@@ -1,0 +1,154 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+import "sdk/common.proto";
+import "sdk/schema.proto";
+import "cluster.proto";
+
+option java_package = "com.alibaba.maxgraph.proto";
+option java_generate_equals_and_hash = true;
+option java_multiple_files = true;
+
+message EndpointsProto {
+    repeated EndpointProto addrs = 1;
+}
+
+message Statistics {
+    map<string, double>    metrics                    = 1;
+}
+
+enum StoreStatus {
+    INITIALING                              = 0;
+    RECOVERED                               = 1;
+    STARTED                                 = 2;
+}
+
+message RuntimeHBReq {
+    enum RuntimeStatus {
+        DOWN                                           = 0;
+        STARTING                                       = 1;
+        RUNNING                                        = 2;
+    }
+
+    RuntimeStatus serverStatus                         = 1;
+    int32 runtimePort                                  = 2;
+    uint32 worker_num_per_process                      = 3;
+    repeated uint32 process_partition_list             = 4;
+}
+
+message RuntimeHBResp {
+    int64 version                                           = 1;
+    uint32 workerId                                         = 2;
+    repeated RuntimeAddressProto addresses                  = 3;
+    uint32 groupId                                          = 4;
+    repeated RuntimeTaskPartitionProto task_partition_list  = 5;
+}
+
+message RuntimeTaskPartitionProto {
+    uint32 task_index                       = 1;
+    uint32 process_index                    = 2;
+    repeated uint32 partition_list          = 3;
+}
+
+message RuntimeAddressProto {
+    string ip                                          = 1;
+    int32 store_port                                   = 2;
+    int32 runtime_port                                 = 3;
+}
+
+message ServerHBReq {
+    // server id
+    uint32 id                                          = 1;
+    EndpointProto endpoint                             = 2;
+
+    // hbtime
+    int64 heartbeatTime                                = 8;
+    Statistics statistics                              = 9;
+    // for runtime_manager in coordinator
+    RuntimeHBReq runtimeReq                            = 10;
+    uint64 aliveId                                     = 11;
+    StoreStatus status                                 = 12;
+    MetricInfoProto infoProto                          = 13;
+}
+
+message SimpleServerHBReq {
+    uint32 id                                          = 1;
+    EndpointProto endpoint                             = 2;
+    RoleType roleType                                  = 3;
+    Statistics statistics                              = 4;
+    string logDir                                      = 5;
+    uint64 aliveId                                     = 6;
+    int32 nodeId                                       = 7;
+    MetricInfoProto infoProto                          = 8;
+}
+
+message ServerHBResp{
+    Response resp                                      = 1;
+    // assign when init/scale up/down
+    repeated uint32 partitions                         = 4;
+    // for timely_server_manager
+    RuntimeHBResp runtimeResp                          = 6;
+    bool isLegal                                       = 7;
+    StoreStatus targetStatus                           = 10;
+    uint64 aliveId                                     = 11;
+}
+
+enum WorkerStatus {
+    RUNNING                  = 0;
+    LOST                     = 1;
+    RESTARTING               = 2;
+    STARTING                 = 3;
+}
+
+message SimpleServerHBResponse {
+    Response resp                                      = 1;
+    WorkerInfoProtos workerInfoProtos                  = 2;
+    bool isLegal                                       = 3;
+    int64 snapshotId                                   = 4;
+    repeated int32 servingServerId                     = 5;
+    uint64 aliveId                                     = 6;
+}
+
+message WorkerInfoProto {
+    int32 id                                           = 1;
+    EndpointProto address                              = 2;
+    repeated uint32 partitions                         = 3;
+    RoleType roleType                                  = 4;
+    WorkerStatus workerStatus                          = 5;
+    ServerHBReq serverHBReq                            = 6;
+    string logDir                                      = 7;
+    int64 lastReportTime                               = 8;
+}
+
+message RoutingServerInfoResp {
+    Response resp                                      = 1;
+    WorkerInfoProtos workerInfoProtos                  = 2;
+    repeated int32 servingServerId                     = 3;
+}
+
+message WorkerInfoProtos {
+    repeated WorkerInfoProto infos                     = 1;
+}
+
+message PartitionProtos {
+    repeated int32 partitionId                         = 1;
+}
+
+message TimestampRequest {
+    int64 timestamp                                     = 1;
+}
+

@@ -1,0 +1,121 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+import "sdk/common.proto";
+import "hb.proto";
+import "cluster.proto";
+
+option java_package = "com.alibaba.maxgraph.proto";
+option java_generate_equals_and_hash = true;
+option java_multiple_files = true;
+
+message InstanceInfoProto {
+    // serverId -> partitionList
+    map<int32, PartitionProtos>  assignment            = 1;
+
+    // roleType -> workInfoList
+    map<int32, WorkerInfoProtos> workerInfos           = 2;
+    int64 offlineVersion                               = 4;
+
+    enum Status {
+        NORMAL                                         = 0;
+        ABNORMAL                                       = 1;
+    }
+
+    Status status                              = 7;
+}
+
+message InstanceInfoResp {
+    Response resp                                      = 1;
+    InstanceInfoProto instanceInfoProto                = 2;
+}
+
+//message DataVersionResp {
+//    Response resp                                      = 1;
+//    repeated int32 routingServerId                     = 5;
+//}
+
+message RuntimeGroupStatusResp {
+    Response response                                   = 1;
+    enum Status {
+        STARTING                                        = 0;
+        READY                                           = 1;
+        RUNNING                                         = 2;
+        RESTORE                                         = 3;
+    }
+    map<int32, Status> runtimeGroupsStstus              = 2;
+}
+
+message DataPathStatusResponse {
+    Response response                                   = 1;
+    bool isInUse                                        = 2;
+}
+
+message GetExecutorAliveIdRequest {
+    uint32 serverId                                     = 1;
+    string ip                                           = 2;
+}
+
+message GetExecutorAliveIdResponse {
+    Response response                                   = 1;
+    uint64 aliveId                                      = 2;
+}
+
+message GetPartitionAssignmentRequest {
+    uint32 serverId                                     = 1;
+}
+
+message GetPartitionAssignmentResponse {
+    repeated uint32 partitionId                          = 1;
+}
+
+message ClientIdResponse {
+    int64 clientId					= 1;
+}
+
+service ServerDataApi {
+
+    // get Server status
+    rpc getInstanceInfo (Request) returns (InstanceInfoResp);
+
+    // heartbeat
+    rpc heartbeat (ServerHBReq) returns (ServerHBResp);
+
+    // update runtime env
+    rpc updateRuntimeEnv (RuntimeEnv) returns (RuntimeEnvList);
+
+    // reset runtime envs
+    rpc resetRuntimeEnv (Empty) returns (Empty);
+
+    rpc simpleHeartbeat(SimpleServerHBReq) returns (SimpleServerHBResponse);
+
+    rpc getRuntimeGroupStatus(Empty) returns (RuntimeGroupStatusResp);
+
+    // query data path is stale or not
+    rpc isDataPathInUse (ServerIdAliveIdProto) returns (DataPathStatusResponse);
+
+    rpc getWorkerInfoAndRoutingServerList(Request) returns (RoutingServerInfoResp);
+
+    rpc getRealTimeMetric (MetricInfoRequest) returns (MetricInfoResp);
+
+    rpc getAllRealTimeMetrics (Request) returns (AllMetricsInfoResp);
+    
+    rpc getExecutorAliveId (GetExecutorAliveIdRequest) returns (GetExecutorAliveIdResponse);
+
+    rpc getPartitionAssignment(GetPartitionAssignmentRequest) returns (GetPartitionAssignmentResponse);
+
+}

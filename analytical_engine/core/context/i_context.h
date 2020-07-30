@@ -1,0 +1,233 @@
+/** Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_I_CONTEXT_H_
+#define ANALYTICAL_ENGINE_CORE_CONTEXT_I_CONTEXT_H_
+
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "grape/app/context_base.h"
+#include "grape/serialization/in_archive.h"
+#include "grape/worker/comm_spec.h"
+#include "vineyard/client/client.h"
+#include "vineyard/graph/fragment/property_graph_types.h"
+
+#include "core/context/context_protocols.h"
+#include "core/context/selector.h"
+#include "core/error.h"
+#include "core/object/gs_object.h"
+#include "core/object/i_fragment_wrapper.h"
+
+namespace gs {
+class IFragmentWrapper;
+
+/**
+ * @brief IContextWrapper is the base class for any kind of ContextWrapper.
+ * The ContextWrapper provides a series of methods to serialize the data hold by
+ * the context. A specific ContextWrapper class can only be instantiated by the
+ * CtxWrapperBuilder.
+ */
+class IContextWrapper : public GSObject {
+ public:
+  explicit IContextWrapper(const std::string& id)
+      : GSObject(id, ObjectType::kContextWrapper) {}
+
+  virtual std::string context_type() = 0;
+
+  virtual std::shared_ptr<IFragmentWrapper> fragment_wrapper() = 0;
+};
+
+/**
+ * @brief A base class for VertexDataContextWrapper.
+ */
+class IVertexDataContextWrapper : public IContextWrapper {
+ public:
+  explicit IVertexDataContextWrapper(const std::string& id)
+      : IContextWrapper(id) {}
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
+      const grape::CommSpec& comm_spec, const Selector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardTensor(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const Selector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardDataframe(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const std::vector<std::pair<std::string, Selector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<
+      std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+  ToArrowArrays(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors) = 0;
+};
+
+/**
+ * @brief A base class for LabeledVertexDataContext. The data in the context are
+ * group by the label.
+ */
+class ILabeledVertexDataContextWrapper : public IContextWrapper {
+  using label_id_t = vineyard::property_graph_types::LABEL_ID_TYPE;
+
+ public:
+  explicit ILabeledVertexDataContextWrapper(const std::string& id)
+      : IContextWrapper(id) {}
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
+      const grape::CommSpec& comm_spec, const LabeledSelector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, LabeledSelector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardTensor(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const LabeledSelector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardDataframe(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const std::vector<std::pair<std::string, LabeledSelector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  /**
+   * @brief Output the data in the context to ArrowArray.
+   *
+   * @param comm_spec
+   * @param selectors example: {"col1_label0": "v:label0.id", "col1_label1":
+   * "v:label1.id", "col2_result": "r:label0"}
+   * @return
+   */
+  virtual bl::result<std::map<
+      label_id_t,
+      std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>>
+  ToArrowArrays(const grape::CommSpec& comm_spec,
+                const std::vector<std::pair<std::string, LabeledSelector>>&
+                    selectors) = 0;
+};
+
+/**
+ * @brief A base class for vertex property context. Differs from
+ * ILabeledVertexDataContextWrapper, its columns can be added at runtime.
+ */
+class IVertexPropertyContextWrapper : public IContextWrapper {
+ public:
+  explicit IVertexPropertyContextWrapper(const std::string& id)
+      : IContextWrapper(id) {}
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
+      const grape::CommSpec& comm_spec, const Selector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardTensor(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const Selector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardDataframe(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const std::vector<std::pair<std::string, Selector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<
+      std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+  ToArrowArrays(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors) = 0;
+};
+
+/**
+ * @brief A base class for LabeledVertexPropertyContext. Compared with
+ * ILabeledVertexDataContextWrapper, columns can be added at runtime.
+ */
+class ILabeledVertexPropertyContextWrapper : public IContextWrapper {
+  using label_id_t = vineyard::property_graph_types::LABEL_ID_TYPE;
+
+ public:
+  explicit ILabeledVertexPropertyContextWrapper(const std::string& id)
+      : IContextWrapper(id) {}
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
+      const grape::CommSpec& comm_spec, const LabeledSelector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, LabeledSelector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardTensor(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const LabeledSelector& selector,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardDataframe(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const std::vector<std::pair<std::string, LabeledSelector>>& selectors,
+      const std::pair<std::string, std::string>& range) = 0;
+
+  virtual bl::result<std::map<
+      label_id_t,
+      std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>>
+  ToArrowArrays(const grape::CommSpec& comm_spec,
+                const std::vector<std::pair<std::string, LabeledSelector>>&
+                    selectors) = 0;
+};
+
+/**
+ * @brief An abstract ContextWrapper for the data not assigned to vertex/edges.
+ */
+class ITensorContextWrapper : public IContextWrapper {
+ public:
+  explicit ITensorContextWrapper(const std::string& id) : IContextWrapper(id) {}
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
+      const grape::CommSpec& comm_spec, uint32_t axis) = 0;
+
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
+      const grape::CommSpec& comm_spec) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardTensor(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      uint32_t axis) = 0;
+
+  virtual bl::result<vineyard::ObjectID> ToVineyardDataframe(
+      const grape::CommSpec& comm_spec, vineyard::Client& client) = 0;
+};
+
+}  // namespace gs
+
+#endif  // ANALYTICAL_ENGINE_CORE_CONTEXT_I_CONTEXT_H_

@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints
+*.egg-info/
+
+# coordinator
+coordinator/proto
+
+# python
+python/proto
+
+# Gar file
+*.gar
+
+# Protobuf GRPC
+*.pb.*
+*_pb2.py
+*_pb2_grpc.py
+
+# Visual Studio Code
+.vscode/
+.project
+.classpath
+.factorypath
+.settings
+
+# Mac OSX
+.DS_store
+
+# CLion
+.idea/
+cmake-build-*/
+**/*.iml
+**/target/
+
+# Workspace
+workspace/
+
+# generated_docs
+docs/source/reference/
+docs/reference/generated/
+docs/reference/networkx/generated/
+docs/_build/
+
+analytical_engine/build/
+
+# etcd data directory
+default.etcd/
+
+# outer build directory
+build/

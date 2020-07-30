@@ -1,0 +1,62 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+import "sdk/common.proto";
+
+option java_package = "com.alibaba.maxgraph.proto";
+option java_generate_equals_and_hash = true;
+option java_multiple_files = true;
+
+enum EventLevel {
+    SERIOUS                 = 0;
+    WARNING                 = 1;
+    NORMAL                  = 2;
+}
+
+enum EventType {
+    RESOURCE_SCHEDULER      = 0;
+    WORKER_OPERATION        = 1;
+    EXCEPTION_INFO          = 2;
+    NORMAL_INFO             = 3;
+}
+
+message SchedulerEvent {
+    EventLevel level        = 1;
+    EventType type          = 2;
+    string msg              = 3;
+    string date             = 4;
+}
+
+message RestartWorkerReq {
+    repeated int32 toRestartWorkerIdList          = 1;
+}
+
+message SchedulerEventReq {
+    int32 latestEventNum                          = 1;
+    string eventLevel                             = 2;
+    string eventType                              = 3;
+}
+
+message SchedulerEventResp {
+    repeated SchedulerEvent eventList             = 1;
+    Response resp                                 = 2;
+}
+
+service SchedulerApi {
+    rpc restartWorkerManually (RestartWorkerReq) returns (Response);
+    rpc getSchedulerEvent (SchedulerEventReq) returns (SchedulerEventResp);
+}

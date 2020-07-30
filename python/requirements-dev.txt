@@ -1,0 +1,11 @@
+black==20.8b1
+breathe
+flake8==3.8.4
+isort==5.5.4
+pylint
+pytest
+m2r2
+recommonmark
+sphinx
+sphinx_rtd_theme
+wheel

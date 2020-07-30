@@ -1,0 +1,150 @@
+app:
+  - algo: pagerank
+    type: cpp_pie
+    class_name: grape::PageRankAuto
+    src: pagerank/pagerank_auto.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
+  - algo: sssp
+    type: cpp_pie
+    class_name: grape::SSSP
+    src: sssp/sssp.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
+  - algo: bfs
+    type: cpp_pie
+    class_name: grape::BFSAuto
+    src: bfs/bfs_auto.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
+  - algo: wcc
+    type: cpp_pie
+    class_name: grape::WCCAuto
+    src: wcc/wcc_auto.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
+  - algo: cdlp
+    type: cpp_pie
+    class_name: grape::CDLP
+    src: cdlp/cdlp.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
+  - algo: sssp_path
+    type: cpp_pie
+    class_name: gs::SSSPPath
+    src: apps/sssp/sssp_path.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
+  - algo: sssp_has_path
+    type: cpp_pie
+    class_name: gs::SSSPHasPath
+    src: apps/sssp/sssp_has_path.h
+    compatible_graph:
+      - gs::DynamicFragment
+  - algo: sssp_average_length
+    type: cpp_pie
+    class_name: gs::SSSPAverageLength
+    src: apps/sssp/sssp_average_length.h
+    compatible_graph:
+      - gs::DynamicFragment
+  - algo: property_sssp
+    type: cpp_pie
+    class_name: gs::PropertySSSP
+    src: apps/property/property_sssp.h
+    compatible_graph:
+      - vineyard::ArrowFragment
+      - gs::DynamicFragment
+  - algo: hits
+    type: cpp_pie
+    class_name: gs::HITS
+    src: apps/hits/hits.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
+  - algo: degree_centrality
+    type: cpp_pie
+    class_name: gs::DegreeCentrality
+    src: apps/centrality/degree/degree_centrality.h
+    compatible_graph:
+      - gs::DynamicFragment
+  - algo: eigenvector_centrality
+    type: cpp_pie
+    class_name: gs::EigenvectorCentrality
+    src: apps/centrality/eigenvector/eigenvector_centrality.h
+    compatible_graph:
+      - gs::DynamicFragment
+  - algo: katz_centrality
+    type: cpp_pie
+    class_name: gs::KatzCentrality
+    src: apps/centrality/katz/katz_centrality.h
+    compatible_graph:
+      - gs::DynamicFragment
+  - algo: bfs_generic
+    type: cpp_pie
+    class_name: gs::BFSGeneric
+    src: apps/bfs/bfs_generic.h
+    compatible_graph:
+      - gs::DynamicFragment
+  - algo: kcore
+    type: cpp_pie
+    class_name: gs::KCore
+    src: apps/kcore/kcore.h
+    compatible_graph:
+      - gs::DynamicFragment
+  - algo: clustering
+    type: cpp_pie
+    class_name: gs::Clustering
+    src: apps/clustering/clustering.h
+    compatible_graph:
+      - gs::DynamicFragment
+  - algo: triangles
+    type: cpp_pie
+    class_name: gs::Triangles
+    src: apps/clustering/triangles.h
+    compatible_graph:
+      - gs::DynamicFragment
+  - algo: transitivity
+    type: cpp_pie
+    class_name: gs::Transitivity
+    src: apps/clustering/transitivity.h
+    compatible_graph:
+      - gs::DynamicFragment
+  - algo: avg_clustering
+    type: cpp_pie
+    class_name: gs::AvgClustering
+    src: apps/clustering/avg_clustering.h
+    compatible_graph:
+      - gs::DynamicFragment
+  - algo: lpau2i
+    type: cpp_pie
+    class_name: gs::LPAU2I
+    src: apps/lpa/lpa_u2i.h
+    compatible_graph:
+      - vineyard::ArrowFragment
+  - algo: sssp_projected
+    type: cpp_pie
+    class_name: gs::SSSPProjected
+    src: apps/projected/sssp_projected.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
+  - algo: property_bfs
+    type: cpp_pie
+    class_name: gs::benchmarks::PropertyBFS
+    src: benchmarks/apps/bfs/property_bfs.h
+    compatible_graph:
+      - vineyard::ArrowFragment

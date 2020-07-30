@@ -1,0 +1,132 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+option java_package = "com.alibaba.maxgraph.proto";
+
+package tinkerpop;
+import "gremlin_query.proto";
+import "sdk/message.proto";
+import "meta_service.proto";
+import "store_api.proto";
+
+// The store service definition.
+service RemoteStoreService {
+    // batch requests
+    rpc getBatchOut(BatchVerticesEdgesRequest) returns (stream BatchVerticesEdgesResponse);
+    rpc getBatchIn(BatchVerticesEdgesRequest) returns (stream BatchVerticesEdgesResponse);
+    rpc getBatchOutCnt(BatchVerticesEdgesRequest) returns (stream BatchVerticesCountResponse);
+    rpc getBatchInCnt(BatchVerticesEdgesRequest) returns (stream BatchVerticesCountResponse);
+
+    rpc getVertices(VerticesRequest) returns (stream VertexResponse);
+    rpc getGraphEdges(GraphEdgesRequest) returns (stream GraphEdgeReponse);
+
+    rpc query_vertices(QueryRequest) returns (stream VertexResponse);
+    rpc query_edges(QueryRequest) returns (stream GraphEdgeReponse);
+    rpc vertex_count(QueryCountRequest) returns (CountResponse);
+    rpc edge_count(QueryCountRequest) returns (CountResponse);
+}
+
+message BatchVerticesEdgesRequest {
+    int64 snapshot_id                                   = 1;
+    repeated int64 vertex_id                            = 2;
+    repeated uint32 label_list                          = 3;
+    repeated maxgraph.LogicalCompare logical_compare    = 4;
+    OutputCondition conditions                          = 5;
+    bool vertex_flag                                    = 6;
+    repeated uint32 partition_ids                       = 7;
+}
+
+message BatchVerticesEdgesResponse {
+     VertexId src_id             = 1;
+     VertexId dst_id             = 2;
+     int64 edge_id               = 3;
+     uint32 type_id              = 4;
+     bytes pros                  = 5;
+}
+
+//TOOD: optimize BatchVerticesEdgesResponse
+/*message BatchVerticesEdgesResponse {
+    VertexId src_id               = 1;
+    repeated Neighbors neighbors  = 2;
+}
+
+message Neighbors {
+    VertexId dst_id             = 1;
+    int64 edge_id               = 2;
+    uint32 type_id              = 3;
+    bytes pros                  = 4;
+}*/
+
+message BatchVerticesCountResponse {
+    int64 vid                   = 1;
+    int64 count_val             = 2;
+}
+
+message VerticesRequest {
+    int64 snapshot_id           = 1;
+    uint32 type_id              = 2;
+    repeated int64 ids          = 3;
+    repeated int32 prop_ids     = 4;
+    bool prop_flag              = 5;
+
+}
+
+message GraphEdgesRequest {
+    int64 snapshot_id           = 1;
+    EdgeType type_id            = 2;
+    repeated EdgeId ids         = 3;
+    repeated int32 prop_ids     = 4;
+    bool prop_flag              = 5;
+}
+
+message QueryRequest {
+    int64 snapshot_id                                   = 1;
+    repeated uint32 label_id                            = 2;
+    repeated maxgraph.LogicalCompare logical_compare    = 3;
+    OutputCondition conditions                          = 4;
+    repeated uint32 partition_ids                       = 5;
+}
+
+message QueryCountRequest {
+    int64 snapshot_id                                   = 1;
+    repeated uint32 label_id                            = 2;
+    repeated maxgraph.LogicalCompare logical_compare    = 3;
+    repeated uint32 partition_ids                       = 4;
+}
+
+message CountResponse {
+    int64 count_val             = 1;
+}
+
+message OutputCondition {
+    repeated uint32 dedup_prop_ids          = 1;
+    uint64 limit                            = 2;
+    bool prop_flag                          = 3;
+    repeated uint32 prop_ids                = 4;
+}
+
+message EdgeId {
+    int64 src_id        = 1;
+    int64 dst_id        = 2;
+    int64 inner_id      = 3;
+}
+
+message EdgeType {
+    uint32 label         = 1;
+    uint32 src_label     = 2;
+    uint32 dst_label     = 3;
+}

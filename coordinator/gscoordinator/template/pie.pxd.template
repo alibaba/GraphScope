@@ -1,0 +1,134 @@
+# distutils: language=c++
+# distutils: extra_compile_args = ["-std=c++14", "-g", "-D __STDC_FORMAT_MACROS", "-fPIC", "-O3"]
+
+from libc.stdint cimport int32_t
+from libc.stdint cimport int64_t
+from libc.stdint cimport uint32_t
+from libc.stdint cimport uint64_t
+
+from libcpp cimport bool
+from libcpp.pair cimport pair
+from libcpp.string cimport string
+from libcpp.vector cimport vector
+
+cdef extern from "<string>" namespace "std":
+    cdef string to_string(int32_t)
+    cdef string to_string(uint32_t)
+    cdef string to_string(int64_t)
+    cdef string to_string(uint64_t)
+    cdef string to_string(float)
+    cdef string to_string(double)
+
+cdef extern from "apps/python_pie/export.h" namespace "python_grape":
+    ctypedef bool (*ap_aggregate_func)(double*, double)
+
+    cdef enum class MessageStrategy:
+        kAlongOutgoingEdgeToOuterVertex = 0
+        kAlongIncomingEdgeToOuterVertex
+        kAlongEdgeToOuterVertex
+        kSyncOnOuterVertex
+
+    cdef cppclass Vertex:
+        Vertex() except +
+        Vertex& operator*()
+        Vertex& operator++()
+        bool operator==(const Vertex&)
+        bool operator!=(const Vertex&)
+
+    cdef cppclass VertexRange:
+        VertexRange()
+        size_t size()
+        Vertex& begin()
+        Vertex& end()
+
+    cdef cppclass VertexArray[T]:
+        VertexArray() except +
+        void Init(const VertexRange&)
+        void Init(const VertexRange&, const T&)
+        T& operator[](const Vertex&)
+
+    cdef cppclass Nbr:
+        Nbr() except +
+        Vertex neighbor()
+        string get_str(int)
+        double get_double(int)
+        int64_t get_int(int)
+
+    cdef cppclass AdjList:
+        AdjList() except +
+        cppclass iterator:
+            Nbr& operator*()
+            iterator& operator++()
+            bool operator==(const iterator&)
+            bool operator!=(const iterator&)
+        iterator begin()
+        iterator end()
+        size_t size()
+
+    cdef cppclass Fragment:
+        Fragment() except +
+        int fid()
+        int fnum()
+        int vertex_label_num()
+        int edge_label_num()
+        size_t get_total_nodes_num()
+        size_t get_nodes_num(int)
+        size_t get_inner_nodes_num(int)
+        size_t get_outer_nodes_num(int)
+        VertexRange nodes(int)
+        VertexRange inner_nodes(int)
+        VertexRange outer_nodes(int)
+        int get_node_fid(const Vertex&)
+        bool is_inner_node(const Vertex&)
+        bool is_outer_node(const Vertex&)
+        bool get_node(int, const int64_t&, Vertex&)
+        bool get_inner_node(int, const int64_t&, Vertex&)
+        bool get_outer_node(int, const int64_t&, Vertex&)
+        int64_t get_node_id(const Vertex&)
+        AdjList get_outgoing_edges(const Vertex&, int)
+        AdjList get_incoming_edges(const Vertex&, int)
+        bool has_child(const Vertex&, int)
+        bool has_parent(const Vertex&, int)
+        int get_indegree(const Vertex&, int)
+        int get_outdegree(const Vertex&, int)
+        string get_str(const Vertex&, int)
+        double get_double(const Vertex&, int)
+        int64_t get_int(const Vertex&, int)
+        vector[string] vertex_labels()
+        vector[string] edge_labels()
+        string get_vertex_label_by_id(int)
+        int get_vertex_label_id_by_name(const string&)
+        string get_edge_label_by_id(int)
+        int get_edge_label_id_by_name(const string&)
+        vector[pair[string, string]] vertex_properties(int)
+        vector[pair[string, string]] vertex_properties(const string&)
+        vector[pair[string, string]] edge_properties(int)
+        vector[pair[string, string]] edge_properties(const string&)
+        int get_vertex_property_id_by_name(const string&, const string&)
+        int get_vertex_property_id_by_name(int, const string&)
+        string get_vertex_property_by_id(const string&, int)
+        string get_vertex_property_by_id(int, int)
+        int get_edge_property_id_by_name(const string&, const string&)
+        int get_edge_property_id_by_name(int, const string&)
+        string get_edge_property_by_id(const string&, int)
+        string get_edge_property_by_id(int, int)
+
+
+    cdef cppclass Context[VD_TYPE, MD_TYPE]:
+        Context() except +
+        int superstep()
+        string get_config(const string&)
+        void init_value(VertexRange, int, MD_TYPE, PIEAggregateType)
+        void init_value(VertexRange, int, MD_TYPE, ap_aggregate_func)
+        void register_sync_buffer(int, MessageStrategy)
+        void set_node_value(Vertex&, const VD_TYPE&)
+        VD_TYPE get_node_value(const Vertex&)
+        bool is_updated(const Vertex&)
+
+    cdef enum class PIEAggregateType:
+        kMinAggregate = 0,
+        kMaxAggregate
+        kSumAggregate
+        kProductAggregate
+        kOverwriteAggregate
+        kTextAppendAggregate

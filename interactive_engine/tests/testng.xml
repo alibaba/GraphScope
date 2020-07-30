@@ -1,0 +1,69 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="preserve order test runs" parallel="false" thread-count="1">
+    <listeners>
+        <listener class-name="com.alibaba.maxgraph.function.test.GraphTestListener"/>
+    </listeners>
+    <parameter name="clean" value="False"/>
+
+    <test name="create modern and classic graph">
+        <parameter name="graphName" value="MODERN"/>
+        <groups>
+            <dependencies>
+                <group name="create_instance" depends-on="load_data"/>
+            </dependencies>
+        </groups>
+        <classes>
+            <class name="com.alibaba.maxgraph.function.test.LoadVineyardDataTest"/>
+            <class name="com.alibaba.maxgraph.function.test.CreateInstanceTest"/>
+        </classes>
+    </test> 
+
+
+    <test name="create grateful graph">
+        <parameter name="graphName" value="GRATEFUL"/>
+        <groups>
+            <dependencies>
+                <group name="create_instance" depends-on="load_data"/>
+            </dependencies>
+        </groups>
+        <classes>
+            <class name="com.alibaba.maxgraph.function.test.LoadVineyardDataTest"/>
+            <class name="com.alibaba.maxgraph.function.test.CreateInstanceTest"/>
+        </classes>
+    </test>
+
+    <test name="create crew graph">
+        <parameter name="graphName" value="CREW"/>
+        <groups>
+            <dependencies>
+                <group name="create_instance" depends-on="load_data"/>
+            </dependencies>
+        </groups>
+        <classes>
+            <class name="com.alibaba.maxgraph.function.test.LoadVineyardDataTest"/>
+            <class name="com.alibaba.maxgraph.function.test.CreateInstanceTest"/>
+        </classes>
+    </test>
+
+    <test name="create sink graph">
+        <parameter name="graphName" value="SINK"/>
+        <groups>
+            <dependencies>
+                <group name="create_instance" depends-on="load_data"/>
+            </dependencies>
+        </groups>
+        <classes>
+            <class name="com.alibaba.maxgraph.function.test.LoadVineyardDataTest"/>
+            <class name="com.alibaba.maxgraph.function.test.CreateInstanceTest"/>
+        </classes>
+    </test>
+
+    <test name="gremlin standard query test" junit="true">
+
+        <classes>
+	        <class name="com.alibaba.maxgraph.function.test.gremlin.GremlinStandardTest"/>
+        </classes>
+    </test>
+
+</suite>
+

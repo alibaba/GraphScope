@@ -1,0 +1,26 @@
+[package]
+name = "maxgraph-store"
+version = "0.1.0"
+authors = ["勤远 <wubin.cwb@alibaba-inc.com>"]
+edition = "2018"
+
+[dependencies]
+byteorder = "1"
+log = "0.3"
+protobuf = { version = "~2.0", features = ["with-bytes"] }
+serde = "1.0.72"
+serde_derive = "1.0.72"
+serde_json = "1.0"
+structopt = "0.2"
+tempfile = "3"
+crossbeam-epoch = "0.7"
+bincode = "1.2.0"
+crc = "1.8.1"
+rust-ini = "0.13"
+libc = "0.2"
+
+maxgraph-common = { path = "../../common/rust/common" }
+
+[dependencies.rocksdb]
+git = "https://github.com/pingcap/rust-rocksdb.git"
+

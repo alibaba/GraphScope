@@ -1,0 +1,5 @@
+#!/bin/sh
+set -x
+POD_NAME=$1
+shift
+kubectl exec ${POD_NAME} -c engine -- /bin/sh -c "cat /etc/hosts_of_nodes >> /etc/hosts && $*"

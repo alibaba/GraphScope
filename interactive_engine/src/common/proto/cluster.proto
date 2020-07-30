@@ -1,0 +1,86 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+option java_package = "com.alibaba.maxgraph.proto";
+option java_outer_classname = "ClusterProto";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+option java_generic_services = true;
+
+enum RoleType {
+    AM                  = 0;
+    EXECUTOR            = 1;
+    COORDINATOR         = 2;
+    ID_SERVICE          = 3;
+    FRONTEND            = 4;
+    INGEST_NODE         = 5;
+    STORE_NODE          = 6;
+    COMPUTE_WORKER      = 7;
+    COMPUTE_MASTER      = 8;
+}
+
+message RuntimeEnv {
+    uint32 id    =    1;
+    uint32 port  =    2;
+    string ip    =    3;
+}
+
+message RuntimeEnvList {
+    repeated string envs    =     1;
+}
+
+enum ShardState {
+    CREATED         = 0;
+    RECOVERING      = 1;
+    ONLINING         = 2;
+}
+
+message NodeID {
+    int32 id                        = 1;
+    RoleType role                   = 2;
+}
+
+message NodeInfo {
+    NodeID nodeId                       = 1;
+    int32 serverId                      = 2;
+    string host                         = 3;
+    int32 port                          = 4;
+}
+
+message PartitionInfo {
+    map<int32, ShardState> shardInfos  = 1; // serverID : STATE
+}
+
+message StateList {
+    repeated int64 states               = 1;
+}
+
+message NodeStateProto {
+    map<int32, StateList> nodeStateMap        = 1;  // entityID : List<entityState>
+}
+
+message ClusterStateProto {
+    repeated NodeInfo nodes                             = 1;
+    map<int32, PartitionInfo> partitions                = 2;  // map - partitionID : { "serverID" : "STATE" }
+    int64 version                                       = 3;
+    map<int32, NodeStateProto> expectedStateMap      = 4;  // node:  { entityID: entityState }
+}
+
+message ServerIdAliveIdProto {
+    int32 serverId                      = 1;
+    int64 aliveId                       = 2;
+}

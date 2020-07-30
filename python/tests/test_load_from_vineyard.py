@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+import os
+
+import numpy as np
+import pandas as pd
+import pytest
+
+import graphscope
+from graphscope.framework.errors import AnalyticalEngineInternalError
+from graphscope.framework.loader import Loader
+
+
+@pytest.fixture
+def p2p_31_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property")):
+    return "vineyard://%s/p2p-31_property_e_0#header_row=true&delimiter=," % data_dir
+
+
+@pytest.fixture
+def p2p_31_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property")):
+    return "vineyard://%s/p2p-31_property_v_0#header_row=true&delimiter=," % data_dir
+
+
+@pytest.fixture
+def lesson_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return "vineyard://%s/lesson.v#header_row=true&delimiter=," % data_dir
+
+
+@pytest.fixture
+def student_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return "vineyard://%s/student.v#header_row=true&delimiter=," % data_dir
+
+
+@pytest.fixture
+def teacher_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return "vineyard://%s/teacher.v#header_row=true&delimiter=," % data_dir
+
+
+@pytest.fixture
+def score_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return "vineyard://%s/score.e#header_row=true&delimiter=," % data_dir
+
+
+@pytest.fixture
+def student_teacher_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return "vineyard://%s/student_teacher.e#header_row=true&delimiter=," % data_dir
+
+
+@pytest.fixture
+def teacher_lesson_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return "vineyard://%s/teacher_lesson.e#header_row=true&delimiter=," % data_dir
+
+
+@pytest.fixture
+def student_group_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return "vineyard://%s/group.e#header_row=true&delimiter=," % data_dir
+
+
+@pytest.fixture
+def teacher_group_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return "vineyard://%s/teacher_group.e#header_row=true&delimiter=," % data_dir
+
+
+@pytest.fixture
+def friend_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return "vineyard://%s/friend.e#header_row=true&delimiter=," % data_dir
+
+
+@pytest.mark.skip("requires vineyard's io adaptors installed properly")
+def test_p2p_form_loader(graphscope_session, p2p_31_e, p2p_31_v):
+    g = graphscope_session.load_from(
+        edges={
+            "group": {
+                "loader": Loader(p2p_31_e, session=graphscope_session),
+            }
+        },
+        vertices={
+            "student": {
+                "loader": Loader(p2p_31_v, session=graphscope_session),
+            }
+        },
+    )
+
+
+@pytest.mark.skip("requires vineyard's io adaptors installed properly")
+def test_dict_in_dict_form_loader(graphscope_session, student_group_e, student_v):
+    g = graphscope_session.load_from(
+        edges={
+            "group": {
+                "loader": Loader(student_group_e, session=graphscope_session),
+                "properties": ["member_size"],
+                "source": ("leader_student_id", "student"),
+                "destination": ("member_student_id", "student"),
+                "load_strategy": "both_out_in",
+            }
+        },
+        vertices={
+            "student": {
+                "loader": Loader(student_v, session=graphscope_session),
+                "properties": ["name", "lesson_nums", "avg_score"],
+                "vid": "student_id",
+            }
+        },
+    )

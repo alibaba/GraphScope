@@ -1,0 +1,198 @@
+// Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package gs.rpc;
+
+import "proto/error_codes.proto";
+import "proto/graph_def.proto";
+import "proto/op_def.proto";
+
+message ResponseStatus {
+  enum NullDetail { NULL_DETAIL = 0; }
+
+  Code code = 1;
+  string error_msg = 2;
+  oneof detail {
+    NullDetail null = 3;
+    OpDef op = 4;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// ConnectSession method request/response protos.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+message ConnectSessionRequest {
+}
+
+message ConnectSessionResponse {
+  ResponseStatus status = 1;
+
+  // The session handle to be used in subsequent calls for the created session.
+  //
+  // The client must arrange to call CloseSession with this returned
+  // session handle to close the session.
+  string session_id = 2;
+  string engine_config = 3;
+  repeated string pod_name_list = 4;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// HeartBeat method request/response protos.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+message HeartBeatRequest {
+}
+
+message HeartBeatResponse {
+  ResponseStatus status = 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// RunStep method request/response protos.
+//
+// The caller should provide the feeds needed by the graph and specify
+// what nodes should be fetched.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+message RunStepRequest {
+  // REQUIRED: session_id must be returned by a CreateSession call
+  // to the same master service.
+  string session_id = 1;
+
+  // REQUIRED: A Dag with op that will be evaluated.
+  // A DagDef will contain only 1 op(ideally).
+  DagDef dag_def = 2;
+}
+
+message RunStepResponse {
+  ResponseStatus status = 1;
+  // If success, store the metrics. (e.g. how many seconds used, memory bytes...)
+  string metrics = 2;
+
+  // result represents app_name or ctx_name or raw bytes If the op returns a NDArray or DataFrame
+  bytes result = 3;
+
+  // If the op create a graph or modify a graph, return the meta data of the
+  // graph.
+  GraphDef graph_def = 31;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// FetchLogs method request/response protos.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+message FetchLogsRequest {
+  string session_id = 1;
+}
+
+message FetchLogsResponse {
+  ResponseStatus status = 1;
+
+  // log info.
+  string message = 2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// CloseSession method request/response protos.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+message CloseSessionRequest {
+  // REQUIRED: session_id must be returned by a CreateSession call
+  // to the same master service.
+  string session_id = 1;
+}
+
+message CloseSessionResponse {
+  ResponseStatus status = 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// CreateInteractive method request/response protos.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+message CreateInteractiveRequest {
+  // object id of the graph in vineyard
+  int64 object_id    = 1;
+  string schema_path = 2;
+}
+
+message CreateInteractiveResponse {
+  ResponseStatus status = 1;
+
+  string frontend_host = 2;
+  int32 frontend_port = 3;
+  int64 object_id = 4;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// CloseInteractive method request/response protos.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+message CloseInteractiveRequest {
+  int64 object_id = 1;
+}
+
+message CloseInteractiveResponse {
+  ResponseStatus status = 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// CreateLeaning method request/response protos.
+//
+////////////////////////////////////////////////////////////////////////////////
+message CreateLearningInstanceRequest {
+  // object id of the graph in vineyard
+  int64 object_id = 1;
+  string handle = 2;
+  string config = 3;
+}
+
+message CreateLearningInstanceResponse {
+  ResponseStatus status = 1;
+
+  string endpoints = 2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// CloseLearning method request/response protos.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+message CloseLearningInstanceRequest {
+  int64 object_id = 1;
+}
+
+message CloseLearningInstanceResponse {
+  ResponseStatus status = 1;
+}

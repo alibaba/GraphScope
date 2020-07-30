@@ -1,0 +1,74 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+option java_package = "com.alibaba.maxgraph.rpc";
+import "query_flow.proto";
+import "sdk/message.proto";
+
+package maxgraph;
+
+
+// The MaxGraph service definition.
+message ShowProcessListRequest {
+}
+
+message RunningQuery {
+  string query_id     = 1;
+  string script       = 2;
+  int64 elapsed_nano  = 3;
+  uint32 front_id     = 4;
+  string dataflow_id  = 5;
+}
+
+message ShowProcessListResponse {
+  repeated RunningQuery queries     = 1;
+}
+
+message CancelDataflowRequest {
+  string query_id     = 1;
+}
+
+message CancelDataflowByFrontRequest {
+  uint32 front_id     = 1;
+}
+
+message CancelDataflowResponse {
+  bool success        = 1;
+  string message      = 2;
+}
+
+service MaxGraphService {
+  rpc query (QueryFlow) returns (stream QueryResponse) {}
+
+  rpc prepare (QueryFlow) returns (OperationResponse) {}
+  rpc query2 (Query) returns (stream QueryResponse) {}
+  rpc execute (QueryFlow) returns (stream QueryResponse) {}
+  rpc remove(RemoveDataflowRequest) returns (OperationResponse) {}
+}
+
+service MaxGraphCtrlService {
+  rpc showProcessList(ShowProcessListRequest) returns (ShowProcessListResponse) {}
+  rpc cancelDataflow(CancelDataflowRequest) returns (CancelDataflowResponse) {}
+  rpc cancelDataflowByFront(CancelDataflowByFrontRequest) returns (CancelDataflowResponse) {}
+}
+
+service AsyncMaxGraphService {
+    rpc asyncQuery (QueryFlow) returns (stream QueryResponse) {}
+    rpc asyncPrepare (QueryFlow) returns (OperationResponse) {}
+    rpc asyncQuery2 (Query) returns (stream QueryResponse) {}
+    rpc asyncExecute (QueryFlow) returns (stream QueryResponse) {}
+    rpc asyncRemove (RemoveDataflowRequest) returns (OperationResponse) {}
+}

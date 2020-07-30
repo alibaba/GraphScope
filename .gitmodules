@@ -1,0 +1,3 @@
+[submodule "learning_engine/graph-learn"]
+	path = learning_engine/graph-learn
+	url = https://github.com/alibaba/graph-learn.git

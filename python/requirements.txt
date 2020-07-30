@@ -1,0 +1,13 @@
+Cython>=3.0a6
+gremlinpython
+grpcio
+grpcio-tools
+kubernetes
+nest_asyncio
+networkx
+numpy
+pandas
+protobuf
+PyYAML
+scipy
+vineyard>=0.1.3
