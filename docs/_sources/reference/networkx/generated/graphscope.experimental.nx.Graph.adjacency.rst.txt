@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.Graph.adjacency
+==========================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: Graph.adjacency

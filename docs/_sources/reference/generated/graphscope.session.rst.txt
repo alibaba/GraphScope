@@ -1,0 +1,36 @@
+﻿graphscope.session
+==================
+
+.. currentmodule:: graphscope
+
+.. autoclass:: session
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~session.__init__
+      ~session.as_default
+      ~session.close
+      ~session.get_config
+      ~session.gremlin
+      ~session.learning
+      ~session.load_from
+      ~session.run
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~session.info
+      ~session.session_id
+   
+   
