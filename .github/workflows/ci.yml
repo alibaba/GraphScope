@@ -23,7 +23,6 @@ on:
 
 jobs:
   build:
-    # runs-on: ${{ matrix.os }}
     runs-on: self-hosted
     strategy:
       matrix:
@@ -133,7 +132,6 @@ jobs:
 
         sudo docker build --build-arg EXPERIMENTAL_ON=${{ matrix.experimental }} \
                           --build-arg profile=${{ matrix.profile }} \
-                          --build-arg ci=${{ matrix.ci }} \
                           -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}  \
                           --network=host \
                           -f ./k8s/graphscope.Dockerfile .
@@ -165,7 +163,6 @@ jobs:
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
 
   build-manager:
-    # runs-on: ${{ matrix.os }}
     runs-on: self-hosted
     steps:
     - name: Clean up
@@ -235,7 +232,6 @@ jobs:
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR} || true
-        cd ${GS_TEST_DIR}
 
     - name: Prepare environment
       env:
@@ -355,7 +351,6 @@ jobs:
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         export PYTHONPATH=${GITHUB_WORKSPACE}/python
-        export CI=${{ matrix.ci }}
         python3 -m pytest --exitfirst -s -vvv --log-cli-level=INFO \
                           ./python/graphscope/deploy/tests/
 
@@ -405,7 +400,6 @@ jobs:
       shell: bash
       run: |
         export PYTHONPATH=${GITHUB_WORKSPACE}/python
-        export CI=true
         cd interactive_engine/tests
         ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
         ./function_test.sh 8111 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
@@ -419,6 +413,7 @@ jobs:
 
   release-image:
     runs-on: self-hosted
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [ gie-test, gae-and-python-tests, k8s-test ]
     steps:
     - name: Release images
