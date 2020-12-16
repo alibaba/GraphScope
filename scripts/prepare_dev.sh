@@ -2,6 +2,7 @@
 #
 # A script to install dependencies for GraphScope dev user
 
+set -x
 set -e
 set -o pipefail
 
@@ -40,5 +41,6 @@ function install_dependencies() {
 
 install_dependencies
 
+set +x
 set +e
 set +o pipefail

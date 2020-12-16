@@ -3,6 +3,7 @@
 # A script to install dependencies for GraphScope user
 
 set -e
+set -x
 set -o pipefail
 
 platform=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
@@ -72,5 +73,6 @@ sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalon
 sudo docker pull zookeeper:3.4.14 || true
 sudo docker pull quay.io/coreos/etcd:v3.4.13 || true
 
+set +x
 set +e
 set +o pipefail
