@@ -8,7 +8,7 @@ ADD . /root/maxgraph/
 # RUN cd /root/maxgraph/ && mvn clean -T 1 install -DskipTests -P java-release
 COPY ./deploy/docker/dockerfile/maven.settings.xml /root/.m2/settings.xml
 RUN cd /root/maxgraph/ && \
-    mvn clean package -DskipTests -Pjava-release
+    mvn clean package -DskipTests -Pjava-release --quiet
 
 # # # # # # # # # # # # # # # # # # # # # #
 # RUNTIME: manager 

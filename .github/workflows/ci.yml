@@ -23,12 +23,10 @@ on:
 
 jobs:
   build:
-    # runs-on: ${{ matrix.os }}
     runs-on: self-hosted
     strategy:
       matrix:
         experimental: [ON, OFF]
-        ci: [true]
         profile: [release]
     steps:
     - name: Clean up
@@ -89,7 +87,6 @@ jobs:
         # run cpplint
         python3 ./misc/cpplint.py --recursive ./apps ./benchmarks ./core ./frame ./test
 
-
     - name: Python Format and Lint Check
       run: |
         echo "Checking formatting for $GITHUB_REPOSITORY"
@@ -104,33 +101,15 @@ jobs:
         python3 -m black --check --diff .
         python3 -m flake8 .
 
-    - name: Install dependencies
-      shell: bash
-      run: |
-        sudo pip3 install vineyard==0.1.3 -i https://pypi.org/simple
-
-        # Install pip dependencies, build builtin gar, and generate proto stuffs.
-        pushd python && sudo python3 setup.py develop && popd
-        pushd coordinator && sudo python3 setup.py develop && popd
-
     - name: Get Test Data
       shell: bash
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR} || true
-        cd ${GS_TEST_DIR}
 
     - name: Build image
-      env:
-        ALIYUN_TOKEN: ${{ secrets.ALIYUN_TOKEN }}
       shell: bash
       run: |
-        echo "$ALIYUN_TOKEN" | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
-
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest
-
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
-
         sudo docker build --build-arg EXPERIMENTAL_ON=${{ matrix.experimental }} \
                           --build-arg profile=${{ matrix.profile }} \
                           --build-arg ci=${{ matrix.ci }} \
@@ -138,34 +117,42 @@ jobs:
                           --network=host \
                           -f ./k8s/graphscope.Dockerfile .
 
-        sudo docker run --rm --shm-size=4096m \
-             -v ${GS_TEST_DIR}:/root/gstest \
-             -v `pwd`:/root/gs \
-             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-             sh -c "echo Container id $(hostname) && \
-                    set pipefail && \
-                    export GS_TEST_DIR='/root/gstest' && \
-                    cd /root/gs/analytical_engine && mkdir build && \
-                    cd build && \
-                    cmake -DEXPERIMENTAL_ON=${{ matrix.experimental }} .. && make -j`nproc` && \
-                    bash /root/gs/analytical_engine/test/app_tests.sh --test_dir /root/gstest"
-
-    - name: Push
-      env:
-        ALIYUN_TOKEN: ${{ secrets.ALIYUN_TOKEN }}
-      if: matrix.experimental == 'ON'
+    - name: Run GAE Tests
       shell: bash
       run: |
-        echo "$ALIYUN_TOKEN" | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
+        sudo docker run --rm --shm-size=4096m \
+            -v ${GS_TEST_DIR}:/root/gstest \
+            -v `pwd`:/root/gs \
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+            sh -c "echo Container id $(hostname) && \
+                  set pipefail && \
+                  export GS_TEST_DIR='/root/gstest' && \
+                  cd /root/gs/analytical_engine && \
+                  mkdir build && \
+                  cd build && \
+                  cmake -DEXPERIMENTAL_ON=${{ matrix.experimental }} .. && \
+                  make run_app run_vy_app run_pregel_app -j`nproc` && \
+                  bash /root/gs/analytical_engine/test/app_tests.sh --test_dir /root/gstest"
+
+    - name: Save Image
+      if: matrix.experimental == 'ON'
+      run: sudo docker save registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} | gzip > graphscope-${{ github.sha }}.tar.gz
+
+    - name: Archive image
+      if: matrix.experimental == 'ON'
+      uses: actions/upload-artifact@v2
+      with:
+        name: graphscope
+        path: graphscope-${{ github.sha }}.tar.gz
+        retention-days: 5
 
     - name: Clean up
       shell: bash
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
 
+
   build-manager:
-    # runs-on: ${{ matrix.os }}
     runs-on: self-hosted
     steps:
     - name: Clean up
@@ -187,22 +174,27 @@ jobs:
         submodules: true
 
     - name: Build manager
-      env:
-        ALIYUN_TOKEN: ${{ secrets.ALIYUN_TOKEN }}
       shell: bash
       run: |
-        echo "$ALIYUN_TOKEN" | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
-        cd ./k8s && sudo make manager
-        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
+        cd ./k8s
+        sudo make manager REGISTRY='registry.cn-hongkong.aliyuncs.com'
+
+    - name: Save Image
+      run: sudo docker save registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 | gzip > maxgraph_standalone_manager.tar.gz
+
+    - name: Archive image
+      uses: actions/upload-artifact@v2
+      with:
+        name: maxgraph_standalone_manager
+        path: maxgraph_standalone_manager.tar.gz
+        retention-days: 5
 
     - name: Clean
       shell: bash
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
                         || true
+
 
   gae-and-python-tests:
     runs-on: self-hosted
@@ -230,23 +222,34 @@ jobs:
       with:
         submodules: true
 
+    - name: Cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
     - name: Get Test Data
       shell: bash
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR} || true
-        cd ${GS_TEST_DIR}
+
+    - name: Download Image
+      uses: actions/download-artifact@v2
+      with:
+        name: graphscope
 
     - name: Prepare environment
       env:
         ALIYUN_TOKEN: ${{ secrets.ALIYUN_TOKEN }}
       shell: bash
       run: |
-        echo "$ALIYUN_TOKEN" | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
+        sudo docker load < graphscope-${{ github.sha }}.tar.gz
+        sudo python3 -m pip install -r python/requirements.txt
+        sudo python3 -m pip install -r python/requirements-dev.txt
 
-        # generate proto, and builtin gar
-        sudo pip3 install -r python/requirements-dev.txt
         pushd python && sudo -E python3 setup.py build_proto && popd
         pushd coordinator && sudo -E python3 setup.py build_builtin && popd
 
@@ -282,7 +285,7 @@ jobs:
 
     - name: NetworkX algo test
       shell: bash
-      if:  matrix.experimental == 'ON'
+      if: matrix.experimental == 'ON'
       run: |
         info=$(git log -1 --pretty=%B)
         if echo ${info} | grep -iqFw ci-algo; then echo ''run nx-algo-ci''; else exit 0; fi
@@ -300,11 +303,9 @@ jobs:
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
 
+
   k8s-test:
     runs-on: self-hosted
-    strategy:
-      matrix:
-        ci: [true]
 
     needs: [build, build-manager]
     steps:
@@ -325,25 +326,30 @@ jobs:
       with:
         submodules: true
 
+    - name: Cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
     - name: Get Test Data
       shell: bash
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR} || true
 
+    - name: Download Image
+      uses: actions/download-artifact@v2
+
     - name: Prepare environment
-      env:
-        ALIYUN_TOKEN: ${{ secrets.ALIYUN_TOKEN }}
       shell: bash
       run: |
-        echo "$ALIYUN_TOKEN" | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
-        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0
-
-        sudo pip3 install kubernetes
-
-        sudo pip3 install vineyard==0.1.3 -i https://pypi.org/simple
+        sudo docker load < graphscope/graphscope-${{ github.sha }}.tar.gz
+        sudo docker load < maxgraph_standalone_manager/maxgraph_standalone_manager.tar.gz
+        sudo python3 -m pip install -r python/requirements.txt
+        sudo python3 -m pip install -r python/requirements-dev.txt
 
         pushd python && sudo -E python3 setup.py develop && popd
 
@@ -355,7 +361,6 @@ jobs:
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         export PYTHONPATH=${GITHUB_WORKSPACE}/python
-        export CI=${{ matrix.ci }}
         python3 -m pytest --exitfirst -s -vvv --log-cli-level=INFO \
                           ./python/graphscope/deploy/tests/
 
@@ -363,8 +368,8 @@ jobs:
       shell: bash
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
+
 
   gie-test:
     runs-on: self-hosted
@@ -388,24 +393,31 @@ jobs:
       with:
         submodules: true
 
+    - name: Cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Download Image
+      uses: actions/download-artifact@v2
+
     - name: Prepare environment
-      env:
-        ALIYUN_TOKEN: ${{ secrets.ALIYUN_TOKEN }}
       shell: bash
       run: |
-        echo "$ALIYUN_TOKEN" | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
-        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0
+        sudo docker load < graphscope/graphscope-${{ github.sha }}.tar.gz
+        sudo docker load < maxgraph_standalone_manager/maxgraph_standalone_manager.tar.gz
 
+        sudo python3 -m pip install -r python/requirements.txt
+        sudo python3 -m pip install -r python/requirements-dev.txt
         pushd python && sudo -E python3 setup.py develop && popd
 
     - name: Run function test
       shell: bash
       run: |
         export PYTHONPATH=${GITHUB_WORKSPACE}/python
-        export CI=true
         cd interactive_engine/tests
         ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
         ./function_test.sh 8111 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
@@ -414,32 +426,30 @@ jobs:
       shell: bash
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
+
 
   release-image:
     runs-on: self-hosted
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [ gie-test, gae-and-python-tests, k8s-test ]
     steps:
-    - name: Release images
-      env:
-        ALIYUN_TOKEN: ${{ secrets.ALIYUN_TOKEN }}
+    - name: Download Image
+      uses: actions/download-artifact@v2
+
+    - name: Prepare environment
       shell: bash
       run: |
-        echo "$ALIYUN_TOKEN" | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
+        sudo docker load < graphscope/graphscope-${{ github.sha }}.tar.gz
+        sudo docker load < maxgraph_standalone_manager/maxgraph_standalone_manager.tar.gz
 
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
+    - name: Release images
+      shell: bash
+      run: |
+        echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
+
         sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
-
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
-        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0
-
-        sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
 
