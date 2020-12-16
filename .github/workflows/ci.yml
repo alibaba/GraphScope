@@ -117,22 +117,22 @@ jobs:
                           --network=host \
                           -f ./k8s/graphscope.Dockerfile .
 
-      - name: Run GAE Tests
-        shell: bash
-        run: |
-        sudo docker run --rm --shm-size=4096m \
-             -v ${GS_TEST_DIR}:/root/gstest \
-             -v `pwd`:/root/gs \
-             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-             sh -c "echo Container id $(hostname) && \
-                    set pipefail && \
-                    export GS_TEST_DIR='/root/gstest' && \
-                    cd /root/gs/analytical_engine && \
-                    mkdir build && \
-                    cd build && \
-                    cmake -DEXPERIMENTAL_ON=${{ matrix.experimental }} .. && \
-                    make run_app run_vy_app run_pregel_app -j`nproc` && \
-                    bash /root/gs/analytical_engine/test/app_tests.sh --test_dir /root/gstest"
+    - name: Run GAE Tests
+      shell: bash
+      run: |
+      sudo docker run --rm --shm-size=4096m \
+            -v ${GS_TEST_DIR}:/root/gstest \
+            -v `pwd`:/root/gs \
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+            sh -c "echo Container id $(hostname) && \
+                  set pipefail && \
+                  export GS_TEST_DIR='/root/gstest' && \
+                  cd /root/gs/analytical_engine && \
+                  mkdir build && \
+                  cd build && \
+                  cmake -DEXPERIMENTAL_ON=${{ matrix.experimental }} .. && \
+                  make run_app run_vy_app run_pregel_app -j`nproc` && \
+                  bash /root/gs/analytical_engine/test/app_tests.sh --test_dir /root/gstest"
 
     - name: Save Image
       run: sudo docker save docker.pkg.github.com/siyuan0322/graphscope/graphscope:${{ github.sha }} | gzip > graphscope.tar.gz
@@ -149,6 +149,7 @@ jobs:
       shell: bash
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
+
 
   build-manager:
     # runs-on: ${{ matrix.os }}
@@ -193,6 +194,7 @@ jobs:
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 \
                         || true
+
 
   gae-and-python-tests:
     runs-on: self-hosted
@@ -368,6 +370,7 @@ jobs:
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
 
+
   gie-test:
     runs-on: self-hosted
     needs: [build, build-manager]
@@ -424,6 +427,7 @@ jobs:
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
+
 
   release-image:
     runs-on: self-hosted
