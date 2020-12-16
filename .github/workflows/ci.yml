@@ -120,7 +120,7 @@ jobs:
     - name: Run GAE Tests
       shell: bash
       run: |
-      sudo docker run --rm --shm-size=4096m \
+        sudo docker run --rm --shm-size=4096m \
             -v ${GS_TEST_DIR}:/root/gstest \
             -v `pwd`:/root/gs \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
