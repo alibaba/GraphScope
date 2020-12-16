@@ -124,6 +124,9 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
       auto fid = comm_spec_.WorkerToFrag(comm_spec_.worker_id());
       auto frag_id = fg->Fragments().at(fid);
       VY_OK_OR_RAISE(client_->DelData(frag_id, false, true));
+    }
+    MPI_Barrier(comm_spec_.comm());
+    if (comm_spec_.worker_id() == 0) {
       VINEYARD_SUPPRESS(client_->DelData(frag_group_id, false, true));
     }
   }

@@ -21,7 +21,7 @@ RUN yum install -y autoconf automake double-conversion-devel git \
     yum clean all && \
     rm -fr /var/cache/yum
 
-# yum install cmake3
+# cmake3
 RUN cd /tmp && \
     wget https://github.com/Kitware/CMake/releases/download/v3.19.1/cmake-3.19.1-Linux-x86_64.sh && \
     bash cmake-3.19.1-Linux-x86_64.sh --prefix=/usr --skip-license && \
