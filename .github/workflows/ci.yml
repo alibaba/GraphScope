@@ -438,6 +438,8 @@ jobs:
       uses: actions/download-artifact@v2
 
     - name: Prepare environment
+      shell: bash
+      run: |
         sudo docker load < graphscope/graphscope.tar.gz
         sudo docker load < maxgraph_standalone_manager/maxgraph_standalone_manager.tar.gz
 
