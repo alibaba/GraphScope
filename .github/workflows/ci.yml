@@ -135,7 +135,7 @@ jobs:
                   bash /root/gs/analytical_engine/test/app_tests.sh --test_dir /root/gstest"
 
     - name: Save Image
-      run: sudo docker save docker.pkg.github.com/siyuan0322/graphscope/graphscope:${{ github.sha }} | gzip > graphscope.tar.gz
+      run: sudo docker save registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} | gzip > graphscope.tar.gz
 
     - name: Archive image
       if: matrix.experimental == 'ON'
@@ -180,7 +180,7 @@ jobs:
         sudo make manager REGISTRY='registry.cn-hongkong.aliyuncs.com'
 
     - name: Save Image
-      run: sudo docker save docker.pkg.github.com/siyuan0322/graphscope/maxgraph_standalone_manager:1.0 | gzip > maxgraph_standalone_manager.tar.gz
+      run: sudo docker save registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 | gzip > maxgraph_standalone_manager.tar.gz
 
     - name: Archive image
       uses: actions/upload-artifact@v2
