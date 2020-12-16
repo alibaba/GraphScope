@@ -69,7 +69,7 @@ RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/
 ARG profile=$profile
 
 # rust & cargo registry
-RUN wget https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
+RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
     curl -sf -L https://static.rust-lang.org/rustup.sh | \
         sh -s -- -y --profile minimal --default-toolchain 1.48.0 && \
@@ -96,10 +96,11 @@ RUN source ~/.bashrc \
 # # # # # # # # # # # # # # # # # # # # # #
 # generate final runtime image
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+
 ARG profile=release
 
 COPY --from=builder /opt/graphscope /usr/local/
-RUN cd /usr/local/dist/ &&  pip3 install ./*.whl
+RUN cd /usr/local/dist/ && pip3 install ./*.whl
 
 RUN mkdir -p /home/maxgraph
 ENV VINEYARD_IPC_SOCKET /home/maxgraph/data/vineyard/vineyard.sock
