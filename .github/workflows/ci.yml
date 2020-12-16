@@ -135,14 +135,15 @@ jobs:
                   bash /root/gs/analytical_engine/test/app_tests.sh --test_dir /root/gstest"
 
     - name: Save Image
-      run: sudo docker save registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} | gzip > graphscope.tar.gz
+      if: matrix.experimental == 'ON'
+      run: sudo docker save registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} | gzip > graphscope-${{ github.sha }}.tar.gz
 
     - name: Archive image
       if: matrix.experimental == 'ON'
       uses: actions/upload-artifact@v2
       with:
         name: graphscope
-        path: graphscope.tar.gz
+        path: graphscope-${{ github.sha }}.tar.gz
         retention-days: 5
 
     - name: Clean up
@@ -152,7 +153,6 @@ jobs:
 
 
   build-manager:
-    # runs-on: ${{ matrix.os }}
     runs-on: self-hosted
     steps:
     - name: Clean up
@@ -246,7 +246,7 @@ jobs:
         ALIYUN_TOKEN: ${{ secrets.ALIYUN_TOKEN }}
       shell: bash
       run: |
-        sudo docker load < graphscope.tar.gz
+        sudo docker load < graphscope-${{ github.sha }}.tar.gz
         sudo python3 -m pip install -r python/requirements.txt
         sudo python3 -m pip install -r python/requirements-dev.txt
 
@@ -346,7 +346,7 @@ jobs:
     - name: Prepare environment
       shell: bash
       run: |
-        sudo docker load < graphscope/graphscope.tar.gz
+        sudo docker load < graphscope/graphscope-${{ github.sha }}.tar.gz
         sudo docker load < maxgraph_standalone_manager/maxgraph_standalone_manager.tar.gz
         sudo python3 -m pip install -r python/requirements.txt
         sudo python3 -m pip install -r python/requirements-dev.txt
@@ -407,7 +407,7 @@ jobs:
     - name: Prepare environment
       shell: bash
       run: |
-        sudo docker load < graphscope/graphscope.tar.gz
+        sudo docker load < graphscope/graphscope-${{ github.sha }}.tar.gz
         sudo docker load < maxgraph_standalone_manager/maxgraph_standalone_manager.tar.gz
 
         sudo python3 -m pip install -r python/requirements.txt
@@ -440,7 +440,7 @@ jobs:
     - name: Prepare environment
       shell: bash
       run: |
-        sudo docker load < graphscope/graphscope.tar.gz
+        sudo docker load < graphscope/graphscope-${{ github.sha }}.tar.gz
         sudo docker load < maxgraph_standalone_manager/maxgraph_standalone_manager.tar.gz
 
     - name: Release images
