@@ -27,11 +27,6 @@ import sys
 import threading
 import time
 
-from kubernetes import client as kube_client
-from kubernetes import watch as kube_watch
-from kubernetes.client import CoreV1Api
-from kubernetes.client.rest import ApiException as K8SApiException
-
 from graphscope.deploy.kubernetes.resource_builder import ClusterRoleBindingBuilder
 from graphscope.deploy.kubernetes.resource_builder import ClusterRoleBuilder
 from graphscope.deploy.kubernetes.resource_builder import GSCoordinatorBuilder
@@ -40,9 +35,14 @@ from graphscope.deploy.kubernetes.resource_builder import RoleBindingBuilder
 from graphscope.deploy.kubernetes.resource_builder import RoleBuilder
 from graphscope.deploy.kubernetes.resource_builder import ServiceBuilder
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
+from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import is_minikube_cluster
 from graphscope.framework.errors import K8sError
 from graphscope.framework.utils import random_string
+from kubernetes import client as kube_client
+from kubernetes import watch as kube_watch
+from kubernetes.client import CoreV1Api
+from kubernetes.client.rest import ApiException as K8SApiException
 
 logger = logging.getLogger("graphscope")
 
@@ -56,6 +56,9 @@ class KubernetesCluster(object):
 
         namespace: str, optional
             Kubernetes namespace. Defaults to None.
+
+        service_type: str, optional
+            Type determines how the GraphScope service is exposed.
 
         minikube_vm_driver: bool, optional
             True if minikube cluster :code:`--vm-driver` is not :code:`None`
@@ -132,6 +135,7 @@ class KubernetesCluster(object):
         self,
         api_client=None,
         namespace=None,
+        service_type=None,
         minikube_vm_driver=None,
         num_workers=None,
         log_level=None,
@@ -158,6 +162,7 @@ class KubernetesCluster(object):
         self._rbac_api = kube_client.RbacAuthorizationV1Api(api_client)
 
         self._namespace = namespace
+        self._service_type = service_type
         self._minikube_vm_driver = minikube_vm_driver
         self._gs_image = gs_image
         self._num_workers = num_workers
@@ -352,7 +357,7 @@ class KubernetesCluster(object):
         # create coordinator service
         service_builder = ServiceBuilder(
             self._coordinator_service_name,
-            service_type="NodePort",
+            service_type=self._service_type,
             port=self._random_coordinator_service_port,
             selector=labels,
         )
@@ -392,6 +397,7 @@ class KubernetesCluster(object):
             num_workers=self._num_workers,
             log_level=self._log_level,
             namespace=self._namespace,
+            service_type=self._service_type,
             gs_image=self._gs_image,
             etcd_image=self._etcd_image,
             gie_graph_manager_image=self._gie_graph_manager_image,
@@ -525,36 +531,20 @@ class KubernetesCluster(object):
         )
 
     def _get_coordinator_endpoint(self):
-        # Note that only support NodePort service type
         if is_minikube_cluster() and self._minikube_vm_driver:
             return self._get_minikube_service(
                 self._namespace, self._coordinator_service_name
             )
 
-        services = self._core_api.list_namespaced_service(self._namespace)
-        for svc in services.items:
-            if svc.metadata.name == self._coordinator_service_name:
-                port = svc.spec.ports[0].node_port
+        # Always len(endpoints) >= 1
+        endpoints = get_service_endpoints(
+            api_client=self._api_client,
+            namespace=self._namespace,
+            name=self._coordinator_service_name,
+            type=self._service_type,
+        )
 
-                if svc.status.load_balancer.ingress is not None:
-                    ingress = svc.status.load_balancer.ingress[0]
-                    if ingress.hostname is not None:
-                        host = ingress.hostname
-                    else:
-                        host = ingress.ip
-                else:
-                    selector = ""
-                    for k, v in svc.spec.selector.items():
-                        selector += k + "=" + v + ","
-                    selector = selector[:-1]
-
-                    # get pod
-                    pods = self._core_api.list_namespaced_pod(
-                        self._namespace, label_selector=selector
-                    )
-                    host = pods.items[0].status.host_ip
-                return "{}:{}".format(host, port)
-        raise RuntimeError("Get coordinator endpoint failed.")
+        return endpoints[0]
 
     def _dump_cluster_logs(self):
         log_dict = dict()

@@ -139,6 +139,7 @@ class Session(object):
         log_level=gs_config.LOG_LEVEL,
         show_log=gs_config.SHOW_LOG,
         k8s_namespace=gs_config.NAMESPACE,
+        k8s_service_type=gs_config.SERVICE_TYPE,
         k8s_gs_image=gs_config.GS_IMAGE,
         k8s_etcd_image=gs_config.ETCD_IMAGE,
         k8s_gie_graph_manager_image=gs_config.GIE_GRAPH_MANAGER_IMAGE,
@@ -175,6 +176,9 @@ class Session(object):
             k8s_namespace (str, optional): Contains the namespace to create all resource inside.
                 If param missing or the namespace not exist, a random namespace will be created and deleted
                 when service stopping. Defaults to None.
+
+            k8s_service_type (str, optional): Type determines how the GraphScope service is exposed.
+                Valid options are NodePort, and LoadBalancer. Defaults to NodePort.
 
             k8s_gs_image (str, optional): The GraphScope engine's image.
 
@@ -227,6 +231,7 @@ class Session(object):
             "log_level",
             "show_log",
             "k8s_namespace",
+            "k8s_service_type",
             "k8s_gs_image",
             "k8s_etcd_image",
             "k8s_image_pull_policy",
@@ -575,6 +580,7 @@ class Session(object):
             self._k8s_cluster = KubernetesCluster(
                 api_client=api_client,
                 namespace=self._config_params["k8s_namespace"],
+                service_type=self._config_params["k8s_service_type"],
                 minikube_vm_driver=self._config_params["k8s_minikube_vm_driver"],
                 num_workers=self._config_params["num_workers"],
                 log_level=self._config_params["log_level"],
