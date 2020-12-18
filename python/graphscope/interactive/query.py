@@ -92,7 +92,7 @@ class InteractiveQuery(object):
         def load_subgraph(name):
             import vineyard
 
-            host, port = self._graphscope_session.engine_config[
+            host, port = self._graphscope_session.info["engine_config"][
                 "vineyard_rpc_endpoint"
             ].split(":")
             client = vineyard.connect(host, int(port))
@@ -145,4 +145,4 @@ class InteractiveQuery(object):
         """Close interactive instance and release resources"""
         if not self.closed():
             self._closed = True
-            self._graphscope_session.close_interactive_instance(self)
+            self._graphscope_session._close_interactive_instance(self)

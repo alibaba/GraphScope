@@ -26,7 +26,7 @@ import yaml
 from decorator import decorator
 
 import graphscope
-from graphscope.framework.context import CreateContext
+from graphscope.framework.context import create_context
 from graphscope.framework.dag_utils import create_app
 from graphscope.framework.dag_utils import run_app
 from graphscope.framework.dag_utils import unload_app
@@ -57,10 +57,9 @@ def not_compatible_for(*graph_types):
         are joined logically with "or".
 
     Examples:
-
-    >>> @not_compatible_for('arrow_property', 'dynamic_property')
-    >>> def sssp(G, src):
-    >>>     pass
+        >>> @not_compatible_for('arrow_property', 'dynamic_property')
+        >>> def sssp(G, src):
+        >>>     pass
     """
 
     @decorator
@@ -227,6 +226,7 @@ class AppAssets(object):
         raise InvalidArgumentError("App not found in gar: {}".format(self._algo))
 
     def __call__(self, graph, *args, **kwargs):
+        """Instantiate an App and do queries over it."""
         app_ = App(graph, self)
         return app_(*args, **kwargs)
 
@@ -279,6 +279,7 @@ class App(object):
 
     @property
     def signature(self):
+        """Signature is computed by all critical components of the App."""
         return hashlib.sha256(
             "{}.{}".format(self._app_assets.signature, self._graph.signature).encode(
                 "utf-8"
@@ -296,10 +297,20 @@ class App(object):
 
     @property
     def algo(self):
+        """Algorithm name, e.g. sssp, pagerank.
+
+        Returns:
+            str: Algorithm name of this asset.
+        """
         return self._app_assets.algo
 
     @property
     def gar(self):
+        """Gar resource.
+
+        Returns:
+            bytes: gar resource of this asset.
+        """
         return self._app_assets.gar
 
     def __call__(self, *args, **kwargs):
@@ -333,7 +344,7 @@ class App(object):
         ret = op.eval()
         ret = json.loads(ret)
         context_key, context_type = ret["context_key"], ret["context_type"]
-        results = CreateContext(
+        results = create_context(
             context_type, self._session_id, context_key, self._graph
         )
         return results
@@ -381,7 +392,6 @@ def load_app(algo, gar=None, **kwargs):
         TypeError: File is not a zip file.
 
     Examples:
-
         >>> sssp = load_app('sssp', gar='./resource.gar')
         >>> sssp(src=4)
 

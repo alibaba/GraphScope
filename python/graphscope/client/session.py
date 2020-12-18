@@ -273,7 +273,7 @@ class Session(object):
         if not run_on_local:
             self._config_params["enable_k8s"] = True
         else:
-            self.__run_on_local()
+            self._run_on_local()
 
         # deploy minikube on virtual machine
         self._config_params["k8s_minikube_vm_driver"] = kw.pop(
@@ -350,10 +350,6 @@ class Session(object):
     def session_id(self):
         return self._session_id
 
-    @property
-    def engine_config(self):
-        return self._engine_config
-
     def _load_config(self, path):
         config_path = os.path.expandvars(os.path.expanduser(path))
         with open(config_path, "r") as f:
@@ -399,7 +395,7 @@ class Session(object):
         self._closed = True
         self._endpoint = None
 
-        self.deregister_default()
+        self._deregister_default()
 
         if self._heartbeat_sending_thread:
             self._heartbeat_sending_thread.join(
@@ -442,12 +438,14 @@ class Session(object):
                 self._k8s_cluster.stop()
                 self._pod_name_list = []
 
-    def close_interactive_instance(self, instance):
+    def _close_interactive_instance(self, instance):
+        """Close a interactive instance."""
         if self._grpc_client:
             self._grpc_client.close_interactive_engine(instance.object_id)
             self._interactive_instance_dict[instance.object_id] = None
 
-    def close_learning_instance(self, instance):
+    def _close_learning_instance(self, instance):
+        """Close a learning instance."""
         if self._grpc_client:
             self._grpc_client.close_learning_engine(instance.object_id)
             self._learning_instance_dict[instance.object_id] = None
@@ -479,7 +477,8 @@ class Session(object):
         self._default_session = default_session(self)
         self._default_session.__enter__()
 
-    def deregister_default(self):
+    def _deregister_default(self):
+        """Remove self from the default session stack."""
         if self._default_session:
             self._default_session.__exit__(None, None, None)
             self._default_session = None
@@ -642,13 +641,17 @@ class Session(object):
         return proc, endpoint
 
     def get_config(self):
+        """Get configuration of the session."""
         return self._config_params
 
     def load_from(self, *args, **kwargs):
+        """Load a graph within the session.
+        See more information in :meth:`graphscope.load_from`.
+        """
         with default_session(self):
             return graphscope.load_from(*args, **kwargs)
 
-    def __run_on_local(self):
+    def _run_on_local(self):
         self._config_params["hosts"] = ["localhost"]
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""
@@ -876,14 +879,20 @@ def _is_port_in_use(port):
 
 
 def _launch_coordinator_on_local(config_params):
-    """Specific implementation to launch coordinator localy
+    """Launch coordinator locally using specific configuration.
 
     Args:
-        port (int): Port used to launch coordinator, or random port if None.
-
+        config_params (dict): Specific configurations,
+          in which we will look at several specific keys:
+            port: Port used to launch coordinator, use random port if None.
+            num_workers: Workers number.
+            hosts: Hosts name of workers.
+            log_level: Log level.
+            timeout_seconds: Wait until reached timeout.
+            vineyard_socket: Vineyard socket path. Use default path if None.
+            show_log: Whether direct logs to stdout and stderr.
     Returns:
         process: instance of Popen object.
-
         endpoint (str): The endpoint to connect to coordinator.
     """
     port = config_params["port"]
@@ -966,7 +975,7 @@ def get_default_session():
     return _default_session_stack.get_default()
 
 
-def get_session_by_handle(handle):
+def get_session_by_id(handle):
     """Return the session by handle."""
     if handle not in _session_dict:
         raise ValueError("Session not exists.")

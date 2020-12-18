@@ -18,7 +18,7 @@
 
 import json
 
-from graphscope.client.session import get_session_by_handle
+from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 
 
@@ -32,7 +32,7 @@ def empty_graph_in_engine(graph, directed):
     nx_graph_type: the networkx graph type of graph (Graph, DiGraph, MultiGraph, MultiDiGraph).
 
     """
-    sess = get_session_by_handle(graph._session_id)
+    sess = get_session_by_id(graph._session_id)
     op = dag_utils.create_graph(
         sess.session_id,
         graph_type=graph._graph_type,

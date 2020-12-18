@@ -31,7 +31,7 @@ from networkx.classes.reportviews import NodeView
 
 from graphscope.client.session import default_session
 from graphscope.client.session import get_default_session
-from graphscope.client.session import get_session_by_handle
+from graphscope.client.session import get_session_by_id
 from graphscope.experimental import nx
 from graphscope.experimental.nx import NetworkXError
 from graphscope.experimental.nx.classes.dicts import AdjDict
@@ -2087,7 +2087,7 @@ class Graph(object):
             self, v_prop, e_prop, v_prop_type, e_prop_type
         )
         graph_def = op.eval()
-        sess = get_session_by_handle(self._session_id)
+        sess = get_session_by_id(self._session_id)
         with default_session(sess):
             graph = self.__class__(create_empty_in_engine=False)
         graph = nx.freeze(graph)
