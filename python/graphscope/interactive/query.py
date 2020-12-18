@@ -145,4 +145,4 @@ class InteractiveQuery(object):
         """Close interactive instance and release resources"""
         if not self.closed():
             self._closed = True
-            self._graphscope_session.close_interactive_instance(self)
+            self._graphscope_session._close_interactive_instance(self)

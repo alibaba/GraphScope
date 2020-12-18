@@ -83,7 +83,7 @@ class Graph(GLGraph):
         if not self.closed:
             self.closed = True
             if self.graphscope_session is not None:
-                self.graphscope_session.close_learning_instance(self)
+                self.graphscope_session._close_learning_instance(self)
             super(Graph, self).close()
 
     @staticmethod

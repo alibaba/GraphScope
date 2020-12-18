@@ -395,7 +395,7 @@ class Session(object):
         self._closed = True
         self._endpoint = None
 
-        self.deregister_default()
+        self._deregister_default()
 
         if self._heartbeat_sending_thread:
             self._heartbeat_sending_thread.join(
@@ -438,13 +438,13 @@ class Session(object):
                 self._k8s_cluster.stop()
                 self._pod_name_list = []
 
-    def close_interactive_instance(self, instance):
+    def _close_interactive_instance(self, instance):
         """Close a interactive instance."""
         if self._grpc_client:
             self._grpc_client.close_interactive_engine(instance.object_id)
             self._interactive_instance_dict[instance.object_id] = None
 
-    def close_learning_instance(self, instance):
+    def _close_learning_instance(self, instance):
         """Close a learning instance."""
         if self._grpc_client:
             self._grpc_client.close_learning_engine(instance.object_id)
@@ -477,7 +477,7 @@ class Session(object):
         self._default_session = default_session(self)
         self._default_session.__enter__()
 
-    def deregister_default(self):
+    def _deregister_default(self):
         """Remove self from the default session stack."""
         if self._default_session:
             self._default_session.__exit__(None, None, None)
