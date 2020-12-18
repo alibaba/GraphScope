@@ -30,6 +30,9 @@ For Linux distributions, we provide a script to install the above dependencies a
 ```bash
 # run the environment preparing script.
 ./scripts/prepare_env.sh
+
+# if on WSL2, run prepare_env_wsl.sh
+./scripts/prepare_env_wsl.sh
 ```
 
 ### Installation
