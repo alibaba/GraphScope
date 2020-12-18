@@ -92,7 +92,7 @@ class InteractiveQuery(object):
         def load_subgraph(name):
             import vineyard
 
-            host, port = self._graphscope_session.engine_config[
+            host, port = self._graphscope_session.info["engine_config"][
                 "vineyard_rpc_endpoint"
             ].split(":")
             client = vineyard.connect(host, int(port))

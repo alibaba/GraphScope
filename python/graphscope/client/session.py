@@ -273,7 +273,7 @@ class Session(object):
         if not run_on_local:
             self._config_params["enable_k8s"] = True
         else:
-            self.__run_on_local()
+            self._run_on_local()
 
         # deploy minikube on virtual machine
         self._config_params["k8s_minikube_vm_driver"] = kw.pop(
@@ -349,10 +349,6 @@ class Session(object):
     @property
     def session_id(self):
         return self._session_id
-
-    @property
-    def engine_config(self):
-        return self._engine_config
 
     def _load_config(self, path):
         config_path = os.path.expandvars(os.path.expanduser(path))
@@ -443,11 +439,13 @@ class Session(object):
                 self._pod_name_list = []
 
     def close_interactive_instance(self, instance):
+        """Close a interactive instance."""
         if self._grpc_client:
             self._grpc_client.close_interactive_engine(instance.object_id)
             self._interactive_instance_dict[instance.object_id] = None
 
     def close_learning_instance(self, instance):
+        """Close a learning instance."""
         if self._grpc_client:
             self._grpc_client.close_learning_engine(instance.object_id)
             self._learning_instance_dict[instance.object_id] = None
@@ -480,6 +478,7 @@ class Session(object):
         self._default_session.__enter__()
 
     def deregister_default(self):
+        """Remove self from the default session stack."""
         if self._default_session:
             self._default_session.__exit__(None, None, None)
             self._default_session = None
@@ -642,13 +641,17 @@ class Session(object):
         return proc, endpoint
 
     def get_config(self):
+        """Get configuration of the session."""
         return self._config_params
 
     def load_from(self, *args, **kwargs):
+        """Load a graph within the session.
+        See more information in :meth:`graphscope.load_from`.
+        """
         with default_session(self):
             return graphscope.load_from(*args, **kwargs)
 
-    def __run_on_local(self):
+    def _run_on_local(self):
         self._config_params["hosts"] = ["localhost"]
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""

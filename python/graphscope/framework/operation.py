@@ -100,9 +100,9 @@ class Operation(object):
     def eval(self):
         # NB: to void cycle import
         # pylint: disable=import-outside-toplevel, cyclic-import
-        from graphscope.client.session import get_session_by_handle
+        from graphscope.client.session import get_session_by_id
 
-        sess = get_session_by_handle(self._session_id)
+        sess = get_session_by_id(self._session_id)
         res = sess.run(self)
         return res
 

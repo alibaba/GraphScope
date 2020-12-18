@@ -20,7 +20,7 @@ import hashlib
 import json
 from typing import Mapping
 
-from graphscope.client.session import get_session_by_handle
+from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
 from graphscope.framework.errors import InvalidArgumentError
@@ -29,7 +29,7 @@ from graphscope.framework.utils import decode_dataframe
 from graphscope.framework.utils import decode_numpy
 
 
-class _Context(object):
+class BaseContext(object):
     """Base class of concrete contexts.
     Hold a handle of app querying context.
 
@@ -68,10 +68,14 @@ class _Context(object):
 
     @property
     def key(self):
+        """Unique identifier of a context."""
         return self._key
 
     @property
     def signature(self):
+        """Compute digest by key and graphs ignatures.
+        Used to ensure the critical information of context is untouched.
+        """
         check_argument(
             self._key is not None,
             "Context key error, maybe it is not connected to engine.",
@@ -85,9 +89,11 @@ class _Context(object):
 
     @property
     def session_id(self):
+        """Return the session id associated with the context.
+        """
         return self._session_id
 
-    def transform_selector(self, selector):
+    def _transform_selector(self, selector):
         raise NotImplementedError()
 
     def to_numpy(self, selector, vertex_range=None, axis=0):
@@ -109,7 +115,7 @@ class _Context(object):
             numpy.ndarray.
         """
         self._check_unmodified()
-        selector = self.transform_selector(selector)
+        selector = self._transform_selector(selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
 
         op = dag_utils.context_to_numpy(self, selector, vertex_range, axis)
@@ -139,7 +145,7 @@ class _Context(object):
             isinstance(selector, Mapping), "selector of to_dataframe must be a dict"
         )
         selector = {
-            key: self.transform_selector(value) for key, value in selector.items()
+            key: self._transform_selector(value) for key, value in selector.items()
         }
         selector = json.dumps(selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
@@ -155,7 +161,7 @@ class _Context(object):
             str: object id of vineyard tensor
         """
         self._check_unmodified()
-        selector = self.transform_selector(selector)
+        selector = self._transform_selector(selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
 
         op = dag_utils.to_vineyard_tensor(self, selector, vertex_range, axis)
@@ -188,7 +194,7 @@ class _Context(object):
                 "selector of to_vineyard_dataframe must be a dict",
             )
             selector = {
-                key: self.transform_selector(value) for key, value in selector.items()
+                key: self._transform_selector(value) for key, value in selector.items()
             }
             selector = json.dumps(selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
@@ -219,7 +225,7 @@ class _Context(object):
         import vineyard.io
 
         df = self.to_vineyard_dataframe(selector, vertex_range)
-        sess = get_session_by_handle(self.session_id)
+        sess = get_session_by_id(self.session_id)
         deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
         conf = sess.info["engine_config"]
         vineyard_endpoint = conf["vineyard_rpc_endpoint"]
@@ -256,16 +262,16 @@ class _Context(object):
         df.to_csv(fd, header=True, index=False)
 
 
-class TensorContext(_Context):
+class TensorContext(BaseContext):
     """Tensor context holds a tensor.
     Only axis is meaningful when considering a TensorContext.
     """
 
-    def transform_selector(self, selector):
+    def _transform_selector(self, selector):
         return None
 
 
-class VertexDataContext(_Context):
+class VertexDataContext(BaseContext):
     """The most simple kind of context.
     A vertex has a single value as results.
 
@@ -282,11 +288,11 @@ class VertexDataContext(_Context):
         - `r`: Get quering results of algorithms. e.g. Rankings of vertices after doing PageRank.
     """
 
-    def transform_selector(self, selector):
+    def _transform_selector(self, selector):
         return utils.transform_vertex_data_selector(selector)
 
 
-class LabeledVertexDataContext(_Context):
+class LabeledVertexDataContext(BaseContext):
     """The labeld kind of context.
     This context has several vertex labels and edge labels,
     and each label has several properties.
@@ -308,11 +314,11 @@ class LabeledVertexDataContext(_Context):
         - `r:label_name`: Get results data of a vertex label.
     """
 
-    def transform_selector(self, selector):
+    def _transform_selector(self, selector):
         return utils.transform_labeled_vertex_data_selector(self._graph, selector)
 
 
-class VertexPropertyContext(_Context):
+class VertexPropertyContext(BaseContext):
     """The simple kind of context with property.
     A vertex can have multiple values (a.k.a. properties) as results.
 
@@ -329,11 +335,11 @@ class VertexPropertyContext(_Context):
         - `r.column_name`: Get the property named `column_name` in results. e.g. `r.hub` in :func:`graphscope.hits`.
     """
 
-    def transform_selector(self, selector):
+    def _transform_selector(self, selector):
         return utils.transform_vertex_property_data_selector(selector)
 
 
-class LabelVertexPropertyContext(_Context):
+class LabelVertexPropertyContext(BaseContext):
     """The labeld kind of context with properties.
     This context has several vertex labels and edge labels,
     And each label has several properties.
@@ -355,13 +361,13 @@ class LabelVertexPropertyContext(_Context):
 
     """
 
-    def transform_selector(self, selector):
+    def _transform_selector(self, selector):
         return utils.transform_labeled_vertex_property_data_selector(
             self._graph, selector
         )
 
 
-def CreateContext(context_type, session_id, context_key, graph):
+def create_context(context_type, session_id, context_key, graph):
     """A context factory, create concrete context class by context_type."""
     if context_type == "tensor":
         return TensorContext(session_id, context_key, graph)
