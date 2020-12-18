@@ -89,8 +89,7 @@ class BaseContext(object):
 
     @property
     def session_id(self):
-        """Return the session id associated with the context.
-        """
+        """Return the session id associated with the context."""
         return self._session_id
 
     def _transform_selector(self, selector):

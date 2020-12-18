@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-""" Patch for cython writer
+""" Patch for Cython writer
 """
 
 import functools

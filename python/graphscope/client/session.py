@@ -879,14 +879,20 @@ def _is_port_in_use(port):
 
 
 def _launch_coordinator_on_local(config_params):
-    """Specific implementation to launch coordinator localy
+    """Launch coordinator locally using specific configuration.
 
     Args:
-        port (int): Port used to launch coordinator, or random port if None.
-
+        config_params (dict): Specific configurations,
+          in which we will look at several specific keys:
+            port: Port used to launch coordinator, use random port if None.
+            num_workers: Workers number.
+            hosts: Hosts name of workers.
+            log_level: Log level
+            timeout_seconds: Wait until reached timeout.
+            vineyard_socket: Vineyard socket path. Use default path if None.
+            show_log: Whether direct logs to stdout and stderr.
     Returns:
         process: instance of Popen object.
-
         endpoint (str): The endpoint to connect to coordinator.
     """
     port = config_params["port"]
