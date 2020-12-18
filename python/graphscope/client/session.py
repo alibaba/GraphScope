@@ -975,7 +975,7 @@ def get_default_session():
     return _default_session_stack.get_default()
 
 
-def get_session_by_handle(handle):
+def get_session_by_id(handle):
     """Return the session by handle."""
     if handle not in _session_dict:
         raise ValueError("Session not exists.")
