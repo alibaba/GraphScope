@@ -887,7 +887,7 @@ def _launch_coordinator_on_local(config_params):
             port: Port used to launch coordinator, use random port if None.
             num_workers: Workers number.
             hosts: Hosts name of workers.
-            log_level: Log level
+            log_level: Log level.
             timeout_seconds: Wait until reached timeout.
             vineyard_socket: Vineyard socket path. Use default path if None.
             show_log: Whether direct logs to stdout and stderr.

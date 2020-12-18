@@ -73,7 +73,7 @@ class BaseContext(object):
 
     @property
     def signature(self):
-        """Compute digest by key and graphs ignatures.
+        """Compute digest by key and graph signatures.
         Used to ensure the critical information of context is untouched.
         """
         check_argument(

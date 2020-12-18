@@ -376,5 +376,6 @@ GraphScope is released under [Apache License 2.0](https://www.apache.org/license
 ## Contributing
 
 Any contributions you make are **greatly appreciated**!
+- Join in the [Slack channel](http://slack.graphscope.io) for discussion.
 - Please report bugs by submitting a GitHub issue.
 - Please submit contributions using pull requests.

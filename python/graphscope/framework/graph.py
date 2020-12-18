@@ -390,7 +390,7 @@ class Graph(object):
         self.check_unmodified()
         check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
         selector = {
-            key: results.transform_selector(value) for key, value in selector.items()
+            key: results._transform_selector(value) for key, value in selector.items()
         }
         selector = json.dumps(selector)
         op = add_column(self, results, selector)

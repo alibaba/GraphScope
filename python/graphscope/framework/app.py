@@ -226,7 +226,7 @@ class AppAssets(object):
         raise InvalidArgumentError("App not found in gar: {}".format(self._algo))
 
     def __call__(self, graph, *args, **kwargs):
-        """Instantiate a App and do queries over it."""
+        """Instantiate an App and do queries over it."""
         app_ = App(graph, self)
         return app_(*args, **kwargs)
 
@@ -279,7 +279,7 @@ class App(object):
 
     @property
     def signature(self):
-        """Signature is compute by all critical components of the App."""
+        """Signature is computed by all critical components of the App."""
         return hashlib.sha256(
             "{}.{}".format(self._app_assets.signature, self._graph.signature).encode(
                 "utf-8"
