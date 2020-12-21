@@ -32,8 +32,6 @@ from graphscope.framework.loader import Loader
 from graphscope.framework.vineyard_object import VineyardObject
 from graphscope.proto import types_pb2
 
-logger = logging.getLogger("graphscope")
-
 
 def test_graph_schema(arrow_property_graph):
     schema = arrow_property_graph.schema
@@ -290,14 +288,14 @@ def test_graph_to_numpy(arrow_property_graph):
     g = arrow_property_graph
     ret = property_sssp(g, 20)
     ctx_out_np_0 = ret.to_numpy("r:v0.dist_0")
-    logger.info("ctx_out_np_0.shape = %r", ctx_out_np_0.shape)
+    assert ctx_out_np_0.shape == (40521,)
     ctx_out_np_1 = ret.to_numpy("r:v1.dist_1")
-    logger.info("ctx_out_np_1.shape = %r", ctx_out_np_1.shape)
+    assert ctx_out_np_1.shape == (40786,)
     g2 = g.add_column(ret, {"result_0": "r:v0.dist_0", "result_1": "r:v1.dist_1"})
-    out_np_0 = g2.to_numpy("v:v0.result_0")
-    logger.info("out_np_0.shape = %r", out_np_0.shape)
-    out_np_1 = g2.to_numpy("v:v1.result_1")
-    logger.info("out_np_1.shape = %r", out_np_1.shape)
+    g_out_np_0 = g2.to_numpy("v:v0.result_0")
+    assert g_out_np_0.shape == (40521,)
+    g_out_np_1 = g2.to_numpy("v:v1.result_1")
+    assert g_out_np_1.shape == (40786,)
 
 
 def test_graph_to_dataframe(arrow_property_graph):
@@ -305,9 +303,9 @@ def test_graph_to_dataframe(arrow_property_graph):
     ret = property_sssp(g, 20)
     g2 = g.add_column(ret, {"result_0": "r:v0.dist_0", "result_1": "r:v1.dist_1"})
     out_df_0 = g2.to_dataframe({"id": "v:v0.id", "result": "v:v0.result_0"})
-    logger.info("out_df_0.shape = %r", out_df_0.shape)
+    assert out_df_0.shape == (40521, 2)
     out_df_1 = g2.to_dataframe({"id": "v:v1.id", "result": "v:v1.result_1"})
-    logger.info("out_df_1.shape = %r", out_df_1.shape)
+    assert out_df_1.shape == (40786, 2)
 
 
 def test_error_on_add_column(arrow_property_graph, property_context):

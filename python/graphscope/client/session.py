@@ -72,8 +72,6 @@ DEFAULT_CONFIG_FILE = os.environ.get("GS_CONFIG_PATH", "")
 
 _session_dict = {}
 
-logger = logging.getLogger("graphscope")
-
 
 class Session(object):
     """A class for interacting with GraphScope graph computation service cluster.
@@ -340,7 +338,7 @@ class Session(object):
             show_log (bool): Whether to show logs to stdout
             log_level (str): Log level of stdout handler
         """
-        logger = logging.getLogger("graphscope")
+        logger = logging.getLogger("graphscope.session")
         logger.setLevel(logging.DEBUG)
 
         file_handler = logging.FileHandler(filename=self._log_file_name)
@@ -647,7 +645,6 @@ class Session(object):
                 try:
                     proc.terminate()
                     output, err = proc.communicate()
-                    logger = logging.getLogger("graphscope")
                     logger.info(output)
                     logger.error(err)
                 except:  # noqa: E722

@@ -30,8 +30,6 @@ from graphscope.dataset.ldbc import load_ldbc
 from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.framework.loader import Loader
 
-logger = logging.getLogger("graphscope")
-
 
 @pytest.fixture
 def data_dir():

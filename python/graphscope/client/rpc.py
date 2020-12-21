@@ -66,14 +66,9 @@ def suppress_grpc_error(fn):
             return fn(*args, **kwargs)
         except grpc.RpcError as exc:
             if isinstance(exc, grpc.Call):
-                logger.warning(
-                    "Grpc call '%s' failed: %s: %s",
-                    fn.__name__,
-                    exc.code(),
-                    exc.details(),
-                )
+                logger.exception("Grpc call '%s' failed:", fn.__name__)
         except Exception as exc:  # noqa: F841
-            logger.warning("RPC call failed: %s", exc)
+            logger.exception("RPC call failed")
 
     return with_grpc_catch
 

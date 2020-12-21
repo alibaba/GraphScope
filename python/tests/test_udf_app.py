@@ -39,8 +39,6 @@ from graphscope.framework.errors import InvalidArgumentError
 
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
-logger = logging.getLogger("graphscope")
-
 
 @pytest.fixture(scope="function")
 def random_gar():
@@ -907,7 +905,6 @@ def test_error_with_import_module():
 
 
 def test_dump_gar(graphscope_session, random_gar, not_exist_gar):
-    logger.debug("random_gar is %s", random_gar)
     SSSP_Pregel.to_gar(random_gar)
     # gar file already exist
     with pytest.raises(RuntimeError, match="Path exist"):
