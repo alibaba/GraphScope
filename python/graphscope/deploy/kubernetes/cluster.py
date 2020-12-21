@@ -27,6 +27,11 @@ import sys
 import threading
 import time
 
+from kubernetes import client as kube_client
+from kubernetes import watch as kube_watch
+from kubernetes.client import CoreV1Api
+from kubernetes.client.rest import ApiException as K8SApiException
+
 from graphscope.deploy.kubernetes.resource_builder import ClusterRoleBindingBuilder
 from graphscope.deploy.kubernetes.resource_builder import ClusterRoleBuilder
 from graphscope.deploy.kubernetes.resource_builder import GSCoordinatorBuilder
@@ -39,10 +44,6 @@ from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import is_minikube_cluster
 from graphscope.framework.errors import K8sError
 from graphscope.framework.utils import random_string
-from kubernetes import client as kube_client
-from kubernetes import watch as kube_watch
-from kubernetes.client import CoreV1Api
-from kubernetes.client.rest import ApiException as K8SApiException
 
 logger = logging.getLogger("graphscope")
 

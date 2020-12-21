@@ -21,10 +21,11 @@ import logging
 import re
 import time
 
-from graphscope.framework.errors import K8sError
 from kubernetes import client as kube_client
 from kubernetes import config as kube_config
 from kubernetes.client.rest import ApiException as K8SApiException
+
+from graphscope.framework.errors import K8sError
 
 logger = logging.getLogger("graphscope")
 
