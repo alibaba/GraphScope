@@ -174,30 +174,29 @@ def test_multiple_session(data_dir):
         num_workers=1,
         k8s_gs_image=image,
         k8s_coordinator_cpu=0.3,
-        k8s_coordinator_mem="128Mi",
+        k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="128Mi",
+        k8s_vineyard_mem="512Mi",
         k8s_engine_cpu=0.1,
-        k8s_engine_mem="128Mi",
-        k8s_vineyard_shared_mem="128Mi",
+        k8s_engine_mem="1500Mi",
+        k8s_vineyard_shared_mem="2Gi",
     )
     info = sess.info
     assert info["status"] == "active"
     assert info["type"] == "k8s"
     assert len(info["engine_hosts"].split(",")) == 1
 
-    sess2 = graphscope.session(
+    sess = graphscope.session(
         show_log=True,
-        k8s_namespace=namespace,
         num_workers=2,
         k8s_gs_image=image,
         k8s_coordinator_cpu=0.3,
-        k8s_coordinator_mem="128Mi",
+        k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="128Mi",
+        k8s_vineyard_mem="512Mi",
         k8s_engine_cpu=0.1,
-        k8s_engine_mem="128Mi",
-        k8s_vineyard_shared_mem="128Mi",
+        k8s_engine_mem="1500Mi",
+        k8s_vineyard_shared_mem="2Gi",
     )
 
     info = sess2.info

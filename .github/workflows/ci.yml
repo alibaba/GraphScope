@@ -105,7 +105,7 @@ jobs:
       if: matrix.experimental == 'ON'
       uses: actions/upload-artifact@v2
       with:
-        name: gae
+        name: gae-${{ github.sha }}
         path: gae.tar
         retention-days: 5
 
@@ -145,7 +145,7 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: gie
+        name: gie-${{ github.sha }}
         path: gie.tar
         retention-days: 5
 
@@ -205,7 +205,7 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: gle
+        name: gle-${{ github.sha }}
         path: gle.tar
         retention-days: 5
 
@@ -239,7 +239,7 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: manager
+        name: manager-${{ github.sha }}
         path: manager.tar
         retention-days: 5
 
@@ -265,8 +265,8 @@ jobs:
         export GS_TEST_DIR='/root/gstest'
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         python3 -m pip install pytest-cov
-        tar -xf ./gae/gae.tar
-        tar -xf ./gle/gle.tar
+        tar -xf ./gae-${{ github.sha }}/gae.tar
+        tar -xf ./gle-${{ github.sha }}/gle.tar
         cp -R -n opt/graphscope/* /usr/local/
         ls -la /usr/local/bin/
         pushd /usr/local/dist/ && pip3 install ./*.whl && popd
@@ -333,10 +333,10 @@ jobs:
       run: |
         cp .github/workflows/*.Dockerfile artifacts/
         pushd artifacts
-        tar -xf ./gae/gae.tar
-        tar -xf ./gle/gle.tar
-        tar -xf ./gie/gie.tar
-        tar -xf ./manager/manager.tar
+        tar -xf ./gae-${{ github.sha }}/gae.tar
+        tar -xf ./gle-${{ github.sha }}/gle.tar
+        tar -xf ./gie-${{ github.sha }}/gie.tar
+        tar -xf ./manager-${{ github.sha }}/manager.tar
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
@@ -410,10 +410,10 @@ jobs:
       run: |
         cp .github/workflows/*.Dockerfile artifacts/
         pushd artifacts
-        tar -xf ./gae/gae.tar
-        tar -xf ./gle/gle.tar
-        tar -xf ./gie/gie.tar
-        tar -xf ./manager/manager.tar
+        tar -xf ./gae-${{ github.sha }}/gae.tar
+        tar -xf ./gle-${{ github.sha }}/gle.tar
+        tar -xf ./gie-${{ github.sha }}/gie.tar
+        tar -xf ./manager-${{ github.sha }}/manager.tar
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
@@ -449,6 +449,10 @@ jobs:
       run: |
         cp .github/workflows/*.Dockerfile artifacts/
         cd artifacts
+        tar -xf ./gae-${{ github.sha }}/gae.tar
+        tar -xf ./gle-${{ github.sha }}/gle.tar
+        tar -xf ./gie-${{ github.sha }}/gie.tar
+        tar -xf ./manager-${{ github.sha }}/manager.tar
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest \
                           --network=host \
                           -f ./graphscope.Dockerfile .
