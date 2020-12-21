@@ -57,7 +57,7 @@ def test_demo(data_dir):
         show_log=True,
         num_workers=1,
         k8s_gs_image=image,
-        k8s_coordinator_cpu=0.3,
+        k8s_coordinator_cpu=0.5,
         k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
         k8s_vineyard_mem="512Mi",
@@ -95,7 +95,7 @@ def test_demo_distribute(data_dir, modern_graph_data_dir):
         show_log=True,
         num_workers=1,
         k8s_gs_image=image,
-        k8s_coordinator_cpu=0.3,
+        k8s_coordinator_cpu=0.5,
         k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
         k8s_vineyard_mem="512Mi",
@@ -173,7 +173,7 @@ def test_multiple_session(data_dir):
         show_log=True,
         num_workers=1,
         k8s_gs_image=image,
-        k8s_coordinator_cpu=0.3,
+        k8s_coordinator_cpu=0.5,
         k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
         k8s_vineyard_mem="512Mi",
@@ -186,11 +186,12 @@ def test_multiple_session(data_dir):
     assert info["type"] == "k8s"
     assert len(info["engine_hosts"].split(",")) == 1
 
-    sess = graphscope.session(
+    sess2 = graphscope.session(
         show_log=True,
+        k8s_namespace=namespace,
         num_workers=2,
         k8s_gs_image=image,
-        k8s_coordinator_cpu=0.3,
+        k8s_coordinator_cpu=0.5,
         k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
         k8s_vineyard_mem="512Mi",
@@ -214,7 +215,7 @@ def test_load_modern_graph(modern_graph_data_dir):
         show_log=True,
         num_workers=1,
         k8s_gs_image=image,
-        k8s_coordinator_cpu=0.3,
+        k8s_coordinator_cpu=0.5,
         k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
         k8s_vineyard_mem="512Mi",
