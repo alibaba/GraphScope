@@ -42,8 +42,10 @@ function install_dependencies() {
 
 install_dependencies
 
-# start docker daemon
-sudo dockerd > /dev/null& || true
+# start docker daemon if docker not running.
+if ! sudo docker info >/dev/null 2>&1; then
+    sudo dockerd > /dev/null& || true
+fi
 
 # launch k8s cluster
 echo "$(date '+%Y-%m-%d %H:%M:%S') launch k8s cluster"

@@ -49,8 +49,10 @@ function install_dependencies() {
 
 install_dependencies
 
-# start docker daemon
-sudo systemctl start docker
+# start docker daemon if docker not running.
+if ! sudo docker info >/dev/null 2>&1; then
+    sudo systemctl start docker
+fi
 
 
 # launch k8s cluster
