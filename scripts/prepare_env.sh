@@ -47,10 +47,23 @@ function install_dependencies() {
   chmod +x minikube && sudo mv minikube /usr/local/bin/ && sudo ln /usr/local/bin/minikube /usr/bin/minikube || true
 }
 
+if [ -f "${HOME}/.kube/config" ];
+then
+    echo "We found existing kubernetes config, seems that you already have a ready kubernetes cluster"
+    echo "WARNING: If you do want to reset the kubernetes environment, please delete the existing config by"
+    echo ""
+    echo "    rm -rf ${HOME}/.kube"
+    echo ""
+    echo "and retry this script again."
+    exit 0
+fi
+
 install_dependencies
 
-# start docker daemon
-sudo systemctl start docker
+# start docker daemon if docker not running.
+if ! sudo docker info >/dev/null 2>&1; then
+    sudo systemctl start docker
+fi
 
 
 # launch k8s cluster
