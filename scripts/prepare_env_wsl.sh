@@ -40,6 +40,17 @@ function install_dependencies() {
   chmod +x kind && sudo mv kind /usr/local/bin/ && sudo ln /usr/local/bin/kind /usr/bin/kind || true
 }
 
+if [ -f "${HOME}/.kube/config" ];
+then
+    echo "We found existing kubernetes config, seems that you already have a ready kubernetes cluster"
+    echo "WARNING: If you do want to reset the kubernetes environment, please delete the existing config by"
+    echo ""
+    echo "    rm -rf ${HOME}/.kube"
+    echo ""
+    echo "and retry this script ."
+    exit 0
+fi
+
 install_dependencies
 
 # start docker daemon if docker not running.
