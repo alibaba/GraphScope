@@ -206,7 +206,9 @@ class GRPCClient(object):
         responses = self._stub.FetchLogs(request)
         for resp in responses:
             resp = check_grpc_response(resp)
-            print(resp.message, file=sys.stdout, end="", flush=True)
+            message = resp.message.rstrip()
+            if message:
+                print(message, end="\n", file=sys.stdout, flush=True)
 
     @catch_grpc_error
     def _close_session_impl(self):

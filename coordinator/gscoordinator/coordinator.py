@@ -105,6 +105,7 @@ class CoordinatorServiceServicer(
 
         self._request = None
         self._object_manager = ObjectManager()
+        self._dangling_detecting_timer = None
         self._config_logging(log_level)
 
         # only one connection is allowed at the same time
@@ -564,7 +565,8 @@ class CoordinatorServiceServicer(
         self._analytical_engine_stub = None
 
         # cancel dangling detect timer
-        self._dangling_detecting_timer.cancel()
+        if self._dangling_detecting_timer:
+            self._dangling_detecting_timer.cancel()
 
         # close engines
         self._launcher.stop(is_dangling=is_dangling)
@@ -671,6 +673,12 @@ def parse_sys_args():
         type=str,
         default="graphscope",
         help="Contains the namespace to create all resource inside, namespace must be exist.",
+    )
+    parser.add_argument(
+        "--k8s_service_type",
+        type=str,
+        default="NodePort",
+        help="Valid options are NodePort, and LoadBalancer.",
     )
     parser.add_argument(
         "--k8s_gs_image",
@@ -782,6 +790,7 @@ def launch_graphscope():
     if args.enable_k8s:
         launcher = KubernetesClusterLauncher(
             namespace=args.k8s_namespace,
+            service_type=args.k8s_service_type,
             gs_image=args.k8s_gs_image,
             etcd_image=args.k8s_etcd_image,
             zookeeper_image=args.k8s_zookeeper_image,

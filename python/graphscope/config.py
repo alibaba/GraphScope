@@ -48,6 +48,8 @@ class GSConfig(object):
     ENGINE_CPU = 0.5
     ENGINE_MEM = "4Gi"
 
+    SERVICE_TYPE = "NodePort"
+
     NUM_WORKERS = 2
     SHOW_LOG = False
     LOG_LEVEL = "info"

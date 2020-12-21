@@ -25,6 +25,8 @@ from kubernetes import client as kube_client
 from kubernetes import config as kube_config
 from kubernetes.client.rest import ApiException as K8SApiException
 
+from graphscope.framework.errors import K8sError
+
 logger = logging.getLogger("graphscope")
 
 
@@ -47,6 +49,85 @@ def is_minikube_cluster():
     contexts, active_context = kube_config.list_kube_config_contexts()
     if contexts:
         return active_context["context"]["cluster"] == "minikube"
+
+
+def get_service_endpoints(api_client, namespace, name, type, timeout_seconds=60):
+    """Get service endpoint by service name and service type.
+
+    Args:
+        api_client: ApiClient
+            An kubernetes ApiClient object, initialized with the client args.
+        namespace: str
+            Namespace of the service belongs to.
+        name: str
+            Service name.
+        type: str
+            Service type. Valid options are NodePort, LoadBalancer and ClusterIP.
+        timeout_seconds: int
+            Raise TimeoutError after waiting for this seconds, only used in LoadBalancer type.
+
+    Raises:
+        TimeoutError: If the underlying cloud-provider doesn't support the LoadBalancer
+            service type.
+        K8sError: The service type is not one of (NodePort, LoadBalancer, ClusterIP). Or
+            the service has no endpoint.
+
+    Returns: A list of endpoint.
+        If service type is LoadBalancer, format with <load_balancer_ip>:<port>. And
+        if service type is NodePort, format with <host_ip>:<node_port>, And
+        if service type is ClusterIP, format with <cluster_ip>:<port>
+    """
+    start_time = time.time()
+
+    core_api = kube_client.CoreV1Api(api_client)
+    svc = core_api.read_namespaced_service(name=name, namespace=namespace)
+
+    # get pods
+    selector = ""
+    for k, v in svc.spec.selector.items():
+        selector += k + "=" + v + ","
+    selector = selector[:-1]
+    pods = core_api.list_namespaced_pod(namespace=namespace, label_selector=selector)
+
+    ips = []
+    ports = []
+    if type == "NodePort":
+        for pod in pods.items:
+            ips.append(pod.status.host_ip)
+        for port in svc.spec.ports:
+            ports.append(port.node_port)
+    elif type == "LoadBalancer":
+        while True:
+            svc = core_api.read_namespaced_service(name=name, namespace=namespace)
+            if svc.status.load_balancer.ingress is not None:
+                for ingress in svc.status.load_balancer.ingress:
+                    if ingress.hostname is not None:
+                        ips.append(ingress.hostname)
+                    else:
+                        ips.append(ingress.ip)
+                for port in svc.spec.ports:
+                    ports.append(port.port)
+                break
+            time.sleep(1)
+            if time.time() - start_time > timeout_seconds:
+                raise TimeoutError("LoadBalancer service type is not supported yet.")
+    elif type == "ClusterIP":
+        ips.append(svc.spec.cluster_ip)
+        for port in svc.spec.ports:
+            ports.append(port.port)
+    else:
+        raise K8sError("Service type {0} is not supported yet".format(type))
+
+    # generate endpoint
+    endpoints = []
+
+    if not ips or not ports:
+        raise K8sError("Get {0} service {1} failed.".format(type, name))
+
+    for ip in ips:
+        for port in ports:
+            endpoints.append("{0}:{1}".format(ip, port))
+    return endpoints
 
 
 def get_kubernetes_object_info(api_client, target):

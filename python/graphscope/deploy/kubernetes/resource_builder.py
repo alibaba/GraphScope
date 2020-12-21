@@ -161,6 +161,14 @@ class ClusterRoleBindingBuilder(object):
 class ServiceBuilder(object):
     """Builder for k8s services."""
 
+    _annotations = {
+        "service.beta.kubernetes.io/alibaba-cloud-loadbalancer-health-check-type": "tcp",
+        "service.beta.kubernetes.io/alibaba-cloud-loadbalancer-health-check-connect-timeout": "8",
+        "service.beta.kubernetes.io/alibaba-cloud-loadbalancer-healthy-threshold": "2",
+        "service.beta.kubernetes.io/alibaba-cloud-loadbalancer-unhealthy-threshold": "2",
+        "service.beta.kubernetes.io/alibaba-cloud-loadbalancer-health-check-interval": "1",
+    }
+
     def __init__(
         self,
         name,
@@ -170,6 +178,7 @@ class ServiceBuilder(object):
         target_port=None,
         node_port=None,
         protocol=None,
+        external_traffic_policy=None,
     ):
         self._name = name
         self._type = service_type
@@ -178,6 +187,7 @@ class ServiceBuilder(object):
         self._port = port
         self._target_port = target_port
         self._node_port = node_port
+        self._external_traffic_policy = external_traffic_policy
 
     def build(self):
         if isinstance(self._port, (range, list, tuple)):
@@ -207,6 +217,7 @@ class ServiceBuilder(object):
         return {
             "kind": "Service",
             "metadata": {
+                "annotations": self._annotations,
                 "name": self._name,
             },
             "spec": _remove_nones(
@@ -214,6 +225,7 @@ class ServiceBuilder(object):
                     "type": self._type,
                     "selector": self._selector,
                     "ports": ports,
+                    "externalTrafficPolicy": self._external_traffic_policy,
                 }
             ),
         }
@@ -840,6 +852,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         num_workers,
         log_level,
         namespace,
+        service_type,
         gs_image,
         etcd_image,
         gie_graph_manager_image,
@@ -863,6 +876,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         self._num_workers = num_workers
         self._log_level = log_level
         self._namespace = namespace
+        self._service_type = service_type
         self._gs_image = gs_image
         self._etcd_image = etcd_image
         self._gie_graph_manager_image = gie_graph_manager_image
@@ -944,6 +958,8 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             self._log_level,
             "--k8s_namespace",
             self._namespace,
+            "--k8s_service_type",
+            self._service_type,
             "--k8s_gs_image",
             self._gs_image,
             "--k8s_etcd_image",

@@ -51,6 +51,7 @@ from graphscope.deploy.kubernetes.resource_builder import HostPathVolumeBuilder
 from graphscope.deploy.kubernetes.resource_builder import ServiceBuilder
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
+from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.framework.utils import random_string
 from graphscope.proto import types_pb2
 
@@ -84,9 +85,6 @@ class KubernetesClusterLauncher(Launcher):
 
     _interactive_engine_manager_port = 8080  # fixed
     _zookeeper_port = 2181  # fixed
-    _random_interactive_engine_service_port = random.randint(
-        30001, 31000
-    )  # 30000-32767
     _random_analytical_engine_rpc_port = random.randint(56001, 57000)
     _random_etcd_listen_peer_service_port = random.randint(57001, 58000)
     _random_etcd_listen_client_service_port = random.randint(58001, 59000)
@@ -98,6 +96,7 @@ class KubernetesClusterLauncher(Launcher):
     def __init__(
         self,
         namespace=None,
+        service_type=None,
         gs_image=None,
         etcd_image=None,
         zookeeper_image=None,
@@ -142,6 +141,7 @@ class KubernetesClusterLauncher(Launcher):
         )
 
         self._namespace = namespace
+        self._service_type = service_type
         self._num_workers = num_workers
 
         self._coordinator_name = coordinator_name
@@ -331,7 +331,7 @@ class KubernetesClusterLauncher(Launcher):
         labels = {"name": self._engine_name}  # vineyard in engine pod
         service_builder = ServiceBuilder(
             self._vineyard_service_name,
-            service_type="NodePort",
+            service_type=self._service_type,
             port=self._vineyard_service_port,
             selector=labels,
         )
@@ -344,39 +344,24 @@ class KubernetesClusterLauncher(Launcher):
         self._resource_object.extend(targets)
 
     def _get_vineyard_service_endpoint(self):
-        services = self._core_api.list_namespaced_service(self._namespace)
-        for svc in services.items:
-            if svc.metadata.name == self._vineyard_service_name:
-                port = svc.spec.ports[0].node_port
-
-                if svc.status.load_balancer.ingress is not None:
-                    ingress = svc.status.load_balancer.ingress[0]
-                    if ingress.hostname is not None:
-                        host = ingress.hostname
-                    else:
-                        host = ingress.ip
-                else:
-                    selector = ""
-                    for k, v in svc.spec.selector.items():
-                        selector += k + "=" + v + ","
-                    selector = selector[:-1]
-
-                    # get pod
-                    pods = self._core_api.list_namespaced_pod(
-                        self._namespace, label_selector=selector
-                    )
-                    host = pods.items[0].status.host_ip
-                return "{}:{}".format(host, port)
-        raise RuntimeError("Get vineyard service endpoint failed.")
+        # Always len(endpoints) >= 1
+        endpoints = get_service_endpoints(
+            api_client=self._api_client,
+            namespace=self._namespace,
+            name=self._vineyard_service_name,
+            type=self._service_type,
+        )
+        return endpoints[0]
 
     def _create_graphlearn_service(self, object_id, start_port, num_workers):
         targets = []
         labels = {"name": self._engine_name}
         service_builder = ServiceBuilder(
             self._gle_service_name_prefix + str(object_id),
-            service_type="NodePort",
+            service_type=self._service_type,
             port=list(range(start_port, start_port + num_workers)),
             selector=labels,
+            external_traffic_policy="Local",
         )
         targets.append(
             self._core_api.create_namespaced_service(
@@ -387,19 +372,28 @@ class KubernetesClusterLauncher(Launcher):
         self._resource_object.extend(targets)
 
     def _parse_graphlearn_service_endpoint(self, object_id):
-        services = self._core_api.list_namespaced_service(self._namespace)
-        for svc in services.items:
-            if svc.metadata.name == self._gle_service_name_prefix + str(object_id):
-                endpoints = []
-                for ip, port_spec in zip(self._pod_host_ip_list, svc.spec.ports):
-                    endpoints.append(
-                        (
-                            "%s:%s" % (ip, port_spec.node_port),
-                            int(port_spec.name.split("-")[-1]),
+        if self._service_type == "NodePort":
+            services = self._core_api.list_namespaced_service(self._namespace)
+            for svc in services.items:
+                if svc.metadata.name == self._gle_service_name_prefix + str(object_id):
+                    endpoints = []
+                    for ip, port_spec in zip(self._pod_host_ip_list, svc.spec.ports):
+                        endpoints.append(
+                            (
+                                "%s:%s" % (ip, port_spec.node_port),
+                                int(port_spec.name.split("-")[-1]),
+                            )
                         )
-                    )
-                endpoints.sort(key=lambda ep: ep[1])
-                return [ep[0] for ep in endpoints]
+                    endpoints.sort(key=lambda ep: ep[1])
+                    return [ep[0] for ep in endpoints]
+        elif self._service_type == "LoadBalancer":
+            endpoints = get_service_endpoints(
+                api_client=self._api_client,
+                namespace=self._namespace,
+                name=self._gle_service_name_prefix + str(object_id),
+                type=self._service_type,
+            )
+            return endpoints
         raise RuntimeError("Get graphlearn service endpoint failed.")
 
     def _create_interactive_engine_service(self):
@@ -407,9 +401,8 @@ class KubernetesClusterLauncher(Launcher):
         labels = {"app": self._gie_graph_manager_name}
         service_builder = ServiceBuilder(
             name=self._gie_graph_manager_service_name,
-            service_type="NodePort",
+            service_type="ClusterIP",
             port=self._interactive_engine_manager_port,
-            node_port=self._random_interactive_engine_service_port,
             selector=labels,
         )
         targets.append(
@@ -625,25 +618,14 @@ class KubernetesClusterLauncher(Launcher):
             json.dump(rlt, f)
 
     def _get_etcd_service_endpoint(self):
-        services = self._core_api.list_namespaced_service(namespace=self._namespace)
-        for svc in services.items:
-            if svc.metadata.name == self._etcd_service_name:
-                port = svc.spec.ports[0].port
-                selector = ""
-                for k, v in svc.spec.selector.items():
-                    selector += k + "=" + v + ","
-                selector = selector[:-1]
-
-                # get pod
-                pods = self._core_api.list_namespaced_pod(
-                    namespace=self._namespace, label_selector=selector
-                )
-                host = pods.items[0].status.pod_ip
-                if host is None:
-                    time.sleep(5)
-                    return self._get_etcd_service_endpoint()
-                return "{}:{}".format(host, port)
-        return ""
+        # Always len(endpoints) >= 1
+        endpoints = get_service_endpoints(
+            api_client=self._api_client,
+            namespace=self._namespace,
+            name=self._etcd_service_name,
+            type="ClusterIP",
+        )
+        return endpoints[0]
 
     def _launch_engine_locally(self):
         # generate and distribute hostfile
