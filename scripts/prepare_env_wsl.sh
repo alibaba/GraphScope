@@ -53,7 +53,7 @@ curl -Lo config-with-mounts.yaml https://kind.sigs.k8s.io/examples/config-with-m
 # mount $HOME dir to cluster container, which is kind-control-plane
 sed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
 sudo kind create cluster --config config-with-mounts.yaml
-sudo cp -rn /root/.kube ${HOME} || true
+sudo cp -r /root/.kube ${HOME} || true
 sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
 
 # pull images(graphscope, etcd, maxgraph_standalone_manager)
