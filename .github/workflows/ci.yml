@@ -386,7 +386,7 @@ jobs:
         find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
         find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
 
-      - uses: actions/checkout@v2.3.2
+    - uses: actions/checkout@v2.3.2
 
     - uses: actions/cache@v2
       with:
