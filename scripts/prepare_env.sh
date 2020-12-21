@@ -59,7 +59,7 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') launch k8s cluster"
 sudo sysctl fs.protected_regular=0 || true
 sudo minikube start --vm-driver=none --kubernetes-version="${K8S_VERSION}"
 
-sudo cp -r /root/.kube /root/.minikube "${HOME}" || true
+sudo cp -rn /root/.kube /root/.minikube "${HOME}" || true
 sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.minikube || true
 sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
 sed -i 's@/root@'"${HOME}"'@g' "${HOME}"/.kube/config || true
