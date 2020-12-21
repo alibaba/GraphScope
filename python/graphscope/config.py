@@ -50,7 +50,7 @@ class GSConfig(object):
 
     NUM_WORKERS = 2
     SHOW_LOG = False
-    LOG_LEVEL = "info"
+    LOG_LEVEL = "INFO"
 
     TIMEOUT_SECONDS = 600
     WAITING_FOR_DELETE = False

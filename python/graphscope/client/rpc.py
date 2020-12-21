@@ -20,7 +20,6 @@
 import functools
 import json
 import logging
-import sys
 import threading
 import time
 
@@ -92,9 +91,7 @@ class GRPCClient(object):
         self._session_id = None
         self._logs_fetching_thread = None
 
-    def waiting_service_ready(
-        self, timeout_seconds=60, enable_k8s=False, show_log=False
-    ):
+    def waiting_service_ready(self, timeout_seconds=60, enable_k8s=False):
         begin_time = time.time()
         request = message_pb2.HeartBeatRequest()
         while True:
@@ -106,7 +103,7 @@ class GRPCClient(object):
             finally:
                 if response is not None:
                     # connnect to coordinator, fetch log
-                    if enable_k8s and show_log:
+                    if enable_k8s:
                         self.fetch_logs()
                     if response.status.code == error_codes_pb2.OK:
                         logger.info("GraphScope coordinator service ready.")
@@ -206,7 +203,7 @@ class GRPCClient(object):
         responses = self._stub.FetchLogs(request)
         for resp in responses:
             resp = check_grpc_response(resp)
-            print(resp.message, file=sys.stdout, end="", flush=True)
+            logger.info(resp.message)
 
     @catch_grpc_error
     def _close_session_impl(self):

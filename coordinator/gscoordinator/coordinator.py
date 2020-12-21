@@ -155,16 +155,26 @@ class CoordinatorServiceServicer(
     def __del__(self):
         self._cleanup()
 
-    def _config_logging(self, log_level):
-        if log_level:
-            log_level = getattr(logging, log_level.upper(), logging.INFO)
-        else:
-            log_level = logging.INFO
-        logging.getLogger("graphscope").setLevel(log_level)
-        logging.basicConfig(
-            format="%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s",
-            stream=sys.stdout,
+    def _config_logging(self, log_level="INFO"):
+        """Set log level basic on config.
+        Additionally, stream all logs to a file named with elapsed seconds since epoch.
+        We use two seperate handlers to do that.
+        Args:
+            show_log (bool): Whether to show logs to stdout
+            log_level (str): Log level of stdout handler
+        """
+        logger = logging.getLogger("graphscope")
+        logger.setLevel(logging.DEBUG)
+
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        stdout_handler.setLevel(log_level)
+
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s"
         )
+        stdout_handler.setFormatter(formatter)
+
+        logger.addHandler(stdout_handler)
 
     def ConnectSession(self, request, context):
         # A session is already connected.

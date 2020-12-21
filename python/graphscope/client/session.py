@@ -42,6 +42,7 @@ except ImportError:
 
 import graphscope
 from graphscope.client.rpc import GRPCClient
+from graphscope.client.utils import ConditionalFormatter
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.kubernetes.cluster import KubernetesCluster
 from graphscope.framework.errors import ConnectionError
@@ -136,8 +137,8 @@ class Session(object):
         self,
         config=None,
         num_workers=gs_config.NUM_WORKERS,
-        log_level=gs_config.LOG_LEVEL,
         show_log=gs_config.SHOW_LOG,
+        log_level=gs_config.LOG_LEVEL,
         k8s_namespace=gs_config.NAMESPACE,
         k8s_gs_image=gs_config.GS_IMAGE,
         k8s_etcd_image=gs_config.ETCD_IMAGE,
@@ -167,7 +168,7 @@ class Session(object):
 
             num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.
 
-            log_level (str, optional): One of in ['info', 'debug'], Defaults to 'info'.
+            log_level (str, optional): One of in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], Defaults to 'INFO'.
 
             show_log (bool, optional): If true, it will fetch and print engines's log from python client.
                 Default to false.
@@ -243,47 +244,6 @@ class Session(object):
             "k8s_waiting_for_delete",
             "timeout_seconds",
         )
-        saved_locals = locals()
-        for param in self._accessable_params:
-            self._config_params[param] = saved_locals[param]
-
-        # parse config, which should be a path to config file, or dict
-        # config has highest priority
-        if isinstance(config, dict):
-            self._config_params.update(config)
-        elif isinstance(config, str):
-            self._load_config(config)
-        elif DEFAULT_CONFIG_FILE:
-            self._load_config(DEFAULT_CONFIG_FILE)
-
-        # update other optional params
-        self._config_params.update(kw)
-        self._config_logging(
-            self._config_params["log_level"], self._config_params["show_log"]
-        )
-
-        logger.info(
-            "Initializing graphscope session with parameters: %s", self._config_params
-        )
-
-        self._config_params["addr"] = None
-
-        # Reserved keyword for local testing.
-        run_on_local = kw.pop("run_on_local", False)
-        if not run_on_local:
-            self._config_params["enable_k8s"] = True
-        else:
-            self._run_on_local()
-
-        # deploy minikube on virtual machine
-        self._config_params["k8s_minikube_vm_driver"] = kw.pop(
-            "k8s_minikube_vm_driver", False
-        )
-
-        # There should be no more custom keyword arguments.
-        if kw:
-            raise ValueError("Not recognized value: ", list(kw.keys()))
-
         self._closed = False
 
         # set _session_type in self._connect()
@@ -313,6 +273,46 @@ class Session(object):
         self._learning_instance_dict = {}
 
         self._default_session = None
+        # parse config, which should be a path to config file, or dict
+        # config has highest priority
+        if isinstance(config, dict):
+            self._config_params.update(config)
+        elif isinstance(config, str):
+            self._load_config(config)
+        elif DEFAULT_CONFIG_FILE:
+            self._load_config(DEFAULT_CONFIG_FILE)
+
+        saved_locals = locals()
+        for param in self._accessable_params:
+            self._config_params[param] = saved_locals[param]
+        self._log_file_name = "/tmp/graphscope-client-{}.log".format(int(time.time()))
+        # update other optional params
+        self._config_params.update(kw)
+        self._config_logging(
+            self._config_params["show_log"], self._config_params["log_level"]
+        )
+
+        logger.info(
+            "Initializing graphscope session with parameters: %s", self._config_params
+        )
+
+        self._config_params["addr"] = None
+
+        # Reserved keyword for local testing.
+        run_on_local = kw.pop("run_on_local", False)
+        if not run_on_local:
+            self._config_params["enable_k8s"] = True
+        else:
+            self._run_on_local()
+
+        # deploy minikube on virtual machine
+        self._config_params["k8s_minikube_vm_driver"] = kw.pop(
+            "k8s_minikube_vm_driver", False
+        )
+
+        # There should be no more custom keyword arguments.
+        if kw:
+            raise ValueError("Not recognized value: ", list(kw.keys()))
 
         atexit.register(self.close)
         # create and connect session
@@ -332,19 +332,35 @@ class Session(object):
     def __str__(self):
         return repr(self)
 
-    def _config_logging(self, log_level, show_log):
-        if show_log:
-            if log_level:
-                log_level = getattr(logging, log_level.upper(), logging.INFO)
-            else:
-                log_level = logging.INFO
-            logging.getLogger("graphscope").setLevel(log_level)
-        else:
-            logging.getLogger("graphscope").setLevel(logging.CRITICAL)
-        logging.basicConfig(
-            format="%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s",
-            stream=sys.stdout,
+    def _config_logging(self, show_log, log_level):
+        """Set log level basic on config.
+        Additionally, stream all logs to a file named with elapsed seconds since epoch.
+        We use two seperate handlers to do that.
+        Args:
+            show_log (bool): Whether to show logs to stdout
+            log_level (str): Log level of stdout handler
+        """
+        logger = logging.getLogger("graphscope")
+        logger.setLevel(logging.DEBUG)
+
+        file_handler = logging.FileHandler(filename=self._log_file_name)
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        file_handler.setLevel(logging.DEBUG)
+        stdout_handler.setLevel(logging.WARNING)
+
+        formatter = ConditionalFormatter(
+            "%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s"
         )
+        file_handler.setFormatter(formatter)
+        stdout_handler.setFormatter(formatter)
+
+        if show_log:
+            stdout_handler.setLevel(log_level)
+        else:
+            stdout_handler.setLevel(logging.CRITICAL)
+
+        logger.addHandler(file_handler)
+        logger.addHandler(stdout_handler)
 
     @property
     def session_id(self):
@@ -530,10 +546,11 @@ class Session(object):
             response = self._grpc_client.run(dag)
         except FatalError:
             self.close()
+            logger.critical(
+                "Critical Error Detected! You can get debugging logs in %s",
+                self._log_file_name,
+            )
             raise
-        check_argument(
-            len(fetch_ops) == 1, "Cannot execute multiple ops at the same time"
-        )
         return self._parse_value(fetch_ops[0], response)
 
     def _parse_value(self, op, response: message_pb2.RunStepResponse):
@@ -613,7 +630,6 @@ class Session(object):
         # waiting service ready
         self._grpc_client = GRPCClient(endpoint)
         self._grpc_client.waiting_service_ready(
-            show_log=self._config_params["show_log"],
             timeout_seconds=self._config_params["timeout_seconds"],
             enable_k8s=self._config_params["enable_k8s"],
         )
@@ -630,6 +646,10 @@ class Session(object):
             if proc is not None and proc.poll() is None:
                 try:
                     proc.terminate()
+                    output, err = proc.communicate()
+                    logger = logging.getLogger("graphscope")
+                    logger.info(output)
+                    logger.error(err)
                 except:  # noqa: E722
                     pass
             raise
@@ -935,8 +955,8 @@ def _launch_coordinator_on_local(config_params):
         universal_newlines=True,
         encoding="utf-8",
         stdin=subprocess.DEVNULL,
-        stdout=sys.stdout if config_params["show_log"] else subprocess.DEVNULL,
-        stderr=sys.stderr if config_params["show_log"] else subprocess.DEVNULL,
+        stdout=sys.stdout if config_params["show_log"] else subprocess.PIPE,
+        stderr=sys.stderr if config_params["show_log"] else subprocess.PIPE,
         bufsize=1,
         env=env,
     )
