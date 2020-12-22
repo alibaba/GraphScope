@@ -22,7 +22,7 @@ on:
       - 'scripts/**'
 
 jobs:
-  gae:
+  build-gae:
     runs-on: ubuntu-20.04
     defaults:
       run:
@@ -128,7 +128,7 @@ jobs:
         path: gae.tar
         retention-days: 5
 
-  gie:
+  build-gie:
     runs-on: ubuntu-20.04
     defaults:
       run:
@@ -168,7 +168,7 @@ jobs:
         path: gie.tar
         retention-days: 5
 
-  gle:
+  build-gle:
     runs-on: ubuntu-20.04
     defaults:
       run:
@@ -228,7 +228,7 @@ jobs:
         path: gle.tar
         retention-days: 5
 
-  manager:
+  build-manager:
     runs-on: ubuntu-20.04
     env:
       profile: release
@@ -264,7 +264,7 @@ jobs:
 
   python-test:
     runs-on: ubuntu-20.04
-    needs: [gae, gle]
+    needs: [build-gae, build-gle]
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
@@ -325,7 +325,7 @@ jobs:
 
   k8s-test:
     runs-on: self-hosted
-    needs: [gae, gie, gle, manager]
+    needs: [build-gae, build-gie, build-gle, build-manager]
     steps:
     - name: Clean up
       run: |
@@ -396,7 +396,7 @@ jobs:
 
   gie-test:
     runs-on: self-hosted
-    needs: [gae, gie, gle, manager]
+    needs: [build-gae, build-gie, build-gle, build-manager]
     steps:
     - name: Clean up
       run: |
@@ -466,6 +466,8 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [ gie-test, python-test, k8s-test ]
     steps:
+    - uses: actions/checkout@v2.3.2
+
     - uses: actions/download-artifact@v2
       with:
         path: artifacts
