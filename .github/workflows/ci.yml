@@ -1,6 +1,25 @@
 name: GraphScope CI
 
-on: [push]
+on:
+  # Trigger the workflow on push or pull request, but only for the main branch
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'gnn_engine/**'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'scripts/**'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'gnn_engine/**'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'scripts/**'
 
 jobs:
   gae:
@@ -282,6 +301,10 @@ jobs:
         cd python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -v tests
+    - name: LS
+      run: |
+        ls -alr .github/*
+        cat .github/codecov.yml || true
 
     - name: Upload Coverage
       if: matrix.experimental == 'OFF'
@@ -453,7 +476,7 @@ jobs:
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest \
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 \
@@ -463,5 +486,9 @@ jobs:
     - name: Release images
       run: |
         echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
+        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+                        registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
+        
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0
