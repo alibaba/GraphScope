@@ -558,13 +558,24 @@ class GSEngineBuilder(ReplicaSetBuilder):
     def add_vineyard_container(
         self, name, image, cpu, mem, shared_mem, etcd_endpoint, port, **kwargs
     ):
-        cmd = [
-            "vineyardd",
-            "--size=%s" % str(shared_mem),
-            "--etcd_endpoint=http://%s" % etcd_endpoint,
-            "--socket=%s" % self._ipc_socket_file,
-            "--etcd_prefix=vineyard",
-        ]
+        vineyard_command = " ".join(
+            [
+                "vineyardd",
+                "--size=%s" % str(shared_mem),
+                "--etcd_endpoint=http://%s" % etcd_endpoint,
+                "--socket=%s" % self._ipc_socket_file,
+                "--etcd_prefix=vineyard",
+            ]
+        )
+        commands = []
+        commands.append(
+            "while ! curl --output /dev/null --silent --head --connect-timeout 1 %s"
+            % etcd_endpoint
+        )
+        commands.append("do sleep 1 && echo -n .")
+        commands.append("done")
+        commands.append(vineyard_command)
+        cmd = ["bash", "-c", "%s" % ("; ".join(commands),)]
 
         resources_dict = {
             "requests": ResourceBuilder(cpu, mem).build(),
