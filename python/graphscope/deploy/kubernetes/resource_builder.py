@@ -557,12 +557,13 @@ class GSEngineBuilder(ReplicaSetBuilder):
         )
         commands = []
         commands.append(
-            "while ! curl --output /dev/null --silent --head %s" % etcd_endpoint
+            "while ! curl --output /dev/null --silent --head --connect-timeout 1 %s"
+            % etcd_endpoint
         )
         commands.append("do sleep 1 && echo -n .")
         commands.append("done")
         commands.append(vineyard_command)
-        cmd = ["bash", "-c", "'%s'" % ("; ".join(commands),)]
+        cmd = ["bash", "-c", "%s" % ("; ".join(commands),)]
 
         resources_dict = {
             "requests": ResourceBuilder(cpu, mem).build(),
