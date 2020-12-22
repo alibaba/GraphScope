@@ -26,6 +26,7 @@ import sys
 import pytest
 
 import graphscope
+from graphscope.config import GSConfig as gs_config
 from graphscope.dataset.ldbc import load_ldbc
 from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.framework.loader import Loader
@@ -44,25 +45,26 @@ def modern_graph_data_dir():
 
 
 def get_gs_image_on_ci_env():
-    if "CI" in os.environ and "GS_IMAGE" in os.environ:
-        return os.environ["GS_IMAGE"], True
+    if "GS_IMAGE" in os.environ:
+        return os.environ["GS_IMAGE"]
     else:
-        return "", False
+        return gs_config.GS_IMAGE
 
 
 def test_demo(data_dir):
-    image, ci = get_gs_image_on_ci_env()
-    if ci:
-        sess = graphscope.session(
-            show_log=True,
-            num_workers=1,
-            k8s_gs_image=image,
-        )
-    else:
-        sess = graphscope.session(
-            show_log=True,
-            num_workers=1,
-        )
+    image = get_gs_image_on_ci_env()
+    sess = graphscope.session(
+        show_log=True,
+        num_workers=1,
+        k8s_gs_image=image,
+        k8s_coordinator_cpu=0.5,
+        k8s_coordinator_mem="2500Mi",
+        k8s_vineyard_cpu=0.1,
+        k8s_vineyard_mem="512Mi",
+        k8s_engine_cpu=0.1,
+        k8s_engine_mem="1500Mi",
+        k8s_vineyard_shared_mem="2Gi",
+    )
     graph = load_ldbc(sess, data_dir)
 
     # Interactive engine
@@ -88,19 +90,19 @@ def test_demo(data_dir):
 
 
 def test_demo_distribute(data_dir, modern_graph_data_dir):
-    image, ci = get_gs_image_on_ci_env()
-    if ci:
-        sess = graphscope.session(
-            show_log=True,
-            num_workers=2,
-            k8s_gs_image=image,
-        )
-    else:
-        sess = graphscope.session(
-            show_log=True,
-            num_workers=2,
-        )
-
+    image = get_gs_image_on_ci_env()
+    sess = graphscope.session(
+        show_log=True,
+        num_workers=1,
+        k8s_gs_image=image,
+        k8s_coordinator_cpu=0.5,
+        k8s_coordinator_mem="2500Mi",
+        k8s_vineyard_cpu=0.1,
+        k8s_vineyard_mem="512Mi",
+        k8s_engine_cpu=0.1,
+        k8s_engine_mem="1500Mi",
+        k8s_vineyard_shared_mem="2Gi",
+    )
     graph = load_ldbc(sess, data_dir)
 
     # Interactive engine
@@ -166,38 +168,38 @@ def test_multiple_session(data_dir):
         [random.choice(string.ascii_lowercase) for _ in range(6)]
     )
 
-    image, ci = get_gs_image_on_ci_env()
-    if ci:
-        sess = graphscope.session(
-            show_log=True,
-            k8s_namespace=namespace,
-            num_workers=2,
-            k8s_gs_image=image,
-        )
-    else:
-        sess = graphscope.session(
-            show_log=True,
-            k8s_namespace=namespace,
-            num_workers=2,
-        )
+    image = get_gs_image_on_ci_env()
+    sess = graphscope.session(
+        show_log=True,
+        num_workers=1,
+        k8s_gs_image=image,
+        k8s_coordinator_cpu=0.5,
+        k8s_coordinator_mem="2500Mi",
+        k8s_vineyard_cpu=0.1,
+        k8s_vineyard_mem="512Mi",
+        k8s_engine_cpu=0.1,
+        k8s_engine_mem="1500Mi",
+        k8s_vineyard_shared_mem="2Gi",
+    )
     info = sess.info
     assert info["status"] == "active"
     assert info["type"] == "k8s"
-    assert len(info["engine_hosts"].split(",")) == 2
+    assert len(info["engine_hosts"].split(",")) == 1
 
-    if ci:
-        sess2 = graphscope.session(
-            show_log=True,
-            k8s_namespace=namespace,
-            num_workers=2,
-            k8s_gs_image=image,
-        )
-    else:
-        sess2 = graphscope.session(
-            show_log=True,
-            k8s_namespace=namespace,
-            num_workers=2,
-        )
+    sess2 = graphscope.session(
+        show_log=True,
+        k8s_namespace=namespace,
+        num_workers=2,
+        k8s_gs_image=image,
+        k8s_coordinator_cpu=0.5,
+        k8s_coordinator_mem="2500Mi",
+        k8s_vineyard_cpu=0.1,
+        k8s_vineyard_mem="512Mi",
+        k8s_engine_cpu=0.1,
+        k8s_engine_mem="1500Mi",
+        k8s_vineyard_shared_mem="2Gi",
+    )
+
     info = sess2.info
     assert info["status"] == "active"
     assert info["type"] == "k8s"
@@ -208,18 +210,19 @@ def test_multiple_session(data_dir):
 
 
 def test_load_modern_graph(modern_graph_data_dir):
-    image, ci = get_gs_image_on_ci_env()
-    if ci:
-        sess = graphscope.session(
-            show_log=True,
-            num_workers=1,
-            k8s_gs_image=image,
-        )
-    else:
-        sess = graphscope.session(
-            show_log=True,
-            num_workers=1,
-        )
+    image = get_gs_image_on_ci_env()
+    sess = graphscope.session(
+        show_log=True,
+        num_workers=1,
+        k8s_gs_image=image,
+        k8s_coordinator_cpu=0.5,
+        k8s_coordinator_mem="2500Mi",
+        k8s_vineyard_cpu=0.1,
+        k8s_vineyard_mem="512Mi",
+        k8s_engine_cpu=0.1,
+        k8s_engine_mem="1500Mi",
+        k8s_vineyard_shared_mem="2Gi",
+    )
     graph = load_modern_graph(sess, modern_graph_data_dir)
     interactive = sess.gremlin(graph)
     queries = [

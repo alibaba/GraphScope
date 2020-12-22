@@ -86,7 +86,7 @@ class Graph(GLGraph):
                 self.graphscope_session._close_learning_instance(self)
             super(Graph, self).close()
 
-    @staticmethod
+    @staticmethod  # noqa: C901
     def preprocess_args(handle, nodes, edges, gen_labels):  # noqa: C901
         handle = json.loads(base64.b64decode(handle).decode("utf-8", errors="ignore"))
         node_names = []

@@ -81,7 +81,6 @@ jobs:
 
         git fetch origin gh-pages --no-recurse-submodules
         git checkout gh-pages
-
         cd docs/
         rm -rf !(_build)
         mv _build/html/* ./

@@ -89,7 +89,7 @@ RUN source ~/.bashrc \
            echo "nightly mode" && export RUSTFLAGS=-Zsanitizer=address && \
                 rustup toolchain install nightly && \
                 ./exec.sh cargo +nightly build --target x86_64-unknown-linux-gnu --all; \
-       else \ 
+       else \
            echo "debug mode" && ./exec.sh cargo build --all; \
        fi
 
