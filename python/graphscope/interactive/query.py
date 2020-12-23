@@ -42,7 +42,7 @@ class InteractiveQuery(object):
     which lifetime is independent from the origin graph.
 
     Use `execute()` to submit a script,
-    ans use `traversal_source()` to get a `GraphTraversalSource` for further traversal.
+    and use `traversal_source()` to get a `GraphTraversalSource` for further traversal.
     """
 
     def __init__(self, graphscope_session, object_id, front_ip, front_port):
