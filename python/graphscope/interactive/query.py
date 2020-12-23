@@ -149,12 +149,12 @@ class InteractiveQuery(object):
 
     def traversal_source(self):
         """Create a GraphTraversalSource and return.
-        Once "g" has been created using a connection, we can start to write
+        Once `g` has been created using a connection, we can start to write
         Gremlin traversals to query the remote graph.
 
         Examples:
 
-            ..code:: python
+            .. code:: python
 
                 sess = graphscope.session()
                 graph = load_modern_graph(sess, modern_graph_data_dir)
