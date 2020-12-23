@@ -43,8 +43,45 @@ function install_dependencies() {
   curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/"${K8S_VERSION}"/bin/linux/amd64/kubectl && \
   chmod +x kubectl && sudo mv kubectl /usr/local/bin/ && sudo ln /usr/local/bin/kubectl /usr/bin/kubectl || true
 
-  curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
-  chmod +x minikube && sudo mv minikube /usr/local/bin/ && sudo ln /usr/local/bin/minikube /usr/bin/minikube || true
+  if [[ ! -z "$IS_WSL" && ! -z "$WSL_DISTRO_NAME" ]]; then
+      curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
+      chmod +x minikube && sudo mv minikube /usr/local/bin/ && sudo ln /usr/local/bin/minikube /usr/bin/minikube || true
+  else
+      curl -Lo kind https://kind.sigs.k8s.io/dl/v0.9.0/kind-linux-amd64 && \
+      chmod +x kind && sudo mv kind /usr/local/bin/ && sudo ln /usr/local/bin/kind /usr/bin/kind || true
+  fi
+}
+
+function start_docker() {
+  # start docker daemon if docker not running.
+  if ! sudo docker info >/dev/null 2>&1; then
+    if [[ ! -z "$IS_WSL" && ! -z "$WSL_DISTRO_NAME" ]]; then
+      sudo systemctl start docker
+    else
+      sudo dockerd > /dev/null& || true
+    fi
+  fi
+}
+
+function launch_k8s_cluster() {
+  if [[ ! -z "$IS_WSL" && ! -z "$WSL_DISTRO_NAME" ]]; then
+    export CHANGE_MINIKUBE_NONE_USER=true
+    sudo sysctl fs.protected_regular=0 || true
+    sudo minikube start --vm-driver=none --kubernetes-version="${K8S_VERSION}"
+
+    sudo cp -r /root/.kube /root/.minikube "${HOME}" || true
+    sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.minikube || true
+    sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
+    sed -i 's@/root@'"${HOME}"'@g' "${HOME}"/.kube/config || true
+    minikube update-context
+  else
+    curl -Lo config-with-mounts.yaml https://kind.sigs.k8s.io/examples/config-with-mounts.yaml
+    # mount $HOME dir to cluster container, which is kind-control-plane
+    sed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
+    sudo kind create cluster --config config-with-mounts.yaml
+    sudo cp -r /root/.kube ${HOME} || true
+    sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
+  fi
 }
 
 if [ -f "${HOME}/.kube/config" ];
@@ -58,26 +95,14 @@ then
     exit 0
 fi
 
+echo "$(date '+%Y-%m-%d %H:%M:%S') install dependencies"
 install_dependencies
 
-# start docker daemon if docker not running.
-if ! sudo docker info >/dev/null 2>&1; then
-    sudo systemctl start docker
-fi
+echo "$(date '+%Y-%m-%d %H:%M:%S') start doker daemon"
+start_docker
 
-
-# launch k8s cluster
-export CHANGE_MINIKUBE_NONE_USER=true
 echo "$(date '+%Y-%m-%d %H:%M:%S') launch k8s cluster"
-sudo sysctl fs.protected_regular=0 || true
-sudo minikube start --vm-driver=none --kubernetes-version="${K8S_VERSION}"
-
-sudo cp -r /root/.kube /root/.minikube "${HOME}" || true
-sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.minikube || true
-sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
-sed -i 's@/root@'"${HOME}"'@g' "${HOME}"/.kube/config || true
-
-minikube update-context
+launch_k8s_cluster
 
 # pull images(graphscope, etcd, maxgraph_standalone_manager)
 echo "$(date '+%Y-%m-%d %H:%M:%S') pull graphscope image and etcd image"
