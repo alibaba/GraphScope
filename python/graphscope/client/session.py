@@ -219,6 +219,13 @@ class Session(object):
                 (such as minikube with param --vm-driver is not None), you can specify
                 :code:`k8s_minikube_vm_driver` is :code:`True`.
 
+                k8s_client_config (dict, optional): Provide configurable parameters for connecting to remote k8s,
+                    which strongly relies on the `kube_config.new_client_from_config` function.
+                    eg: {"config_file": "~/.kube/config", "context": None, "persist_config": True}
+                    config_file: Name of the kube-config file.
+                    context: set the active context. If is set to None, current_context from config file will be used.
+                    persist_config: If True, config file will be updated when changed(e.g GCP token refresh).
+
 
         Raises:
             TypeError: If the given argument combination is invalid and cannot be used to create
@@ -267,10 +274,6 @@ class Session(object):
             self._config_params["log_level"], self._config_params["show_log"]
         )
 
-        logger.info(
-            "Initializing graphscope session with parameters: %s", self._config_params
-        )
-
         self._config_params["addr"] = None
 
         # Reserved keyword for local testing.
@@ -285,9 +288,16 @@ class Session(object):
             "k8s_minikube_vm_driver", False
         )
 
+        # update k8s_client_config params
+        self._config_params["k8s_client_config"] = kw.pop("k8s_client_config", {})
+
         # There should be no more custom keyword arguments.
         if kw:
             raise ValueError("Not recognized value: ", list(kw.keys()))
+
+        logger.info(
+            "Initializing graphscope session with parameters: %s", self._config_params
+        )
 
         self._closed = False
 
@@ -574,7 +584,9 @@ class Session(object):
                 or self._config_params["k8s_gs_image"] is None
             ):
                 raise K8sError("None image found.")
-            api_client = kube_config.new_client_from_config()
+            api_client = kube_config.new_client_from_config(
+                **self._config_params["k8s_client_config"]
+            )
             proc = None
             self._session_type = types_pb2.K8S
             self._k8s_cluster = KubernetesCluster(
