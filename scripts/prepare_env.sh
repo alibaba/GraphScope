@@ -7,7 +7,7 @@ set -x
 set -o pipefail
 
 platform=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
-is_in_wsl=false && [[ -z "${IS_WSL}" || -z "${WSL_DISTRO_NAME}" ]] && is_in_wsl=true
+is_in_wsl=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && is_in_wsl=true
 
 ##########################
 # Install packages
