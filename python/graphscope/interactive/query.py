@@ -41,8 +41,8 @@ class InteractiveQuery(object):
     from origin graph, produce a new, smaller but concise graph stored in vineyard,
     which lifetime is independent from the origin graph.
 
-    Use `execute()` to submit a script,
-    and use `traversal_source()` to get a `GraphTraversalSource` for further traversal.
+    User can either use `execute()` to submit a script, or use `traversal_source()`
+    to get a `GraphTraversalSource` for further traversal.
     """
 
     def __init__(self, graphscope_session, object_id, front_ip, front_port):
