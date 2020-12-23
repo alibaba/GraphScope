@@ -184,16 +184,17 @@ def compile_app(workspace: str, app_name: str, attr, engine_config: dict):
             f.write(content)
 
     # compile
+    logger.info("Building app ...")
     cmake_process = subprocess.Popen(
         cmake_commands,
         env=os.environ.copy(),
         universal_newlines=True,
         encoding="utf-8",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
     )
-    cmake_stdout_watcher = PipeWatcher(cmake_process.stdout, sys.stdout)
-    setattr(cmake_process, "stdout_watcher", cmake_stdout_watcher)
+    cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stdout)
+    setattr(cmake_process, "stderr_watcher", cmake_stderr_watcher)
     cmake_process.wait()
 
     make_process = subprocess.Popen(
@@ -201,11 +202,11 @@ def compile_app(workspace: str, app_name: str, attr, engine_config: dict):
         env=os.environ.copy(),
         universal_newlines=True,
         encoding="utf-8",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
     )
-    make_stdout_watcher = PipeWatcher(make_process.stdout, sys.stdout)
-    setattr(make_process, "stdout_watcher", make_stdout_watcher)
+    make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
+    setattr(make_process, "stderr_watcher", make_stderr_watcher)
     make_process.wait()
 
     return get_lib_path(app_dir, app_name)
@@ -293,16 +294,17 @@ def compile_graph_frame(
             f.write(content)
 
     # compile
+    logger.info("Building graph ...")
     cmake_process = subprocess.Popen(
         cmake_commands,
         env=os.environ.copy(),
         universal_newlines=True,
         encoding="utf-8",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
     )
-    cmake_stdout_watcher = PipeWatcher(cmake_process.stdout, sys.stdout)
-    setattr(cmake_process, "stdout_watcher", cmake_stdout_watcher)
+    cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stdout)
+    setattr(cmake_process, "stderr_watcher", cmake_stderr_watcher)
     cmake_process.wait()
 
     make_process = subprocess.Popen(
@@ -310,11 +312,11 @@ def compile_graph_frame(
         env=os.environ.copy(),
         universal_newlines=True,
         encoding="utf-8",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
     )
-    make_stdout_watcher = PipeWatcher(make_process.stdout, sys.stdout)
-    setattr(make_process, "stdout_watcher", make_stdout_watcher)
+    make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
+    setattr(make_process, "stderr_watcher", make_stderr_watcher)
     make_process.wait()
 
     return get_lib_path(frame_dir, frame_name)

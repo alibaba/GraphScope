@@ -100,7 +100,7 @@ class CoordinatorServiceServicer(
 
     """
 
-    def __init__(self, launcher, dangling_seconds, log_level="info"):
+    def __init__(self, launcher, dangling_seconds, log_level="INFO"):
         self._launcher = launcher
 
         self._request = None
@@ -825,13 +825,16 @@ def launch_graphscope():
         log_level=args.log_level,
     )
 
+    # after GraphScope ready, fetch logs via gRPC.
+    sys.stdout.drop(False)
+
     # register gRPC server
     server = grpc.server(futures.ThreadPoolExecutor(os.cpu_count() or 1))
     coordinator_service_pb2_grpc.add_CoordinatorServiceServicer_to_server(
         coordinator_service_servicer, server
     )
     server.add_insecure_port("0.0.0.0:{}".format(args.port))
-    logger.info("server listen at 0.0.0.0:%d", args.port)
+    logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
 
     server.start()
     try:

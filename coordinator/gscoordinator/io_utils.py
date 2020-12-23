@@ -21,21 +21,26 @@ from queue import Queue
 
 
 class StdoutWrapper(object):
-    def __init__(self, stdout, queue=None):
+    def __init__(self, stdout, queue=None, drop=True):
         self._stdout_backup = stdout
         if queue is None:
             self._lines = Queue()
         else:
             self._lines = queue
+        self._drop = drop
 
     @property
     def stdout(self):
         return self._stdout_backup
 
+    def drop(self, drop=True):
+        self._drop = drop
+
     def write(self, line):
         line = line.encode("ascii", "ignore").decode("ascii")
         self._stdout_backup.write(line)
-        self._lines.put(line)
+        if not self._drop:
+            self._lines.put(line)
 
     def flush(self):
         self._stdout_backup.flush()

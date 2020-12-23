@@ -220,6 +220,7 @@ class KubernetesClusterLauncher(Launcher):
         return self._gie_graph_manager_service_name
 
     def _create_engine_replicaset(self):
+        logger.info("Launching GraphScope engines pod ...")
         targets = []
         labels = {"name": self._engine_name}
         # create engine replicaset
@@ -283,6 +284,7 @@ class KubernetesClusterLauncher(Launcher):
         self._resource_object.extend(targets)
 
     def _create_etcd(self):
+        logger.info("Launching etcd ...")
         targets = []
         labels = {"name": self._etcd_name}
         # should create service first
@@ -397,6 +399,7 @@ class KubernetesClusterLauncher(Launcher):
         raise RuntimeError("Get graphlearn service endpoint failed.")
 
     def _create_interactive_engine_service(self):
+        logger.info("Launching GIE graph manager ...")
         targets = []
         labels = {"app": self._gie_graph_manager_name}
         service_builder = ServiceBuilder(
@@ -500,7 +503,7 @@ class KubernetesClusterLauncher(Launcher):
             ):
                 raise TimeoutError("Waiting GIE graph manager start timeout.")
             time.sleep(2)
-        logger.info("Interactive engine graph manager service is ready.")
+        logger.info("GIE graph manager service is ready.")
 
     def _create_services(self):
         # create interactive engine service
@@ -568,9 +571,8 @@ class KubernetesClusterLauncher(Launcher):
                 self._timeout_seconds
                 and self._timeout_seconds + start_time < time.time()
             ):
-                raise TimeoutError("Engine launching timeout.")
+                raise TimeoutError("GraphScope Engines launching timeout.")
             time.sleep(2)
-        logger.info("Analytical engine service is ready.")
 
         self._pod_name_list = []
         self._pod_ip_list = []
@@ -591,6 +593,7 @@ class KubernetesClusterLauncher(Launcher):
 
         # get vineyard service endpoint
         self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
+        logger.info("GraphScope engines pod is ready.")
 
     def _dump_cluster_logs(self):
         log_dict = dict()
@@ -627,7 +630,13 @@ class KubernetesClusterLauncher(Launcher):
         )
         return endpoints[0]
 
-    def _launch_engine_locally(self):
+    def _launch_analytical_engine_locally(self):
+        logger.info(
+            "Starting GAE rpc service on {} ...".format(
+                str(self._analytical_engine_endpoint)
+            )
+        )
+
         # generate and distribute hostfile
         with open("/tmp/kube_hosts", "w") as f:
             for i in range(len(self._pod_ip_list)):
@@ -716,18 +725,13 @@ class KubernetesClusterLauncher(Launcher):
             self._create_services()
             self._waiting_for_services_ready()
             self._dump_resource_object()
-            logger.info("Engine pod name list: {}".format(self._pod_name_list))
-            logger.info("Engine pod ip list: {}".format(self._pod_ip_list))
-            logger.info("Engine pod host ip list: {}".format(self._pod_host_ip_list))
-            logger.info(
-                "Analytical engine service endpoint: {}".format(
-                    self._analytical_engine_endpoint
-                )
-            )
+            logger.info("Engines pod name list: {}".format(self._pod_name_list))
+            logger.info("Engines pod ip list: {}".format(self._pod_ip_list))
+            logger.info("Engines pod host ip list: {}".format(self._pod_host_ip_list))
             logger.info(
                 "Vineyard service endpoint: {}".format(self._vineyard_service_endpoint)
             )
-            self._launch_engine_locally()
+            self._launch_analytical_engine_locally()
         except Exception as e:
             time.sleep(1)
             logger.error(

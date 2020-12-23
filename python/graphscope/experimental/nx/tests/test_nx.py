@@ -29,10 +29,12 @@ from graphscope.framework.graph_utils import load_from
 from graphscope.framework.loader import Loader
 from graphscope.proto import types_pb2
 
+graphscope.set_option(show_log=True)
+
 
 @pytest.fixture(scope="session")
 def graphscope_session():
-    sess = graphscope.session(run_on_local=True, show_log=True, num_workers=1)
+    sess = graphscope.session(run_on_local=True, num_workers=1)
     sess.as_default()
     yield sess
     sess.close()

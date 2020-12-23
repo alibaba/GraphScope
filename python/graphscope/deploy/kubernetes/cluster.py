@@ -20,6 +20,7 @@
 import atexit
 import logging
 import os
+import queue
 import random
 import re
 import subprocess
@@ -32,6 +33,7 @@ from kubernetes import watch as kube_watch
 from kubernetes.client import CoreV1Api
 from kubernetes.client.rest import ApiException as K8SApiException
 
+from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.kubernetes.resource_builder import ClusterRoleBindingBuilder
 from graphscope.deploy.kubernetes.resource_builder import ClusterRoleBuilder
 from graphscope.deploy.kubernetes.resource_builder import GSCoordinatorBuilder
@@ -39,9 +41,11 @@ from graphscope.deploy.kubernetes.resource_builder import NamespaceBuilder
 from graphscope.deploy.kubernetes.resource_builder import RoleBindingBuilder
 from graphscope.deploy.kubernetes.resource_builder import RoleBuilder
 from graphscope.deploy.kubernetes.resource_builder import ServiceBuilder
+from graphscope.deploy.kubernetes.utils import KubernetesPodWatcher
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import is_minikube_cluster
+from graphscope.deploy.kubernetes.utils import wait_for_deployment_complete
 from graphscope.framework.errors import K8sError
 from graphscope.framework.utils import random_string
 
@@ -66,9 +70,6 @@ class KubernetesCluster(object):
 
         num_workers: int
             Number of workers to launch graphscope engine.
-
-        log_level: str
-            Verbosity of logging in graphscope engine.
 
         gs_image: str
             GraphScope engine image.
@@ -139,7 +140,6 @@ class KubernetesCluster(object):
         service_type=None,
         minikube_vm_driver=None,
         num_workers=None,
-        log_level=None,
         gs_image=None,
         etcd_image=None,
         gie_graph_manager_image=None,
@@ -167,7 +167,6 @@ class KubernetesCluster(object):
         self._minikube_vm_driver = minikube_vm_driver
         self._gs_image = gs_image
         self._num_workers = num_workers
-        self._log_level = log_level
         self._etcd_image = etcd_image
         self._gie_graph_manager_image = gie_graph_manager_image
         self._zookeeper_image = zookeeper_image
@@ -203,6 +202,10 @@ class KubernetesCluster(object):
 
         self._closed = False
         self._timeout_seconds = timeout_seconds
+
+        # pods watcher
+        self._coordinator_pods_watcher = []
+        self._logs = []
 
         self._delete_namespace = False
 
@@ -352,6 +355,7 @@ class KubernetesCluster(object):
         self._resource_object.extend(targets)
 
     def _create_coordinator(self):
+        logger.info("Launching coordinator...")
         targets = []
 
         labels = {"name": self._coordinator_name}
@@ -396,7 +400,7 @@ class KubernetesCluster(object):
             name=self._coordinator_container_name,
             port=self._random_coordinator_service_port,
             num_workers=self._num_workers,
-            log_level=self._log_level,
+            log_level=gs_config.log_level,
             namespace=self._namespace,
             service_type=self._service_type,
             gs_image=self._gs_image,
@@ -431,64 +435,33 @@ class KubernetesCluster(object):
         self._create_coordinator()
 
     def _waiting_for_services_ready(self):
-        start_time = time.time()
-        event_messages = []
-        while True:
-            deployments = self._app_api.list_namespaced_deployment(self._namespace)
-            service_available = False
-            for deployment in deployments.items:
-                if deployment.metadata.name == self._coordinator_name:
-                    # replica is 1
-                    if deployment.status.available_replicas == 1:
-                        # service is ready
-                        service_available = True
-                        break
+        deployment = self._app_api.read_namespaced_deployment_status(
+            namespace=self._namespace, name=self._coordinator_name
+        )
 
-                    # check container status
-                    selector = ""
-                    for k, v in deployment.spec.selector.match_labels.items():
-                        selector += k + "=" + v + ","
-                    selector = selector[:-1]
-                    pods = self._core_api.list_namespaced_pod(
-                        namespace=self._namespace, label_selector=selector
-                    )
-                    for pod in pods.items:
-                        # output pod event
-                        pod_name = pod.metadata.name
-                        field_selector = "involvedObject.name=" + pod_name
-                        stream = kube_watch.Watch().stream(
-                            self._core_api.list_namespaced_event,
-                            self._namespace,
-                            field_selector=field_selector,
-                            timeout_seconds=1,
-                        )
-                        for event in stream:
-                            msg = "[{}]: {}".format(pod_name, event["object"].message)
-                            if msg not in event_messages:
-                                event_messages.append(msg)
-                                logger.info(msg)
-                                if event["object"].reason == "Failed":
-                                    raise RuntimeError("Kubernetes event error: ", msg)
-                        # check failed
-                        if pod.status.container_statuses is not None:
-                            for container_status in pod.status.container_statuses:
-                                if (
-                                    container_status.ready is False
-                                    and container_status.restart_count > 0
-                                ):
-                                    service_available = False
-                                    raise RuntimeError("Coordinator pod start failed.")
+        # get deployment pods
+        selector = ""
+        for k, v in deployment.spec.selector.match_labels.items():
+            selector += k + "=" + v + ","
+        selector = selector[:-1]
+        pods = self._core_api.list_namespaced_pod(
+            namespace=self._namespace, label_selector=selector
+        )
 
-            if service_available:
-                break
+        for pod in pods.items:
+            self._coordinator_pods_watcher.append(
+                KubernetesPodWatcher(self._api_client, self._namespace, pod)
+            )
+            self._coordinator_pods_watcher[-1].start()
 
-            if (
-                self._timeout_seconds
-                and self._timeout_seconds + start_time < time.time()
-            ):
-                raise RuntimeError("Coordinator service start timeout.")
-            time.sleep(1)
-        logger.info("Coordinator service is ready.")
+        if wait_for_deployment_complete(
+            api_client=self._api_client,
+            namespace=self._namespace,
+            name=self._coordinator_name,
+            timeout_seconds=self._timeout_seconds,
+        ):
+            for pod_watcher in self._coordinator_pods_watcher:
+                pod_watcher.stop()
 
     def _get_minikube_service(self, namespace, service_name):
         def minikube_get_service_url(process, rlt, messages):
@@ -547,43 +520,18 @@ class KubernetesCluster(object):
 
         return endpoints[0]
 
-    def _dump_cluster_logs(self):
-        log_dict = dict()
-        pod_items = self._core_api.list_namespaced_pod(self._namespace).to_dict()
-        for item in pod_items["items"]:
-            log_dict[item["metadata"]["name"]] = self._core_api.read_namespaced_pod_log(
-                name=item["metadata"]["name"], namespace=self._namespace
-            )
-        return log_dict
-
-    def _dump_coordinator_status(self):
-        deployments = self._app_api.list_namespaced_deployment(
-            namespace=self._namespace
-        )
-        for deployment in deployments.items:
-            if deployment.metadata.name == self._coordinator_name:
-                selector = ""
-                for k, v in deployment.spec.selector.match_labels.items():
-                    selector += k + "=" + v + ","
-                selector = selector[:-1]
-
-                pods = self._core_api.list_namespaced_pod(
-                    namespace=self._namespace, label_selector=selector
-                )
-                for pod in pods.items:
-                    pod_name = pod.metadata.name
+    def _dump_coordinator_failed_status(self):
+        # Dump failed status even show_log is False
+        if not gs_config.show_log:
+            for pod_watcher in self._coordinator_pods_watcher:
+                while True:
                     try:
-                        # dump logs
-                        logger.error(
-                            self._core_api.read_namespaced_pod_log(
-                                name=pod_name,
-                                namespace=self._namespace,
-                                container=self._coordinator_container_name,
-                            )
-                        )
-                    except K8SApiException as e:
-                        # describe pod
-                        logger.error(str(e))
+                        message = pod_watcher.poll(timeout_seconds=3)
+                    except queue.Empty:
+                        pod_watcher.stop()
+                        break
+                    else:
+                        logger.error(message, extra={"simple": True})
 
     def start(self):
         """Launch graphscope instance on kubernetes cluster.
@@ -599,12 +547,13 @@ class KubernetesCluster(object):
             self._create_role_and_binding()
 
             self._create_services()
+            time.sleep(1)
             self._waiting_for_services_ready()
+            logger.info("Coordinator pod start successful, connecting to service...")
             return self._get_coordinator_endpoint()
         except Exception as e:
             time.sleep(1)
-            logger.error("Error when launching Coordinator on kubernetes cluster.")
-            self._dump_coordinator_status()
+            self._dump_coordinator_failed_status()
             self.stop()
             raise K8sError(
                 "Error when launching Coordinator on kubernetes cluster"
