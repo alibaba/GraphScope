@@ -7,6 +7,7 @@ set -x
 set -o pipefail
 
 platform=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
+is_in_wsl=false && [[ -z "${IS_WSL}" || -z "${WSL_DISTRO_NAME}" ]] && is_in_wsl=true
 
 ##########################
 # Install packages
@@ -43,7 +44,7 @@ function install_dependencies() {
   curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/"${K8S_VERSION}"/bin/linux/amd64/kubectl && \
   chmod +x kubectl && sudo mv kubectl /usr/local/bin/ && sudo ln /usr/local/bin/kubectl /usr/bin/kubectl || true
 
-  if [[ ! -z ${IS_WSL} && ! -z ${WSL_DISTRO_NAME} ]]; then
+  if [[ "${is_in_wsl}" = false ]]; then
       curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
       chmod +x minikube && sudo mv minikube /usr/local/bin/ && sudo ln /usr/local/bin/minikube /usr/bin/minikube || true
   else
@@ -55,7 +56,7 @@ function install_dependencies() {
 function start_docker() {
   # start docker daemon if docker not running.
   if ! sudo docker info >/dev/null 2>&1; then
-    if [[ ! -z ${IS_WSL} && ! -z ${WSL_DISTRO_NAME} ]]; then
+    if [[ "${is_in_wsl}" = false ]]; then
       sudo systemctl start docker
     else
       sudo dockerd > /dev/null& || true
@@ -64,7 +65,7 @@ function start_docker() {
 }
 
 function launch_k8s_cluster() {
-  if [[ ! -z ${IS_WSL} && ! -z ${WSL_DISTRO_NAME} ]]; then
+  if [[ "${is_in_wsl}" = false ]]; then
     export CHANGE_MINIKUBE_NONE_USER=true
     sudo sysctl fs.protected_regular=0 || true
     sudo minikube start --vm-driver=none --kubernetes-version="${K8S_VERSION}"
@@ -90,7 +91,7 @@ function pull_images() {
   sudo docker pull zookeeper:3.4.14 || true
   sudo docker pull quay.io/coreos/etcd:v3.4.13 || true
 
-  if [[ -z ${IS_WSL} || -z ${WSL_DISTRO_NAME} ]]; then
+  if [[ "${is_in_wsl}" = true ]]; then
     echo "$(date '+%Y-%m-%d %H:%M:%S') load images into cluster"
     sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest || true
     sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
