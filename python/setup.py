@@ -244,11 +244,12 @@ setup(
     author="Alibaba Damo Academy",
     author_email="graphscope@alibaba-inc.com",
     url="https://github.com/alibaba/GraphScope",
-    license="MIT",
+    license="Apache License 2.0",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: Apache Software License",
         "Topic :: Software Development :: Libraries",
         "Topic :: System :: Distributed Computing",
         "Operating System :: MacOS :: MacOS X",
