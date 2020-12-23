@@ -209,7 +209,7 @@ def test_multiple_session(data_dir):
     sess.close()
 
 
-def test_load_modern_graph(modern_graph_data_dir):
+def test_query_modern_graph(modern_graph_data_dir):
     image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         show_log=True,
@@ -236,3 +236,52 @@ def test_load_modern_graph(modern_graph_data_dir):
     for q in queries:
         result = interactive.execute(q).all().result()[0]
         assert result == 1
+
+
+def test_traversal_modern_graph(modern_graph_data_dir):
+    from gremlin_python.process.traversal import P
+    from gremlin_python.process.traversal import Order
+
+    image = get_gs_image_on_ci_env()
+    sess = graphscope.session(
+        show_log=True,
+        num_workers=1,
+        k8s_gs_image=image,
+        k8s_coordinator_cpu=0.5,
+        k8s_coordinator_mem="2500Mi",
+        k8s_vineyard_cpu=0.1,
+        k8s_vineyard_mem="512Mi",
+        k8s_engine_cpu=0.1,
+        k8s_engine_mem="1500Mi",
+        k8s_vineyard_shared_mem="2Gi",
+    )
+    graph = load_modern_graph(sess, modern_graph_data_dir)
+    interactive = sess.gremlin(graph)
+    g = interactive.traversal_source()
+    assert g.V().has("name", "marko").count().toList()[0] == 1
+    assert g.V().has("person", "name", "marko").count().toList()[0] == 1
+    assert g.V().has("person", "name", "marko").outE("created").count().toList()[0] == 1
+    assert (
+        g.V().has("person", "name", "marko").outE("created").inV().count().toList()[0]
+        == 1
+    )
+    assert g.V().has("person", "name", "marko").out("created").count().toList()[0] == 1
+    assert (
+        g.V()
+        .has("person", "name", "marko")
+        .out("created")
+        .values("name")
+        .count()
+        .toList()[0]
+        == 1
+    )
+    assert (
+        g.V()
+        .hasLabel("person")
+        .has("age", P.gt(30))
+        .order()
+        .by("age", Order.desc)
+        .count()
+        .toList()[0]
+        == 2
+    )
