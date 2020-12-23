@@ -239,8 +239,8 @@ def test_query_modern_graph(modern_graph_data_dir):
 
 
 def test_traversal_modern_graph(modern_graph_data_dir):
-    from gremlin_python.process.traversal import P
     from gremlin_python.process.traversal import Order
+    from gremlin_python.process.traversal import P
 
     image = get_gs_image_on_ci_env()
     sess = graphscope.session(
