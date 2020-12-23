@@ -1,4 +1,10 @@
 /**
+ * Part of this is referred from project cuba,
+ *
+ * https://github.com/cuba-platform/cuba/blob/master/modules/global/src/com/haulmont/cuba/core/sys/serialization/KryoSerialization.java
+ *
+ * which has the following license:
+ *
  * Copyright (c) 2008-2016 Haulmont.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");

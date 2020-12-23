@@ -1,4 +1,10 @@
 /**
+ * This file is referred and derived from project apache/tinkerpop
+ *
+ *   https://github.com/apache/tinkerpop/blob/master/gremlin-server/src/main/java/org/apache/tinkerpop/gremlin/server/op/traversal/TraversalOpProcessor.java
+ *
+ * which has the following license:
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
