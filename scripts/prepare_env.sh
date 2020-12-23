@@ -43,7 +43,7 @@ function install_dependencies() {
   curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/"${K8S_VERSION}"/bin/linux/amd64/kubectl && \
   chmod +x kubectl && sudo mv kubectl /usr/local/bin/ && sudo ln /usr/local/bin/kubectl /usr/bin/kubectl || true
 
-  if [[ ! -z "$IS_WSL" && ! -z "$WSL_DISTRO_NAME" ]]; then
+  if [[ ! -z ${IS_WSL} && ! -z ${WSL_DISTRO_NAME} ]]; then
       curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
       chmod +x minikube && sudo mv minikube /usr/local/bin/ && sudo ln /usr/local/bin/minikube /usr/bin/minikube || true
   else
@@ -55,7 +55,7 @@ function install_dependencies() {
 function start_docker() {
   # start docker daemon if docker not running.
   if ! sudo docker info >/dev/null 2>&1; then
-    if [[ ! -z "$IS_WSL" && ! -z "$WSL_DISTRO_NAME" ]]; then
+    if [[ ! -z ${IS_WSL} && ! -z ${WSL_DISTRO_NAME} ]]; then
       sudo systemctl start docker
     else
       sudo dockerd > /dev/null& || true
@@ -64,7 +64,7 @@ function start_docker() {
 }
 
 function launch_k8s_cluster() {
-  if [[ ! -z "$IS_WSL" && ! -z "$WSL_DISTRO_NAME" ]]; then
+  if [[ ! -z ${IS_WSL} && ! -z ${WSL_DISTRO_NAME} ]]; then
     export CHANGE_MINIKUBE_NONE_USER=true
     sudo sysctl fs.protected_regular=0 || true
     sudo minikube start --vm-driver=none --kubernetes-version="${K8S_VERSION}"
@@ -81,6 +81,21 @@ function launch_k8s_cluster() {
     sudo kind create cluster --config config-with-mounts.yaml
     sudo cp -r /root/.kube ${HOME} || true
     sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
+  fi
+}
+
+function pull_images() {
+  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest || true
+  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
+  sudo docker pull zookeeper:3.4.14 || true
+  sudo docker pull quay.io/coreos/etcd:v3.4.13 || true
+
+  if [[ -z ${IS_WSL} || -z ${WSL_DISTRO_NAME} ]]; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') load images into cluster"
+    sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest || true
+    sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
+    sudo kind load zookeeper:3.4.14 || true
+    sudo kind load quay.io/coreos/etcd:v3.4.13 || true
   fi
 }
 
@@ -104,12 +119,8 @@ start_docker
 echo "$(date '+%Y-%m-%d %H:%M:%S') launch k8s cluster"
 launch_k8s_cluster
 
-# pull images(graphscope, etcd, maxgraph_standalone_manager)
-echo "$(date '+%Y-%m-%d %H:%M:%S') pull graphscope image and etcd image"
-sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest || true
-sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
-sudo docker pull zookeeper:3.4.14 || true
-sudo docker pull quay.io/coreos/etcd:v3.4.13 || true
+echo "$(date '+%Y-%m-%d %H:%M:%S') pull images(graphscope, etcd, maxgraph_standalone_manager)"
+pull_images
 
 set +x
 set +e
