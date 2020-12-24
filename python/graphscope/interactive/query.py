@@ -22,6 +22,8 @@ import random
 from concurrent.futures import ThreadPoolExecutor
 
 from gremlin_python.driver.client import Client
+from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
+from gremlin_python.process.anonymous_traversal import traversal
 
 from graphscope.framework.loader import Loader
 
@@ -32,11 +34,15 @@ class InteractiveQuery(object):
     """`InteractiveQuery` class, is a simple wrapper around
     `Gremlin-Python <https://pypi.org/project/gremlinpython/>`_,
     which implements Gremlin within the Python language.
-    It also can expose gremlin endpoint which can be used by any other standard gremlin console.
+    It also can expose gremlin endpoint which can be used by
+    any other standard gremlin console, with the method `graph_url()`.
 
     It also has a method called `subgraph` which can extract some fragments
     from origin graph, produce a new, smaller but concise graph stored in vineyard,
     which lifetime is independent from the origin graph.
+
+    User can either use `execute()` to submit a script, or use `traversal_source()`
+    to get a `GraphTraversalSource` for further traversal.
     """
 
     def __init__(self, graphscope_session, object_id, front_ip, front_port):
@@ -140,6 +146,27 @@ class InteractiveQuery(object):
         if self.closed():
             raise RuntimeError("Interactive query is closed.")
         return self._client.submit(query)
+
+    def traversal_source(self):
+        """Create a GraphTraversalSource and return.
+        Once `g` has been created using a connection, we can start to write
+        Gremlin traversals to query the remote graph.
+
+        Examples:
+
+            .. code:: python
+
+                sess = graphscope.session()
+                graph = load_modern_graph(sess, modern_graph_data_dir)
+                interactive = sess.gremlin(graph)
+                g = interactive.traversal_source()
+                print(g.V().both()[1:3].toList())
+                print(g.V().both().name.toList())
+
+        Returns:
+            `GraphTraversalSource`
+        """
+        return traversal().withRemote(DriverRemoteConnection(self._graph_url, "g"))
 
     def close(self):
         """Close interactive instance and release resources"""
