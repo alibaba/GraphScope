@@ -59,7 +59,7 @@ function start_docker() {
     if [[ "${is_in_wsl}" = false ]]; then
       sudo systemctl start docker
     else
-      sudo dockerd > /dev/null& || true
+      sudo dockerd > /dev/null&
     fi
   fi
 }
