@@ -56,12 +56,3 @@ class GSConfig(object):
     log_level = "INFO"
 
     timeout_seconds = 600
-
-    @staticmethod
-    def _dump_json_():
-        _dict_ = GSConfig.__dict__
-        return {
-            k: _dict_[k]
-            for k in _dict_
-            if not k.startswith("_") and not k.endswith("_")
-        }

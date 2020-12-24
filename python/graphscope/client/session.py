@@ -23,7 +23,6 @@ import atexit
 import base64
 import contextlib
 import copy
-import functools
 import json
 import logging
 import os
@@ -44,6 +43,7 @@ except ImportError:
 import graphscope
 from graphscope.client.rpc import GRPCClient
 from graphscope.client.utils import GSLogger
+from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.kubernetes.cluster import KubernetesCluster
 from graphscope.framework.errors import ConnectionError
@@ -134,6 +134,7 @@ class Session(object):
         >>> s = graphscope.session(config={'k8s_engine_cpu': 5, 'k8s_engine_mem': '5Gi'})
     """
 
+    @set_defaults(gs_config)
     def __init__(
         self,
         config=None,
@@ -867,11 +868,7 @@ class Session(object):
         return learning_graph
 
 
-def session_impl(*args, **kwargs):
-    return Session(*args, **kwargs)
-
-
-session = functools.partial(session_impl)
+session = Session
 
 
 def _is_port_in_use(port):
@@ -990,10 +987,7 @@ def set_option(**kwargs):
     for k, v in kwargs.items():
         setattr(gs_config, k, v)
 
-    import graphscope
-
     GSLogger.update()
-    graphscope.session = functools.partial(session_impl, **gs_config._dump_json_())
 
 
 def get_option(key):

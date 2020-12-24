@@ -16,8 +16,10 @@
 # limitations under the License.
 #
 
+import inspect
 import logging
 import sys
+from functools import wraps
 
 from graphscope.config import GSConfig as gs_config
 
@@ -79,3 +81,57 @@ class GSLogger(object):
 
 
 GSLogger.init()
+
+
+def set_defaults(defaults):
+    """Decorator to update default params to the latest defaults value.
+
+    Args:
+        defaults: object
+            Include the latest values you want to set.
+
+    Returns:
+        The decorated function.
+
+    Examples:
+        >>> class Config(object):
+        >>>     param1 = "new_value1"
+        >>>     param2 = "new_value2"
+        >>>
+        >>> @set_defaults()
+        >>> def func(extra_param1, extra_param2=None, param1="old_value1", param2="old_value2", **kwargs):
+        >>>     print(extra_param1, extra_param2, param1, param2)
+        >>>
+        >>> func("extra_value1")
+        "extra_value1", None, "new_value1", "new_value2"
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            original_defaults = func.__defaults__
+
+            new_defaults = []
+            signature = inspect.signature(func)
+            for k, v in signature.parameters.items():
+                # filter self and position params
+                if k == "self" or v.default is inspect.Parameter.empty:
+                    continue
+                if hasattr(defaults, k):
+                    new_defaults.append(getattr(defaults, k))
+                else:
+                    new_defaults.append(v.default)
+
+            assert len(original_defaults) == len(new_defaults), "set defaults failed"
+            func.__defaults__ = tuple(new_defaults)
+
+            return_value = func(*args, **kwargs)
+
+            # Restore original defaults.
+            func.__defaults__ = original_defaults
+
+            return return_value
+
+        return wrapper
+
+    return decorator
