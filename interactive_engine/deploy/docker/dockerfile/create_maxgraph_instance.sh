@@ -52,17 +52,31 @@ function _setup_config {
     sh -c "$update_cmd"
     parallel_run "$update_cmd" "$pod_hosts" $ENGINE_CONTAINER
 }
+function _random_generator {
+    min=$1
+    range=$2
+    _port=$(( ((RANDOM<<15)|RANDOM) % $range + $min ))
+    echo ${_port}
+}
 function _expose_gremlin_server {
     port=$1
     gremlin_pod=`kubectl get pods -l "graph=pod-${object_id}" | grep -v NAME | awk '{print $1}'`
-    kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${port} \
-        --target-port=${port} --type=NodePort 1>/dev/null 2>&1
-    [ $? -eq 0 ] || exit 1
-    node_port=`kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]"`
-    [ $? -eq 0 ] || exit 1
-    # EXTERNAL_IP=`kubectl describe pods -l "app=manager" | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}'`
-    EXTERNAL_IP=`kubectl describe pods pod-${object_id} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}'`
-    echo "FRONTEND_PORT:$EXTERNAL_IP:$node_port"
+    if [ "$GREMLIN_EXPOSE" = "LoadBalancer" ]; then
+        # range [50001, 53000)
+        external_port=$( _random_generator 50001 3000 )
+        kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${external_port} \
+            --target-port=${port} --type=LoadBalancer 1>/dev/null 2>&1
+        [ $? -eq 0 ] || exit 1
+        EXTERNAL_IP=`kubectl describe service gremlin-${object_id} | grep "LoadBalancer Ingress" | awk -F'[ :]+' '{print $3}'`
+    else
+        kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${port} \
+            --target-port=${port} --type=NodePort 1>/dev/null 2>&1
+        [ $? -eq 0 ] || exit 1
+        external_port=`kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]"`
+        [ $? -eq 0 ] || exit 1
+        EXTERNAL_IP=`kubectl describe pods pod-${object_id} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}'`
+    fi
+    echo "FRONTEND_PORT:$EXTERNAL_IP:$external_port"
 }
 export object_id=$1
 export schema_path=$2
