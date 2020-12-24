@@ -294,7 +294,7 @@ def compile_graph_frame(
             f.write(content)
 
     # compile
-    logger.info("Building graph ...")
+    logger.info("Building graph library ...")
     cmake_process = subprocess.Popen(
         cmake_commands,
         env=os.environ.copy(),

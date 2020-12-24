@@ -29,18 +29,19 @@ class ConditionalFormatter(logging.Formatter):
     Taken from https://stackoverflow.com/questions/34954373/disable-format-for-some-messages
     Examples:
        .. code:: python
-            import logging
-            import sys
-            handler = logging.StreamHandler(sys.stdout)
-            formatter = ConditionalFormatter('%(asctime)s %(levelname)s - %(message)s')
-            handler.setFormatter(formatter)
-            logger = logging.getLogger("graphscope")
-            logger.setLevel("INFO")
-            logger.addHandler(handler)
-            logger.info("with formatting")
-            # 2020-12-21 13:44:52,537 INFO - with formatting
-            logger.info("without formatting", extra={'simple': True})
-            # without formatting
+
+            >>> import logging
+            >>> import sys
+            >>> handler = logging.StreamHandler(sys.stdout)
+            >>> formatter = ConditionalFormatter('%(asctime)s %(levelname)s - %(message)s')
+            >>> handler.setFormatter(formatter)
+            >>> logger = logging.getLogger("graphscope")
+            >>> logger.setLevel("INFO")
+            >>> logger.addHandler(handler)
+            >>> logger.info("with formatting")
+            2020-12-21 13:44:52,537 INFO - with formatting
+            >>> logger.info("without formatting", extra={'simple': True})
+            without formatting
     """
 
     def format(self, record):
@@ -64,6 +65,7 @@ class GSLogger(object):
         else:
             stdout_handler.setLevel(logging.ERROR)
         logger.addHandler(stdout_handler)
+        logger.propagate = False
 
     @staticmethod
     def update():

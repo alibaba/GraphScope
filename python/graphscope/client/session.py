@@ -209,22 +209,24 @@ class Session(object):
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
 
             **kw (dict, optional): Other optional parameters will be put to :code:`**kw`.
-                - If your kubernetes cluster deployed on inner virtual machine
-                (such as minikube with param --vm-driver is not None), you can specify
-                :code:`k8s_minikube_vm_driver` is :code:`True`.
+                - k8s_minikube_vm_driver (bool, optional):
+                    If your kubernetes cluster deployed on inner virtual machine
+                    (such as minikube with param --vm-driver is not None), you can specify
+                    :code:`k8s_minikube_vm_driver` is :code:`True`.
 
-                - k8s_client_config (dict, optional): Provide configurable parameters for connecting to remote k8s,
+                - k8s_client_config (dict, optional):
+                    Provide configurable parameters for connecting to remote k8s,
                     which strongly relies on the `kube_config.new_client_from_config` function.
                     eg: {"config_file": "~/.kube/config", "context": None, "persist_config": True}
                     config_file: Name of the kube-config file.
                     context: set the active context. If is set to None, current_context from config file will be used.
                     persist_config: If True, config file will be updated when changed(e.g GCP token refresh).
 
-                - log_level: Deprecated,
-                move this param as a global configuration. Set via `graphscope.set_option(log_level='DEBUG')`
+                - log_level: Deprecated.
+                    Move this param as a global configuration. Set via `graphscope.set_option(log_level='DEBUG')`
 
-                - show_log: Deprecated,
-                mmove this param as a global configuration.Set via `graphscope.set_option(show_log=True)`
+                - show_log: Deprecated.
+                    Move this param as a global configuration.Set via `graphscope.set_option(show_log=True)`
 
         Raises:
             TypeError: If the given argument combination is invalid and cannot be used to create
@@ -891,7 +893,6 @@ def _launch_coordinator_on_local(config_params):
             port: Port used to launch coordinator, use random port if None.
             num_workers: Workers number.
             hosts: Hosts name of workers.
-            log_level: Log level.
             timeout_seconds: Wait until reached timeout.
             vineyard_socket: Vineyard socket path. Use default path if None.
     Returns:
@@ -918,7 +919,7 @@ def _launch_coordinator_on_local(config_params):
         "--hosts",
         "{}".format(",".join(config_params["hosts"])),
         "--log_level",
-        "{}".format(config_params["log_level"]),
+        "{}".format(gs_config.log_level),
         "--timeout_seconds",
         "{}".format(config_params["timeout_seconds"]),
         "--port",
