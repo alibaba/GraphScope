@@ -130,6 +130,9 @@ launch_k8s_cluster
 
 pull_images
 
+echo "The script has successfully prepared an environment for GraphScope."
+echo "Now you are ready to have fun with GraphScope."
+
 set +x
 set +e
 set +o pipefail
