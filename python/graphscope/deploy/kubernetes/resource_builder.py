@@ -952,7 +952,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         )
 
     def build_readiness_probe(self):
-        return TcpProbeBuilder(port=self._port, timeout=15, failure_thresh=8)
+        return TcpProbeBuilder(port=self._port, timeout=15, period=10, failure_thresh=8)
 
     def build_container_command(self):
         cmd = [

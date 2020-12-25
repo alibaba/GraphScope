@@ -19,10 +19,13 @@
 
 import logging
 import re
+import threading
 import time
+from queue import Queue
 
 from kubernetes import client as kube_client
 from kubernetes import config as kube_config
+from kubernetes import watch as kube_watch
 from kubernetes.client.rest import ApiException as K8SApiException
 
 from graphscope.framework.errors import K8sError
@@ -49,6 +52,137 @@ def is_minikube_cluster():
     contexts, active_context = kube_config.list_kube_config_contexts()
     if contexts:
         return active_context["context"]["cluster"] == "minikube"
+
+
+def wait_for_deployment_complete(api_client, namespace, name, timeout_seconds=60):
+    core_api = kube_client.CoreV1Api(api_client)
+    app_api = kube_client.AppsV1Api(api_client)
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        time.sleep(2)
+        response = app_api.read_namespaced_deployment_status(
+            namespace=namespace, name=name
+        )
+        s = response.status
+        if (
+            s.updated_replicas == response.spec.replicas
+            and s.replicas == response.spec.replicas
+            and s.available_replicas == response.spec.replicas
+            and s.observed_generation >= response.metadata.generation
+        ):
+            return True
+        else:
+            # check failed
+            selector = ""
+            for k, v in response.spec.selector.match_labels.items():
+                selector += k + "=" + v + ","
+            selector = selector[:-1]
+            pods = core_api.list_namespaced_pod(
+                namespace=namespace, label_selector=selector
+            )
+            for pod in pods.items:
+                if pod.status.container_statuses is not None:
+                    for container_status in pod.status.container_statuses:
+                        if (
+                            not container_status.ready
+                            and container_status.restart_count > 0
+                        ):
+                            raise K8sError("Deployment {} start failed.".format(name))
+    raise TimeoutError("Waiting timeout for deployment {}".format(name))
+
+
+class KubernetesPodWatcher(object):
+    """Class for watching events and logs of kubernetes pod."""
+
+    def __init__(self, api_client, namespace, pod, container=None, queue=None):
+        self._api_client = api_client
+        self._core_api = kube_client.CoreV1Api(api_client)
+        self._app_api = kube_client.AppsV1Api(api_client)
+
+        self._namespace = namespace
+        self._pod = pod
+        self._container = container
+
+        self._pod_name = pod.metadata.name
+        if queue is None:
+            self._lines = Queue()
+        else:
+            self._lines = queue
+
+        self._stream_event_thread = None
+        self._stream_log_thread = None
+        self._stopped = True
+
+    def _stream_event_impl(self, simple=False):
+        field_selector = "involvedObject.name=" + self._pod_name
+
+        event_messages = []
+        while not self._stopped:
+            time.sleep(1)
+            try:
+                events = self._core_api.list_namespaced_event(
+                    namespace=self._namespace,
+                    field_selector=field_selector,
+                    timeout_seconds=2,
+                )
+            except K8SApiException:
+                pass
+            else:
+                for event in events.items:
+                    msg = "{0}: {1}".format(self._pod_name, event.message)
+                    if msg and msg not in event_messages:
+                        event_messages.append(msg)
+                        self._lines.put(msg)
+                        logger.info(msg, extra={"simple": simple})
+                        if event.reason == "Failed":
+                            raise K8sError("Kubernetes event error: {}".format(msg))
+
+    def _stream_log_impl(self, simple=False):
+        log_messages = []
+        while not self._stopped:
+            time.sleep(1)
+            try:
+                logs = self._core_api.read_namespaced_pod_log(
+                    namespace=self._namespace,
+                    name=self._pod_name,
+                    container=self._container,
+                )
+            except K8SApiException:
+                pass
+            else:
+                for msg in logs.split("\n"):
+                    if msg and msg not in log_messages:
+                        log_messages.append(msg)
+                        self._lines.put(msg)
+                        logger.info(msg, extra={"simple": simple})
+
+    def poll(self, block=True, timeout_seconds=None):
+        return self._lines.get(block=block, timeout=timeout_seconds)
+
+    def start(self):
+        self._stopped = False
+        self._stream_event_thread = threading.Thread(
+            target=self._stream_event_impl, args=()
+        )
+        self._stream_event_thread.start()
+        time.sleep(1)
+        self._stream_log_thread = threading.Thread(
+            target=self._stream_log_impl, args=(True,)
+        )
+        self._stream_log_thread.start()
+
+    def stop(self, timeout_seconds=60):
+        if not self._stopped:
+            self._stopped = True
+            self._stream_event_thread.join(timeout=timeout_seconds)
+            self._stream_log_thread.join(timeout=timeout_seconds)
+            if (
+                self._stream_event_thread.is_alive()
+                or self._stream_log_thread.is_alive()
+            ):
+                raise TimeoutError(
+                    "Pod watcher thread joined timeout: {}.".format(self._pod_name)
+                )
 
 
 def get_service_endpoints(api_client, namespace, name, type, timeout_seconds=60):

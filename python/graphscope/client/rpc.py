@@ -26,6 +26,7 @@ import time
 
 import grpc
 
+from graphscope.config import GSConfig as gs_config
 from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import check_grpc_response
@@ -92,9 +93,7 @@ class GRPCClient(object):
         self._session_id = None
         self._logs_fetching_thread = None
 
-    def waiting_service_ready(
-        self, timeout_seconds=60, enable_k8s=False, show_log=False
-    ):
+    def waiting_service_ready(self, timeout_seconds=60, enable_k8s=True):
         begin_time = time.time()
         request = message_pb2.HeartBeatRequest()
         while True:
@@ -106,10 +105,10 @@ class GRPCClient(object):
             finally:
                 if response is not None:
                     # connnect to coordinator, fetch log
-                    if enable_k8s and show_log:
+                    if enable_k8s:
                         self.fetch_logs()
                     if response.status.code == error_codes_pb2.OK:
-                        logger.info("GraphScope coordinator service ready.")
+                        logger.info("GraphScope coordinator service connected.")
                         break
                 time.sleep(1)
                 if time.time() - begin_time >= timeout_seconds:
@@ -208,7 +207,7 @@ class GRPCClient(object):
             resp = check_grpc_response(resp)
             message = resp.message.rstrip()
             if message:
-                print(message, end="\n", file=sys.stdout, flush=True)
+                logger.info(message, extra={"simple": True})
 
     @catch_grpc_error
     def _close_session_impl(self):

@@ -21,38 +21,38 @@
 
 
 class GSConfig(object):
-    NAMESPACE = None
+    k8s_namespace = None
 
     # image
-    ZOOKEEPER_IMAGE = "zookeeper:3.4.14"
-    ETCD_IMAGE = "quay.io/coreos/etcd:v3.4.13"
-    GS_IMAGE = "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest"
-    GIE_GRAPH_MANAGER_IMAGE = (
+    k8s_zookeeper_image = "zookeeper:3.4.14"
+    k8s_etcd_image = "quay.io/coreos/etcd:v3.4.13"
+    k8s_gs_image = "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest"
+    k8s_gie_graph_manager_image = (
         "registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0"
     )
 
     # image pull configuration
-    IMAGE_PULL_POLICY = "IfNotPresent"
-    IMAGE_PULL_SECRETS = []
+    k8s_image_pull_policy = "IfNotPresent"
+    k8s_image_pull_secrets = []
 
     # coordinator resource configuration
-    COORDINATOR_CPU = 1.0
-    COORDINATOR_MEM = "4Gi"
+    k8s_coordinator_cpu = 1.0
+    k8s_coordinator_mem = "4Gi"
 
     # vineyard resource configuration
-    VINEYARD_CPU = 0.5
-    VINEYARD_MEM = "512Mi"
-    VINEYARD_SHARED_MEM = "4Gi"
+    k8s_vineyard_cpu = 0.5
+    k8s_vineyard_mem = "512Mi"
+    k8s_vineyard_shared_mem = "4Gi"
 
     # engine resource configuration
-    ENGINE_CPU = 0.5
-    ENGINE_MEM = "4Gi"
+    k8s_engine_cpu = 0.5
+    k8s_engine_mem = "4Gi"
 
-    SERVICE_TYPE = "NodePort"
+    k8s_service_type = "NodePort"
 
-    NUM_WORKERS = 2
-    SHOW_LOG = False
-    LOG_LEVEL = "info"
+    k8s_waiting_for_delete = False
+    num_workers = 2
+    show_log = False
+    log_level = "INFO"
 
-    TIMEOUT_SECONDS = 600
-    WAITING_FOR_DELETE = False
+    timeout_seconds = 600

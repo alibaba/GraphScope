@@ -42,6 +42,8 @@ except ImportError:
 
 import graphscope
 from graphscope.client.rpc import GRPCClient
+from graphscope.client.utils import GSLogger
+from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.kubernetes.cluster import KubernetesCluster
 from graphscope.framework.errors import ConnectionError
@@ -132,29 +134,28 @@ class Session(object):
         >>> s = graphscope.session(config={'k8s_engine_cpu': 5, 'k8s_engine_mem': '5Gi'})
     """
 
+    @set_defaults(gs_config)
     def __init__(
         self,
         config=None,
-        num_workers=gs_config.NUM_WORKERS,
-        log_level=gs_config.LOG_LEVEL,
-        show_log=gs_config.SHOW_LOG,
-        k8s_namespace=gs_config.NAMESPACE,
-        k8s_service_type=gs_config.SERVICE_TYPE,
-        k8s_gs_image=gs_config.GS_IMAGE,
-        k8s_etcd_image=gs_config.ETCD_IMAGE,
-        k8s_gie_graph_manager_image=gs_config.GIE_GRAPH_MANAGER_IMAGE,
-        k8s_zookeeper_image=gs_config.ZOOKEEPER_IMAGE,
-        k8s_image_pull_policy=gs_config.IMAGE_PULL_POLICY,
-        k8s_image_pull_secrets=gs_config.IMAGE_PULL_SECRETS,
-        k8s_coordinator_cpu=gs_config.COORDINATOR_CPU,
-        k8s_coordinator_mem=gs_config.COORDINATOR_MEM,
-        k8s_vineyard_cpu=gs_config.VINEYARD_CPU,
-        k8s_vineyard_mem=gs_config.VINEYARD_MEM,
-        k8s_vineyard_shared_mem=gs_config.VINEYARD_SHARED_MEM,
-        k8s_engine_cpu=gs_config.ENGINE_CPU,
-        k8s_engine_mem=gs_config.ENGINE_MEM,
-        k8s_waiting_for_delete=gs_config.WAITING_FOR_DELETE,
-        timeout_seconds=gs_config.TIMEOUT_SECONDS,
+        num_workers=gs_config.num_workers,
+        k8s_namespace=gs_config.k8s_namespace,
+        k8s_service_type=gs_config.k8s_service_type,
+        k8s_gs_image=gs_config.k8s_gs_image,
+        k8s_etcd_image=gs_config.k8s_etcd_image,
+        k8s_gie_graph_manager_image=gs_config.k8s_gie_graph_manager_image,
+        k8s_zookeeper_image=gs_config.k8s_zookeeper_image,
+        k8s_image_pull_policy=gs_config.k8s_image_pull_policy,
+        k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
+        k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
+        k8s_coordinator_mem=gs_config.k8s_coordinator_mem,
+        k8s_vineyard_cpu=gs_config.k8s_vineyard_cpu,
+        k8s_vineyard_mem=gs_config.k8s_vineyard_mem,
+        k8s_vineyard_shared_mem=gs_config.k8s_vineyard_shared_mem,
+        k8s_engine_cpu=gs_config.k8s_engine_cpu,
+        k8s_engine_mem=gs_config.k8s_engine_mem,
+        k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
+        timeout_seconds=gs_config.timeout_seconds,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -167,11 +168,6 @@ class Session(object):
                 in environment. Note that it will overwrite explicit parameters. Defaults to None.
 
             num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.
-
-            log_level (str, optional): One of in ['info', 'debug'], Defaults to 'info'.
-
-            show_log (bool, optional): If true, it will fetch and print engines's log from python client.
-                Default to false.
 
             k8s_namespace (str, optional): Contains the namespace to create all resource inside.
                 If param missing or the namespace not exist, a random namespace will be created and deleted
@@ -211,21 +207,27 @@ class Session(object):
                 Also, after seconds of client disconnect, coordinator will clean up this graphscope instance.
                 Defaults to 600.
 
-
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
 
             **kw (dict, optional): Other optional parameters will be put to :code:`**kw`.
-                If your kubernetes cluster deployed on inner virtual machine
-                (such as minikube with param --vm-driver is not None), you can specify
-                :code:`k8s_minikube_vm_driver` is :code:`True`.
+                - k8s_minikube_vm_driver (bool, optional):
+                    If your kubernetes cluster deployed on inner virtual machine
+                    (such as minikube with param --vm-driver is not None), you can specify
+                    :code:`k8s_minikube_vm_driver` is :code:`True`.
 
-                k8s_client_config (dict, optional): Provide configurable parameters for connecting to remote k8s,
+                - k8s_client_config (dict, optional):
+                    Provide configurable parameters for connecting to remote k8s,
                     which strongly relies on the `kube_config.new_client_from_config` function.
                     eg: {"config_file": "~/.kube/config", "context": None, "persist_config": True}
                     config_file: Name of the kube-config file.
                     context: set the active context. If is set to None, current_context from config file will be used.
                     persist_config: If True, config file will be updated when changed(e.g GCP token refresh).
 
+                - log_level: Deprecated.
+                    Move this param as a global configuration. Set via `graphscope.set_option(log_level='DEBUG')`
+
+                - show_log: Deprecated.
+                    Move this param as a global configuration.Set via `graphscope.set_option(show_log=True)`
 
         Raises:
             TypeError: If the given argument combination is invalid and cannot be used to create
@@ -235,8 +237,6 @@ class Session(object):
         self._config_params = {}
         self._accessable_params = (
             "num_workers",
-            "log_level",
-            "show_log",
             "k8s_namespace",
             "k8s_service_type",
             "k8s_gs_image",
@@ -270,9 +270,6 @@ class Session(object):
 
         # update other optional params
         self._config_params.update(kw)
-        self._config_logging(
-            self._config_params["log_level"], self._config_params["show_log"]
-        )
 
         self._config_params["addr"] = None
 
@@ -282,6 +279,10 @@ class Session(object):
             self._config_params["enable_k8s"] = True
         else:
             self._run_on_local()
+
+        # deprecated params handle
+        kw.pop("show_log", None)
+        kw.pop("log_level", None)
 
         # deploy minikube on virtual machine
         self._config_params["k8s_minikube_vm_driver"] = kw.pop(
@@ -346,20 +347,6 @@ class Session(object):
 
     def __str__(self):
         return repr(self)
-
-    def _config_logging(self, log_level, show_log):
-        if show_log:
-            if log_level:
-                log_level = getattr(logging, log_level.upper(), logging.INFO)
-            else:
-                log_level = logging.INFO
-            logging.getLogger("graphscope").setLevel(log_level)
-        else:
-            logging.getLogger("graphscope").setLevel(logging.CRITICAL)
-        logging.basicConfig(
-            format="%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s",
-            stream=sys.stdout,
-        )
 
     @property
     def session_id(self):
@@ -595,7 +582,6 @@ class Session(object):
                 service_type=self._config_params["k8s_service_type"],
                 minikube_vm_driver=self._config_params["k8s_minikube_vm_driver"],
                 num_workers=self._config_params["num_workers"],
-                log_level=self._config_params["log_level"],
                 gs_image=self._config_params["k8s_gs_image"],
                 etcd_image=self._config_params["k8s_etcd_image"],
                 gie_graph_manager_image=self._config_params[
@@ -631,7 +617,6 @@ class Session(object):
         # waiting service ready
         self._grpc_client = GRPCClient(endpoint)
         self._grpc_client.waiting_service_ready(
-            show_log=self._config_params["show_log"],
             timeout_seconds=self._config_params["timeout_seconds"],
             enable_k8s=self._config_params["enable_k8s"],
         )
@@ -905,10 +890,8 @@ def _launch_coordinator_on_local(config_params):
             port: Port used to launch coordinator, use random port if None.
             num_workers: Workers number.
             hosts: Hosts name of workers.
-            log_level: Log level.
             timeout_seconds: Wait until reached timeout.
             vineyard_socket: Vineyard socket path. Use default path if None.
-            show_log: Whether direct logs to stdout and stderr.
     Returns:
         process: instance of Popen object.
         endpoint (str): The endpoint to connect to coordinator.
@@ -933,7 +916,7 @@ def _launch_coordinator_on_local(config_params):
         "--hosts",
         "{}".format(",".join(config_params["hosts"])),
         "--log_level",
-        "{}".format(config_params["log_level"]),
+        "{}".format(gs_config.log_level),
         "--timeout_seconds",
         "{}".format(config_params["timeout_seconds"]),
         "--port",
@@ -953,13 +936,98 @@ def _launch_coordinator_on_local(config_params):
         universal_newlines=True,
         encoding="utf-8",
         stdin=subprocess.DEVNULL,
-        stdout=sys.stdout if config_params["show_log"] else subprocess.DEVNULL,
-        stderr=sys.stderr if config_params["show_log"] else subprocess.DEVNULL,
+        stdout=sys.stdout if gs_config.show_log else subprocess.DEVNULL,
+        stderr=sys.stderr if gs_config.show_log else subprocess.DEVNULL,
         bufsize=1,
         env=env,
     )
 
     return process, "localhost:%s" % port
+
+
+def set_option(**kwargs):
+    """Set the value of specified options.
+
+    Available options:
+        - num_workers
+        - log_level
+        - show_log
+        - k8s_namespace
+        - k8s_service_type
+        - k8s_gs_image
+        - k8s_etcd_image
+        - k8s_gie_graph_manager_image
+        - k8s_zookeeper_image
+        - k8s_image_pull_policy
+        - k8s_image_pull_secrets
+        - k8s_coordinator_cpu
+        - k8s_coordinator_mem
+        - k8s_vineyard_cpu
+        - k8s_vineyard_mem
+        - k8s_vineyard_shared_mem
+        - k8s_engine_cpu
+        - k8s_engine_mem
+        - k8s_waiting_for_delete
+        - timeout_seconds
+
+    Args:
+        kwargs: dict
+            kv pair of GraphScope config you want to set.
+
+    Raises:
+        ValueError: If no such option exists.
+
+    Returns: None
+    """
+    # check exists
+    for k, v in kwargs.items():
+        if not hasattr(gs_config, k):
+            raise ValueError("No such option {} exists.".format(k))
+
+    for k, v in kwargs.items():
+        setattr(gs_config, k, v)
+
+    GSLogger.update()
+
+
+def get_option(key):
+    """Get the value of specified option.
+
+    Available options:
+        - num_workers
+        - log_level
+        - show_log
+        - k8s_namespace
+        - k8s_service_type
+        - k8s_gs_image
+        - k8s_etcd_image
+        - k8s_gie_graph_manager_image
+        - k8s_zookeeper_image
+        - k8s_image_pull_policy
+        - k8s_image_pull_secrets
+        - k8s_coordinator_cpu
+        - k8s_coordinator_mem
+        - k8s_vineyard_cpu
+        - k8s_vineyard_mem
+        - k8s_vineyard_shared_mem
+        - k8s_engine_cpu
+        - k8s_engine_mem
+        - k8s_waiting_for_delete
+        - timeout_seconds
+
+    Args:
+        key: str
+            Key of GraphScope config you want to get.
+
+    Raises:
+        ValueError: If no such option exists.
+
+    Returns: result: the value of the option
+    """
+    if hasattr(gs_config, key):
+        return getattr(gs_config, key)
+    else:
+        raise ValueError("No such option {} exists.".format(key))
 
 
 def default_session(session):

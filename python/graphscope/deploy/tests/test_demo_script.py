@@ -31,6 +31,7 @@ from graphscope.dataset.ldbc import load_ldbc
 from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.framework.loader import Loader
 
+graphscope.set_option(show_log=True)
 logger = logging.getLogger("graphscope")
 
 
@@ -54,7 +55,6 @@ def get_gs_image_on_ci_env():
 def test_demo(data_dir):
     image = get_gs_image_on_ci_env()
     sess = graphscope.session(
-        show_log=True,
         num_workers=1,
         k8s_gs_image=image,
         k8s_coordinator_cpu=0.5,
@@ -92,7 +92,6 @@ def test_demo(data_dir):
 def test_demo_distribute(data_dir, modern_graph_data_dir):
     image = get_gs_image_on_ci_env()
     sess = graphscope.session(
-        show_log=True,
         num_workers=1,
         k8s_gs_image=image,
         k8s_coordinator_cpu=0.5,
@@ -170,7 +169,6 @@ def test_multiple_session(data_dir):
 
     image = get_gs_image_on_ci_env()
     sess = graphscope.session(
-        show_log=True,
         num_workers=1,
         k8s_gs_image=image,
         k8s_coordinator_cpu=0.5,
@@ -187,7 +185,6 @@ def test_multiple_session(data_dir):
     assert len(info["engine_hosts"].split(",")) == 1
 
     sess2 = graphscope.session(
-        show_log=True,
         k8s_namespace=namespace,
         num_workers=2,
         k8s_gs_image=image,
@@ -212,7 +209,6 @@ def test_multiple_session(data_dir):
 def test_query_modern_graph(modern_graph_data_dir):
     image = get_gs_image_on_ci_env()
     sess = graphscope.session(
-        show_log=True,
         num_workers=1,
         k8s_gs_image=image,
         k8s_coordinator_cpu=0.5,
