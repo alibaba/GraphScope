@@ -98,7 +98,7 @@ def set_defaults(defaults):
         >>>     param1 = "new_value1"
         >>>     param2 = "new_value2"
         >>>
-        >>> @set_defaults()
+        >>> @set_defaults(Config)
         >>> def func(extra_param1, extra_param2=None, param1="old_value1", param2="old_value2", **kwargs):
         >>>     print(extra_param1, extra_param2, param1, param2)
         >>>
