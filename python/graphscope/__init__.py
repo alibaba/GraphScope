@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+from graphscope._version import __version__
 from graphscope.analytical.app import *
 from graphscope.analytical.udf import declare
 from graphscope.analytical.udf.types import Vertex

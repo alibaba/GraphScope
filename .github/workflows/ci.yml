@@ -364,7 +364,7 @@ jobs:
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 \
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
                           --network=host \
                           -f ./manager.Dockerfile .
         popd
@@ -392,7 +392,7 @@ jobs:
     - name: Clean
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
+                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
 
   gie-test:
     runs-on: self-hosted
@@ -441,7 +441,7 @@ jobs:
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 \
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
                           --network=host \
                           -f ./manager.Dockerfile .
         popd
@@ -459,7 +459,7 @@ jobs:
     - name: Clean
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
+                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
 
   release-image:
     runs-on: ubuntu-20.04
@@ -482,7 +482,7 @@ jobs:
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 \
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
                           --network=host \
                           -f ./manager.Dockerfile .
 
@@ -493,5 +493,8 @@ jobs:
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
-        
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0
+
+        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
+                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest

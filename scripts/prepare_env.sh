@@ -96,7 +96,7 @@ function launch_k8s_cluster() {
 function pull_images() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') pulling GraphScope images."
   sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest || true
-  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
+  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest || true
   sudo docker pull zookeeper:3.4.14 || true
   sudo docker pull quay.io/coreos/etcd:v3.4.13 || true
   echo "$(date '+%Y-%m-%d %H:%M:%S') images pulled successfully."
@@ -104,7 +104,7 @@ function pull_images() {
   if [[ "${is_in_wsl}" = true ]]; then
     echo "$(date '+%Y-%m-%d %H:%M:%S') loading images into kind cluster."
     sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest || true
-    sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0 || true
+    sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest || true
     sudo kind load zookeeper:3.4.14 || true
     sudo kind load quay.io/coreos/etcd:v3.4.13 || true
     echo "$(date '+%Y-%m-%d %H:%M:%S') images loaded."

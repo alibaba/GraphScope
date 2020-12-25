@@ -707,7 +707,7 @@ def parse_sys_args():
     parser.add_argument(
         "--k8s_gie_graph_manager_image",
         type=str,
-        default="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0",
+        default="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest",
         help="Graph Manager image of graph interactive engine.",
     )
     parser.add_argument(
