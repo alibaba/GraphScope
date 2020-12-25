@@ -430,6 +430,7 @@ class KubernetesClusterLauncher(Launcher):
             "GREMLIN_IMAGE": self._gie_graph_manager_image,
             "ENGINE_NAMESPACE": self._namespace,
             "COORDINATOR_IMAGE": self._gie_graph_manager_image,
+            "GREMLIN_EXPOSE": self._service_type,
         }
         graph_manager_builder.add_simple_envs(envs)
 
