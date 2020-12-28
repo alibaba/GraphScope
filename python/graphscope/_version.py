@@ -18,45 +18,12 @@
 
 
 import os
-import subprocess
 
-__version__ = "v0.1.0"
+pkg_root = os.path.dirname(os.path.abspath(__file__))
+git_root = os.path.join(os.path.dirname(pkg_root), "../")
 
-
-def git_info():
-    def _get_cmd_results(pkg_root, cmd):
-        proc = subprocess.Popen(cmd, cwd=pkg_root, stdout=subprocess.PIPE)
-        proc.wait()
-        if proc.returncode == 0:
-            outs, errs = proc.communicate()
-            return outs.decode()
-        return None
-
-    pkg_root = os.path.dirname(os.path.abspath(__file__))
-    git_root = os.path.join(os.path.dirname(pkg_root), "../.git")
-
-    if os.path.isdir(git_root):
-        commit_hash = _get_cmd_results(pkg_root, ["git", "rev-parse", "HEAD"]).strip()
-        if commit_hash is None:
-            return None, None
-        branches = _get_cmd_results(pkg_root, ["git", "branch"]).splitlines(False)
-        commit_ref = None
-        for branch in branches:
-            if not branch.startswith("*"):
-                continue
-            striped = branch[1:].strip()
-            if not striped.startswith("("):
-                commit_ref = striped
-            else:
-                _, commit_ref = striped.rsplit(" ", 1)
-                commit_ref = commit_ref.rstrip(")")
-        if commit_ref is None:
-            return None, None
-        return commit_hash, commit_ref
-    else:
-        branch_file = os.path.join(pkg_root, ".git-branch")
-        if not os.path.exists(branch_file):
-            return None, None
-        with open(branch_file, "r") as bf:
-            bf_content = bf.read().strip()
-            return bf_content.split(None, 1)
+try:
+    with open(os.path.join(git_root, "VERSION")) as f:
+        __version__ = f.readline().rstrip()
+except:
+    __version__ == "latest"

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 curdir=$(cd "$(dirname "$0")"; pwd)
+__version__=`cat ${curdir}/../../VERSION`
 tmp_result="$curdir/tmp_result"
 function _start {
     _port=$1
@@ -20,10 +21,10 @@ function _start {
     gs_image=$3
     gie_manager_image=$4
     if [ -z "$gs_image" ]; then
-        gs_image="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest"
+        gs_image="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${__version__}"
     fi
     if [ -z "$gie_manager_image" ]; then
-        gie_manager_image="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0"
+        gie_manager_image="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${__version__}"
     fi
 
     export GS_TEST_DIR=$curdir/src/main/resources

@@ -6,6 +6,9 @@ set -e
 set -x
 set -o pipefail
 
+graphscope_home="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
+__version__=`cat ${graphscope_home}/VERSION`
+
 platform=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
 is_in_wsl=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && is_in_wsl=true
 
@@ -95,16 +98,16 @@ function launch_k8s_cluster() {
 
 function pull_images() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') pulling GraphScope images."
-  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest || true
-  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest || true
+  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${__version__} || true
+  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${__version__} || true
   sudo docker pull zookeeper:3.4.14 || true
   sudo docker pull quay.io/coreos/etcd:v3.4.13 || true
   echo "$(date '+%Y-%m-%d %H:%M:%S') images pulled successfully."
 
   if [[ "${is_in_wsl}" = true ]]; then
     echo "$(date '+%Y-%m-%d %H:%M:%S') loading images into kind cluster."
-    sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest || true
-    sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest || true
+    sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${__version__} || true
+    sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${__version__} || true
     sudo kind load zookeeper:3.4.14 || true
     sudo kind load quay.io/coreos/etcd:v3.4.13 || true
     echo "$(date '+%Y-%m-%d %H:%M:%S') images loaded."

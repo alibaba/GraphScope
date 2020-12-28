@@ -43,6 +43,7 @@ from gscoordinator.io_utils import StdoutWrapper
 sys.stdout = StdoutWrapper(sys.stdout)
 
 from daemons.prefab import run
+from graphscope import __version__
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import engine_service_pb2_grpc
@@ -683,7 +684,9 @@ def parse_sys_args():
     parser.add_argument(
         "--k8s_gs_image",
         type=str,
-        default="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest",
+        default="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{}".format(
+            __version__
+        ),
         help="Docker image of graphscope engines.",
     )
     parser.add_argument(
@@ -707,7 +710,9 @@ def parse_sys_args():
     parser.add_argument(
         "--k8s_gie_graph_manager_image",
         type=str,
-        default="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest",
+        default="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:{}".format(
+            __version__
+        ),
         help="Graph Manager image of graph interactive engine.",
     )
     parser.add_argument(

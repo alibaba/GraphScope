@@ -45,7 +45,7 @@ graphscope: submodule
 				 -f $(WORKING_DIR)/graphscope.Dockerfile ..
 manager:
 	cd ../interactive_engine && docker build --target manager \
-				 -t ${REGISTRY}/$(DOCKER_ORG)/maxgraph_standalone_manager:1.0 \
+				 -t graphscope/maxgraph_standalone_manager:${SHORT_SHA} \
 				 -f ../k8s/manager.Dockerfile .
 
 graphscope-manylinux2010:
