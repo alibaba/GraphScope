@@ -25,5 +25,5 @@ git_root = os.path.join(os.path.dirname(pkg_root), "../")
 try:
     with open(os.path.join(git_root, "VERSION")) as f:
         __version__ = f.readline().rstrip()
-except:
+except:  # noqa: E722
     __version__ == "latest"
