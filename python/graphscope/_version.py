@@ -20,7 +20,7 @@
 import os
 import subprocess
 
-__version__ = "0.1.0"
+__version__ = "v0.1.0"
 
 
 def git_info():
@@ -28,17 +28,17 @@ def git_info():
         proc = subprocess.Popen(cmd, cwd=pkg_root, stdout=subprocess.PIPE)
         proc.wait()
         if proc.returncode == 0:
-            s = proc.stdout.read().decode()
-            proc.stdout.close()
-            return s
+            outs, errs = proc.communicate()
+            return outs.decode()
+        return None
 
     pkg_root = os.path.dirname(os.path.abspath(__file__))
     git_root = os.path.join(os.path.dirname(pkg_root), "../.git")
 
-    if os.path.exists(git_root):
+    if os.path.isdir(git_root):
         commit_hash = _get_cmd_results(pkg_root, ["git", "rev-parse", "HEAD"]).strip()
-        if not commit_hash:
-            return
+        if commit_hash is None:
+            return None, None
         branches = _get_cmd_results(pkg_root, ["git", "branch"]).splitlines(False)
         commit_ref = None
         for branch in branches:
@@ -51,12 +51,12 @@ def git_info():
                 _, commit_ref = striped.rsplit(" ", 1)
                 commit_ref = commit_ref.rstrip(")")
         if commit_ref is None:
-            return
+            return None, None
         return commit_hash, commit_ref
     else:
         branch_file = os.path.join(pkg_root, ".git-branch")
         if not os.path.exists(branch_file):
-            return
+            return None, None
         with open(branch_file, "r") as bf:
             bf_content = bf.read().strip()
             return bf_content.split(None, 1)

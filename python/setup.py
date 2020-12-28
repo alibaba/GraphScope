@@ -54,6 +54,82 @@ class BuildProto(Command):
         )
 
 
+class Release(Command):
+    description = "Tag and release image"
+    user_options = []
+
+    gs_image = "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope"
+    gie_manager_image = (
+        "registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager"
+    )
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from graphscope._version import __version__
+        from graphscope._version import git_info
+
+        tag = __version__
+        commit_hash, commit_ref = git_info()
+
+        if commit_hash is None or commit_ref is None:
+            print("Get git info faild.")
+            return
+
+        if commit_ref != "main":
+            print("Not main branch currently.")
+            return
+
+        # release gs image
+        subprocess.check_call(
+            ["sudo", "docker", "pull", "{0}:{1}".format(self.gs_image, commit_hash)]
+        )
+        subprocess.check_call(
+            [
+                "sudo",
+                "docker",
+                "tag",
+                "{0}:{1}".format(self.gs_image, commit_hash),
+                "{0}:{1}".format(self.gs_image, tag),
+            ]
+        )
+        subprocess.check_call(
+            ["sudo", "docker", "push", "{0}:{1}".format(self.gs_image, tag)]
+        )
+
+        # release gie manager image
+        subprocess.check_call(
+            [
+                "sudo",
+                "docker",
+                "pull",
+                "{0}:{1}".format(self.gie_manager_image, commit_hash),
+            ]
+        )
+        subprocess.check_call(
+            [
+                "sudo",
+                "docker",
+                "tag",
+                "{0}:{1}".format(self.gie_manager_image, commit_hash),
+                "{0}:{1}".format(self.gie_manager_image, tag),
+            ]
+        )
+        subprocess.check_call(
+            ["sudo", "docker", "push", "{0}:{1}".format(self.gie_manager_image, tag)]
+        )
+
+        # tag
+        subprocess.check_call(
+            ["git", "tag", "-a", tag, "-m", "Release {}.".format(tag)],
+        )
+        subprocess.check_call(["git", "push", "origin", tag])
+
+
 class FormatAndLint(Command):
     description = "format and lint code"
     user_options = []
@@ -272,6 +348,7 @@ setup(
         "sdist": CustomSDist,
         "develop": CustomDevelop,
         "lint": FormatAndLint,
+        "release": Release,
     },
     install_requires=parsed_reqs(),
     extras_require={

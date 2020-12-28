@@ -46,17 +46,18 @@ def modern_graph_data_dir():
 
 
 def get_gs_image_on_ci_env():
-    if "GS_IMAGE" in os.environ:
-        return os.environ["GS_IMAGE"]
+    if "GS_IMAGE" in os.environ and "GIE_MANAGER_IMAGE" in os.environ:
+        return os.environ["GS_IMAGE"], os.environ["GIE_MANAGER_IMAGE"]
     else:
-        return gs_config.GS_IMAGE
+        return gs_config.k8s_gs_image, gs_config.k8s_gie_graph_manager_image
 
 
 def test_demo(data_dir):
-    image = get_gs_image_on_ci_env()
+    gs_image, gie_manager_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
-        k8s_gs_image=image,
+        k8s_gs_image=gs_image,
+        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=0.5,
         k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
@@ -90,10 +91,11 @@ def test_demo(data_dir):
 
 
 def test_demo_distribute(data_dir, modern_graph_data_dir):
-    image = get_gs_image_on_ci_env()
+    gs_image, gie_manager_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
-        k8s_gs_image=image,
+        k8s_gs_image=gs_image,
+        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=0.5,
         k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
@@ -167,10 +169,11 @@ def test_multiple_session(data_dir):
         [random.choice(string.ascii_lowercase) for _ in range(6)]
     )
 
-    image = get_gs_image_on_ci_env()
+    gs_image, gie_manager_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
-        k8s_gs_image=image,
+        k8s_gs_image=gs_image,
+        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=0.5,
         k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
@@ -187,7 +190,8 @@ def test_multiple_session(data_dir):
     sess2 = graphscope.session(
         k8s_namespace=namespace,
         num_workers=2,
-        k8s_gs_image=image,
+        k8s_gs_image=gs_image,
+        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=0.5,
         k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
@@ -207,10 +211,11 @@ def test_multiple_session(data_dir):
 
 
 def test_query_modern_graph(modern_graph_data_dir):
-    image = get_gs_image_on_ci_env()
+    gs_image, gie_manager_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
-        k8s_gs_image=image,
+        k8s_gs_image=gs_image,
+        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=0.5,
         k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
@@ -238,11 +243,12 @@ def test_traversal_modern_graph(modern_graph_data_dir):
     from gremlin_python.process.traversal import Order
     from gremlin_python.process.traversal import P
 
-    image = get_gs_image_on_ci_env()
+    gs_image, gie_manager_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         show_log=True,
         num_workers=1,
-        k8s_gs_image=image,
+        k8s_gs_image=gs_image,
+        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=0.5,
         k8s_coordinator_mem="2500Mi",
         k8s_vineyard_cpu=0.1,
