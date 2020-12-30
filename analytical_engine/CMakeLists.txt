@@ -263,7 +263,8 @@ endmacro()
 
 # Install headers
 macro(install_gsa_headers header_target)
-    install(DIRECTORY ${header_target}
+    get_filename_component(ABS_DIR ${header_target} REALPATH)
+    install(DIRECTORY ${ABS_DIR}
             DESTINATION include/graphscope      # target directory
             FILES_MATCHING                      # install only matched files
             PATTERN "*.h"                       # select header files
@@ -273,7 +274,8 @@ endmacro()
 
 # Install app frames
 macro(install_gsa_app_frames source_target)
-    install(DIRECTORY ${source_target}
+    get_filename_component(ABS_DIR ${source_target} REALPATH)
+    install(DIRECTORY ${ABS_DIR}
             DESTINATION include/graphscope      # target directory
             FILES_MATCHING                      # install only matched files
             PATTERN "*.h"                       # select app frame files
@@ -283,7 +285,8 @@ endmacro()
 
 # Install dependencies FindXXX.cmake
 macro(install_gsa_dependency_modules cmake_target)
-    install(DIRECTORY ${cmake_target}
+    get_filename_component(ABS_DIR ${cmake_target} REALPATH)
+    install(DIRECTORY ${ABS_DIR}
             DESTINATION lib                     # target directory
             FILES_MATCHING                      # install only matched files
             PATTERN "*.cmake"                   # select cmake files
