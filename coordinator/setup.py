@@ -22,7 +22,6 @@ import subprocess
 import sys
 from distutils.cmd import Command
 
-from graphscope import __version__
 from setuptools import find_packages
 from setuptools import setup
 from setuptools.command.build_py import build_py
