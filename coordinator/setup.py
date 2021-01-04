@@ -29,7 +29,15 @@ from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
 from setuptools.command.sdist import sdist
 
+
+def execfile(fname):
+    with open(fname) as f:
+        return f.readline().rstrip()
+
+
 repo_root = os.path.dirname(os.path.abspath(__file__))
+version_file_path = os.path.join(repo_root, "../VERSION")
+version = execfile(version_file_path)
 
 
 class BuildBuiltin(Command):
@@ -141,7 +149,7 @@ def parsed_dev_reqs():
 
 setup(
     name="gscoordinator",
-    version=__version__,
+    version=version,
     description="",
     long_description=long_description,
     long_description_content_type="text/markdown",

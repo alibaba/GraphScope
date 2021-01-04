@@ -29,9 +29,15 @@ from setuptools.command.develop import develop
 from setuptools.command.sdist import sdist
 from wheel.bdist_wheel import bdist_wheel
 
-from graphscope import __version__
+
+def execfile(fname):
+    with open(fname) as f:
+        return f.readline().rstrip()
+
 
 repo_root = os.path.dirname(os.path.abspath(__file__))
+version_file_path = os.path.join(repo_root, "../VERSION")
+version = execfile(version_file_path)
 
 
 class BuildProto(Command):
@@ -239,7 +245,7 @@ def build_learning_engine():
 
 setup(
     name="graphscope",
-    version=__version__,
+    version=version,
     description="GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba",
     long_description=long_description,
     long_description_content_type="text/markdown",

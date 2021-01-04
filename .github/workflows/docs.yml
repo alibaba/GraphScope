@@ -68,7 +68,6 @@ jobs:
         # Install pip dependencies, build builtin gar, and generate proto stuffs.
         sudo apt update
         sudo apt install -y doxygen
-        sudo python3 python/setup.py build_proto
         make graphscope-docs
 
     - name: Upload Docs
