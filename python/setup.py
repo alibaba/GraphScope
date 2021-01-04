@@ -248,14 +248,15 @@ def parse_version(root, **kwargs):
     """
     from setuptools_scm.git import parse
     from setuptools_scm.version import meta
-    version_file = os.path.join(repo_root, '..', 'VERSION')
+
+    version_file = os.path.join(repo_root, "..", "VERSION")
     if os.path.isfile(version_file):
-        with open(version_file, 'r', encoding='utf-8') as fp:
+        with open(version_file, "r", encoding="utf-8") as fp:
             return meta(fp.read().strip())
     return parse(root, **kwargs)
 
 
-version_template = '''#!/usr/bin/env python3
+version_template = """#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
@@ -274,7 +275,9 @@ version_template = '''#!/usr/bin/env python3
 
 import os
 
-version_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "VERSION")
+version_file_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..", "VERSION"
+)
 
 if os.path.isfile(version_file_path):
     with open(version_file_path, "r", encoding="utf-8") as fp:
@@ -285,7 +288,7 @@ else:
     __version_tuple__ = {version_tuple}
 
 del version_file_path
-'''
+"""
 
 
 setup(
@@ -315,13 +318,12 @@ setup(
     ],
     keywords="Graph, Large-Scale, Distributed Computing",
     use_scm_version={
-        'root': repo_root,
-        'parse': parse_version,
-        'write_to': os.path.join(repo_root,
-                                 'graphscope/version.py'),
-        'write_to_template': version_template
+        "root": repo_root,
+        "parse": parse_version,
+        "write_to": os.path.join(repo_root, "graphscope/version.py"),
+        "write_to_template": version_template,
     },
-    setup_requires =['setuptools_scm', 'grpcio', 'grpcio-tools'],
+    setup_requires=["setuptools_scm", "grpcio", "grpcio-tools"],
     package_dir=resolve_graphscope_package_dir(),
     packages=find_graphscope_packages(),
     ext_modules=build_learning_engine(),

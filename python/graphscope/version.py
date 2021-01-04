@@ -17,7 +17,9 @@
 
 import os
 
-version_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "VERSION")
+version_file_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..", "VERSION"
+)
 
 if os.path.isfile(version_file_path):
     with open(version_file_path, "r", encoding="utf-8") as fp:
