@@ -22,6 +22,7 @@ import subprocess
 import sys
 from distutils.cmd import Command
 
+from graphscope import __version__
 from setuptools import find_packages
 from setuptools import setup
 from setuptools.command.build_py import build_py
@@ -140,7 +141,7 @@ def parsed_dev_reqs():
 
 setup(
     name="gscoordinator",
-    version="0.1",
+    version=__version__,
     description="",
     long_description=long_description,
     long_description_content_type="text/markdown",

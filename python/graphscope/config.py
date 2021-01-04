@@ -19,7 +19,7 @@
 """ GraphScope default configuration.
 """
 
-from graphscope._version import __version__
+from graphscope.version import __version__
 
 
 class GSConfig(object):

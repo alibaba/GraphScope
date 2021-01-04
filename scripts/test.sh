@@ -6,13 +6,13 @@ set -euo pipefail
 
 # initialize variables
 graphscope_home="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
-__version__=`cat ${graphscope_home}/VERSION`
+version=$(cat ${graphscope_home}/VERSION)
 
 platform=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
 
 test_dir=""
-gs_image="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${__version__}"
-gie_manager_image="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${__version__}"
+gs_image="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${version}"
+gie_manager_image="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${version}"
 test_GIE=0
 test_on_k8s=0
 

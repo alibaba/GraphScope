@@ -29,6 +29,8 @@ from setuptools.command.develop import develop
 from setuptools.command.sdist import sdist
 from wheel.bdist_wheel import bdist_wheel
 
+from graphscope import __version__
+
 repo_root = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -237,7 +239,7 @@ def build_learning_engine():
 
 setup(
     name="graphscope",
-    version="0.1",
+    version=__version__,
     description="GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba",
     long_description=long_description,
     long_description_content_type="text/markdown",
