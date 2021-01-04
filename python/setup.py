@@ -29,12 +29,6 @@ from setuptools.command.develop import develop
 from setuptools.command.sdist import sdist
 from wheel.bdist_wheel import bdist_wheel
 
-
-def execfile(fname):
-    with open(fname) as f:
-        return f.readline().rstrip()
-
-
 repo_root = os.path.dirname(os.path.abspath(__file__))
 
 

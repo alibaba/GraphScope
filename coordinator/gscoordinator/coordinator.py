@@ -42,7 +42,6 @@ from gscoordinator.io_utils import StdoutWrapper
 # capture system stdout
 sys.stdout = StdoutWrapper(sys.stdout)
 
-from graphscope import __version__
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import engine_service_pb2_grpc
@@ -65,6 +64,7 @@ from gscoordinator.utils import dump_string
 from gscoordinator.utils import generate_graph_type_sig
 from gscoordinator.utils import str2bool
 from gscoordinator.utils import to_maxgraph_schema
+from gscoordinator.version import __version__
 
 COORDINATOR_HOME = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
