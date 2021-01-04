@@ -14,16 +14,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-
 
 import os
 
-pkg_root = os.path.dirname(os.path.abspath(__file__))
-git_root = os.path.join(os.path.dirname(pkg_root), "../")
+version_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "VERSION")
 
-try:
-    with open(os.path.join(git_root, "VERSION")) as f:
-        __version__ = f.readline().rstrip()
-except OSError:
-    __version__ == "latest"
+if os.path.isfile(version_file_path):
+    with open(version_file_path, "r", encoding="utf-8") as fp:
+        __version__ = fp.read().strip()
+    __version_tuple__ = (int(v) for v in __version__.split("."))
+else:
+    __version__ = "0.1.0"
+    __version_tuple__ = (0, 1, 0)
+
+del version_file_path
