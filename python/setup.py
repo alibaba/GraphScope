@@ -317,7 +317,7 @@ setup(
         "write_to": os.path.join(repo_root, "graphscope/version.py"),
         "write_to_template": version_template,
     },
-    setup_requires=["setuptools_scm", "grpcio", "grpcio-tools"],
+    setup_requires=["setuptools_scm>=5.0.0", "grpcio", "grpcio-tools"],
     package_dir=resolve_graphscope_package_dir(),
     packages=find_graphscope_packages(),
     ext_modules=build_learning_engine(),
