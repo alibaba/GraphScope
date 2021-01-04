@@ -1,7 +1,7 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Alibaba Group Holding Limited.
+# Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 
-from gscoordinator.version import __version__
+import os
+
+version_file_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..", "VERSION"
+)
+
+if os.path.isfile(version_file_path):
+    with open(version_file_path, "r", encoding="utf-8") as fp:
+        __version__ = fp.read().strip()
+    __version_tuple__ = (int(v) for v in __version__.split("."))
+else:
+    __version__ = "0.1.0"
+    __version_tuple__ = (0, 1, 0)
+
+del version_file_path

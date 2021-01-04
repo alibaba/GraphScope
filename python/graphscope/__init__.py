@@ -28,3 +28,4 @@ from graphscope.framework.errors import *
 from graphscope.framework.graph import Graph
 from graphscope.framework.graph_utils import g
 from graphscope.framework.graph_utils import load_from
+from graphscope.version import __version__

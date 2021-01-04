@@ -235,9 +235,58 @@ def build_learning_engine():
     return [ext]
 
 
+def parse_version(root, **kwargs):
+    """
+    Parse function for setuptools_scm that first tries to read '../VERSION' file
+    to get a version number.
+    """
+    from setuptools_scm.git import parse
+    from setuptools_scm.version import meta
+
+    version_file = os.path.join(repo_root, "..", "VERSION")
+    if os.path.isfile(version_file):
+        with open(version_file, "r", encoding="utf-8") as fp:
+            return meta(fp.read().strip())
+    return parse(root, **kwargs)
+
+
+version_template = """#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+
+version_file_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..", "VERSION"
+)
+
+if os.path.isfile(version_file_path):
+    with open(version_file_path, "r", encoding="utf-8") as fp:
+        __version__ = fp.read().strip()
+    __version_tuple__ = (int(v) for v in __version__.split("."))
+else:
+    __version__ = "{version}"
+    __version_tuple__ = {version_tuple}
+
+del version_file_path
+"""
+
+
 setup(
     name="graphscope",
-    version="0.1",
     description="GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -262,6 +311,13 @@ setup(
         "Programming Language :: Python :: 3.9",
     ],
     keywords="Graph, Large-Scale, Distributed Computing",
+    use_scm_version={
+        "root": repo_root,
+        "parse": parse_version,
+        "write_to": os.path.join(repo_root, "graphscope/version.py"),
+        "write_to_template": version_template,
+    },
+    setup_requires=["setuptools_scm>=5.0.0", "grpcio", "grpcio-tools"],
     package_dir=resolve_graphscope_package_dir(),
     packages=find_graphscope_packages(),
     ext_modules=build_learning_engine(),

@@ -19,6 +19,8 @@
 """ GraphScope default configuration.
 """
 
+from graphscope.version import __version__
+
 
 class GSConfig(object):
     k8s_namespace = None
@@ -26,9 +28,11 @@ class GSConfig(object):
     # image
     k8s_zookeeper_image = "zookeeper:3.4.14"
     k8s_etcd_image = "quay.io/coreos/etcd:v3.4.13"
-    k8s_gs_image = "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest"
-    k8s_gie_graph_manager_image = (
-        "registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:1.0"
+    k8s_gs_image = "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{0}".format(
+        __version__
+    )
+    k8s_gie_graph_manager_image = "registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:{0}".format(
+        __version__
     )
 
     # image pull configuration

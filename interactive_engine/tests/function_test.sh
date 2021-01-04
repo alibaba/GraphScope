@@ -13,20 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 curdir=$(cd "$(dirname "$0")"; pwd)
+version=$(cat ${curdir}/../../VERSION)
+
 tmp_result="$curdir/tmp_result"
 function _start {
     _port=$1
     workers=$2
-    image=$3
-    if [ -z "$image" ]; then
-        image="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest"
+    gs_image=$3
+    gie_manager_image=$4
+    if [ -z "$gs_image" ]; then
+        gs_image="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${version}"
     fi
+    if [ -z "$gie_manager_image" ]; then
+        gie_manager_image="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${version}"
+    fi
+
     export GS_TEST_DIR=$curdir/src/main/resources
     cd $curdir/../deploy/testing && python3 maxgraph_test_server.py ${_port} &
     sleep 5s
     curl -XPOST http://localhost:${_port} -d 'import graphscope'
     curl -XPOST http://localhost:${_port} -d 'from graphscope.framework.loader import Loader'
-    curl_sess="curl -XPOST http://localhost:${_port} -d 'session = graphscope.session(num_workers=${workers}, show_log=True, k8s_coordinator_cpu=1.0, k8s_coordinator_mem='\''4Gi'\'', k8s_vineyard_cpu=1.0, k8s_vineyard_mem='\''4Gi'\'', k8s_vineyard_shared_mem='\''4Gi'\'', k8s_engine_cpu=1.0, k8s_engine_mem='\''4Gi'\'', k8s_gs_image='\''${image}'\'')' --write-out %{http_code} --silent --output ./curl.tmp"
+    curl_sess="curl -XPOST http://localhost:${_port} -d 'session = graphscope.session(num_workers=${workers}, show_log=True, k8s_coordinator_cpu=1.0, k8s_coordinator_mem='\''4Gi'\'', k8s_vineyard_cpu=1.0, k8s_vineyard_mem='\''4Gi'\'', k8s_vineyard_shared_mem='\''4Gi'\'', k8s_engine_cpu=1.0, k8s_engine_mem='\''4Gi'\'', k8s_gie_graph_manager_image='\''${gie_manager_image}'\'', k8s_gs_image='\''${gs_image}'\'')' --write-out %{http_code} --silent --output ./curl.tmp"
 
     echo $curl_sess
     code=`sh -c "$curl_sess"`
@@ -58,13 +65,13 @@ function _test {
 
 opt=$1
 if [ "$opt" = "_start" ]; then
-    _start $2 $3 $4
+    _start $2 $3 $4 $5
 elif [ "$opt" = "_stop" ]; then
     _stop
 elif [ "$opt" = "_test" ]; then
     _test
 else
-    _start $1 $2 $3
+    _start $1 $2 $3 $4
     _test
     exit_code=$?
     echo "test log ------------------------------------------------------------"
