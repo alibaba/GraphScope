@@ -36,6 +36,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosectionlabel',
+    'sphinx_ext',
 ]
 
 breathe_projects = {
