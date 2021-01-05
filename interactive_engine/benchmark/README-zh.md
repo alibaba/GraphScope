@@ -1,97 +1,90 @@
-# Interactive Engine Performance
+# 性能报告
 
-Here is a performance report from the run of the included benchmark program.
+下面是根据本目录下的测试程序得到的性能报告。
 
 
-## Experimental Setup
-**Hardware Configurations:**
-* cluster: an 8 nodes cluster
-* memory: 755GB memory
-* network: 50Gbps network
-* cpu: two 26-core Intel(R) Xeon(R) Platinum 8269CY CPUs at 2.50GHz
+## 实验设置
+**硬件配置：**
+* 集群： 8个节点组成的集群
+* 单机内存： 755GB
+* 网卡： 50Gbps
+* 处理器： 两个26核的Intel(R) Xeon(R) Platinum 8269CY 2.50GHz处理器
 
-**Datasets:**
-We generate large LDBC data sets with scale factor 30 using [LDBC SNB Data Generator](http://github.com/ldbc/ldbc_snb_datagen).
-The generated LDBC data sets which have 89 million vertices and 541 million edges would be used for following experiments.
+**数据集：**
+我们使用[LDBC官方工具](http://github.com/ldbc/ldbc_snb_datagen) 生成了规模30(scale factor=30)的数据集，该数据集包含8900万的点和54100万的边。
 
-**Queries:**
-For comparison, we consider graph queries from the Social Network Benchmark defined by [LDBC](http://github.com/ldbc/ldbc_snb_implementations) to model industrial use cases on a social network akin to Facebook.
-We choose 10 out of 14 complex read queries (denoted as CR-1...14) from LDBC’s Interactive Workload. 
-_(The remaining queries are either too simple (such as simple point-lookup queries) or rely on user-defined logic (such as CR-4,10,13,14), 
-which is not supported by other popular TinkerPop-based systems.)_
+**查询：**
+为了方便比较，在本测试中我们采用了[LDBC](http://github.com/ldbc/ldbc_snb_implementations) 测试集中的查询。
+我们从LDBC的交互式查询集的14条查询中挑选了10条复杂型查询（表示为CR-1...14）。
+_（剩下的查询要么是很简单的单点查询或者是依赖于用户自定义的逻辑，比如CR-4,10,13,14，这些查询在其他流行Tinkerpop系统中也不被支持）_
 
-## Single-node performance
+## 单机性能
 
-JanusGraph cannot process query in parallel, and we run GraphScope in one machine for fair comparison.
+由于JanusGraph不能并行化查询，为了公平比较，GraphScope也采用单机运行的形式进行比较。
 
 <div align="center">
     <img src="figures/large-scale-DB.jpg" width="500" alt="compare-JanusGraph">
 </div>
  
-As shown above, GraphScope achieves orders-of-magnitude better performance than JanusGraph in most cases.
-JanusGraph fails to answer many queries (CR-3, 5, 9) due to out of time.
+如上图所示，相比于JanusGraph系统，GraphScope在大多数情况下能取得数量级级别的性能领先。
+JanusGraph对于一些查询（CR-3, 5, 9）的处理需要耗费大量时间，导致超时。
 
 
-## Scalability
+## 可扩展性
 
-We further study the scalability of GraphScope by adding more computing nodes.
+我们进一步通过增加更多的计算节点来研究GraphScope的可扩展性。
 
 <div align="center">
     <img src="figures/scale-out-large.jpg" width="300" alt="scale-out-large"><img src="figures/scale-out-small.jpg" width="300" alt="scale-out-small">
 </div>
 
-As shown in the above figure, we analyze the results regarding the two query groups based on their runtime: larger queries (CR-3,5,6,9) and small queries (CR-1, 2, 7, 8, 11).
+如上图所示，由于这些查询的处理延迟差别很多，因此我们将它们分成两组来分析GraphSCope表现：一组是大查询（CR-3, 5, 6, 9），另外一组是小查询（CR-1, 2, 7, 8, 11）
 
-* For large queries, these queries traverse a large amount of data and can scale well with up to 5x performance gain from 1 nodes to 8 nodes.
+* 对大查询来说，这些查询会遍历大量的数据，耗时较长，因此GraphScope能够通过扩展计算节点数（1到8）来获得最多5倍的性能提升，表现出优秀的可扩展性；
 
-* For small queries, they only touch a small sub-graph and are not computation-intensive. We expect that their performance may not be improved by adding more machines, 
-while CR-1, 2 and CR-12 still run consistently faster. 
+* 对小查询来说，这些查询只会接触一小部分的子图数据，以及它们不属于计算密集型。我们预测这些查询的性能并不能通过添加计算节点数来获得提升，这是因为添加计算节点会带来额外的通讯开销。然而我们可以看到CR-1, 2, 22仍然能获得一些性能提升。
 
-As we can see, GraphScope can scale large complex queries almost linearly while keeping stable performance of small queries. 
+综上所述，GraphSCope能够近似线性的扩展复杂的查询，同时也能保证小查询的稳定性能。
 
 
-## Benchmark Tool Usage
+## 测试程序的使用方法
 
-In this directory is a tool that can be used to reproduce this benchmark. It serves as multiple clients to send 
-queries to gremlin server through the gremlin endpoint exposed by the engine, and report the performance numbers 
-(e.g., latency, throughput, query results).
-The benchmark program sends mixed queries to the server by reading query templates from [queries](queries) with filling the parameters in the query templates 
-using [substitution_parameters](data/substitution_parameters). 
-The program uses a round-robin strategy to iterate all the **enabled** queries with corresponding parameters.
+这个目录底下是一个测试程序，该程序可以用来复现上述的测试结果。
+这个程序可以用来模拟多个客户端通过gremlin endpoint给gremlin server发送查询请求，然后收集结果和统计数据，最后汇报性能数字，比如延迟，吞吐等等。
+该测试程序会读取目录[substitution_parameters](data/substitution_parameters)底下各个查询的参数，并填入目录[queries](queries)底下查询模板（替换掉$开头的查询参数），生成各种混合查询发送给服务器进行处理。
+目前采用了轮询的方式来发送每个查询模板（填入对应的查询参数后）。
 
-### Repository contents
+### 文件结构
 ```
 - config                                
-    - interactive-benchmark.properties  // configurations for running benchmark
+    - interactive-benchmark.properties  // 用来运行测试程序的配置文件，用户使用前需要配置
 - data
-    - substitution_parameters           // query parameter files using to fill the query templates
-- queries                               // qurery templates including LDBC queries, K-hop queries and user-defined queries
+    - substitution_parameters           // 用来填入查询模板的查询参数
+- queries                               // 查询模板，包括：LDBC查询，K-hop查询以及用户自定义查询
 - shell
-    - benchmark.sh                      // script for running benchmark
-- src                                   // source code of benchmark program
+    - benchmark.sh                      // 测试程序运行脚本
+- src                                   // 源码
 ```
-_Note:_ the queries here with the prefix _interactive-complex_ are implementations of LDBC official interactive complex reads,
-and the corresponding parameters (factor 30) are generated by [LDBC official tools](http://github.com/ldbc/ldbc_snb_datagen).
+_注意：_ 前缀是 _interactive-complex_ 的查询是对LDBC官方交互式读查询的gremlin实现，对应的默认查询参数（factor 30）是通过[LDBC official tools](http://github.com/ldbc/ldbc_snb_datagen) 生成的。
 
-### Building
+### 编译
 
-Build benchmark program using Maven:
+可以通过Maven来编译该测试程序：
 ```bash
 mvn clean package
 ```
-All the binary and queries would be packed into _target/benchmark-0.0.1-SNAPSHOT-dist.tar.gz_, 
-and you can use deploy the package to anywhere could connect to the gremlin endpoint. 
+运行该命令之后，所有的二进制可执行文件和查询等都会被打包到 _target/benchmark-0.0.1-SNAPSHOT-dist.tar.gz_，然后你可以使用该压缩包部署到任何网络可达gremlin endpoint的地方。
 
-### Running the benchmark
+### 运行
 
 ```bash
 tar -xvf maxgraph-benchmark-0.0.1-SNAPSHOT-dist.tar.gz
 cd maxgraph-benchmark-0.0.1-SNAPSHOT
-vim conf/interactive-benchmark.properties # specify the gremlin endpoint of your server and modify running configurations
-./shell/benchmark.sh                      # run the benchmark program
+vim conf/interactive-benchmark.properties # 用户需要指定你服务的gremlin endpoint，以及调整一些执行参数
+./shell/benchmark.sh                      # 运行测试程序
 ```
 
-Benchmark reports numbers as following:
+通过以上步骤，测试程序将会运行进行性能测试，并输出汇报类似下面的执行情况：
 ```
 QueryName[LDBC_QUERY_1], Parameter[{firstName=John, personId=17592186223433}], ResultCount[87], ExecuteTimeMS[ 1266 ].
 QueryName[LDBC_QUERY_12], Parameter[{tagClassName=Judge, personId=19791209469071}], ResultCount[0], ExecuteTimeMS[ 259 ].
@@ -107,21 +100,21 @@ QueryName[LDBC_QUERY_2], Parameter[{personId=28587302394490, maxDate=20121128080
 query count: 10; execute time(ms): ...; qps: ...
 ```
 
-## Reproduce this Performance Report
+## 复现测试报告
 
-1. Generate LDBC data using the official tool and set the scale factor (_ldbc.snb.datagen.generator.scaleFactor:snb.interactive.1_) to 30;
+1. 通过ldbc官方工具生成对应的数据集以及查询参数（指定 _ldbc.snb.datagen.generator.scaleFactor:snb.interactive.1_ 为30）；
 
-After generation, you may need to adjust the data sets by following two steps:
-  * enter _social_network_ directory and copy all the csv files from _dynamic_ and _static_ to one directory;  
-  * convert _date_ format to yyyymmddhhmmssmmm like this: 
+生成数据之后，你可能需要对数据格式进行调整：
+  * 进入 _social_network_ 目录，把所有的csv文件从 _dynamic_ 和 _static_ 目录拷贝到一个目录下；
+  * 通过下述命令来转换日期格式变成yyyymmddhhmmssmmm格式：
  ```bash
   sed -i "s#|\([0-9][0-9][0-9][0-9]\)-\([0-9][0-9]\)-\([0-9][0-9]\)T\([0-9][0-9]\):\([0-9][0-9]\):\([0-9][0-9]\)\.\([0-9][0-9][0-9]\)+0000#|\1\2\3\4\5\6\7#g" *.csv
  ```
 
-2. Load the LDBC data to GraphScope system (ref to the [loading doc](../../docs/loading_graph.rst) and [LDBC loading scripts](../../python/graphscope/dataset/load_ldbc.py));
+2. 加载LDBC数据到GraphSCope，参考[加载文档](../../docs/loading_graph.rst)和[LDBC加载脚本](../../python/graphscope/dataset/load_ldbc.py);
 
-3. Specify the configuration of benchmark (gremlin endpoint, queries enabled ...);
+3. 配置和修改测试程序的配置文件，比如你需要指定gremlin endpoint和发送的查询等；
 
-4. Copy the generated substitution parameters to directory _./data/substitution_parameters_;
+4. 把数据一同生成的查询参数拷贝到 _./data/substitution_parameters_ 目录；
 
-5. Run the benchmark and accumulate the statistics. (see section [Benchmark Tool Usage](#benchmark-tool-usage))
+5. 最后，运行测试程序并获取统计数据（具体见[测试程序的使用方法](#测试程序的使用方法)）。
