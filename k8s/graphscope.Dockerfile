@@ -57,7 +57,7 @@ RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/
     pip3 install -r requirements.txt -r requirements-dev.txt && \
     python3 setup.py bdist_wheel && \
     cd ./dist && \
-    auditwheel repair --plat=manylinux2014_x86_64 ./*.whl && \
+    auditwheel repair --plat=manylinux2014_x86_64 ./*.whl || true && \
     cp ./wheelhouse/* /opt/graphscope/dist/ && \
     cd /root/gs/coordinator && \
     pip3 install -r requirements.txt -r requirements-dev.txt && \
