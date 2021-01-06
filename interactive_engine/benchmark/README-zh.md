@@ -38,13 +38,13 @@ JanusGraph对于一些查询（CR-3, 5, 9）的处理需要耗费大量时间，
     <img src="figures/scale-out-large.jpg" width="300" alt="scale-out-large"><img src="figures/scale-out-small.jpg" width="300" alt="scale-out-small">
 </div>
 
-如上图所示，由于这些查询的处理延迟差别很多，因此我们将它们分成两组来分析GraphSCope表现：一组是大查询（CR-3, 5, 6, 9），另外一组是小查询（CR-1, 2, 7, 8, 11）
+如上图所示，由于这些查询的处理延迟差别很多，因此我们将它们分成两组来分析GraphScope表现：一组是大查询（CR-3, 5, 6, 9），另外一组是小查询（CR-1, 2, 7, 8, 11）
 
 * 对大查询来说，这些查询会遍历大量的数据，耗时较长，因此GraphScope能够通过扩展计算节点数（1到8）来获得最多5倍的性能提升，表现出优秀的可扩展性；
 
 * 对小查询来说，这些查询只会接触一小部分的子图数据，以及它们不属于计算密集型。我们预测这些查询的性能并不能通过添加计算节点数来获得提升，这是因为添加计算节点会带来额外的通讯开销。然而我们可以看到CR-1, 2, 22仍然能获得一些性能提升。
 
-综上所述，GraphSCope能够近似线性的扩展复杂的查询，同时也能保证小查询的稳定性能。
+综上所述，GraphScope能够近似线性的扩展复杂的查询，同时也能保证小查询的稳定性能。
 
 
 ## 测试程序的使用方法
@@ -111,7 +111,7 @@ query count: 10; execute time(ms): ...; qps: ...
   sed -i "s#|\([0-9][0-9][0-9][0-9]\)-\([0-9][0-9]\)-\([0-9][0-9]\)T\([0-9][0-9]\):\([0-9][0-9]\):\([0-9][0-9]\)\.\([0-9][0-9][0-9]\)+0000#|\1\2\3\4\5\6\7#g" *.csv
  ```
 
-2. 加载LDBC数据到GraphSCope，参考[加载文档](../../docs/zh/loading_graph.rst)和[LDBC加载脚本](../../python/graphscope/dataset/ldbc.py);
+2. 加载LDBC数据到GraphScope，参考[加载文档](../../docs/zh/loading_graph.rst)和[LDBC加载脚本](../../python/graphscope/dataset/ldbc.py);
 
 3. 配置和修改测试程序的配置文件，比如你需要指定gremlin endpoint和发送的查询等；
 
