@@ -111,7 +111,7 @@ query count: 10; execute time(ms): ...; qps: ...
   sed -i "s#|\([0-9][0-9][0-9][0-9]\)-\([0-9][0-9]\)-\([0-9][0-9]\)T\([0-9][0-9]\):\([0-9][0-9]\):\([0-9][0-9]\)\.\([0-9][0-9][0-9]\)+0000#|\1\2\3\4\5\6\7#g" *.csv
  ```
 
-2. 加载LDBC数据到GraphSCope，参考[加载文档](../../docs/loading_graph.rst)和[LDBC加载脚本](../../python/graphscope/dataset/load_ldbc.py);
+2. 加载LDBC数据到GraphSCope，参考[加载文档](../../docs/zh/loading_graph.rst)和[LDBC加载脚本](../../python/graphscope/dataset/ldbc.py);
 
 3. 配置和修改测试程序的配置文件，比如你需要指定gremlin endpoint和发送的查询等；
 
