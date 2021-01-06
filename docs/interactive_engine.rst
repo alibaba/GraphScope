@@ -137,7 +137,7 @@ Nested traversal is also critical to the support for loops, which are expressed 
 An example
 ~~~~~~~~~~
 
-Below shows a Gremlin query for the above example that tries to find cyclic paths of length ``k``, starting from a given account.
+Below shows a Gremlin query for cycle detection, which tries to find cyclic paths of length ``k`` starting from a given account.
 
 .. code:: java
 
