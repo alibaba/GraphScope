@@ -3,7 +3,7 @@
 ###############################################################################
 
 project(example C CXX)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 
 option(CYTHON_PREGEL_APP "Whether to build cython pregel app." False)
 option(CYTHON_PIE_APP "Whether to build cython pie app" False)

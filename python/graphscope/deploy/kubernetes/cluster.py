@@ -450,7 +450,12 @@ class KubernetesCluster(object):
 
         for pod in pods.items:
             self._coordinator_pods_watcher.append(
-                KubernetesPodWatcher(self._api_client, self._namespace, pod)
+                KubernetesPodWatcher(
+                    self._api_client,
+                    self._namespace,
+                    pod,
+                    self._coordinator_container_name,
+                )
             )
             self._coordinator_pods_watcher[-1].start()
 
@@ -532,6 +537,9 @@ class KubernetesCluster(object):
                         break
                     else:
                         logger.error(message, extra={"simple": True})
+        else:
+            for pod_watcher in self._coordinator_pods_watcher:
+                pod_watcher.stop()
 
     def start(self):
         """Launch graphscope instance on kubernetes cluster.
