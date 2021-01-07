@@ -74,9 +74,6 @@ Linux 下的 Wheel 分发包在 manylinux2010 的环境下构建，该编译环�
 
     docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-manylinux2010:latest
 
-Or, you can build the image from scratch. Assuming you are in the root directory of GraphScope repository,
-You could build the docker image (note that you only need to rebuild the docker image when you
-update dependencies in :code:`manylinux2010.Dockerfile`) by
 
 或者，您可以从 GraphScope 的根目录中，从头构建该镜像。（请注意，您需要在重建 docker 镜像时
 更新 `manylinux2010.Dockerfile` 中的依赖项）
