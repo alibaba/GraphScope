@@ -84,7 +84,7 @@ In this case, a `group` key follows a list of configurations.
         ]
     }
 
-.. It is worth nothing that for several configurations in the side `Label`, 
+.. It is worth noting that for several configurations in the side `Label`, 
 .. the attributes should be the same in number and type, and preferably 
 .. have the same name, because the data of the same `Label` will be put into one Table, 
 .. and the attribute names will uses the names specified by the first configuration.
@@ -105,7 +105,7 @@ e.g., properties can be empty, which means to select all columns
 
 Alternatively, all column names can be assigned with index.
 For example, the number in the src/dst assigned 
-the first column is used as src_id and the second column is used as dst_vid:
+the first column is used as src_id and the second column is used as dst_id:
 
 .. code:: ipython
 
@@ -188,8 +188,9 @@ We can also omit certain configurations for vertices.
 
 - properties can be empty, which means that all columns are selected as properties;
 - vid can be represented by a number of index,
-- In the simplest case, the configuration can only contains a loader. In this case, the first column
-  is used as vid, and the rest columns are used as properties.
+
+In the simplest case, the configuration can only contains a loader. In this case, the first column
+is used as vid, and the rest columns are used as properties.
 
 
 .. code:: ipython
@@ -246,7 +247,7 @@ Let's make the example complete:
         },
     )
 
-A more complex example to load LDBC snb graph can be find here.
+A more complex example to load LDBC snb graph can be find [here](../python/graphscope/dataset/load_ldbc.py).
 
 
 Graphs from Numpy and Pandas
