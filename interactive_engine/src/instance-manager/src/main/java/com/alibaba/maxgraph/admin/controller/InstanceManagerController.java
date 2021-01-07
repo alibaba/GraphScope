@@ -161,6 +161,11 @@ public class InstanceManagerController {
     }
 
     private boolean checkInstanceReady(String ip, int port) {
+        if (ip.equals("localhost") || ip.equals("127.0.0.1")) {
+            // now, used in mac os with docker-desktop kubernetes cluster,
+            // which external ip is 'localhost' when service type is 'LoadBalancer'.
+            return true;
+        }
         MessageSerializer serializer = Serializers.GRYO_V1D0.simpleInstance();
         Map<String, Object> config = new HashMap<String, Object>() {
             {

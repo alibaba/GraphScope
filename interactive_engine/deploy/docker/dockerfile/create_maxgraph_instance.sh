@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 source /root/maxgraph/func.sh
+timeout_seconds=60
+
 function _create_maxgraph_instance {
     _setup_config
     # launch coordinator & frontend in one pod
@@ -67,7 +69,20 @@ function _expose_gremlin_server {
         kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${external_port} \
             --target-port=${port} --type=LoadBalancer 1>/dev/null 2>&1
         [ $? -eq 0 ] || exit 1
-        EXTERNAL_IP=`kubectl describe service gremlin-${object_id} | grep "LoadBalancer Ingress" | awk -F'[ :]+' '{print $3}'`
+        wait_period_seconds=0
+        while true
+        do
+            EXTERNAL_IP=`kubectl describe service gremlin-${object_id} | grep "LoadBalancer Ingress" | awk -F'[ :]+' '{print $3}'`
+            if [ -n "${EXTERNAL_IP}" ]; then
+                break
+            fi
+            wait_period_seconds=$(($wait_period_seconds+5))
+            if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+                echo "Get external ip of ${GREMLIN_EXPOSE} failed."
+                break
+            fi
+            sleep 5
+        done
     else
         kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${port} \
             --target-port=${port} --type=NodePort 1>/dev/null 2>&1

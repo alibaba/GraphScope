@@ -157,15 +157,22 @@ class CoordinatorServiceServicer(
         self._cleanup()
 
     def _config_logging(self, log_level):
-        if log_level:
-            log_level = getattr(logging, log_level.upper(), logging.INFO)
-        else:
-            log_level = logging.INFO
-        logging.getLogger("graphscope").setLevel(log_level)
-        logging.basicConfig(
-            format="%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s",
-            stream=sys.stdout,
+        """Set log level basic on config.
+        Args:
+            log_level (str): Log level of stdout handler
+        """
+        logger = logging.getLogger("graphscope")
+        logger.setLevel(logging.DEBUG)
+
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        stdout_handler.setLevel(log_level)
+
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s"
         )
+        stdout_handler.setFormatter(formatter)
+
+        logger.addHandler(stdout_handler)
 
     def ConnectSession(self, request, context):
         # A session is already connected.
