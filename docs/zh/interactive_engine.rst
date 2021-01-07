@@ -1,13 +1,13 @@
 交互查询引擎
 ============
 
-GraphScope的交互查询引擎（简称GIE）是一个分布式系统，它为不同经验的用户提供了一个易用的交互式环境，支持海量复杂图数据上的*实时分析与交互探索*。该引擎支持`Gremlin <http://tinkerpop.apache.org/>`_ 语言表达的交互图查询，并提供了自动化和用户透明的分布式并行执行。
+GraphScope的交互查询引擎（简称GIE）是一个分布式系统，它为不同经验的用户提供了一个易用的交互式环境，支持海量复杂图数据上的*实时分析与交互探索*。该引擎支持 `Gremlin <http://tinkerpop.apache.org/>`_ 语言表达的交互图查询，并提供了自动化和用户透明的分布式并行执行。
 
 
 Apache TinkerPop
 ----------------
 
-`Apache TinkerPop <http://tinkerpop.apache.org/>`_ 是基于Gremlin语言开发交互式图应用的一个开源框架和事实标准。GIE通过TinkerPop提供的`Gremlin Server <https://tinkerpop.apache.org/docs/current/reference/#gremlin-server>`_ 接口，实现了与TinkerPop生态无缝集成，从而用户可以直接采用诸如`Gremlin Console <https://tinkerpop.apache.org/docs/current/reference/#gremlin-console>`_ 的开发工具或通过Java和Python等多种语言接口编写应用逻辑。
+`Apache TinkerPop <http://tinkerpop.apache.org/>`_ 是基于Gremlin语言开发交互式图应用的一个开源框架和事实标准。GIE通过TinkerPop提供的 `Gremlin Server <https://tinkerpop.apache.org/docs/current/reference/#gremlin-server>`_ 接口，实现了与TinkerPop生态无缝集成，从而用户可以直接采用诸如 `Gremlin Console <https://tinkerpop.apache.org/docs/current/reference/#gremlin-console>`_ 的开发工具或通过Java和Python等多种语言接口编写应用逻辑。
 
 
 利用Python（Gremlin）连接GraphScope
@@ -30,7 +30,7 @@ Apache TinkerPop
     node_num = interactive.execute('g.V().count()').one()
     edge_num = interactive.execute("g.E().count()").one()
 
-上面代码中的``interactive``对象事实上是Python类``InteractiveQuery``的一个实例，而这一类封装了用Python实现的完整Gremlin客户端类库`Gremlin-Python <https://pypi.org/project/gremlinpython/>`_ 。
+上面代码中的``interactive``对象事实上是Python类``InteractiveQuery``的一个实例，而这一类封装了用Python实现的完整Gremlin客户端类库 `Gremlin-Python <https://pypi.org/project/gremlinpython/>`_ 。
 
 每一个载入GraphScope的图都包含一个Gremlin查询提交入口，可以像下面这样获得具体的访问地址（URL）:
 
@@ -44,13 +44,13 @@ Apache TinkerPop
 
     ws://your-endpoint:your-ip/gremlin
 
-有了这一URL信息，用户也可以直接采用Gremlin-Python访问图数据，具体可以参考`官方文档 <https://tinkerpop.apache.org/docs/current/reference/#gremlin-python>`_ 。
+有了这一URL信息，用户也可以直接采用Gremlin-Python访问图数据，具体可以参考 `官方文档 <https://tinkerpop.apache.org/docs/current/reference/#gremlin-python>`_ 。
 
 
 利用Java（Gremlin）连接GraphScope
 ---------------------------------
 
-TinkerPop同时支持Java语言按类似方式访问，详见Gremlin-Java的`官方文档 <https://tinkerpop.apache.org/docs/current/reference/#gremlin-java>`_ 。
+TinkerPop同时支持Java语言按类似方式访问，详见Gremlin-Java的 `官方文档 <https://tinkerpop.apache.org/docs/current/reference/#gremlin-java>`_ 。
 
 
 Gremlin Console（开发控制台）
@@ -60,7 +60,7 @@ Gremlin Console（开发控制台）
 
 1.安装Gremlin Console依赖的Java运行时环境，版本需要满足[8, 12)。
 
-2.从`Apache TinkerPop <https://tinkerpop.apache.org/downloads.html>`_ 下载适当版本的Gremlin Console。
+2.从 `Apache TinkerPop <https://tinkerpop.apache.org/downloads.html>`_ 下载适当版本的Gremlin Console。
 
 .. code:: bash
 
@@ -109,7 +109,7 @@ Gremlin Console（开发控制台）
 Gremlin编程入门--101
 --------------------
 
-GIE以忠实保留Gremlin编程模型为设计目标，从而让已有的应用只需最小化的修改就可以扩展到大规模计算集群。在此我们提供一个Gremlin的总体介绍，特别是其中包含的图数据模型和查询语言等关键概念。更详细和完整的介绍，请参考`TinkerPop reference <https://tinkerpop.apache.org/docs/current/reference/>`_ 。
+GIE以忠实保留Gremlin编程模型为设计目标，从而让已有的应用只需最小化的修改就可以扩展到大规模计算集群。在此我们提供一个Gremlin的总体介绍，特别是其中包含的图数据模型和查询语言等关键概念。更详细和完整的介绍，请参考 `TinkerPop reference <https://tinkerpop.apache.org/docs/current/reference/>`_ 。
 
 图数据模型
 ~~~~~~~~~~
@@ -158,7 +158,7 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
 属性图模型约束
 ~~~~~~~~~~~~~
 
-目前的MaxGraph技术预览版利用了`Vineyard <https://github.com/alibaba/libvineyard>`_ 项目提供的分布式内存存储作为输入图，它支持一次载入*不可修改*的图模型数据，和图分片存储在分布式集群。当前设计有下面的一些限制：
+目前的MaxGraph技术预览版利用了 `Vineyard <https://github.com/alibaba/libvineyard>`_ 项目提供的分布式内存存储作为输入图，它支持一次载入*不可修改*的图模型数据，和图分片存储在分布式集群。当前设计有下面的一些限制：
 
 - Schema（模式）约束：每个图的数据需要满足事先定义的Schema，包括点、边的类型名称（label）和属性名及值类型。
 
