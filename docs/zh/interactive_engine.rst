@@ -30,7 +30,7 @@ Apache TinkerPop
     node_num = interactive.execute('g.V().count()').one()
     edge_num = interactive.execute("g.E().count()").one()
 
-上面代码中的``interactive``对象事实上是Python类``InteractiveQuery``的一个实例，而这一类封装了用Python实现的完整Gremlin客户端类库 `Gremlin-Python <https://pypi.org/project/gremlinpython/>`_ 。
+上面代码中的 ``interactive`` 对象事实上是Python类 ``InteractiveQuery`` 的一个实例，而这一类封装了用Python实现的完整Gremlin客户端类库 `Gremlin-Python <https://pypi.org/project/gremlinpython/>`_ 。
 
 每一个载入GraphScope的图都包含一个Gremlin查询提交入口，可以像下面这样获得具体的访问地址（URL）:
 
@@ -99,7 +99,7 @@ Gremlin Console（开发控制台）
     :remote connect tinkerpop.server conf/graphscope-remote.yaml
     :remote console
 
-8.现在你可以尝试一些简单的Gremlin查询了！例如``g.V().limit(1)``。当你完成交互，输入下列命令可以退出Gremlin Console。
+8.现在你可以尝试一些简单的Gremlin查询了！例如 ``g.V().limit(1)`` 。当你完成交互，输入下列命令可以退出Gremlin Console。
 
 .. code:: bash
 
@@ -121,7 +121,7 @@ Gremlin允许用户在属性图模型上定义特设（ad-hoc）遍历查询。�
     :align: center
     :alt: 电商属性图模型示例。
 
-上图展示了一个属性图模型示例。它包含``user``（用户）、``product``（商品）和``address``（地址）三类点，它们通过``order``（购买）、``deliver``（递送）、``belongs_to``（属于）和``home_of``（家庭地址）四类边相互关联。图中虚线展示的一条（从起点到终点的）路径1-->2-->3，代表了一个用户（买家）"Tom"购买了一个卖家"Jack"提供的标价"$99"的商品"gift"。
+上图展示了一个属性图模型示例。它包含 ``user`` （用户）、 ``product`` （商品）和 ``address`` （地址）三类点，它们通过 ``order`` （购买）、 ``deliver`` （递送）、 ``belongs_to`` （属于）和 ``home_of`` （家庭地址）四类边相互关联。图中虚线展示的一条（从起点到终点的）路径1-->2-->3，代表了一个用户（买家）"Tom"购买了一个卖家"Jack"提供的标价"$99"的商品"gift"。
 
 查询语言
 ~~~~~~~~
@@ -130,14 +130,14 @@ Gremlin允许用户在属性图模型上定义特设（ad-hoc）遍历查询。�
 
 Gremlin语言丰富灵活的表达能力主要来自于它对*嵌套遍历*的支持，它允许一个（子）查询或遍历被包含在另一个操作中，作为一个可调用的函数被包裹操作用于处理其每一个输入。函数的声明和作用都由包裹操作的语义决定。
 
-例如，``where``（过滤）操作可以包含一个嵌套查询，作为过滤条件谓词。而``select``（映射）或``order``（排序）操作各自可以通过嵌套查询讲每一个输入单独映射到从它开始的子遍历得到的结果，或依据结果值作为排序依据。
+例如， ``where`` （过滤）操作可以包含一个嵌套查询，作为过滤条件谓词。而 ``select`` （映射）或 ``order`` （排序）操作各自可以通过嵌套查询讲每一个输入单独映射到从它开始的子遍历得到的结果，或依据结果值作为排序依据。
 
-嵌套遍历的另一个重要应用是表达循环，在Gremlin中通过``repeat``（循环）操作和随后的``until/times``（终止条件）表达。``repeat``操作包含一个嵌套遍历作为循环体，每一个输入都会重复送入这一子查询，直到终止条件满足。``until``（条件终止）操作类似``where``，可以表达一个条件谓词，它被独立应用于循环体的每一个输出遍历器，满足条件的遍历器就会离开循环。另一个常用的``times``（迭代轮次终止）操作可以利用一个整型常量``k``表达固定迭代轮次后终止循环。
+嵌套遍历的另一个重要应用是表达循环，在Gremlin中通过 ``repeat`` （循环）操作和随后的 ``until/times`` （终止条件）表达。 ``repeat`` 操作包含一个嵌套遍历作为循环体，每一个输入都会重复送入这一子查询，直到终止条件满足。 ``until`` （条件终止）操作类似 ``where`` ，可以表达一个条件谓词，它被独立应用于循环体的每一个输出遍历器，满足条件的遍历器就会离开循环。另一个常用的 ``times`` （迭代轮次终止）操作可以利用一个整型常量 ``k`` 表达固定迭代轮次后终止循环。
 
 一个例子
 ~~~~~~~~
 
-下面展示了一个完整的Gremlin示例，它尝试从一个给定账户（account）点开始找到长度为``k``的有向环路。
+下面展示了一个完整的Gremlin示例，它尝试从一个给定账户（account）点开始找到长度为 ``k`` 的有向环路。
 
 .. code:: java
 
@@ -147,7 +147,7 @@ Gremlin语言丰富灵活的表达能力主要来自于它对*嵌套遍历*的�
      .where(out('transfer').eq('s'))
      .path().limit(1)
 
-首先，输入图操作``V``（包含一个``has``表达的简单过滤）返回图中满足条件的``account``点（即唯一标识为``2``的点）。紧随其后的``as``操作是一个*修饰符*，它不改变输入遍历器集合，但对其中每一个遍历器的当前位置，打上一个有名标签（这个例子中的``s``），从而今后可以引用。接下来，查询沿着``transfer``类型的出边循环游走``k-1``次，且每一次都过滤或跳过路径中的重复点（利用``simplePath``操作实现）。最后，``where``操作检查此时遍历路径的下一跳是否可以回到起点（用``s``指代），从而形成一个长度为``k``的环。对于检测到的环，查询还通过``path``操作展示每个遍历器的完成路径信息。``limit``操作类似SQL中的top K，它表达了查询结果仅需要包含一个这样的路径（如果有的话）。
+首先，输入图操作 ``V`` （包含一个 ``has`` 表达的简单过滤）返回图中满足条件的 ``account`` 点（即唯一标识为 ``2`` 的点）。紧随其后的 ``as`` 操作是一个*修饰符*，它不改变输入遍历器集合，但对其中每一个遍历器的当前位置，打上一个有名标签（这个例子中的 ``s`` ），从而今后可以引用。接下来，查询沿着 ``transfer`` 类型的出边循环游走 ``k-1`` 次，且每一次都过滤或跳过路径中的重复点（利用 ``simplePath`` 操作实现）。最后， ``where`` 操作检查此时遍历路径的下一跳是否可以回到起点（用 ``s`` 指代），从而形成一个长度为 ``k`` 的环。对于检测到的环，查询还通过 ``path`` 操作展示每个遍历器的完成路径信息。 ``limit`` 操作类似SQL中的top K，它表达了查询结果仅需要包含一个这样的路径（如果有的话）。
 
 
 Gremlin兼容性（对比TinkerPop）
@@ -164,7 +164,7 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
 
 - 主键约束：每个顶点类型需要包含一个用户可自定义的主键（属性），同时系统会为每个点和边对象，自动分配产生一个字符串类型的唯一标识（ID）。对于点来说，ID编码了类型（label）和用户自定义主键信息。
 
-- 每个点或边的属性，可以包含下列类型的属性值：``int``、``long``、``float``、``double``、``String``、``List<int>``、``List<long>``和``List<String>``。
+- 每个点或边的属性，可以包含下列类型的属性值：``int``、``long``、``float``、``double``、``String``、``List<int>``、``List<long>`` 和 ``List<String>`` 。
 
 尚不支持的功能特性
 ~~~~~~~~~~~~~~~~~
@@ -173,7 +173,7 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
 
 - 图修改操作。
 
-- Lambda和Groovy表达式或自定义函数，例如：``.map{<expression>}``、``.by{<expression>}``和``.filter{<expression>}``函数，``1+1``和``System.currentTimeMillis()``等表达式或Java调用等等。
+- Lambda和Groovy表达式或自定义函数，例如：``.map{<expression>}``、``.by{<expression>}`` 和 ``.filter{<expression>}`` 函数，``1+1`` 和 ``System.currentTimeMillis()`` 等表达式或Java调用等等。
 
 - 定制Gremlin图遍历策略（traversal strategies），即查询优化由GraphScope系统自动完成。
 
@@ -364,6 +364,6 @@ GraphScope暂时不支持下列Gremlin操作（会逐步支持）：
 - Sack（自定义状态计算）
 - Subgraph（计算子图，目前实现了一个简化版本，支持抽取子图写入Vineyard存储）
 - Cap（访问自定义状态）
-- ``GraphComputer``接口（例如PageRank和ShortestPath）；这部分功能GraphScope通过图分析引擎和NetworkX兼容接口提供。
+- ``GraphComputer`` 接口（例如PageRank和ShortestPath）；这部分功能GraphScope通过图分析引擎和NetworkX兼容接口提供。
 
 此外，目前支持的Repeat（循环）操作不支持嵌套，也就是在循环体内不可以出现另一个Repeat操作。
