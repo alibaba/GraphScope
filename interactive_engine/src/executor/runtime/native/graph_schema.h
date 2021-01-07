@@ -29,11 +29,10 @@
 
 #include "arrow/api.h"
 #include "boost/leaf/all.hpp"
-#include "boost/property_tree/json_parser.hpp"
-#include "boost/property_tree/ptree.hpp"
 
-#include "graph/fragment/property_graph_types.h"
-#include "graph/fragment/graph_schema.h"
+#include "vineyard/common/util/json.h"
+#include "vineyard/graph/fragment/property_graph_types.h"
+#include "vineyard/graph/fragment/graph_schema.h"
 
 namespace vineyard {
 
@@ -70,8 +69,8 @@ class MGPropertyGraphSchema {
     }
   }
 
-  void ToJSON(boost::property_tree::ptree& root) const;
-  void FromJSON(boost::property_tree::ptree const& root);
+  void ToJSON(vineyard::json& root) const;
+  void FromJSON(vineyard::json const& root);
 
   std::string ToJSONString() const;
   void FromJSONString(std::string const& schema);

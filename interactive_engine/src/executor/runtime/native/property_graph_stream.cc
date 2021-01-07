@@ -404,7 +404,7 @@ void PropertyGraphOutStream::initialTables() {
 
 void PropertyGraphOutStream::buildTableChunk(
     std::shared_ptr<arrow::RecordBatch> batch,
-    std::shared_ptr<vineyard::DataframeStreamWriter>& stream_writer,
+    std::unique_ptr<vineyard::DataframeStreamWriter>& stream_writer,
     int const property_offset,
     std::map<int, int> const& property_id_mapping) {
 #ifndef NDEBUG
@@ -496,8 +496,7 @@ std::shared_ptr<Object> GlobalPGStreamBuilder::_Seal(Client& client) {
   auto gstream = std::make_shared<GlobalPGStream>();
   gstream->total_stream_chunks_ = total_stream_chunks_;
   gstream->meta_.SetTypeName(type_name<GlobalPGStream>());
-  gstream->meta_.AddKeyValue("total_stream_chunks",
-                             std::to_string(total_stream_chunks_));
+  gstream->meta_.AddKeyValue("total_stream_chunks", total_stream_chunks_);
 
   for (size_t idx = 0; idx < stream_chunks_.size(); ++idx) {
     gstream->meta_.AddMember("stream_chunk_" + std::to_string(idx),
@@ -505,7 +504,6 @@ std::shared_ptr<Object> GlobalPGStreamBuilder::_Seal(Client& client) {
   }
 
   VINEYARD_CHECK_OK(client.CreateMetaData(gstream->meta_, gstream->id_));
-  VINEYARD_CHECK_OK(client.Persist(gstream->id_));
   return std::dynamic_pointer_cast<Object>(gstream);
 }
 

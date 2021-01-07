@@ -33,6 +33,7 @@ import subprocess
 import sys
 import threading
 import time
+import warnings
 from queue import Empty as EmptyQueue
 
 try:
@@ -281,8 +282,20 @@ class Session(object):
             self._run_on_local()
 
         # deprecated params handle
-        kw.pop("show_log", None)
-        kw.pop("log_level", None)
+        if "show_log" in kw:
+            warnings.warn(
+                "The `show_log` parameter has been deprecated and has no effect, "
+                "please use `graphscope.set_option(show_log=%s)` instead."
+                % kw.pop("show_log", None),
+                category=DeprecationWarning,
+            )
+        if "log_level" in kw:
+            warnings.warn(
+                "The `log_level` parameter has been deprecated and has no effect, "
+                "please use `graphscope.set_option(log_level=%r)` instead."
+                % kw.pop("show_log", None),
+                category=DeprecationWarning,
+            )
 
         # deploy minikube on virtual machine
         self._config_params["k8s_minikube_vm_driver"] = kw.pop(

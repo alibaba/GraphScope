@@ -39,7 +39,7 @@
 #include "vineyard/basic/stream/parallel_stream.h"
 #include "vineyard/client/client.h"
 #include "vineyard/client/ds/blob.h"
-#include "vineyard/common/util/ptree.h"
+#include "vineyard/common/util/json.h"
 
 #include "graph_schema.h"
 #include "htap_types.h"
@@ -206,7 +206,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
       s->vertex_stream_ =
         std::dynamic_pointer_cast<vineyard::DataframeStream>(builder.Seal(client));
       client.Persist(s->vertex_stream_->id());
-      s->vertex_writer_ = s->vertex_stream_->OpenWriter(client);
+      VINEYARD_CHECK_OK(s->vertex_stream_->OpenWriter(client, s->vertex_writer_));
     }
     {
       vineyard::DataframeStreamBuilder builder(client);
@@ -215,14 +215,14 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
       s->edge_stream_ =
         std::dynamic_pointer_cast<vineyard::DataframeStream>(builder.Seal(client));
       client.Persist(s->edge_stream_->id());
-      s->edge_writer_ = s->edge_stream_->OpenWriter(client);
+      VINEYARD_CHECK_OK(s->edge_stream_->OpenWriter(client, s->edge_writer_));
     }
 
     s->stream_index_ = index;
 
     s->meta_.SetTypeName(type_name<PropertyGraphOutStream>());
     s->meta_.AddKeyValue("graph_name", std::string(graph_name));
-    s->meta_.AddKeyValue("stream_index", std::to_string(s->stream_index_));
+    s->meta_.AddKeyValue("stream_index", s->stream_index_);
     s->meta_.AddKeyValue("graph_schema", s->graph_schema_->ToJSONString());
     s->meta_.AddMember("vertex_stream", s->vertex_stream_->meta());
     s->meta_.AddMember("edge_stream", s->edge_stream_->meta());
@@ -239,19 +239,18 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
 
   void Construct(const ObjectMeta& meta) override {
     meta_ = meta;
-    const ptree& tree = meta.MetaData();
-    this->id_ = VYObjectIDFromString(tree.get<std::string>("id"));
-    this->stream_index_ = tree.get<int>("stream_index");
+    this->id_ = VYObjectIDFromString(meta.GetKeyValue("id"));
+    this->stream_index_ = meta.GetKeyValue<int>("stream_index");
     this->vertex_stream_ =
       std::dynamic_pointer_cast<vineyard::DataframeStream>(meta.GetMember("vertex_stream"));
     this->edge_stream_ =
       std::dynamic_pointer_cast<vineyard::DataframeStream>(meta.GetMember("edge_stream"));
     auto client = dynamic_cast<vineyard::Client *>(meta.GetClient());
-    this->vertex_writer_ = this->vertex_stream_->OpenWriter(*client);
-    this->edge_writer_ = this->edge_stream_->OpenWriter(*client);
+    VINEYARD_CHECK_OK(this->vertex_stream_->OpenWriter(*client, this->vertex_writer_));
+    VINEYARD_CHECK_OK(this->edge_stream_->OpenWriter(*client, this->edge_writer_));
 
     this->graph_schema_ = std::make_shared<MGPropertyGraphSchema>();
-    graph_schema_->FromJSONString(tree.get<std::string>("graph_schema"));
+    graph_schema_->FromJSONString(meta.GetKeyValue("graph_schema"));
     this->initialTables();
   }
 
@@ -287,7 +286,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
  private:
   void initialTables();
   void buildTableChunk(std::shared_ptr<arrow::RecordBatch> batch,
-                       std::shared_ptr<vineyard::DataframeStreamWriter>& stream_writer,
+                       std::unique_ptr<vineyard::DataframeStreamWriter>& stream_writer,
                        int const property_offset,
                        std::map<int, int> const& property_id_mapping);
 
@@ -316,8 +315,8 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
   int stream_index_;
   std::shared_ptr<vineyard::DataframeStream> vertex_stream_;
   std::shared_ptr<vineyard::DataframeStream> edge_stream_;
-  std::shared_ptr<vineyard::DataframeStreamWriter> vertex_writer_;
-  std::shared_ptr<vineyard::DataframeStreamWriter> edge_writer_;
+  std::unique_ptr<vineyard::DataframeStreamWriter> vertex_writer_;
+  std::unique_ptr<vineyard::DataframeStreamWriter> edge_writer_;
 
   friend class PropertyGraphInStream;
 };
@@ -328,8 +327,8 @@ class PropertyGraphInStream {
       : vertex_stream_(stream.vertex_stream_),
         edge_stream_(stream.edge_stream_),
         graph_schema_(stream.graph_schema_) {
-    vertex_reader_ = vertex_stream_->OpenReader(client);
-    edge_reader_ = edge_stream_->OpenReader(client);
+    VINEYARD_CHECK_OK(vertex_stream_->OpenReader(client, vertex_reader_));
+    VINEYARD_CHECK_OK(edge_stream_->OpenReader(client, edge_reader_));
   }
 
   Status GetNextVertices(Client& client,
@@ -349,8 +348,8 @@ class PropertyGraphInStream {
  private:
   std::shared_ptr<vineyard::DataframeStream> vertex_stream_;
   std::shared_ptr<vineyard::DataframeStream> edge_stream_;
-  std::shared_ptr<vineyard::DataframeStreamReader> vertex_reader_;
-  std::shared_ptr<vineyard::DataframeStreamReader> edge_reader_;
+  std::unique_ptr<vineyard::DataframeStreamReader> vertex_reader_;
+  std::unique_ptr<vineyard::DataframeStreamReader> edge_reader_;
   std::shared_ptr<MGPropertyGraphSchema> graph_schema_;
 };
 

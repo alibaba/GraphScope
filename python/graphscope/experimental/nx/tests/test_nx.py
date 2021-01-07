@@ -454,6 +454,10 @@ class TestGraphProjectTest(object):
     def test_implicit_project_to_simple(self):
         g = self.g
         nx.builtin.degree_centrality(g)
+
+    @pytest.mark.skip(reason="It use much memory, exceeds the limit of Github runner")
+    def test_implicit_project_to_simple_and_sssp(self):
+        g = self.g
         nx.builtin.single_source_dijkstra_path_length(g, source=6, weight="weight")
 
     def test_error_on_view_project_to_simple(self):

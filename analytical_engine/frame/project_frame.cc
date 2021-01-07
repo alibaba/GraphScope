@@ -93,7 +93,8 @@ class ProjectFrame<gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>> {
     auto oid_type = parent_meta.GetKeyValue("oid_type");
     auto vid_type = parent_meta.GetKeyValue("vid_type");
 
-    graph_def.set_directed(parent_meta.template GetKeyValue<bool>("directed"));
+    graph_def.set_directed(
+        static_cast<bool>(parent_meta.template GetKeyValue<int>("directed")));
     auto* schema_def = graph_def.mutable_schema_def();
     schema_def->set_oid_type(oid_type);
     schema_def->set_vid_type(vid_type);

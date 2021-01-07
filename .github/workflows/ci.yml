@@ -28,7 +28,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.5
       options:
         --shm-size 4096m
     strategy:
@@ -133,7 +133,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.5
     steps:
     - name: Install Dependencies
       run: |
@@ -173,7 +173,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.5
     steps:
     - name: Install Dependencies
       run: |
@@ -284,10 +284,14 @@ jobs:
     - uses: actions/checkout@v2.3.2
 
     - uses: actions/download-artifact@v2
-    - name: Prepare environment
+
+    - name: Prepare environment for dataset
       run: |
         export GS_TEST_DIR='/root/gstest'
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+
+    - name: Prepare environment for deps
+      run: |
         python3 -m pip install pytest-cov
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
@@ -302,10 +306,15 @@ jobs:
     - name: App Test with Expr Off
       if: matrix.experimental == 'OFF'
       run: |
+        # prelaunch the etcd
+        /usr/local/bin/etcd --data-dir=/dev/shm/default.etcd &
+
         export GS_TEST_DIR='/root/gstest'
         cd python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -v tests
+
+        pkill -TERM etcd || true
 
     - name: Upload Coverage
       if: matrix.experimental == 'OFF'
@@ -317,11 +326,16 @@ jobs:
     - name: App Test with Expr On
       if: matrix.experimental == 'ON'
       run: |
+        # prelaunch the etcd
+        /usr/local/bin/etcd --data-dir=/dev/shm/default.etcd &
+
         export GS_TEST_DIR='/root/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/experimental/nx/tests/classes
         python3 -m pytest --exitfirst -s -v python/graphscope/experimental/nx/tests/test_nx.py
         python3 -m pytest --exitfirst -s -v python/graphscope/experimental/nx/tests/algorithms/builtin \
                                             python/graphscope/experimental/nx/tests/test_utils.py
+
+        pkill -TERM etcd || true
 
   k8s-test:
     runs-on: self-hosted
