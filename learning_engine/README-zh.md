@@ -1,6 +1,6 @@
 # GraphScope 图学习引擎: Graph-Learn
 
-[English version](README.md)
+[![Translation](https://img.shields.io/badge/Translation-English-success)](README.md)
 
 GraphScope 图学习引擎即为 GraphLearn，在其之上做了一些适配和封装。
 
