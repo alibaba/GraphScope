@@ -25,7 +25,7 @@ GraphScope集合了达摩院的多项学术研究成果，其中的核心技术�
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: 目录
 
    installation
    getting_started
@@ -38,7 +38,10 @@ GraphScope集合了达摩院的多项学术研究成果，其中的核心技术�
 
 .. toctree::
    :maxdepth: 2
-   :caption: Reference
+   :caption: API 参考
+
+   Python API 参考 <https://graphscope.io/docs/reference/python_index.html>
+   图分析引擎 API 参考 <https://graphscope.io/docs/reference/analytical_engine_index.html>
 
 索引
 ====
