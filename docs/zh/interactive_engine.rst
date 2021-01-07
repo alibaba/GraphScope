@@ -1,5 +1,5 @@
-交互查询引擎
-============
+图交互式分析引擎 
+==========
 
 GraphScope的交互查询引擎（简称GIE）是一个分布式系统，它为不同经验的用户提供了一个易用的交互式环境，支持海量复杂图数据上的 *实时分析与交互探索* 。该引擎支持 `Gremlin <http://tinkerpop.apache.org/>`_ 语言表达的交互图查询，并提供了自动化和用户透明的分布式并行执行。
 
@@ -367,3 +367,4 @@ GraphScope暂时不支持下列Gremlin操作（会逐步支持）：
 - ``GraphComputer`` 接口（例如PageRank和ShortestPath）；这部分功能GraphScope通过图分析引擎和NetworkX兼容接口提供。
 
 此外，目前支持的Repeat（循环）操作不支持嵌套，也就是在循环体内不可以出现另一个Repeat操作。
+

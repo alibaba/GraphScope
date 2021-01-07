@@ -1,5 +1,7 @@
 # GraphScope Learning Engine: Graph-Learn
 
+[![Translation](https://img.shields.io/badge/Translation-%E4%B8%AD%E6%96%87%E7%89%88-success)](README-zh.md)
+
 The learning engine in GraphScope is GraphLearn with some adaptions and wrappers.
 
 [Graph-Learn(GL)](https://github.com/alibaba/graph-learn/) is a distributed framework designed for the development and application of large-scale graph neural networks. It refines and abstracts a set of programming paradigms suitable for the current neural network model. It has been successfully applied to many scenarios such as search recommendation, network security, and knowledge graphs within Alibaba.

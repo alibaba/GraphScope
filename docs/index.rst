@@ -36,6 +36,12 @@ and the vineyard store that offers efficient in-memory data transfers.
    reference/python_index
    reference/analytical_engine_index
 
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   zh/index
+
 Indices and tables
 ==================
 
@@ -43,7 +49,3 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. toctree::
-   :hidden:
-
-   zh/index.rst

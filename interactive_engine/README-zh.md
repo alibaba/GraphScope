@@ -1,4 +1,6 @@
-# GraphScope交互查询引擎
+# GraphScope 交互查询引擎
+
+[![Translation](https://img.shields.io/badge/Translation-English-success)](https://github.com/alibaba/GraphScope/tree/main/interactive_engine)
 
 GraphScope的交互查询引擎（简称GIE）是一个分布式系统，它为不同经验的用户提供了一个易用的交互式环境，支持海量复杂图数据上的*实时分析与交互探索*。该引擎支持[Gremlin](http://tinkerpop.apache.org/)语言表达的交互图查询，并提供了自动化和用户透明的分布式并行执行。
 

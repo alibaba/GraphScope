@@ -12,7 +12,7 @@ Configurations of a Graph
 
 To load a property graph to GraphScope, we provide a function:
 
-.. code:: ipython
+.. code:: python
 
     load_from(edges, vertices)
 
@@ -28,7 +28,7 @@ the pair is a configuration `Tuple` or `List`, which contains:
 
 Let's see an example:
 
-.. code:: ipython
+.. code:: python
 
     edges={
         # a kind of edge with label "group"
@@ -48,7 +48,7 @@ Alternatively, the configuration can be a `Dict`,
 The reserved keys of the `Dict` are "loader", "properties", "source" and "destination".
 This configuration for edges are exactly the same to the above configuration.
 
-.. code:: ipython
+.. code:: python
 
     edges = {
         "group": {
@@ -64,7 +64,7 @@ graph, two kinds of edges are labeled with `group` but represents two relations.
 i.e., `teacher`-`group`-> `student` and `student`-`group`-> `student`. 
 In this case, a `group` key follows a list of configurations.
 
-.. code:: ipython
+.. code:: python
 
     edges={
         # a kind of edge with label "group"
@@ -84,7 +84,7 @@ In this case, a `group` key follows a list of configurations.
         ]
     }
 
-.. It is worth nothing that for several configurations in the side `Label`, 
+.. It is worth noting that for several configurations in the side `Label`, 
 .. the attributes should be the same in number and type, and preferably 
 .. have the same name, because the data of the same `Label` will be put into one Table, 
 .. and the attribute names will uses the names specified by the first configuration.
@@ -92,7 +92,7 @@ In this case, a `group` key follows a list of configurations.
 Some configurations can omit for edges.
 e.g., properties can be empty, which means to select all columns
 
-.. code:: ipython
+.. code:: python
 
     edges={
         "group": (
@@ -105,9 +105,9 @@ e.g., properties can be empty, which means to select all columns
 
 Alternatively, all column names can be assigned with index.
 For example, the number in the src/dst assigned 
-the first column is used as src_id and the second column is used as dst_vid:
+the first column is used as src_id and the second column is used as dst_id:
 
-.. code:: ipython
+.. code:: python
 
     edges={
         "group": (
@@ -122,7 +122,7 @@ the first column is used as src_id and the second column is used as dst_vid:
 
 If there is only one label in the graph, the label of vertices can be omitted.
 
-.. code:: ipython
+.. code:: python
 
     edges={
         "group": (
@@ -141,7 +141,7 @@ the first column will be used as src_id,
 the second column will be used as dst_id.
 all the rest columns in the file are parsed as properties.
 
-.. code:: ipython
+.. code:: python
 
     edges={
         "group": "file:///home/admin/group.e"
@@ -157,7 +157,7 @@ for the label. The configurations contain:
 
 Here is an example for vertices:
 
-.. code:: ipython
+.. code:: python
 
     vertices={
         "student": (
@@ -174,7 +174,7 @@ Here is an example for vertices:
 Like the edges, the configuration for vertices can also be a `Dict`, 
 in which the keys are "loader", "properties" and "vid"
 
-.. code:: ipython
+.. code:: python
 
     vertices={
         "student": {
@@ -188,11 +188,12 @@ We can also omit certain configurations for vertices.
 
 - properties can be empty, which means that all columns are selected as properties;
 - vid can be represented by a number of index,
-- In the simplest case, the configuration can only contains a loader. In this case, the first column
-  is used as vid, and the rest columns are used as properties.
+
+In the simplest case, the configuration can only contains a loader. In this case, the first column
+is used as vid, and the rest columns are used as properties.
 
 
-.. code:: ipython
+.. code:: python
 
     vertices={
         "student": "file:///home/admin/student.v"
@@ -202,7 +203,7 @@ Moreover, the vertices can be totally omitted.
 `graphscope` will extract vertices ids from edges, and a default label `_` will assigned 
 to all vertices in this case.
 
-.. code:: ipython
+.. code:: python
 
     g = graphscope_session.load_from(
         edges={
@@ -213,7 +214,7 @@ to all vertices in this case.
 
 Let's make the example complete:
 
-.. code:: ipython
+.. code:: python
 
     g = graphscope_session.load_from(
         edges={
@@ -246,7 +247,7 @@ Let's make the example complete:
         },
     )
 
-A more complex example to load LDBC snb graph can be find here.
+A more complex example to load LDBC snb graph can be find `here <https://github.com/alibaba/GraphScope/blob/main/python/graphscope/dataset/ldbc.py>`_.
 
 
 Graphs from Numpy and Pandas
@@ -256,7 +257,7 @@ The datasource aforementioned is an object of :ref`Loader`. A loader wraps
 a location or the data itself. `graphscope` supports load a graph
 from pandas dataframes or numpy ndarrays.
 
-.. code:: ipython
+.. code:: python
 
     import pandas as pd
 
@@ -272,7 +273,7 @@ from pandas dataframes or numpy ndarrays.
 
 Or load from numpy ndarrays
 
-.. code:: ipython
+.. code:: python
 
     import numpy
 
@@ -292,7 +293,7 @@ according to the schema.
 
 Currently, `graphscope` supports loaders for these locations:
 
-.. code:: ipython
+.. code:: python
 
     from graphscope import Loader
 

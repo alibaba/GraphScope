@@ -8,6 +8,7 @@
 [![GraphScope CI](https://github.com/alibaba/GraphScope/workflows/GraphScope%20CI/badge.svg)](https://github.com/alibaba/GraphScope/actions?workflow=GraphScope+CI)
 [![Docs](https://github.com/alibaba/GraphScope/workflows/Docs/badge.svg)](https://graphscope.io/docs)
 [![Coverage](https://codecov.io/gh/alibaba/GraphScope/branch/main/graph/badge.svg)](https://codecov.io/gh/alibaba/GraphScope)
+[![Translation](https://img.shields.io/badge/Translation-%E4%B8%AD%E6%96%87%E7%89%88-success)](README-zh.md)
 
 GraphScope is a unified distributed graph computing platform that provides a one-stop environment for performing diverse graph operations on a cluster of computers through a user-friendly Python interface. GraphScope makes multi-staged processing of large-scale graph data on compute clusters simple by combining several important pieces of Alibaba technology: including [GRAPE](https://github.com/alibaba/libgrape-lite), [MaxGraph](interactive_engine/), and [Graph-Learn](https://github.com/alibaba/graph-learn) (GL) for analytics, interactive, and graph neural networks (GNN) computation, respectively, and the [vineyard](https://github.com/alibaba/libvineyard) store that offers efficient in-memory data transfers.
 
@@ -31,7 +32,6 @@ For Linux distributions, we provide a script to install the above dependencies a
 ```bash
 # run the environment preparing script.
 ./scripts/prepare_env.sh
-
 ```
 
 ### Installation
@@ -51,19 +51,19 @@ Please note that we have not hardened this release for production use and it lac
 
 [`ogbn-mag`](https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag) is a heterogeneous network composed of a subset of the Microsoft Academic Graph. It contains 4 types of entities(i.e., papers, authors, institutions, and fields of study), as well as four types of directed relations connecting two entities.
 
-Given the heterogeneous ogbn-mag data, the task is to predict the class of each paper. Node classification can identify papers in multiple venues, which represent different groups of scientific work on different topics. We apply both the attribute and structural information to classify papers. In the graph, each paper node contains a 128-dimensional word2vec vector representing its content, which is obtained by averaging the embeddings of words in its title and abstract. The embeddings of individual words are pre-trained. The structural information is computed on-the-fly.
+Given the heterogeneous `ogbn-mag` data, the task is to predict the class of each paper. Node classification can identify papers in multiple venues, which represent different groups of scientific work on different topics. We apply both the attribute and structural information to classify papers. In the graph, each paper node contains a 128-dimensional word2vec vector representing its content, which is obtained by averaging the embeddings of words in its title and abstract. The embeddings of individual words are pre-trained. The structural information is computed on-the-fly.
 
 <div align="center">
     <img src="https://graphscope.io/docs/_images/how-it-works.png" width="600" alt="how-it-works" />
 </div>
 
-The figure shows the flow of execution when a client Python program is executed..
+The figure shows the flow of execution when a client Python program is executed.
 
 - *Step 1*. Create a session or workspace in GraphScope.
 - *Step 2*. Define schema and load the graph.
 - *Step 3*. Query graph data.
 - *Step 4*. Run graph algorithms.
-- *Step 5*. Run graph-based machine learing tasks.
+- *Step 5*. Run graph-based machine learning tasks.
 - *Step 6*. Close the session.
 
 ### Creating a session
@@ -97,7 +97,7 @@ Taking `ogbn-mag` as example, the figure below shows the model of the property g
     <img src="https://graphscope.io/docs/_images/sample_pg.png" width="600" alt="sample-of-property-graph" />
 </div>
 
-This graph has fours kinds of vertices, labeled as `paper`, `author`, `institution` and `field_of_study`. There are four kinds of edges connecting them, each kind of edges has a label and specifies the vertex labels for its two ends. For example, `cites` edges connect two vertices labeled `paper`. Another example is `writes`, it requires the source vertex is labeled `author` and the destination is a `paper` vertex. All the vertices and edges may have properties. e.g., `paper`  vertices have properties like features, publish year, subject label, etc.
+This graph has four kinds of vertices, labeled as `paper`, `author`, `institution` and `field_of_study`. There are four kinds of edges connecting them, each kind of edges has a label and specifies the vertex labels for its two ends. For example, `cites` edges connect two vertices labeled `paper`. Another example is `writes`, it requires the source vertex is labeled `author` and the destination is a `paper` vertex. All the vertices and edges may have properties. e.g., `paper`  vertices have properties like features, publish year, subject label, etc.
 
 To load this graph to GraphScope, one may use the code below with the [data files](https://graphscope.oss-accelerate.aliyuncs.com/ogbn_mag_small.tar.gz). Please download and extract it to the mounted dir on local(in this case, `~/test_data`).
 

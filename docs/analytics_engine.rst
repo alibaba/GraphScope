@@ -21,7 +21,7 @@ analysis, community detection, centrality computations.
 
 Built-in algorithms can be easily invoked over loaded graphs. For example, 
 
-.. code:: ipython
+.. code:: python
 
     from graphscope import pagerank
     from graphscope import lpa
@@ -68,7 +68,7 @@ Users may want to fetch the results to the client, or write to cloud or distribu
 
 There is a list of supported method to retrieve the results.
 
-.. code:: iPython
+.. code:: python
 
     # fetch to data structures
     result_pr.to_numpy()
@@ -89,7 +89,7 @@ There is a list of supported method to retrieve the results.
 In addition, as shown in the Getting_Started, computation results can add back to 
 the graph as a new property (column) of the vertices(edges).
 
-.. code:: iPython
+.. code:: python
 
     simple_g = sub_graph.project_to_simple(vlabel="paper", elabel="cites")
     ret = graphscope.kcore(simple_g, k=5)
@@ -104,7 +104,7 @@ also be a part of the result, e.g., the vertex id. We reserve three keywords for
 `r` represents the result, `v` and `e` for vertices and edges, respectively.
 Here are some examples for selectors on result processing.
 
-.. code:: iPython
+.. code:: python
 
     # get the results on the vertex
     result_pr.to_numpy('r')
@@ -141,7 +141,7 @@ programming model in a pure Python mode.
 
 To implement this, a user just need to fulfill this class.
 
-.. code:: ipython
+.. code:: python
 
     @graphscope.analytical.udf.pie
     class YourAlgorithm(AppAssets):
@@ -166,7 +166,7 @@ can be found in :ref:`Cython SDK API`.
 
 Let's take SSSP as example, a user defined SSSP in PIE model may be like this.
 
-.. code:: ipython
+.. code:: python
 
     @graphscope.analytical.udf.pie
     class SSSP:
@@ -238,7 +238,7 @@ In addition to the sub-graph based PIE model,
 `Pregel` model as well. 
 You may develop an algorithms in `Pregel` model by implementing this.
 
-.. code:: ipython
+.. code:: python
 
     @pregel(vd_type='double', md_type='double')
     class YourPregelAlgorithm(AppAssets):
@@ -259,7 +259,7 @@ Differ from the PIE model, the decorator for this class is @graphscope.analytica
 And the functions to be implemented is defined on vertex, rather than the fragment.
 Take SSSP as example, the algorithm in Pregel model looks like this.
 
-.. code:: ipython
+.. code:: python
 
     # decorator, and assign the types for vertex data, message data.
     @pregel(vd_type='double', md_type='double')
@@ -299,7 +299,7 @@ Run Your Own Algorithms
 
 To run your own algorithms, you may trigger it in place where you defined it.
 
-.. code:: ipython
+.. code:: python
 
     import graphscope
 
@@ -315,14 +315,14 @@ To run your own algorithms, you may trigger it in place where you defined it.
 
 After developing and testing, you may want to save it for the future use.
 
-.. code:: ipython
+.. code:: python
 
     SSSP_Pregel.to_gar("file:///var/graphscope/udf/my_sssp_pregel.gar")
 
 
 Later, you can load your own algorithm from the gar package.
 
-.. code:: ipython
+.. code:: python
 
     import graphscope
 

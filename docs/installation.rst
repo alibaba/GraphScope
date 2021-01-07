@@ -21,9 +21,6 @@ Alternatively, You may want to install `WSL2 <https://docs.microsoft.com/zh-cn/w
 
 .. code:: bash
 
-    # if on WSL2, we need to enable systemd first. Otherwise, skip this step.
-    ./script/wsl/enable_systemd.sh
-
     # run the environment preparing script.
     ./scripts/prepare_env.sh
 
