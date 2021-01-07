@@ -1,5 +1,7 @@
 # GraphScope Analytical Engine - GRAPE
 
+[![Translation](https://img.shields.io/badge/translation-%E4%B8%AD%E6%96%87%E7%89%88-success)](README-zh.md)
+
 The analytical engine in GraphScope originated from **GRAPE**, a system that implemented the fix-point model proposed in the paper [Parallelizing Sequential Graph Computations](https://dl.acm.org/doi/10.1145/3282488). 
 
 GRAPE differs from prior systems in its ability to parallelize sequential graph algorithms as a whole by following the PIE programming model from the paper. Sequential algorithms can be easily ["plugged into"](https://github.com/alibaba/libgrape-lite/blob/master/examples/analytical_apps/sssp/sssp_auto.h) **GRAPE** with only minor changes and get parallelized to handle large graphs efficiently. In addition to the ease of programming, **GRAPE** is designed to be [highly efficient](https://github.com/alibaba/libgrape-lite/blob/master/Performance.md) and [flexible](https://github.com/alibaba/libgrape-lite/blob/master/examples/gnn_sampler), to cope the scale, variety and complexity from real-life graph applications.
