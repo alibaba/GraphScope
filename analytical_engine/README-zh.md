@@ -1,6 +1,6 @@
 # GraphScope 图分析引擎 - GRAPE
 
-[![Translation](https://img.shields.io/badge/Translation-English-success)](README.md)
+[![Translation](https://img.shields.io/badge/Translation-English-success)](https://github.com/alibaba/GraphScope/tree/main/analytical_engine)
 
 
 GraphScope 中的图分析引擎继承自 **GRAPE**，该系统实现了论文[Parallelizing Sequential Graph Computations](https://dl.acm.org/doi/10.1145/3282488) 中提出的不动点计算模型。
