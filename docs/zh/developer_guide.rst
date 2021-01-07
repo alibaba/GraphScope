@@ -84,7 +84,7 @@ Linux 下的 Wheel 分发包在 manylinux2010 的环境下构建，该编译环�
     cd k8s
     make graphscope-manylinux2010
 
-如果您为 Pytho{36,37,38,39} 版本构建，可以使用以下命令：
+如果您为 Python{36,37,38,39} 版本构建，可以使用以下命令：
 
 .. code:: bash
 
