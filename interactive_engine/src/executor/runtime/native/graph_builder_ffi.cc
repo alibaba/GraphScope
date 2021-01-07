@@ -57,13 +57,13 @@ void get_builder_id(GraphBuilder builder, ObjectId *object_id,
 void launch_property_graph_loader(vineyard::Client &client,
                                   vineyard::ObjectID global_stream_id,
                                   size_t size, InstanceId *instance_ids) {
-  std::map<vineyard::InstanceID, vineyard::ptree> cluster;
+  std::map<vineyard::InstanceID, vineyard::json> cluster;
   VINEYARD_CHECK_OK(client.ClusterInfo(cluster));
   std::set<std::string> host_list;
   for (size_t idx = 0; idx < size; ++idx) {
     auto iter = cluster.find(instance_ids[idx]);
     VINEYARD_ASSERT(iter != cluster.end());
-    host_list.emplace(iter->second.get<std::string>("hostname"));
+    host_list.emplace(iter->second["hostname"].get_ref<std::string const &>());
   }
   std::string hosts = boost::algorithm::join(host_list, ",");
   std::string loader_path;

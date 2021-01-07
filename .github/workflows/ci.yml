@@ -28,7 +28,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.5
       options:
         --shm-size 4096m
     strategy:
@@ -133,7 +133,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.5
     steps:
     - name: Install Dependencies
       run: |
@@ -173,7 +173,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.5
     steps:
     - name: Install Dependencies
       run: |

@@ -36,7 +36,7 @@ limitations under the License.
 #include "arrow/api.h"
 #include "glog/logging.h"
 
-#include "common/util/ptree.h"
+#include "common/util/json.h"
 
 namespace vineyard {
 
@@ -94,8 +94,6 @@ PropertyType PropertyTypeFromString(const std::string& type) {
 }
 
 }  // namespace detail
-
-using boost::property_tree::ptree;
 
 MGPropertyGraphSchema::PropertyId MGPropertyGraphSchema::GetPropertyId(
     const std::string& name) {
@@ -196,51 +194,47 @@ MGPropertyGraphSchema::Entry* MGPropertyGraphSchema::CreateEntry(
   }
 }
 
-void MGPropertyGraphSchema::ToJSON(ptree& root) const {
-  root.put("partitionNum", fnum_);
-  ptree types;
+void MGPropertyGraphSchema::ToJSON(vineyard::json& root) const {
+  root["partitionNum"] = fnum_;
+  vineyard::json types = vineyard::json::array();
   for (auto const& entry : vertex_entries_) {
-    types.push_back(std::make_pair("", entry.ToJSON()));
+    types.emplace_back(entry.ToJSON());
   }
   for (auto const& entry : edge_entries_) {
-    types.push_back(std::make_pair("", entry.ToJSON()));
+    types.emplace_back(entry.ToJSON());
   }
-  root.add_child("types", types);
+  root["types"] = types;
   if (!unique_property_names_.empty()) {
     vineyard::put_container(root, "uniquePropertyNames",
                             unique_property_names_);
   }
 }
 
-void MGPropertyGraphSchema::FromJSON(ptree const& root) {
-  fnum_ = root.get<size_t>("partitionNum");
-  for (auto const& kv : root.get_child("types")) {
+void MGPropertyGraphSchema::FromJSON(vineyard::json const& root) {
+  fnum_ = root["partitionNum"].get<size_t>();
+  for (auto const& item : root["types"]) {
     Entry entry;
-    entry.FromJSON(kv.second);
+    entry.FromJSON(item);
     if (entry.type == "VERTEX") {
       vertex_entries_.push_back(std::move(entry));
     } else {
       edge_entries_.push_back(std::move(entry));
     }
   }
-  if (root.get_optional<std::string>("uniquePropertyNames")) {
+  if (root.contains("uniquePropertyNames")) {
     vineyard::get_container(root, "uniquePropertyNames",
                             unique_property_names_);
   }
 }
 
 std::string MGPropertyGraphSchema::ToJSONString() const {
-  std::stringstream ss;
-  ptree root;
+  vineyard::json root;
   ToJSON(root);
-  boost::property_tree::write_json(ss, root, false);
-  return ss.str();
+  return vineyard::json_to_string(root);
 }
 
 void MGPropertyGraphSchema::FromJSONString(std::string const& schema) {
-  ptree root;
-  std::istringstream iss(schema);
-  boost::property_tree::read_json(iss, root);
+  vineyard::json root = vineyard::json::parse(schema);
   FromJSON(root);
 }
 

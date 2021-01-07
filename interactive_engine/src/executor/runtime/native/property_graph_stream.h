@@ -39,7 +39,7 @@
 #include "vineyard/basic/stream/parallel_stream.h"
 #include "vineyard/client/client.h"
 #include "vineyard/client/ds/blob.h"
-#include "vineyard/common/util/ptree.h"
+#include "vineyard/common/util/json.h"
 
 #include "graph_schema.h"
 #include "htap_types.h"
@@ -239,9 +239,8 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
 
   void Construct(const ObjectMeta& meta) override {
     meta_ = meta;
-    const ptree& tree = meta.MetaData();
-    this->id_ = VYObjectIDFromString(tree.get<std::string>("id"));
-    this->stream_index_ = tree.get<int>("stream_index");
+    this->id_ = VYObjectIDFromString(meta.GetKeyValue("id"));
+    this->stream_index_ = meta.GetKeyValue<int>("stream_index");
     this->vertex_stream_ =
       std::dynamic_pointer_cast<vineyard::DataframeStream>(meta.GetMember("vertex_stream"));
     this->edge_stream_ =
@@ -251,7 +250,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
     this->edge_writer_ = this->edge_stream_->OpenWriter(*client);
 
     this->graph_schema_ = std::make_shared<MGPropertyGraphSchema>();
-    graph_schema_->FromJSONString(tree.get<std::string>("graph_schema"));
+    graph_schema_->FromJSONString(meta.GetKeyValue("graph_schema"));
     this->initialTables();
   }
 

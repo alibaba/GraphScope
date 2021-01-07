@@ -43,7 +43,7 @@ inline void set_graph_def(
     rpc::GraphDef& graph_def) {
   auto& meta = fragment->meta();
   graph_def.set_graph_type(rpc::ARROW_PROPERTY);
-  graph_def.set_directed(meta.GetKeyValue<bool>("directed"));
+  graph_def.set_directed(static_cast<bool>(meta.GetKeyValue<int>("directed")));
 
   auto* schema_def = graph_def.mutable_schema_def();
   schema_def->set_oid_type(

@@ -109,7 +109,7 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
       if (handle->schema == NULL) {
         auto schema = handle->fragments[fid].schema();
         vineyard::MGPropertyGraphSchema mgschema;
-        boost::property_tree::ptree schema_json;
+        vineyard::json schema_json;
         schema.ToJSON(schema_json);
         mgschema.FromJSON(schema_json);
         handle->schema =
