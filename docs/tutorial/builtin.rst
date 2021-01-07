@@ -26,7 +26,7 @@ graphs of the new data type.
 Take the built-in algorithm :code:`SSSP` (aka. single source shortest path algorithm) as
 an example. We frist create a session to connects to the *GRAPE* engine:
 
-.. code:: ipython
+.. code:: python
 
     >>> import graphscope
     >>> sess = graphscope.Session()
@@ -34,7 +34,7 @@ an example. We frist create a session to connects to the *GRAPE* engine:
 Then create a graph with :code:`double` type edges and apply the :code:`SSSP` algorithm
 on that:
 
-.. code:: ipython
+.. code:: python
 
     >>> g1 = graphscope.from_numpy(np.array([[1, 2, 3],
                                         [3, 4, 5]]),
@@ -54,7 +54,7 @@ will be resulted.
 
 Now we apply the :code:`SSSP` algorithm on another graph with different data type:
 
-.. code:: ipython
+.. code:: python
 
     >>> g2 = graphscope.from_numpy(np.array([[1, 2, 3],
                                         [3, 4, 5]]),

@@ -43,7 +43,7 @@ You may want to re-install the python client on local.
 
 To test the newly built binaries, manually open a session and assigned your image:
 
-.. code:: ipython
+.. code:: python
 
     import graphscope
     
