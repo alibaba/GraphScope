@@ -22,13 +22,13 @@ from sphinx.builders.html import StandaloneHTMLBuilder
 from sphinx.environment.adapters.toctree import TocTree
 
 class TocTreeExt(TocTree):
-    def get_local_toctree_for(self, docname, builder, collapse, **kwargs):
+    def get_local_toctree_for(self, master_doc, docname, builder, collapse, **kwargs):
         ''' Like `get_local_toctree` in `TocTree`, but don't generate
             toctree for master_doc, rather, generate toctree for the
             given doc.
         '''
         """Return the global TOC nodetree."""
-        doctree = self.env.get_doctree(docname)
+        doctree = self.env.get_doctree(master_doc)
         toctrees = []  # type: List[Element]
         if 'includehidden' not in kwargs:
             kwargs['includehidden'] = True
@@ -50,17 +50,17 @@ class StandaloneHTMLBuilderExt(StandaloneHTMLBuilder):
     ''' Extend the standard `StandaloneHTMLBuilder` with a `toctree_for` derivate in
         context to creating toctrees for zh_CN documentations.
     '''
-    def _get_local_toctree_ext(self, docname, collapse, **kwargs):
+    def _get_local_toctree_ext(self, master_doc, pagename, collapse, **kwargs):
         if 'includehidden' not in kwargs:
             kwargs['includehidden'] = False
         if kwargs.get('maxdepth') == '':
             kwargs.pop('maxdepth')
         return self.render_partial(TocTreeExt(self.env).get_local_toctree_for(
-            docname, self, collapse, **kwargs))['fragment']
+            master_doc, pagename, self, collapse, **kwargs))['fragment']
 
-    def handle_page(self, *args, **kwargs):
-        self.globalcontext['toctree_for'] = lambda pagename, **kwargs: self._get_local_toctree_ext(pagename, **kwargs)
-        return super(StandaloneHTMLBuilderExt, self).handle_page(*args, **kwargs)
+    def handle_page(self, pagename, *args, **kwargs):
+        self.globalcontext['toctree_for'] = lambda master_doc, **kwargs: self._get_local_toctree_ext(master_doc, pagename, **kwargs)
+        return super(StandaloneHTMLBuilderExt, self).handle_page(pagename, *args, **kwargs)
 
 def setup(app):
     app.add_builder(StandaloneHTMLBuilderExt, override=True)

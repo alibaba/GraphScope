@@ -16,6 +16,7 @@ GraphScope 被设计为运行在 Kubernetes 管理的群集上。
 您也可以在 Windows 上安装 `WSL2 <https://docs.microsoft.com/zh-cn/windows/wsl/install-win10>`_ 以使用脚本。
 
 .. code:: bash
+
     # run the environment preparing script.
     ./scripts/prepare_env.sh
 
