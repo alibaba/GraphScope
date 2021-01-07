@@ -8,7 +8,7 @@
 
 示例: 论文引用网络中的节点分类任务
 --------------------------------------------
-`ogbn-mag <https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)`_ 是
+`ogbn-mag <https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)>`_ 是
 由微软学术关系图（Microsoft Academic Graph）的子集组成的异构图网络。
 该图中包含4种类型的实体（即论文、作者、机构和研究领域），
 以及连接两个实体的四种类型的有向关系边。
@@ -21,7 +21,7 @@
 该表征是经过预训练提前获取的；而结构信息是在以下过程中即时计算的。
 
 
-.. image:: images/how-it-works.png
+.. image:: ../images/how-it-works.png
     :width: 600
     :align: center
     :alt: How it works.
@@ -42,7 +42,7 @@
 
 使用 GraphScope 的第一步，我们需要在 Python 中创建一个会话（session）。
 
-.. code:: ipython
+.. code:: python
 
     import graphscope
     sess = graphscope.session()
@@ -59,7 +59,7 @@
 GraphScope 以属性图（property graph）建模图数据。属性图中，点和边都有一个标签（label），不同的标签有不同的属性（property）。
 以 `ogbn-mag` 为例，下图展示了属性图的模型。
 
-.. image:: images/sample_pg.png
+.. image:: ../images/sample_pg.png
     :width: 600
     :align: center
     :alt: a sample property graph.
@@ -75,7 +75,7 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
 `数据文件 <https://graphscope.oss-accelerate.aliyuncs.com/ogbn_mag_small.tar.gz>`_ 结合使用。
 请下载数据并将其解压缩到本地的挂载目录（在本例中为`〜/test_data`）。
 
-.. code:: ipython
+.. code:: python
 
     g = sess.load_from(
         vertices={
@@ -114,7 +114,7 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
 
 
 请注意，这里的 `g` 已经是一个分布式存储在 vineyard 中的图。图数据分布在这个会话背后拉起的 k8s pods中。
-更多细节请查看 :ref:`Loading Graphs`
+更多细节请查看 :ref:`载图`
 
 
 交互式查询
@@ -126,7 +126,7 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
 
 在此示例中，我们使用图遍历来查看两位给定作者共同撰写的论文数量。为了简化查询，我们假设作者可以分别由ID `2` 和 `4307` 唯一标识。
 
-.. code:: ipython
+.. code:: python
 
     # get the entrypoint for submitting Gremlin queries on graph g.
     interactive = sess.gremlin(g)
@@ -153,7 +153,7 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 请注意，许多算法可能仅适用于同构图（只有一类点和一类边而不区分标签），
 因此，要在属性图上使用这些算法，我们首先需要将其投影到一个简单的同构图中。
 
-.. code:: ipython
+.. code:: python
 
     # exact a subgraph of publication within a time range
     sub_graph = interactive.subgraph("g.V().has('year', inside(2014, 2020)).outE('cites')")
@@ -182,7 +182,7 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 每个类别代表一个出处（例如预印本和会议）。
 为此，首先我们接着上一步，启动学习引擎并构建一个具有特征的数据图。
 
-.. code:: ipython
+.. code:: python
 
     # define the features for learning
     paper_features = []
@@ -202,7 +202,7 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 
 然后我们定义一个训练过程并执行。
 
-.. code:: ipython
+.. code:: python
 
     from graphscope.learning.examples import GCN
     from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
@@ -263,7 +263,7 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 
 最后，当我们完成所有的计算过程后，关闭当前的会话。该步骤会告知背后的 `Coordinator` 和引擎，释放当前所有的资源
 
-.. code:: ipython
+.. code:: python
 
     sess.close()
 

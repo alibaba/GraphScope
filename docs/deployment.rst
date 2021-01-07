@@ -10,7 +10,7 @@ A session encapsulates the control and state of the GraphScope engines.
 It serves as the entrance in the python client to GraphScope. A session
 allows users to deploy and connect GraphScope on a k8s cluster.
 
-.. code:: ipython
+.. code:: python
 
     import graphscope
 

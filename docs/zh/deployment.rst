@@ -8,7 +8,7 @@ GraphScope 以 docker 镜像的方式分发引擎等组件。
 会话（:ref:`Session`) 作为 GraphScope 在 Python 客户端，它封装、管理着 GraphScope 引擎的各种组件，
 并部署、连接、操作用户在 Kubernetes 集群上的 GraphScope 引擎。
 
-.. code:: ipython
+.. code:: python
 
     import graphscope
 

@@ -51,7 +51,7 @@ Launching Session
 
 To use GraphScope, we need to establish a :ref:`Session` in a python interpreter.
 
-.. code:: ipython
+.. code:: python
 
     import graphscope
     sess = graphscope.session()
@@ -88,7 +88,7 @@ Paper vertices have properties like features, publish year, subject label, etc.
 
 To load this graph to GraphScope, one may use the code below.
 
-.. code:: ipython
+.. code:: python
 
     g = sess.load_from(
         vertices={
@@ -144,7 +144,7 @@ In this example, we use graph queries to find citation counts
 for a particular author, and to derive a subgraph by
 extracting publications in specific time out of the entire graph.
 
-.. code:: ipython
+.. code:: python
 
     # get the entrypoint for submitting Gremlin queries on graph g.
     interactive = sess.gremlin(g)
@@ -173,7 +173,7 @@ you may want to project the property graph to a simple graph at first.
 Continue our example, we run k-core decomposition and triangle counting
 to generate the structural features of each paper node.
 
-.. code:: ipython
+.. code:: python
 
     # exact a subgraph of publication within a time range
     sub_graph = interactive.subgraph("g.V().has('year', inside(2014, 2020)).outE('cites')")
@@ -207,7 +207,7 @@ each of which represents a venue (e.g. pre-print and conference).
 To achieve this, first we launch a learning engine and build
 a graph with features following the last step.
 
-.. code:: ipython
+.. code:: python
 
     # define the features for learning
     paper_features = []
@@ -227,7 +227,7 @@ a graph with features following the last step.
 
 Then we define the training and testing process, and run it.
 
-.. code:: ipython
+.. code:: python
 
     from graphscope.learning.examples import GCN
     from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
@@ -287,7 +287,7 @@ Closing Session
 
 At last, we close the session after processing all graph tasks.
 
-.. code:: ipython
+.. code:: python
 
     sess.close()
 

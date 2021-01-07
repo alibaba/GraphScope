@@ -1,4 +1,4 @@
-分析引擎
+图分析引擎
 ============================
 
 GraphScope 的图分析引擎继承了 `GRAPE <https://dl.acm.org/doi/10.1145/3282488>`_ ，
@@ -15,7 +15,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 内置算法可以在图上轻松调用。例如，
 
-.. code:: ipython
+.. code:: python
 
     from graphscope import pagerank
     from graphscope import lpa
@@ -56,7 +56,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 用户可能希望将结果传到客户端进行处理，或是写入云中某位置或分布式文件系统。GraphScope 支持用户通过以下方法来获取结果数据。
 
-.. code:: iPython
+.. code:: python
 
     # 转化为相应数据类型
     result_pr.to_numpy()
@@ -76,7 +76,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 此外，如 :ref: `快速上手` 中所示，用户可以将计算结果加回到该图数据中作为顶点（边）的新属性（列）。
 
-.. code:: iPython
+.. code:: python
 
     simple_g = sub_graph.project_to_simple(vlabel="paper", elabel="cites")
     ret = graphscope.kcore(simple_g, k=5)
@@ -89,7 +89,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 我们为选择器保留了三个关键字：``r`` 代表结果，``v`` 和 ``e`` 分别代表顶点和边。
 以下是结果处理中选择器的一些示例。
 
-.. code:: iPython
+.. code:: python
 
     # 获取顶点上的结果
     result_pr.to_numpy('r')
@@ -117,7 +117,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 如果内置算法无法满足需求，用户可以编写自己的算法。用户可以通过 `graphscope` 在纯 Python 模式
 下使用 `PIE <https://dl.acm.org/doi/10.1145/3282488>`_ 编程模型编写算法。
 
-.. image:: images/pie.png
+.. image:: ../images/pie.png
     :width: 600
     :align: center
     :alt: Workflow of PIE
@@ -125,7 +125,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 为了实现自己的算法，用户需要实现此类。
 
-.. code:: ipython
+.. code:: python
 
     @graphscope.analytical.udf.pie
     class YourAlgorithm(AppAssets):
@@ -147,7 +147,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 以单源最短路径算法 SSSP 为例，用户在 PIE 模型中定义的 SSSP 算法可如下所示。
 
-.. code:: ipython
+.. code:: python
 
     @graphscope.analytical.udf.pie
     class SSSP:
@@ -214,7 +214,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 除了基于子图的 PIE 模型之外，`graphscope` 也支持以顶点为中心的 `Pregel` 编程模型。
 您可以通过实现以下算法类来在 `Pregel` 模型中开发算法。
 
-.. code:: ipython
+.. code:: python
 
     @pregel(vd_type='double', md_type='double')
     class YourPregelAlgorithm(AppAssets):
@@ -235,7 +235,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 定义在顶点上的，而不同于 PIE 模型中定义在图分区上。
 还是以 SSSP 为例，Pregel 模型下的算法如下所示。
 
-.. code:: ipython
+.. code:: python
 
     # 装饰器, 定义顶点数据和消息数据的类型
     @pregel(vd_type='double', md_type='double')
@@ -275,7 +275,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 运行自定义算法，用户需要在定义算法后调用算法。
 
-.. code:: ipython
+.. code:: python
 
     import graphscope
 
@@ -290,13 +290,13 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 在开发和测试之后，您可以通过 `to_gar` 方法将算法保存成 gar 包以备将来使用。
 
-.. code:: ipython
+.. code:: python
 
     SSSP_Pregel.to_gar("file:///var/graphscope/udf/my_sssp_pregel.gar")
 
 在此之后，您可以从 gar 包加载自定义的算法。
 
-.. code:: ipython
+.. code:: python
 
     import graphscope
 

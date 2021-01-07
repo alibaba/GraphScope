@@ -38,7 +38,7 @@ GraphScope 的 Python 客户端不包含在该镜像中，构建也与引擎有�
 
 测试新构建的镜像，用户可以手动打开一个会话，指定用新编译的镜像。
 
-.. code:: ipython
+.. code:: python
 
     import graphscope
     
@@ -57,12 +57,8 @@ GraphScope 的 Python 客户端不包含在该镜像中，构建也与引擎有�
 构建 Python Wheels
 -------------------
 
-GraphScope's python client can run on Linux and MacOS, which can be installed from wheel packages we
-distributed on `pypi <https://pypi.org/project/graphscope>`_. For developers, the wheel packages could
-be built via the following procedure:
-
 GraphScope 的 Python 客户端可以在 Linux 和 macOS 上运行，Python Wheel 包通过
-在`pypi <https://pypi.org/project/graphscope>`_ 分发。 对于开发人员而言，Wheel 包也可以
+在 `pypi <https://pypi.org/project/graphscope>`_ 分发。 对于开发人员而言，Wheel 包也可以
 通过以下过程构建：
 
 Linux
