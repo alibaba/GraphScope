@@ -87,7 +87,7 @@ update dependencies in :code:`manylinux2010.Dockerfile`) by
     cd k8s
     make graphscope-manylinux2010
 
-如果您为 Pytho{36,37,38,39} 版本构建，可以使用以下命令：
+如果您为 Python{36,37,38,39} 版本构建，可以使用以下命令：
 
 .. code:: bash
 
