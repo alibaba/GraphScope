@@ -19,7 +19,6 @@
 #include <functional>
 #include <memory>
 #include <vector>
-#include <iostream>
 
 #include "kshell/kshell_context.h"
 
@@ -106,12 +105,12 @@ class KShell : public grape::ParallelAppBase<FRAG_T, KShellContext<FRAG_T>>,
       }
     });
 
-    bool curr_k_changed=false;
-    size_t global_removed_count_inc = 0;
-    Sum(to_remove_vertices_inc.Count(), global_removed_count_inc);
-    if (global_removed_count_inc == 0) {
+    bool curr_k_changed = false;
+    size_t global_removed_inc_count = 0;
+    Sum(to_remove_vertices_inc.Count(), global_removed_inc_count);
+    if (global_removed_inc_count == 0) {
       curr_k++;
-      curr_k_changed=true;
+      curr_k_changed = true;
     }
 
     to_remove_vertices_inc.Clear();

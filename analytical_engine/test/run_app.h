@@ -60,6 +60,7 @@ limitations under the License.
 #include "apps/dfs/dfs.h"
 #include "apps/hits/hits.h"
 #include "apps/kcore/kcore.h"
+#include "apps/kshell/kshell.h"
 #include "apps/sssp/sssp_average_length.h"
 #include "apps/sssp/sssp_has_path.h"
 #include "apps/sssp/sssp_path.h"
@@ -85,6 +86,8 @@ DECLARE_int32(hits_max_round);
 DECLARE_bool(hits_normalized);
 
 DECLARE_int32(kcore_k);
+
+DECLARE_int32(kshell_k);
 
 DECLARE_double(katz_centrality_alpha);
 DECLARE_double(katz_centrality_beta);
@@ -324,6 +327,14 @@ void Run() {
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
                                        FLAGS_kcore_k);
+  } else if (name == "kshell") {
+    using GraphType =
+        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
+                                        grape::LoadStrategy::kBothOutIn>;
+    using AppType = KShell<GraphType>;
+    CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
+                                       FLAGS_datasource, fnum, spec,
+                                       FLAGS_kshell_k);
   } else if (name == "hits") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,

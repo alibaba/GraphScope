@@ -44,6 +44,8 @@ DEFINE_bool(hits_normalized, true,
 
 DEFINE_int32(kcore_k, 3, "The order of the core");
 
+DEFINE_int32(kshell_k, 3, "The order of the shell");
+
 DEFINE_double(katz_centrality_alpha, 0.1, "Attenuation factor");
 DEFINE_double(katz_centrality_beta, 1.0,
               "Weight attributed to the immediate neighborhood.");

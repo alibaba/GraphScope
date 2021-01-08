@@ -22,7 +22,6 @@ limitations under the License.
 #include <queue>
 #include <unordered_set>
 #include <utility>
-#include <iostream>
 
 #include "grape/grape.h"
 

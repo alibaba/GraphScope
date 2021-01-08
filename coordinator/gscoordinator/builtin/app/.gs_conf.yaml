@@ -104,6 +104,12 @@ app:
     src: apps/kcore/kcore.h
     compatible_graph:
       - gs::DynamicFragment
+  - algo: kshell
+    type: cpp_pie
+    class_name: gs::KShell
+    src: apps/kshell/kshell.h
+    compatible_graph:
+      - gs::DynamicFragment
   - algo: clustering
     type: cpp_pie
     class_name: gs::Clustering
