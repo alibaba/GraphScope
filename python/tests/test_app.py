@@ -341,7 +341,6 @@ def test_app_on_undirected_graph(
     assert np.all(ctx10.to_numpy("r", vertex_range={"begin": 1, "end": 4}) == [0, 0, 0])
 
 
-
 def test_error_on_parameters_not_correct(arrow_project_graph):
     # Incorrect type of parameters
     with pytest.raises(ValueError, match="could not convert string to float"):

@@ -25,7 +25,7 @@ __all__ = ["k_shell"]
 
 @not_compatible_for("arrow_property", "dynamic_property")
 def k_shell(graph, k: int):
-    """The k-shell is the subgraph induced by nodes with core number k. 
+    """The k-shell is the subgraph induced by nodes with core number k.
     That is, nodes in the k-core that are not in the (k+1)-core.
 
     Args:
