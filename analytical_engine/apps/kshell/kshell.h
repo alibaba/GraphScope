@@ -24,14 +24,14 @@
 
 namespace gs {
 /**
- * @brief Get a subgraph induced by nodes with core number k. 
+ * @brief Get a subgraph induced by nodes with core number k.
  * That is, nodes in the k-core that are not in the (k+1)-core.
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
 class KShell : public grape::ParallelAppBase<FRAG_T, KShellContext<FRAG_T>>,
-              public grape::ParallelEngine,
-              public grape::Communicator {
+               public grape::ParallelEngine,
+               public grape::Communicator {
  public:
   INSTALL_PARALLEL_WORKER(KShell<FRAG_T>, KShellContext<FRAG_T>, FRAG_T)
   static constexpr grape::MessageStrategy message_strategy =
@@ -78,13 +78,13 @@ class KShell : public grape::ParallelAppBase<FRAG_T, KShellContext<FRAG_T>>,
         [&degrees](int tid, vertex_t v, int32_t msg) { *degrees[v] += msg; });
 
     // remove vertices which degree less or equal than curr_k
-    ForEach(remaining_vertices,
-            [&to_remove_vertices_k, &to_remove_vertices_inc, &degrees, curr_k](int tid, vertex_t v) {
-              if (degrees[v]->load() <= curr_k) {
-                to_remove_vertices_k.Insert(v);
-                to_remove_vertices_inc.Insert(v);
-              }
-            });
+    ForEach(remaining_vertices, [&to_remove_vertices_k, &to_remove_vertices_inc,
+                                 &degrees, curr_k](int tid, vertex_t v) {
+      if (degrees[v]->load() <= curr_k) {
+        to_remove_vertices_k.Insert(v);
+        to_remove_vertices_inc.Insert(v);
+      }
+    });
 
     // keep vertices which degree greater than currk
     ForEach(remaining_vertices,
@@ -117,7 +117,7 @@ class KShell : public grape::ParallelAppBase<FRAG_T, KShellContext<FRAG_T>>,
     remaining_vertices.Clear();
     remaining_vertices.Swap(next_remaining_vertices);
 
-    if (curr_k > ctx.k ) {
+    if (curr_k > ctx.k) {
       auto inner_vertices = frag.InnerVertices();
 
       for (auto v : inner_vertices) {
@@ -126,7 +126,7 @@ class KShell : public grape::ParallelAppBase<FRAG_T, KShellContext<FRAG_T>>,
       return;
     }
 
-    if(curr_k_changed){
+    if (curr_k_changed) {
       to_remove_vertices_k.Clear();
     }
 
