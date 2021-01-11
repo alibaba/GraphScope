@@ -82,9 +82,10 @@ class Graph(GLGraph):
     def close(self):
         if not self.closed:
             self.closed = True
+            super(Graph, self).close()  # close client first
+            # close server instance
             if self.graphscope_session is not None:
                 self.graphscope_session._close_learning_instance(self)
-            super(Graph, self).close()
 
     @staticmethod  # noqa: C901
     def preprocess_args(handle, nodes, edges, gen_labels):  # noqa: C901
