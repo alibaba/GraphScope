@@ -1,6 +1,6 @@
 # GraphScope Learning Engine: Graph-Learn
 
-[![Translation](https://img.shields.io/badge/Translation-%E4%B8%AD%E6%96%87%E7%89%88-success)](README-zh.md)
+[![Translation](https://shields.io/badge/Docs-%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](README-zh.md)
 
 The learning engine in GraphScope is GraphLearn with some adaptions and wrappers.
 
