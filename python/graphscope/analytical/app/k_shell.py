@@ -48,4 +48,5 @@ def k_shell(graph, k: int):
         s.close()
 
     """
-    return AppAssets(algo="kshell")(graph, k=k)
+    k = int(k)
+    return AppAssets(algo="kshell")(graph, k)
