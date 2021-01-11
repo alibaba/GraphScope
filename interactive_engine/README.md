@@ -1,6 +1,6 @@
 # GraphScope Interactive Engine
 
-[![Translation](https://img.shields.io/badge/Translation-%E4%B8%AD%E6%96%87%E7%89%88-success)](README-zh.md)
+[![Translation](https://shields.io/badge/Docs-%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](README-zh.md)
 
 GraphScope Interactive Engine (GIE) is a distributed system designed specifically to make it easy for a variety of users to analyze large and complex graph structures in an *exploratory* manner.  It exploits [Gremlin](http://tinkerpop.apache.org/) to provide a high-level language for interactive graph queries, and provides automatic parallel execution.
 
