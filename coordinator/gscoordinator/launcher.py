@@ -109,10 +109,12 @@ class LocalLauncher(Launcher):
         cmd, mpi_env = rmcp.resolve(self._num_workers, self._hosts)
 
         master = self._hosts.split(",")[0]
-        rpc_port = self._get_free_port(master)
+        # rpc_port = self._get_free_port(master)
+        rpc_port = 56002
         self._analytical_engine_endpoint = "{}:{}".format(master, str(rpc_port))
 
         cmd.append(ANALYTICAL_ENGINE_PATH)
+        cmd.extend(["--host", "0.0.0.0"])
         cmd.extend(["--port", str(rpc_port)])
 
         if rmcp.openmpi():
@@ -133,8 +135,8 @@ class LocalLauncher(Launcher):
             universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stdout=sys.__stdout__,
+            stderr=sys.__stdout__,
             bufsize=1,
         )
 

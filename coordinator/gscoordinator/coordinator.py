@@ -123,6 +123,7 @@ class CoordinatorServiceServicer(
             if not self._launcher.start():
                 raise RuntimeError("Coordinator Launching failed.")
 
+
         self._launcher_type = self._launcher.type()
         if self._launcher_type == types_pb2.K8S:
             self._pods_list = self._launcher.get_pods_list()
@@ -144,12 +145,14 @@ class CoordinatorServiceServicer(
         # control log fetching
         self._closed = False
 
+
         # dangling check
         self._dangling_seconds = dangling_seconds
-        self._dangling_detecting_timer = threading.Timer(
-            interval=self._dangling_seconds, function=self._cleanup, args=(True,)
-        )
-        self._dangling_detecting_timer.start()
+        if (self._dangling_seconds != -1):
+          self._dangling_detecting_timer = threading.Timer(
+              interval=self._dangling_seconds, function=self._cleanup, args=(True,)
+          )
+          self._dangling_detecting_timer.start()
 
         atexit.register(self._cleanup)
 
@@ -176,6 +179,7 @@ class CoordinatorServiceServicer(
 
     def ConnectSession(self, request, context):
         # A session is already connected.
+        logger.info('connecting session.')
         if self._request:
             return self._make_response(
                 message_pb2.ConnectSessionResponse,
@@ -197,11 +201,12 @@ class CoordinatorServiceServicer(
 
     def HeartBeat(self, request, context):
         # Reset dangling detect timer
-        self._dangling_detecting_timer.cancel()
-        self._dangling_detecting_timer = threading.Timer(
-            interval=self._dangling_seconds, function=self._cleanup, args=(True,)
-        )
-        self._dangling_detecting_timer.start()
+        if self._dangling_seconds != -1:
+            self._dangling_detecting_timer.cancel()
+            self._dangling_detecting_timer = threading.Timer(
+                interval=self._dangling_seconds, function=self._cleanup, args=(True,)
+            )
+            self._dangling_detecting_timer.start()
         # analytical engine
         request = message_pb2.HeartBeatRequest()
         try:
@@ -613,6 +618,8 @@ class CoordinatorServiceServicer(
         if self._launcher_type == types_pb2.K8S:
             config["vineyard_service_name"] = self._launcher.get_vineyard_service_name()
             config["vineyard_rpc_endpoint"] = self._launcher.get_vineyard_rpc_endpoint()
+        else:
+            config['engine_hosts'] = self._launcher.hosts
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):

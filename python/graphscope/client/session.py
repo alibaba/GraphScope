@@ -272,7 +272,7 @@ class Session(object):
         # update other optional params
         self._config_params.update(kw)
 
-        self._config_params["addr"] = None
+        self._config_params["addr"] = kw.pop("addr", None)
 
         # Reserved keyword for local testing.
         run_on_local = kw.pop("run_on_local", False)
@@ -388,7 +388,10 @@ class Session(object):
             info["namespace"] = self._config_params["k8s_namespace"]
         else:
             info["type"] = "hosts"
-            info["engine_hosts"] = ",".join(self._config_params["hosts"])
+            if self._config_params["addr"] is not None:
+                info["engine_hosts"] = self._engine_config['engine_hosts']
+            else:
+                info["engine_hosts"] = ",".join(self._config_params["hosts"])
 
         info["num_workers"] = self._config_params["num_workers"]
         info["coordinator_endpoint"] = self._endpoint
