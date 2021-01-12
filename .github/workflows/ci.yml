@@ -382,9 +382,9 @@ jobs:
                           --network=host \
                           -f ./manager.Dockerfile .
         popd
-        sudo python3 -m pip install -r python/requirements.txt
-        sudo python3 -m pip install -r python/requirements-dev.txt
-        sudo python3 -m pip install pytest-cov
+        python3 -m pip install -r python/requirements.txt --user
+        python3 -m pip install -r python/requirements-dev.txt --user
+        python3 -m pip install pytest-cov --user
         pushd python && sudo -E python3 setup.py develop && popd
 
     - name: Kubernetes test
@@ -460,9 +460,9 @@ jobs:
                           --network=host \
                           -f ./manager.Dockerfile .
         popd
-        sudo python3 -m pip install -r python/requirements.txt
-        sudo python3 -m pip install -r python/requirements-dev.txt
-        sudo python3 -m pip install pytest-cov
+        python3 -m pip install -r python/requirements.txt
+        python3 -m pip install -r python/requirements-dev.txt
+        python3 -m pip install pytest-cov
         pushd python && sudo -E python3 setup.py develop && popd
 
     - name: Run function test
