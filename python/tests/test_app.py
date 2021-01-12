@@ -30,6 +30,7 @@ from graphscope import degree_centrality
 from graphscope import eigenvector_centrality
 from graphscope import hits
 from graphscope import k_core
+from graphscope import k_shell
 from graphscope import katz_centrality
 from graphscope import lpa
 from graphscope import pagerank
@@ -189,6 +190,7 @@ def test_app_on_undirected_graph(
     wcc_result,
     cdlp_result,
     triangles_result,
+    kshell_result,
 ):
     # sssp
     ctx1 = sssp(p2p_project_undirected_graph, src=6)
@@ -319,6 +321,24 @@ def test_app_on_undirected_graph(
     assert np.all(
         sorted(ctx9.to_numpy("r", vertex_range={"begin": 1, "end": 4})) == [1, 2, 2]
     )
+
+    # kshell
+    ctx10 = k_shell(p2p_project_undirected_graph, k=3)
+    r10 = (
+        ctx10.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=int)
+    )
+    assert np.all(r10 == kshell_result)
+    assert np.all(
+        ctx10.to_dataframe(
+            {"node": "v.id", "r": "r"}, vertex_range={"begin": 1, "end": 4}
+        )
+        .sort_values(by=["node"])
+        .to_numpy()
+        == [[1, 0], [2, 0], [3, 0]]
+    )
+    assert np.all(ctx10.to_numpy("r", vertex_range={"begin": 1, "end": 4}) == [0, 0, 0])
 
 
 def test_error_on_parameters_not_correct(arrow_project_graph):

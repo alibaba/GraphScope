@@ -553,6 +553,12 @@ def wcc_result():
 
 
 @pytest.fixture(scope="module")
+def kshell_result():
+    ret = np.loadtxt("{}/../p2p-31-kshell-3".format(property_dir), dtype=int)
+    yield ret
+
+
+@pytest.fixture(scope="module")
 def pagerank_result():
     ret = {}
     ret["directed"] = np.loadtxt(
