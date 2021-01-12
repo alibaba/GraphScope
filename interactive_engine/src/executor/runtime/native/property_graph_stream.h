@@ -206,7 +206,8 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
       s->vertex_stream_ =
         std::dynamic_pointer_cast<vineyard::DataframeStream>(builder.Seal(client));
       client.Persist(s->vertex_stream_->id());
-      VINEYARD_CHECK_OK(s->vertex_stream_->OpenWriter(client, s->vertex_writer_));
+      // Don't "OpenWriter" when creating, it will be "Get and Construct" again
+      // VINEYARD_CHECK_OK(s->vertex_stream_->OpenWriter(client, s->vertex_writer_));
     }
     {
       vineyard::DataframeStreamBuilder builder(client);
@@ -215,7 +216,8 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
       s->edge_stream_ =
         std::dynamic_pointer_cast<vineyard::DataframeStream>(builder.Seal(client));
       client.Persist(s->edge_stream_->id());
-      VINEYARD_CHECK_OK(s->edge_stream_->OpenWriter(client, s->edge_writer_));
+      // Don't "OpenWriter" when creating, it will be "Get and Construct" again
+      // VINEYARD_CHECK_OK(s->edge_stream_->OpenWriter(client, s->edge_writer_));
     }
 
     s->stream_index_ = index;
