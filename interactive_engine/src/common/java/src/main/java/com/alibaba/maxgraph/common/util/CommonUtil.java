@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,11 +23,9 @@ import com.alibaba.maxgraph.common.cluster.MaxGraphConfiguration;
 import com.alibaba.maxgraph.sdkcommon.util.JSON;
 import com.alibaba.maxgraph.sdkcommon.util.PropertyUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +34,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.*;
@@ -102,13 +99,13 @@ public class CommonUtil {
 
     public static InstanceConfig getInstanceConfig(String[] args, int serverId) throws IOException {
         Map<String, String> params = getConfigFromSystemEnv();
-        if (params!= null && !params.isEmpty()) {
-            LOG.info("read configs from system env:{}" ,params);
+        if (params != null && !params.isEmpty()) {
+            LOG.info("read configs from system env:{}", params);
             return new InstanceConfig(params);
         }
 
         InstanceConfig config;
-        if (args!=null && args.length > 0) {
+        if (args != null && args.length > 0) {
             Properties properties = PropertyUtil.getProperties(args[0], false);
             config = new InstanceConfig(properties);
         } else {
@@ -127,7 +124,8 @@ public class CommonUtil {
 
 
     public static String getYarnLogDir() {
-        String yarnLogDir = System.getenv(ApplicationConstants.Environment.LOG_DIRS.name());
+//        String yarnLogDir = System.getenv(ApplicationConstants.Environment.LOG_DIRS.name());
+        String yarnLogDir = StringUtils.EMPTY;
         if (StringUtils.isEmpty(yarnLogDir)) {
             return "/tmp";
         } else {
@@ -144,6 +142,7 @@ public class CommonUtil {
                 threadCount,
                 new ForkJoinPool.ForkJoinWorkerThreadFactory() {
                     final AtomicInteger num = new AtomicInteger();
+
                     @Override
                     public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
                         ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
@@ -152,7 +151,9 @@ public class CommonUtil {
                         return thread;
                     }
                 },
-                (thread, e) -> { LOG.error("Uncaught exception in thread: {}", thread.getName(), e); },
+                (thread, e) -> {
+                    LOG.error("Uncaught exception in thread: {}", thread.getName(), e);
+                },
                 true);
     }
 
