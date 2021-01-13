@@ -212,7 +212,7 @@ void PropertyGraphOutStream::AddVertex(VertexId id, LabelId labelid,
       batch_chunk->RemoveColumn(vertex_primary_key_column_[labelid]));
 #endif
   }
-  this->buildTableChunk(batch_chunk, vertex_writer_, 1,
+  this->buildTableChunk(batch_chunk, vertex_stream_, vertex_writer_, 1,
                         vertex_property_id_mapping_[labelid]);
 }
 
@@ -252,7 +252,7 @@ void PropertyGraphOutStream::AddEdge(EdgeId edge_id, VertexId src_id,
   appender->Apply(builder, edge_id, src_id, dst_id, src_label, dst_label,
                   property_size, properties,
                   edge_property_id_mapping_[label], batch_chunk);
-  this->buildTableChunk(batch_chunk, edge_writer_, 2,
+  this->buildTableChunk(batch_chunk, edge_stream_, edge_writer_, 2,
                         edge_property_id_mapping_[label]);
 }
 
@@ -404,7 +404,8 @@ void PropertyGraphOutStream::initialTables() {
 
 void PropertyGraphOutStream::buildTableChunk(
     std::shared_ptr<arrow::RecordBatch> batch,
-    std::shared_ptr<vineyard::DataframeStreamWriter>& stream_writer,
+    std::shared_ptr<vineyard::DataframeStream> &output_stream,
+    std::unique_ptr<vineyard::DataframeStreamWriter>& stream_writer,
     int const property_offset,
     std::map<int, int> const& property_id_mapping) {
 #ifndef NDEBUG
@@ -413,6 +414,11 @@ void PropertyGraphOutStream::buildTableChunk(
   if (batch == nullptr) {
     return;
   }
+
+  if (stream_writer == nullptr) {
+    VINEYARD_CHECK_OK(this->Open(output_stream, stream_writer));
+  }
+
 #ifndef NDEBUG
   LOG(INFO) << "chunk schema: batch is " << batch->schema()->ToString();
 #endif
@@ -444,7 +450,7 @@ void PropertyGraphOutStream::FinishAllVertices() {
         batch->RemoveColumn(vertex_primary_key_column_[vertices.first]));
 #endif
     }
-    buildTableChunk(batch, vertex_writer_, 1,
+    buildTableChunk(batch, vertex_stream_, vertex_writer_, 1,
                     vertex_property_id_mapping_[vertices.first]);
   }
   VINEYARD_CHECK_OK(vertex_writer_->Finish());
@@ -465,7 +471,7 @@ void PropertyGraphOutStream::FinishAllEdges() {
 #ifndef NDEBUG
     LOG(INFO) << "finish edges: " << batch;
 #endif
-      buildTableChunk(batch, edge_writer_, 2,
+      buildTableChunk(batch, edge_stream_, edge_writer_, 2,
                       edge_property_id_mapping_[edges.first]);
     }
   }
@@ -496,8 +502,7 @@ std::shared_ptr<Object> GlobalPGStreamBuilder::_Seal(Client& client) {
   auto gstream = std::make_shared<GlobalPGStream>();
   gstream->total_stream_chunks_ = total_stream_chunks_;
   gstream->meta_.SetTypeName(type_name<GlobalPGStream>());
-  gstream->meta_.AddKeyValue("total_stream_chunks",
-                             std::to_string(total_stream_chunks_));
+  gstream->meta_.AddKeyValue("total_stream_chunks", total_stream_chunks_);
 
   for (size_t idx = 0; idx < stream_chunks_.size(); ++idx) {
     gstream->meta_.AddMember("stream_chunk_" + std::to_string(idx),
@@ -505,7 +510,6 @@ std::shared_ptr<Object> GlobalPGStreamBuilder::_Seal(Client& client) {
   }
 
   VINEYARD_CHECK_OK(client.CreateMetaData(gstream->meta_, gstream->id_));
-  VINEYARD_CHECK_OK(client.Persist(gstream->id_));
   return std::dynamic_pointer_cast<Object>(gstream);
 }
 

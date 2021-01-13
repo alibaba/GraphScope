@@ -451,6 +451,7 @@ class TestGraphProjectTest(object):
         ):
             sg6 = empty_g.project_to_simple(v_prop="foo")
 
+    @pytest.mark.skip(reason="It use much memory, exceeds the limit of Github runner")
     def test_implicit_project_to_simple(self):
         g = self.g
         nx.builtin.degree_centrality(g)
