@@ -1,5 +1,7 @@
 # Interactive Engine Performance
 
+[![Translation](https://shields.io/badge/README-%E4%B8%AD%E6%96%87-blue)](README-zh.md)
+
 Here is a performance report from the run of the included benchmark program.
 
 

@@ -1,6 +1,6 @@
 # GraphScope Analytical Engine - GRAPE
 
-[![Translation](https://shields.io/badge/Docs-%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](README-zh.md)
+[![Translation](https://shields.io/badge/README-%E4%B8%AD%E6%96%87-blue)](README-zh.md)
 
 The analytical engine in GraphScope originated from **GRAPE**, a system that implemented the fix-point model proposed in the paper [Parallelizing Sequential Graph Computations](https://dl.acm.org/doi/10.1145/3282488). 
 
