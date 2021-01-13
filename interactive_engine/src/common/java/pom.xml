@@ -38,10 +38,6 @@
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <exclusions>
                 <exclusion>
@@ -87,19 +83,12 @@
             <groupId>de.javakaffee</groupId>
             <artifactId>kryo-serializers</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.kamranzafar</groupId>
-            <artifactId>jtar</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>com.alibaba.maxgraph</groupId>
             <artifactId>maxgraph-sdk-common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.jgrapht</groupId>
-            <artifactId>jgrapht-core</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
