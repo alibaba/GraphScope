@@ -247,13 +247,20 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
       std::dynamic_pointer_cast<vineyard::DataframeStream>(meta.GetMember("vertex_stream"));
     this->edge_stream_ =
       std::dynamic_pointer_cast<vineyard::DataframeStream>(meta.GetMember("edge_stream"));
-    auto client = dynamic_cast<vineyard::Client *>(meta.GetClient());
-    VINEYARD_CHECK_OK(this->vertex_stream_->OpenWriter(*client, this->vertex_writer_));
-    VINEYARD_CHECK_OK(this->edge_stream_->OpenWriter(*client, this->edge_writer_));
 
     this->graph_schema_ = std::make_shared<MGPropertyGraphSchema>();
     graph_schema_->FromJSONString(meta.GetKeyValue("graph_schema"));
     this->initialTables();
+  }
+
+  Status Open(std::shared_ptr<vineyard::DataframeStream> &output_stream,
+              std::unique_ptr<vineyard::DataframeStreamWriter> &writer) {
+    auto client = dynamic_cast<vineyard::Client *>(meta_.GetClient());
+    auto status = output_stream->OpenWriter(*client, writer);
+    if (!status.ok()) {
+      LOG(INFO) << "Failed to open writer for stream: " << status.ToString();
+    }
+    return status;
   }
 
   Status GetNext(size_t const size,
@@ -288,6 +295,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
  private:
   void initialTables();
   void buildTableChunk(std::shared_ptr<arrow::RecordBatch> batch,
+                       std::shared_ptr<vineyard::DataframeStream> &output_stream,
                        std::unique_ptr<vineyard::DataframeStreamWriter>& stream_writer,
                        int const property_offset,
                        std::map<int, int> const& property_id_mapping);

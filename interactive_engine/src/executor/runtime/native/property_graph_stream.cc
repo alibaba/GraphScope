@@ -212,7 +212,7 @@ void PropertyGraphOutStream::AddVertex(VertexId id, LabelId labelid,
       batch_chunk->RemoveColumn(vertex_primary_key_column_[labelid]));
 #endif
   }
-  this->buildTableChunk(batch_chunk, vertex_writer_, 1,
+  this->buildTableChunk(batch_chunk, vertex_stream_, vertex_writer_, 1,
                         vertex_property_id_mapping_[labelid]);
 }
 
@@ -252,7 +252,7 @@ void PropertyGraphOutStream::AddEdge(EdgeId edge_id, VertexId src_id,
   appender->Apply(builder, edge_id, src_id, dst_id, src_label, dst_label,
                   property_size, properties,
                   edge_property_id_mapping_[label], batch_chunk);
-  this->buildTableChunk(batch_chunk, edge_writer_, 2,
+  this->buildTableChunk(batch_chunk, edge_stream_, edge_writer_, 2,
                         edge_property_id_mapping_[label]);
 }
 
@@ -404,6 +404,7 @@ void PropertyGraphOutStream::initialTables() {
 
 void PropertyGraphOutStream::buildTableChunk(
     std::shared_ptr<arrow::RecordBatch> batch,
+    std::shared_ptr<vineyard::DataframeStream> &output_stream,
     std::unique_ptr<vineyard::DataframeStreamWriter>& stream_writer,
     int const property_offset,
     std::map<int, int> const& property_id_mapping) {
@@ -413,6 +414,11 @@ void PropertyGraphOutStream::buildTableChunk(
   if (batch == nullptr) {
     return;
   }
+
+  if (stream_writer == nullptr) {
+    VINEYARD_CHECK_OK(this->Open(output_stream, stream_writer));
+  }
+
 #ifndef NDEBUG
   LOG(INFO) << "chunk schema: batch is " << batch->schema()->ToString();
 #endif
@@ -444,7 +450,7 @@ void PropertyGraphOutStream::FinishAllVertices() {
         batch->RemoveColumn(vertex_primary_key_column_[vertices.first]));
 #endif
     }
-    buildTableChunk(batch, vertex_writer_, 1,
+    buildTableChunk(batch, vertex_stream_, vertex_writer_, 1,
                     vertex_property_id_mapping_[vertices.first]);
   }
   VINEYARD_CHECK_OK(vertex_writer_->Finish());
@@ -465,7 +471,7 @@ void PropertyGraphOutStream::FinishAllEdges() {
 #ifndef NDEBUG
     LOG(INFO) << "finish edges: " << batch;
 #endif
-      buildTableChunk(batch, edge_writer_, 2,
+      buildTableChunk(batch, edge_stream_, edge_writer_, 2,
                       edge_property_id_mapping_[edges.first]);
     }
   }
