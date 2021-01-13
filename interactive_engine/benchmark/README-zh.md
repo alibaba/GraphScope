@@ -1,5 +1,7 @@
 # 性能报告
 
+[![Translation](https://shields.io/badge/README-English-blue)](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/benchmark)
+
 下面是根据本目录下的测试程序得到的性能报告。
 
 
