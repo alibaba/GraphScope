@@ -17,6 +17,7 @@
 #
 
 import logging
+from typing import Dict
 from typing import Sequence
 from typing import Tuple
 from urllib.parse import urlparse
@@ -68,18 +69,21 @@ class CSVOptions(object):
         # If false, column names will be of the form "f0", "f1"...
         self.header_row = True
 
-    def __str__(self) -> str:
-        options = []
-        options.append("delimiter={}".format(self.delimiter))
-        options.append("header_row={}".format(self.header_row))
+    def to_dict(self) -> Dict:
+        options = {}
+        options["delimiter"] = self.delimiter
+        options["header_row"] = self.header_row
         if self.include_columns:
-            options.append("schema={}".format(",".join(self.include_columns)))
+            options["schema"] = ",".join(self.include_columns)
         if self.column_types:
             cpp_types = [utils.data_type_to_cpp(dt) for dt in self.column_types]
-            options.append("column_types={}".format(",".join(cpp_types)))
+            options["column_types"] = ",".join(cpp_types)
         if self.force_include_all:
-            options.append("include_all_columns={}".format(self.force_include_all))
-        return "&".join(options)
+            options["include_all_columns"] = self.force_include_all
+        return options
+
+    def __str__(self) -> str:
+        return "&".join(["{}={}".format(k, v) for k, v in self.to_dict().items()])
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -90,7 +94,7 @@ class Loader(object):
     Loader can take various data sources, and assemble necessary information into a AttrValue.
     """
 
-    def __init__(self, source, delimiter=",", header_row=True, session=None):
+    def __init__(self, source, delimiter=",", header_row=True, **kwargs):
         """Initialize a loader with configurable options.
         Note: Loader cannot be reused since it may change inner state when constructing
         information for loading a graph.
@@ -117,9 +121,6 @@ class Loader(object):
             header_row (bool, optional): Whether source have a header. If true, column names
                 will be read from the first row of source, else they are named by 'f0', 'f1', ....
                 Defaults to True.
-
-            session (:class:`Session`, optional): The session that will be used to retrieve information about
-                current GraphScope session for properly launching IO adaptors. Defaults to None.
         """
         self.protocol = ""
         self.source = ""
@@ -133,13 +134,19 @@ class Loader(object):
         self.options.delimiter = delimiter
         self.options.header_row = header_row
 
+        self.finished = False
         # metas for data source is numpy or dataframe
         self.row_num = 0
         self.column_num = 0
         self.deduced_properties = None
         self.property_bytes = None
 
-        self.session = session
+        # extra args directly passed to storage system
+        self.storage_options = kwargs
+
+        # Allow to defer some execution until `finish()`
+        self.preprocessor = None
+
         self.resolve(source)
 
     def __str__(self) -> str:
@@ -178,11 +185,13 @@ class Loader(object):
         # If protocol is not set, use 'file' as default
         if not self.protocol:
             self.protocol = "file"
-        check_argument(self.protocol in ("file", "hdfs", "oss", "vineyard"))
-        if self.protocol in ["vineyard", "hdfs"]:
-            self.process_vineyard(source)
-        else:
+        check_argument(
+            self.protocol in ("file", "hdfs", "hive", "oss", "s3", "vineyard")
+        )
+        if self.protocol == "file":
             self.source = source
+        else:
+            self.process_vineyard(source)
 
     def process_numpy(self, source: Sequence[np.ndarray]):
         self.protocol = "numpy"
@@ -229,43 +238,56 @@ class Loader(object):
     def process_vineyard(self, source):
         if vineyard is None:
             raise RuntimeError("Vineyard is not installed")
-        if source.startswith("vineyard://"):
-            source = source[len("vineyard://") :]
-        if not urlparse(source).scheme:
-            source = "file://%s" % source
-        if "#" in source:
-            source = "%s&%s" % (source, str(self.options))
-        else:
-            source = "%s#%s" % (source, str(self.options))
-        if self.session is not None:
-            sess = self.session
-        else:
-            sess = get_default_session()
-        info = sess.info
-        conf = info["engine_config"]
-        vineyard_endpoint = conf["vineyard_rpc_endpoint"]
-        vineyard_ipc_socket = conf["vineyard_socket"]
-        hosts = info["engine_hosts"].split(",")
-        if "namespace" in info:
-            deployment = "kubernetes"
-            hosts = ["%s:%s" % (info["namespace"], host) for host in hosts]
-        else:
-            deployment = "ssh"
-        num_workers = info["num_workers"]
+        # defer execution of `vineyard.io.open` because `read_options` is unknown
+        # until load_from has been fully processed.
+        def func(source, read_options, storage_options, sess):
+            if source.startswith("vineyard://"):
+                source = source[len("vineyard://") :]
+            if not urlparse(source).scheme:
+                source = "file://%s" % source
 
-        self.protocol = "vineyard"
-        self.source = repr(
-            vineyard.io.open(
-                source,
-                mode="r",
-                vineyard_endpoint=vineyard_endpoint,
-                vineyard_ipc_socket=vineyard_ipc_socket,
-                hosts=hosts,
-                num_workers=num_workers,
-                deployment=deployment,
+            info = sess.info
+            vineyard_endpoint = info["engine_config"]["vineyard_rpc_endpoint"]
+            vineyard_ipc_socket = info["engine_config"]["vineyard_socket"]
+            hosts = info["engine_hosts"].split(",")
+            if "namespace" in info:
+                deployment = "kubernetes"
+                hosts = ["%s:%s" % (info["namespace"], host) for host in hosts]
+            else:
+                deployment = "ssh"
+            num_workers = info["num_workers"]
+
+            stream_id = repr(
+                vineyard.io.open(
+                    source,
+                    mode="r",
+                    vineyard_endpoint=vineyard_endpoint,
+                    vineyard_ipc_socket=vineyard_ipc_socket,
+                    hosts=hosts,
+                    num_workers=num_workers,
+                    deployment=deployment,
+                    read_options=read_options,
+                    storage_options=storage_options,
+                )
             )
-        )
-        logger.debug("opened vineyard stream id = %s", self.source)
+            return "vineyard", stream_id
+
+        self.preprocessor = func
+
+    def finish(self):
+        if self.finished:
+            return
+        if self.preprocessor is not None:
+            self.protocol, self.source = self.preprocessor(
+                self.source,
+                self.storage_options,
+                self.options.to_dict(),
+                get_default_session(),
+            )
+            logger.debug(
+                f"processed protocol = {self.protocol}, source = {self.source}"
+            )
+        self.finished = True
 
     def process_vy_object(self, source):
         self.protocol = "vineyard"
@@ -281,10 +303,15 @@ class Loader(object):
         self.options.force_include_all = include_all
 
     def get_attr(self):
+        if not self.finished:
+            self.finish()
         attr = attr_value_pb2.AttrValue()
         attr.func.name = "loader"
         attr.func.attr[types_pb2.PROTOCOL].CopyFrom(utils.s_to_attr(self.protocol))
-        if self.protocol in ("file", "oss", "vineyard", "mars"):
+        # Let graphscope handle local files cause it's implemented in c++ and
+        # doesn't add an additional stream layer.
+        # Maybe handled by vineyard in the near future
+        if self.protocol == "file":
             source = "{}#{}".format(self.source, self.options)
             attr.func.attr[types_pb2.VALUES].CopyFrom(
                 utils.bytes_to_attr(source.encode("utf-8"))
@@ -299,6 +326,8 @@ class Loader(object):
                 attr.func.attr[10000 + i].CopyFrom(
                     utils.bytes_to_attr(self.property_bytes[i])
                 )
-        else:
-            raise TypeError("Protocol not recognized " + self.protocol)
+        else:  # Let vineyard handle other data source.
+            attr.func.attr[types_pb2.VALUES].CopyFrom(
+                utils.bytes_to_attr(source.encode("utf-8"))
+            )
         return attr

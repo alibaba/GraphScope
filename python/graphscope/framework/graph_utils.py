@@ -74,6 +74,7 @@ class VertexLabel(object):
         self.loader.select_columns(
             self.properties, include_all=bool(not self.raw_properties)
         )
+        self.loader.finish()
 
     def __str__(self) -> str:
         s = "\ntype: VertexLabel"
@@ -150,6 +151,7 @@ class EdgeSubLabel(object):
         self.loader.select_columns(
             self.properties, include_all=bool(not self.raw_properties)
         )
+        self.loader.finish()
 
     def __str__(self) -> str:
         s = "\ntype: EdgeSubLabel"
