@@ -240,7 +240,7 @@ class Loader(object):
             raise RuntimeError("Vineyard is not installed")
         # defer execution of `vineyard.io.open` because `read_options` is unknown
         # until load_from has been fully processed.
-        def func(source, read_options, storage_options, sess):
+        def func(source, storage_options, read_options, sess):
             if source.startswith("vineyard://"):
                 source = source[len("vineyard://") :]
             if not urlparse(source).scheme:
@@ -272,6 +272,7 @@ class Loader(object):
             )
             return "vineyard", stream_id
 
+        self.source = source
         self.preprocessor = func
 
     def finish(self):
@@ -328,6 +329,6 @@ class Loader(object):
                 )
         else:  # Let vineyard handle other data source.
             attr.func.attr[types_pb2.VALUES].CopyFrom(
-                utils.bytes_to_attr(source.encode("utf-8"))
+                utils.bytes_to_attr(self.source.encode("utf-8"))
             )
         return attr

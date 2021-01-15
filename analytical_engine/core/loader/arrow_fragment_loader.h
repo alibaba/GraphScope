@@ -472,7 +472,7 @@ class ArrowFragmentLoader {
       auto read_procedure =
           [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
         std::shared_ptr<arrow::Table> table;
-        if (vertices[i]->protocol == "file" || vertices[i]->protocol == "oss") {
+        if (vertices[i]->protocol == "file") {
           auto path = vertices[i]->values;
           BOOST_LEAF_AUTO(tmp, readTableFromLocation(vertices[i]->values, index,
                                                      total_parts));
@@ -490,6 +490,8 @@ class ArrowFragmentLoader {
               table, comm_spec_.local_id(), comm_spec_.local_num()));
           LOG(INFO) << "read table from vineyard: " << vertices[i]->values
                     << ": " << table->schema()->ToString();
+        } else {
+          LOG(ERROR) << "Unsupported protocol: " << vertices[i]->protocol;
         }
         return table;
       };
@@ -617,8 +619,9 @@ class ArrowFragmentLoader {
           } else {
             meta = tables[0][0]->schema()->metadata()->Copy();
           }
-          if (meta->FindKey(LABEL_TAG) == -1 || meta->FindKey(SRC_LABEL_TAG) ||
-              meta->FindKey(DST_LABEL_TAG)) {
+          if (meta->FindKey(LABEL_TAG) == -1 ||
+              meta->FindKey(SRC_LABEL_TAG) == -1 ||
+              meta->FindKey(DST_LABEL_TAG) == -1) {
             meta->Append(LABEL_TAG, edges[0]->label);
             meta->Append(SRC_LABEL_TAG, edges[0]->sub_labels[0].src_label);
             meta->Append(DST_LABEL_TAG, edges[0]->sub_labels[0].dst_label);
@@ -661,8 +664,7 @@ class ArrowFragmentLoader {
         auto load_procedure =
             [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
           std::shared_ptr<arrow::Table> table;
-          if (sub_labels[j].protocol == "file" ||
-              sub_labels[j].protocol == "oss") {
+          if (sub_labels[j].protocol == "file") {
             BOOST_LEAF_ASSIGN(table, readTableFromLocation(sub_labels[j].values,
                                                            index, total_parts));
           } else if (sub_labels[j].protocol == "numpy" ||
@@ -678,6 +680,8 @@ class ArrowFragmentLoader {
                 table, comm_spec_.local_id(), comm_spec_.local_num()));
             LOG(INFO) << "read table from vineyard: " << sub_labels[j].values
                       << ": " << table->schema()->ToString();
+          } else {
+            LOG(ERROR) << "Unrecognized protocol: " << sub_labels[j].protocol;
           }
           return table;
         };

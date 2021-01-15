@@ -387,7 +387,8 @@ class Session(object):
             info["engine_hosts"] = ",".join(self._pod_name_list)
             info["namespace"] = self._config_params["k8s_namespace"]
         else:
-            info["types"] = "invalid"
+            info["type"] = "hosts"
+            info["engine_hosts"] = ",".join(self._config_params["hosts"])
 
         info["num_workers"] = self._config_params["num_workers"]
         info["coordinator_endpoint"] = self._endpoint
