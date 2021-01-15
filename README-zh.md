@@ -5,6 +5,8 @@
     一站式超大规模图计算系统
 </p>
 
+[![Docs-en](https://shields.io/badge/Docs-English-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs)
+[![Docs-zh](https://shields.io/badge/Docs-%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs/zh/)
 [![Translation](https://shields.io/badge/README-English-blue)](https://github.com/alibaba/GraphScope)
 
 GraphScope 是阿里巴巴达摩院智能计算实验室研发并开源的一站式图计算平台。依托于阿里海量数据和丰富场景，与达摩院的高水平研究，GraphScope 致力于针对实际生产场景中图计算的挑战，提供一站式高效的解决方案。
