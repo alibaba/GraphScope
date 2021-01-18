@@ -271,16 +271,21 @@ GraphScope 以
 当 `loader` 包含文件路径时，它可能仅包含一个字符串。
 文件路径应遵循 URI 标准。当收到包含文件路径的载图请求时， `graphscope` 将会解析 URI，调用相应的载图模块。
 
-目前, `graphscope` 支持三个数据源：本地, OSS 和 HDFS:
+目前, `graphscope` 支持多种数据源：本地, OSS，S3，和 HDFS:
+数据由 `libvineyard <https://github.com/alibaba/libvineyard>`_ 负责载入，`libvineyard` 使用 `fsspec <https://github.com/intake/filesystem_spec>`_ 解析不同的数据格式以及参数。任何额外的具体的配置都可以在Loader的可变参数列表中传入，这些参数会直接被传递到对应的存储类中。比如 `host` 和 `port` 之于 `HDFS`，或者是 `access-id`, `secret-access-key` 之于 oss 或 s3。
 
 .. code:: python
 
     from graphscope import Loader
 
     ds1 = Loader("file:///var/datafiles/group.e")
-    ds2 = Loader("oss://graphscope_bucket/datafiles/group.e")
-    ds3 = Loader("hdfs://datafiles/group.e")
+    ds2 = Loader("oss://graphscope_bucket/datafiles/group.e", key='access-id', secret='secret-access-key', endpoint='oss-cn-hangzhou.aliyuncs.com')
+    ds3 = Loader("hdfs://datafiles/group.e", host='localhost', port='9000', extra_conf={'conf1': 'value1'})
+    d34 = Loader("s3://datafiles/group.e", key='access-id', secret='secret-access-key', client_kwargs={'region_name': 'us-east-1'})
 
+用户可以方便的实现自己的driver来支持更多的数据源，比如参照 `ossfs <https://github.com/alibaba/libvineyard/blob/main/modules/io/adaptors/ossfs.py>`_ driver的实现方式。
+用户需要继承 `AbstractFileSystem` 类用来做scheme对应的resolver， 以及 `AbstractBufferedFile`。用户仅需要实现 ``_upload_chunk``,
+``_initiate_upload`` and ``_fetch_range`` 这几个方法就可以实现基本的read，write功能。最后通过 ``fsspec.register_implementation('protocol_name', 'protocol_file_system')`` 注册自定义的resolver。
 
 
 +------------------------------+---------------------------------------------+

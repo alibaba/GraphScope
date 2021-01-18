@@ -104,7 +104,8 @@ class Loader(object):
 
                     * local file: specified by URL :code:`file://...`
                     * oss file: specified by URL :code:`oss://...`
-                    * hdfs file: specieied by URL :code:`hdfs://...`
+                    * hdfs file: specified by URL :code:`hdfs://...`
+                    * s3 file: specified by URL :code:`s3://...`
                     * numpy ndarray, in CSR format
                     * pandas dataframe
 
@@ -121,6 +122,10 @@ class Loader(object):
             header_row (bool, optional): Whether source have a header. If true, column names
                 will be read from the first row of source, else they are named by 'f0', 'f1', ....
                 Defaults to True.
+
+        Notes:
+            Data is resolved by drivers in `libvineyard <https://github.com/alibaba/libvineyard>`_ .
+            See more additional info in `Loading Graph` section of Docs, and implementations in `libvineyard`.
         """
         self.protocol = ""
         self.source = ""

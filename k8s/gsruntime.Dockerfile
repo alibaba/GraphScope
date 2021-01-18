@@ -30,8 +30,8 @@ RUN cd /tmp && \
 
 # pip dependencies
 RUN pip3 install -U pip && \
-    pip3 --no-cache-dir install auditwheel daemons grpcio-tools gremlinpython hdfs3 oss2 ipython kubernetes \
-        libclang networkx==2.4 numpy pandas parsec pycrypto pyorc pytest scipy scikit_learn wheel && \
+    pip3 --no-cache-dir install auditwheel daemons grpcio-tools gremlinpython hdfs3 fsspec oss2 s3fs ipython kubernetes \
+        libclang networkx==2.4 numpy pandas parsec pycryptodome pyorc pytest scipy scikit_learn wheel && \
     pip3 --no-cache-dir install Cython --pre -U
 
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64
