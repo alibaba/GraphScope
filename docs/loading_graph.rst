@@ -291,17 +291,25 @@ The string follows the standard of URI. When receiving a request for loading gra
 from a location, `graphscope` will parse the URI and invoke corresponding loader
 according to the schema.
 
-Currently, `graphscope` supports loaders for these locations:
+Currently, `graphscope` supports loaders for `local`, `s3`, `oss`, `hdfs`:
+Data is loaded by `libvineyard <https://github.com/alibaba/libvineyard>`_ , `libvineyard` takes advantage
+of `fsspec <https://github.com/intake/filesystem_spec>`_ to resolve specific scheme and formats.
+Any additional specific configurations can be passed in kwargs of `Loader`, and these configurations will
+directly be passed to corresponding storage class. Like `host` and `port` to `HDFS`, or `access-id`, `secret-access-key` to `oss` or `s3`.
 
 .. code:: python
 
     from graphscope import Loader
 
     ds1 = Loader("file:///var/datafiles/group.e")
-    ds2 = Loader("oss://graphscope_bucket/datafiles/group.e")
-    ds3 = Loader("hdfs://datafiles/group.e")
+    ds2 = Loader("oss://graphscope_bucket/datafiles/group.e", key='access-id', secret='secret-access-key', endpoint='oss-cn-hangzhou.aliyuncs.com')
+    ds3 = Loader("hdfs://datafiles/group.e", host='localhost', port='9000', extra_conf={'conf1': 'value1'})
+    d34 = Loader("s3://datafiles/group.e", key='access-id', secret='secret-access-key', client_kwargs={'region_name': 'us-east-1'})
 
-
+User can implement customized driver to support additional data sources. Take `ossfs <https://github.com/alibaba/libvineyard/blob/main/modules/io/adaptors/ossfs.py>`_ as an example, User need to subclass `AbstractFileSystem`, which
+is used as resolve to specific protocol scheme, and `AbstractBufferFile` to do read and write.
+The only methods user need to override is ``_upload_chunk``,
+``_initiate_upload`` and ``_fetch_range``. In the end user need to use ``fsspec.register_implementation('protocol_name', 'protocol_file_system')`` to register corresponding resolver.
 
 +------------------------------+---------------------------------------------+
 | :meth:`graphscope.load_from` | Loading from local filesystem, OSS, or ODPS |
