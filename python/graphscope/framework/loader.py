@@ -245,6 +245,7 @@ class Loader(object):
             raise RuntimeError("Vineyard is not installed")
         # defer execution of `vineyard.io.open` because `read_options` is unknown
         # until load_from has been fully processed.
+
         def func(source, storage_options, read_options, sess):
             if source.startswith("vineyard://"):
                 source = source[len("vineyard://") :]
