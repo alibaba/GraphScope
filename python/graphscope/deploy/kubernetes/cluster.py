@@ -45,6 +45,7 @@ from graphscope.deploy.kubernetes.utils import KubernetesPodWatcher
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import is_minikube_cluster
+from graphscope.deploy.kubernetes.utils import try_to_read_namespace_from_context
 from graphscope.deploy.kubernetes.utils import wait_for_deployment_complete
 from graphscope.framework.errors import K8sError
 from graphscope.framework.utils import random_string
@@ -285,7 +286,10 @@ class KubernetesCluster(object):
 
     def _create_namespace(self):
         if self._namespace is None:
-            self._namespace = self._get_free_namespace()
+            self._namespace = try_to_read_namespace_from_context()
+            # Doesn't have any namespace info in kube context.
+            if self._namespace is None:
+                self._namespace = self._get_free_namespace()
         if not self._namespace_exist(self._namespace):
             self._core_api.create_namespace(NamespaceBuilder(self._namespace).build())
             self._delete_namespace = True
@@ -326,31 +330,33 @@ class KubernetesCluster(object):
                 )
             )
 
-        if not self._cluster_role_exist(cluster_role=self._cluster_role_name):
-            cluster_role_builder = ClusterRoleBuilder(
-                name=self._cluster_role_name,
-                api_groups="apps,",
-                resources="namespaces",
-                verbs="create,delete,get,update,watch,list",
-            )
-            targets.append(
-                self._rbac_api.create_cluster_role(cluster_role_builder.build())
-            )
-
-        if not self._cluster_role_binding_exist(
-            cluster_role_binding=self._cluster_role_binding_name
-        ):
-            cluster_role_binding_builder = ClusterRoleBindingBuilder(
-                name=self._cluster_role_binding_name,
-                namespace=self._namespace,
-                cluster_role_name=self._cluster_role_name,
-                service_account_name="default",
-            )
-            targets.append(
-                self._rbac_api.create_cluster_role_binding(
-                    cluster_role_binding_builder.build()
+        if self._delete_namespace:
+            # Create clusterRole to delete namespace.
+            if not self._cluster_role_exist(cluster_role=self._cluster_role_name):
+                cluster_role_builder = ClusterRoleBuilder(
+                    name=self._cluster_role_name,
+                    api_groups="apps,",
+                    resources="namespaces",
+                    verbs="create,delete,get,update,watch,list",
                 )
-            )
+                targets.append(
+                    self._rbac_api.create_cluster_role(cluster_role_builder.build())
+                )
+
+            if not self._cluster_role_binding_exist(
+                cluster_role_binding=self._cluster_role_binding_name
+            ):
+                cluster_role_binding_builder = ClusterRoleBindingBuilder(
+                    name=self._cluster_role_binding_name,
+                    namespace=self._namespace,
+                    cluster_role_name=self._cluster_role_name,
+                    service_account_name="default",
+                )
+                targets.append(
+                    self._rbac_api.create_cluster_role_binding(
+                        cluster_role_binding_builder.build()
+                    )
+                )
 
         self._resource_object.extend(targets)
 

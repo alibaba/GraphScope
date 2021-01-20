@@ -171,8 +171,9 @@ class Session(object):
             num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.
 
             k8s_namespace (str, optional): Contains the namespace to create all resource inside.
-                If param missing or the namespace not exist, a random namespace will be created and deleted
-                when service stopping. Defaults to None.
+                If param missing, it will try to read namespace from kubernetes context, or
+                a random namespace will be created and deleted if namespace not exist.
+                Defaults to None.
 
             k8s_service_type (str, optional): Type determines how the GraphScope service is exposed.
                 Valid options are NodePort, and LoadBalancer. Defaults to NodePort.
