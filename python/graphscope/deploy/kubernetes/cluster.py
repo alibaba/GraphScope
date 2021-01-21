@@ -409,6 +409,7 @@ class KubernetesCluster(object):
             name=self._coordinator_container_name,
             port=self._random_coordinator_service_port,
             num_workers=self._num_workers,
+            instance_id=self._instance_id,
             log_level=gs_config.log_level,
             namespace=self._namespace,
             service_type=self._service_type,
