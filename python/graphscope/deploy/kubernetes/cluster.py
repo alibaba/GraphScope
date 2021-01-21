@@ -124,8 +124,8 @@ class KubernetesCluster(object):
     _coordinator_service_name_prefix = "coordinator-service-"
     _coordinator_container_name = "coordinator"
 
-    _role_name = "gs-reader"
-    _role_binding_name = "gs-reader-binding"
+    _role_name_prefix = "gs-reader-"
+    _role_binding_name_prefix = "gs-reader-binding-"
     _cluster_role_name_prefix = "gs-cluster-reader-"
     _cluster_role_binding_name_prefix = "gs-cluster-reader-binding-"
 
@@ -186,15 +186,18 @@ class KubernetesCluster(object):
         self._engine_mem = engine_mem
         self._waiting_for_delete = waiting_for_delete
 
+        self._instance_id = random_string(6)
+        self._role_name = self._role_name_prefix + self._instance_id
+        self._role_binding_name = self._role_binding_name_prefix + self._instance_id
         self._cluster_role_name = ""
         self._cluster_role_binding_name = ""
 
         # all resource created inside namsapce
         self._resource_object = []
 
-        self._coordinator_name = self._coordinator_name_prefix + random_string(6)
+        self._coordinator_name = self._coordinator_name_prefix + self._instance_id
         self._coordinator_service_name = (
-            self._coordinator_service_name_prefix + random_string(6)
+            self._coordinator_service_name_prefix + self._instance_id
         )
         self._coordinator_cpu = coordinator_cpu
         self._coordinator_mem = coordinator_mem
@@ -306,7 +309,7 @@ class KubernetesCluster(object):
                 name=self._role_name,
                 namespace=self._namespace,
                 api_groups="apps,",
-                resources="configmaps,deployments,endpoints,events,pods,pods/log,pods/exec,pods/status,services,replicasets",
+                resources="configmaps,deployments,deployments/status,endpoints,events,pods,pods/log,pods/exec,pods/status,services,replicasets",  # noqa: E501
                 verbs="create,delete,get,update,watch,list",
             )
             targets.append(
@@ -406,6 +409,7 @@ class KubernetesCluster(object):
             name=self._coordinator_container_name,
             port=self._random_coordinator_service_port,
             num_workers=self._num_workers,
+            instance_id=self._instance_id,
             log_level=gs_config.log_level,
             namespace=self._namespace,
             service_type=self._service_type,
@@ -586,7 +590,8 @@ class KubernetesCluster(object):
         """
         if not self._closed:
             # delete resources created by graphscope inside namespace
-            for target in self._resource_object:
+            # make sure delete permission resouces in the end
+            for target in reversed(self._resource_object):
                 delete_kubernetes_object(
                     api_client=self._api_client,
                     target=target,
