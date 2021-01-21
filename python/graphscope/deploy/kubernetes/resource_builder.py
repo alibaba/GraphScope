@@ -861,6 +861,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         name,
         port,
         num_workers,
+        instance_id,
         log_level,
         namespace,
         service_type,
@@ -885,6 +886,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
     ):
         self._port = port
         self._num_workers = num_workers
+        self._instance_id = instance_id
         self._log_level = log_level
         self._namespace = namespace
         self._service_type = service_type
@@ -965,6 +967,8 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             str(self._port),
             "--num_workers",
             str(self._num_workers),
+            "--instance_id",
+            self._instance_id,
             "--log_level",
             self._log_level,
             "--k8s_namespace",
