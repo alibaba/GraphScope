@@ -45,6 +45,17 @@ def modern_graph_data_dir():
     return "/testingdata/modern_graph"
 
 
+def get_k8s_volumes():
+    k8s_volumes = {
+        "data": {
+            "type": "hostPath",
+            "field": {"path": os.environ["GS_TEST_DIR"], "type": "Directory"},
+            "mounts": {"mountPath": "/testingdata"},
+        }
+    }
+    return k8s_volumes
+
+
 def get_gs_image_on_ci_env():
     if "GS_IMAGE" in os.environ and "GIE_MANAGER_IMAGE" in os.environ:
         return os.environ["GS_IMAGE"], os.environ["GIE_MANAGER_IMAGE"]
@@ -65,6 +76,7 @@ def test_demo(data_dir):
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
         k8s_vineyard_shared_mem="2Gi",
+        k8s_volumes=get_k8s_volumes(),
     )
     graph = load_ldbc(sess, data_dir)
 
@@ -103,6 +115,7 @@ def test_demo_distribute(data_dir, modern_graph_data_dir):
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
         k8s_vineyard_shared_mem="2Gi",
+        k8s_volumes=get_k8s_volumes(),
     )
     graph = load_ldbc(sess, data_dir)
 
@@ -181,6 +194,7 @@ def test_multiple_session(data_dir):
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
         k8s_vineyard_shared_mem="2Gi",
+        k8s_volumes=get_k8s_volumes(),
     )
     info = sess.info
     assert info["status"] == "active"
@@ -199,6 +213,7 @@ def test_multiple_session(data_dir):
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
         k8s_vineyard_shared_mem="2Gi",
+        k8s_volumes=get_k8s_volumes(),
     )
 
     info = sess2.info
@@ -223,6 +238,7 @@ def test_query_modern_graph(modern_graph_data_dir):
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
         k8s_vineyard_shared_mem="2Gi",
+        k8s_volumes=get_k8s_volumes(),
     )
     graph = load_modern_graph(sess, modern_graph_data_dir)
     interactive = sess.gremlin(graph)
@@ -256,6 +272,7 @@ def test_traversal_modern_graph(modern_graph_data_dir):
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
         k8s_vineyard_shared_mem="2Gi",
+        k8s_volumes=get_k8s_volumes(),
     )
     graph = load_modern_graph(sess, modern_graph_data_dir)
     interactive = sess.gremlin(graph)

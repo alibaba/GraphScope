@@ -111,6 +111,10 @@ class KubernetesCluster(object):
         coordinator_mem: str
             Minimum number of memory request for coordinator pod.
 
+        volumes: dict
+           A dict of k8s volumes which represents a directory containing data,
+           accessible to the containers in a pod.
+
         timeout_seconds: int
             Timeout when setting up graphscope instance on kubernetes cluster.
 
@@ -154,6 +158,7 @@ class KubernetesCluster(object):
         engine_mem=None,
         coordinator_cpu=None,
         coordinator_mem=None,
+        volumes=None,
         timeout_seconds=None,
         waiting_for_delete=None,
         **kwargs
@@ -203,6 +208,8 @@ class KubernetesCluster(object):
         self._coordinator_mem = coordinator_mem
         # environment variable
         self._coordinator_envs = kwargs.pop("coordinator_envs", dict())
+
+        self._volumes = volumes
 
         self._closed = False
         self._timeout_seconds = timeout_seconds
@@ -394,15 +401,7 @@ class KubernetesCluster(object):
         for name in self._image_pull_secrets:
             coordinator_builder.add_image_pull_secret(name)
 
-        if "GS_TEST_DIR" in os.environ:
-            envs = {
-                "PYTHONPATH": "/root/gsa",
-                "GS_TEST_DIR": os.environ["GS_TEST_DIR"],
-                "PYTHONUNBUFFERED": "TRUE",
-            }
-        else:
-            envs = {"PYTHONPATH": "/root/gsa", "PYTHONUNBUFFERED": "TRUE"}
-
+        envs = {"PYTHONPATH": "/root/gsa", "PYTHONUNBUFFERED": "TRUE"}
         coordinator_builder.add_simple_envs(envs)
 
         coordinator_builder.add_coordinator_container(
@@ -428,6 +427,7 @@ class KubernetesCluster(object):
             vineyard_shared_mem=self._vineyard_shared_mem,
             engine_cpu=self._engine_cpu,
             engine_mem=self._engine_mem,
+            volumes=self._volumes,
             timeout_seconds=self._timeout_seconds,
             waiting_for_delete=self._waiting_for_delete,
             delete_namespace=self._delete_namespace,

@@ -155,6 +155,7 @@ class Session(object):
         k8s_vineyard_shared_mem=gs_config.k8s_vineyard_shared_mem,
         k8s_engine_cpu=gs_config.k8s_engine_cpu,
         k8s_engine_mem=gs_config.k8s_engine_mem,
+        k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
         **kw
@@ -203,6 +204,27 @@ class Session(object):
             k8s_coordinator_cpu (float, optional): Minimum number of CPU cores request for coordinator pod. Defaults to 1.0.
 
             k8s_coordinator_mem (str, optional): Minimum number of memory request for coordinator pod. Defaults to '4Gi'.
+
+            k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the
+                containers in a pod. Defaults to {}. Only 'hostPath' supported yet. For example, we can mount host path with:
+
+                k8s_volumes = {
+                    "my-data": {
+                        "type": "hostPath",
+                        "field": {
+                            "path": "<path>",
+                            "type": "Directory"
+                        },
+                        "mounts": [
+                            {
+                                "mountPath": "<path1>"
+                            },
+                            {
+                                "mountPath": "<path2>"
+                            }
+                        ]
+                    }
+                }
 
             timeout_seconds (int, optional): For waiting service ready (or waiting for delete if
                 k8s_waiting_for_delete is True).
@@ -254,6 +276,7 @@ class Session(object):
             "k8s_vineyard_shared_mem",
             "k8s_engine_cpu",
             "k8s_engine_mem",
+            "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
         )
@@ -612,6 +635,7 @@ class Session(object):
                 engine_mem=self._config_params["k8s_engine_mem"],
                 coordinator_cpu=float(self._config_params["k8s_coordinator_cpu"]),
                 coordinator_mem=self._config_params["k8s_coordinator_mem"],
+                volumes=self._config_params["k8s_volumes"],
                 waiting_for_delete=self._config_params["k8s_waiting_for_delete"],
                 timeout_seconds=self._config_params["timeout_seconds"],
             )
