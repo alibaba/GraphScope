@@ -22,7 +22,12 @@ is_in_wsl=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && is_in_
 
 function check_os_compatibility() {
   if [[ "${is_in_wsl}" == true && -z "${WSL_INTEROP}" ]]; then
-    echo "Not support to run on WSL1, please use WSL2."
+    echo "GraphScope not support to run on WSL1, please use WSL2."
+    exit 1
+  fi
+
+  if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"CentOS"* ]]; then
+    echo "This script is only available on Unbuntu/CentOS/WSL2."
     exit 1
   fi
 
@@ -37,7 +42,7 @@ function check_dependencies_version() {
   fi
   ver=$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
   if [ "$ver" -lt "36" ]; then
-    echo "This script requires python 3.6 or greater"
+    echo "GraphScope requires python 3.6 or greater"
     exit 1
   fi
 }
@@ -58,9 +63,6 @@ function install_dependencies() {
     sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     sudo yum install -y docker-ce docker-ce-cli containerd.io
     sudo yum clean all
-  else
-    echo "Only support Ubuntu and CentOS"
-    exit 1
   fi
 
   pip3 install -U pip --user
