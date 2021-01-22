@@ -52,6 +52,8 @@ class GSConfig(object):
     k8s_engine_cpu = 0.5
     k8s_engine_mem = "4Gi"
 
+    k8s_volumes = {}
+
     k8s_service_type = "NodePort"
 
     k8s_waiting_for_delete = False

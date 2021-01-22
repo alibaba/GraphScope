@@ -17,14 +17,35 @@
 #
 
 
+import json
+import logging
 import os
 import shutil
 
 from graphscope.deploy.kubernetes.utils import parse_readable_memory
 
+logger = logging.getLogger("graphscope")
+
 
 def _remove_nones(o):
     return dict((k, v) for k, v in o.items() if v is not None)
+
+
+def resolve_volume_builder(name, value):
+    """Resolve specified volume with value dict."""
+    supported_type = ["hostPath"]
+    if "type" not in value or "field" not in value or "mounts" not in value:
+        logger.warning("Volume %s must contains 'type' 'field' and 'mounts'", name)
+        return None
+    type = value["type"]
+    if type not in supported_type:
+        logger.warning("%s of volume %s is unsupported yet", type, name)
+        return None
+    field = value["field"]
+    mounts_list = value["mounts"]
+    if type == "hostPath":
+        return HostPathVolumeBuilder(name=name, field=field, mounts_list=mounts_list)
+    return None
 
 
 class NamespaceBuilder(object):
@@ -273,47 +294,42 @@ class ResourceBuilder(object):
 class VolumeBuilder(object):
     """Builder for k8s volumes."""
 
-    def __init__(self, name, mount_path):
+    def __init__(self, name, mounts_list):
         self._name = name
-        self._mount_path = mount_path
+        self._mounts_list = mounts_list
+        if not isinstance(self._mounts_list, list):
+            self._mounts_list = [self._mounts_list]
+
+        for mount in self._mounts_list:
+            mount["name"] = self._name
 
     def build(self):
         raise NotImplementedError
 
     def build_mount(self):
-        mount_paths = []
-        for path in self._mount_path:
-            mount_paths.append({"name": self._name, "mountPath": path})
-        return mount_paths
+        return self._mounts_list
 
 
 class HostPathVolumeBuilder(VolumeBuilder):
     """Builder for k8s host volume."""
 
-    def __init__(self, name, mount_path, host_path, volume_type=None):
-        super().__init__(name, mount_path)
-        self._host_path = host_path
-        self._volume_type = volume_type or "DirectoryOrCreate"
+    def __init__(self, name, field, mounts_list):
+        super().__init__(name, mounts_list)
+        self._field = field
 
     def build(self):
-        return {
-            "name": self._name,
-            "hostPath": {"path": self._host_path, "type": self._volume_type},
-        }
+        return {"name": self._name, "hostPath": self._field}
 
 
 class EmptyDirVolumeBuilder(VolumeBuilder):
     """Builder for k8s empty-dir volumes."""
 
-    def __init__(self, name, mount_path, use_memory=False):
-        super().__init__(name, mount_path)
-        self._medium = "Memory" if use_memory else None
+    def __init__(self, name, field, mounts_list):
+        super().__init__(name, mounts_list)
+        self._field = field
 
     def build(self):
-        result = {"name": self._name, "emptyDir": {}}
-        if self._medium:
-            result["emptyDir"]["medium"] = self._medium
-        return result
+        return {"name": self._name, "emptyDir": self._field}
 
 
 class HttpHeaderBuilder(object):
@@ -880,6 +896,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         vineyard_shared_mem,
         engine_cpu,
         engine_mem,
+        volumes,
         timeout_seconds,
         waiting_for_delete,
         delete_namespace,
@@ -905,6 +922,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         self._vineyard_shared_mem = vineyard_shared_mem
         self._engine_cpu = engine_cpu
         self._engine_mem = engine_mem
+        self._volumes_str = json.dumps(volumes)
         self._timeout_seconds = timeout_seconds
         self._waiting_for_delete = waiting_for_delete
         self._delete_namespace = delete_namespace
@@ -1001,6 +1019,8 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             str(self._engine_cpu),
             "--k8s_engine_mem",
             self._engine_mem,
+            "--k8s_volumes",
+            self._volumes_str,
             "--timeout_seconds",
             str(self._timeout_seconds),
             "--waiting_for_delete",

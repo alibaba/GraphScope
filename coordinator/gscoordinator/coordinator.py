@@ -775,6 +775,12 @@ def parse_sys_args():
         help="Memory of engine container, suffix with ['Mi', 'Gi', 'Ti'].",
     )
     parser.add_argument(
+        "--k8s_volumes",
+        type=str,
+        default="{}",
+        help="A json string for kubernetes volumes.",
+    )
+    parser.add_argument(
         "--timeout_seconds",
         type=int,
         default=60,
@@ -820,6 +826,7 @@ def launch_graphscope():
             vineyard_shared_mem=args.k8s_vineyard_shared_mem,
             image_pull_policy=args.k8s_image_pull_policy,
             image_pull_secrets=args.k8s_image_pull_secrets,
+            volumes=args.k8s_volumes,
             num_workers=args.num_workers,
             instance_id=args.instance_id,
             log_level=args.log_level,

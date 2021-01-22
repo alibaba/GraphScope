@@ -49,6 +49,7 @@ from graphscope.deploy.kubernetes.resource_builder import GSEtcdBuilder
 from graphscope.deploy.kubernetes.resource_builder import GSGraphManagerBuilder
 from graphscope.deploy.kubernetes.resource_builder import HostPathVolumeBuilder
 from graphscope.deploy.kubernetes.resource_builder import ServiceBuilder
+from graphscope.deploy.kubernetes.resource_builder import resolve_volume_builder
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
@@ -109,6 +110,7 @@ class KubernetesClusterLauncher(Launcher):
         vineyard_shared_mem=None,
         image_pull_policy=None,
         image_pull_secrets=None,
+        volumes=None,
         num_workers=None,
         instance_id=None,
         log_level=None,
@@ -179,6 +181,8 @@ class KubernetesClusterLauncher(Launcher):
         else:
             self._image_pull_secrets = []
 
+        self._volumes = json.loads(volumes)
+
         self._host0 = None
         self._pod_name_list = None
         self._pod_ip_list = None
@@ -237,25 +241,27 @@ class KubernetesClusterLauncher(Launcher):
         engine_builder.add_volume(
             EmptyDirVolumeBuilder(
                 name="vineyard-ipc-volume",
-                mount_path=["/tmp/vineyard_workspace", "/home/maxgraph/data/vineyard"],
+                field={},
+                mounts_list=[
+                    {"mountPath": "/tmp/vineyard_workspace"},
+                    {"mountPath": "/home/maxgraph/data/vineyard"},
+                ],
             )
         )
         # volume2 is for shared memory
         engine_builder.add_volume(
             EmptyDirVolumeBuilder(
-                name="host-shm", mount_path=["/dev/shm"], use_memory=True
+                name="host-shm",
+                field={"medium": "Memory"},
+                mounts_list=[{"mountPath": "/dev/shm"}],
             )
         )
-        # volume3 is for CI test, mount ${GS_TEST_DIR} to /testingdata
-        if "GS_TEST_DIR" in os.environ:
-            engine_builder.add_volume(
-                HostPathVolumeBuilder(
-                    name="gstest",
-                    mount_path=["/testingdata"],
-                    host_path=os.environ["GS_TEST_DIR"],
-                    volume_type="Directory",
-                )
-            )
+        # volumes for test data
+        for name, volume in self._volumes.items():
+            volume_builder = resolve_volume_builder(name, volume)
+            if volume_builder is not None:
+                engine_builder.add_volume(volume_builder)
+
         # add env
         engine_builder.add_simple_envs({"GLOG_v": str(self._glog_level)})
         # add vineyard container

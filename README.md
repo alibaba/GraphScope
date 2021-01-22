@@ -78,10 +78,21 @@ import graphscope
 # Setting an env for mounting test data from local disk,
 # hence we can access data inside the pods.
 
-# assume we mount `~/test_data` to GS_TEST_DIR, which is `/testingdata` in pods.
-os.environ["GS_TEST_DIR"] = os.path.expanduser("~/test_data/")
+# assume we mount `~/test_data` to `/testingdata` in pods.
+k8s_volumes = {
+    "data": {
+        "type": "hostPath",
+        "field": {
+          "path": os.path.expanduser("~/test_data/"),
+          "type": "Directory"
+        },
+        "mounts": {
+          "mountPath": "/testingdata"
+        }
+    }
+}
 
-sess = graphscope.session()
+sess = graphscope.session(k8s_volumes=k8s_volumes)
 ```
 
 A session tries to launch a `coordinator`, which is the entry for the back-end engines.

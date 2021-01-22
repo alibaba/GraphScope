@@ -114,7 +114,6 @@ function run_gie_test() {
 #   None
 ##########################
 function run_k8s_test() {
-  export GS_TEST_DIR="${test_dir}"  # set k8s mount path
   export GS_IMAGE="${gs_image}"  # let session use specified image tag
   export GIE_MANAGER_IMAGE="${gie_manager_image}"
 
