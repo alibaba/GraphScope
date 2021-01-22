@@ -20,7 +20,7 @@ is_in_wsl=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && is_in_
 #   None
 ##########################
 
-function check_os_compatible() {
+function check_os_compatibility() {
   if [[ "${is_in_wsl}" == true && -z "${WSL_INTEROP}" ]]; then
     echo "Not support to run on WSL1, please use WSL2."
     exit 1
@@ -148,7 +148,7 @@ then
     exit 0
 fi
 
-check_os_compatible
+check_os_compatibility
 
 install_dependencies
 

@@ -22,11 +22,11 @@ GraphScope can run on clusters managed by [Kubernetes](https://kubernetes.io/) w
 
 ### Prerequisites
 
-To run GraphScope on your local, the following dependencies or tools are required.
+To run GraphScope on your local computer, the following dependencies or tools are required.
 
 - Docker
 - Python >= 3.6 (with pip)
-- Local Kubernetes cluster tool (e.g. [Minikube](https://minikube.sigs.k8s.io), [Kind](https://kind.sigs.k8s.io))
+- Local Kubernetes cluster set-up tool (e.g. [Minikube](https://minikube.sigs.k8s.io) or [Kind](https://kind.sigs.k8s.io))
 
 For Ubuntu/CentOs/WSL2, we provide a script to install the above dependencies and prepare the environment.
 
