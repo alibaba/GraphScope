@@ -35,13 +35,11 @@ def resolve_volume_builder(name, value):
     """Resolve specified volume with value dict."""
     supported_type = ["hostPath"]
     if "type" not in value or "field" not in value or "mounts" not in value:
-        logger.warning(
-            "Volume {} must contains 'type' 'field' and 'mounts'".format(name)
-        )
+        logger.warning("Volume %s must contains 'type' 'field' and 'mounts'", name)
         return None
     type = value["type"]
     if type not in supported_type:
-        logger.warning("{} of volume {} is unsupported yet".format(type, name))
+        logger.warning("%s of volume %s is unsupported yet", type, name)
         return None
     field = value["field"]
     mounts_list = value["mounts"]
