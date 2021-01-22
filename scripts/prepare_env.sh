@@ -27,7 +27,7 @@ function check_os_compatibility() {
   fi
 
   if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"CentOS"* ]]; then
-    echo "This script is only available on Unbuntu/CentOS/WSL2."
+    echo "This script is only available on Ubuntu/CentOS/WSL2."
     exit 1
   fi
 
