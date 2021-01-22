@@ -123,7 +123,6 @@ class CoordinatorServiceServicer(
             if not self._launcher.start():
                 raise RuntimeError("Coordinator Launching failed.")
 
-
         self._launcher_type = self._launcher.type()
         if self._launcher_type == types_pb2.K8S:
             self._pods_list = self._launcher.get_pods_list()
@@ -144,7 +143,6 @@ class CoordinatorServiceServicer(
 
         # control log fetching
         self._closed = False
-
 
         # dangling check
         self._dangling_seconds = dangling_seconds
@@ -179,7 +177,6 @@ class CoordinatorServiceServicer(
 
     def ConnectSession(self, request, context):
         # A session is already connected.
-        logger.info('connecting session.')
         if self._request:
             return self._make_response(
                 message_pb2.ConnectSessionResponse,
@@ -200,8 +197,8 @@ class CoordinatorServiceServicer(
         )
 
     def HeartBeat(self, request, context):
-        # Reset dangling detect timer
         if self._dangling_seconds != -1:
+            # Reset dangling detect timer
             self._dangling_detecting_timer.cancel()
             self._dangling_detecting_timer = threading.Timer(
                 interval=self._dangling_seconds, function=self._cleanup, args=(True,)
