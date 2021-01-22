@@ -18,17 +18,17 @@ Read more in the [whitepaper](https://github.com/alibaba/GraphScope/blob/main/do
 
 ## Getting Started
 
-GraphScope can run on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started, we can leverage [minikube](https://minikube.sigs.k8s.io/) (on Linux) to set up a *local* Kubernetes cluster and take advantage of pre-built Docker images as follows.
+GraphScope can run on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started, we can set up a *local* Kubernetes cluster and take advantage of pre-built Docker images as follows.
 
 ### Prerequisites
 
-To run GraphScope on your local computer with minikube, the following dependencies or tools are required.
+To run GraphScope on your local, the following dependencies or tools are required.
 
 - Docker
-- minikube
 - Python >= 3.6 (with pip)
+- Local Kubernetes cluster tool (e.g. [Minikube](https://minikube.sigs.k8s.io), [Kind](https://kind.sigs.k8s.io))
 
-For Linux distributions, we provide a script to install the above dependencies and prepare the environment.
+For Ubuntu/CentOs/WSL2, we provide a script to install the above dependencies and prepare the environment.
 
 ```bash
 # run the environment preparing script.

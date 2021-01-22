@@ -19,6 +19,29 @@ is_in_wsl=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && is_in_
 # Arguments:
 #   None
 ##########################
+
+function check_os_compatible() {
+  if [[ "${is_in_wsl}" == true && -z "${WSL_INTEROP}" ]]; then
+    echo "Not support to run on WSL1, please use WSL2."
+    exit 1
+  fi
+
+  echo "$(date '+%Y-%m-%d %H:%M:%S') preparing environment on '${platform}'"
+}
+
+function check_dependencies_version() {
+  # python
+  if ! hash python3; then
+    echo "Python3 is not installed"
+    exit 1
+  fi
+  ver=$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
+  if [ "$ver" -lt "36" ]; then
+    echo "This script requires python 3.6 or greater"
+    exit 1
+  fi
+}
+
 function install_dependencies() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') install dependencies."
   if [[ "${platform}" == *"Ubuntu"* ]]; then
@@ -125,7 +148,11 @@ then
     exit 0
 fi
 
+check_os_compatible
+
 install_dependencies
+
+check_dependencies_version
 
 start_docker
 
