@@ -778,7 +778,7 @@ def parse_sys_args():
         "--k8s_volumes",
         type=str,
         default="{}",
-        help="A str of dict for kubernetes volumes.",
+        help="A json string for kubernetes volumes.",
     )
     parser.add_argument(
         "--timeout_seconds",

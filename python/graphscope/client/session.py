@@ -226,6 +226,18 @@ class Session(object):
                     }
                 }
 
+                Also, you can mount a single volume with:
+
+                k8s_volumes = {
+                    "my-data": {
+                        "type": "hostPath",
+                        "field": {xxx},
+                        "mounts": {
+                            "mountPath": "<path1>"
+                        }
+                    }
+                }
+
             timeout_seconds (int, optional): For waiting service ready (or waiting for delete if
                 k8s_waiting_for_delete is True).
                 Also, after seconds of client disconnect, coordinator will clean up this graphscope instance.
