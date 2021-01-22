@@ -52,7 +52,6 @@ from graphscope.deploy.kubernetes.resource_builder import ServiceBuilder
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
-from graphscope.framework.utils import random_string
 from graphscope.proto import types_pb2
 
 from gscoordinator.io_utils import PipeWatcher
@@ -111,6 +110,7 @@ class KubernetesClusterLauncher(Launcher):
         image_pull_policy=None,
         image_pull_secrets=None,
         num_workers=None,
+        instance_id=None,
         log_level=None,
         timeout_seconds=None,
         waiting_for_delete=None,
@@ -125,19 +125,21 @@ class KubernetesClusterLauncher(Launcher):
         self._core_api = kube_client.CoreV1Api(self._api_client)
         self._app_api = kube_client.AppsV1Api(self._api_client)
 
+        self._instance_id = instance_id
+
         # random for multiple k8s cluster in the same namespace
-        self._engine_name = self._engine_name_prefix + random_string(6)
-        self._etcd_name = self._etcd_name_prefix + random_string(6)
-        self._etcd_service_name = self._etcd_service_name_prefix + random_string(6)
+        self._engine_name = self._engine_name_prefix + self._instance_id
+        self._etcd_name = self._etcd_name_prefix + self._instance_id
+        self._etcd_service_name = self._etcd_service_name_prefix + self._instance_id
 
         self._gie_graph_manager_name = (
-            self._gie_graph_manager_name_prefix + random_string(6)
+            self._gie_graph_manager_name_prefix + self._instance_id
         )
         self._gie_graph_manager_service_name = (
-            self._gie_graph_manager_service_name_prefix + random_string(6)
+            self._gie_graph_manager_service_name_prefix + self._instance_id
         )
         self._vineyard_service_name = (
-            self._vineyard_service_name_prefix + random_string(6)
+            self._vineyard_service_name_prefix + self._instance_id
         )
 
         self._namespace = namespace

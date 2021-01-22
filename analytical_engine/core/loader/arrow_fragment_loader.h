@@ -437,7 +437,7 @@ class ArrowFragmentLoader {
             vineyard::GatherVTables(
                 client_, {vineyard::VYObjectIDFromString(vertices[0]->values)},
                 comm_spec_.local_id(), comm_spec_.local_num()));
-        if (tables.size() == 1 || tables[0] != nullptr) {
+        if (tables.size() == 1 && tables[0] != nullptr) {
           std::shared_ptr<arrow::KeyValueMetadata> meta;
           if (tables[0]->schema()->metadata() == nullptr) {
             meta = std::make_shared<arrow::KeyValueMetadata>();

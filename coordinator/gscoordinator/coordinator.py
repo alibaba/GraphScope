@@ -651,6 +651,11 @@ def parse_sys_args():
         help="The number of engine workers.",
     )
     parser.add_argument(
+        "--instance_id",
+        type=str,
+        help="Unique id for each GraphScope instance.",
+    )
+    parser.add_argument(
         "--port",
         type=int,
         default=63800,
@@ -823,6 +828,7 @@ def launch_graphscope():
             image_pull_policy=args.k8s_image_pull_policy,
             image_pull_secrets=args.k8s_image_pull_secrets,
             num_workers=args.num_workers,
+            instance_id=args.instance_id,
             log_level=args.log_level,
             timeout_seconds=args.timeout_seconds,
             waiting_for_delete=args.waiting_for_delete,
