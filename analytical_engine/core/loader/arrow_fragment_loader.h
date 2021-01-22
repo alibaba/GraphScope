@@ -437,7 +437,7 @@ class ArrowFragmentLoader {
             vineyard::GatherVTables(
                 client_, {vineyard::VYObjectIDFromString(vertices[0]->values)},
                 comm_spec_.local_id(), comm_spec_.local_num()));
-        if (tables.size() == 1) {
+        if (tables.size() == 1 && tables[0] != nullptr) {
           std::shared_ptr<arrow::KeyValueMetadata> meta;
           if (tables[0]->schema()->metadata() == nullptr) {
             meta = std::make_shared<arrow::KeyValueMetadata>();
@@ -485,11 +485,16 @@ class ArrowFragmentLoader {
                                       total_parts, vertices[i]->properties));
           table = tmp;
         } else if (vertices[i]->protocol == "vineyard") {
+          VLOG(2) << "read vertex table from vineyard: " << vertices[i]->values;
           VY_OK_OR_RAISE(vineyard::ReadTableFromVineyard(
               client_, vineyard::VYObjectIDFromString(vertices[i]->values),
               table, comm_spec_.local_id(), comm_spec_.local_num()));
-          LOG(INFO) << "read table from vineyard: " << vertices[i]->values
-                    << ": " << table->schema()->ToString();
+          if (table != nullptr) {
+            VLOG(2) << "schema of vertex table: "
+                    << table->schema()->ToString();
+          } else {
+            VLOG(2) << "vertex table is null";
+          }
         } else {
           LOG(ERROR) << "Unsupported protocol: " << vertices[i]->protocol;
         }
@@ -612,7 +617,8 @@ class ArrowFragmentLoader {
                             {{vineyard::VYObjectIDFromString(
                                 edges[0]->sub_labels[0].values)}},
                             comm_spec_.local_id(), comm_spec_.local_num()));
-        if (tables.size() == 1 && tables[0].size() == 1) {
+        if (tables.size() == 1 && tables[0].size() == 1 &&
+            tables[0][0] != nullptr) {
           std::shared_ptr<arrow::KeyValueMetadata> meta;
           if (tables[0][0]->schema()->metadata() == nullptr) {
             meta = std::make_shared<arrow::KeyValueMetadata>();
@@ -675,11 +681,17 @@ class ArrowFragmentLoader {
                                    sub_labels[j].column_num, index, total_parts,
                                    sub_labels[j].properties));
           } else if (sub_labels[j].protocol == "vineyard") {
+            LOG(INFO) << "read edge table from vineyard: "
+                      << sub_labels[j].values;
             VY_OK_OR_RAISE(vineyard::ReadTableFromVineyard(
                 client_, vineyard::VYObjectIDFromString(sub_labels[j].values),
                 table, comm_spec_.local_id(), comm_spec_.local_num()));
-            LOG(INFO) << "read table from vineyard: " << sub_labels[j].values
-                      << ": " << table->schema()->ToString();
+            if (table == nullptr) {
+              VLOG(2) << "edge table is null";
+            } else {
+              VLOG(2) << "schema of edge table: "
+                      << table->schema()->ToString();
+            }
           } else {
             LOG(ERROR) << "Unrecognized protocol: " << sub_labels[j].protocol;
           }
