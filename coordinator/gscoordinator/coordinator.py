@@ -147,10 +147,10 @@ class CoordinatorServiceServicer(
         # dangling check
         self._dangling_seconds = dangling_seconds
         if (self._dangling_seconds != -1):
-          self._dangling_detecting_timer = threading.Timer(
-              interval=self._dangling_seconds, function=self._cleanup, args=(True,)
-          )
-          self._dangling_detecting_timer.start()
+            self._dangling_detecting_timer = threading.Timer(
+                interval=self._dangling_seconds, function=self._cleanup, args=(True,)
+            )
+            self._dangling_detecting_timer.start()
 
         atexit.register(self._cleanup)
 
