@@ -25,7 +25,6 @@ import threading
 import time
 
 import grpc
-
 from graphscope.config import GSConfig as gs_config
 from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import GRPCError
@@ -148,9 +147,14 @@ class GRPCClient(object):
         return self._stub.HeartBeat(request)
 
     @catch_grpc_error
-    def create_interactive_engine(self, object_id, schema_path):
+    def create_interactive_engine(
+        self, object_id, schema_path, gremlin_server_cpu, gremlin_server_mem
+    ):
         request = message_pb2.CreateInteractiveRequest(
-            object_id=object_id, schema_path=schema_path
+            object_id=object_id,
+            schema_path=schema_path,
+            gremlin_server_cpu=gremlin_server_cpu,
+            gremlin_server_mem=gremlin_server_mem,
         )
         response = self._stub.CreateInteractiveInstance(request)
         return check_grpc_response(response)

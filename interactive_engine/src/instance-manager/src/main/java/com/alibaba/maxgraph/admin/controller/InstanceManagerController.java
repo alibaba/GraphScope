@@ -92,7 +92,9 @@ public class InstanceManagerController {
     public CreateInstanceEntity createInstance(@RequestParam("graphName") String graphName,
                                                @RequestParam("schemaJson") String schemaJson,
                                                @RequestParam("podNameList") String podNameList,
-                                               @RequestParam("containerName") String containerName) throws Exception {
+                                               @RequestParam("containerName") String containerName,
+                                               @RequestParam("gremlinServerCpu") String gremlinServerCpu,
+                                               @RequestParam("gremlinServerMem") String gremlinServerMem) throws Exception {
         CreateInstanceEntity createInstanceEntity = new CreateInstanceEntity();
         int errorCode;
         String errorMessage;
@@ -123,6 +125,8 @@ public class InstanceManagerController {
             createCommandList.add(schemaPath);
             createCommandList.add(podNameList);
             createCommandList.add(containerName);
+            createCommandList.add(gremlinServerCpu);
+            createCommandList.add(gremlinServerMem);
             String command = StringUtils.join(createCommandList, " ");
             logger.info("start to create instance with command " + command);
             Process process = Runtime.getRuntime().exec(command);

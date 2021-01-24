@@ -150,6 +150,12 @@ class Session(object):
         k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
         k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
         k8s_coordinator_mem=gs_config.k8s_coordinator_mem,
+        k8s_etcd_cpu=gs_config.k8s_etcd_cpu,
+        k8s_etcd_mem=gs_config.k8s_etcd_mem,
+        k8s_zookeeper_cpu=gs_config.k8s_zookeeper_cpu,
+        k8s_zookeeper_mem=gs_config.k8s_zookeeper_mem,
+        k8s_gie_graph_manager_cpu=gs_config.k8s_gie_graph_manager_cpu,
+        k8s_gie_graph_manager_mem=gs_config.k8s_gie_graph_manager_mem,
         k8s_vineyard_cpu=gs_config.k8s_vineyard_cpu,
         k8s_vineyard_mem=gs_config.k8s_vineyard_mem,
         k8s_vineyard_shared_mem=gs_config.k8s_vineyard_shared_mem,
@@ -204,6 +210,18 @@ class Session(object):
             k8s_coordinator_cpu (float, optional): Minimum number of CPU cores request for coordinator pod. Defaults to 1.0.
 
             k8s_coordinator_mem (str, optional): Minimum number of memory request for coordinator pod. Defaults to '4Gi'.
+
+            k8s_etcd_cpu (float, optional): Minimum number of CPU cores request for etcd pod. Defaults to 0.5.
+
+            k8s_etcd_mem (str, optional): Minimum number of memory request for etcd pod. Defaults to '128Mi'.
+
+            k8s_zookeeper_cpu (float, optional): Minimum number of CPU cores request for zookeeper container. Defaults to 0.5.
+
+            k8s_zookeeper_mem (str, optional): Minimum number of memory request for zookeeper container. Defaults to '128Mi'.
+
+            k8s_gie_graph_manager_cpu (float, optional): Minimum number of CPU cores request for graphmanager container. Defaults to 1.0.
+
+            k8s_gie_graph_manager_mem (str, optional): Minimum number of memory request for graphmanager container. Defaults to '256Mi'.
 
             k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the
                 containers in a pod. Defaults to {}. Only 'hostPath' supported yet. For example, we can mount host path with:
@@ -283,6 +301,12 @@ class Session(object):
             "k8s_zookeeper_image",
             "k8s_coordinator_cpu",
             "k8s_coordinator_mem",
+            "k8s_etcd_cpu",
+            "k8s_etcd_mem",
+            "k8s_zookeeper_cpu",
+            "k8s_zookeeper_mem",
+            "k8s_gie_graph_manager_cpu",
+            "k8s_gie_graph_manager_mem",
             "k8s_vineyard_cpu",
             "k8s_vineyard_mem",
             "k8s_vineyard_shared_mem",
@@ -642,7 +666,12 @@ class Session(object):
                 image_pull_secrets=self._config_params["k8s_image_pull_secrets"],
                 vineyard_cpu=self._config_params["k8s_vineyard_cpu"],
                 vineyard_mem=self._config_params["k8s_vineyard_mem"],
-                vineyard_shared_mem=self._config_params["k8s_vineyard_shared_mem"],
+                etcd_cpu=self._config_params["k8s_etcd_cpu"],
+                etcd_mem=self._config_params["k8s_etcd_mem"],
+                zookeeper_cpu=self._config_params["k8s_zookeeper_cpu"],
+                zookeeper_mem=self._config_params["k8s_zookeeper_mem"],
+                gie_graph_manager_cpu=self._config_params["k8s_gie_graph_manager_cpu"],
+                gie_graph_manager_mem=self._config_params["k8s_gie_graph_manager_mem"],
                 engine_cpu=self._config_params["k8s_engine_cpu"],
                 engine_mem=self._config_params["k8s_engine_mem"],
                 coordinator_cpu=float(self._config_params["k8s_coordinator_cpu"]),
@@ -859,7 +888,10 @@ class Session(object):
         from graphscope.interactive.query import InteractiveQuery
 
         response = self._grpc_client.create_interactive_engine(
-            graph.vineyard_id, graph.schema_path
+            object_id=graph.vineyard_id,
+            schema_path=graph.schema_path,
+            gremlin_server_cpu=gs_config.k8s_gie_gremlin_server_cpu,
+            gremlin_server_mem=gs_config.k8s_gie_gremlin_server_mem,
         )
         interactive_query = InteractiveQuery(
             graphscope_session=self,

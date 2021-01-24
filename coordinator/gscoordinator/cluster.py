@@ -103,6 +103,12 @@ class KubernetesClusterLauncher(Launcher):
         gie_graph_manager_image=None,
         coordinator_name=None,
         coordinator_service_name=None,
+        etcd_cpu=None,
+        etcd_mem=None,
+        zookeeper_cpu=None,
+        zookeeper_mem=None,
+        gie_graph_manager_cpu=None,
+        gie_graph_manager_mem=None,
         engine_cpu=None,
         engine_mem=None,
         vineyard_cpu=None,
@@ -165,12 +171,18 @@ class KubernetesClusterLauncher(Launcher):
 
         # etcd pod info
         self._etcd_image = etcd_image
+        self._etcd_cpu = etcd_cpu
+        self._etcd_mem = etcd_mem
 
         # zookeeper pod info
         self._zookeeper_image = zookeeper_image
+        self._zookeeper_cpu = zookeeper_cpu
+        self._zookeeper_mem = zookeeper_mem
 
         # interactive engine graph manager info
         self._gie_graph_manager_image = gie_graph_manager_image
+        self._gie_graph_manager_cpu = gie_graph_manager_cpu
+        self._gie_graph_manager_mem = gie_graph_manager_mem
 
         self._image_pull_policy = image_pull_policy
 
@@ -325,6 +337,8 @@ class KubernetesClusterLauncher(Launcher):
             name=self._etcd_container_name,
             service_name=self._etcd_service_name,
             image=self._etcd_image,
+            cpu=self._etcd_cpu,
+            mem=self._etcd_mem,
             listen_peer_service_port=self._random_etcd_listen_peer_service_port,
             listen_client_service_port=self._random_etcd_listen_client_service_port,
         )
@@ -446,6 +460,8 @@ class KubernetesClusterLauncher(Launcher):
         graph_manager_builder.add_manager_container(
             name=self._gie_manager_container_name,
             image=self._gie_graph_manager_image,
+            cpu=self._gie_graph_manager_cpu,
+            mem=self._gie_graph_manager_mem,
             port=self._interactive_engine_manager_port,
         )
 
@@ -453,6 +469,8 @@ class KubernetesClusterLauncher(Launcher):
         graph_manager_builder.add_zookeeper_container(
             name=self._gie_zookeeper_container_name,
             image=self._zookeeper_image,
+            cpu=self._zookeeper_cpu,
+            mem=self._zookeeper_mem,
             port=self._zookeeper_port,
         )
 

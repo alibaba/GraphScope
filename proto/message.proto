@@ -141,6 +141,9 @@ message CreateInteractiveRequest {
   // object id of the graph in vineyard
   int64 object_id    = 1;
   string schema_path = 2;
+  // resource
+  float gremlin_server_cpu = 3;
+  string gremlin_server_mem = 4;
 }
 
 message CreateInteractiveResponse {

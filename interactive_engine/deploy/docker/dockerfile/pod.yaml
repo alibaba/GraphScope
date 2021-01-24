@@ -16,6 +16,13 @@ spec:
   #           - k8s_node_host 
   containers:
   - image: gremlin_image
+    resources:
+      requests:
+        cpu: gremlin_server_cpu
+        memory: gremlin_server_mem
+      limits:
+        cpu: gremlin_server_cpu
+        memory: gremlin_server_mem
     name: gremlin-container
     imagePullPolicy: IfNotPresent
     args: ["/home/maxgraph/frontend-entrypoint.sh"]
@@ -26,6 +33,13 @@ spec:
     - mountPath: /home/maxgraph/config
       name: config-volume
   - image: coordinator_image
+    resources:
+      requests:
+        cpu: gremlin_server_cpu
+        memory: gremlin_server_mem
+      limits:
+        cpu: gremlin_server_cpu
+        memory: gremlin_server_mem
     name: coordinator-container
     imagePullPolicy: IfNotPresent
     args: ["/home/maxgraph/coordinator-entrypoint.sh"]
