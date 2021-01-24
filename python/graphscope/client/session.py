@@ -215,13 +215,17 @@ class Session(object):
 
             k8s_etcd_mem (str, optional): Minimum number of memory request for etcd pod. Defaults to '128Mi'.
 
-            k8s_zookeeper_cpu (float, optional): Minimum number of CPU cores request for zookeeper container. Defaults to 0.5.
+            k8s_zookeeper_cpu (float, optional):
+                Minimum number of CPU cores request for zookeeper container. Defaults to 0.5.
 
-            k8s_zookeeper_mem (str, optional): Minimum number of memory request for zookeeper container. Defaults to '128Mi'.
+            k8s_zookeeper_mem (str, optional):
+                Minimum number of memory request for zookeeper container. Defaults to '128Mi'.
 
-            k8s_gie_graph_manager_cpu (float, optional): Minimum number of CPU cores request for graphmanager container. Defaults to 1.0.
+            k8s_gie_graph_manager_cpu (float, optional):
+                Minimum number of CPU cores request for graphmanager container. Defaults to 1.0.
 
-            k8s_gie_graph_manager_mem (str, optional): Minimum number of memory request for graphmanager container. Defaults to '256Mi'.
+            k8s_gie_graph_manager_mem (str, optional):
+                Minimum number of memory request for graphmanager container. Defaults to '256Mi'.
 
             k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the
                 containers in a pod. Defaults to {}. Only 'hostPath' supported yet. For example, we can mount host path with:

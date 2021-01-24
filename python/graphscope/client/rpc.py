@@ -25,6 +25,7 @@ import threading
 import time
 
 import grpc
+
 from graphscope.config import GSConfig as gs_config
 from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import GRPCError

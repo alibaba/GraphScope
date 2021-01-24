@@ -90,6 +90,24 @@ class KubernetesCluster(object):
         image_pull_secrets: list of str, optional
             A list of secret name used to pulling image. Defaults to None.
 
+        etcd_cpu: float
+            Minimum number of CPU cores request for etcd pod.
+
+        etcd_mem: str
+             Minimum number of memory request for etcd pod.
+
+        zookeeper_cpu: float
+            Minimum number of CPU cores request for zookeeper container.
+
+        zookeeper_mem: str:
+            Minimum number of memory request for zookeeper container.
+
+        gie_graph_manager_cpu: float
+            Minimum number of CPU cores request for graph manager container.
+
+        gie_graph_manager_mem: str
+            Minimum number of memory request for graph manager container.
+
         vineyard_cpu: float
             Minimum number of CPU cores request for vineyard container.
 
