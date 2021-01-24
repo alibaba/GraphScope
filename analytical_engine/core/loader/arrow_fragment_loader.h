@@ -435,7 +435,7 @@ class ArrowFragmentLoader {
         BOOST_LEAF_AUTO(
             tables,
             vineyard::GatherVTables(
-                client_, {vineyard::VYObjectIDFromString(vertices[0]->values)},
+                client_, {vineyard::ObjectIDFromString(vertices[0]->values)},
                 comm_spec_.local_id(), comm_spec_.local_num()));
         if (tables.size() == 1 && tables[0] != nullptr) {
           std::shared_ptr<arrow::KeyValueMetadata> meta;
@@ -487,8 +487,8 @@ class ArrowFragmentLoader {
         } else if (vertices[i]->protocol == "vineyard") {
           VLOG(2) << "read vertex table from vineyard: " << vertices[i]->values;
           VY_OK_OR_RAISE(vineyard::ReadTableFromVineyard(
-              client_, vineyard::VYObjectIDFromString(vertices[i]->values),
-              table, comm_spec_.local_id(), comm_spec_.local_num()));
+              client_, vineyard::ObjectIDFromString(vertices[i]->values), table,
+              comm_spec_.local_id(), comm_spec_.local_num()));
           if (table != nullptr) {
             VLOG(2) << "schema of vertex table: "
                     << table->schema()->ToString();
@@ -614,7 +614,7 @@ class ArrowFragmentLoader {
         BOOST_LEAF_AUTO(tables,
                         vineyard::GatherETables(
                             client_,
-                            {{vineyard::VYObjectIDFromString(
+                            {{vineyard::ObjectIDFromString(
                                 edges[0]->sub_labels[0].values)}},
                             comm_spec_.local_id(), comm_spec_.local_num()));
         if (tables.size() == 1 && tables[0].size() == 1 &&
@@ -684,7 +684,7 @@ class ArrowFragmentLoader {
             LOG(INFO) << "read edge table from vineyard: "
                       << sub_labels[j].values;
             VY_OK_OR_RAISE(vineyard::ReadTableFromVineyard(
-                client_, vineyard::VYObjectIDFromString(sub_labels[j].values),
+                client_, vineyard::ObjectIDFromString(sub_labels[j].values),
                 table, comm_spec_.local_id(), comm_spec_.local_num()));
             if (table == nullptr) {
               VLOG(2) << "edge table is null";

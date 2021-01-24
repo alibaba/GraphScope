@@ -73,11 +73,9 @@ class MPIGlobalTensorBuilder : public vineyard::GlobalTensorBuilder,
   }
 
   vineyard::Status Build(vineyard::Client& client) override {
-    GatherWorkerObjectIDs(client, comm_spec_, local_chunk_ids_,
-                          this->partitions_builder_);
-    if (comm_spec_.worker_id() == 0) {
-      this->set_partitions_(this->partitions_builder_.Seal(client));
-    }
+    std::vector<vineyard::ObjectID> all_ids;
+    GatherWorkerObjectIDs(client, comm_spec_, local_chunk_ids_, all_ids);
+    this->AddPartitions(all_ids);
     MPI_Barrier(comm_spec_.comm());
     return vineyard::Status::OK();
   }
@@ -123,8 +121,6 @@ class MPIGlobalDataFrameBuilder : public vineyard::GlobalDataFrameBuilder,
     }
     SyncGlobalObjectID(comm_spec_, id);  // this sync can be seen as a barrier
     if (comm_spec_.worker_id() != 0) {
-      // FIXME: the aim of `Construct` is to fillup the ObjectSet, needs better
-      // design.
       df = std::make_shared<vineyard::GlobalDataFrame>();
       vineyard::ObjectMeta meta;
       VINEYARD_CHECK_OK(client.GetMetaData(id, meta, true));
@@ -134,11 +130,9 @@ class MPIGlobalDataFrameBuilder : public vineyard::GlobalDataFrameBuilder,
   }
 
   vineyard::Status Build(vineyard::Client& client) override {
-    GatherWorkerObjectIDs(client, comm_spec_, local_chunk_ids_,
-                          object_set_builder_);
-    if (comm_spec_.worker_id() == 0) {
-      this->set_objects_(object_set_builder_.Seal(client));
-    }
+    std::vector<vineyard::ObjectID> all_ids;
+    GatherWorkerObjectIDs(client, comm_spec_, local_chunk_ids_, all_ids);
+    this->AddPartitions(all_ids);
     MPI_Barrier(comm_spec_.comm());
     return vineyard::Status::OK();
   }

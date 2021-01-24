@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
 
   LOG(INFO) << "Connected to IPCServer: " << ipc_socket;
 
-  vineyard::ObjectID fragment_id = vineyard::VYObjectIDFromString(frag_id_str);
+  vineyard::ObjectID fragment_id = vineyard::ObjectIDFromString(frag_id_str);
 
   MPI_Barrier(comm_spec.comm());
 

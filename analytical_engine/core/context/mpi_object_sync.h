@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "grape/worker/comm_spec.h"
-#include "vineyard/basic/ds/object_set.h"
 #include "vineyard/client/client.h"
 
 namespace gs {
@@ -41,43 +40,40 @@ class MPIObjectSync {
 
   void GatherWorkerObjectID(vineyard::Client& client,
                             grape::CommSpec const& comm_spec,
-                            vineyard::ObjectID const object_id,
-                            vineyard::ObjectSetBuilder& target_chunk_map) {
+                            vineyard::ObjectID object_id,
+                            std::vector<vineyard::ObjectID>& assembled_ids) {
     // gather chunk id per worker, and add to the target chunkmap
     if (comm_spec.worker_id() == 0) {
-      target_chunk_map.AddObject(client.instance_id(), object_id);
+      assembled_ids.push_back(object_id);
       for (int src_worker_id = 1; src_worker_id < comm_spec.worker_num();
            ++src_worker_id) {
-        std::pair<vineyard::InstanceID, vineyard::ObjectID> chunk;
-        grape::recv_buffer(&chunk, 1, src_worker_id, comm_spec.comm(), 0x10);
-        target_chunk_map.AddObject(chunk.first, chunk.second);
+        vineyard::ObjectID recv_object_id;
+        grape::recv_buffer(&recv_object_id, 1, src_worker_id, comm_spec.comm(),
+                           0x10);
+        assembled_ids.push_back(recv_object_id);
       }
     } else {
-      auto chunk = std::make_pair(client.instance_id(), object_id);
-      grape::send_buffer(&chunk, 1, 0, comm_spec.comm(), 0x10);
+      grape::send_buffer(&object_id, 1, 0, comm_spec.comm(), 0x10);
     }
   }
 
   void GatherWorkerObjectIDs(vineyard::Client& client,
                              grape::CommSpec const& comm_spec,
                              std::vector<vineyard::ObjectID> const& object_ids,
-                             vineyard::ObjectSetBuilder& target_chunk_map) {
-    // gather chunk id per worker, and add to the target chunkmap
+                             std::vector<vineyard::ObjectID>& assembled_ids) {
+    // gather chunk id vector per worker, and add to the target chunkmap
     if (comm_spec.worker_id() == 0) {
-      target_chunk_map.AddObjects(client.instance_id(), object_ids);
+      assembled_ids.insert(assembled_ids.end(), object_ids.begin(),
+                           object_ids.end());
       for (int src_worker_id = 1; src_worker_id < comm_spec.worker_num();
            ++src_worker_id) {
-        vineyard::InstanceID instance_id = vineyard::UnspecifiedInstanceID();
         std::vector<vineyard::ObjectID> recv_object_ids;
-        grape::recv_buffer(&instance_id, 1, src_worker_id, comm_spec.comm(),
-                           0x11);
         grape::RecvVector(recv_object_ids, src_worker_id, comm_spec.comm(),
                           0x12);
-        target_chunk_map.AddObjects(instance_id, recv_object_ids);
+        assembled_ids.insert(assembled_ids.end(), recv_object_ids.begin(),
+                             recv_object_ids.end());
       }
     } else {
-      auto instance_id = client.instance_id();
-      grape::send_buffer(&instance_id, 1, 0, comm_spec.comm(), 0x11);
       grape::SendVector(object_ids, 0, comm_spec.comm(), 0x12);
     }
   }

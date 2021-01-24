@@ -21,6 +21,7 @@ import json
 import logging
 from typing import Mapping
 
+from graphscope.client.session import get_session_by_id
 from graphscope.framework.dag_utils import add_column
 from graphscope.framework.dag_utils import copy_graph
 from graphscope.framework.dag_utils import create_graph
@@ -539,3 +540,82 @@ class Graph(object):
             instance: learning instance
         """
         self._learning_instance_list.append(instance)
+
+    def serialize(self, path, **kwargs):
+        """Serialize graph to a location.
+        The meta and data of graph is dumped to specified location,
+        and can be restored by `Graph.deserialize` in other sessions.
+
+        Each worker will write a `path_{worker_id}.meta` file and
+        a `path_{worker_id}` file to storage.
+        Args:
+            path (str): supported storages are local, hdfs, oss, s3
+        """
+        import vineyard
+        import vineyard.io
+
+        sess = get_session_by_id(self.session_id)
+        deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
+        conf = sess.info["engine_config"]
+        vineyard_endpoint = conf["vineyard_rpc_endpoint"]
+        vineyard_ipc_socket = conf["vineyard_socket"]
+        if sess.info["type"] == "k8s":
+            hosts = [
+                "{}:{}".format(sess.info["namespace"], s)
+                for s in sess.info["engine_hosts"].split(",")
+            ]
+        else:  # type == "hosts"
+            hosts = sess.info["engine_hosts"].split(",")
+        vineyard.io.serialize(
+            path,
+            vineyard.ObjectID(self._vineyard_id),
+            type="global",
+            vineyard_ipc_socket=vineyard_ipc_socket,
+            vineyard_endpoint=vineyard_endpoint,
+            storage_options=kwargs,
+            deployment=deployment,
+            hosts=hosts,
+        )
+
+    @classmethod
+    def deserialize(cls, path, sess, **kwargs):
+        """Construct a `Graph` by deserialize from `path`.
+        It will read all serialization files, which is dumped by
+        `Graph.serialize`.
+        If any serialize file doesn't exists or broken, will error out.
+
+        Args:
+            path (str): Path contains the serialization files.
+            sess (`graphscope.Session`): The target session
+                that the graph will be construct in
+
+        Returns:
+            `Graph`: A new graph object. Schema and data is supposed to be
+                identical with the one that called serialized method.
+        """
+        import vineyard
+        import vineyard.io
+
+        deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
+        conf = sess.info["engine_config"]
+        vineyard_endpoint = conf["vineyard_rpc_endpoint"]
+        vineyard_ipc_socket = conf["vineyard_socket"]
+        if sess.info["type"] == "k8s":
+            hosts = [
+                "{}:{}".format(sess.info["namespace"], s)
+                for s in sess.info["engine_hosts"].split(",")
+            ]
+        else:  # type == "hosts"
+            hosts = sess.info["engine_hosts"].split(",")
+        graph_id = vineyard.io.deserialize(
+            path,
+            type="global",
+            vineyard_ipc_socket=vineyard_ipc_socket,
+            vineyard_endpoint=vineyard_endpoint,
+            storage_options=kwargs,
+            deployment=deployment,
+            hosts=hosts,
+        )
+        return cls(
+            sess.session_id, VineyardObject(object_id=int(vineyard.ObjectID(graph_id)))
+        )

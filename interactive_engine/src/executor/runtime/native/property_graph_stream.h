@@ -241,7 +241,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
 
   void Construct(const ObjectMeta& meta) override {
     meta_ = meta;
-    this->id_ = VYObjectIDFromString(meta.GetKeyValue("id"));
+    this->id_ = ObjectIDFromString(meta.GetKeyValue("id"));
     this->stream_index_ = meta.GetKeyValue<int>("stream_index");
     this->vertex_stream_ =
       std::dynamic_pointer_cast<vineyard::DataframeStream>(meta.GetMember("vertex_stream"));

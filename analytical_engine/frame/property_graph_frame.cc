@@ -82,6 +82,7 @@ void LoadGraph(
           VINEYARD_CHECK_OK(client.GetMetaData(frag_id, obj_meta));
           vineyard::ObjectID new_frag_id;
           VINEYARD_CHECK_OK(client.CreateMetaData(obj_meta, new_frag_id));
+          VINEYARD_CHECK_OK(client.Persist(new_frag_id));
           auto new_frag = std::static_pointer_cast<_GRAPH_TYPE>(
               client.GetObject(new_frag_id));
 

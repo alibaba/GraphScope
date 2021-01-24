@@ -26,7 +26,7 @@ if os.path.isfile(version_file_path):
         __version__ = fp.read().strip()
     __version_tuple__ = (int(v) for v in __version__.split("."))
 else:
-    __version__ = "0.1.2"
-    __version_tuple__ = (0, 1, 2)
+    __version__ = "0.1.3"
+    __version_tuple__ = (0, 1, 3)
 
 del version_file_path

@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
   VINEYARD_CHECK_OK(client.GetName(name_to_wait, global_streamobject_id, true));
 
   LOG(INFO) << "receive global stream object id: "
-            << vineyard::VYObjectIDToString(global_streamobject_id)
+            << vineyard::ObjectIDToString(global_streamobject_id)
             << ", " << global_streamobject_id;
 
   MPI_Barrier(comm_spec.comm());
