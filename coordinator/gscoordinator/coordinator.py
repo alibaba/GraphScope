@@ -146,7 +146,7 @@ class CoordinatorServiceServicer(
 
         # dangling check
         self._dangling_seconds = dangling_seconds
-        if (self._dangling_seconds != -1):
+        if self._dangling_seconds != -1:
             self._dangling_detecting_timer = threading.Timer(
                 interval=self._dangling_seconds, function=self._cleanup, args=(True,)
             )
@@ -616,7 +616,7 @@ class CoordinatorServiceServicer(
             config["vineyard_service_name"] = self._launcher.get_vineyard_service_name()
             config["vineyard_rpc_endpoint"] = self._launcher.get_vineyard_rpc_endpoint()
         else:
-            config['engine_hosts'] = self._launcher.hosts
+            config["engine_hosts"] = self._launcher.hosts
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):

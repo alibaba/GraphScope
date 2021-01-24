@@ -390,7 +390,7 @@ class Session(object):
         else:
             info["type"] = "hosts"
             if self._config_params["addr"] is not None:
-                info["engine_hosts"] = self._engine_config['engine_hosts']
+                info["engine_hosts"] = self._engine_config["engine_hosts"]
             else:
                 info["engine_hosts"] = ",".join(self._config_params["hosts"])
 
