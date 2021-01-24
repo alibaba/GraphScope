@@ -27,8 +27,16 @@ function check_os_compatibility() {
   fi
 
   if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"CentOS"* ]]; then
-    echo "This script is only available on Ubuntu/CentOS/WSL2."
+    echo "This script is only available on Ubuntu/CentOS."
     exit 1
+  fi
+
+  if [[ "${platform}" != *"Ubuntu"* && "$(grep '^VERSION' /etc/os-release)" -lt "12.04" ]]; then
+    echo "This script requires Ubuntu 12.04 or greater."
+  fi
+
+  if [[ "${platform}" != *"CentOS"* && "$(grep '^VERSION' /etc/os-release)" -lt "7" ]]; then
+    echo "This script requires CentOS 7 or greater."
   fi
 
   echo "$(date '+%Y-%m-%d %H:%M:%S') preparing environment on '${platform}'"
@@ -42,7 +50,7 @@ function check_dependencies_version() {
   fi
   ver=$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
   if [ "$ver" -lt "36" ]; then
-    echo "GraphScope requires python 3.6 or greater"
+    echo "GraphScope requires python 3.6 or greater."
     exit 1
   fi
 }
