@@ -76,7 +76,7 @@ $ pip show # 查看是否安装成功
 
 ```bash
 $ cd ipygraphiin
-$ jupyter labextension instanll .
+$ jupyter labextension install .
 ```
 
 **重新构建 jupyterlab 应用**

@@ -619,3 +619,24 @@ class Graph(object):
         return cls(
             sess.session_id, VineyardObject(object_id=int(vineyard.ObjectID(graph_id)))
         )
+
+    def draw(self, vertices, hop, interactive_query=None):
+        """Visualize the graph data in the result cell when the draw functions are invoked
+
+        Args:
+            vertices (list): selected vertices.
+            hop (int): draw induced subgraph with hop extension.
+            interactive_query: interactive instance
+
+        Returns:
+            A GraphModel.
+        """
+        if interactive_query is None:
+            raise ValueError(
+                "Failed to obtain interactive_query, unable to query data and draw graph."
+            )
+        from ipygraphin import GraphModel
+
+        graph = GraphModel()
+        graph.queryGraphData(vertices, hop, interactive_query)
+        return graph
