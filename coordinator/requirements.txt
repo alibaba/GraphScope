@@ -1,4 +1,5 @@
 daemons
+graphscope
 grpcio
 kubernetes
 protobuf
