@@ -1051,7 +1051,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             self._zookeeper_mem,
             "--k8s_gie_graph_manager_cpu",
             str(self._gie_graph_manager_cpu),
-            "--k8s_gie_gremlin_server_mem",
+            "--k8s_gie_graph_manager_mem",
             self._gie_graph_manager_mem,
             "--k8s_vineyard_cpu",
             str(self._vineyard_cpu),
