@@ -6,6 +6,7 @@ __pycache__/
 *.egg/
 build/
 dist/
+lib/
 
 # Gar file
 *.gar

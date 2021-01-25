@@ -6,4 +6,4 @@ Information about the frontend package of the widgets.
 """
 
 module_name = "jupyter-graphin"
-module_version = "^0.0.1"
+module_version = "^0.0.3"

@@ -1,6 +1,6 @@
 {
   "name": "jupyter-graphin",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A Graphin Jupyter Widget",
   "keywords": [
     "jupyter",
@@ -55,7 +55,7 @@
     "watch:nbextension": "webpack --watch"
   },
   "dependencies": {
-    "@antv/graphin": "^2.0.0-beta.1",
+    "@antv/graphin-graphscope": "^0.0.16",
     "@jupyter-widgets/base": "^1.1.10 || ^2 || ^3",
     "react": "^16.9.0",
     "react-dom": "^16.9.0"

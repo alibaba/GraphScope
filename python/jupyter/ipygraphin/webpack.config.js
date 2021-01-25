@@ -28,7 +28,7 @@ module.exports = [
     output: {
       filename: 'index.js',
       path: path.resolve(__dirname, 'ipygraphin', 'nbextension', 'static'),
-      libraryTarget: 'amd'
+      libraryTarget: 'umd'
     },
     module: {
       rules: rules
@@ -53,7 +53,7 @@ module.exports = [
     output: {
       filename: 'index.js',
       path: path.resolve(__dirname, 'dist'),
-      libraryTarget: 'amd',
+      libraryTarget: 'umd',
       library: 'jupyter-ipygraphin',
       publicPath: 'https://unpkg.com/jupyter-ipygraphin@' + version + '/dist/'
     },
@@ -76,7 +76,7 @@ module.exports = [
       filename: 'embed-bundle.js',
       path: path.resolve(__dirname, 'docs', 'source', '_static'),
       library: 'jupyter-ipygraphin',
-      libraryTarget: 'amd'
+      libraryTarget: 'umd'
     },
     module: {
       rules: rules
