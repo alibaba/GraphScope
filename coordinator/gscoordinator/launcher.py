@@ -113,6 +113,7 @@ class LocalLauncher(Launcher):
         self._analytical_engine_endpoint = "{}:{}".format(master, str(rpc_port))
 
         cmd.append(ANALYTICAL_ENGINE_PATH)
+        cmd.extend(["--host", "0.0.0.0"])
         cmd.extend(["--port", str(rpc_port)])
 
         if rmcp.openmpi():

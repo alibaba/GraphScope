@@ -247,11 +247,6 @@ class Loader(object):
         # until load_from has been fully processed.
 
         def func(source, storage_options, read_options, sess):
-            if source.startswith("vineyard://"):
-                source = source[len("vineyard://") :]
-            if not urlparse(source).scheme:
-                source = "file://%s" % source
-
             info = sess.info
             vineyard_endpoint = info["engine_config"]["vineyard_rpc_endpoint"]
             vineyard_ipc_socket = info["engine_config"]["vineyard_socket"]

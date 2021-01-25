@@ -146,10 +146,11 @@ class CoordinatorServiceServicer(
 
         # dangling check
         self._dangling_seconds = dangling_seconds
-        self._dangling_detecting_timer = threading.Timer(
-            interval=self._dangling_seconds, function=self._cleanup, args=(True,)
-        )
-        self._dangling_detecting_timer.start()
+        if self._dangling_seconds >= 0:
+            self._dangling_detecting_timer = threading.Timer(
+                interval=self._dangling_seconds, function=self._cleanup, args=(True,)
+            )
+            self._dangling_detecting_timer.start()
 
         atexit.register(self._cleanup)
 
@@ -196,12 +197,13 @@ class CoordinatorServiceServicer(
         )
 
     def HeartBeat(self, request, context):
-        # Reset dangling detect timer
-        self._dangling_detecting_timer.cancel()
-        self._dangling_detecting_timer = threading.Timer(
-            interval=self._dangling_seconds, function=self._cleanup, args=(True,)
-        )
-        self._dangling_detecting_timer.start()
+        if self._dangling_seconds >= 0:
+            # Reset dangling detect timer
+            self._dangling_detecting_timer.cancel()
+            self._dangling_detecting_timer = threading.Timer(
+                interval=self._dangling_seconds, function=self._cleanup, args=(True,)
+            )
+            self._dangling_detecting_timer.start()
         # analytical engine
         request = message_pb2.HeartBeatRequest()
         try:
@@ -617,6 +619,8 @@ class CoordinatorServiceServicer(
         if self._launcher_type == types_pb2.K8S:
             config["vineyard_service_name"] = self._launcher.get_vineyard_service_name()
             config["vineyard_rpc_endpoint"] = self._launcher.get_vineyard_rpc_endpoint()
+        else:
+            config["engine_hosts"] = self._launcher.hosts
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
