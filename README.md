@@ -29,9 +29,9 @@ To run GraphScope on your local computer, the following dependencies or tools ar
 - Local Kubernetes cluster set-up tool (e.g. [Minikube](https://minikube.sigs.k8s.io) or [Kind](https://kind.sigs.k8s.io))
 
 On Windows and macOS, you can follow the official guides to install them.
-For Ubuntu/CenOS Linux distributions, we provide a script to install the above
+For Ubuntu/CentOS Linux distributions, we provide a script to install the above
 dependencies and prepare the environment.
-Alternatively, You may want to install `WSL2 <https://docs.microsoft.com/zh-cn/windows/wsl/install-win10>`_ on Windows to use the scripts.
+Alternatively, you may want to install `WSL2 <https://docs.microsoft.com/zh-cn/windows/wsl/install-win10>`_ on Windows to use the script.
 
 ```bash
 # run the environment preparing script.

@@ -3,16 +3,16 @@
 GraphScope 客户端以 Python 程序包的形式发布，背后通过容器机制管理一组引擎和一个协调器。
 
 GraphScope 被设计为运行在 Kubernetes 管理的群集上。
-方便起见，我们可以按照本文档的以下步骤通过 `minikube <https://minikube.sigs.k8s.io/>`_ 部署一个本地 Kubernetes 集群，并加载预编译好的镜像。
+方便起见，我们可以按照本文档的以下步骤部署一个本地 Kubernetes 集群，并加载预编译好的镜像。
 
 本地运行 GraphScope 需要预先安装以下依赖。
 
 - Docker
-- minikube
 - Python 3.8 (with pip)
+- Local Kubernetes cluster set-up tool (e.g. [Minikube](https://minikube.sigs.k8s.io) or [Kind](https://kind.sigs.k8s.io))
 
 对于 Windows 和 MacOS 的用户，可通过官方文档来安装上述依赖。
-对于常见的 Linux 发行版用户，我们提供了脚本来准备运行时环境。
+对于Ubuntu/CentOS Linux 发行版用户，我们提供了脚本来准备运行时环境。
 您也可以在 Windows 上安装 `WSL2 <https://docs.microsoft.com/zh-cn/windows/wsl/install-win10>`_ 以使用脚本。
 
 .. code:: bash
