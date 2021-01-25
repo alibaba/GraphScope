@@ -52,8 +52,8 @@ class GSConfig(object):
     k8s_zookeeper_mem = "128Mi"
 
     # GIE graph manager resource configuration
-    k8s_gie_graph_manager_cpu = 0.5
-    k8s_gie_graph_manager_mem = "128Mi"
+    k8s_gie_graph_manager_cpu = 1.0
+    k8s_gie_graph_manager_mem = "4Gi"
 
     # GIE gremlin server resource configuration
     k8s_gie_gremlin_server_cpu = 1.0
