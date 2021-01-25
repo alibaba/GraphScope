@@ -19,6 +19,7 @@ is_in_wsl=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && is_in_
 #   None
 ##########################
 
+# https://unix.stackexchange.com/questions/6345/how-can-i-get-distribution-name-and-version-number-in-a-simple-shell-script
 function get_os_version() {
   if [ -f /etc/os-release ]; then
     # freedesktop.org and systemd
@@ -38,10 +39,10 @@ function get_os_version() {
     # Older Debian/Ubuntu/etc.
     platform=Debian
     os_version=$(cat /etc/debian_version)
-  elif [ -f /etc/redhat-release ]; then
+  elif [ -f /etc/centos-release ]; then
     # Older Red Hat, CentOS, etc.
     platform=CentOS
-    os_version=$(cat /etc/debian_version)
+    os_version=$(cat /etc/centos-release | sed 's/.* \([0-9]\).*/\1/'))
   else
     # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
     platform=$(uname -s)
@@ -65,12 +66,12 @@ function check_os_compatibility() {
     exit 1
   fi
 
-  if [[ "${platform}" == *"CentOS"* && "$(echo ${os_version} | sed 's/\([0-9]\).*/\1')" -lt "7" ]]; then
+  if [[ "${platform}" == *"CentOS"* && "${os_version}" -lt "7" ]]; then
     echo "This script requires CentOS 7 or greater."
     exit 1
   fi
 
-  echo "$(date '+%Y-%m-%d %H:%M:%S') preparing environment on '${platform}'"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') preparing environment on '${platform}' '${os_version}'"
 }
 
 function check_dependencies_version() {
@@ -103,6 +104,8 @@ function install_dependencies() {
     sudo yum install -y docker-ce docker-ce-cli containerd.io
     sudo yum clean all
   fi
+
+  check_dependencies_version
 
   pip3 install -U pip --user
   pip3 install graphscope vineyard wheel --user
@@ -194,8 +197,6 @@ get_os_version
 check_os_compatibility
 
 install_dependencies
-
-check_dependencies_version
 
 start_docker
 
