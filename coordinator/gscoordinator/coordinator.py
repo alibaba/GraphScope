@@ -146,7 +146,7 @@ class CoordinatorServiceServicer(
 
         # dangling check
         self._dangling_seconds = dangling_seconds
-        if self._dangling_seconds != -1:
+        if self._dangling_seconds >= 0:
             self._dangling_detecting_timer = threading.Timer(
                 interval=self._dangling_seconds, function=self._cleanup, args=(True,)
             )
@@ -197,7 +197,7 @@ class CoordinatorServiceServicer(
         )
 
     def HeartBeat(self, request, context):
-        if self._dangling_seconds != -1:
+        if self._dangling_seconds >= 0:
             # Reset dangling detect timer
             self._dangling_detecting_timer.cancel()
             self._dangling_detecting_timer = threading.Timer(
