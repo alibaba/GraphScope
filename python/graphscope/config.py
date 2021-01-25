@@ -57,7 +57,7 @@ class GSConfig(object):
 
     # GIE gremlin server resource configuration
     k8s_gie_gremlin_server_cpu = 1.0
-    k8s_gie_gremlin_server_mem = "4Gi"
+    k8s_gie_gremlin_server_mem = "1Gi"
 
     # vineyard resource configuration
     k8s_vineyard_cpu = 0.5
