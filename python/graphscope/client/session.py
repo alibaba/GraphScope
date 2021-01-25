@@ -670,6 +670,7 @@ class Session(object):
                 image_pull_secrets=self._config_params["k8s_image_pull_secrets"],
                 vineyard_cpu=self._config_params["k8s_vineyard_cpu"],
                 vineyard_mem=self._config_params["k8s_vineyard_mem"],
+                vineyard_shared_mem=self._config_params["k8s_vineyard_shared_mem"],
                 etcd_cpu=self._config_params["k8s_etcd_cpu"],
                 etcd_mem=self._config_params["k8s_etcd_mem"],
                 zookeeper_cpu=self._config_params["k8s_zookeeper_cpu"],
