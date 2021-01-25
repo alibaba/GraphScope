@@ -6,6 +6,8 @@ from traitlets import Unicode
 from ._frontend import module_name
 from ._frontend import module_version
 
+import json
+
 
 class Mutable(TraitType):
     """A base class for mutable traits using Spectate"""
@@ -64,17 +66,55 @@ class GraphModel(widgets.DOMWidget):
     data = MutableDict().tag(sync=True)
 
     # 测试使用的文本值
-    value = Unicode("x").tag(sync=True)
+    value = Unicode("").tag(sync=True)
 
     _interactive_query = None
 
+    # 通过外部传入的数据渲染图
+    def addGraphFromData(self, data):
+        nodeList = []
+        edgeList = []
+        def _addNodes(nodes):
+            for node in nodes:
+                current = {}
+                current['id'] = str(node.id)
+                current['label'] = node.label
+                current["parentId"] = ""
+                current["level"] = 0
+                current["degree"] = 1  # need to update
+                current["count"] = 0
+                current["nodeType"] = node.nodeType
+                current["properties"] = {}
+                nodeList.append(current)
+
+        def _addEdges(list_edge):
+            for line in list_edge:
+                edge = {}
+                edge["id"] = str(line.id)
+                edge["label"] = line.label
+                edge["source"] = str(line.outV.id)
+                edge["target"] = str(line.inV.id)
+                edge["count"] = 0
+                edge["edgeType"] = line.edgeType
+                edge["properties"] = {}
+                edgeList.append(edge)
+
+        _addNodes(data.nodes)
+        _addEdges(data.edges)
+
+        data_dict = {}
+        data_dict["graphVisId"] = "0"
+        data_dict["nodes"] = nodeList
+        data_dict["edges"] = edgeList
+        
+        data_str = json.dumps(data_dict)
+        self.value = data_str
     # 查询图数据
     def queryGraphData(self, vertices, hop, interactive_query=None, dump_to_file=False):
         # 调用 python 接口，获取查询的图数据，格式为 JSON，同时修改 data 值
         # self.value = 'result data'
         print("vertices", vertices)
         print("hop", hop)
-        import json
 
         if interactive_query is not None:
             _interactive_query = interactive_query
