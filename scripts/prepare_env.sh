@@ -60,8 +60,8 @@ function check_os_compatibility() {
     exit 1
   fi
 
-  if [[ "${platform}" == *"Ubuntu"* && "$(echo ${os_version} | sed 's/\([0-9]\)\([0-9]\).*/\1\2/')" -lt "14" ]]; then
-    echo "This script requires Ubuntu 14 or greater."
+  if [[ "${platform}" == *"Ubuntu"* && "$(echo ${os_version} | sed 's/\([0-9]\)\([0-9]\).*/\1\2/')" -lt "18" ]]; then
+    echo "This script requires Ubuntu 18 or greater."
     exit 1
   fi
 
