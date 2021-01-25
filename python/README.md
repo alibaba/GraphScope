@@ -38,20 +38,20 @@ $ jupyter lab --watch
 os.environ["GS_TEST_DIR"] = os.path.expanduser("path_to_gstest/gstest/")
 ```
 ### 远程连接k8s集群
-通过config文件可远程连接k8s集群，无需在本地安装docker desktop和kubernetes。config文件可向开发人员索取。
+~~通过config文件可远程连接k8s集群，无需在本地安装docker desktop和kubernetes。config文件可向开发人员索取。~~
 ```bash
 $ # 备份 ~/.kube/config
 $ cp config ~/.kube/config
 ```
-安装kubectl
+~~安装kubectl~~
 
-修改jupyter lab默认运行根目录
+~~修改jupyter lab默认运行根目录~~
 
-运行jupyter lab
+~~运行jupyter lab~~
 
-在jupyter lab窗口打开test_graphin_k8s_cluster.ipynb，
+~~在jupyter lab窗口打开test_graphin_k8s_cluster.ipynb，~~
 
-无需修改测试数据路径，直接运行测试脚本。
+~~无需修改测试数据路径，直接运行测试脚本。~~
 
 ## 注意事项
 远程k8s集群可能因为网络波动出现连接超时现象
