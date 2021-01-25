@@ -422,6 +422,8 @@ class Session(object):
         self._heartbeat_sending_thread.daemon = True
         self._heartbeat_sending_thread.start()
 
+        self._cluster = None
+
     def __repr__(self):
         return str(self.info)
 
@@ -663,9 +665,16 @@ class Session(object):
                 or self._config_params["k8s_gs_image"] is None
             ):
                 raise K8sError("None image found.")
-            api_client = kube_config.new_client_from_config(
-                **self._config_params["k8s_client_config"]
-            )
+            if self._cluster is not None:
+                from kubernetes.client import ApiClient, Configuration
+                k8s_config = self._cluster.create_cluster()
+                client_config = type.__call__(Configuration)
+                kube_config.load_kube_config_from_dict(k8s_config, client_configuration=client_config)
+                api_client = ApiClient(configuration=client_config)
+            else:
+                api_client = kube_config.new_client_from_config(
+                    **self._config_params["k8s_client_config"]
+                )
             proc = None
             self._session_type = types_pb2.K8S
             self._k8s_cluster = KubernetesCluster(
