@@ -71,61 +71,41 @@ class GraphModel(widgets.DOMWidget):
 
     # 通过外部传入的数据渲染图
     def addGraphFromData(self, data):
-        # nodeList = []
-        # edgeList = []
-        # def _addNodes(nodes):
-        #     for node in nodes:
-        #         current = {}
-        #         current['id'] = str(node.id)
-        #         current['label'] = node.label
-        #         current["parentId"] = ""
-        #         current["level"] = 0
-        #         current["degree"] = 1  # need to update
-        #         current["count"] = 0
-        #         current["nodeType"] = node.nodeType
-        #         current["properties"] = {}
-        #         nodeList.append(current)
+        nodeList = []
+        edgeList = []
+        def _addNodes(nodes):
+            for node in nodes:
+                current = {}
+                current['id'] = str(node['id'])
+                current['label'] = node['label']
+                current["parentId"] = ""
+                current["level"] = 0
+                current["degree"] = 1  # need to update
+                current["count"] = 0
+                current["nodeType"] = node['nodeType']
+                current["properties"] = {}
+                nodeList.append(current)
 
-        # def _addEdges(list_edge):
-        #     for line in list_edge:
-        #         edge = {}
-        #         edge["id"] = str(line.id)
-        #         edge["label"] = line.label
-        #         edge["source"] = str(line.outV.id)
-        #         edge["target"] = str(line.inV.id)
-        #         edge["count"] = 0
-        #         edge["edgeType"] = line.edgeType
-        #         edge["properties"] = {}
-        #         edgeList.append(edge)
+        def _addEdges(list_edge):
+            for line in list_edge:
+                edge = {}
+                edge["label"] = line['label']
+                edge["source"] = str(line['source'])
+                edge["target"] = str(line['target'])
+                edge["count"] = 0
+                # edge["edgeType"] = line['edgeType']
+                edge["properties"] = {}
+                edgeList.append(edge)
 
-        # _addNodes(data['nodes'])
-        # _addEdges(data['edges'])
+        _addNodes(data['nodes'])
+        _addEdges(data['edges'])
 
-        # data_dict = {}
-        # data_dict["graphVisId"] = "0"
-        # data_dict["nodes"] = nodeList
-        # data_dict["edges"] = edgeList
+        data_dict = {}
+        data_dict["graphVisId"] = "0"
+        data_dict["nodes"] = nodeList
+        data_dict["edges"] = edgeList
 
-        data = {
-            'nodes': [
-                    {
-                        'id': 'node1',
-                        'label': 'node1'
-                    },
-                    {
-                        'id': 'node2',
-                        'label': 'node12'
-                    }
-                ],
-                'edges': [
-                    {
-                        'source': 'node1',
-                        'target': 'node2'
-                    }
-                ]
-        }
-        
-        data_str = json.dumps(data)
+        data_str = json.dumps(data_dict)
         self.value = data_str
     # 查询图数据
     def queryGraphData(self, vertices, hop, interactive_query=None, dump_to_file=False):
