@@ -416,6 +416,8 @@ class CoordinatorServiceServicer(
             request.object_id,
         )
         object_id = request.object_id
+        gremlin_server_cpu = request.gremlin_server_cpu
+        gremlin_server_mem = request.gremlin_server_mem
         manager_host = MAXGRAPH_MANAGER_HOST % (
             self._gie_graph_manager_service_name,
             self._k8s_namespace,
@@ -428,6 +430,8 @@ class CoordinatorServiceServicer(
                 "schemaJson": schema_json,
                 "podNameList": ",".join(self._pods_list),
                 "containerName": ENGINE_CONTAINER,
+                "gremlinServerCpu": str(gremlin_server_cpu),
+                "gremlinServerMem": gremlin_server_mem,
             }
             post_data = urllib.parse.urlencode(params).encode("utf-8")
             create_res = urllib.request.urlopen(url=post_url, data=post_data)
@@ -775,6 +779,42 @@ def parse_sys_args():
         help="Memory of engine container, suffix with ['Mi', 'Gi', 'Ti'].",
     )
     parser.add_argument(
+        "--k8s_etcd_cpu",
+        type=float,
+        default=1.0,
+        help="Cpu cores of etcd pod, default: 1.0",
+    )
+    parser.add_argument(
+        "--k8s_etcd_mem",
+        type=str,
+        default="256Mi",
+        help="Memory of etcd pod, suffix with ['Mi', 'Gi', 'Ti'].",
+    )
+    parser.add_argument(
+        "--k8s_zookeeper_cpu",
+        type=float,
+        default=1.0,
+        help="Cpu cores of zookeeper container, default: 1.0",
+    )
+    parser.add_argument(
+        "--k8s_zookeeper_mem",
+        type=str,
+        default="256Mi",
+        help="Memory of zookeeper container, suffix with ['Mi', 'Gi', 'Ti'].",
+    )
+    parser.add_argument(
+        "--k8s_gie_graph_manager_cpu",
+        type=float,
+        default=1.0,
+        help="Cpu cores of graph manager container, default: 1.0",
+    )
+    parser.add_argument(
+        "--k8s_gie_graph_manager_mem",
+        type=str,
+        default="256Mi",
+        help="Memory of graph manager container, suffix with ['Mi', 'Gi', 'Ti'].",
+    )
+    parser.add_argument(
         "--k8s_volumes",
         type=str,
         default="{}",
@@ -819,6 +859,12 @@ def launch_graphscope():
             gie_graph_manager_image=args.k8s_gie_graph_manager_image,
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,
+            etcd_cpu=args.k8s_etcd_cpu,
+            etcd_mem=args.k8s_etcd_mem,
+            zookeeper_cpu=args.k8s_zookeeper_cpu,
+            zookeeper_mem=args.k8s_zookeeper_mem,
+            gie_graph_manager_cpu=args.k8s_gie_graph_manager_cpu,
+            gie_graph_manager_mem=args.k8s_gie_graph_manager_mem,
             engine_cpu=args.k8s_engine_cpu,
             engine_mem=args.k8s_engine_mem,
             vineyard_cpu=args.k8s_vineyard_cpu,

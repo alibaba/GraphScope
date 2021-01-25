@@ -90,6 +90,24 @@ class KubernetesCluster(object):
         image_pull_secrets: list of str, optional
             A list of secret name used to pulling image. Defaults to None.
 
+        etcd_cpu: float
+            Minimum number of CPU cores request for etcd pod.
+
+        etcd_mem: str
+             Minimum number of memory request for etcd pod.
+
+        zookeeper_cpu: float
+            Minimum number of CPU cores request for zookeeper container.
+
+        zookeeper_mem: str:
+            Minimum number of memory request for zookeeper container.
+
+        gie_graph_manager_cpu: float
+            Minimum number of CPU cores request for graph manager container.
+
+        gie_graph_manager_mem: str
+            Minimum number of memory request for graph manager container.
+
         vineyard_cpu: float
             Minimum number of CPU cores request for vineyard container.
 
@@ -158,6 +176,12 @@ class KubernetesCluster(object):
         engine_mem=None,
         coordinator_cpu=None,
         coordinator_mem=None,
+        etcd_cpu=None,
+        etcd_mem=None,
+        zookeeper_cpu=None,
+        zookeeper_mem=None,
+        gie_graph_manager_cpu=None,
+        gie_graph_manager_mem=None,
         volumes=None,
         timeout_seconds=None,
         waiting_for_delete=None,
@@ -183,6 +207,13 @@ class KubernetesCluster(object):
             self._image_pull_secrets = []
         elif not isinstance(self._image_pull_secrets, list):
             self._image_pull_secrets = [self._image_pull_secrets]
+
+        self._etcd_cpu = etcd_cpu
+        self._etcd_mem = etcd_mem
+        self._zookeeper_cpu = zookeeper_cpu
+        self._zookeeper_mem = zookeeper_mem
+        self._gie_graph_manager_cpu = gie_graph_manager_cpu
+        self._gie_graph_manager_mem = gie_graph_manager_mem
 
         self._vineyard_cpu = vineyard_cpu
         self._vineyard_mem = vineyard_mem
@@ -422,6 +453,12 @@ class KubernetesCluster(object):
             coordinator_cpu=self._coordinator_cpu,
             coordinator_mem=self._coordinator_mem,
             coordinator_service_name=self._coordinator_service_name,
+            etcd_cpu=self._etcd_cpu,
+            etcd_mem=self._etcd_mem,
+            zookeeper_cpu=self._zookeeper_cpu,
+            zookeeper_mem=self._zookeeper_mem,
+            gie_graph_manager_cpu=self._gie_graph_manager_cpu,
+            gie_graph_manager_mem=self._gie_graph_manager_mem,
             vineyard_cpu=self._vineyard_cpu,
             vineyard_mem=self._vineyard_mem,
             vineyard_shared_mem=self._vineyard_shared_mem,

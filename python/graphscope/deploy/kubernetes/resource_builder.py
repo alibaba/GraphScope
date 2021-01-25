@@ -714,6 +714,8 @@ class GSEtcdBuilder(DeploymentBuilder):
         name,
         service_name,
         image,
+        cpu,
+        mem,
         listen_peer_service_port,
         listen_client_service_port,
         max_txn_ops=1024000,
@@ -741,6 +743,11 @@ class GSEtcdBuilder(DeploymentBuilder):
             "new",
         ]
 
+        resources_dict = {
+            "requests": ResourceBuilder(cpu, mem).build(),
+            "limits": ResourceBuilder(cpu, mem).build(),
+        }
+
         volumeMounts = []
         for vol in self._volumes:
             for vol_mount in vol.build_mount():
@@ -754,7 +761,8 @@ class GSEtcdBuilder(DeploymentBuilder):
                     "image": image,
                     "name": name,
                     "imagePullPolicy": self._image_pull_policy,
-                    "resources": None,
+                    "resources": dict((k, v) for k, v in resources_dict.items() if v)
+                    or None,
                     "ports": [
                         PortBuilder(listen_peer_service_port).build(),
                         PortBuilder(listen_client_service_port).build(),
@@ -791,12 +799,17 @@ class GSGraphManagerBuilder(DeploymentBuilder):
             self._name, self._labels, self._replicas, self._image_pull_policy
         )
 
-    def add_manager_container(self, name, image, port=8080):
+    def add_manager_container(self, name, image, cpu, mem, port=8080):
         cmd = [
             "/bin/bash",
             "-c",
             "--",
         ]
+
+        resources_dict = {
+            "requests": ResourceBuilder(cpu, mem).build(),
+            "limits": ResourceBuilder(cpu, mem).build(),
+        }
 
         args = ["/home/maxgraph/manager-entrypoint.sh"]
 
@@ -824,7 +837,8 @@ class GSGraphManagerBuilder(DeploymentBuilder):
                     "image": image,
                     "name": name,
                     "imagePullPolicy": self._image_pull_policy,
-                    "resources": None,
+                    "resources": dict((k, v) for k, v in resources_dict.items() if v)
+                    or None,
                     "ports": [PortBuilder(port).build()],
                     "volumeMounts": volumeMounts or None,
                     "livenessProbe": None,
@@ -834,7 +848,12 @@ class GSGraphManagerBuilder(DeploymentBuilder):
             )
         )
 
-    def add_zookeeper_container(self, name, image, port=2181):
+    def add_zookeeper_container(self, name, image, cpu, mem, port=2181):
+        resources_dict = {
+            "requests": ResourceBuilder(cpu, mem).build(),
+            "limits": ResourceBuilder(cpu, mem).build(),
+        }
+
         volumeMounts = []
         for vol in self._volumes:
             for vol_mount in vol.build_mount():
@@ -849,7 +868,8 @@ class GSGraphManagerBuilder(DeploymentBuilder):
                     "image": image,
                     "name": name,
                     "imagePullPolicy": self._image_pull_policy,
-                    "resources": None,
+                    "resources": dict((k, v) for k, v in resources_dict.items() if v)
+                    or None,
                     "ports": [PortBuilder(port).build()],
                     "volumeMounts": volumeMounts or None,
                     "livenessProbe": None,
@@ -891,6 +911,12 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         coordinator_cpu,
         coordinator_mem,
         coordinator_service_name,
+        etcd_cpu,
+        etcd_mem,
+        zookeeper_cpu,
+        zookeeper_mem,
+        gie_graph_manager_cpu,
+        gie_graph_manager_mem,
         vineyard_cpu,
         vineyard_mem,
         vineyard_shared_mem,
@@ -917,6 +943,12 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         self._coordinator_cpu = coordinator_cpu
         self._coordinator_mem = coordinator_mem
         self._coordinator_service_name = coordinator_service_name
+        self._etcd_cpu = etcd_cpu
+        self._etcd_mem = etcd_mem
+        self._zookeeper_cpu = zookeeper_cpu
+        self._zookeeper_mem = zookeeper_mem
+        self._gie_graph_manager_cpu = gie_graph_manager_cpu
+        self._gie_graph_manager_mem = gie_graph_manager_mem
         self._vineyard_cpu = vineyard_cpu
         self._vineyard_mem = vineyard_mem
         self._vineyard_shared_mem = vineyard_shared_mem
@@ -1009,6 +1041,18 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             self._coordinator_name,
             "--k8s_coordinator_service_name",
             self._coordinator_service_name,
+            "--k8s_etcd_cpu",
+            str(self._etcd_cpu),
+            "--k8s_etcd_mem",
+            self._etcd_mem,
+            "--k8s_zookeeper_cpu",
+            str(self._zookeeper_cpu),
+            "--k8s_etcd_mem",
+            self._zookeeper_mem,
+            "--k8s_gie_graph_manager_cpu",
+            str(self._gie_graph_manager_cpu),
+            "--k8s_gie_graph_manager_mem",
+            self._gie_graph_manager_mem,
             "--k8s_vineyard_cpu",
             str(self._vineyard_cpu),
             "--k8s_vineyard_mem",
