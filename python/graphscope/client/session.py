@@ -49,6 +49,7 @@ from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.kubernetes.cluster import KubernetesCluster
 from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import FatalError
+from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InteractiveEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import K8sError
@@ -411,6 +412,8 @@ class Session(object):
         # create and connect session
         self._proc, self._endpoint = self._connect()
 
+        self._disconnected = False
+
         # heartbeat
         self._heartbeat_interval_seconds = 5
         self._heartbeat_sending_thread = threading.Thread(
@@ -441,7 +444,7 @@ class Session(object):
         info = {}
         if self._closed:
             info["status"] = "closed"
-        elif self._grpc_client is None:
+        elif self._grpc_client is None or self._disconnected:
             info["status"] = "disconnected"
         else:
             info["status"] = "active"
@@ -465,7 +468,13 @@ class Session(object):
     def _send_heartbeat(self):
         while not self._closed:
             if self._grpc_client:
-                self._grpc_client.send_heartbeat()
+                try:
+                    self._grpc_client.send_heartbeat()
+                except GRPCError as exc:
+                    logger.warning(exc)
+                    self._disconnected = True
+                else:
+                    self._disconnected = False
             time.sleep(self._heartbeat_interval_seconds)
 
     def close(self):
@@ -485,6 +494,8 @@ class Session(object):
                 timeout=self._heartbeat_interval_seconds
             )
             self._heartbeat_sending_thread = None
+
+        self._disconnected = True
 
         # close all interactive instances
         for instance in self._interactive_instance_dict.values():

@@ -142,7 +142,7 @@ class GRPCClient(object):
             self._logs_fetching_thread.daemon = True
             self._logs_fetching_thread.start()
 
-    @suppress_grpc_error
+    @catch_grpc_error
     def send_heartbeat(self):
         request = message_pb2.HeartBeatRequest()
         return self._stub.HeartBeat(request)
