@@ -6,7 +6,6 @@ import {
 } from '@jupyter-widgets/base';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Utils } from '@antv/graphin';
 import { GraphScopeComponent } from '@antv/graphin-graphscope';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -23,8 +22,7 @@ export class GraphModel extends WidgetModel {
       _model_module_version: GraphModel.model_module_version,
       nodes: [],
       edges: [],
-      value: 'x',
-      graphData: {},
+      value: '',
       zoom: false
     };
   }
@@ -50,10 +48,6 @@ export class GraphView extends DOMWidgetView {
     });
 
     this.el.addEventListener('contextmenu', this.onClick.bind(this));
-
-    this.graphData = Utils.mock(8)
-      .circle()
-      .graphin();
   }
 
   onClick(evt: any) {
@@ -67,32 +61,26 @@ export class GraphView extends DOMWidgetView {
 
   valueChanged() {
     const value = this.model.get('value');
-    const graphData = this.model.get('graphData');
 
-    console.log('change value', value, graphData);
-    // const textDom = document.createElement('span');
-    // console.log(textDom);
-    // textDom.innerText = value + 'xxx';
+    console.log('change value', value);
 
-    // this.el.append(textDom);
+    if (value) {
+      const currentData = JSON.parse(value);
+      console.log('json parse value', currentData);
+      this.graphData = currentData;
+      this.renderGraph(currentData);
+    }
   }
 
   render() {
-    this.el.classList.add('custom-widget');
-
     //Python attributes that must be sync. with frontend
-    // this.model.on('change:data', this._updateMinZoom, this);
     this.model.on('change:value', this.valueChanged, this);
-    // this.model.on('change:graphData', this.valueChanged, this);
-    this.model.on('change:enabledZoom', this.value_changed, this);
 
     if (this.dom) {
       ReactDOM.unmountComponentAtNode(this.dom);
+    } else {
+      this.valueChanged();
     }
-
-    this.value_changed();
-
-    // this.el.addEventListener('click', this.onClick.bind(this));
   }
 
   queryNeighbors(nodeId: string, degree: number) {
@@ -111,9 +99,10 @@ export class GraphView extends DOMWidgetView {
     // } as any);
   }
 
-  value_changed() {
+  renderGraph(data: any) {
     // dom 不存在时，创建 dom 元素并添加到 this.el 中
     if (!this.dom) {
+      this.el.classList.add('custom-widget');
       this.dom = document.createElement('div');
       this.dom.style.width = '1000px';
       this.dom.style.height = '400px';
@@ -133,7 +122,7 @@ export class GraphView extends DOMWidgetView {
             width: 1000,
             height: 400,
             neighbors: this.queryNeighbors.bind(this),
-            data: this.graphData,
+            data: data,
             hasMinimap: true,
             hasContextMenu: true,
             zoomCanvas: this.model.get('zoom')
