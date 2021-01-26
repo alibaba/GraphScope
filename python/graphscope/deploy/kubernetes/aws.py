@@ -22,13 +22,13 @@ except ImportError:
     boto3 = None
 
 
-class AWSCluster(object):
-    def __init__(self, access_key_id,  secret_access_key, region_name):
+class AliyunLauncher(object):
+    def __init__(self, access_key_id,  secret_access_key, region):
         self._access_key_id = access_key_id
         self._secret_access_key = secret_access_key
-        self._region_name = region_name
+        self._region = region
         self._client = boto3.client("eks", aws_access_key_id=self._access_key_id,
-            aws_secret_access_key=self._secret_access_key, region_name=self._region_name)
+            aws_secret_access_key=self._secret_access_key, region=self._region)
 
     def create_cluster(self):
         rep = self._client.create_cluster(name="eks_for_gs")
