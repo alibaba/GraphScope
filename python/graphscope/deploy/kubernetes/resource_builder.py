@@ -1047,7 +1047,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             self._etcd_mem,
             "--k8s_zookeeper_cpu",
             str(self._zookeeper_cpu),
-            "--k8s_etcd_mem",
+            "--k8s_zookeeper_mem",
             self._zookeeper_mem,
             "--k8s_gie_graph_manager_cpu",
             str(self._gie_graph_manager_cpu),
