@@ -49,7 +49,7 @@ class GSConfig(object):
 
     # zookeeper resource configuration
     k8s_zookeeper_cpu = 0.5
-    k8s_zookeeper_mem = "128Mi"
+    k8s_zookeeper_mem = "256Mi"
 
     # GIE graph manager resource configuration
     k8s_gie_graph_manager_cpu = 1.0
