@@ -165,6 +165,9 @@ class Session(object):
         k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
+        access_key_id = gs_config.access_key_id,
+        access_key_secret = gs_config.access_key_secret,
+        region = gs_config.region,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -370,6 +373,11 @@ class Session(object):
         # update k8s_client_config params
         self._config_params["k8s_client_config"] = kw.pop("k8s_client_config", {})
 
+        self._config_params["cloud_type"] = kw.pop("cloud_type", None)
+        self._config_params["access_key_id"] = kw.pop("access_key_id", None)
+        self._config_params["access_key_secret"] = kw.pop("access_key_secret", None)
+        self._config_params["region"] = kw.pop("region", None)
+
         # There should be no more custom keyword arguments.
         if kw:
             raise ValueError("Not recognized value: ", list(kw.keys()))
@@ -422,7 +430,9 @@ class Session(object):
         self._heartbeat_sending_thread.daemon = True
         self._heartbeat_sending_thread.start()
 
-        self._cluster = None
+        self._cloud_cluster = None
+        if self._cloud_type is not None:
+            self._cloud_cluster = AWSCluster(self._config_params["access_key_id"], self._config_params["access_key_secret"], self._config_params["region"])
 
     def __repr__(self):
         return str(self.info)
@@ -665,9 +675,9 @@ class Session(object):
                 or self._config_params["k8s_gs_image"] is None
             ):
                 raise K8sError("None image found.")
-            if self._cluster is not None:
+            if self._cloud_cluster is not None:
                 from kubernetes.client import ApiClient, Configuration
-                k8s_config = self._cluster.create_cluster()
+                k8s_config = self._cound_cluster.create_cluster()
                 client_config = type.__call__(Configuration)
                 kube_config.load_kube_config_from_dict(k8s_config, client_configuration=client_config)
                 api_client = ApiClient(configuration=client_config)
