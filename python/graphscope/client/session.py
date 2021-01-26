@@ -220,7 +220,7 @@ class Session(object):
                 Minimum number of CPU cores request for zookeeper container. Defaults to 0.5.
 
             k8s_zookeeper_mem (str, optional):
-                Minimum number of memory request for zookeeper container. Defaults to '128Mi'.
+                Minimum number of memory request for zookeeper container. Defaults to '256Mi'.
 
             k8s_gie_graph_manager_cpu (float, optional):
                 Minimum number of CPU cores request for graphmanager container. Defaults to 1.0.
