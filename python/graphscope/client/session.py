@@ -47,6 +47,8 @@ from graphscope.client.utils import GSLogger
 from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.kubernetes.cluster import KubernetesCluster
+from graphscope.deploy.kubernetes.aws import AWSLauncher
+from graphscope.deploy.kubernetes.aliyun import AliyunLauncher
 from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import GRPCError
@@ -373,10 +375,12 @@ class Session(object):
         # update k8s_client_config params
         self._config_params["k8s_client_config"] = kw.pop("k8s_client_config", {})
 
+        # update cloud config
         self._config_params["cloud_type"] = kw.pop("cloud_type", None)
         self._config_params["access_key_id"] = kw.pop("access_key_id", None)
         self._config_params["access_key_secret"] = kw.pop("access_key_secret", None)
         self._config_params["region"] = kw.pop("region", None)
+        self._config_params["cluster_config"] = kw.pop("cluster_config", None)
 
         # There should be no more custom keyword arguments.
         if kw:
@@ -430,9 +434,15 @@ class Session(object):
         self._heartbeat_sending_thread.daemon = True
         self._heartbeat_sending_thread.start()
 
-        self._cloud_cluster = None
-        if self._cloud_type is not None:
-            self._cloud_cluster = AWSCluster(self._config_params["access_key_id"], self._config_params["access_key_secret"], self._config_params["region"])
+        self._cloud_launcher = None
+        cloud_type = self._config_params["cloud_type"]
+        if cloud_type is not None:
+            if cloud_type == "aws":
+                self._cloud_launcher = AWSLauncher(self._config_params["access_key_id"], self._config_params["access_key_secret"], self._config_params["region"], self._config_params["cluster_config"])
+            elif cloud_type == "aliyun":
+                self._cloud_launcher = AliyunLauncher(self._config_params["access_key_id"], self._config_params["access_key_secret"], self._config_params["region"], self._config_params["cluster_config"])
+            else:
+                logger.error("Not suport clund type: {}".format(cloud_type))
 
     def __repr__(self):
         return str(self.info)
@@ -543,6 +553,10 @@ class Session(object):
             if self._k8s_cluster:
                 self._k8s_cluster.stop()
                 self._pod_name_list = []
+
+        # delete cloud cluster
+        if self._cloud_launcher is not None:
+            self._cloud_launcher.delete_cluster()
 
     def _close_interactive_instance(self, instance):
         """Close a interactive instance."""
@@ -675,9 +689,9 @@ class Session(object):
                 or self._config_params["k8s_gs_image"] is None
             ):
                 raise K8sError("None image found.")
-            if self._cloud_cluster is not None:
+            if self._cloud_launcher is not None:
                 from kubernetes.client import ApiClient, Configuration
-                k8s_config = self._cound_cluster.create_cluster()
+                k8s_config = self._cloud_launcher.create_cluster()
                 client_config = type.__call__(Configuration)
                 kube_config.load_kube_config_from_dict(k8s_config, client_configuration=client_config)
                 api_client = ApiClient(configuration=client_config)

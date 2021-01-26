@@ -66,8 +66,13 @@ class AliyunLauncher(object):
         request.set_uri_pattern('/k8s/{}/user_config'.format(cluster_id))
         body = '''{}'''
         request.set_content(body.encode('utf-8'))
-        response = self._client.do_action_with_exception(request)
-        return json.loads(str(response, encoding='utf-8'))["config"]
+        try:
+            response = self._client.do_action_with_exception(request)
+            # TODO: need to transform to dict
+            return json.loads(str(response, encoding='utf-8'))["config"]
+        except Exception as e:
+            print(e)
+
 
     def delete_cluster(self):
         request = CommonRequest()
@@ -75,6 +80,7 @@ class AliyunLauncher(object):
         request.set_method('DELETE')
         request.set_protocol_type('https') # https | http
         request.set_domain('cs.aliyuncs.com')
+        request.set_version('2015-12-15')
         request.add_query_param('RegionId', self._region)
         request.add_header('Content-Type', 'application/json')
         request.set_uri_pattern('/clusters/{}'.format(self._cluster_id))

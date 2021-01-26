@@ -16,25 +16,33 @@
 # limitations under the License.
 #
 
+import json
+import time
+
 try:
     import boto3
 except ImportError:
     boto3 = None
 
 
-class AliyunLauncher(object):
-    def __init__(self, access_key_id,  secret_access_key, region):
+class AWSLauncher(object):
+    def __init__(self, access_key_id,  access_key_secret, region, config_file):
         self._access_key_id = access_key_id
-        self._secret_access_key = secret_access_key
+        self._access_key_secret = access_key_secret
         self._region = region
         self._client = boto3.client("eks", aws_access_key_id=self._access_key_id,
-            aws_secret_access_key=self._secret_access_key, region=self._region)
+            aws_secret_access_key=self._access_key_secret, region=self._region)
+        with open(config_file) as f:
+            self._cluster_config = json.load(f)
+        self._cluster_name = self._cluster_config["name"]
 
     def create_cluster(self):
-        rep = self._client.create_cluster(name="eks_for_gs")
-        cluster_cert = rep["cluster"]["certificateAuthority"]["data"]
-        cluster_ep = rep["cluster"]["endpoint"]
-        cluster_name = rep["cluster"]["name"]
+        self._client.create_cluster(**self._cluster_config)
+        self._wait_cluster_ready()
+        response = self._client.describe_cluster(name=self._cluster_name)
+        cluster_cert = response["cluster"]["certificateAuthority"]["data"]
+        cluster_ep = response["cluster"]["endpoint"]
+        cluster_name = response["cluster"]["name"]
         # build the cluster config hash
         cluster_config = {
             "apiVersion": "v1",
@@ -74,8 +82,14 @@ class AliyunLauncher(object):
                 }
             ]
         }
-
         return cluster_config
 
+    def _wait_cluster_ready(self):
+        while True:
+            response = self._client.describe_cluster(name=self._cluster_name)
+            if response["cluster"]["status"] == "ACTIVE":
+                return
+            time.sleep(5)
+
     def delete_cluster(self):
-        self._client.delete_cluster(name="eks_for_gs")
+        self._client.delete_cluster(name=self._cluster_name)
