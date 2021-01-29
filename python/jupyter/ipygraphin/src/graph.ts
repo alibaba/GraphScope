@@ -99,12 +99,16 @@ export class GraphView extends DOMWidgetView {
     // } as any);
   }
 
+  handleNodeClick(model: any, type: string) {
+    console.log('click node', model);
+  }
+
   renderGraph(data: any) {
     // dom 不存在时，创建 dom 元素并添加到 this.el 中
     if (!this.dom) {
       this.el.classList.add('custom-widget');
       this.dom = document.createElement('div');
-      this.dom.style.width = '1000px';
+      this.dom.style.width = '100%';
       this.dom.style.height = '400px';
       this.dom.style.position = 'relative';
 
@@ -119,7 +123,7 @@ export class GraphView extends DOMWidgetView {
           GraphScopeComponent,
           {
             graphDOM: this.dom,
-            width: 1000,
+            // width: 1000,
             height: 400,
             neighbors: this.queryNeighbors.bind(this),
             data: data,
