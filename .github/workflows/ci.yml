@@ -388,11 +388,6 @@ jobs:
         python3 -m pip install pytest-cov --user
         pushd python && sudo -E python3 setup.py develop && popd
 
-        # Copy Vineyard drivers to /usr/local
-        sudo rm -f ./artifacts/opt/graphscope/bin/vineyard-codegen || true
-        sudo cp -rvf ./artifacts/opt/graphscope/bin/* /usr/local/bin/
-        sudo cp -rvf ./artifacts/opt/graphscope/share/vineyard /usr/local/share/
-
     - name: Kubernetes test
       env:
         CHANGE_MINIKUBE_NONE_USER: true
@@ -410,6 +405,7 @@ jobs:
       with:
         file: ./python/coverage.xml
         fail_ci_if_error: true
+
     - name: Clean
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
