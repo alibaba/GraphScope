@@ -435,7 +435,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardTensor(
     CHECK(false);
   }
 
-  auto s_id = vineyard::VYObjectIDToString(id);
+  auto s_id = vineyard::ObjectIDToString(id);
 
   client_->PutName(id, s_id);
 
@@ -501,7 +501,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
     CHECK(false);
   }
 
-  auto s_id = vineyard::VYObjectIDToString(id);
+  auto s_id = vineyard::ObjectIDToString(id);
 
   client_->PutName(id, s_id);
 

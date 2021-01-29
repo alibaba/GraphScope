@@ -40,7 +40,7 @@ GraphBuilder create_graph_builder(const char *graph_name, Schema schema,
                                                          schema_ptr, index);
   VINEYARD_CHECK_OK(client.Persist(stream->id()));
   LOG(INFO) << "create graph builder: yields "
-            << vineyard::VYObjectIDToString(stream->id());
+            << vineyard::ObjectIDToString(stream->id());
   // create a shared_ptr object on heap.
   return new std::shared_ptr<vineyard::PropertyGraphOutStream>(stream);
 }
@@ -99,7 +99,7 @@ ObjectId build_global_graph_stream(const char *graph_name, size_t size,
 #ifndef NDEBUG
     LOG(INFO) << "add substream: "
               << "idx = " << idx << " => "
-              << vineyard::VYObjectIDToString(object_ids[idx]) << " at "
+              << vineyard::ObjectIDToString(object_ids[idx]) << " at "
               << instance_ids[idx];
 #endif
     // sync remote metadata, to ensure the persisted objects get watched.
@@ -132,7 +132,7 @@ ObjectId build_global_graph_stream(const char *graph_name, size_t size,
     auto pstream = builder.Seal(client);
     client.PutName(pstream->id(), std::string("__") + graph_name + "_vertex_stream");
     LOG(INFO) << "Generate parallel stream for vertex: " << graph_name << " -> "
-              << vineyard::VYObjectIDToString(pstream->id());
+              << vineyard::ObjectIDToString(pstream->id());
   }
   {
     vineyard::ParallelStreamBuilder builder(client);
@@ -142,7 +142,7 @@ ObjectId build_global_graph_stream(const char *graph_name, size_t size,
     auto pstream = builder.Seal(client);
     client.PutName(pstream->id(), std::string("__") + graph_name + "_edge_stream");
     LOG(INFO) << "Generate parallel stream for edge: " << graph_name << " -> "
-              << vineyard::VYObjectIDToString(pstream->id());
+              << vineyard::ObjectIDToString(pstream->id());
   }
 
   LOG(INFO) << "finish build_global_graph_stream, id = " << global_stream_id;
@@ -155,7 +155,7 @@ GraphBuilder get_graph_builder(const char *graph_name, const int index) {
   VINEYARD_CHECK_OK(client.GetName(graph_name, id));
 #ifndef NDEBUG
   LOG(INFO) << "get name " << graph_name << " yields ID "
-            << vineyard::VYObjectIDToString(id);
+            << vineyard::ObjectIDToString(id);
 #endif
   vineyard::ObjectMeta meta;
   VINEYARD_CHECK_OK(client.GetMetaData(id, meta, true));

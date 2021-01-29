@@ -28,7 +28,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.7
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.8
       options:
         --shm-size 4096m
     strategy:
@@ -133,7 +133,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.7
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.8
     steps:
     - name: Install Dependencies
       run: |
@@ -173,7 +173,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.7
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.8
     steps:
     - name: Install Dependencies
       run: |
@@ -375,6 +375,7 @@ jobs:
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
@@ -386,6 +387,11 @@ jobs:
         python3 -m pip install -r python/requirements-dev.txt --user
         python3 -m pip install pytest-cov --user
         pushd python && sudo -E python3 setup.py develop && popd
+
+        # Copy Vineyard drivers to /usr/local
+        sudo rm -f ./artifacts/opt/graphscope/bin/vineyard-codegen || true
+        sudo cp -rvf ./artifacts/opt/graphscope/bin/* /usr/local/bin/
+        sudo cp -rvf ./artifacts/opt/graphscope/share/vineyard /usr/local/share/
 
     - name: Kubernetes test
       env:
@@ -453,6 +459,7 @@ jobs:
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
@@ -471,7 +478,7 @@ jobs:
         cd interactive_engine/tests
         ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
-        ./function_test.sh 8111 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+        ./function_test.sh 8112 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
     - name: Clean
       run: |

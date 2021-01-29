@@ -10,4 +10,4 @@ pandas
 protobuf
 PyYAML
 scipy
-vineyard==0.1.7
+vineyard==0.1.8

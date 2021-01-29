@@ -23,12 +23,14 @@ import string
 import subprocess
 import sys
 
+import numpy as np
 import pytest
 
 import graphscope
 from graphscope.config import GSConfig as gs_config
 from graphscope.dataset.ldbc import load_ldbc
 from graphscope.dataset.modern_graph import load_modern_graph
+from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
 graphscope.set_option(show_log=True)
@@ -43,6 +45,11 @@ def data_dir():
 @pytest.fixture
 def modern_graph_data_dir():
     return "/testingdata/modern_graph"
+
+
+@pytest.fixture
+def p2p_property_dir():
+    return "/testingdata/property"
 
 
 def get_k8s_volumes():
@@ -304,3 +311,52 @@ def test_traversal_modern_graph(modern_graph_data_dir):
         .toList()[0]
         == 2
     )
+
+
+def test_serialize_roundtrip(p2p_property_dir):
+    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+    sess = graphscope.session(
+        num_workers=2,
+        k8s_gs_image=gs_image,
+        k8s_gie_graph_manager_image=gie_manager_image,
+        k8s_coordinator_cpu=0.5,
+        k8s_coordinator_mem="2500Mi",
+        k8s_vineyard_cpu=0.1,
+        k8s_vineyard_mem="512Mi",
+        k8s_engine_cpu=0.1,
+        k8s_engine_mem="1500Mi",
+        k8s_vineyard_shared_mem="2Gi",
+        k8s_volumes=get_k8s_volumes(),
+    )
+    graph = sess.load_from(
+        edges={
+            "knows": (
+                Loader(
+                    "{}/p2p-31_property_e_0".format(p2p_property_dir), header_row=True
+                ),
+                ["src_label_id", "dst_label_id", "dist"],
+                ("src_id", "person"),
+                ("dst_id", "person"),
+            ),
+        },
+        vertices={
+            "person": Loader(
+                "{}/p2p-31_property_v_0".format(p2p_property_dir), header_row=True
+            ),
+        },
+        generate_eid=False,
+    )
+    graph.serialize("/tmp/serialize")
+    graph.unload()
+    new_graph = Graph.deserialize("/tmp/serialize", sess)
+    pg = new_graph.project_to_simple(0, 0, 0, 2)
+    ctx = graphscope.sssp(pg, src=6)
+    ret = (
+        ctx.to_dataframe({"node": "v.id", "r": "r"}, vertex_range={"end": 6})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=float)
+    )
+    expect = np.array(
+        [[1.0, 260.0], [2.0, 229.0], [3.0, 310.0], [4.0, 256.0], [5.0, 303.0]]
+    )
+    assert np.all(ret == expect)

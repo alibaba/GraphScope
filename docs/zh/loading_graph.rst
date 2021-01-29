@@ -276,7 +276,7 @@ GraphScope 以
 
 .. code:: python
 
-    from graphscope import Loader
+    from graphscope.framework.loader import Loader
 
     ds1 = Loader("file:///var/datafiles/group.e")
     ds2 = Loader("oss://graphscope_bucket/datafiles/group.e", key='access-id', secret='secret-access-key', endpoint='oss-cn-hangzhou.aliyuncs.com')

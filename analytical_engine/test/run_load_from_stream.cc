@@ -45,7 +45,7 @@ static std::shared_ptr<gs::detail::Graph> make_graph_info(
     for (auto const& e : ess) {
       auto sublabel = gs::detail::Edge::SubLabel();
       auto pstream = client.GetObject<vineyard::ParallelStream>(
-          vineyard::VYObjectIDFromString(e));
+          vineyard::ObjectIDFromString(e));
       VINEYARD_ASSERT(pstream != nullptr,
                       "The pstream " + e + " doesn't exist");
       auto stream = pstream->GetStream<vineyard::DataframeStream>(0);
@@ -64,7 +64,7 @@ static std::shared_ptr<gs::detail::Graph> make_graph_info(
   for (auto const& v : vstreams) {
     auto vertex = std::make_shared<gs::detail::Vertex>();
     auto pstream = client.GetObject<vineyard::ParallelStream>(
-        vineyard::VYObjectIDFromString(v));
+        vineyard::ObjectIDFromString(v));
     VINEYARD_ASSERT(pstream != nullptr, "The stream " + v + " doesn't exist");
     auto stream = pstream->GetStream<vineyard::DataframeStream>(0);
     auto params = stream->GetParams();

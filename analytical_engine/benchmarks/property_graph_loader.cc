@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
     LOG(INFO) << "[property graph ids]:";
   }
   LOG(INFO) << "\n[frag-" << comm_spec.fid()
-            << "]: " << vineyard::VYObjectIDToString(fragment_id);
+            << "]: " << vineyard::ObjectIDToString(fragment_id);
 
   MPI_Barrier(comm_spec.comm());
 
@@ -141,14 +141,14 @@ int main(int argc, char** argv) {
     LOG(INFO) << "[empty graph ids]:";
   }
   LOG(INFO) << "\n[frag-" << comm_spec.fid()
-            << "]: " << vineyard::VYObjectIDToString(empty_frag_id);
+            << "]: " << vineyard::ObjectIDToString(empty_frag_id);
   MPI_Barrier(comm_spec.comm());
 
   if (comm_spec.worker_id() == 0) {
     LOG(INFO) << "[ed graph ids]:";
   }
   LOG(INFO) << "\n[frag-" << comm_spec.fid()
-            << "]: " << vineyard::VYObjectIDToString(ed_frag_id);
+            << "]: " << vineyard::ObjectIDToString(ed_frag_id);
 
   MPI_Barrier(comm_spec.comm());
 

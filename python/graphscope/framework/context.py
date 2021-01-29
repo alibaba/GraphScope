@@ -202,7 +202,7 @@ class BaseContext(object):
         object_id = json.loads(ret)["object_id"]
         return object_id
 
-    def output(self, fd, selector, vertex_range=None):
+    def output(self, fd, selector, vertex_range=None, **kwargs):
         """Dump results to `fd`.
         Support dumps data to local (respect to pod) files, hdfs or oss.
         It first write results to a vineyard dataframe, and let vineyard
@@ -211,14 +211,20 @@ class BaseContext(object):
             - local
                 `file:///tmp/result_path`
             - oss
-                `oss://id:key@endpoint/bucket/object`
+                `oss:///bucket/object`
             - hdfs
-                `hdfs://endpoint/result_path`
+                `hdfs:///tmp/result_path`
 
         Args:
             fd (str): Output location.
             selector (dict): Similar to `to_dataframe`.
             vertex_range (dict, optional): Similar to `to_dataframe`. Defaults to None.
+            kwargs (dict, optional): Storage options with respect to output storage type.
+                    for example:
+                    key, secret, endpoint for oss,
+                    key, secret, client_kwargs for s3,
+                    host, port for hdfs,
+                    None for local.
         """
         import vineyard
         import vineyard.io
@@ -251,6 +257,7 @@ class BaseContext(object):
             mode="w",
             vineyard_ipc_socket=vineyard_ipc_socket,
             vineyard_endpoint=vineyard_endpoint,
+            storage_options=kwargs,
             deployment=deployment,
             hosts=hosts,
         )
