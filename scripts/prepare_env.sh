@@ -42,7 +42,7 @@ function get_os_version() {
   elif [ -f /etc/centos-release ]; then
     # Older Red Hat, CentOS, etc.
     platform=CentOS
-    os_version=$(cat /etc/centos-release | sed 's/.* \([0-9]\).*/\1/'))
+    os_version=$(cat /etc/centos-release | sed 's/.* \([0-9]\).*/\1/')
   else
     # Fall back to uname, e.g. "Linux <version>", also works for BSD, Darwin, etc.
     platform=$(uname -s)
