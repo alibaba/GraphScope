@@ -145,11 +145,11 @@ function start_docker() {
 function launch_k8s_cluster() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') launching k8s cluster"
   curl -Lo config-with-mounts.yaml https://kind.sigs.k8s.io/examples/config-with-mounts.yaml
+  # mount $HOME dir to cluster container, which is kind-control-plane
   if [[ "${platform}" == *"Darwin"* ]];then
-    # mount $HOME dir to cluster container, which is kind-control-plane
-    sed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
-  else
     gsed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
+  else
+    sed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
   fi
   sudo kind create cluster --config config-with-mounts.yaml
   sudo cp -r /root/.kube ${HOME} || true
