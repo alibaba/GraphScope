@@ -56,7 +56,7 @@ function check_os_compatibility() {
     exit 1
   fi
 
-  if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"CentOS"* ]]; then
+  if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"CentOS"* && "${platform}" != *"Darwin"* ]]; then
     echo "This script is only available on Ubuntu/CentOS."
     exit 1
   fi
@@ -104,9 +104,12 @@ function install_dependencies() {
     sudo yum install -y docker-ce docker-ce-cli containerd.io
     sudo yum clean all
   elif [[ "${platform}" == *"Darwin"* ]]; then
+    if ! hash brew; then
+      echo "Homebrew is not installed"
+      exit 1
+    fi
     brew install git
-    brew install --cask docker
-    brew install gnu_sed
+    brew install gnu-sed
   fi
 
   check_dependencies_version
@@ -152,7 +155,6 @@ function launch_k8s_cluster() {
     sed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
   fi
   sudo kind create cluster --config config-with-mounts.yaml
-  sudo cp -r /root/.kube ${HOME} || true
   sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
   echo "$(date '+%Y-%m-%d %H:%M:%S') cluster is lauched successfully."
 }
