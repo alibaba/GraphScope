@@ -16,7 +16,7 @@ GraphScope is a unified distributed graph computing platform that provides a one
 Read more in the [whitepaper](https://github.com/alibaba/GraphScope/blob/main/docs/GraphScope_whitepaper.pdf).
 
 
-## Online Trial
+## Playground
 
 We provide a [Playground](https://try.graphscope.app) with a managed JupyterLab. With the Playground, you may try GraphScope just in your browser with a set of tutorials.
 
