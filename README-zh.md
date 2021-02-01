@@ -21,15 +21,17 @@ GraphScope 整合了达摩院的多项学术研究成果，其中的核心技术
 
 GraphScope 设计在 [Kubernetes (k8s)](https://kubernetes.io/) 管理的群集上运行。为了快速上手，我们可以利用 [minikube](https://minikube.sigs.k8s.io/) 来创建一个本地的 Kubernetes 集群，并根据如下步骤利用我们预先构建的 GraphScope 镜像。
 
-### 环境准备 
+### 环境准备
 
 为了在本地环境下使用 minikube 跑通我们的示例，以下软件需要您预先安装：
 
 - Docker
-- minikube
 - Python >= 3.6 (以及 pip)
+- Local Kubernetes cluster set-up tool (例如 [Kind](https://kind.sigs.k8s.io))
 
-对于 Linux 环境，我们也提供了一个脚本来安装以上软件来准备环境。
+对于 Windows 和 MacOS 的用户，可通过官方文档来安装上述依赖, 并在Docker中开启Kubernetes功能。
+对于 Ubuntu/CentOS Linux 发行版用户，我们提供了脚本来准备运行时环境。
+您也可以在 Windows 上安装 `WSL2 <https://docs.microsoft.com/zh-cn/windows/wsl/install-win10>`_ 以使用脚本。
 
 ```bash
 # run the environment preparing script.
@@ -111,9 +113,9 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
 </div>
 
 该图具有四种顶点，分别标记为“论文”、“作者”、“机构”和“研究领域”。有四种连接它们的边，
-每种边都有一个标签，并且边的两端顶点的标签也是确定的。 
+每种边都有一个标签，并且边的两端顶点的标签也是确定的。
 例如，“引用”这种标签的边连接两个“论文”顶点。另一个例子是标记为“撰写”的边，
-它要求该起始点的标记为“作者”，终止点的标记为“论文”。 
+它要求该起始点的标记为“作者”，终止点的标记为“论文”。
 所有的顶点和边都可以具有属性。 例如，“论文”顶点具有诸如发布年份、主题标签等属性。
 
 要将此图加载到 GraphScope，可以将以下代码与
