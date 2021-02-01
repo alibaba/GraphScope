@@ -502,6 +502,7 @@ std::shared_ptr<Object> GlobalPGStreamBuilder::_Seal(Client& client) {
   auto gstream = std::make_shared<GlobalPGStream>();
   gstream->total_stream_chunks_ = total_stream_chunks_;
   gstream->meta_.SetTypeName(type_name<GlobalPGStream>());
+  gstream->meta_.SetGlobal(true);
   gstream->meta_.AddKeyValue("total_stream_chunks", total_stream_chunks_);
 
   for (size_t idx = 0; idx < stream_chunks_.size(); ++idx) {
