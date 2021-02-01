@@ -99,6 +99,12 @@ k8s_volumes = {
 sess = graphscope.session(k8s_volumes=k8s_volumes)
 ```
 
+对于 macOS，创建会话需要使用 LoadBalancer 服务类型（默认是 NodePort）。
+
+```python
+sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
+```
+
 会话的建立过程中，首选会在背后尝试拉起一个 `coordinator` 作为后端引擎的入口。
 该 `coordinator` 负责管理该次会话的所有资源（k8s pods），以及交互式查询、图分析、图学习引擎的生命周期。
 在 `coordinator` 后续拉起的其他每个 pod 中，都有一个 vineyard 实例作为内存管理层，分布式的管理图数据。

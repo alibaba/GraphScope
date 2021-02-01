@@ -72,7 +72,7 @@ To use GraphScope, we need to establish a :ref:`Session` in a python interpreter
 
     sess = graphscope.session(k8s_volumes=k8s_volumes)
 
-for macOS, session need to established with LoadBalancer service type (default is NodePort).
+For macOS, the session needs to establish with the LoadBalancer service type (which is NodePort by default).
 
 .. code:: python
 

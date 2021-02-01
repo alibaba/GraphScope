@@ -95,7 +95,7 @@ k8s_volumes = {
 sess = graphscope.session(k8s_volumes=k8s_volumes)
 ```
 
-for macOS, session need to established with LoadBalancer service type (default is NodePort).
+For macOS, the session needs to establish with the LoadBalancer service type (which is NodePort by default).
 
 ```python
 sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
