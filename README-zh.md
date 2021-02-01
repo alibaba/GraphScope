@@ -17,6 +17,10 @@ GraphScope 整合了达摩院的多项学术研究成果，其中的核心技术
 
 欢迎阅读[白皮书](https://github.com/alibaba/GraphScope/blob/main/docs/GraphScope_whitepaper.pdf)了解更多信息。
 
+## 在线试用
+
+我们提供了一个基于 JupyterHub 的 [Playground](https://try.graphscope.app)，您可以从浏览器中就能在线试用 GraphScope。我们在 Playground 中也提供了一系列教程，帮助您更好的上手 GraphScope。 
+
 ## 快速开始
 
 GraphScope 设计在 [Kubernetes (k8s)](https://kubernetes.io/) 管理的群集上运行。为了快速上手，我们可以按照本文档的以下步骤部署一个本地 Kubernetes 集群，并加载预编译好的镜像。。
