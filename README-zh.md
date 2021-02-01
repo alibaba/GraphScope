@@ -19,17 +19,19 @@ GraphScope 整合了达摩院的多项学术研究成果，其中的核心技术
 
 ## 快速开始
 
-GraphScope 设计在 [Kubernetes (k8s)](https://kubernetes.io/) 管理的群集上运行。为了快速上手，我们可以利用 [minikube](https://minikube.sigs.k8s.io/) 来创建一个本地的 Kubernetes 集群，并根据如下步骤利用我们预先构建的 GraphScope 镜像。
+GraphScope 设计在 [Kubernetes (k8s)](https://kubernetes.io/) 管理的群集上运行。为了快速上手，我们可以按照本文档的以下步骤部署一个本地 Kubernetes 集群，并加载预编译好的镜像。。
 
-### 环境准备 
+### 环境准备
 
-为了在本地环境下使用 minikube 跑通我们的示例，以下软件需要您预先安装：
+本地运行 GraphScope 需要预先安装以下依赖:
 
 - Docker
-- minikube
 - Python >= 3.6 (以及 pip)
+- Local Kubernetes cluster set-up tool (例如 [Kind](https://kind.sigs.k8s.io))
 
-对于 Linux 环境，我们也提供了一个脚本来安装以上软件来准备环境。
+对于 Windows 和 MacOS 的用户，可通过官方文档来安装上述依赖, 并在Docker中开启Kubernetes功能。
+对于 Ubuntu/CentOS Linux 发行版用户，我们提供了脚本来准备运行时环境。
+您也可以在 Windows 上安装 `WSL2 <https://docs.microsoft.com/zh-cn/windows/wsl/install-win10>`_ 以使用脚本。
 
 ```bash
 # run the environment preparing script.
@@ -97,6 +99,12 @@ k8s_volumes = {
 sess = graphscope.session(k8s_volumes=k8s_volumes)
 ```
 
+对于 macOS，创建会话需要使用 LoadBalancer 服务类型（默认是 NodePort）。
+
+```python
+sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
+```
+
 会话的建立过程中，首选会在背后尝试拉起一个 `coordinator` 作为后端引擎的入口。
 该 `coordinator` 负责管理该次会话的所有资源（k8s pods），以及交互式查询、图分析、图学习引擎的生命周期。
 在 `coordinator` 后续拉起的其他每个 pod 中，都有一个 vineyard 实例作为内存管理层，分布式的管理图数据。
@@ -111,9 +119,9 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
 </div>
 
 该图具有四种顶点，分别标记为“论文”、“作者”、“机构”和“研究领域”。有四种连接它们的边，
-每种边都有一个标签，并且边的两端顶点的标签也是确定的。 
+每种边都有一个标签，并且边的两端顶点的标签也是确定的。
 例如，“引用”这种标签的边连接两个“论文”顶点。另一个例子是标记为“撰写”的边，
-它要求该起始点的标记为“作者”，终止点的标记为“论文”。 
+它要求该起始点的标记为“作者”，终止点的标记为“论文”。
 所有的顶点和边都可以具有属性。 例如，“论文”顶点具有诸如发布年份、主题标签等属性。
 
 要将此图加载到 GraphScope，可以将以下代码与

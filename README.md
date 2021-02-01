@@ -26,9 +26,9 @@ To run GraphScope on your local computer, the following dependencies or tools ar
 
 - Docker
 - Python >= 3.6 (with pip)
-- Local Kubernetes cluster set-up tool (e.g. [Minikube](https://minikube.sigs.k8s.io) or [Kind](https://kind.sigs.k8s.io))
+- Local Kubernetes cluster set-up tool (e.g. [Kind](https://kind.sigs.k8s.io))
 
-On macOS, you can follow the official guides to install them.
+On macOS, you can follow the official guides to install them and enable Kubernetes in Docker.
 For Ubuntu/CentOS Linux distributions, we provide a script to install the above
 dependencies and prepare the environment.
 On Windows, you may want to install [Ubuntu](https://ubuntu.com/blog/ubuntu-on-wsl-2-is-generally-available) on [WSL2](https://docs.microsoft.com/zh-cn/windows/wsl/install-win10) to use the script.
@@ -78,24 +78,27 @@ To use GraphScope, we need to establish a session in a python interpreter.
 import os
 import graphscope
 
-# Setting an env for mounting test data from local disk,
-# hence we can access data inside the pods.
-
 # assume we mount `~/test_data` to `/testingdata` in pods.
 k8s_volumes = {
     "data": {
         "type": "hostPath",
         "field": {
-          "path": os.path.expanduser("~/test_data/"),
-          "type": "Directory"
+            "path": os.path.expanduser("~/test_data/"),
+            "type": "Directory"
         },
         "mounts": {
-          "mountPath": "/testingdata"
+            "mountPath": "/testingdata"
         }
     }
 }
 
 sess = graphscope.session(k8s_volumes=k8s_volumes)
+```
+
+For macOS, the session needs to establish with the LoadBalancer service type (which is NodePort by default).
+
+```python
+sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
 ```
 
 A session tries to launch a `coordinator`, which is the entry for the back-end engines.

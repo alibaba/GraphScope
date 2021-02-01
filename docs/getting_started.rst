@@ -53,8 +53,30 @@ To use GraphScope, we need to establish a :ref:`Session` in a python interpreter
 
 .. code:: python
 
+    import os
     import graphscope
-    sess = graphscope.session()
+
+    # assume we mount `~/test_data` to `/testingdata` in pods.
+    k8s_volumes = {
+        "data": {
+            "type": "hostPath",
+            "field": {
+                "path": os.path.expanduser("~/test_data/"),
+                "type": "Directory"
+            },
+            "mounts": {
+                "mountPath": "/testingdata"
+            }
+        }
+    }
+
+    sess = graphscope.session(k8s_volumes=k8s_volumes)
+
+For macOS, the session needs to establish with the LoadBalancer service type (which is NodePort by default).
+
+.. code:: python
+
+    sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
 
 A :ref:`Session` tries to launch a coordinator,
 which is the entry for the back-end engines.
@@ -124,6 +146,14 @@ To load this graph to GraphScope, one may use the code below.
             ),
         }
     )
+
+Alternatively, we provide a function to load this graph for convenience.
+
+.. code:: python
+
+    from graphscope.dataset.ogbn_mag import load_ogbn_mag
+
+    g = load_ogbn_mag(sess, "/testingdata/ogbn_mag_small/")
 
 Here, the ``g`` is loaded in parallel via vineyard and stored
 in vineyard instances in the cluster managed by the session.

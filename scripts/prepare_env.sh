@@ -42,9 +42,9 @@ function get_os_version() {
   elif [ -f /etc/centos-release ]; then
     # Older Red Hat, CentOS, etc.
     platform=CentOS
-    os_version=$(cat /etc/centos-release | sed 's/.* \([0-9]\).*/\1/'))
+    os_version=$(cat /etc/centos-release | sed 's/.* \([0-9]\).*/\1/')
   else
-    # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+    # Fall back to uname, e.g. "Linux <version>", also works for BSD, Darwin, etc.
     platform=$(uname -s)
     os_version=$(uname -r)
   fi
@@ -57,7 +57,7 @@ function check_os_compatibility() {
   fi
 
   if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"CentOS"* ]]; then
-    echo "This script is only available on Ubuntu/CentOS."
+    echo "This script is only available on Ubuntu/CentOS"
     exit 1
   fi
 
@@ -116,15 +116,9 @@ function install_dependencies() {
   chmod +x kubectl && sudo mv kubectl /usr/local/bin/ && sudo ln /usr/local/bin/kubectl /usr/bin/kubectl || true
   echo "$(date '+%Y-%m-%d %H:%M:%S') kubectl ${K8S_VERSION} installed."
 
-  if [[ "${is_in_wsl}" = false ]]; then
-      curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
-      chmod +x minikube && sudo mv minikube /usr/local/bin/ && sudo ln /usr/local/bin/minikube /usr/bin/minikube || true
-      echo "$(date '+%Y-%m-%d %H:%M:%S') minikube ${K8S_VERSION} installed."
-  else
-      curl -Lo kind https://kind.sigs.k8s.io/dl/v0.9.0/kind-linux-amd64 && \
-      chmod +x kind && sudo mv kind /usr/local/bin/ && sudo ln /usr/local/bin/kind /usr/bin/kind || true
-      echo "$(date '+%Y-%m-%d %H:%M:%S') kind v0.9.0 installed."
-  fi
+  curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.10.0/kind-linux-amd64
+  chmod +x kind && sudo mv kind /usr/local/bin/ && sudo ln /usr/local/bin/kind /usr/bin/kind || true
+  echo "$(date '+%Y-%m-%d %H:%M:%S') kind v0.10.0 installed."
 }
 
 function start_docker() {
@@ -142,24 +136,11 @@ function start_docker() {
 
 function launch_k8s_cluster() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') launching k8s cluster"
-  if [[ "${is_in_wsl}" = false ]]; then
-    export CHANGE_MINIKUBE_NONE_USER=true
-    sudo sysctl fs.protected_regular=0 || true
-    sudo minikube start --vm-driver=none --kubernetes-version="${K8S_VERSION}"
-
-    sudo cp -r /root/.kube /root/.minikube "${HOME}" || true
-    sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.minikube || true
-    sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
-    sed -i 's@/root@'"${HOME}"'@g' "${HOME}"/.kube/config || true
-    minikube update-context
-  else
-    curl -Lo config-with-mounts.yaml https://kind.sigs.k8s.io/examples/config-with-mounts.yaml
-    # mount $HOME dir to cluster container, which is kind-control-plane
-    sed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
-    sudo kind create cluster --config config-with-mounts.yaml
-    sudo cp -r /root/.kube ${HOME} || true
-    sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
-  fi
+  curl -Lo config-with-mounts.yaml https://kind.sigs.k8s.io/examples/config-with-mounts.yaml
+  # mount $HOME dir to cluster container, which is kind-control-plane
+  sed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
+  sudo kind create cluster --config config-with-mounts.yaml
+  sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
   echo "$(date '+%Y-%m-%d %H:%M:%S') cluster is lauched successfully."
 }
 
@@ -171,14 +152,13 @@ function pull_images() {
   sudo docker pull quay.io/coreos/etcd:v3.4.13 || true
   echo "$(date '+%Y-%m-%d %H:%M:%S') images pulled successfully."
 
-  if [[ "${is_in_wsl}" = true ]]; then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') loading images into kind cluster."
-    sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${version} || true
-    sudo kind load registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${version} || true
-    sudo kind load zookeeper:3.4.14 || true
-    sudo kind load quay.io/coreos/etcd:v3.4.13 || true
-    echo "$(date '+%Y-%m-%d %H:%M:%S') images loaded."
-  fi
+  echo "$(date '+%Y-%m-%d %H:%M:%S') loading images into kind cluster."
+  sudo kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${version} || true
+  sudo kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${version} || true
+  sudo kind load docker-image zookeeper:3.4.14 || true
+  sudo kind load docker-image quay.io/coreos/etcd:v3.4.13 || true
+  echo "$(date '+%Y-%m-%d %H:%M:%S') images loaded."
+
 }
 
 if [ -f "${HOME}/.kube/config" ];
