@@ -86,6 +86,7 @@ void LoadGraph(
           auto new_frag = std::static_pointer_cast<_GRAPH_TYPE>(
               client.GetObject(new_frag_id));
 
+          VINEYARD_CHECK_OK(client.Persist(new_frag_id));
           BOOST_LEAF_AUTO(
               new_frag_group_id,
               vineyard::ConstructFragmentGroup(client, new_frag_id, comm_spec));
@@ -172,6 +173,7 @@ void ToArrowFragment(
 
         gs::DynamicToArrowConverter<oid_t> converter(comm_spec, client);
         BOOST_LEAF_AUTO(arrow_frag, converter.Convert(dynamic_frag));
+        VINEYARD_CHECK_OK(client.Persist(arrow_frag->id()));
         BOOST_LEAF_AUTO(frag_group_id,
                         vineyard::ConstructFragmentGroup(
                             client, arrow_frag->id(), comm_spec));

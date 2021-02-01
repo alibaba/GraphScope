@@ -98,6 +98,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     VINEYARD_CHECK_OK(client->GetMetaData(fragment_->id(), obj_meta));
     vineyard::ObjectID new_frag_id;
     VINEYARD_CHECK_OK(client->CreateMetaData(obj_meta, new_frag_id));
+    VINEYARD_CHECK_OK(client->Persist(new_frag_id));
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
                                        *client, new_frag_id, comm_spec));
     auto new_frag =
@@ -206,6 +207,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
 
     auto new_frag_id = fragment_->AddVertexColumns(*client, columns);
 
+    VINEYARD_CHECK_OK(client->Persist(new_frag_id));
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
                                        *client, new_frag_id, comm_spec));
     auto new_frag = client->GetObject<fragment_t>(new_frag_id);
