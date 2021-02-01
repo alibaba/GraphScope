@@ -1,7 +1,7 @@
 Tutorials
 =========
 
-We provide a set of comprehensive tutorials for users to get start with GraphScope. In the tutorials you could learn
+We provide a set of comprehensive tutorials for users to get started with GraphScope. In the tutorials you could learn
 how to launch a session, to load graphs, and to run analytical analysis, interactive queries as well as graph neural
 network trainings using GAE, GIE and GLE in GraphScope.
 
