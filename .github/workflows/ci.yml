@@ -11,6 +11,7 @@ on:
       - '**.rst'
       - 'docs/**'
       - 'scripts/**'
+      - 'tutorials/**'
   pull_request:
     branches:
       - main
@@ -20,6 +21,7 @@ on:
       - '**.rst'
       - 'docs/**'
       - 'scripts/**'
+      - 'tutorials/**'
 
 jobs:
   build-gae:
