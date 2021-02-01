@@ -16,6 +16,11 @@ GraphScope is a unified distributed graph computing platform that provides a one
 Read more in the [whitepaper](https://github.com/alibaba/GraphScope/blob/main/docs/GraphScope_whitepaper.pdf).
 
 
+## Online Trial
+
+We provide a [Playground](https://try.graphscope.app) with a managed JupyterLab. With the Playground, you may try GraphScope just in your browser with a set of tutorials.
+
+
 ## Getting Started
 
 GraphScope can run on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started, we can set up a *local* Kubernetes cluster and take advantage of pre-built Docker images as follows.
