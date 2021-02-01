@@ -56,8 +56,8 @@ function check_os_compatibility() {
     exit 1
   fi
 
-  if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"CentOS"* && "${platform}" != *"Darwin"* ]]; then
-    echo "This script is only available on Ubuntu/CentOS."
+  if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"CentOS"* ]]; then
+    echo "This script is only available on Ubuntu/CentOS"
     exit 1
   fi
 
@@ -103,13 +103,6 @@ function install_dependencies() {
     sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     sudo yum install -y docker-ce docker-ce-cli containerd.io
     sudo yum clean all
-  elif [[ "${platform}" == *"Darwin"* ]]; then
-    if ! hash brew; then
-      echo "Homebrew is not installed"
-      exit 1
-    fi
-    brew install git
-    brew install gnu-sed
   fi
 
   check_dependencies_version
@@ -123,11 +116,7 @@ function install_dependencies() {
   chmod +x kubectl && sudo mv kubectl /usr/local/bin/ && sudo ln /usr/local/bin/kubectl /usr/bin/kubectl || true
   echo "$(date '+%Y-%m-%d %H:%M:%S') kubectl ${K8S_VERSION} installed."
 
-  if [[ "${platform}" == *"Darwin"* ]];then
-      curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.10.0/kind-darwin-amd64
-  else
-      curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.10.0/kind-linux-amd64
-  fi
+  curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.10.0/kind-linux-amd64
   chmod +x kind && sudo mv kind /usr/local/bin/ && sudo ln /usr/local/bin/kind /usr/bin/kind || true
   echo "$(date '+%Y-%m-%d %H:%M:%S') kind v0.10.0 installed."
 }
@@ -149,11 +138,7 @@ function launch_k8s_cluster() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') launching k8s cluster"
   curl -Lo config-with-mounts.yaml https://kind.sigs.k8s.io/examples/config-with-mounts.yaml
   # mount $HOME dir to cluster container, which is kind-control-plane
-  if [[ "${platform}" == *"Darwin"* ]];then
-    gsed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
-  else
-    sed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
-  fi
+  sed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
   sudo kind create cluster --config config-with-mounts.yaml
   sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
   echo "$(date '+%Y-%m-%d %H:%M:%S') cluster is lauched successfully."
