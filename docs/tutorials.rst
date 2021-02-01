@@ -1,6 +1,15 @@
 Tutorials
 =========
 
+We provide a set of comprehensive tutorials for users to get start with GraphScope. In the tutorials you could learn
+how to launch a session, to load graphs, and to run analytical analysis, interactive queries as well as graph neural
+network trainings using GAE, GIE and GLE in GraphScope.
+
+The tutorials are organized as jupyter notebooks. Users can try them in any jupyter notebook servers. You could play
+with those tutorials using our well-prepared jupyterlab environment in `GraphScope Playground <https://try.graphscope.app>`_.
+
+All tutorials are listed as follows:
+
 .. toctree::
    :numbered:
    :maxdepth: 2
