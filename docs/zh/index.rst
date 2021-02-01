@@ -41,6 +41,19 @@ GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。
 
 .. toctree::
    :maxdepth: 2
+   :caption: 入门教程
+
+   How to Create a Session <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/1_how_to_launch_a_session.ipynb>
+   Loading Graphs <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/2_loading_graphs.ipynb>
+   Built-in Analytical Algorithms <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/3_builtin_analytical_algorithms.ipynb>
+   Writing Your Own Algorithms <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/4_writing_your_own_algorithms.ipynb>
+   Interactive Query with Gremlin <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/5_interactive_query_with_gremlin.ipynb>
+   Unsupervised Learning with GraphSage <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/6_unsupervised_learning_with_graphsage.ipynb>
+   Supervised Learning with GCN <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/7_supervised_learning_with_gcn.ipynb>
+   A Complex Workflow: Node Classification on Citation Network <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/8_node_classification_on_citation_network.ipynb>
+
+.. toctree::
+   :maxdepth: 2
    :caption: API 参考
 
    Python API 参考 <https://graphscope.io/docs/reference/python_index.html>
