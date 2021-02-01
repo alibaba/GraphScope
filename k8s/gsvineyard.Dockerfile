@@ -14,7 +14,7 @@ RUN cd /tmp && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.1.7 https://github.com/alibaba/libvineyard.git && \
+    git clone -b v0.1.8 https://github.com/alibaba/libvineyard.git && \
     cd libvineyard && \
     git submodule update --init && \
     mkdir -p /tmp/libvineyard/build && \

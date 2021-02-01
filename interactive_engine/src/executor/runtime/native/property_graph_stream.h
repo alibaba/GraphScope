@@ -365,7 +365,7 @@ class PropertyGraphInStream {
 
 class GlobalPGStreamBuilder;
 
-class GlobalPGStream : public Registered<GlobalPGStream> {
+class GlobalPGStream : public Registered<GlobalPGStream>, GlobalObject {
  public:
   static std::shared_ptr<Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<Object>(

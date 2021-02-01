@@ -273,6 +273,7 @@ class ArrowFragmentLoader {
 
   boost::leaf::result<vineyard::ObjectID> LoadFragmentAsFragmentGroup() {
     BOOST_LEAF_AUTO(frag_id, LoadFragment());
+    VY_OK_OR_RAISE(client_.Persist(frag_id));
     return vineyard::ConstructFragmentGroup(client_, frag_id, comm_spec_);
   }
 
