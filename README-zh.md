@@ -19,11 +19,11 @@ GraphScope 整合了达摩院的多项学术研究成果，其中的核心技术
 
 ## 快速开始
 
-GraphScope 设计在 [Kubernetes (k8s)](https://kubernetes.io/) 管理的群集上运行。为了快速上手，我们可以利用 [minikube](https://minikube.sigs.k8s.io/) 来创建一个本地的 Kubernetes 集群，并根据如下步骤利用我们预先构建的 GraphScope 镜像。
+GraphScope 设计在 [Kubernetes (k8s)](https://kubernetes.io/) 管理的群集上运行。为了快速上手，我们可以按照本文档的以下步骤部署一个本地 Kubernetes 集群，并加载预编译好的镜像。。
 
 ### 环境准备
 
-为了在本地环境下使用 minikube 跑通我们的示例，以下软件需要您预先安装：
+本地运行 GraphScope 需要预先安装以下依赖:
 
 - Docker
 - Python >= 3.6 (以及 pip)
