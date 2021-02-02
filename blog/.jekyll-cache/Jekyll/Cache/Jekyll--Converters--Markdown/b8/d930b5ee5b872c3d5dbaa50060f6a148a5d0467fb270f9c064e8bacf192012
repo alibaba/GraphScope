@@ -1,0 +1,55 @@
+I"ç
+<p><img src="/blog/assets/images/release_note_t.png" alt="release-note" />
+The GraphScope team is pleased to announce the 0.2.0 release after two-months development.
+The 0.2.0 release is focused on better getting started experience for end-users and we have
+make a lot of improvements since the last minor release. We have improved our documentation
+a lot, and made the kubernetes integration work for more settings. We have also brought the
+support for various I/O to make GraphScope suitable for more production environments.</p>
+
+<p>Along with the 0.2.0 release we also bring <a href="https://try.graphscope.app">GraphScope Playground</a> to users
+for getting started with GraphScope easier.</p>
+
+<p>We highlights the following improvements included in this releases:</p>
+
+<ol>
+  <li>
+    <p>Better Kubernetes integration.</p>
+
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">LoadBalancer</code> service type has been supported in this release, which brings GraphScope to
+vendored could environments like Alibabacloud, AWS and Azure.</li>
+      <li>A <code class="language-plaintext highlighter-rouge">volumes</code> parameter has been added to <code class="language-plaintext highlighter-rouge">graphscope.session()</code> to allow users mount their
+volumes (host path, or cloud volumes, etc.) to worker pods for input graph data and retrieve
+results.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Enhancement for interactive query.</p>
+
+    <ul>
+      <li>GraphScope v0.2.0 added a <code class="language-plaintext highlighter-rouge">InteractiveQuery.traversal_source()</code> method to allows an interative
+query seamlessly works with the <code class="language-plaintext highlighter-rouge">gremlinpython</code> SDK.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Better I/O and serialization support.</p>
+
+    <ul>
+      <li>GraphScope v0.2.0 started to support various I/O, including Aliyun OSS, AWS S3, HDFS and other
+storage services that the filesystem-spec could support, for input datasets and result sink.</li>
+      <li>GraphScope v0.2.0 added a <code class="language-plaintext highlighter-rouge">Graph.serialize()</code> method to allow users serialize a graph to external
+storage and restore it back via <code class="language-plaintext highlighter-rouge">Graph.deserailize()</code>.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Bugfix for learning engine.</p>
+
+    <ul>
+      <li>A bug in closing learning instance of a graph has been fixed along this release.</li>
+    </ul>
+  </li>
+</ol>
+
+<p>For more detailed bugfixes and improvements that have been made in
+this version, please refer to the <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.2.0">complete changelog</a>.</p>
+:ET

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Release Notes: v0.2.0</h1>
+            <section class="post-meta">
+                
+                on ReleaseNotes
+                
+                <time class="post-date" datetime=" 2021-02-01">01 Feb 2021</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2021-02-01">01 Feb 2021</time>
+            
+                on ReleaseNotes
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Release Notes: v0.2.0</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/release_note_t.png" alt="release-note" />
+The GraphScope team is pleased to announce the 0.2.0 release after two-months development.
+The 0.2.0 release is focused on better getting started experience for end-users and we have
+make a lot of improvements since the last minor release. We have improved our documentation
+a lot, and made the kubernetes integration work for more settings. We have also brought the
+support for various I/O to make GraphScope suitable for more production environments.</p>
+
+<p>Along with the 0.2.0 release we also bring <a href="https://try.graphscope.app">GraphScope Playground</a> to users
+for getting started with GraphScope easier.</p>
+
+<p>We highlights the following improvements included in this releases:</p>
+
+<ol>
+  <li>
+    <p>Better Kubernetes integration.</p>
+
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">LoadBalancer</code> service type has been supported in this release, which brings GraphScope to
+vendored could environments like Alibabacloud, AWS and Azure.</li>
+      <li>A <code class="language-plaintext highlighter-rouge">volumes</code> parameter has been added to <code class="language-plaintext highlighter-rouge">graphscope.session()</code> to allow users mount their
+volumes (host path, or cloud volumes, etc.) to worker pods for input graph data and retrieve
+results.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Enhancement for interactive query.</p>
+
+    <ul>
+      <li>GraphScope v0.2.0 added a <code class="language-plaintext highlighter-rouge">InteractiveQuery.traversal_source()</code> method to allows an interative
+query seamlessly works with the <code class="language-plaintext highlighter-rouge">gremlinpython</code> SDK.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Better I/O and serialization support.</p>
+
+    <ul>
+      <li>GraphScope v0.2.0 started to support various I/O, including Aliyun OSS, AWS S3, HDFS and other
+storage services that the filesystem-spec could support, for input datasets and result sink.</li>
+      <li>GraphScope v0.2.0 added a <code class="language-plaintext highlighter-rouge">Graph.serialize()</code> method to allow users serialize a graph to external
+storage and restore it back via <code class="language-plaintext highlighter-rouge">Graph.deserailize()</code>.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Bugfix for learning engine.</p>
+
+    <ul>
+      <li>A bug in closing learning instance of a graph has been fixed along this release.</li>
+    </ul>
+  </li>
+</ol>
+
+<p>For more detailed bugfixes and improvements that have been made in
+this version, please refer to the <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.2.0">complete changelog</a>.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Release Notes: v0.2.0&amp;url=https://graphscope.io/releasenotes/2021/02/01/release-notes-0.2.0.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/releasenotes/2021/02/01/release-notes-0.2.0.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/releasenotes/2021/02/01/release-notes-0.2.0.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2021 &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+</body>
+</html>

@@ -1,0 +1,20 @@
+I"a<p><img src="/blog/assets/images/releasing.png" alt="graphscope-releasing" />
+The source code of GraphScope is released today!</p>
+
+<p>github repo: https://github.com/alibaba/graphscope</p>
+
+<p>GraphScope aims to provide a single system that is able to support three
+types of computation tasks, i.e., graph interactive query, graph analytics and graph deep learning.
+We carefully design GraphScope with user-friendly interface and extensible programming APIs,
+so that users can easily construct customized end-to-end graph processing pipelines involving
+different types of graph computation tasks. In specific, GraphScope fully embraces the Python and
+Gremlin ecosystem, and thus comes with a shallow learning curve for both data scientists and
+developers. Under the hood, GraphScope comprises core engines specifically optimized for each
+graph computation paradigm, and can smoothly orchestrate multiple engines to cooperate efficiently,
+avoiding the complexity of manually stitching multiple independent systems together. GraphScope
+can scale to ultra-large graphs, and run in industrial speed and robustness.</p>
+
+<p>GraphScope is released under Apache License 2.0. Any contributions are greatly appreciated!
+You may reach us at <a href="http://slack.graphscope.io/">Slack channel</a> or submit 
+<a href="https://github.com/alibaba/GraphScope/issues">GitHub issues</a>.</p>
+:ET

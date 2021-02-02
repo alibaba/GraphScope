@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Introducing GraphScope Playground</h1>
+            <section class="post-meta">
+                
+                on Newsroom
+                
+                <time class="post-date" datetime=" 2021-02-01">01 Feb 2021</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2021-02-01">01 Feb 2021</time>
+            
+                on Newsroom
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Introducing GraphScope Playground</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/try-record.gif" alt="try-record.gif" /> 
+Today we released <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.2.0">GraphScope 0.2.0</a>.  With this release, we are happy to introduce <a href="http://try.graphscope.app/">GraphScope Playground</a>, a hosted JupyterLab with GraphScope ready out-of-the-box. Now you can get started with GraphScope straight away in your browser without any hassle for setting it up.</p>
+
+<h4 id="signing-in">Signing-in</h4>
+<p>The GraphScope Playground is built on top of <a href="https://jupyter.org/hub">JupyterHub</a>. At the moment, it only supports Github OAuth for signing-in. Please make sure you have a <a href="https://github.com/join">Github account</a> before proceed.</p>
+
+<p><img src="/blog/assets/images/try-login.gif" alt="try-login.gif" /></p>
+
+<p>Open <a href="https://try.graphscope.app/">GraphScope PlayGround</a> in your browser. You will be shown a landing page of GraphScope Playground. It only take a few clicks to get authenticated with your Github account. A JupyterLab session will be created for you in a few seconds.</p>
+
+<h4 id="in-the-playground">In the Playground</h4>
+<p>You will be redirected to the JupyterLab interface after signing-in. It is a modern integrated development environment for Notebooks, where documents and activities integrate with each other, enabling new workflows for interactive computing in Python.</p>
+
+<p><img src="/blog/assets/images/raw-playground-snapshot.png" alt="gs-snapshot" /></p>
+
+<p>On the left, there is a sidebar, where you can navigate your workspace with the file browser, as well as check the list of running kernels and terminals, the command palette, and the list of tabs in the main work area etc. One the right, it is the main work area, where tabs and panes can be created for the files and notebooks you edit. You can also open a terminal if you like.</p>
+
+<p>A JupyterLab session lives inside a docker container is specifically created for you after signing-in. The session will live for up to 120 mins (or 15 mins without user interactions). Based on the the official <code class="language-plaintext highlighter-rouge">jupyterhub/singleuser:1.3</code> image, we added necessary packages, tutorials and sample datasets for running GraphScope to the  Playground image. You are given 1 CPU core and 2GB memory for the JupyterLab container, and you are also given the access to a Kubernetes cluster with a limit of 16 CPU cores and 32GB memory for you to run GraphScope sessions. Following the convention of JupyterLab, the default working directory is <code class="language-plaintext highlighter-rouge">/home/jovyan/</code>,  where you can find tutorials at the root, datasets under the <code class="language-plaintext highlighter-rouge">datasets</code> folder and a <code class="language-plaintext highlighter-rouge">workspace</code> folder.</p>
+
+<p>You can open an existing / create a new notebook, and start coding with GraphScope straight away. If you want to access the files you edited at a later time, you can place them under <code class="language-plaintext highlighter-rouge">workspace</code> folder. All the changes elsewhere will be reset after session ends. We place  <strong>a copy of the sample datasets</strong> on K8s hosts, which can be <a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_how_to_launch_a_session.ipynb#Mounting-Volumes">mounted to the GraphScope pods</a>. Please note that your local edits to the <code class="language-plaintext highlighter-rouge">~/datasets</code> won’t affect the copy on K8s hosts (<em>stay tuned!</em>).</p>
+
+<h4 id="tutorials">Tutorials</h4>
+
+<p>In the GraphScope Playground, you have access to a set of comprehensive tutorials to get started with GraphScope. In the tutorials you could learn how to launch a session, to load graphs, and to run analytical analysis, interactive queries as well as graph neural network trainings in GraphScope. At the moment, we have the following tutorials included.</p>
+
+<ol>
+  <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_how_to_launch_a_session.ipynb">How to Create a Session</a></li>
+  <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/2_loading_graphs.ipynb">Loading Graphs</a></li>
+  <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/3_builtin_analytical_algorithms.ipynb">Built-in Analytical Algorithms</a></li>
+  <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/4_writing_your_own_algorithms.ipynb">Writing Your Own Algorithms</a></li>
+  <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/5_interactive_query_with_gremlin.ipynb">Interactive Query with Gremlin</a></li>
+  <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/6_unsupervised_learning_with_graphsage.ipynb">Unsupervised Learning with GraphSage</a></li>
+  <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/7_supervised_learning_with_gcn.ipynb">Supervised Learning with GCN</a></li>
+  <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/8_node_classification_on_citation_network.ipynb">A Complex Workflow: Node Classification on Citation Network</a></li>
+</ol>
+
+<h1 id="stay-tuned-for-new-features">Stay tuned for new features</h1>
+<p>With GraphScope Playground, we wish to make getting started with GraphScope as easy as possible. We are constantly working on improving the experience. If you have any questions or feedbacks, feel free to write a <a href="https://github.com/alibaba/GraphScope/discussions">post at Github Discussions</a>. Happy Coding!</p>
+
+<p>Please note that the service provided by GraphScope Playground is strictly limited to the trial of GraphScope only. Any other use is strictly prohibited. Your use of the service will be at your own risk. And we provide no warranties to the service.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Introducing GraphScope Playground&amp;url=https://graphscope.io/newsroom/2021/02/01/introducing-graphscope-playground.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/newsroom/2021/02/01/introducing-graphscope-playground.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/newsroom/2021/02/01/introducing-graphscope-playground.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2021 &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+</body>
+</html>

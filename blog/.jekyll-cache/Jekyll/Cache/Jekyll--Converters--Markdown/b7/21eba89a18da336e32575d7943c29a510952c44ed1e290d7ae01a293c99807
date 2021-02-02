@@ -1,0 +1,3 @@
+I"Î<p><img src="/blog/assets/images/try-record.gif" alt="try-record.gif" /> 
+Today we released <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.2.0">GraphScope 0.2.0</a>.  With this release, we are happy to introduce <a href="http://try.graphscope.app/">GraphScope Playground</a>, a hosted JupyterLab with GraphScope ready out-of-the-box. Now you can get started with GraphScope straight away in your browser without any hassle for setting it up.</p>
+:ET

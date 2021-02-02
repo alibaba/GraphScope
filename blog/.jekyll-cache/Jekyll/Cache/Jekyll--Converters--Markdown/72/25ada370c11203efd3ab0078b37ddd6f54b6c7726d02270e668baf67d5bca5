@@ -1,0 +1,7 @@
+I"<p><img src="/blog/assets/images/release_note_t.png" alt="release-note" />
+The GraphScope team is pleased to announce the 0.2.0 release after two-months development.
+The 0.2.0 release is focused on better getting started experience for end-users and we have
+make a lot of improvements since the last minor release. We have improved our documentation
+a lot, and made the kubernetes integration work for more settings. We have also brought the
+support for various I/O to make GraphScope suitable for more production environments.</p>
+:ET

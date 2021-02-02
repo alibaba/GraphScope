@@ -1,91 +1,579 @@
+<!--header-->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5V27DVHLP0"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
 
-  <title>GraphScope - A One-Stop Large-Scale Graph Computing System from Alibaba</title>
-  <meta name="description" content="GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba" />
+        gtag('config', 'G-5V27DVHLP0');
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords"
+        content="graph, graph computation, graph analytics, graph algorithms, gnn, graph learning, graph embedding, gremlin, graph query">
+    <meta name="description" content="GraphScope, A One-Stop Large-Scale Graph Computing System">
+    <meta name="author" content="yecol">
 
-  <meta name="HandheldFriendly" content="True" />
-  <meta name="MobileOptimized" content="320" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:title" content="GraphScope">
+    <meta property="og:description" content="A One-Stop Large-Scale Graph Computing System.">
+    <meta property="og:image" content="img/logo.png">
+    <meta property="og:url" content="http://graphscope.io">
 
-  <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
-  <link rel="stylesheet" type="text/css"
-    href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
-  <!-- Customisation  -->
-  <link rel="stylesheet" type="text/css" href="/assets/css/main.css " />
+    <title>GraphScope</title>
+
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    <!-- Bootstrap Core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="vendor/fontawesome/css/all.min.css" rel="stylesheet" type="text/css">
+    <link
+        href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800'
+        rel='stylesheet' type='text/css'>
+    <link href="https://fonts.googleapis.com/css?family=Fira+Mono">
+
+    <!-- Theme CSS -->
+    <link href="css/style-ed1efede3e.min.css" rel="stylesheet">
+    <link href="vendor/termynal/termynal.css" rel="stylesheet">
+    <link href="vendor/owl/owl.carousel.css" rel="stylesheet">
+    <link href="vendor/owl/owl.theme.css" rel="stylesheet">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
 
 </head>
+<!--headerend-->
 
-<body class="home-template">
+<body id="index">
 
-  <header class="main-header no-cover">
-    <nav class="main-nav overlay clearfix">
+    <!--nav-->
+<nav id="main-nav" class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span> Menu <i class="fa fa-bars"></i>
+            </button>
+            <a class="navbar-brand page-scroll" href="index.html">
+                <div class="logo" id="logo"></div>
+                <div class="brand">GraphScope</div>
+            </a>
+        </div>
 
-      <a class="subscribe-button" target="blank" href="https://graphscope.io/docs">Docs</a>
-      <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
-      <a class="subscribe-button" target="blank"
-        href="https://graphscope.oss-cn-beijing.aliyuncs.com/graphscope_whitepaper.pdf">Whitepaper</a>
-    </nav>
-    <div class="vertical">
-      <div class="main-header-content inner">
-        <img src="assets/images/logo-notext.png" alt="GraphScope Logo" width="300px" />
-        <h1 class="page-title">GraphScope</h1>
-        <h2 class="page-description">
-          A One-Stop Large-Scale Graph Computing System from Alibaba.
-        </h2>
-      </div>
-      <div class="gs-intro post-excerpt">
-        GraphScope is a unified distributed graph computing platform that provides a one-stop environment for
-        performing diverse graph operations on a cluster of computers through a user-friendly Python interface.
-        GraphScope makes multi-staged processing of large-scale graph data on compute clusters simple by
-        combining several important pieces of Alibaba technology: including <a
-          href="https://github.com/alibaba/libgrape-lite" target="_blank">GRAPE</a>,
-        <a href="https://github.com/alibaba/GraphScope/blob/master/interactive_engine" target="_blank">MaxGraph</a>, and
-        <a href="https://github.com/alibaba/graph-learn" target="_blank">Graph-Learn</a>
-        (GL) for analytics, interactive, and graph neural networks (GNN) computation, respectively, and the
-        <a href="https://github.com/alibaba/libvineyard" target="_blank">vineyard</a> store that offers efficient
-        in-memory data transfers.
-      </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a class="page-scroll" href="index.html">Introduction</a>
+                </li>
+                <li>
+                    <a class="page-scroll" href="https://graphscope.io/docs" target="_blank">Docs</a>
+                </li>
+                <li>
+                    <a class="page-scroll" href="https://try.graphscope.app/">Playground</a>
+                </li>
+                <li>
+                    <a class="page-scroll" href="/publications.html" target="_blank">Publications</a>
+                </li>
+                <li>
+                    <a class="page-scroll" href="/blog" target="_blank">Blog</a>
+                </li>
+                <li>
+                    <a class="page-scroll" href="https://github.com/alibaba/graphscope" target="_blank">Github</a>
+                </li>
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
     </div>
-    <!-- <a class="scroll-down icon-arrow-left" href="#content" data-offset="-45"><span class="hidden">Scroll Down</span></a> -->
-  </header>
+    <!-- /.container-fluid -->
+</nav>
+<!--navend-->
+
+    <header>
+        <div id="slide">
+            <div class="slides-container header-bg" id="header-bg">
+                <!-- <img src="./img/header-bg-2.jpg" /> -->
+            </div>
+        </div>
+        <div class="header-content">
+            <div class="header-content-inner">
+                <div class="wording">
+                    <h1 id="homeHeading">GraphScope</h1>
+                    <h2>A One-Stop Large-Scale Graph Computing System</h2>
+                </div>
+            </div>
+        </div>
+    </header>
 
 
-  <main id="content" class="content" role="main">
-  </main>
-  <footer class="site-footer clearfix">
-    <section class="copyright">
-      <a href="https://damo.alibaba.com/">Damo Academy</a>,
-      <a href="https://www.alibabagroup.com/">Alibaba Inc.</a> &copy;
-      2020 &bull; All rights reserved.
+    <section class="intro-section gray-section" id="intro-brief">
+        <div class="section-content">
+            <div class="section-content-inner text-center">
+                <img src="./img/logo.png" id="intro-logo" />
+                <h3>What is GraphScope</h3>
+                <p>
+                    GraphScope is a unified distributed graph computing platform that provides a one-stop environment
+                    for performing diverse graph operations on a cluster through a user-friendly Python
+                    interface. GraphScope makes multi-staged processing of large-scale graph data on compute clusters
+                    simple by combining several important pieces of Alibaba technology: including GRAPE, MaxGraph, and
+                    Graph-Learn (GL) for analytics, interactive, and graph neural networks (GNN) computation,
+                    respectively, and the vineyard store that offers efficient in-memory data transfers.
+                </p>
+                <p class="social-icons">
+                    <a href="https://slack.graphscope.io" target="_blank"><i class="fab fa-slack"></i>Slack</a>
+                    <a href="https://graphscope.oss-cn-beijing.aliyuncs.com/graphscope_whitepaper.pdf"
+                        target="_blank"><i class="far fa-file-pdf"></i>Whitepaper</a>
+                    <a href="https://github.com/alibaba/GraphScope/discussions" target="_blank"><i
+                            class="far fa-comments"></i>Discussions</a>
+                    <a href="https://github.com/alibaba/GraphScope" target="_blank"><i
+                            class="fab fa-github"></i>Github</a>
+                </p>
+            </div>
+        </div>
     </section>
-    <section class="poweredby">Made with Jekyll using
-      <a href="http://github.com/rosario/kasper">Kasper theme</a>
+
+    <aside id="features">
+        <div class="container">
+            <div class="row">
+                <div class="hero">
+                    <h3>Features</h3>
+                </div>
+                <div class="col-lg-3 col-md-3 text-center">
+                    <div class="feature-box">
+                        <div class="text-primary sr-icons">
+                            <img class="feature-icon" src="img/shuttle.png" />
+                        </div>
+                        <h3>High Performance</h3>
+                        <p class="text-muted">
+                            Superior performance compared with state-of-the-art graph systems.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-3 text-center">
+                    <div class="feature-box">
+                        <div class="text-primary sr-icons">
+                            <img class="feature-icon" src="img/power-station.png" />
+                        </div>
+                        <h3>One-Stop Processing</h3>
+                        <p class="text-muted"> Performing diverse parallel graph operations in a cluster in one unified
+                            system.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-3 text-center">
+                    <div class="feature-box">
+                        <div class="text-primary sr-icons">
+                            <img class="feature-icon" src="img/cloud.png" />
+                        </div>
+                        <h3>Cloud Native</h3>
+                        <p class="text-muted">Fully integrated with Kubernetes for processing big graphs across
+                            thousands of workers.</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-3 text-center">
+                    <div class="feature-box">
+                        <div class="text-primary sr-icons">
+                            <img class="feature-icon" src="img/puzzle.png" />
+                        </div>
+                        <h3>Easy to Use</h3>
+                        <p class="text-muted"> Making distributed graph computing as easy
+                            as writing local python scripts.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <section class="intro-section gray-section" id="intro-termynal">
+        <div class="section-content">
+            <div class="section-content-inner text-center">
+                <h3>Playground</h3>
+                <p class="as-text"> GraphScope provides ease-of-use Python interface. <br />
+                    Users are enabled to process computation over very large graphs in a Jupyter Notebook.
+                </p>
+                <a href="https://graphscope.io/docs" target="_blank"
+                    class="btn btn-primary btn-xl page-scroll with-other-btn">Read the
+                    docs</a>
+                <a href="https://try.graphscope.app/" target="_blank"
+                    class="btn btn-primary btn-xl page-scroll with-other-btn">Try it
+                    online</a>
+                <div id="termynal" data-termynal>
+                    <span data-ty="input">pip install graphscope</span>
+                    <span data-ty="progress"></span>
+                    <span data-ty>Successfully installed graphscope</span>
+                    <span data-ty="input">python</span>
+                    <span data-ty="input" data-ty-prompt=">>>">import graphscope</span>
+                    <span data-ty="input" data-ty-prompt=">>>">sess = graphscope.session()</span>
+                    <span data-ty="input" data-ty-prompt=">>>">from graphscope.dataset.ogbn_mag import
+                        load_ogbn_mag</span>
+                    <span data-ty="input" data-ty-prompt=">>>">g = load_ogbn_mag(sess, "testing_data")</span>
+                </div>
+            </div>
+        </div>
     </section>
-  </footer>
 
-  <script type="text/javascript" src="/assets/js/jquery-1.11.1.min.js"></script>
-  <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
-  <script type="text/javascript" src="/assets/js/index.js"></script>
+    <section class="intro-section" id="intro-app">
+        <div class="section-content">
+            <div class="section-content-inner text-center">
+                <h3>Latest Blogs</h3>
+                <p class="as-text"> Stay tuned with our latest news and tech blogs. <br />
+                </p>
+                <div id="owl-slides" class="owl-carousel">
 
-  <!-- Google Analytics Tracking code -->
-  <script type="text/javascript">
+                    <a href="blog/newsroom/2021/02/01/introducing-graphscope-playground.html" class="link-2-post">
+                        <div class="item app-card">
+                            <img src="blog/assets/images/try-snapshot.png" />
+                            <div class="desc">
+                                <h2> Introducing Playground</h2>
+                                <p> We are happy to introduce GraphScope Playground, a hosted JupyterLab with GraphScope
+                                    ready out-of-the-box. </p>
+                                <p class="posted-date">Posted on 01-Feb-2021</p>
+                            </div>
+                        </div>
+                    </a>
 
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-XXXXXXXX-X']);
-    _gaq.push(['_trackPageview']);
+                    <a href="blog/releasenotes/2021/02/01/release-notes-0.2.0.html" class="link-2-post">
+                        <div class="item app-card">
+                            <img src="blog/assets/images/release_note.png" />
+                            <div class="desc">
+                                <h2> Release Note 0.2.0</h2>
+                                <p> The GraphScope team is pleased to announce the 0.2.0 release after two-months
+                                    development. </p>
+                                <p class="posted-date">Posted on 01-Feb-2021</p>
+                            </div>
+                        </div>
+                    </a>
 
-    (function () {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+                    <a href="blog/newsroom/2020/12/07/say-hello-to-graphscope.html" class="link-2-post">
+                        <div class="item app-card">
 
-  </script>
+                            <img src="blog/assets/images/releasing.png" />
+                            <div class="desc">
+                                <h2> Say Hello to GraphScope</h2>
+                                <p> We are excited to open source the code of GraphScope! Find more at
+                                    https://github.com/alibaba/GraphScope</p>
+                                <p class="posted-date">Posted on 07-Dec-2020</p>
+                            </div>
+
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="intro-section gray-section" id="intro-award">
+        <div class="section-content">
+            <div class="section-content-inner text-center">
+                <h3>Awards</h3>
+                <p class="as-text"> GraphScope is the receipent of <br />the Best Paper Award of SIGMOD 2017,
+                    the Best Demo Award of VLDB 2017, <br />
+                    Super AI Leader(SAIL) Award 2019 and
+                    the Best Paper Runner Up of VLDB 2020. <br />
+                    GraphScope receives Int’l recognition by both academia and industry. </p>
+
+                <a href="publications.html" class="btn btn-primary btn-xl page-scroll">View our publications</a>
+                <div>
+                    <div class="award" id="award-sigmod">
+                        <img src="img/awards-sigmod-g.png" />
+                        <div class="desc"><i class="fas fa-trophy"></i>
+                            Best Paper Award</div>
+                    </div>
+                    <div class="award" id="award-vldb">
+                        <img src="img/awards-vldb2017.png" />
+                        <div class="desc"><i class="fas fa-trophy"></i>
+                            Best Paper Award</div>
+                    </div>
+                    <div class="award" id="award-sail">
+                        <img src="img/awards-sail.png" />
+                        <div class="desc"><i class="fas fa-trophy"></i>
+                            Super AI Leader Award</div>
+                    </div>
+                    <div class="award" id="award-vldb-2">
+                        <img src="img/awards-vldb2020.png" />
+                        <div class="desc"><i class="fas fa-trophy"></i>
+                            Best Paper Award</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <footer id="footer" class="bg-gray builder-bg">
+        <div class="container">
+            <div class="row">
+                <!-- logo -->
+                <div class="col-md-6 col-sm-12 col-xs-12">
+                    <!-- logo -->
+                    <div class="logo">
+                        <h2>GraphScope</h2>
+                        <div class="tz-text">
+                            <p>A One-Stop Large-Scale Graph Computing System from Alibaba</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- end logo -->
+                <div class="col-md-2 col-sm-3 col-xs-12 desktop-only">
+                    <ul class="links">
+                        <li class="text-medium">Quick Links</li>
+                        <li><a class="tz-text"
+                                href="https://graphscope.oss-cn-beijing.aliyuncs.com/graphscope_whitepaper.pdf"
+                                target="blank">White
+                                paper</a>
+                        </li>
+                        <li><a class="tz-text" href="https://graphscope.io/docs" target="blank">Read the
+                                docs</a>
+                        </li>
+                        <li><a class="tz-text" href="https://github.com/alibaba/GraphScope" target="blank">Github
+                                repo</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-sm-3 col-xs-12 desktop-only">
+                    <ul class="links">
+                        <li class="text-medium">Contact Us</li>
+                        <li><a class="tz-text" href="https://slack.graphscope.io" target="blank">Slack Channel</a></li>
+                        <li><a class="tz-text" href="https://github.com/alibaba/GraphScope/discussions"
+                                target="blank">Discussion</a></li>
+                        <li><a class="tz-text" href="https://ding.graphscope.app" target="blank">Join in us on DingTalk
+                                👉</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 col-sm-2 col-xs-12 xs-text-center desktop-only">
+                    <div class="qrcode">
+                        <img src="./img/gs_code.jpg" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12 text-center">
+                    <div class="padding-six-top margin-six-top xs-padding-six-top border-top tz-border">
+                        <p class="tz-text no-margin-bottom">© 2021 Damo Academy. Alibaba Group.</p>
+                        <div class="icons">Some icons made by <a href="https://www.freepik.com"
+                                title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/"
+                                title="Flaticon">www.flaticon.com</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- termynal -->
+    <script src="vendor/termynal/termynal.js" data-termynal-container="#termynal"></script>
+
+    <!-- jQuery -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- Plugin JavaScript -->
+    <script src="vendor/jquery/jquery.easing.min.js"></script>
+    <script src="vendor/jquery/jquery.animate-enhanced.min.js"></script>
+    <script src="vendor/scrollreveal/scrollreveal.min.js"></script>
+    <script src="vendor/superslides/jquery.superslides.min.js"></script>
+
+    <!-- Theme JavaScript -->
+    <script type="text/javascript" src="js/particles.min.js"></script>
+    <script src="js/creative.min.js"></script>
+
+    <script type="text/javascript" src="vendor/three/three.min.js"></script>
+    <script type="text/javascript" src="vendor/three/CanvasRenderer.js"></script>
+    <script type="text/javascript" src="vendor/three/Projector.js"></script>
+    <script type="text/javascript" src="vendor/three/stats.min.js"></script>
+
+    <script type="text/javascript" src="vendor/owl/owl.carousel.js"></script>
+
+    <script>
+        var SEPARATION = 100, AMOUNTX = 50, AMOUNTY = 50;
+
+        var container, stats;
+        var camera, scene, renderer;
+
+        var particles, particle, count = 0;
+
+        var mouseX = 0, mouseY = 0;
+
+        var windowHalfX = window.innerWidth / 2;
+        var windowHalfY = window.innerHeight / 2;
+
+        // if (window.innerWidth > 600) {
+        init();
+        animate();
+        // }
+        // else {
+        //     document.getElementById('header-bg');
+        //     document.getElementById("header-bg").className += " mobile-header";
+        // }
+
+        function init() {
+
+            container = document.createElement('div');
+            document.getElementById('header-bg').appendChild(container);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+            camera.position.z = 1000;
+
+            scene = new THREE.Scene();
+            // scene.background = new THREE.Color( 0xff0000 );
+
+            particles = new Array();
+
+            var PI2 = Math.PI * 2;
+            var material = new THREE.SpriteCanvasMaterial({
+
+                color: 0xffffff,
+                program: function (context) {
+
+                    context.beginPath();
+                    context.arc(0, 0, 0.5, 0, PI2, true);
+                    context.fill();
+
+                }
+
+            });
+
+            var i = 0;
+
+            for (var ix = 0; ix < AMOUNTX; ix++) {
+
+                for (var iy = 0; iy < AMOUNTY; iy++) {
+
+                    particle = particles[i++] = new THREE.Sprite(material);
+                    particle.position.x = ix * SEPARATION - ((AMOUNTX * SEPARATION) / 2);
+                    particle.position.z = iy * SEPARATION - ((AMOUNTY * SEPARATION) / 2);
+                    scene.add(particle);
+
+                }
+
+            }
+
+            renderer = new THREE.CanvasRenderer({ alpha: true });
+            // renderer.setClearColor( 0xffffff, 0)
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight + 200);
+            container.appendChild(renderer.domElement);
+
+            // stats = new Stats();
+            // container.appendChild( stats.dom );
+
+            document.addEventListener('mousemove', onDocumentMouseMove, false);
+            document.addEventListener('touchstart', onDocumentTouchStart, false);
+            document.addEventListener('touchmove', onDocumentTouchMove, false);
+
+            //
+
+            window.addEventListener('resize', onWindowResize, false);
+
+        }
+
+        function onWindowResize() {
+
+            windowHalfX = window.innerWidth / 2;
+            windowHalfY = window.innerHeight / 2;
+
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+        }
+
+        //
+
+        function onDocumentMouseMove(event) {
+
+            mouseX = event.clientX - windowHalfX;
+            // mouseY = event.clientY - windowHalfY;
+            // = -300
+            // console.log(mouseY)
+
+        }
+
+        function onDocumentTouchStart(event) {
+
+            if (event.touches.length === 1) {
+                event.preventDefault();
+                mouseX = event.touches[0].pageX - windowHalfX;
+                // mouseY = event.touches[ 0 ].pageY - windowHalfY;
+
+            }
+
+        }
+
+        function onDocumentTouchMove(event) {
+
+            if (event.touches.length === 1) {
+                event.preventDefault();
+                mouseX = event.touches[0].pageX - windowHalfX;
+                // mouseY = event.touches[ 0 ].pageY - windowHalfY;
+
+            }
+
+        }
+
+        //
+
+        function animate() {
+            requestAnimationFrame(animate);
+            render();
+            // stats.update();
+
+        }
+
+        function render() {
+
+            mouseY = -300;
+
+            camera.position.x += (mouseX - camera.position.x) * .05;
+            camera.position.y += (- mouseY - camera.position.y) * .05;
+            camera.lookAt(scene.position);
+
+            var i = 0;
+
+            for (var ix = 0; ix < AMOUNTX; ix++) {
+
+                for (var iy = 0; iy < AMOUNTY; iy++) {
+
+                    particle = particles[i++];
+                    particle.position.y = (Math.sin((ix + count) * 0.3) * 50) +
+                        (Math.sin((iy + count) * 0.5) * 50);
+                    particle.scale.x = particle.scale.y = (Math.sin((ix + count) * 0.3) + 1) * 4 +
+                        (Math.sin((iy + count) * 0.5) + 1) * 4;
+
+                }
+
+            }
+
+            renderer.render(scene, camera);
+
+            count += 0.1;
+
+        }
+
+        $("#owl-slides").owlCarousel({
+            itemsCustom: [
+                [0, 1],
+                [200, 1],
+                [900, 2],
+                [1200, 3],
+                [2000, 3]
+            ],
+        });
+
+
+    </script>
+
 </body>
 
 </html>
