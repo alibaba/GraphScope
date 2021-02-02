@@ -18,7 +18,7 @@ Read more in the [whitepaper](https://github.com/alibaba/GraphScope/blob/main/do
 
 ## Getting Started
 
-We provide a [Playground](https://try.graphscope.app) with a managed JupyterLab. [Try GraphScope](https://try.graphscope.app) straight away in your browser!
+>_We provide a [Playground](https://try.graphscope.app) with a managed JupyterLab. [Try GraphScope](https://try.graphscope.app) straight away in your browser!_
 
 GraphScope can run on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started, we can set up a *local* Kubernetes cluster and take advantage of pre-built Docker images as follows.
 
