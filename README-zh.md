@@ -16,7 +16,7 @@ GraphScope 提供了 Python 客户端，能十分方便的对接上下游工作�
 
 GraphScope 整合了达摩院的多项学术研究成果，其中的核心技术曾获得数据库领域顶级学术会议 SIGMOD2017 最佳论文奖、VLDB2017 最佳演示奖、VLDB2020 最佳论文奖亚军、世界人工智能创新大赛SAIL奖等。GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。还有其它围绕 GraphScope 的十多项研究成果发表在领域顶级的学术会议或期刊上，如 TODS、SIGMOD、VLDB、KDD等。
 
-欢迎阅读[白皮书](https://github.com/alibaba/GraphScope/blob/main/docs/GraphScope_whitepaper.pdf)了解更多信息。
+欢迎访问我们的网站 [graphscope.io](https://graphscope.io) 了解更多信息。
 
 ## 快速开始
 
