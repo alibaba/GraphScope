@@ -341,6 +341,12 @@ def test_app_on_undirected_graph(
     assert np.all(ctx10.to_numpy("r", vertex_range={"begin": 1, "end": 4}) == [0, 0, 0])
 
 
+def test_run_app_on_string_oid_graph(p2p_project_directed_graph_string):
+    ctx = sssp(p2p_project_directed_graph_string, src="6")
+    r1 = ctx.to_dataframe({"node": "v.id", "r": "r"})
+    assert r1[r1["node"] == "6"].r.values[0] == 0.0
+
+
 def test_error_on_parameters_not_correct(arrow_project_graph):
     # Incorrect type of parameters
     with pytest.raises(ValueError, match="could not convert string to float"):

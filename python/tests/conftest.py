@@ -467,6 +467,28 @@ def p2p_property_graph(graphscope_session):
 
 
 @pytest.fixture(scope="module")
+def p2p_property_graph_string(graphscope_session):
+    g = graphscope_session.load_from(
+        edges={
+            "knows": (
+                Loader("{}/p2p-31_property_e_0".format(property_dir), header_row=True),
+                ["src_label_id", "dst_label_id", "dist"],
+                ("src_id", "person"),
+                ("dst_id", "person"),
+            ),
+        },
+        vertices={
+            "person": Loader(
+                "{}/p2p-31_property_v_0".format(property_dir), header_row=True
+            ),
+        },
+        generate_eid=False,
+        oid_type="string",
+    )
+    yield g
+
+
+@pytest.fixture(scope="module")
 def p2p_property_graph_undirected(graphscope_session):
     g = graphscope_session.load_from(
         edges={
@@ -498,6 +520,12 @@ def p2p_project_directed_graph(p2p_property_graph):
 @pytest.fixture(scope="module")
 def p2p_project_undirected_graph(p2p_property_graph_undirected):
     pg = p2p_property_graph_undirected.project_to_simple(0, 0, 0, 2)
+    yield pg
+
+
+@pytest.fixture(scope="module")
+def p2p_project_directed_graph_string(p2p_property_graph_string):
+    pg = p2p_property_graph_string.project_to_simple(0, 0, 0, 2)
     yield pg
 
 
