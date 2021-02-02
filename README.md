@@ -2,7 +2,7 @@
 
 **Acknowledgement**
 
-The website is made with Jekyll using [Kasper theme](https://github.com/rosario/kasper).
+The Blog is made with Jekyll using [Kasper theme](https://github.com/rosario/kasper).
 
 
 **Copyright & License**
