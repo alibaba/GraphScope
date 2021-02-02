@@ -29,3 +29,27 @@ from graphscope.framework.graph import Graph
 from graphscope.framework.graph_utils import g
 from graphscope.framework.graph_utils import load_from
 from graphscope.version import __version__
+
+__doc__ = """
+GraphScope - A unified distributed graph computing platform
+=====================================================================
+
+GraphScope provides a one-stop environment for performing diverse graph
+operations on a cluster of computers through a user-friendly Python interface.
+GraphScope makes multi-staged processing of large-scale graph data on compute
+clusters simple by combining several important pieces of Alibaba technology:
+including GRAPE, MaxGraph, and Graph-Learn (GL) for analytics, interactive, 
+and graph neural networks (GNN) computation, respectively, and
+the vineyard store that offers efficient in-memory data transfers.
+
+Main Components
+---------------
+
+Here are the main components that GraphScope includes:
+
+  - Graph Interactive Engine (GIE): a parallel interactive engine for graph traversal
+
+  - Graph Analytical Engine (GAE): a high-performance graph analytics engine
+
+  - Graph Learning Engine (GLE): an end-to-end graph learning framework
+"""
