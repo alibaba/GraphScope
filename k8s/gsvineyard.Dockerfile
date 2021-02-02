@@ -6,7 +6,7 @@ ARG BASE_VERSION=latest
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:$BASE_VERSION
 
 RUN cd /tmp && \
-    git clone https://github.com/alibaba/libgrape-lite.git && \
+    git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
     cd libgrape-lite && \
     mkdir build && \
     cd build && \
@@ -14,7 +14,7 @@ RUN cd /tmp && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.1.8 https://github.com/alibaba/libvineyard.git && \
+    git clone -b v0.1.8 https://github.com/alibaba/libvineyard.git --depth=1 && \
     cd libvineyard && \
     git submodule update --init && \
     mkdir -p /tmp/libvineyard/build && \

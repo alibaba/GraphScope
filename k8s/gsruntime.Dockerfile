@@ -90,15 +90,15 @@ RUN cd /tmp && \
     cd /tmp && \
     rm -fr /tmp/arrow-apache-arrow-1.0.1 /tmp/apache-arrow-1.0.1.tar.gz
 
-# boost v1.72.0
+# boost v1.73.0
 RUN cd /tmp && \
-    wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz && \
-    tar zxvf boost_1_72_0.tar.gz && \
-    cd boost_1_72_0 && \
+    wget https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.tar.gz && \
+    tar zxvf boost_1_73_0.tar.gz && \
+    cd boost_1_73_0 && \
     ./bootstrap.sh && \
     ./b2 install link=shared runtime-link=shared variant=release threading=multi || true && \
     cd /tmp && \
-    rm -fr /tmp/boost_1_72_0 /tmp/boost_1_72_0.tar.gz
+    rm -fr /tmp/boost_1_73_0 /tmp/boost_1_73_0.tar.gz
 
 # gflags v2.2.2
 RUN cd /tmp && \
