@@ -22,6 +22,7 @@ and the vineyard store that offers efficient in-memory data transfers.
 
    installation
    getting_started
+   tutorials
    deployment
    loading_graph
    interactive_engine

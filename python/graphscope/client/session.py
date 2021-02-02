@@ -71,7 +71,9 @@ except ModuleNotFoundError:
         os.path.join(__file__, "..", "..", "..", "..", "coordinator")
     )
 
-DEFAULT_CONFIG_FILE = os.environ.get("GS_CONFIG_PATH", "")
+DEFAULT_CONFIG_FILE = os.environ.get(
+    "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/session.json")
+)
 
 _session_dict = {}
 
@@ -330,7 +332,7 @@ class Session(object):
         if isinstance(config, dict):
             self._config_params.update(config)
         elif isinstance(config, str):
-            self._load_config(config)
+            self._load_config(config, False)
         elif DEFAULT_CONFIG_FILE:
             self._load_config(DEFAULT_CONFIG_FILE)
 
@@ -432,11 +434,15 @@ class Session(object):
     def session_id(self):
         return self._session_id
 
-    def _load_config(self, path):
+    def _load_config(self, path, slient=True):
         config_path = os.path.expandvars(os.path.expanduser(path))
-        with open(config_path, "r") as f:
-            data = json.load(f)
-            self._config_params.update(data)
+        try:
+            with open(config_path, "r") as f:
+                data = json.load(f)
+                self._config_params.update(data)
+        except Exception as exp:  # noqa
+            if not slient:
+                raise exp
 
     @property
     def info(self):
