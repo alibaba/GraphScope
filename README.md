@@ -14,7 +14,7 @@
 
 GraphScope is a unified distributed graph computing platform that provides a one-stop environment for performing diverse graph operations on a cluster of computers through a user-friendly Python interface. GraphScope makes multi-staged processing of large-scale graph data on compute clusters simple by combining several important pieces of Alibaba technology: including [GRAPE](https://github.com/alibaba/libgrape-lite), [MaxGraph](interactive_engine/), and [Graph-Learn](https://github.com/alibaba/graph-learn) (GL) for analytics, interactive, and graph neural networks (GNN) computation, respectively, and the [vineyard](https://github.com/alibaba/libvineyard) store that offers efficient in-memory data transfers.
 
-Read more in the [whitepaper](https://github.com/alibaba/GraphScope/blob/main/docs/GraphScope_whitepaper.pdf).
+Visit our [website](https://graphscope.io) to learn more.
 
 ## Getting Started
 
