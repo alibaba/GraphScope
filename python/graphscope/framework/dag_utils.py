@@ -41,7 +41,9 @@ def create_app(graph, app):
     config = {
         types_pb2.APP_ALGO: utils.s_to_attr(app.algo),
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
-        types_pb2.OID_TYPE: utils.s_to_attr(graph.schema.oid_type),
+        types_pb2.OID_TYPE: utils.s_to_attr(
+            utils.normalize_data_type_str(graph.schema.oid_type)
+        ),
         types_pb2.VID_TYPE: utils.s_to_attr(graph.schema.vid_type),
         types_pb2.V_DATA_TYPE: utils.s_to_attr(
             utils.data_type_to_cpp(graph.schema.vdata_type)
