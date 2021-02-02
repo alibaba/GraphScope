@@ -243,3 +243,4 @@ class GraphModel(widgets.DOMWidget):
                 degree: 1
             }
         """
+        # 查询到邻居数据以后，将邻居数据和 value 值进行合并，把合并后的值赋值给 value
