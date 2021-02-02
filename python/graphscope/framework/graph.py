@@ -639,4 +639,7 @@ class Graph(object):
 
         graph = GraphModel()
         graph.queryGraphData(vertices, hop, interactive_query)
+
+        # 监听对节点的 1-2 度关系扩散的操作
+        graph.on_msg(graph.queryNeighbor)
         return graph

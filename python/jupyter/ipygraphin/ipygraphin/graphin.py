@@ -225,3 +225,21 @@ class GraphModel(widgets.DOMWidget):
             self.value = data_str
 
         _process_vertices_1_hop(vertices)
+
+    # 节点的 1-2 度关系扩散
+    def queryNeighbor(self, ins, params, buffers):
+        """
+        响应 Graph 上的事件，如点击、关系扩散等事件
+        ----------
+        self : 实例
+        content : object 事件触发时附带的参数
+        buffers : boolean
+        """
+        print('event', params)
+        # 具体实现到这里，params 里面会包括查询的度数和当前节点的ID，格式如下
+        """
+            {
+                nodeId: '',
+                degree: 1
+            }
+        """
