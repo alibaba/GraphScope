@@ -8,6 +8,7 @@
 [![Docs-en](https://shields.io/badge/Docs-English-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs)
 [![Docs-zh](https://shields.io/badge/Docs-%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs/zh/)
 [![Translation](https://shields.io/badge/README-English-blue)](https://github.com/alibaba/GraphScope)
+[![Playground](https://shields.io/badge/JupyterLab-Try%20GraphScope%20Now!-F37626?logo=jupyter)](https://try.graphscope.app)
 
 GraphScope 是阿里巴巴达摩院智能计算实验室研发并开源的一站式图计算平台。依托于阿里海量数据和丰富场景，与达摩院的高水平研究，GraphScope 致力于针对实际生产场景中图计算的挑战，提供一站式高效的解决方案。
 
@@ -17,11 +18,9 @@ GraphScope 整合了达摩院的多项学术研究成果，其中的核心技术
 
 欢迎阅读[白皮书](https://github.com/alibaba/GraphScope/blob/main/docs/GraphScope_whitepaper.pdf)了解更多信息。
 
-## 在线试用
-
-我们提供了一个基于 JupyterHub 的 [Playground](https://try.graphscope.app)，您可以从浏览器中就能在线试用 GraphScope。我们在 Playground 中也提供了一系列教程，帮助您更好的上手 GraphScope。 
-
 ## 快速开始
+
+我们提供了一个基于 JupyterLab 的 [Playground](https://try.graphscope.app)，您可以从浏览器中在线试用 GraphScope。 
 
 GraphScope 设计在 [Kubernetes (k8s)](https://kubernetes.io/) 管理的群集上运行。为了快速上手，我们可以按照本文档的以下步骤部署一个本地 Kubernetes 集群，并加载预编译好的镜像。。
 
