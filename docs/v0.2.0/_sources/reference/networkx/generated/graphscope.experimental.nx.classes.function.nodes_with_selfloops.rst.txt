@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.nodes\_with\_selfloops
+==================================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.nodes_with_selfloops

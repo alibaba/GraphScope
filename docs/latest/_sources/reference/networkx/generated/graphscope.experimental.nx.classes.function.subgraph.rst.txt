@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.subgraph
+====================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.subgraph

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.add\_star
+=====================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.add_star

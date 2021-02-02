@@ -26,6 +26,7 @@
 
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 
@@ -54,6 +55,10 @@
 
           
             
+            
+              <div class="version">
+                stable
+              </div>
             
           
 
@@ -85,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
@@ -179,6 +185,7 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="k">import</span> <span class="n">ThreadPoolExecutor</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
 
 <span class="kn">from</span> <span class="nn">gremlin_python.driver.client</span> <span class="k">import</span> <span class="n">Client</span>
 <span class="kn">from</span> <span class="nn">gremlin_python.driver.driver_remote_connection</span> <span class="k">import</span> <span class="n">DriverRemoteConnection</span>
@@ -187,6 +194,15 @@
 <span class="kn">from</span> <span class="nn">graphscope.framework.loader</span> <span class="k">import</span> <span class="n">Loader</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;graphscope&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">InteractiveQueryStatus</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A enumeration class of current status of InteractiveQuery&quot;&quot;&quot;</span>
+
+    <span class="n">Initializing</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Running</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Failed</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Closed</span> <span class="o">=</span> <span class="mi">3</span>
 
 
 <div class="viewcode-block" id="InteractiveQuery"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery">[docs]</a><span class="k">class</span> <span class="nc">InteractiveQuery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -204,12 +220,21 @@
 <span class="sd">    to get a `GraphTraversalSource` for further traversal.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="InteractiveQuery.__init__"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graphscope_session</span><span class="p">,</span> <span class="n">object_id</span><span class="p">,</span> <span class="n">front_ip</span><span class="p">,</span> <span class="n">front_port</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graphscope_session</span> <span class="o">=</span> <span class="n">graphscope_session</span>
+<div class="viewcode-block" id="InteractiveQuery.__init__"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">object_id</span><span class="p">,</span> <span class="n">front_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">front_port</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Initializing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_object_id</span> <span class="o">=</span> <span class="n">object_id</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="s2">&quot;ws://</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">/gremlin&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">front_ip</span><span class="p">,</span> <span class="n">front_port</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">False</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_msg</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">front_ip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">front_port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="s2">&quot;ws://</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">/gremlin&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">front_ip</span><span class="p">,</span> <span class="n">front_port</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;graphscope.InteractiveQuery &lt;</span><span class="si">{self._graph_url}</span><span class="s2">&gt;&quot;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">object_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -225,9 +250,29 @@
         <span class="sd">&quot;&quot;&quot;The gremlin graph url can be used with any standard gremlin console, e.g., thinkerpop.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span>
+
+    <span class="nd">@status</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">error_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_msg</span>
+
+    <span class="nd">@error_msg</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">error_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_msg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_msg</span> <span class="o">=</span> <span class="n">error_msg</span>
+
+<div class="viewcode-block" id="InteractiveQuery.set_frontend"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.set_frontend">[docs]</a>    <span class="k">def</span> <span class="nf">set_frontend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">front_ip</span><span class="p">,</span> <span class="n">front_port</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="s2">&quot;ws://</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">/gremlin&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">front_ip</span><span class="p">,</span> <span class="n">front_port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="InteractiveQuery.closed"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.closed">[docs]</a>    <span class="k">def</span> <span class="nf">closed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return if the current instance is closed.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Closed</span></div>
 
 <div class="viewcode-block" id="InteractiveQuery.subgraph"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a subgraph, which input is the result of the execution of `gremlin_script`.</span>
@@ -236,13 +281,15 @@
 <span class="sd">            gremlin_script (str): gremlin script to be executed</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            RuntimeError: If the interactive instance is closed.</span>
+<span class="sd">            RuntimeError: If the interactive instance is not running.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            :class:`Graph`: constructed subgraph. which is also stored in vineyard.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Interactive query is closed.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">!=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Interactive query is unavailable with </span><span class="si">%s</span><span class="s2"> status.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="n">now_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">)</span>
         <span class="n">random_num</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10000000</span><span class="p">)</span>
@@ -257,24 +304,18 @@
         <span class="k">def</span> <span class="nf">load_subgraph</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
             <span class="kn">import</span> <span class="nn">vineyard</span>
 
-            <span class="n">host</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphscope_session</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_config&quot;</span><span class="p">][</span>
-                <span class="s2">&quot;vineyard_rpc_endpoint&quot;</span>
-            <span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
-            <span class="n">client</span> <span class="o">=</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">))</span>
+            <span class="kn">import</span> <span class="nn">graphscope</span>
 
-            <span class="c1"># get vertex/edge stream id</span>
-            <span class="n">vstream</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_vertex_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-            <span class="n">estream</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_name</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_edge_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-
-            <span class="c1"># invoke load_from</span>
-            <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graphscope_session</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span>
-                <span class="n">edges</span><span class="o">=</span><span class="p">[</span><span class="n">Loader</span><span class="p">(</span><span class="n">estream</span><span class="p">)],</span>
-                <span class="n">vertices</span><span class="o">=</span><span class="p">[</span><span class="n">Loader</span><span class="p">(</span><span class="n">vstream</span><span class="p">)],</span>
-                <span class="n">generate_eid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">generate_eid</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span>
+                <span class="n">Loader</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectName</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_vertex_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">))</span>
             <span class="p">)</span>
-            <span class="n">client</span><span class="o">.</span><span class="n">put_name</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">),</span> <span class="n">graph_name</span><span class="p">)</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span>
+                <span class="n">Loader</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectName</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_edge_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;subgraph has been loaded&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">g</span>
+            <span class="k">return</span> <span class="n">graph</span>
 
         <span class="n">pool</span> <span class="o">=</span> <span class="n">ThreadPoolExecutor</span><span class="p">()</span>
         <span class="n">subgraph_task</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">load_subgraph</span><span class="p">,</span> <span class="p">(</span><span class="n">graph_name</span><span class="p">,))</span>
@@ -297,19 +338,24 @@
 <span class="sd">            query (str): Scripts that written in gremlin quering language.</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            RuntimeError: If the interactive script is closed</span>
+<span class="sd">            RuntimeError: If the interactive script is not running.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            execution results</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Interactive query is closed.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">!=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Interactive query is unavailable with </span><span class="si">%s</span><span class="s2"> status.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="InteractiveQuery.traversal_source"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.traversal_source">[docs]</a>    <span class="k">def</span> <span class="nf">traversal_source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a GraphTraversalSource and return.</span>
 <span class="sd">        Once `g` has been created using a connection, we can start to write</span>
 <span class="sd">        Gremlin traversals to query the remote graph.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError: If the interactive script is not running.</span>
 
 <span class="sd">        Examples:</span>
 
@@ -325,13 +371,17 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            `GraphTraversalSource`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">!=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Interactive query is unavailable with </span><span class="si">%s</span><span class="s2"> status.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">traversal</span><span class="p">()</span><span class="o">.</span><span class="n">withRemote</span><span class="p">(</span><span class="n">DriverRemoteConnection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="InteractiveQuery.close"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Close interactive instance and release resources&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_graphscope_session</span><span class="o">.</span><span class="n">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Closed</span></div></div>
 </pre></div>
 
            </div>
@@ -384,18 +434,112 @@
   </script>
   
 
-  <div class="rst-versions shift-up" data-toggle="rst-versions" role="note" aria-label="versions">
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Read the Docs</span>
-      v: latest
+      v: stable
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
       <dl>
         <dt>Languages</dt>
         <dd><a href="../../../index.html">en</a></dd>
         <dd><a href="../../../zh/index.html">zh_CN</a></dd>
       </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
     </div>
   </div>
 

@@ -26,6 +26,7 @@
 
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="graphscope.framework.app.load_app" href="generated/graphscope.framework.app.load_app.html" />
@@ -57,6 +58,10 @@
           
             
             
+              <div class="version">
+                stable
+              </div>
+            
           
 
           
@@ -87,6 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_transformation.html">Graph Transformations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
@@ -254,6 +260,12 @@ Default to None</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="graphscope.framework.app.AppAssets.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
 <dl class="py attribute">
 <dt id="graphscope.framework.app.AppAssets.__weakref__">
 <code class="sig-name descname">__weakref__</code><a class="headerlink" href="#graphscope.framework.app.AppAssets.__weakref__" title="Permalink to this definition">¶</a></dt>
@@ -343,392 +355,68 @@ Default to None</p></li>
 <h2>BuiltIn apps<a class="headerlink" href="#builtin-apps" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="graphscope.bfs">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">bfs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">src</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/bfs.html#bfs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.bfs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Breadth first search from the src on projected simple graph.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
-<li><p><strong>src</strong> (<em>int</em><em>, </em><em>optional</em>) – Source vertex of breadth first search. Defaults to 0.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a context with each vertex with a distance from the source.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDataContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s1">&#39;vlabel&#39;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s1">&#39;elabel&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">bfs</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>  <span class="c1"># use 6 as source vertex</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">bfs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">src</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.bfs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.pagerank">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">pagerank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">delta</span><span class="o">=</span><span class="default_value">0.85</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/pagerank.html#pagerank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.pagerank" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evalute PageRank on a graph.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<a class="reference internal" href="graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><em>Graph</em></a>) – A projected simple graph.</p></li>
-<li><p><strong>delta</strong> (<em>float</em><em>, </em><em>optional</em>) – Dumping factor. Defaults to 0.85.</p></li>
-<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of rounds. Defaults to 10.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with the pagerank value.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDataContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s1">&#39;vlabel&#39;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s1">&#39;elabel&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">k_core</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">pagerank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">delta</span><span class="o">=</span><span class="default_value">0.85</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.pagerank" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.sssp">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">sssp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">src</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/sssp.html#sssp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.sssp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute single source shortest path on the <cite>graph</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
-<li><p><strong>src</strong> (<em>int</em><em>, </em><em>optional</em>) – The source vertex. Defaults to 0.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with the shortest distance from the src.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDataContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s1">&#39;vlabel&#39;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s1">&#39;elabel&#39;</span><span class="p">,</span> <span class="n">v_prop</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">e_prop</span><span class="o">=</span><span class="s1">&#39;distance&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">sssp</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">sssp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">src</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.sssp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.wcc">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">wcc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/wcc.html#wcc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.wcc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate weakly connected components on the <cite>graph</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with the component ID.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDataContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s1">&#39;vlabel&#39;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s1">&#39;elabel&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">wcc</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">wcc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.wcc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.cdlp">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">cdlp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/cdlp.html#cdlp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.cdlp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate Community Detection with Label Propagation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
-<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum rounds. Defaults to 10.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with a community ID.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDataContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s1">&#39;vlabel&#39;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s1">&#39;elabel&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">cdlp</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">cdlp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.cdlp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.clustering">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">clustering</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#clustering"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.clustering" title="Permalink to this definition">¶</a></dt>
-<dd><p>Local clustering coefficient of a node in a Graph is the fraction
-of pairs of the node’s neighbors that are adjacent to each
-other.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned the computed clustering value.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDataContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s1">&#39;vlabel&#39;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s1">&#39;elabel&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">clustering</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">clustering</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.clustering" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.degree_centrality">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">degree_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">centrality_type</span><span class="o">=</span><span class="default_value">'both'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/degree_centrality.html#degree_centrality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.degree_centrality" title="Permalink to this definition">¶</a></dt>
-<dd><p>The degree centrality values are normalized by dividing
-by the maximum possible degree in a simple graph n-1 where
-n is the number of nodes in G.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
-<li><p><strong>centrality_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Available options are in/out/both.
-Defaults to “both”.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with the computed degree centrality.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDataContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s2">&quot;vlabel&quot;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s2">&quot;elabel&quot;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">degree_centrality</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">centrality_type</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">degree_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">centrality_type</span><span class="o">=</span><span class="default_value">'both'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.degree_centrality" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.eigenvector_centrality">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">eigenvector_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">tolerance</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">100</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/eigenvector_centrality.html#eigenvector_centrality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.eigenvector_centrality" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the eigenvector centrality for the <cite>graph</cite>.
-See more about eigenvector centrality here:
-<a class="reference external" href="https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html">https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
-<li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Defaults to 1e-06.</p></li>
-<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to 100.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with a gv-centrality.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDataContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s1">&#39;vlabel&#39;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s1">&#39;elabel&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">eigenvector_centrality</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">eigenvector_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">tolerance</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">100</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.eigenvector_centrality" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.hits">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">hits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">tolerance</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">normalized</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/hits.html#hits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.hits" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute HITS on <cite>graph</cite>.</p>
-<p>Hyperlink-Induced Topic Search (HITS; also known as hubs and authorities)
-is a link analysis algorithm that rates Web pages. See more here:
-<a class="reference external" href="https://en.wikipedia.org/wiki/HITS_algorithm">https://en.wikipedia.org/wiki/HITS_algorithm</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
-<li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Defaults to 0.01.</p></li>
-<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to 100.</p></li>
-<li><p><strong>normalized</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to normalize the result to 0-1. Defaults to True.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with the HITS value.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexPropertyContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s1">&#39;vlabel&#39;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s1">&#39;elabel&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">hits</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">hits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">tolerance</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">normalized</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.hits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.k_core">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">k_core</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">k</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/k_core.html#k_core"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.k_core" title="Permalink to this definition">¶</a></dt>
-<dd><p>K-cores of the graph are connected components that are left after
-all vertices of degree less than <cite>k</cite> have been removed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
-<li><p><strong>k</strong> (<em>int</em>) – The <cite>k</cite> for k-core.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with a boolean:
-1 if the vertex satisfies k-core, otherwise 0.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDataContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s1">&#39;vlabel&#39;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s1">&#39;elabel&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">k_core</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">k_core</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">k</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.k_core" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.katz_centrality">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">katz_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">beta</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">tolerance</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">normalized</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/katz_centrality.html#katz_centrality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.katz_centrality" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the Katz centrality.</p>
-<p>See more details for Katz centrality here:
-<a class="reference external" href="https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html">https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p></li>
-<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – Auttenuation factor. Defaults to 0.1.</p></li>
-<li><p><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Weight attributed to the immediate neighborhood. Defaults to 1.0.</p></li>
-<li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Error tolerance. Defaults to 1e-06.</p></li>
-<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximun number of rounds. Defaults to 100.</p></li>
-<li><p><strong>normalized</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to normalize result values. Defaults to True.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with the computed katz_centrality.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDatacontext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s1">&#39;vlabel&#39;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s1">&#39;elabel&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">katz_centrality</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">katz_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">beta</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">tolerance</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">normalized</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.katz_centrality" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.lpa">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">lpa</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/lpa.html#lpa"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.lpa" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate (multi-) label propagation on a property graph.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A property graph.</p></li>
-<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of rounds. Defaults to 10.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex, following an array of propagated labels.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledVertexPropertyContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">lpa</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">lpa</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">max_round</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.lpa" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt id="graphscope.triangles">
-<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">triangles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/triangles.html#triangles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.triangles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate triangle counting of the graph G.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A projected simple graph.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A context with each vertex assigned with the triangle counting result.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDataContext</span></code></p>
-</dd>
-</dl>
-<p>Examples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
-<span class="n">s</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="s1">&#39;The parameters for loading a graph...&#39;</span><span class="p">)</span>
-<span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="n">v_label</span><span class="o">=</span><span class="s1">&#39;vlabel&#39;</span><span class="p">,</span> <span class="n">e_label</span><span class="o">=</span><span class="s1">&#39;elabel&#39;</span><span class="p">)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
-<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
+<code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">triangles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.triangles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 <div class="section" id="app-object">
@@ -977,18 +665,112 @@ set by analytical engine after library is built.</p>
   </script>
   
 
-  <div class="rst-versions shift-up" data-toggle="rst-versions" role="note" aria-label="versions">
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Read the Docs</span>
-      v: latest
+      v: stable
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
       <dl>
         <dt>Languages</dt>
         <dd><a href="../index.html">en</a></dd>
         <dd><a href="../zh/index.html">zh_CN</a></dd>
       </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
     </div>
   </div>
 

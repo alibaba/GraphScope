@@ -26,6 +26,7 @@
 
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 
@@ -54,6 +55,10 @@
 
           
             
+            
+              <div class="version">
+                stable
+              </div>
             
           
 
@@ -85,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
@@ -207,7 +213,7 @@
 <span class="sd">    .. code:: python</span>
 
 <span class="sd">        &gt;&gt;&gt; g = get_test_property_graph()</span>
-<span class="sd">        &gt;&gt;&gt; sg = g.project_to_simple(&#39;person&#39;, &#39;knows&#39;, &#39;id&#39;, &#39;weight&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; sg = g.project(vertices={&#39;person&#39;: [&#39;id&#39;]}, edges={&#39;knows&#39;: [&#39;weight&#39;]})</span>
 <span class="sd">        &gt;&gt;&gt; ret = sssp(sg, 20)</span>
 <span class="sd">        &gt;&gt;&gt; out = ret.to_numpy(&#39;r&#39;)</span>
 <span class="sd">        &gt;&gt;&gt; out.shape</span>
@@ -224,6 +230,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">session_id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;graphscope.</span><span class="si">{self.__class__.__name__}</span><span class="s2"> from graph {str(self._graph)}&quot;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -258,16 +267,16 @@
         <span class="sd">&quot;&quot;&quot;Return context data as numpy array</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">        selector (str): Describes how to select values of context.</span>
-<span class="sd">            See more details in derived context class.</span>
-<span class="sd">        vertex_range (dict): optional, default to None.</span>
-<span class="sd">            Works as slicing. The expression {&#39;begin&#39;: m, &#39;end&#39;: n} select a portion</span>
-<span class="sd">            of vertices from `m` to, but not including `n`. Type of `m`, `n` must be identical with vertices&#39;</span>
-<span class="sd">            oid type.</span>
-<span class="sd">            Omitting the first index starts the slice at the beginning of the vertices,</span>
-<span class="sd">            and omitting the second index extends the slice to the end of the vertices.</span>
-<span class="sd">            Note the comparision is not based on numeric order, but on alphabetic order.</span>
-<span class="sd">        axis (int): optional, default to 0.</span>
+<span class="sd">            selector (str): Describes how to select values of context.</span>
+<span class="sd">                See more details in derived context class.</span>
+<span class="sd">            vertex_range (dict): optional, default to None.</span>
+<span class="sd">                Works as slicing. The expression {&#39;begin&#39;: m, &#39;end&#39;: n} select a portion</span>
+<span class="sd">                of vertices from `m` to, but not including `n`. Type of `m`, `n` must be identical with vertices&#39;</span>
+<span class="sd">                oid type.</span>
+<span class="sd">                Omitting the first index starts the slice at the beginning of the vertices,</span>
+<span class="sd">                and omitting the second index extends the slice to the end of the vertices.</span>
+<span class="sd">                Note the comparision is not based on numeric order, but on alphabetic order.</span>
+<span class="sd">            axis (int): optional, default to 0.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            numpy.ndarray.</span>
@@ -367,6 +376,7 @@
 <span class="sd">        It first write results to a vineyard dataframe, and let vineyard</span>
 <span class="sd">        do the data dumping job.</span>
 <span class="sd">        `fd` must meet specific formats, with auth information if needed. As follows:</span>
+
 <span class="sd">            - local</span>
 <span class="sd">                `file:///tmp/result_path`</span>
 <span class="sd">            - oss</span>
@@ -504,7 +514,7 @@
         <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_property_data_selector</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span></div>
 
 
-<span class="k">class</span> <span class="nc">LabelVertexPropertyContext</span><span class="p">(</span><span class="n">BaseContext</span><span class="p">):</span>
+<div class="viewcode-block" id="LabeledVertexPropertyContext"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.LabeledVertexPropertyContext">[docs]</a><span class="k">class</span> <span class="nc">LabeledVertexPropertyContext</span><span class="p">(</span><span class="n">BaseContext</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The labeld kind of context with properties.</span>
 <span class="sd">    This context has several vertex labels and edge labels,</span>
 <span class="sd">    And each label has several properties.</span>
@@ -529,7 +539,7 @@
     <span class="k">def</span> <span class="nf">_transform_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_labeled_vertex_property_data_selector</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">selector</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">create_context</span><span class="p">(</span><span class="n">context_type</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
@@ -543,7 +553,7 @@
     <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;vertex_property&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">VertexPropertyContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;labeled_vertex_property&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">LabelVertexPropertyContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">LabeledVertexPropertyContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Not supported context type: &quot;</span> <span class="o">+</span> <span class="n">context_type</span><span class="p">)</span>
 </pre></div>
@@ -598,18 +608,112 @@
   </script>
   
 
-  <div class="rst-versions shift-up" data-toggle="rst-versions" role="note" aria-label="versions">
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Read the Docs</span>
-      v: latest
+      v: stable
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
       <dl>
         <dt>Languages</dt>
         <dd><a href="../../../index.html">en</a></dd>
         <dd><a href="../../../zh/index.html">zh_CN</a></dd>
       </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
     </div>
   </div>
 

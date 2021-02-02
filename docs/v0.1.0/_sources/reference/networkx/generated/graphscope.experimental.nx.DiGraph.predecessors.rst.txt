@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.predecessors
+===============================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.predecessors

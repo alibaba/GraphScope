@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.restricted\_view
+============================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.restricted_view

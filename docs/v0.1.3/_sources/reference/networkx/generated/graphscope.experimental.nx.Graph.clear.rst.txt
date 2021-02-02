@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.Graph.clear
+======================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: Graph.clear

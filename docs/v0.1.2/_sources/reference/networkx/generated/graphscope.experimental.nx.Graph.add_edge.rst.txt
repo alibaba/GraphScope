@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.Graph.add\_edge
+==========================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: Graph.add_edge

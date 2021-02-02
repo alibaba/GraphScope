@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.Graph.get\_edge\_data
+================================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: Graph.get_edge_data

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.generators.classic.ladder\_graph
+===========================================================
+
+.. currentmodule:: graphscope.experimental.nx.generators.classic
+
+.. autofunction:: ladder_graph

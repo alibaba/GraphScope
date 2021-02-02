@@ -26,6 +26,7 @@
 
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Analytical App" href="app.html" />
@@ -57,6 +58,10 @@
           
             
             
+              <div class="version">
+                stable
+              </div>
+            
           
 
           
@@ -87,6 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_transformation.html">Graph Transformations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
@@ -185,37 +191,27 @@
 <h2>Graph object<a class="headerlink" href="#graph-object" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="graphscope.framework.graph.Graph">
-<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.graph.</code><code class="sig-name descname">Graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session_id</span></em>, <em class="sig-param"><span class="n">incoming_data</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.graph.</code><code class="sig-name descname">Graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session</span></em>, <em class="sig-param"><span class="n">incoming_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">oid_type</span><span class="o">=</span><span class="default_value">'int64'</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">generate_eid</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class for representing metadata of a graph in the GraphScope.</p>
 <p>A <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a> object holds the metadata of a graph, such as key, schema, and the graph is directed or not.</p>
 <p>It is worth noting that the graph is stored by the backend such as Analytical Engine, Vineyard.
 In other words, the graph object holds nothing but metadata.</p>
-<p>The graph object should not be created directly from <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a>.
-Instead, the graph should be created by <cite>Session.load_from</cite></p>
 <p>The following example demonstrates its usage:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.framework.loader</span> <span class="kn">import</span> <span class="n">Loader</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">edges</span><span class="o">=</span><span class="p">{</span>
-<span class="gp">... </span>        <span class="s2">&quot;knows&quot;</span><span class="p">:</span> <span class="p">(</span>
-<span class="gp">... </span>            <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;{}/p2p-31_property_e_0&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">property_dir</span><span class="p">),</span> <span class="n">header_row</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
-<span class="gp">... </span>            <span class="p">[</span><span class="s2">&quot;src_label_id&quot;</span><span class="p">,</span> <span class="s2">&quot;dst_label_id&quot;</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">],</span>
-<span class="gp">... </span>            <span class="p">(</span><span class="s2">&quot;src_id&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">),</span>
-<span class="gp">... </span>            <span class="p">(</span><span class="s2">&quot;dst_id&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">),</span>
-<span class="gp">... </span>        <span class="p">),</span>
-<span class="gp">... </span>    <span class="p">},</span>
-<span class="gp">... </span>    <span class="n">vertices</span><span class="o">=</span><span class="p">{</span>
-<span class="gp">... </span>        <span class="s2">&quot;person&quot;</span><span class="p">:</span> <span class="n">Loader</span><span class="p">(</span>
-<span class="gp">... </span>            <span class="s2">&quot;{}/p2p-31_property_v_0&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">property_dir</span><span class="p">),</span> <span class="n">header_row</span><span class="o">=</span><span class="bp">True</span>
-<span class="gp">... </span>        <span class="p">),</span>
-<span class="gp">... </span>    <span class="p">}</span>
-<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s2">&quot;person.csv&quot;</span><span class="p">,</span><span class="s2">&quot;person&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s2">&quot;software.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;software&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s2">&quot;knows.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;knows&quot;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s2">&quot;person&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s2">&quot;created.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;created&quot;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s2">&quot;software&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py method">
 <dt id="graphscope.framework.graph.Graph.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session_id</span></em>, <em class="sig-param"><span class="n">incoming_data</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session</span></em>, <em class="sig-param"><span class="n">incoming_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">oid_type</span><span class="o">=</span><span class="default_value">'int64'</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">generate_eid</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a> object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -225,10 +221,10 @@ Instead, the graph should be created by <cite>Session.load_from</cite></p>
 which can be one of:</p>
 <blockquote>
 <div><ul>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDef</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Operation</span></code></p></li>
 <li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">nx.Graph</span></code></p></li>
 <li><p><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a></p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VineyardObject</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.Object</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.ObjectId</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.ObjectName</span></code></p></li>
 </ul>
 </div></blockquote>
 </p></li>
@@ -258,51 +254,51 @@ which can be one of:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.Graph.attach_interactive_instance">
-<code class="sig-name descname">attach_interactive_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instance</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.attach_interactive_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.attach_interactive_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Store the instance when a new interactive instance is started.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>instance</strong> – interactive instance</p>
+<dt id="graphscope.framework.graph.Graph.add_edges">
+<code class="sig-name descname">add_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">'_'</span></em>, <em class="sig-param"><span class="n">properties</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">src_label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dst_label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">src_field</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">dst_field</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.add_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.add_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add edges to graph.
+1. Add edges to a uninitialized graph.</p>
+<blockquote>
+<div><ol class="lowerroman simple">
+<li><p>src_label and dst_label both unspecified. In this case, current graph must
+has 0 (we deduce vertex label from edge table, and set vertex label name to ‘_’),
+or 1 vertex label (we set src_label and dst label to this).</p></li>
+<li><p>src_label and dst_label both specified and existed in current graph’s vertex labels.</p></li>
+<li><p>src_label and dst_label both specified and there is no vertex labels in current graph.
+we deduce all vertex labels from edge tables.
+Note that you either provide all vertex labels, or let graphscope deduce all vertex labels.
+We don’t support mixed style.</p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><dl class="simple">
+<dt>Add edges to a existed graph.</dt><dd><p>Must add a new kind of edge label, not a new relation to builded graph.
+But you can add a new relation to uninitialized part of the graph.
+src_label and dst_label must be specified and existed in current graph.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="graphscope.framework.graph.Graph.attach_learning_instance">
-<code class="sig-name descname">attach_learning_instance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instance</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.attach_learning_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.attach_learning_instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Store the instance when a new learning instance is created.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>instance</strong> – learning instance</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="graphscope.framework.graph.Graph.deserialize">
-<em class="property">classmethod </em><code class="sig-name descname">deserialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.deserialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.deserialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Construct a <cite>Graph</cite> by deserialize from <cite>path</cite>.
-It will read all serialization files, which is dumped by
-<cite>Graph.serialize</cite>.
-If any serialize file doesn’t exists or broken, will error out.</p>
+</li>
+</ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> (<em>str</em>) – Path contains the serialization files.</p></li>
-<li><p><strong>sess</strong> (<cite>graphscope.Session</cite>) – The target session
-that the graph will be construct in</p></li>
+<li><p><strong>edges</strong> (<em>[</em><em>type</em><em>]</em>) – [description]</p></li>
+<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – [description]. Defaults to “_”.</p></li>
+<li><p><strong>properties</strong> (<em>[</em><em>type</em><em>]</em><em>, </em><em>optional</em>) – [description]. Defaults to None.</p></li>
+<li><p><strong>src_label</strong> (<em>[</em><em>type</em><em>]</em><em>, </em><em>optional</em>) – [description]. Defaults to None.</p></li>
+<li><p><strong>dst_label</strong> (<em>[</em><em>type</em><em>]</em><em>, </em><em>optional</em>) – [description]. Defaults to None.</p></li>
+<li><p><strong>src_field</strong> (<em>int</em><em>, </em><em>optional</em>) – [description]. Defaults to 0.</p></li>
+<li><p><strong>dst_field</strong> (<em>int</em><em>, </em><em>optional</em>) – [description]. Defaults to 1.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>A new graph object. Schema and data is supposed to be</dt><dd><p>identical with the one that called serialized method.</p>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – [description]</p>
 </dd>
-</dl>
-</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>[description]</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><cite>Graph</cite></p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">Graph</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -336,33 +332,43 @@ this <a class="reference internal" href="#graphscope.framework.graph.Graph" titl
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.graph.Graph.op">
-<em class="property">property </em><code class="sig-name descname">op</code><a class="headerlink" href="#graphscope.framework.graph.Graph.op" title="Permalink to this definition">¶</a></dt>
-<dd><p>The DAG op of this graph.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="graphscope.framework.graph.Graph.project_to_simple">
-<code class="sig-name descname">project_to_simple</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v_label</span><span class="o">=</span><span class="default_value">'_'</span></em>, <em class="sig-param"><span class="n">e_label</span><span class="o">=</span><span class="default_value">'_'</span></em>, <em class="sig-param"><span class="n">v_prop</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">e_prop</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.project_to_simple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.project_to_simple" title="Permalink to this definition">¶</a></dt>
-<dd><p>Project a property graph to a simple graph, useful for analytical engine.
-Will translate name represented label or property to index, which is broadedly used
-in internal engine.</p>
+<dt id="graphscope.framework.graph.Graph.load_from">
+<em class="property">classmethod </em><code class="sig-name descname">load_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">sess</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.load_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.load_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a <cite>Graph</cite> by deserialize from <cite>path</cite>.
+It will read all serialization files, which is dumped by
+<cite>Graph.serialize</cite>.
+If any serialize file doesn’t exists or broken, will error out.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>v_label</strong> (<em>str</em><em>, </em><em>optional</em>) – vertex label to project. Defaults to “_”.</p></li>
-<li><p><strong>e_label</strong> (<em>str</em><em>, </em><em>optional</em>) – edge label to project. Defaults to “_”.</p></li>
-<li><p><strong>v_prop</strong> (<em>str</em><em>, </em><em>optional</em>) – vertex property of the v_label. Defaults to None.</p></li>
-<li><p><strong>e_prop</strong> (<em>str</em><em>, </em><em>optional</em>) – edge property of the e_label. Defaults to None.</p></li>
+<li><p><strong>path</strong> (<em>str</em>) – Path contains the serialization files.</p></li>
+<li><p><strong>sess</strong> (<cite>graphscope.Session</cite>) – The target session
+that the graph will be construct in</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A <cite>Graph</cite> instance, which graph_type is <cite>ARROW_PROJECTED</cite></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a></p>
+<dd class="field-even"><p><dl class="simple">
+<dt>A new graph object. Schema and data is supposed to be</dt><dd><p>identical with the one that called serialized method.</p>
 </dd>
 </dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><cite>Graph</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.graph.Graph.save_to">
+<code class="sig-name descname">save_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.save_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.save_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize graph to a location.
+The meta and data of graph is dumped to specified location,
+and can be restored by <cite>Graph.deserialize</cite> in other sessions.</p>
+<p>Each worker will write a <cite>path_{worker_id}.meta</cite> file and
+a <cite>path_{worker_id}</cite> file to storage.
+:param path: supported storages are local, hdfs, oss, s3
+:type path: str</p>
 </dd></dl>
 
 <dl class="py method">
@@ -391,18 +397,6 @@ in internal engine.</p>
 <dd class="field-even"><p>str</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="graphscope.framework.graph.Graph.serialize">
-<code class="sig-name descname">serialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.serialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.serialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Serialize graph to a location.
-The meta and data of graph is dumped to specified location,
-and can be restored by <cite>Graph.deserialize</cite> in other sessions.</p>
-<p>Each worker will write a <cite>path_{worker_id}.meta</cite> file and
-a <cite>path_{worker_id}</cite> file to storage.
-:param path: supported storages are local, hdfs, oss, s3
-:type path: str</p>
 </dd></dl>
 
 <dl class="py method">
@@ -488,12 +482,13 @@ Loader can take various data sources, and assemble necessary information into a 
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">','</span></em>, <em class="sig-param"><span class="n">header_row</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/loader.html#Loader.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.loader.Loader.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a loader with configurable options.
 Note: Loader cannot be reused since it may change inner state when constructing
-information for loading a graph.
-:param source:</p>
+information for loading a graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<em>str</em><em> or </em><em>value</em>) – <p>The data source to be load, which could be one of the followings:</p>
 <blockquote>
-<div><p>The data source to be load, which could be one of the followings:</p>
-<blockquote>
-<div><ul class="simple">
+<div><ul>
 <li><p>local file: specified by URL <code class="code docutils literal notranslate"><span class="pre">file://...</span></code></p></li>
 <li><p>oss file: specified by URL <code class="code docutils literal notranslate"><span class="pre">oss://...</span></code></p></li>
 <li><p>hdfs file: specified by URL <code class="code docutils literal notranslate"><span class="pre">hdfs://...</span></code></p></li>
@@ -508,10 +503,7 @@ into a vineyard stream first, then GraphScope’s fragment will be built upon th
 in vineyard.</p>
 <p>Once the stream IO in vineyard reaches a stable state, it will be the default mode to
 load data sources and construct fragments in GraphScope.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
+</p></li>
 <li><p><strong>delimiter</strong> (<em>char</em><em>, </em><em>optional</em>) – Column delimiter. Defaults to ‘,’</p></li>
 <li><p><strong>header_row</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether source have a header. If true, column names
 will be read from the first row of source, else they are named by ‘f0’, ‘f1’, ….
@@ -530,9 +522,13 @@ See more additional info in <cite>Loading Graph</cite> section of Docs, and impl
 <div class="section" id="graph-functions">
 <h2>Graph Functions<a class="headerlink" href="#graph-functions" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt id="graphscope.framework.graph_utils.load_from">
-<code class="sig-prename descclassname">graphscope.framework.graph_utils.</code><code class="sig-name descname">load_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Mapping<span class="p">[</span>str<span class="p">, </span>Union<span class="p">[</span>Sequence<span class="p">, </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>graphscope.framework.vineyard_object.VineyardObject<span class="p">, </span>Mapping<span class="p">]</span><span class="p">]</span><span class="p">, </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>graphscope.framework.vineyard_object.VineyardObject<span class="p">, </span>Sequence<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">vertices</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>Mapping<span class="p">[</span>str<span class="p">, </span>Union<span class="p">[</span>Sequence<span class="p">, </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>graphscope.framework.vineyard_object.VineyardObject<span class="p">, </span>Mapping<span class="p">]</span><span class="p">]</span><span class="p">, </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>graphscope.framework.vineyard_object.VineyardObject<span class="p">, </span>Sequence<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">oid_type</span><span class="o">=</span><span class="default_value">'int64_t'</span></em>, <em class="sig-param"><span class="n">generate_eid</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">graphscope.framework.graph.Graph</a><a class="reference internal" href="../_modules/graphscope/framework/graph_utils.html#load_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph_utils.load_from" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.framework.graph_builder.load_from">
+<code class="sig-prename descclassname">graphscope.framework.graph_builder.</code><code class="sig-name descname">load_from</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Mapping<span class="p">[</span>str<span class="p">, </span>Union<span class="p">[</span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>vineyard.Object<span class="p">, </span>vineyard.ObjectID<span class="p">, </span>vineyard.ObjectName<span class="p">, </span>Sequence<span class="p">, </span>Mapping<span class="p">]</span><span class="p">]</span><span class="p">, </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>vineyard.Object<span class="p">, </span>vineyard.ObjectID<span class="p">, </span>vineyard.ObjectName<span class="p">, </span>Sequence<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">vertices</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>Mapping<span class="p">[</span>str<span class="p">, </span>Union<span class="p">[</span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>vineyard.Object<span class="p">, </span>vineyard.ObjectID<span class="p">, </span>vineyard.ObjectName<span class="p">, </span>Sequence<span class="p">, </span>Mapping<span class="p">]</span><span class="p">]</span><span class="p">, </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader">graphscope.framework.loader.Loader</a><span class="p">, </span>str<span class="p">, </span>Sequence<span class="p">[</span>numpy.ndarray<span class="p">]</span><span class="p">, </span>pandas.core.frame.DataFrame<span class="p">, </span>vineyard.Object<span class="p">, </span>vineyard.ObjectID<span class="p">, </span>vineyard.ObjectName<span class="p">, </span>Sequence<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">oid_type</span><span class="o">=</span><span class="default_value">'int64_t'</span></em>, <em class="sig-param"><span class="n">generate_eid</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">graphscope.framework.graph.Graph</a><a class="reference internal" href="../_modules/graphscope/framework/graph_builder.html#load_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph_builder.load_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a Arrow property graph using a list of vertex/edge specifications.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version version: </span>0.3
+Use <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph()</span></code> instead.</p>
+</div>
 <ul>
 <li><dl>
 <dt>Use Dict of tuples to setup a graph.</dt><dd><p>We can use a dict to set vertex and edge configurations,
@@ -695,18 +691,112 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
   </script>
   
 
-  <div class="rst-versions shift-up" data-toggle="rst-versions" role="note" aria-label="versions">
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Read the Docs</span>
-      v: latest
+      v: stable
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
       <dl>
         <dt>Languages</dt>
         <dd><a href="../index.html">en</a></dd>
         <dd><a href="../zh/index.html">zh_CN</a></dd>
       </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
     </div>
   </div>
 

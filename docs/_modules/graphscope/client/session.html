@@ -26,6 +26,7 @@
 
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 
@@ -54,6 +55,10 @@
 
           
             
+            
+              <div class="version">
+                stable
+              </div>
             
           
 
@@ -85,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
@@ -202,6 +208,7 @@
 
 <span class="kn">import</span> <span class="nn">graphscope</span>
 <span class="kn">from</span> <span class="nn">graphscope.client.rpc</span> <span class="k">import</span> <span class="n">GRPCClient</span>
+<span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="k">import</span> <span class="n">CaptureKeyboardInterrupt</span>
 <span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="k">import</span> <span class="n">GSLogger</span>
 <span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="k">import</span> <span class="n">set_defaults</span>
 <span class="kn">from</span> <span class="nn">graphscope.config</span> <span class="k">import</span> <span class="n">GSConfig</span> <span class="k">as</span> <span class="n">gs_config</span>
@@ -214,7 +221,10 @@
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">K8sError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">LearningEngineInternalError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">check_argument</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="k">import</span> <span class="n">Graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.operation</span> <span class="k">import</span> <span class="n">Operation</span>
+<span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="k">import</span> <span class="n">InteractiveQuery</span>
+<span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="k">import</span> <span class="n">InteractiveQueryStatus</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">message_pb2</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">op_def_pb2</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">types_pb2</span>
@@ -260,15 +270,17 @@
 <span class="sd">        &gt;&gt;&gt; import graphscope as gs</span>
 
 <span class="sd">        &gt;&gt;&gt; # use session object explicitly</span>
-<span class="sd">        &gt;&gt;&gt; s = gs.session()</span>
-<span class="sd">        &gt;&gt;&gt; g = s.load_from(&#39;xxx&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; sess = gs.session()</span>
+<span class="sd">        &gt;&gt;&gt; g = sess.g()</span>
+<span class="sd">        &gt;&gt;&gt; pg = g.project(vertices={&#39;v&#39;: []}, edges={&#39;e&#39;: [&#39;dist&#39;]})</span>
 <span class="sd">        &gt;&gt;&gt; r = s.sssp(g, 4)</span>
 <span class="sd">        &gt;&gt;&gt; s.close()</span>
 
 <span class="sd">        &gt;&gt;&gt; # or use a session as default</span>
 <span class="sd">        &gt;&gt;&gt; s = gs.session().as_default()</span>
-<span class="sd">        &gt;&gt;&gt; g = gs.load_from(&#39;xxx&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; r = gs.sssp(g, 4)</span>
+<span class="sd">        &gt;&gt;&gt; g = g()</span>
+<span class="sd">        &gt;&gt;&gt; pg = g.project(vertices={&#39;v&#39;: []}, edges={&#39;e&#39;: [&#39;dist&#39;]})</span>
+<span class="sd">        &gt;&gt;&gt; r = gs.sssp(pg, 4)</span>
 <span class="sd">        &gt;&gt;&gt; s.close()</span>
 
 <span class="sd">    We support setup a service cluster and create a RPC session in following ways:</span>
@@ -301,7 +313,9 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">addr</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">addr</span><span class="p">,</span>
         <span class="n">num_workers</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span>
+        <span class="n">preemptive</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">preemptive</span><span class="p">,</span>
         <span class="n">k8s_namespace</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_namespace</span><span class="p">,</span>
         <span class="n">k8s_service_type</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_service_type</span><span class="p">,</span>
         <span class="n">k8s_gs_image</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gs_image</span><span class="p">,</span>
@@ -312,20 +326,28 @@
         <span class="n">k8s_image_pull_secrets</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_image_pull_secrets</span><span class="p">,</span>
         <span class="n">k8s_coordinator_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_coordinator_cpu</span><span class="p">,</span>
         <span class="n">k8s_coordinator_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_coordinator_mem</span><span class="p">,</span>
+        <span class="n">k8s_etcd_num_pods</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_etcd_num_pods</span><span class="p">,</span>
         <span class="n">k8s_etcd_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_etcd_cpu</span><span class="p">,</span>
         <span class="n">k8s_etcd_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_etcd_mem</span><span class="p">,</span>
         <span class="n">k8s_zookeeper_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_zookeeper_cpu</span><span class="p">,</span>
         <span class="n">k8s_zookeeper_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_zookeeper_mem</span><span class="p">,</span>
         <span class="n">k8s_gie_graph_manager_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_graph_manager_cpu</span><span class="p">,</span>
         <span class="n">k8s_gie_graph_manager_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_graph_manager_mem</span><span class="p">,</span>
+        <span class="n">k8s_vineyard_daemonset</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_vineyard_daemonset</span><span class="p">,</span>
         <span class="n">k8s_vineyard_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_vineyard_cpu</span><span class="p">,</span>
         <span class="n">k8s_vineyard_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_vineyard_mem</span><span class="p">,</span>
         <span class="n">k8s_vineyard_shared_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_vineyard_shared_mem</span><span class="p">,</span>
         <span class="n">k8s_engine_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_engine_cpu</span><span class="p">,</span>
         <span class="n">k8s_engine_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_engine_mem</span><span class="p">,</span>
+        <span class="n">k8s_mars_worker_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mars_worker_cpu</span><span class="p">,</span>
+        <span class="n">k8s_mars_worker_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mars_worker_mem</span><span class="p">,</span>
+        <span class="n">k8s_mars_scheduler_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mars_scheduler_cpu</span><span class="p">,</span>
+        <span class="n">k8s_mars_scheduler_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mars_scheduler_mem</span><span class="p">,</span>
         <span class="n">k8s_volumes</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_volumes</span><span class="p">,</span>
         <span class="n">k8s_waiting_for_delete</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_waiting_for_delete</span><span class="p">,</span>
         <span class="n">timeout_seconds</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="p">,</span>
+        <span class="n">dangling_timeout_seconds</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">dangling_timeout_seconds</span><span class="p">,</span>
+        <span class="n">with_mars</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">with_mars</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kw</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Construct a new GraphScope session.</span>
@@ -337,7 +359,15 @@
 <span class="sd">                :code:`DEFAULT_CONFIG_FILE` will be used, which get value of GS_CONFIG_PATH</span>
 <span class="sd">                in environment. Note that it will overwrite explicit parameters. Defaults to None.</span>
 
+<span class="sd">            addr (str, optional): The endpoint of a pre-launched GraphScope instance with &#39;&lt;ip&gt;:&lt;port&gt;&#39; format.</span>
+<span class="sd">                A new session id will be generated for each session connection.</span>
+
 <span class="sd">            num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.</span>
+
+<span class="sd">            preemptive (bool, optional): If True, GraphScope instance will treat resource params (e.g. k8s_coordinator_cpu)</span>
+<span class="sd">                as limits and provide the minimum available value as requests, but this will make pod has a `Burstable` QOS,</span>
+<span class="sd">                which can be preempted by other pods with high QOS. Otherwise, it will set both requests and limits with the</span>
+<span class="sd">                same value.</span>
 
 <span class="sd">            k8s_namespace (str, optional): Contains the namespace to create all resource inside.</span>
 <span class="sd">                If param missing, it will try to read namespace from kubernetes context, or</span>
@@ -359,6 +389,10 @@
 
 <span class="sd">            k8s_zookeeper_image (str, optional): The image of zookeeper, which used by GIE graph manager.</span>
 
+<span class="sd">            k8s_vineyard_daemonset (str, optional): The name of vineyard Helm deployment to use. GraphScope will try to</span>
+<span class="sd">                discovery the daemonset from kubernetes cluster, then use it if exists, and fallback to launching</span>
+<span class="sd">                a bundled vineyard container otherwise.</span>
+
 <span class="sd">            k8s_vineyard_cpu (float, optional): Minimum number of CPU cores request for vineyard container. Defaults to 0.5.</span>
 
 <span class="sd">            k8s_vineyard_mem (str, optional): Minimum number of memory request for vineyard container. Defaults to &#39;512Mi&#39;.</span>
@@ -372,6 +406,8 @@
 <span class="sd">            k8s_coordinator_cpu (float, optional): Minimum number of CPU cores request for coordinator pod. Defaults to 1.0.</span>
 
 <span class="sd">            k8s_coordinator_mem (str, optional): Minimum number of memory request for coordinator pod. Defaults to &#39;4Gi&#39;.</span>
+
+<span class="sd">            k8s_etcd_num_pods (int, optional): The number of etcd pods. Defaults to 3.</span>
 
 <span class="sd">            k8s_etcd_cpu (float, optional): Minimum number of CPU cores request for etcd pod. Defaults to 0.5.</span>
 
@@ -389,8 +425,25 @@
 <span class="sd">            k8s_gie_graph_manager_mem (str, optional):</span>
 <span class="sd">                Minimum number of memory request for graphmanager container. Defaults to &#39;4Gi&#39;.</span>
 
+<span class="sd">            k8s_mars_worker_cpu (float, optional):</span>
+<span class="sd">                Minimum number of CPU cores request for mars worker container. Defaults to 0.5.</span>
+
+<span class="sd">            k8s_mars_worker_mem (str, optional):</span>
+<span class="sd">                Minimum number of memory request for mars worker container. Defaults to &#39;4Gi&#39;.</span>
+
+<span class="sd">            k8s_mars_scheduler_cpu (float, optional):</span>
+<span class="sd">                Minimum number of CPU cores request for mars scheduler container. Defaults to 0.5.</span>
+
+<span class="sd">            k8s_mars_scheduler_mem (str, optional):</span>
+<span class="sd">                Minimum number of memory request for mars scheduler container. Defaults to &#39;2Gi&#39;.</span>
+
+<span class="sd">            with_mars (bool, optional):</span>
+<span class="sd">                Launch graphscope with mars. Defaults to False.</span>
+
 <span class="sd">            k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the</span>
-<span class="sd">                containers in a pod. Defaults to {}. Only &#39;hostPath&#39; supported yet. For example, we can mount host path with:</span>
+<span class="sd">                containers in a pod. Defaults to {}.</span>
+
+<span class="sd">                For example, you can mount host path with:</span>
 
 <span class="sd">                k8s_volumes = {</span>
 <span class="sd">                    &quot;my-data&quot;: {</span>
@@ -410,6 +463,22 @@
 <span class="sd">                    }</span>
 <span class="sd">                }</span>
 
+<span class="sd">                Or you can mount PVC with:</span>
+
+<span class="sd">                k8s_volumes = {</span>
+<span class="sd">                    &quot;my-data&quot;: {</span>
+<span class="sd">                        &quot;type&quot;: &quot;persistentVolumeClaim&quot;,</span>
+<span class="sd">                        &quot;field&quot;: {</span>
+<span class="sd">                            &quot;claimName&quot;: &quot;your-pvc-name&quot;</span>
+<span class="sd">                        },</span>
+<span class="sd">                        &quot;mounts&quot;: [</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;mountPath&quot;: &quot;&lt;path1&gt;&quot;</span>
+<span class="sd">                            }</span>
+<span class="sd">                        ]</span>
+<span class="sd">                    }</span>
+<span class="sd">                }</span>
+
 <span class="sd">                Also, you can mount a single volume with:</span>
 
 <span class="sd">                k8s_volumes = {</span>
@@ -424,16 +493,16 @@
 
 <span class="sd">            timeout_seconds (int, optional): For waiting service ready (or waiting for delete if</span>
 <span class="sd">                k8s_waiting_for_delete is True).</span>
-<span class="sd">                Also, after seconds of client disconnect, coordinator will clean up this graphscope instance.</span>
-<span class="sd">                Defaults to 600.</span>
+
+<span class="sd">            dangling_timeout_seconds (int, optional): After seconds of client disconnect,</span>
+<span class="sd">                coordinator will kill this graphscope instance. Defaults to 600.</span>
+<span class="sd">                Expect this value to be greater than 5 (heartbeat interval).</span>
+<span class="sd">                Disable dangling check by setting -1.</span>
 
 <span class="sd">            k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.</span>
 
 <span class="sd">            **kw (dict, optional): Other optional parameters will be put to :code:`**kw`.</span>
-<span class="sd">                - k8s_minikube_vm_driver (bool, optional):</span>
-<span class="sd">                    If your kubernetes cluster deployed on inner virtual machine</span>
-<span class="sd">                    (such as minikube with param --vm-driver is not None), you can specify</span>
-<span class="sd">                    :code:`k8s_minikube_vm_driver` is :code:`True`.</span>
+<span class="sd">                - k8s_minikube_vm_driver: Deprecated.</span>
 
 <span class="sd">                - k8s_client_config (dict, optional):</span>
 <span class="sd">                    Provide configurable parameters for connecting to remote k8s,</span>
@@ -456,7 +525,9 @@
         <span class="n">num_workers</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_workers</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_accessable_params</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;addr&quot;</span><span class="p">,</span>
             <span class="s2">&quot;num_workers&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;preemptive&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_namespace&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_service_type&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_gs_image&quot;</span><span class="p">,</span>
@@ -467,20 +538,28 @@
             <span class="s2">&quot;k8s_zookeeper_image&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_coordinator_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_coordinator_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_etcd_num_pods&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_etcd_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_etcd_mem&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_zookeeper_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_zookeeper_mem&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_gie_graph_manager_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_gie_graph_manager_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_vineyard_daemonset&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_vineyard_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_vineyard_mem&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_vineyard_shared_mem&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_engine_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_engine_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_mars_worker_cpu&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_mars_worker_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_mars_scheduler_cpu&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_mars_scheduler_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;with_mars&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_volumes&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_waiting_for_delete&quot;</span><span class="p">,</span>
             <span class="s2">&quot;timeout_seconds&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dangling_timeout_seconds&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">saved_locals</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accessable_params</span><span class="p">:</span>
@@ -498,14 +577,18 @@
         <span class="c1"># update other optional params</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;addr&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-
         <span class="c1"># Reserved keyword for local testing.</span>
         <span class="n">run_on_local</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;run_on_local&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">run_on_local</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_run_on_local</span><span class="p">()</span>
+
+        <span class="c1"># mars cannot work with run-on-local mode</span>
+        <span class="k">if</span> <span class="n">run_on_local</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;with_mars&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Mars cluster cannot be launched along with local GraphScope deployment&quot;</span>
+            <span class="p">)</span>
 
         <span class="c1"># deprecated params handle</span>
         <span class="k">if</span> <span class="s2">&quot;show_log&quot;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
@@ -523,11 +606,6 @@
                 <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="c1"># deploy minikube on virtual machine</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_minikube_vm_driver&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
-            <span class="s2">&quot;k8s_minikube_vm_driver&quot;</span><span class="p">,</span> <span class="kc">False</span>
-        <span class="p">)</span>
-
         <span class="c1"># update k8s_client_config params</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">,</span> <span class="p">{})</span>
 
@@ -535,9 +613,16 @@
         <span class="k">if</span> <span class="n">kw</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not recognized value: &quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Initializing graphscope session with parameters: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Connecting graphscope session with address: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Initializing graphscope session with parameters: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -571,7 +656,8 @@
 
         <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">)</span>
         <span class="c1"># create and connect session</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_proc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">CaptureKeyboardInterrupt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_proc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -604,6 +690,11 @@
                 <span class="k">raise</span> <span class="n">exp</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">engine_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Show the engine configration associated with session in json format.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Show all resources info associated with session in json format.&quot;&quot;&quot;</span>
         <span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
@@ -614,17 +705,17 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;active&quot;</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">REMOTE</span><span class="p">:</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;remote&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span><span class="p">:</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;k8s&quot;</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span><span class="p">)</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;namespace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;hosts&quot;</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">])</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">])</span>
 
+        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;session_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;coordinator_endpoint&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span>
@@ -692,7 +783,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_proc</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_proc</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k8s_cluster</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_k8s_cluster</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span> <span class="o">=</span> <span class="p">[]</span></div>
@@ -814,13 +905,12 @@
             <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">result</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
-                <span class="s2">&quot;Not recognized output type: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span>
+                <span class="s2">&quot;Not recognized output type: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span>
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># try connect to exist coordinator</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_session_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span>
             <span class="n">proc</span><span class="p">,</span> <span class="n">endpoint</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="p">(</span>
@@ -832,14 +922,13 @@
                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
             <span class="p">)</span>
             <span class="n">proc</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_session_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_k8s_cluster</span> <span class="o">=</span> <span class="n">KubernetesCluster</span><span class="p">(</span>
                 <span class="n">api_client</span><span class="o">=</span><span class="n">api_client</span><span class="p">,</span>
                 <span class="n">namespace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">],</span>
                 <span class="n">service_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_service_type&quot;</span><span class="p">],</span>
-                <span class="n">minikube_vm_driver</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_minikube_vm_driver&quot;</span><span class="p">],</span>
                 <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">],</span>
                 <span class="n">gs_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gs_image&quot;</span><span class="p">],</span>
+                <span class="n">preemptive</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;preemptive&quot;</span><span class="p">],</span>
                 <span class="n">etcd_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_image&quot;</span><span class="p">],</span>
                 <span class="n">gie_graph_manager_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span>
                     <span class="s2">&quot;k8s_gie_graph_manager_image&quot;</span>
@@ -847,9 +936,11 @@
                 <span class="n">zookeeper_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_zookeeper_image&quot;</span><span class="p">],</span>
                 <span class="n">image_pull_policy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_image_pull_policy&quot;</span><span class="p">],</span>
                 <span class="n">image_pull_secrets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_image_pull_secrets&quot;</span><span class="p">],</span>
+                <span class="n">vineyard_daemonset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_daemonset&quot;</span><span class="p">],</span>
                 <span class="n">vineyard_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_cpu&quot;</span><span class="p">],</span>
                 <span class="n">vineyard_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_mem&quot;</span><span class="p">],</span>
                 <span class="n">vineyard_shared_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_shared_mem&quot;</span><span class="p">],</span>
+                <span class="n">etcd_num_pods</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_num_pods&quot;</span><span class="p">],</span>
                 <span class="n">etcd_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_cpu&quot;</span><span class="p">],</span>
                 <span class="n">etcd_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_mem&quot;</span><span class="p">],</span>
                 <span class="n">zookeeper_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_zookeeper_cpu&quot;</span><span class="p">],</span>
@@ -858,11 +949,19 @@
                 <span class="n">gie_graph_manager_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gie_graph_manager_mem&quot;</span><span class="p">],</span>
                 <span class="n">engine_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_engine_cpu&quot;</span><span class="p">],</span>
                 <span class="n">engine_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_engine_mem&quot;</span><span class="p">],</span>
+                <span class="n">mars_worker_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_worker_cpu&quot;</span><span class="p">],</span>
+                <span class="n">mars_worker_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_worker_mem&quot;</span><span class="p">],</span>
+                <span class="n">mars_scheduler_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_scheduler_cpu&quot;</span><span class="p">],</span>
+                <span class="n">mars_scheduler_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_scheduler_mem&quot;</span><span class="p">],</span>
+                <span class="n">with_mars</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;with_mars&quot;</span><span class="p">],</span>
                 <span class="n">coordinator_cpu</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_coordinator_cpu&quot;</span><span class="p">]),</span>
                 <span class="n">coordinator_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_coordinator_mem&quot;</span><span class="p">],</span>
                 <span class="n">volumes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_volumes&quot;</span><span class="p">],</span>
                 <span class="n">waiting_for_delete</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_waiting_for_delete&quot;</span><span class="p">],</span>
                 <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;timeout_seconds&quot;</span><span class="p">],</span>
+                <span class="n">dangling_timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span>
+                    <span class="s2">&quot;dangling_timeout_seconds&quot;</span>
+                <span class="p">],</span>
             <span class="p">)</span>
             <span class="n">endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k8s_cluster</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -874,7 +973,6 @@
         <span class="p">):</span>
             <span class="c1"># lanuch coordinator with hosts</span>
             <span class="n">proc</span><span class="p">,</span> <span class="n">endpoint</span> <span class="o">=</span> <span class="n">_launch_coordinator_on_local</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_session_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Session initialize failed.&quot;</span><span class="p">)</span>
 
@@ -882,16 +980,26 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span> <span class="o">=</span> <span class="n">GRPCClient</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">waiting_service_ready</span><span class="p">(</span>
             <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;timeout_seconds&quot;</span><span class="p">],</span>
-            <span class="n">enable_k8s</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">],</span>
         <span class="p">)</span>
 
-        <span class="c1"># connect to rpc server</span>
+        <span class="c1"># connect and fetch logs from rpc server</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_session_type</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span><span class="p">,</span>
-            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">],</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                <span class="n">cleanup_instance</span><span class="o">=</span><span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]),</span>
+                <span class="n">dangling_timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span>
+                    <span class="s2">&quot;dangling_timeout_seconds&quot;</span>
+                <span class="p">],</span>
+            <span class="p">)</span>
+            <span class="c1"># fetch logs</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">fetch_logs</span><span class="p">()</span>
             <span class="n">_session_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">proc</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -901,15 +1009,14 @@
                     <span class="k">pass</span>
             <span class="k">raise</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">]:</span>
-            <span class="c1"># minikube service</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_k8s_cluster</span><span class="o">.</span><span class="n">check_and_set_vineyard_rpc_endpoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">)</span>
-
         <span class="k">return</span> <span class="n">proc</span><span class="p">,</span> <span class="n">endpoint</span>
 
 <div class="viewcode-block" id="Session.get_config"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get configuration of the session.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span></div>
+
+    <span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_data</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">directed</span><span class="p">,</span> <span class="n">generate_eid</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Session.load_from"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.load_from">[docs]</a>    <span class="k">def</span> <span class="nf">load_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load a graph within the session.</span>
@@ -1046,11 +1153,29 @@
         <span class="n">handle_json_string</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">handle_json_string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Session.gremlin"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.gremlin">[docs]</a>    <span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.gremlin"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.gremlin">[docs]</a>    <span class="nd">@set_defaults</span><span class="p">(</span><span class="n">gs_config</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get a interactive engine handler to execute gremlin queries.</span>
 
+<span class="sd">        Note that this method will be executed implicitly when a property graph created</span>
+<span class="sd">        and cache a instance of InteractiveQuery in session if `initializing_interactive_engine`</span>
+<span class="sd">        is True. If you want to create a new instance under the same graph by different params,</span>
+<span class="sd">        you should close the instance first.</span>
+
+<span class="sd">        .. code:: python</span>
+
+<span class="sd">            &gt;&gt;&gt; # close and recreate InteractiveQuery.</span>
+<span class="sd">            &gt;&gt;&gt; interactive_query = sess.gremlin(g)</span>
+<span class="sd">            &gt;&gt;&gt; interactive_query.close()</span>
+<span class="sd">            &gt;&gt;&gt; interactive_query = sess.gremlin(g, engine_params={&quot;xxx&quot;:&quot;xxx&quot;})</span>
+
+
 <span class="sd">        Args:</span>
-<span class="sd">            graph: :class:`Graph`</span>
+<span class="sd">            graph (:class:`Graph`): Use the graph to create interactive instance.</span>
+<span class="sd">            engine_params (dict, optional): Configure startup parameters of interactive engine.</span>
+<span class="sd">                You can also configure this param by `graphscope.set_option(engine_params={})`.</span>
+<span class="sd">                See a list of configurable keys in</span>
+<span class="sd">                `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            InvalidArgumentError: :code:`graph` is not a property graph or unloaded.</span>
@@ -1058,33 +1183,64 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            :class:`InteractiveQuery`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># self._interactive_instance_dict[graph.vineyard_id] will be None if</span>
+        <span class="c1"># InteractiveQuery closed</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span>
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span>
+            <span class="n">interactive_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">interactive_query</span>
+            <span class="k">elif</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InteractiveEngineInternalError</span><span class="p">(</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Initializing.</span>
+                <span class="c1"># while True is ok, as the status is either running or failed eventually after timeout.</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">interactive_query</span>
+                    <span class="k">elif</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">InteractiveEngineInternalError</span><span class="p">(</span>
+                            <span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span>
+                        <span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph has already been unloaded&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph should be a property graph.&quot;</span><span class="p">)</span>
 
-        <span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="k">import</span> <span class="n">InteractiveQuery</span>
-
-        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_interactive_engine</span><span class="p">(</span>
-            <span class="n">object_id</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span>
-            <span class="n">schema_path</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">schema_path</span><span class="p">,</span>
-            <span class="n">gremlin_server_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_gremlin_server_cpu</span><span class="p">,</span>
-            <span class="n">gremlin_server_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_gremlin_server_mem</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">(</span>
-            <span class="n">graphscope_session</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
-            <span class="n">object_id</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span>
-            <span class="n">front_ip</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">frontend_host</span><span class="p">,</span>
-            <span class="n">front_port</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">frontend_port</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">object_id</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactive_query</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">attach_interactive_instance</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">engine_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">engine_params</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">):</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">engine_params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">engine_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_interactive_engine</span><span class="p">(</span>
+                <span class="n">object_id</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span>
+                <span class="n">schema_path</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">schema_path</span><span class="p">,</span>
+                <span class="n">gremlin_server_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_gremlin_server_cpu</span><span class="p">,</span>
+                <span class="n">gremlin_server_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_gremlin_server_mem</span><span class="p">,</span>
+                <span class="n">engine_params</span><span class="o">=</span><span class="n">engine_params</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span>
+            <span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InteractiveEngineInternalError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">interactive_query</span><span class="o">.</span><span class="n">set_frontend</span><span class="p">(</span>
+                <span class="n">front_ip</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">frontend_host</span><span class="p">,</span> <span class="n">front_port</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">frontend_port</span>
+            <span class="p">)</span>
+            <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">_attach_interactive_instance</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">interactive_query</span></div>
 
 <div class="viewcode-block" id="Session.learning"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.learning">[docs]</a>    <span class="k">def</span> <span class="nf">learning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1131,7 +1287,7 @@
 
         <span class="n">learning_graph</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">learning_graph</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">attach_learning_instance</span><span class="p">(</span><span class="n">learning_graph</span><span class="p">)</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_attach_learning_instance</span><span class="p">(</span><span class="n">learning_graph</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">learning_graph</span></div></div>
 
 
@@ -1197,8 +1353,11 @@
 
     <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">env</span><span class="p">[</span><span class="s2">&quot;PYTHONUNBUFFERED&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;TRUE&quot;</span>
+    <span class="c1"># Param `start_new_session=True` is for putting child process to a new process group</span>
+    <span class="c1"># so it won&#39;t get the signals from parent.</span>
     <span class="n">process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
         <span class="n">cmd</span><span class="p">,</span>
+        <span class="n">start_new_session</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">cwd</span><span class="o">=</span><span class="n">COORDINATOR_HOME</span><span class="p">,</span>
         <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
@@ -1229,12 +1388,20 @@
 <span class="sd">        - k8s_image_pull_secrets</span>
 <span class="sd">        - k8s_coordinator_cpu</span>
 <span class="sd">        - k8s_coordinator_mem</span>
+<span class="sd">        - k8s_vineyard_daemonset</span>
 <span class="sd">        - k8s_vineyard_cpu</span>
 <span class="sd">        - k8s_vineyard_mem</span>
 <span class="sd">        - k8s_vineyard_shared_mem</span>
 <span class="sd">        - k8s_engine_cpu</span>
 <span class="sd">        - k8s_engine_mem</span>
+<span class="sd">        - k8s_mars_worker_cpu</span>
+<span class="sd">        - k8s_mars_worker_mem</span>
+<span class="sd">        - k8s_mars_scheduler_cpu</span>
+<span class="sd">        - k8s_mars_scheduler_mem</span>
+<span class="sd">        - with_mars</span>
 <span class="sd">        - k8s_waiting_for_delete</span>
+<span class="sd">        - engine_params</span>
+<span class="sd">        - initializing_interactive_engine</span>
 <span class="sd">        - timeout_seconds</span>
 
 <span class="sd">    Args:</span>
@@ -1274,12 +1441,20 @@
 <span class="sd">        - k8s_image_pull_secrets</span>
 <span class="sd">        - k8s_coordinator_cpu</span>
 <span class="sd">        - k8s_coordinator_mem</span>
+<span class="sd">        - k8s_vineyard_daemonset</span>
 <span class="sd">        - k8s_vineyard_cpu</span>
 <span class="sd">        - k8s_vineyard_mem</span>
 <span class="sd">        - k8s_vineyard_shared_mem</span>
 <span class="sd">        - k8s_engine_cpu</span>
 <span class="sd">        - k8s_engine_mem</span>
+<span class="sd">        - k8s_mars_worker_cpu</span>
+<span class="sd">        - k8s_mars_worker_mem</span>
+<span class="sd">        - k8s_mars_scheduler_cpu</span>
+<span class="sd">        - k8s_mars_scheduler_mem</span>
+<span class="sd">        - with_mars</span>
 <span class="sd">        - k8s_waiting_for_delete</span>
+<span class="sd">        - engine_params</span>
+<span class="sd">        - initializing_interactive_engine</span>
 <span class="sd">        - timeout_seconds</span>
 
 <span class="sd">    Args:</span>
@@ -1366,6 +1541,10 @@
 
 
 <span class="n">_default_session_stack</span> <span class="o">=</span> <span class="n">_DefaultSessionStack</span><span class="p">()</span>  <span class="c1"># pylint: disable=protected-access</span>
+
+
+<span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">get_default_session</span><span class="p">()</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">directed</span><span class="p">,</span> <span class="n">generate_eid</span><span class="p">)</span>
 </pre></div>
 
            </div>
@@ -1418,18 +1597,112 @@
   </script>
   
 
-  <div class="rst-versions shift-up" data-toggle="rst-versions" role="note" aria-label="versions">
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Read the Docs</span>
-      v: latest
+      v: stable
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
       <dl>
         <dt>Languages</dt>
         <dd><a href="../../../index.html">en</a></dd>
         <dd><a href="../../../zh/index.html">zh_CN</a></dd>
       </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
     </div>
   </div>
 

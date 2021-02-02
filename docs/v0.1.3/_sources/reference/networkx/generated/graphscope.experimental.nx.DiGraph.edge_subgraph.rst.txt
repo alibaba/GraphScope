@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.edge\_subgraph
+=================================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.edge_subgraph

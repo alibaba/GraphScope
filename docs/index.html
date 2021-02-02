@@ -26,6 +26,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation" href="installation.html" /> 
@@ -55,6 +56,10 @@
 
           
             
+            
+              <div class="version">
+                stable
+              </div>
             
           
 
@@ -86,6 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
@@ -195,11 +201,22 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
 <li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/8_node_classification_on_citation_network.ipynb">A Complex Workflow: Node Classification on Citation Network</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#deployment-with-helm">Deployment with Helm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#deploy-with-aws-aliyun">Deploy with AWS/Aliyun</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="loading_graph.html#configurations-of-a-graph">Configurations of a Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loading_graph.html#building-a-graph">Building a Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="loading_graph.html#graphs-from-numpy-and-pandas">Graphs from Numpy and Pandas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="loading_graph.html#graphs-from-given-location">Graphs from Given Location</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#attach-new-labels">Attach new labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#projection">Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#transform-to-simple-graph-implicitly">Transform to simple graph implicitly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#add-results-back-to-graph-as-a-property">Add results back to graph as a property</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a><ul>
@@ -328,18 +345,112 @@ and the vineyard store that offers efficient in-memory data transfers.</p>
   </script>
   
 
-  <div class="rst-versions shift-up" data-toggle="rst-versions" role="note" aria-label="versions">
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Read the Docs</span>
-      v: latest
+      v: stable
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="#">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
       <dl>
         <dt>Languages</dt>
         <dd><a href="#">en</a></dd>
         <dd><a href="zh/index.html">zh_CN</a></dd>
       </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
     </div>
   </div>
 

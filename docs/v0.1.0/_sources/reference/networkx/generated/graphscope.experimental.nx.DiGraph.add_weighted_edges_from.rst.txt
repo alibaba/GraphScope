@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.add\_weighted\_edges\_from
+=============================================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.add_weighted_edges_from

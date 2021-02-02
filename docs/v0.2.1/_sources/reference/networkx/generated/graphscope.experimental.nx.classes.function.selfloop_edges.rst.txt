@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.classes.function.selfloop\_edges
+===========================================================
+
+.. currentmodule:: graphscope.experimental.nx.classes
+
+.. autofunction:: function.selfloop_edges

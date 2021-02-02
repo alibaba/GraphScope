@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.Graph.degree
+=======================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. autoproperty:: Graph.degree

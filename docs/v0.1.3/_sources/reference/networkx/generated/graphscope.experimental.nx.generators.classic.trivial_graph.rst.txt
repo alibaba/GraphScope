@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.generators.classic.trivial\_graph
+============================================================
+
+.. currentmodule:: graphscope.experimental.nx.generators.classic
+
+.. autofunction:: trivial_graph

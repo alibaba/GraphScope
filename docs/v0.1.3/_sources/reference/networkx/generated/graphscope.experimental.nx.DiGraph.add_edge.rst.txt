@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.add\_edge
+============================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.add_edge

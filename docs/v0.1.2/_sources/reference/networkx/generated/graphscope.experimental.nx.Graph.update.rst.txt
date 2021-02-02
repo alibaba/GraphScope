@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.Graph.update
+=======================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: Graph.update

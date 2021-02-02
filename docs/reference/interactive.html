@@ -26,6 +26,7 @@
 
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Graph Learning" href="learning.html" />
@@ -57,6 +58,10 @@
           
             
             
+              <div class="version">
+                stable
+              </div>
+            
           
 
           
@@ -87,6 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_transformation.html">Graph Transformations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
@@ -186,7 +192,7 @@
 </table>
 <dl class="py class">
 <dt id="graphscope.interactive.query.InteractiveQuery">
-<em class="property">class </em><code class="sig-prename descclassname">graphscope.interactive.query.</code><code class="sig-name descname">InteractiveQuery</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graphscope_session</span></em>, <em class="sig-param"><span class="n">object_id</span></em>, <em class="sig-param"><span class="n">front_ip</span></em>, <em class="sig-param"><span class="n">front_port</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.interactive.query.</code><code class="sig-name descname">InteractiveQuery</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session</span></em>, <em class="sig-param"><span class="n">object_id</span></em>, <em class="sig-param"><span class="n">front_ip</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">front_port</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery" title="Permalink to this definition">¶</a></dt>
 <dd><p><cite>InteractiveQuery</cite> class, is a simple wrapper around
 <a class="reference external" href="https://pypi.org/project/gremlinpython/">Gremlin-Python</a>,
 which implements Gremlin within the Python language.
@@ -199,7 +205,7 @@ which lifetime is independent from the origin graph.</p>
 to get a <cite>GraphTraversalSource</cite> for further traversal.</p>
 <dl class="py method">
 <dt id="graphscope.interactive.query.InteractiveQuery.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graphscope_session</span></em>, <em class="sig-param"><span class="n">object_id</span></em>, <em class="sig-param"><span class="n">front_ip</span></em>, <em class="sig-param"><span class="n">front_port</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session</span></em>, <em class="sig-param"><span class="n">object_id</span></em>, <em class="sig-param"><span class="n">front_ip</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">front_port</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -216,6 +222,11 @@ to get a <cite>GraphTraversalSource</cite> for further traversal.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="graphscope.interactive.query.InteractiveQuery.error_msg">
+<em class="property">property </em><code class="sig-name descname">error_msg</code><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.error_msg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="graphscope.interactive.query.InteractiveQuery.execute">
 <code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">query</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute gremlin querying scripts.
@@ -225,7 +236,7 @@ Behind the scene, it uses <cite>gremlinpython</cite> to send the query.</p>
 <dd class="field-odd"><p><strong>query</strong> (<em>str</em>) – Scripts that written in gremlin quering language.</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – If the interactive script is closed</p>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the interactive script is not running.</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>execution results</p>
@@ -254,6 +265,16 @@ Behind the scene, it uses <cite>gremlinpython</cite> to send the query.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="graphscope.interactive.query.InteractiveQuery.set_frontend">
+<code class="sig-name descname">set_frontend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">front_ip</span></em>, <em class="sig-param"><span class="n">front_port</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.set_frontend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.set_frontend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.interactive.query.InteractiveQuery.status">
+<em class="property">property </em><code class="sig-name descname">status</code><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="graphscope.interactive.query.InteractiveQuery.subgraph">
 <code class="sig-name descname">subgraph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gremlin_script</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.subgraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.subgraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a subgraph, which input is the result of the execution of <cite>gremlin_script</cite>.
@@ -262,7 +283,7 @@ Any gremlin script that will output a set of edges can be used to contruct a sub
 :type gremlin_script: str</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – If the interactive instance is closed.</p>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If the interactive instance is not running.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>constructed subgraph. which is also stored in vineyard.</p>
@@ -279,6 +300,11 @@ Any gremlin script that will output a set of edges can be used to contruct a sub
 <dd><p>Create a GraphTraversalSource and return.
 Once <cite>g</cite> has been created using a connection, we can start to write
 Gremlin traversals to query the remote graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If the interactive script is not running.</p>
+</dd>
+</dl>
 <p class="rubric">Examples</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_modern_graph</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">modern_graph_data_dir</span><span class="p">)</span>
@@ -359,18 +385,112 @@ Gremlin traversals to query the remote graph.</p>
   </script>
   
 
-  <div class="rst-versions shift-up" data-toggle="rst-versions" role="note" aria-label="versions">
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Read the Docs</span>
-      v: latest
+      v: stable
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
       <dl>
         <dt>Languages</dt>
         <dd><a href="../index.html">en</a></dd>
         <dd><a href="../zh/index.html">zh_CN</a></dd>
       </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
     </div>
   </div>
 

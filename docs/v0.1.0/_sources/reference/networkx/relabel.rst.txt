@@ -1,0 +1,4 @@
+.. _relabel:
+
+Relabeling nodes
+------------------
