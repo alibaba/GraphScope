@@ -620,26 +620,36 @@ class Graph(object):
             sess.session_id, VineyardObject(object_id=int(vineyard.ObjectID(graph_id)))
         )
 
-    def draw(self, vertices, hop, interactive_query=None):
+    def draw(self, vertices, hop=1):
         """Visualize the graph data in the result cell when the draw functions are invoked
 
         Args:
             vertices (list): selected vertices.
-            hop (int): draw induced subgraph with hop extension.
-            interactive_query: interactive instance
+            hop (int): draw induced subgraph with hop extension. Defaults to 1.
 
         Returns:
             A GraphModel.
         """
+        from ipygraphin import GraphModel
+
+        sess = get_session_by_id(self.session_id)
+        interactive_instance_dict = sess.interactive_instance()
+        if (
+            self._vineyard_id in interactive_instance_dict
+            and interactive_instance_dict[self._vineyard_id] is not None
+        ):
+            interactive_query = interactive_instance_dict[self._vineyard_id]
+        else:
+            interactive_query = sess.gremlin(self)
+
         if interactive_query is None:
             raise ValueError(
-                "Failed to obtain interactive_query, unable to query data and draw graph."
+                "Failed to obtain interactive instance, unable to query data and draw graph."
             )
-        from ipygraphin import GraphModel
 
         graph = GraphModel()
         graph.queryGraphData(vertices, hop, interactive_query)
 
-        # 监听对节点的 1-2 度关系扩散的操作
+        # listen on the 1~2 hops operation of node
         graph.on_msg(graph.queryNeighbor)
         return graph

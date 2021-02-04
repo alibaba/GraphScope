@@ -9,17 +9,16 @@ This file originates from the 'jupyter-packaging' package, and
 contains a set of useful utilities for including npm packages
 within a Python package.
 """
-from collections import defaultdict
-from os.path import join as pjoin
+import functools
 import io
 import os
-import functools
 import pipes
 import re
 import shlex
 import subprocess
 import sys
-
+from collections import defaultdict
+from os.path import join as pjoin
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.
@@ -27,13 +26,13 @@ if os.path.exists("MANIFEST"):
     os.remove("MANIFEST")
 
 
+from distutils import log
 from distutils.cmd import Command
 from distutils.command.build_py import build_py
 from distutils.command.sdist import sdist
-from distutils import log
 
-from setuptools.command.develop import develop
 from setuptools.command.bdist_egg import bdist_egg
+from setuptools.command.develop import develop
 
 try:
     from wheel.bdist_wheel import bdist_wheel
@@ -117,7 +116,7 @@ def find_packages(top=HERE):
         if os.path.exists(pjoin(d, "__init__.py")):
             packages.append(os.path.relpath(d, top).replace(os.path.sep, "."))
         elif d != top:
-            # Do not look for packages in subfolders if current is not a package
+            # Don't look for packages in subfolders if current is not a package
             dirs[:] = []
     return packages
 
@@ -142,7 +141,9 @@ class bdist_egg_disabled(bdist_egg):
         )
 
 
-def create_cmdclass(prerelease_cmd=None, package_data_spec=None, data_files_spec=None):
+def create_cmdclass(
+    prerelease_cmd=None, package_data_spec=None, data_files_spec=None
+):
     """Create a command class with the given optional prerelease class.
 
     Parameters
@@ -328,7 +329,12 @@ def mtime(path):
 
 
 def install_npm(
-    path=None, build_dir=None, source_dir=None, build_cmd="build", force=False, npm=None
+    path=None,
+    build_dir=None,
+    source_dir=None,
+    build_cmd="build",
+    force=False,
+    npm=None,
 ):
     """Return a Command for managing an npm installation.
 
@@ -377,7 +383,9 @@ def install_npm(
                 )
                 return
 
-            if force or is_stale(node_modules, pjoin(node_package, "package.json")):
+            if force or is_stale(
+                node_modules, pjoin(node_package, "package.json")
+            ):
                 log.info(
                     "Installing build dependencies with npm.  This may "
                     "take a while..."
@@ -427,7 +435,9 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
     # Additionally check that `file` is not a directory, as on Windows
     # directories pass the os.access check.
     def _access_check(fn, mode):
-        return os.path.exists(fn) and os.access(fn, mode) and not os.path.isdir(fn)
+        return (
+            os.path.exists(fn) and os.access(fn, mode) and not os.path.isdir(fn)
+        )
 
     # Short circuit. If we're given a full path which matches the mode
     # and it exists, we're done here.

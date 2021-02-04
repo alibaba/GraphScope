@@ -5,23 +5,20 @@
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
+
 from glob import glob
-from os.path import join as pjoin
 from os import path
+from os.path import join as pjoin
 
-from setupbase import (
-    create_cmdclass,
-    install_npm,
-    ensure_targets,
-    find_packages,
-    combine_commands,
-    ensure_python,
-    get_version,
-    HERE,
-)
-
+from setupbase import HERE
+from setupbase import combine_commands
+from setupbase import create_cmdclass
+from setupbase import ensure_python
+from setupbase import ensure_targets
+from setupbase import find_packages
+from setupbase import get_version
+from setupbase import install_npm
 from setuptools import setup
-
 
 # The name of the project
 name = "ipygraphin"
@@ -51,7 +48,9 @@ data_files_spec = [
 
 
 cmdclass = create_cmdclass(
-    "jsdeps", package_data_spec=package_data_spec, data_files_spec=data_files_spec
+    "jsdeps",
+    package_data_spec=package_data_spec,
+    data_files_spec=data_files_spec,  # noqa: E501
 )
 cmdclass["jsdeps"] = combine_commands(
     install_npm(HERE, build_cmd="build:all"),
@@ -65,7 +64,7 @@ with open(pjoin(this_directory, "README.md"), encoding="utf-8") as f:
 
 setup_args = dict(
     name=name,
-    description="Python implementation of the graph visualization tool Graphin.",
+    description="Python implementation of the graph visualization tool Graphin.",  # noqa: E501
     long_description=long_description,
     long_description_content_type="text/markdown",
     version=version,

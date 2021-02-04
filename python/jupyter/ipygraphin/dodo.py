@@ -1,9 +1,10 @@
 # this uses https://pydoit.org/ to run tasks/chores
 # pip install doit
 # $ doit
-import pkg_resources
-from ipygraphin._version import __version__ as version
+
 import re
+
+from ipygraphin._version import __version__ as version
 
 
 def task_mybinder():
@@ -14,7 +15,7 @@ def task_mybinder():
             with open(filename) as f:
                 content = f.read()
             content = re.sub(
-                "graphin(?P<cmp>[^0-9]*)([0-9\.].*)",
+                "graphin(?P<cmp>[^0-9]*)([0-9\.].*)",  # noqa: W605
                 rf"graphin\g<cmp>{version}",
                 content,
             )

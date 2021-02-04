@@ -483,6 +483,10 @@ class Session(object):
                     self._disconnected = False
             time.sleep(self._heartbeat_interval_seconds)
 
+    def interactive_instance(self):
+        """Get all interactive instances of session."""
+        return self._interactive_instance_dict
+
     def close(self):
         """Closes this session.
 
