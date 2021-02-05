@@ -29,10 +29,12 @@ import pytest
 import graphscope
 from graphscope.client.session import DEFAULT_CONFIG_FILE
 
-graphscope.set_option(show_log=True)
-
 COORDINATOR_HOME = os.path.join(os.path.dirname(__file__), "../", "../coordinator")
 new_data_dir = os.path.expandvars("${GS_TEST_DIR}/new_property/v2_e2")
+
+
+def setUpModule():
+    graphscope.set_option(show_log=True)
 
 
 @pytest.fixture
