@@ -48,12 +48,6 @@ def parse_readable_memory(value):
     return value
 
 
-def is_minikube_cluster():
-    contexts, active_context = kube_config.list_kube_config_contexts()
-    if contexts:
-        return active_context["context"]["cluster"] == "minikube"
-
-
 def try_to_read_namespace_from_context():
     contexts, active_context = kube_config.list_kube_config_contexts()
     if contexts and "namespace" in active_context["context"]:

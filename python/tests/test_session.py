@@ -29,6 +29,8 @@ import pytest
 import graphscope
 from graphscope.client.session import DEFAULT_CONFIG_FILE
 
+graphscope.set_option(show_log=True)
+
 COORDINATOR_HOME = os.path.join(os.path.dirname(__file__), "../", "../coordinator")
 new_data_dir = os.path.expandvars("${GS_TEST_DIR}/new_property/v2_e2")
 
@@ -120,7 +122,7 @@ def load_graph(session):
 
 
 def test_default_session():
-    s = graphscope.session(run_on_local=True, show_log=True)
+    s = graphscope.session(run_on_local=True)
 
     info = s.info
     assert info["status"] == "active"
@@ -128,7 +130,7 @@ def test_default_session():
 
 
 def test_launch_cluster_on_local(local_config_file):
-    s = graphscope.session(run_on_local=True, show_log=True, config=local_config_file)
+    s = graphscope.session(run_on_local=True, config=local_config_file)
     info = s.info
     assert info["status"] == "active"
     s.close()
@@ -138,7 +140,7 @@ def test_launch_session_from_config(local_config_file):
     saved = os.environ.get("GS_CONFIG_PATH", "")
     try:
         os.environ["GS_CONFIG_PATH"] = local_config_file
-        s = graphscope.session(run_on_local=True, show_log=True)
+        s = graphscope.session(run_on_local=True)
 
         info = s.info
         assert info["status"] == "active"
@@ -149,7 +151,7 @@ def test_launch_session_from_config(local_config_file):
 
 def test_launch_session_from_dict():
     conf_dict = {"num_workers": 4}
-    s = graphscope.session(run_on_local=True, show_log=True, config=conf_dict)
+    s = graphscope.session(run_on_local=True, config=conf_dict)
 
     info = s.info
     assert info["status"] == "active"
@@ -157,9 +159,7 @@ def test_launch_session_from_dict():
 
 
 def test_config_dict_has_highest_priority(local_config_file):
-    s = graphscope.session(
-        run_on_local=True, show_log=True, config=local_config_file, num_workers=2
-    )
+    s = graphscope.session(run_on_local=True, config=local_config_file, num_workers=2)
 
     info = s.info
     assert info["status"] == "active"
@@ -168,20 +168,18 @@ def test_config_dict_has_highest_priority(local_config_file):
 
 def test_error_on_config_file_not_exist():
     with pytest.raises(FileNotFoundError, match="No such file or directory"):
-        graphscope.session(
-            run_on_local=True, show_log=True, config="~/non_existing_filename.txt"
-        )
+        graphscope.session(run_on_local=True, config="~/non_existing_filename.txt")
 
 
 def test_error_on_invalid_config_file(invalid_config_file):
     # invalid config file (example json format incorrect)
     with pytest.raises(json.decoder.JSONDecodeError):
-        graphscope.session(run_on_local=True, show_log=True, config=invalid_config_file)
+        graphscope.session(run_on_local=True, config=invalid_config_file)
 
 
 def test_error_on_used_after_close():
     # use after session close
-    s1 = graphscope.session(run_on_local=True, show_log=True)
+    s1 = graphscope.session(run_on_local=True)
 
     s1.close()
     with pytest.raises(RuntimeError, match="Attempted to use a closed Session."):
@@ -204,7 +202,7 @@ def test_error_on_used_after_close():
         )
 
     # close after close
-    s2 = graphscope.session(run_on_local=True, show_log=True)
+    s2 = graphscope.session(run_on_local=True)
 
     s2.close()
     assert s2.info["status"] == "closed"
@@ -214,7 +212,7 @@ def test_error_on_used_after_close():
 
 
 def test_correct_closing_on_hosts():
-    s1 = graphscope.session(run_on_local=True, show_log=True)
+    s1 = graphscope.session(run_on_local=True)
 
     s1.close()
     # check, launched coordinator and graphscope-engines on local are correctly closed.
@@ -223,9 +221,9 @@ def test_correct_closing_on_hosts():
 
 
 def test_border_cases():
-    s1 = graphscope.session(run_on_local=True, show_log=True)
-    s2 = graphscope.session(run_on_local=True, show_log=True)
-    s3 = graphscope.session(run_on_local=True, show_log=True)
+    s1 = graphscope.session(run_on_local=True)
+    s2 = graphscope.session(run_on_local=True)
+    s3 = graphscope.session(run_on_local=True)
 
     with pytest.raises(RuntimeError, match="No default session found."):
         g = graphscope.load_from(

@@ -28,7 +28,8 @@ from graphscope.framework.loader import Loader
 
 def p2p_property_graph(num_workers, directed=True):
     data_dir = os.path.expandvars("${GS_TEST_DIR}/property")
-    sess = graphscope.session(show_log=True, num_workers=num_workers, run_on_local=True)
+    graphscope.set_option(show_log=True)
+    sess = graphscope.session(num_workers=num_workers, run_on_local=True)
 
     g = sess.load_from(
         edges={

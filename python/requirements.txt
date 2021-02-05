@@ -7,7 +7,7 @@ nest_asyncio
 networkx
 numpy
 pandas
-protobuf
+protobuf>=3.12.0
 PyYAML
 scipy
 vineyard==0.1.8

@@ -268,7 +268,6 @@ def test_traversal_modern_graph(modern_graph_data_dir):
 
     gs_image, gie_manager_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
-        show_log=True,
         num_workers=1,
         k8s_gs_image=gs_image,
         k8s_gie_graph_manager_image=gie_manager_image,
