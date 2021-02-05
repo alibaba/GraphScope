@@ -503,47 +503,6 @@ class KubernetesCluster(object):
             for pod_watcher in self._coordinator_pods_watcher:
                 pod_watcher.stop()
 
-    def _get_minikube_service(self, namespace, service_name):
-        def minikube_get_service_url(process, rlt, messages):
-            for line in process.stdout:
-                line = line.decode("utf-8")
-                messages.append(line)
-                for match in re.finditer(self._url_pattern, line):
-                    rlt.append(match.group())
-                    return
-
-        cmd = ["minikube", "service", service_name, "-n", namespace, "--url"]
-        process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        )
-        rlt = []
-        messages = []
-        t = threading.Thread(
-            target=minikube_get_service_url,
-            args=(
-                process,
-                rlt,
-                messages,
-            ),
-        )
-        t.start()
-        try:
-            # 10 seconds is enough
-            t.join(timeout=10)
-        except:  # noqa: E722
-            pass
-        process.terminate()
-
-        if not rlt:
-            raise RuntimeError(
-                "Minikube get service error: {}".format("".join(messages))
-            )
-
-        endpoint_match = re.search(self._endpoint_pattern, rlt[0])
-        return "{}:{}".format(
-            endpoint_match.group("host"), endpoint_match.group("port")
-        )
-
     def _get_coordinator_endpoint(self):
         # Always len(endpoints) >= 1
         endpoints = get_service_endpoints(
