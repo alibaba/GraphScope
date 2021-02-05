@@ -44,7 +44,6 @@ from graphscope.deploy.kubernetes.resource_builder import ServiceBuilder
 from graphscope.deploy.kubernetes.utils import KubernetesPodWatcher
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
-from graphscope.deploy.kubernetes.utils import is_minikube_cluster
 from graphscope.deploy.kubernetes.utils import try_to_read_namespace_from_context
 from graphscope.deploy.kubernetes.utils import wait_for_deployment_complete
 from graphscope.framework.errors import K8sError
@@ -65,9 +64,6 @@ class KubernetesCluster(object):
 
         service_type: str, optional
             Type determines how the GraphScope service is exposed.
-
-        minikube_vm_driver: bool, optional
-            True if minikube cluster :code:`--vm-driver` is not :code:`None`
 
         num_workers: int
             Number of workers to launch graphscope engine.
@@ -161,7 +157,6 @@ class KubernetesCluster(object):
         api_client=None,
         namespace=None,
         service_type=None,
-        minikube_vm_driver=None,
         num_workers=None,
         gs_image=None,
         etcd_image=None,
@@ -194,7 +189,6 @@ class KubernetesCluster(object):
 
         self._namespace = namespace
         self._service_type = service_type
-        self._minikube_vm_driver = minikube_vm_driver
         self._gs_image = gs_image
         self._num_workers = num_workers
         self._etcd_image = etcd_image
@@ -261,12 +255,6 @@ class KubernetesCluster(object):
             str: Kubernetes namespace.
         """
         return self._namespace
-
-    def check_and_set_vineyard_rpc_endpoint(self, engine_config):
-        if is_minikube_cluster() and self._minikube_vm_driver:
-            engine_config["vineyard_rpc_endpoint"] = self._get_minikube_service(
-                self._namespace, engine_config["vineyard_service_name"]
-            )
 
     def _get_free_namespace(self):
         while True:
@@ -515,53 +503,7 @@ class KubernetesCluster(object):
             for pod_watcher in self._coordinator_pods_watcher:
                 pod_watcher.stop()
 
-    def _get_minikube_service(self, namespace, service_name):
-        def minikube_get_service_url(process, rlt, messages):
-            for line in process.stdout:
-                line = line.decode("utf-8")
-                messages.append(line)
-                for match in re.finditer(self._url_pattern, line):
-                    rlt.append(match.group())
-                    return
-
-        cmd = ["minikube", "service", service_name, "-n", namespace, "--url"]
-        process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        )
-        rlt = []
-        messages = []
-        t = threading.Thread(
-            target=minikube_get_service_url,
-            args=(
-                process,
-                rlt,
-                messages,
-            ),
-        )
-        t.start()
-        try:
-            # 10 seconds is enough
-            t.join(timeout=10)
-        except:  # noqa: E722
-            pass
-        process.terminate()
-
-        if not rlt:
-            raise RuntimeError(
-                "Minikube get service error: {}".format("".join(messages))
-            )
-
-        endpoint_match = re.search(self._endpoint_pattern, rlt[0])
-        return "{}:{}".format(
-            endpoint_match.group("host"), endpoint_match.group("port")
-        )
-
     def _get_coordinator_endpoint(self):
-        if is_minikube_cluster() and self._minikube_vm_driver:
-            return self._get_minikube_service(
-                self._namespace, self._coordinator_service_name
-            )
-
         # Always len(endpoints) >= 1
         endpoints = get_service_endpoints(
             api_client=self._api_client,

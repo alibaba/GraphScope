@@ -271,10 +271,7 @@ class Session(object):
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
 
             **kw (dict, optional): Other optional parameters will be put to :code:`**kw`.
-                - k8s_minikube_vm_driver (bool, optional):
-                    If your kubernetes cluster deployed on inner virtual machine
-                    (such as minikube with param --vm-driver is not None), you can specify
-                    :code:`k8s_minikube_vm_driver` is :code:`True`.
+                - k8s_minikube_vm_driver: Deprecated.
 
                 - k8s_client_config (dict, optional):
                     Provide configurable parameters for connecting to remote k8s,
@@ -363,11 +360,6 @@ class Session(object):
                 % kw.pop("show_log", None),
                 category=DeprecationWarning,
             )
-
-        # deploy minikube on virtual machine
-        self._config_params["k8s_minikube_vm_driver"] = kw.pop(
-            "k8s_minikube_vm_driver", False
-        )
 
         # update k8s_client_config params
         self._config_params["k8s_client_config"] = kw.pop("k8s_client_config", {})
@@ -678,7 +670,6 @@ class Session(object):
                 api_client=api_client,
                 namespace=self._config_params["k8s_namespace"],
                 service_type=self._config_params["k8s_service_type"],
-                minikube_vm_driver=self._config_params["k8s_minikube_vm_driver"],
                 num_workers=self._config_params["num_workers"],
                 gs_image=self._config_params["k8s_gs_image"],
                 etcd_image=self._config_params["k8s_etcd_image"],
@@ -741,10 +732,6 @@ class Session(object):
                 except:  # noqa: E722
                     pass
             raise
-
-        if self._config_params["enable_k8s"]:
-            # minikube service
-            self._k8s_cluster.check_and_set_vineyard_rpc_endpoint(self._engine_config)
 
         return proc, endpoint
 

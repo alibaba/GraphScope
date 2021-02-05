@@ -33,7 +33,8 @@ from graphscope.framework.loader import Loader
 
 @pytest.fixture(scope="module")
 def graphscope_session():
-    sess = graphscope.session(run_on_local=True, show_log=True)
+    graphscope.set_option(show_log=True)
+    sess = graphscope.session(run_on_local=True)
     yield sess
     sess.close()
 
