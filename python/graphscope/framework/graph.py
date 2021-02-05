@@ -633,19 +633,7 @@ class Graph(object):
         from ipygraphin import GraphModel
 
         sess = get_session_by_id(self.session_id)
-        interactive_instance_dict = sess.interactive_instance()
-        if (
-            self._vineyard_id in interactive_instance_dict
-            and interactive_instance_dict[self._vineyard_id] is not None
-        ):
-            interactive_query = interactive_instance_dict[self._vineyard_id]
-        else:
-            interactive_query = sess.gremlin(self)
-
-        if interactive_query is None:
-            raise ValueError(
-                "Failed to obtain interactive instance, unable to query data and draw graph."
-            )
+        interactive_query = sess.gremlin(self)
 
         graph = GraphModel()
         graph.queryGraphData(vertices, hop, interactive_query)
