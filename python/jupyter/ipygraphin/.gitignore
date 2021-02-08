@@ -145,8 +145,8 @@ $RECYCLE.BIN/
 # ----
 
 **/node_modules/
-ipygraphin/nbextension/static/index.*
 ipygraphin/labextension/*.tgz
+ipygraphin/nbextension/static/
 
 # Coverage data
 # -------------
