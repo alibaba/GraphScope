@@ -126,16 +126,16 @@ class GraphModel(widgets.DOMWidget):
                     continue
                 #
                 node = {}
-                node["id"] = str(list_val[i])
+                node["id"] = id
                 node["parentId"] = ""
-                node["label"] = str(list_id[i].label)
+                node["label"] = str(list_val[i])
                 node["level"] = 0
                 node["degree"] = 1  # need to update
                 node["count"] = 0
-                node["nodeType"] = ""
+                node["nodeType"] = str(list_id[i].label)
                 node["properties"] = list_prop[i]
                 self._nodes_id_dict[id] = True
-                self._nodes_id_map[id] = node["id"]
+                self._nodes_id_map[id] = str(list_val[i])
                 nodes.append(node)
 
         def _process_edge(list_edge):
@@ -147,10 +147,12 @@ class GraphModel(widgets.DOMWidget):
                     continue
                 #
                 edge["label"] = e.label
-                edge["source"] = self._nodes_id_map[str(e.outV.id)]
-                edge["target"] = self._nodes_id_map[str(e.inV.id)]
+                edge["source"] = str(e.outV.id)
+                edge["target"] = str(e.inV.id)
+                # edge["source"] = self._nodes_id_map[str(e.outV.id)]
+                # edge["target"] = self._nodes_id_map[str(e.inV.id)]
                 edge["count"] = 0
-                edge["edgeType"] = ""
+                edge["edgeType"] = e.label
                 edge["properties"] = {}
                 self._edges_id_dict[edge["id"]] = True
                 edges.append(edge)
@@ -243,10 +245,12 @@ class GraphModel(widgets.DOMWidget):
         """
         if "nodeId" in params and "degree" in params:
             id = str(params["nodeId"])
+            # convert to original id
+            oid = self._nodes_id_map[id]
             hop = int(params["degree"])
 
             if hop == 1:
-                new_value_dict = self._process_vertices_1_hop([id])
+                new_value_dict = self._process_vertices_1_hop([oid])
                 self.value_dict["nodes"].extend(new_value_dict["nodes"])
                 self.value_dict["edges"].extend(new_value_dict["edges"])
                 self.value = json.dumps(self.value_dict)
