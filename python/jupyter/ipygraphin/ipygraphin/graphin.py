@@ -145,8 +145,9 @@ class GraphModel(widgets.DOMWidget):
                 #
                 node = {}
                 node["id"] = id
+                node["oid"] = str(list_val[i])
                 node["parentId"] = ""
-                node["label"] = str(list_val[i])
+                node["label"] = str(list_id[i].label)
                 node["level"] = 0
                 node["degree"] = 1  # need to update
                 node["count"] = 0
