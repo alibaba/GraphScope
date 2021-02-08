@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+
 def _jupyter_nbextension_paths():
     return [
         {

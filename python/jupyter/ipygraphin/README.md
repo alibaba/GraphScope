@@ -134,5 +134,5 @@ pip install -e .
 We use a shared copyright model that enables all contributors to maintain the
 copyright on their contributions.
 
-This software is licensed under the Apache license 2. See the
+This software is licensed under the Apache License 2.0. See the
 [LICENSE](LICENSE) file for details.
