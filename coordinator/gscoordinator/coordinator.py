@@ -878,6 +878,7 @@ def launch_graphscope():
             image_pull_secrets=args.k8s_image_pull_secrets,
             volumes=args.k8s_volumes,
             num_workers=args.num_workers,
+            vineyard_socket=args.vineyard_socket,
             instance_id=args.instance_id,
             log_level=args.log_level,
             timeout_seconds=args.timeout_seconds,

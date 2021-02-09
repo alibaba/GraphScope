@@ -118,6 +118,7 @@ class KubernetesClusterLauncher(Launcher):
         image_pull_secrets=None,
         volumes=None,
         num_workers=None,
+        vineyard_socket=None,
         instance_id=None,
         log_level=None,
         timeout_seconds=None,
@@ -153,6 +154,10 @@ class KubernetesClusterLauncher(Launcher):
         self._namespace = namespace
         self._service_type = service_type
         self._num_workers = num_workers
+
+        self._vineyard_socket = json.loads(vineyard_socket) if vineyard_socket else None
+        # launch vineyard as a container inside engine pods.
+        self._launch_vineyard = True if self._vineyard_socket is None else False
 
         self._coordinator_name = coordinator_name
         self._coordinator_service_name = coordinator_service_name
@@ -250,16 +255,28 @@ class KubernetesClusterLauncher(Launcher):
         )
         # volume1 is for vineyard ipc socket
         # MaxGraph: /home/maxgraph/data/vineyard
-        engine_builder.add_volume(
-            EmptyDirVolumeBuilder(
-                name="vineyard-ipc-volume",
-                field={},
-                mounts_list=[
-                    {"mountPath": "/tmp/vineyard_workspace"},
-                    {"mountPath": "/home/maxgraph/data/vineyard"},
-                ],
+        if self._launch_vineyard:
+            engine_builder.add_volume(
+                EmptyDirVolumeBuilder(
+                    name="vineyard-ipc-volume",
+                    field={},
+                    mounts_list=[
+                        {"mountPath": "/tmp/vineyard_workspace"},
+                        {"mountPath": "/home/maxgraph/data/vineyard"},
+                    ],
+                )
             )
-        )
+        else:
+            engine_builder.add_volume(
+                HostPathVolumeBuilder(
+                    name="vineyard-ipc-volume",
+                    field=self._vineyard_socket["field"],
+                    mounts_list=[
+                        {"mountPath": "/tmp/vineyard_workspace/vineyard.sock"},
+                        {"mountPath": "/home/maxgraph/data/vineyard/vineyard.sock"},
+                    ],
+                )
+            )
         # volume2 is for shared memory
         engine_builder.add_volume(
             EmptyDirVolumeBuilder(
@@ -277,15 +294,16 @@ class KubernetesClusterLauncher(Launcher):
         # add env
         engine_builder.add_simple_envs({"GLOG_v": str(self._glog_level)})
         # add vineyard container
-        engine_builder.add_vineyard_container(
-            self._vineyard_container_name,
-            self._gs_image,
-            self._vineyard_cpu,
-            self._vineyard_mem,
-            self._vineyard_shared_mem,
-            self._etcd_endpoint,
-            self._vineyard_service_port,
-        )
+        if self._launch_vineyard:
+            engine_builder.add_vineyard_container(
+                self._vineyard_container_name,
+                self._gs_image,
+                self._vineyard_cpu,
+                self._vineyard_mem,
+                self._vineyard_shared_mem,
+                self._etcd_endpoint,
+                self._vineyard_service_port,
+            )
         # add engine container
         engine_builder.add_engine_container(
             self._engine_container_name,
@@ -543,7 +561,9 @@ class KubernetesClusterLauncher(Launcher):
         logger.info("Etcd is ready, endpoint is {}".format(self._etcd_endpoint))
 
         self._create_engine_replicaset()
-        self._create_vineyard_service()
+        # create vineyard rpc service
+        if self._launch_vineyard:
+            self._create_vineyard_service()
 
     def _waiting_for_services_ready(self):
         start_time = time.time()
@@ -619,7 +639,8 @@ class KubernetesClusterLauncher(Launcher):
         )
 
         # get vineyard service endpoint
-        self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
+        if self._launch_vineyard:
+            self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
         logger.info("GraphScope engines pod is ready.")
 
     def _dump_cluster_logs(self):

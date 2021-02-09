@@ -74,6 +74,7 @@ class GSConfig(object):
 
     k8s_waiting_for_delete = False
     num_workers = 2
+    vineyard_socket = None
     show_log = False
     log_level = "INFO"
 

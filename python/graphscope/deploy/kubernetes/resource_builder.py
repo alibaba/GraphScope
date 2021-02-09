@@ -897,6 +897,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         name,
         port,
         num_workers,
+        vineyard_socket,
         instance_id,
         log_level,
         namespace,
@@ -929,6 +930,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
     ):
         self._port = port
         self._num_workers = num_workers
+        self._vineyard_socket = vineyard_socket
         self._instance_id = instance_id
         self._log_level = log_level
         self._namespace = namespace
@@ -1072,4 +1074,6 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             "--k8s_delete_namespace",
             str(self._delete_namespace),
         ]
+        if self._vineyard_socket is not None:
+            cmd.extend(["--vineyard_socket", self._vineyard_socket])
         return cmd

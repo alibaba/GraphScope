@@ -143,6 +143,7 @@ class Session(object):
         self,
         config=None,
         num_workers=gs_config.num_workers,
+        vineyard_socket=gs_config.vineyard_socket,
         k8s_namespace=gs_config.k8s_namespace,
         k8s_service_type=gs_config.k8s_service_type,
         k8s_gs_image=gs_config.k8s_gs_image,
@@ -179,6 +180,11 @@ class Session(object):
                 in environment. Note that it will overwrite explicit parameters. Defaults to None.
 
             num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.
+
+            vineyard_socket (str, optional): Socket path to connect to vineyard.
+                In K8s cluster, you should deploy vineyard service manually first, it will mount this path
+                as a hostPath volume with Socket type. Or GraphScope will launch a vineyard container
+                inside engine pods and a random socket will be created if param missing. Defaults to None.
 
             k8s_namespace (str, optional): Contains the namespace to create all resource inside.
                 If param missing, it will try to read namespace from kubernetes context, or
@@ -295,6 +301,7 @@ class Session(object):
         self._config_params = {}
         self._accessable_params = (
             "num_workers",
+            "vineyard_socket",
             "k8s_namespace",
             "k8s_service_type",
             "k8s_gs_image",
@@ -671,6 +678,7 @@ class Session(object):
                 namespace=self._config_params["k8s_namespace"],
                 service_type=self._config_params["k8s_service_type"],
                 num_workers=self._config_params["num_workers"],
+                vineyard_socket=self._config_params["vineyard_socket"],
                 gs_image=self._config_params["k8s_gs_image"],
                 etcd_image=self._config_params["k8s_etcd_image"],
                 gie_graph_manager_image=self._config_params[
@@ -749,7 +757,10 @@ class Session(object):
     def _run_on_local(self):
         self._config_params["hosts"] = ["localhost"]
         self._config_params["port"] = None
-        self._config_params["vineyard_socket"] = ""
+        if self._config_params["vineyard_socket"] is None:
+            self._config_params["vineyard_socket"] = ""
+        elif not isinstance(self._config_params["vineyard_socket"], str):
+            raise ValueError("Parameter vineyard_socket must be a str path")
         self._config_params["enable_k8s"] = False
 
     def _get_gl_handle(self, graph):

@@ -18,6 +18,7 @@
 
 
 import atexit
+import json
 import logging
 import os
 import queue
@@ -67,6 +68,9 @@ class KubernetesCluster(object):
 
         num_workers: int
             Number of workers to launch graphscope engine.
+
+        vineyard_socket: str
+            Socket path to connect to vineyard.
 
         gs_image: str
             GraphScope engine image.
@@ -167,6 +171,7 @@ class KubernetesCluster(object):
         vineyard_cpu=None,
         vineyard_mem=None,
         vineyard_shared_mem=None,
+        vineyard_socket=None,
         engine_cpu=None,
         engine_mem=None,
         coordinator_cpu=None,
@@ -191,6 +196,12 @@ class KubernetesCluster(object):
         self._service_type = service_type
         self._gs_image = gs_image
         self._num_workers = num_workers
+        self._vineyard_socket = (
+            self._generate_vineyard_ipc_volume(vineyard_socket)
+            if vineyard_socket
+            else None
+        )
+
         self._etcd_image = etcd_image
         self._gie_graph_manager_image = gie_graph_manager_image
         self._zookeeper_image = zookeeper_image
@@ -247,6 +258,10 @@ class KubernetesCluster(object):
 
     def __del__(self):
         self.stop()
+
+    def _generate_vineyard_ipc_volume(self, path):
+        volume = {"type": "hostPath", "field": {"path": path, "type": "Socket"}}
+        return json.dumps(volume)
 
     def get_namespace(self):
         """Get kubernetes namespace which graphscope instance running on.
@@ -427,6 +442,7 @@ class KubernetesCluster(object):
             name=self._coordinator_container_name,
             port=self._random_coordinator_service_port,
             num_workers=self._num_workers,
+            vineyard_socket=self._vineyard_socket,
             instance_id=self._instance_id,
             log_level=gs_config.log_level,
             namespace=self._namespace,
@@ -512,6 +528,7 @@ class KubernetesCluster(object):
             type=self._service_type,
         )
 
+        logger.info("Coordinator endpoint: %s", endpoints[0])
         return endpoints[0]
 
     def _dump_coordinator_failed_status(self):
