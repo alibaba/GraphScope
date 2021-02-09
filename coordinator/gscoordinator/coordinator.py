@@ -304,6 +304,7 @@ class CoordinatorServiceServicer(
                     response.graph_def.key,
                     GraphMeta(
                         response.graph_def.key,
+                        response.graph_def.vineyard_id,
                         response.graph_def.schema_def,
                         schema_path,
                     ),
@@ -566,6 +567,11 @@ class CoordinatorServiceServicer(
                         s=obj.key.encode("utf-8")
                     )
                 }
+                # dynamic graph doesn't have a vineyard id
+                if obj.vineyard_id != -1:
+                    config[types_pb2.VINEYARD_ID] = attr_value_pb2.AttrValue(
+                        i=obj.vineyard_id
+                    )
 
             if unload_type:
                 dag_def = create_single_op_dag(unload_type, config)
