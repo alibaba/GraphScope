@@ -70,6 +70,8 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
     graph_def.set_key(graph_name);
     graph_def.set_directed(directed);
     graph_def.set_graph_type(rpc::DYNAMIC_PROPERTY);
+    // dynamic graph doesn't have a vineyard id
+    graph_def.set_vineyard_id(-1);
     auto* schema_def = graph_def.mutable_schema_def();
 
     schema_def->set_oid_type(

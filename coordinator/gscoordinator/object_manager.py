@@ -25,9 +25,10 @@ class LibMeta(object):
 
 
 class GraphMeta(object):
-    def __init__(self, key, schema, schema_path=None):
+    def __init__(self, key, vineyard_id, schema, schema_path=None):
         self.key = key
         self.type = "graph"
+        self.vineyard_id = vineyard_id
         self.schema = schema
         self.schema_path = schema_path
 
