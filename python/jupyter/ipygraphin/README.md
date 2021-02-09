@@ -1,10 +1,10 @@
 # ipygraphin
 
-The project structure refers to **(ipycytoscape)**[https://github.com/QuantStack/ipycytoscape/tree/1.1.0].
+The project structure refers to **(ipycytoscape)[https://github.com/QuantStack/ipycytoscape/tree/1.1.0]**.
 
 A widget enabling interactive graph visualization with [Graphin](https://github.com/antvis/Graphin) in JupyterLab and the Jupyter notebook.
 
-![graphin screencast](https://gw.alipayobjects.com/mdn/rms_f8c6a0/afts/img/A*CZs5RIRVefoAAAAAAAAAAAAAARQnAQ)
+![graphin screencast](https://gw.alipayobjects.com/mdn/rms_f8c6a0/afts/img/A*EJvtT7KcywAAAAAAAAAAAAAAARQnAQ)
 
 ## Installation
 
@@ -36,7 +36,7 @@ conda install -c conda-forge nodejs
 
 
 # install jupyterlab-manager extension
-jupyter labextension install @jupyter-widgets/jupyterlab-manager --no-build
+jupyter labextension install @jupyter-widgets/jupyterlab-manager@2
 
 # if you have previously installed the manager you still to run jupyter lab build
 jupyter lab build
@@ -61,8 +61,8 @@ conda create -n ipygraphin -c conda-forge jupyterlab nodejs networkx
 conda activate ipygraphin
 
 # clone repo
-git clone https://github.com/QuantStack/ipygraphin.git
-cd ipygraphin
+git clone https://github.com/alibaba/GraphScope.git
+cd GraphScope/python/jupyter/ipygraphin
 
 # Install python package for development, runs npm install and npm run build
 pip install -e .
@@ -72,8 +72,7 @@ When developing ipygraphin, you need to manually enable the extension with the
 notebook / lab frontend. For lab, this is done by the command:
 
 ```
-# install jupyterlab-manager and this extension
-jupyter labextension install @jupyter-widgets/jupyterlab-manager --no-build
+# install this extension
 jupyter labextension install .
 ```
 
@@ -126,6 +125,7 @@ If you make a change to the python code then you need to restart the notebook ke
 Install necessary dependencies with pip:
 
 ```
+cd GraphScope/python/jupyter/ipygraphin
 pip install -e .
 ```
 
