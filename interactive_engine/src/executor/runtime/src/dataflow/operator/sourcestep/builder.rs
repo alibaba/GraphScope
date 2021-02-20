@@ -85,7 +85,8 @@ fn build_graph_source_operator<VV, VVI, EE, EEI, F>(source: &query_flow::SourceO
         if op_type == OperatorType::V ||
             op_type == OperatorType::E ||
             op_type == OperatorType::V_COUNT ||
-            op_type == OperatorType::E_COUNT {
+            op_type == OperatorType::E_COUNT ||
+            op_type == OperatorType::SOURCE_CHAIN {
             let primary_key_list = parse_from_bytes::<VertexPrimaryKeyListProto>(source.get_base().get_argument().get_payload()).unwrap();
             for primary_key in primary_key_list.get_primary_keys() {
                 let label_id = primary_key.get_label_id();
