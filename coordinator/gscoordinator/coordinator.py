@@ -31,6 +31,7 @@ import string
 import sys
 import threading
 import time
+import urllib.parse
 import urllib.request
 from concurrent import futures
 from io import StringIO
@@ -427,49 +428,54 @@ class CoordinatorServiceServicer(
         )
         with open(request.schema_path) as file:
             schema_json = file.read()
-            post_url = "%s/instance/create" % manager_host
-            params = {
-                "graphName": "%s" % object_id,
-                "schemaJson": schema_json,
-                "podNameList": ",".join(self._pods_list),
-                "containerName": ENGINE_CONTAINER,
-                "gremlinServerCpu": str(gremlin_server_cpu),
-                "gremlinServerMem": gremlin_server_mem,
-            }
-            post_data = urllib.parse.urlencode(params).encode("utf-8")
-            create_res = urllib.request.urlopen(url=post_url, data=post_data)
-            res_json = json.load(create_res)
-            error_code = res_json["errorCode"]
-            if error_code == 0:
-                front_host = res_json["frontHost"]
-                front_port = res_json["frontPort"]
-                logger.info(
-                    "build frontend %s:%d for graph %ld",
-                    front_host,
-                    front_port,
-                    object_id,
-                )
-                return message_pb2.CreateInteractiveResponse(
-                    status=message_pb2.ResponseStatus(code=error_codes_pb2.OK),
-                    frontend_host=front_host,
-                    frontend_port=front_port,
-                    object_id=object_id,
-                )
-            else:
-                error_message = (
-                    "create interactive instance for object id %ld failed with error code %d message %s"
-                    % (object_id, error_code, res_json["errorMessage"])
-                )
-                logger.error(error_message)
-                return message_pb2.CreateInteractiveResponse(
-                    status=message_pb2.ResponseStatus(
-                        code=error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR,
-                        error_msg=error_message,
-                    ),
-                    frontend_host="",
-                    frontend_port=0,
-                    object_id=object_id,
-                )
+        post_url = "%s/instance/create" % manager_host
+        params = {
+            "graphName": "%s" % object_id,
+            "schemaJson": schema_json,
+            "podNameList": ",".join(self._pods_list),
+            "containerName": ENGINE_CONTAINER,
+            "gremlinServerCpu": str(gremlin_server_cpu),
+            "gremlinServerMem": gremlin_server_mem,
+        }
+        engine_params = [
+            "{}:{}".format(key, value) for key, value in request.engine_params.items()
+        ]
+        params["engineParams"] = "'{}'".format(";".join(engine_params))
+
+        post_data = urllib.parse.urlencode(params).encode("utf-8")
+        create_res = urllib.request.urlopen(url=post_url, data=post_data)
+        res_json = json.load(create_res)
+        error_code = res_json["errorCode"]
+        if error_code == 0:
+            front_host = res_json["frontHost"]
+            front_port = res_json["frontPort"]
+            logger.info(
+                "build frontend %s:%d for graph %ld",
+                front_host,
+                front_port,
+                object_id,
+            )
+            return message_pb2.CreateInteractiveResponse(
+                status=message_pb2.ResponseStatus(code=error_codes_pb2.OK),
+                frontend_host=front_host,
+                frontend_port=front_port,
+                object_id=object_id,
+            )
+        else:
+            error_message = (
+                "create interactive instance for object id %ld failed with error code %d message %s"
+                % (object_id, error_code, res_json["errorMessage"])
+            )
+            logger.error(error_message)
+            return message_pb2.CreateInteractiveResponse(
+                status=message_pb2.ResponseStatus(
+                    code=error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR,
+                    error_msg=error_message,
+                ),
+                frontend_host="",
+                frontend_port=0,
+                object_id=object_id,
+            )
 
     def CloseInteractiveInstance(self, request, context):
         object_id = request.object_id

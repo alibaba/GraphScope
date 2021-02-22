@@ -874,11 +874,14 @@ class Session(object):
         handle_json_string = json.dumps(handle)
         return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")
 
-    def gremlin(self, graph):
+    def gremlin(self, graph, engine_params=None):
         """Get a interactive engine handler to execute gremlin queries.
 
         Args:
-            graph: :class:`Graph`
+            graph (:class:`Graph`): Use the graph to create interactive instance.
+            engine_params (dict, optional): Configure startup parameters of interactive engine.
+                See a list of configurable keys in
+                `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`
 
         Raises:
             InvalidArgumentError: :code:`graph` is not a property graph or unloaded.
@@ -897,6 +900,12 @@ class Session(object):
         if not graph.graph_type == types_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
 
+        if engine_params is not None:
+            engine_params = {
+                str(key): str(value) for key, value in engine_params.items()
+            }
+        else:
+            engine_params = {}
         from graphscope.interactive.query import InteractiveQuery
 
         response = self._grpc_client.create_interactive_engine(
@@ -904,6 +913,7 @@ class Session(object):
             schema_path=graph.schema_path,
             gremlin_server_cpu=gs_config.k8s_gie_gremlin_server_cpu,
             gremlin_server_mem=gs_config.k8s_gie_gremlin_server_mem,
+            engine_params=engine_params,
         )
         interactive_query = InteractiveQuery(
             graphscope_session=self,

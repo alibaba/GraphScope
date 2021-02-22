@@ -19,7 +19,7 @@ ENV RUST_BACKTRACE=1
 # copy start script from builder
 RUN mkdir -p /home/maxgraph/config
 COPY ./interactive_engine/deploy/docker/dockerfile/executor-entrypoint.sh /home/maxgraph/executor-entrypoint.sh
-COPY ./interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties.bak /home/maxgraph/config/executor.application.properties
+COPY ./interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties /home/maxgraph/config/executor.application.properties
 
 RUN mkdir -p /root/maxgraph
 COPY ./interactive_engine/deploy/docker/dockerfile/set_config.sh /root/maxgraph/set_config.sh
