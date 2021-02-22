@@ -167,6 +167,7 @@ class Session(object):
         k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
+        gie_engine_params=None,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -270,6 +271,9 @@ class Session(object):
 
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
 
+            gie_engine_options(dict, optional): Configurations of GIE engine. See configurable keys in
+                `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`.
+
             **kw (dict, optional): Other optional parameters will be put to :code:`**kw`.
                 - k8s_minikube_vm_driver: Deprecated.
 
@@ -319,7 +323,14 @@ class Session(object):
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
+            "gie_engine_params",
         )
+        if gie_engine_params is not None:
+            gie_engine_params = {
+                str(key): str(value) for key, value in gie_engine_params
+            }
+        else:
+            gie_engine_params = {}
         saved_locals = locals()
         for param in self._accessable_params:
             self._config_params[param] = saved_locals[param]
@@ -904,6 +915,7 @@ class Session(object):
             schema_path=graph.schema_path,
             gremlin_server_cpu=gs_config.k8s_gie_gremlin_server_cpu,
             gremlin_server_mem=gs_config.k8s_gie_gremlin_server_mem,
+            engine_params=self._config_params["gie_engine_params"],
         )
         interactive_query = InteractiveQuery(
             graphscope_session=self,

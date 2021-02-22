@@ -144,6 +144,7 @@ message CreateInteractiveRequest {
   // resource
   float gremlin_server_cpu = 3;
   string gremlin_server_mem = 4;
+  map<string, string> engine_params = 5;
 }
 
 message CreateInteractiveResponse {
