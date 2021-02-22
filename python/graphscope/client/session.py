@@ -167,7 +167,6 @@ class Session(object):
         k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
-        gie_engine_params=None,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -271,9 +270,6 @@ class Session(object):
 
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
 
-            gie_engine_options(dict, optional): Configurations of GIE engine. See configurable keys in
-                `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`.
-
             **kw (dict, optional): Other optional parameters will be put to :code:`**kw`.
                 - k8s_minikube_vm_driver: Deprecated.
 
@@ -323,14 +319,7 @@ class Session(object):
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
-            "gie_engine_params",
         )
-        if gie_engine_params is not None:
-            gie_engine_params = {
-                str(key): str(value) for key, value in gie_engine_params
-            }
-        else:
-            gie_engine_params = {}
         saved_locals = locals()
         for param in self._accessable_params:
             self._config_params[param] = saved_locals[param]
@@ -885,11 +874,14 @@ class Session(object):
         handle_json_string = json.dumps(handle)
         return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")
 
-    def gremlin(self, graph):
+    def gremlin(self, graph, engine_params=None):
         """Get a interactive engine handler to execute gremlin queries.
 
         Args:
-            graph: :class:`Graph`
+            graph (:class:`Graph`): Use the graph to create interactive instance.
+            engine_params (dict, optional): Configure startup parameters of interactive engine.
+                See a list of configurable keys in
+                `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`
 
         Raises:
             InvalidArgumentError: :code:`graph` is not a property graph or unloaded.
@@ -908,6 +900,12 @@ class Session(object):
         if not graph.graph_type == types_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
 
+        if engine_params is not None:
+            engine_params = {
+                str(key): str(value) for key, value in engine_params.items()
+            }
+        else:
+            engine_params = {}
         from graphscope.interactive.query import InteractiveQuery
 
         response = self._grpc_client.create_interactive_engine(
@@ -915,7 +913,7 @@ class Session(object):
             schema_path=graph.schema_path,
             gremlin_server_cpu=gs_config.k8s_gie_gremlin_server_cpu,
             gremlin_server_mem=gs_config.k8s_gie_gremlin_server_mem,
-            engine_params=self._config_params["gie_engine_params"],
+            engine_params=engine_params,
         )
         interactive_query = InteractiveQuery(
             graphscope_session=self,

@@ -440,7 +440,7 @@ class CoordinatorServiceServicer(
         engine_params = [
             "{}:{}".format(key, value) for key, value in request.engine_params.items()
         ]
-        params["engineParams"] = ";".join(engine_params)
+        params["engineParams"] = "'{}'".format(";".join(engine_params))
 
         post_data = urllib.parse.urlencode(params).encode("utf-8")
         create_res = urllib.request.urlopen(url=post_url, data=post_data)
