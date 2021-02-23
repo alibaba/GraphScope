@@ -126,8 +126,6 @@ class AppAssets(object):
             # built_in apps has no gar resource.
             self._gar = None
 
-        self._saved_signature = self.signature
-
     @property
     def algo(self):
         """Algorithm name, e.g. sssp, pagerank.
@@ -281,7 +279,7 @@ class App(object):
     def signature(self):
         """Signature is computed by all critical components of the App."""
         return hashlib.sha256(
-            "{}.{}".format(self._app_assets.signature, self._graph.signature).encode(
+            "{}.{}".format(self._app_assets.signature, self._graph.template_str).encode(
                 "utf-8"
             )
         ).hexdigest()

@@ -62,7 +62,9 @@ from gscoordinator.utils import create_single_op_dag
 from gscoordinator.utils import distribute_lib_on_k8s
 from gscoordinator.utils import distribute_lib_via_hosts
 from gscoordinator.utils import dump_string
-from gscoordinator.utils import generate_graph_type_sig
+from gscoordinator.utils import get_app_sha256
+from gscoordinator.utils import get_graph_sha256
+from gscoordinator.utils import get_lib_path
 from gscoordinator.utils import str2bool
 from gscoordinator.utils import to_maxgraph_schema
 from gscoordinator.version import __version__
@@ -331,11 +333,15 @@ class CoordinatorServiceServicer(
         return response
 
     def _maybe_compile_app(self, op):
-        app_sig = self._generate_app_sig(op.attr)
-        if app_sig in self._object_manager:
-            app_lib_path = self._object_manager.get(app_sig).lib_path
-        else:
-            app_lib_path = self._compile_lib_and_distribute(compile_app, app_sig, op)
+        app_sig = get_app_sha256(op.attr)
+        space = self._builtin_workspace
+        if types_pb2.GAR in op.attr:
+            space = self._udf_app_workspace
+        app_lib_path = get_lib_path(os.path.join(space, app_sig), app_sig)
+        if not os.path.isfile(app_lib_path):
+            compiled_path = self._compile_lib_and_distribute(compile_app, app_sig, op)
+            if app_lib_path != compiled_path:
+                raise RuntimeError("Computed path not equal to compiled path.")
 
         op.attr[types_pb2.APP_LIBRARY_PATH].CopyFrom(
             attr_value_pb2.AttrValue(s=app_lib_path.encode("utf-8"))
@@ -343,14 +349,15 @@ class CoordinatorServiceServicer(
         return op, app_sig, app_lib_path
 
     def _maybe_register_graph(self, op, session_id):
-        graph_sig = self._generate_graph_sig(op.attr)
-        if graph_sig in self._object_manager:
-            lib_meta = self._object_manager.get(graph_sig)
-            graph_lib_path = lib_meta.lib_path
-        else:
-            graph_lib_path = self._compile_lib_and_distribute(
+        graph_sig = get_graph_sha256(op.attr)
+        space = self._builtin_workspace
+        graph_lib_path = get_lib_path(os.path.join(space, graph_sig), graph_sig)
+        if not os.path.isfile(graph_lib_path):
+            compiled_path = self._compile_lib_and_distribute(
                 compile_graph_frame, graph_sig, op
             )
+            if graph_lib_path != compiled_path:
+                raise RuntimeError("Computed path not equal to compiled path.")
 
             # register graph
             op_def = op_def_pb2.OpDef(op=types_pb2.REGISTER_GRAPH_TYPE)
@@ -609,15 +616,6 @@ class CoordinatorServiceServicer(
             self._launcher.get_analytical_engine_endpoint(), options=options
         )
         return engine_service_pb2_grpc.EngineServiceStub(channel)
-
-    def _generate_app_sig(self, attr):
-        return hashlib.sha256(
-            attr[types_pb2.APP_SIGNATURE].s + attr[types_pb2.GRAPH_SIGNATURE].s
-        ).hexdigest()
-
-    def _generate_graph_sig(self, attr: dict):
-        graph_signature = generate_graph_type_sig(attr)
-        return hashlib.sha256(graph_signature.encode("utf-8")).hexdigest()
 
     def _get_engine_config(self):
         op_def = op_def_pb2.OpDef(op=types_pb2.GET_ENGINE_CONFIG)

@@ -34,9 +34,11 @@ from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.utils import b_to_attr
+from graphscope.framework.utils import data_type_to_cpp
 from graphscope.framework.utils import decode_dataframe
 from graphscope.framework.utils import decode_numpy
 from graphscope.framework.utils import i_to_attr
+from graphscope.framework.utils import normalize_data_type_str
 from graphscope.framework.utils import s_to_attr
 from graphscope.framework.utils import transform_labeled_vertex_property_data_selector
 from graphscope.framework.utils import transform_vertex_range
@@ -200,18 +202,22 @@ class Graph(object):
         ).hexdigest()
 
     @property
-    def template_sigature(self):
-        if self._key is None:
-            raise RuntimeError("graph should be registered in remote.")
-        return hashlib.sha256(
-            "{}.{}.{}.{}.{}".format(
-                self._graph_type,
-                self._schema.oid_type,
-                self._schema.vid_type,
-                self._schema.vdata_type,
-                self._schema.edata_type,
-            ).encode("utf-8")
-        ).hexdigest()
+    def template_str(self):
+        graph_type = self._graph_type
+        # transform str/string to std::string
+        oid_type = normalize_data_type_str(self._schema.oid_type)
+        vid_type = self._schema.vid_type
+        vdata_type = data_type_to_cpp(self._schema.vdata_type)
+        edata_type = data_type_to_cpp(self._schema.edata_type)
+        if graph_type == types_pb2.ARROW_PROPERTY:
+            template = f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
+        elif graph_type == types_pb2.ARROW_PROJECTED:
+            template = f"gs::ArrowProjectedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
+        elif graph_type == types_pb2.DYNAMIC_PROJECTED:
+            template = f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
+        else:
+            raise ValueError(f"Unsupported graph type: {graph_type}")
+        return template
 
     @property
     def vineyard_id(self):
