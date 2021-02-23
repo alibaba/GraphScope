@@ -231,7 +231,7 @@ class Session(object):
                 Minimum number of memory request for graphmanager container. Defaults to '4Gi'.
 
             k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the
-                containers in a pod. Defaults to {}. Only 'hostPath' supported yet. For example, we can mount host path with:
+                containers in a pod. Defaults to {}. For example, we can mount host path with:
 
                 k8s_volumes = {
                     "my-data": {

@@ -43,12 +43,11 @@ except ImportError:
     K8SApiException = None
     K8SConfigException = None
 
-from graphscope.deploy.kubernetes.resource_builder import EmptyDirVolumeBuilder
 from graphscope.deploy.kubernetes.resource_builder import GSEngineBuilder
 from graphscope.deploy.kubernetes.resource_builder import GSEtcdBuilder
 from graphscope.deploy.kubernetes.resource_builder import GSGraphManagerBuilder
-from graphscope.deploy.kubernetes.resource_builder import HostPathVolumeBuilder
 from graphscope.deploy.kubernetes.resource_builder import ServiceBuilder
+from graphscope.deploy.kubernetes.resource_builder import VolumeBuilder
 from graphscope.deploy.kubernetes.resource_builder import resolve_volume_builder
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
@@ -251,8 +250,9 @@ class KubernetesClusterLauncher(Launcher):
         # volume1 is for vineyard ipc socket
         # MaxGraph: /home/maxgraph/data/vineyard
         engine_builder.add_volume(
-            EmptyDirVolumeBuilder(
+            VolumeBuilder(
                 name="vineyard-ipc-volume",
+                type="emptyDir",
                 field={},
                 mounts_list=[
                     {"mountPath": "/tmp/vineyard_workspace"},
@@ -262,8 +262,9 @@ class KubernetesClusterLauncher(Launcher):
         )
         # volume2 is for shared memory
         engine_builder.add_volume(
-            EmptyDirVolumeBuilder(
+            VolumeBuilder(
                 name="host-shm",
+                type="emptyDir",
                 field={"medium": "Memory"},
                 mounts_list=[{"mountPath": "/dev/shm"}],
             )

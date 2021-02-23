@@ -33,19 +33,12 @@ def _remove_nones(o):
 
 def resolve_volume_builder(name, value):
     """Resolve specified volume with value dict."""
-    supported_type = ["hostPath"]
     if "type" not in value or "field" not in value or "mounts" not in value:
         logger.warning("Volume %s must contains 'type' 'field' and 'mounts'", name)
         return None
-    type = value["type"]
-    if type not in supported_type:
-        logger.warning("%s of volume %s is unsupported yet", type, name)
-        return None
-    field = value["field"]
-    mounts_list = value["mounts"]
-    if type == "hostPath":
-        return HostPathVolumeBuilder(name=name, field=field, mounts_list=mounts_list)
-    return None
+    return VolumeBuilder(
+        name=name, type=value["type"], field=value["field"], mounts_list=value["mounts"]
+    )
 
 
 class NamespaceBuilder(object):
@@ -294,8 +287,10 @@ class ResourceBuilder(object):
 class VolumeBuilder(object):
     """Builder for k8s volumes."""
 
-    def __init__(self, name, mounts_list):
+    def __init__(self, name, type, field, mounts_list):
         self._name = name
+        self._type = type
+        self._field = field
         self._mounts_list = mounts_list
         if not isinstance(self._mounts_list, list):
             self._mounts_list = [self._mounts_list]
@@ -304,32 +299,10 @@ class VolumeBuilder(object):
             mount["name"] = self._name
 
     def build(self):
-        raise NotImplementedError
+        return {"name": self._name, self._type: self._field}
 
     def build_mount(self):
         return self._mounts_list
-
-
-class HostPathVolumeBuilder(VolumeBuilder):
-    """Builder for k8s host volume."""
-
-    def __init__(self, name, field, mounts_list):
-        super().__init__(name, mounts_list)
-        self._field = field
-
-    def build(self):
-        return {"name": self._name, "hostPath": self._field}
-
-
-class EmptyDirVolumeBuilder(VolumeBuilder):
-    """Builder for k8s empty-dir volumes."""
-
-    def __init__(self, name, field, mounts_list):
-        super().__init__(name, mounts_list)
-        self._field = field
-
-    def build(self):
-        return {"name": self._name, "emptyDir": self._field}
 
 
 class HttpHeaderBuilder(object):
