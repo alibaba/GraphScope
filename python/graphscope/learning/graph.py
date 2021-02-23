@@ -202,6 +202,7 @@ class Graph(GLGraph):
     def get_handle(self, worker_count=1):
         """Return a base64-encoded handle for distributed training."""
         handle_copy = self.handle.copy()
+        handle_copy["config"] = self.config
         handle_copy["client_count"] = worker_count
         return base64.b64encode(json.dumps(handle_copy).encode("utf-8")).decode("utf-8")
 
