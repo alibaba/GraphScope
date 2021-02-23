@@ -51,6 +51,7 @@ function _start {
 }
 
 function _stop {
+    curl -XPOST http://localhost:${_port} -d 'session.close()'
     _port=`cat $tmp_result | awk -F":" '{print $3}'`
     echo "stop port is ${_port}"
     kill -INT `lsof -i:${_port} -t`
