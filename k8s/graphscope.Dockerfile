@@ -101,6 +101,7 @@ ARG profile=release
 
 COPY --from=builder /opt/graphscope /usr/local/
 RUN cd /usr/local/dist/ && pip3 install ./*.whl
+RUN python3 k8s/precompile.py
 
 RUN mkdir -p /home/maxgraph
 ENV VINEYARD_IPC_SOCKET /home/maxgraph/data/vineyard/vineyard.sock

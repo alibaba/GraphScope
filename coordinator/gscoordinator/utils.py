@@ -90,7 +90,6 @@ def get_lib_path(app_dir, app_name):
         lib_path = os.path.join(app_dir, "lib%s.dylib" % app_name)
     else:
         raise RuntimeError("Unsupported platform.")
-    assert os.path.isfile(lib_path), "Error occurs when building the frame library."
     return lib_path
 
 
@@ -249,8 +248,9 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
     setattr(make_process, "stderr_watcher", make_stderr_watcher)
     make_process.wait()
-
-    return get_lib_path(app_dir, library_name)
+    lib_path = get_lib_path(app_dir, library_name)
+    assert os.path.isfile(lib_path), "Error occurs when building the frame library."
+    return lib_path
 
 
 def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config: dict):
@@ -340,8 +340,9 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
     setattr(make_process, "stderr_watcher", make_stderr_watcher)
     make_process.wait()
-
-    return get_lib_path(library_dir, library_name)
+    lib_path = get_lib_path(library_dir, library_name)
+    assert os.path.isfile(lib_path), "Error occurs when building the frame library."
+    return lib_path
 
 
 def _extract_gar(app_dir: str, attr):

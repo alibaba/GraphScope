@@ -358,7 +358,7 @@ class CoordinatorServiceServicer(
             )
             if graph_lib_path != compiled_path:
                 raise RuntimeError("Computed path not equal to compiled path.")
-
+        if graph_sig not in self._object_manager:
             # register graph
             op_def = op_def_pb2.OpDef(op=types_pb2.REGISTER_GRAPH_TYPE)
             op_def.attr[types_pb2.GRAPH_LIBRARY_PATH].CopyFrom(
