@@ -87,27 +87,28 @@ class CaptureKeyboardInterrupt(object):
     """Context Manager for capture keyboard interrupt
 
     Args:
-        func: function
+        callback: function
             Callback function when KeyboardInterrupt occurs.
 
     Examples:
-        >>> with CaptureKeyboardInterrupt(func):
+        >>> with CaptureKeyboardInterrupt(callback):
         >>>     do_somethings()
     """
 
-    def __init__(self, func=None):
-        self._func = func
+    def __init__(self, callback=None):
+        self._callback = callback
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
-        if exc_type is KeyboardInterrupt:
-            logger.info("KeyboardInterrupt Captured.")
-            if self._func:
-                self._func()
-            return True
-        return False
+        if exc_type is not None:
+            if self._callback:
+                try:
+                    self._callback()
+                except:  # noqa: E722
+                    pass
+            return False
 
 
 def set_defaults(defaults):
