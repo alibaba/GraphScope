@@ -107,6 +107,21 @@ def cmake_app(app):
     print("Finished compiling", app_class, graph_class)
 
 
+def get_app_info(algo: str):
+    fp = BUILTIN_APP_RESOURCE_PATH  # default is builtin app resources.
+    with zipfile.ZipFile(fp, "r") as zip_ref:
+        with zip_ref.open(".gs_conf.yaml", "r") as f:
+            config_yaml = yaml.safe_load(f)
+
+    for app in config_yaml["app"]:
+        if app["algo"] == algo:
+            app_type = app["type"]  # cpp_pie or cython_pregel or cython_pie
+            if app_type == "cpp_pie":
+                return app_type, app["src"], f"{app['class_name']}<_GRAPH_TYPE>"
+
+    raise KeyError("Algorithm %s does not exist in the gar resource." % algo)
+
+
 def compile_graph():
     property_frame_template = "vineyard::ArrowFragment<{},{}>"
     projected_frame_template = "gs::ArrowProjectedFragment<{},{},{},{}>"
@@ -131,118 +146,31 @@ def compile_graph():
                     )
                     graph_classes.append(graph_class)
 
-    with multiprocessing.Pool(processes=len(graph_classes)) as pool:
+    with multiprocessing.Pool() as pool:
         pool.map(cmake_graph, graph_classes)
 
 
-def get_app_info(algo: str):
-    fp = BUILTIN_APP_RESOURCE_PATH  # default is builtin app resources.
-    with zipfile.ZipFile(fp, "r") as zip_ref:
-        with zip_ref.open(".gs_conf.yaml", "r") as f:
-            config_yaml = yaml.safe_load(f)
-
-    for app in config_yaml["app"]:
-        if app["algo"] == algo:
-            app_type = app["type"]  # cpp_pie or cython_pregel or cython_pie
-            if app_type == "cpp_pie":
-                return app_type, app["src"], f"{app['class_name']}<_GRAPH_TYPE>"
-
-    raise KeyError("Algorithm %s does not exist in the gar resource." % algo)
-
-
 def compile_cpp_pie_app():
-    algos = ["pagerank", "wcc", "cdlp", "bfs", "sssp", "kcore", "triangles"]
-    frame_template = "gs::ArrowProjectedFragment<{},{},{},{}>"
-    targets = []
-    targets.append(
-        (
-            "pagerank",
-            frame_template.format(
-                "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
-            ),
-        )
+    template = "gs::ArrowProjectedFragment<{},{},{},{}>"
+    luee = template.format(
+        "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
     )
-    targets.append(
-        (
-            "pagerank",
-            frame_template.format("int64_t", "uint64_t", "grape::EmptyType", "int64_t"),
-        )
-    )
-
-    targets.append(
-        (
-            "wcc",
-            frame_template.format(
-                "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
-            ),
-        )
-    )
-    targets.append(
-        (
-            "wcc",
-            frame_template.format("int64_t", "uint64_t", "grape::EmptyType", "int64_t"),
-        )
-    )
-
-    targets.append(
-        (
-            "cdlp",
-            frame_template.format(
-                "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
-            ),
-        )
-    )
-    targets.append(
-        (
-            "cdlp",
-            frame_template.format("int64_t", "uint64_t", "grape::EmptyType", "int64_t"),
-        )
-    )
-
-    targets.append(
-        (
-            "bfs",
-            frame_template.format(
-                "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
-            ),
-        )
-    )
-    targets.append(
-        (
-            "bfs",
-            frame_template.format("int64_t", "uint64_t", "grape::EmptyType", "int64_t"),
-        )
-    )
-
-    targets.append(
-        (
-            "sssp",
-            frame_template.format("int64_t", "uint64_t", "grape::EmptyType", "int64_t"),
-        )
-    )
-    targets.append(
-        (
-            "sssp",
-            frame_template.format("int64_t", "uint64_t", "grape::EmptyType", "double"),
-        )
-    )
-
-    targets.append(
-        (
-            "kcore",
-            frame_template.format(
-                "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
-            ),
-        )
-    )
-    targets.append(
-        (
-            "triangles",
-            frame_template.format(
-                "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
-            ),
-        )
-    )
+    luel = template.format("int64_t", "uint64_t", "grape::EmptyType", "int64_t")
+    lued = template.format("int64_t", "uint64_t", "grape::EmptyType", "double")
+    targets = [
+        ("pagerank", luee),
+        ("pagerank", luel),
+        ("wcc", luee),
+        ("wcc", luel),
+        ("cdlp", luee),
+        ("cdlp", luel),
+        ("bfs", luee),
+        ("bfs", luel),
+        ("sssp", luel),
+        ("sssp", lued),
+        ("kcore", luee),
+        ("triangles", luee),
+    ]
 
     with multiprocessing.Pool() as pool:
         pool.map(cmake_app, targets)

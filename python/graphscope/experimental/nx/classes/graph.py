@@ -332,8 +332,13 @@ class Graph(object):
     @property
     def template_str(self):
         if self._graph_type != types_pb2.DYNAMIC_PROPERTY:
+            return "gs::DynamicFragment"
+        elif self._graph_type == types_pb2.DYNAMIC_PROJECTED:
+            vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
+            edata_type = utils.data_type_to_cpp(self._schema.edata_type)
+            return f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
+        else:
             raise ValueError(f"Unsupported graph type: {self._graph_type}")
-        return "gs::DynamicFragment"
 
     @property
     def graph_type(self):

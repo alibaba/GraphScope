@@ -208,20 +208,6 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         )
         with open(cmakelists_file, mode="w") as f:
             f.write(content)
-    logger.info(
-        "Compiling app: %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
-        app_dir,
-        ANALYTICAL_ENGINE_HOME,
-        library_name,
-        vd_type,
-        md_type,
-        graph_type,
-        graph_header,
-        module_name,
-        app_class,
-        app_header,
-    )
-    logger.info("Cmake command: %s", " ".join(cmake_commands))
 
     # compile
     logger.info("Building app ...")
@@ -306,14 +292,6 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         )
         with open(cmakelists_file, mode="w") as f:
             f.write(content)
-    logger.info(
-        "Compiling graph: %s, %s, %s, %s",
-        library_dir,
-        ANALYTICAL_ENGINE_HOME,
-        library_name,
-        graph_class,
-    )
-    logger.info("Cmake command: %s", " ".join(cmake_commands))
 
     # compile
     logger.info("Building graph library ...")
