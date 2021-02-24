@@ -43,6 +43,7 @@ except ImportError:
 
 import graphscope
 from graphscope.client.rpc import GRPCClient
+from graphscope.client.utils import CaptureKeyboardInterrupt
 from graphscope.client.utils import GSLogger
 from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
@@ -422,7 +423,8 @@ class Session(object):
 
         atexit.register(self.close)
         # create and connect session
-        self._proc, self._endpoint = self._connect()
+        with CaptureKeyboardInterrupt(self.close):
+            self._proc, self._endpoint = self._connect()
 
         self._disconnected = False
 

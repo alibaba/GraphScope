@@ -17,6 +17,7 @@
 #
 
 import base64
+import copy
 import json
 import logging
 import os
@@ -62,6 +63,66 @@ from gscoordinator.utils import parse_as_glog_level
 logger = logging.getLogger("graphscope")
 
 
+class ResourceManager(object):
+    """A class to manager kubernetes object.
+
+    Object managed by this class will dump meta info to disk file
+    for pod preStop lifecycle management.
+
+    meta info format:
+
+        {
+            "my-deployment": "Deployment",
+            "my-service": "Service"
+        }
+    """
+
+    _resource_object_path = "/tmp/resource_object"  # fixed
+
+    def __init__(self, api_client):
+        self._api_client = api_client
+        self._resource_object = []
+        self._meta_info = {}
+
+    def append(self, target):
+        self._resource_object.append(target)
+        self._meta_info.update(
+            get_kubernetes_object_info(api_client=self._api_client, target=target)
+        )
+        self.dump()
+
+    def extend(self, targets):
+        self._resource_object.extend(targets)
+        for target in targets:
+            self._meta_info.update(
+                get_kubernetes_object_info(api_client=self._api_client, target=target)
+            )
+        self.dump()
+
+    def clear(self):
+        self._resource_object.clear()
+        self._meta_info.clear()
+
+    def __str__(self):
+        return str(self._meta_info)
+
+    def __getitem__(self, index):
+        return self._resource_object[index]
+
+    def dump(self):
+        with open(self._resource_object_path, "w") as f:
+            json.dump(self._meta_info, f)
+
+    def dump_with_extra_resource(self, resource):
+        """Also dump with extra resources. A typical scenario is
+        dump meta info of namespace for coordinator dangling processing.
+        """
+        rlt = copy.deepcopy(self._meta_info)
+        rlt.update(resource)
+        with open(self._resource_object_path, "w") as f:
+            json.dump(rlt, f)
+
+
 class KubernetesClusterLauncher(Launcher):
     _gs_etcd_builder_cls = GSEtcdBuilder
     _gs_engine_builder_cls = GSEngineBuilder
@@ -89,8 +150,6 @@ class KubernetesClusterLauncher(Launcher):
     _random_etcd_listen_client_service_port = random.randint(58001, 59000)
 
     _vineyard_service_port = 9600  # fixed
-
-    _resource_object_path = "/tmp/resource_object"  # fixed
 
     def __init__(
         self,
@@ -156,7 +215,7 @@ class KubernetesClusterLauncher(Launcher):
         self._coordinator_name = coordinator_name
         self._coordinator_service_name = coordinator_service_name
 
-        self._resource_object = []
+        self._resource_object = ResourceManager(self._api_client)
 
         # engine container info
         self._gs_image = gs_image
@@ -238,7 +297,6 @@ class KubernetesClusterLauncher(Launcher):
 
     def _create_engine_replicaset(self):
         logger.info("Launching GraphScope engines pod ...")
-        targets = []
         labels = {"name": self._engine_name}
         # create engine replicaset
         engine_builder = self._gs_engine_builder_cls(
@@ -296,17 +354,15 @@ class KubernetesClusterLauncher(Launcher):
         )
         for name in self._image_pull_secrets:
             engine_builder.add_image_pull_secret(name)
-        targets.append(
+
+        self._resource_object.append(
             self._app_api.create_namespaced_replica_set(
                 self._namespace, engine_builder.build()
             )
         )
 
-        self._resource_object.extend(targets)
-
     def _create_etcd(self):
         logger.info("Launching etcd ...")
-        targets = []
         labels = {"name": self._etcd_name}
         # should create service first
         service_builder = ServiceBuilder(
@@ -315,7 +371,7 @@ class KubernetesClusterLauncher(Launcher):
             port=self._random_etcd_listen_client_service_port,
             selector=labels,
         )
-        targets.append(
+        self._resource_object.append(
             self._core_api.create_namespaced_service(
                 self._namespace, service_builder.build()
             )
@@ -343,16 +399,13 @@ class KubernetesClusterLauncher(Launcher):
             listen_peer_service_port=self._random_etcd_listen_peer_service_port,
             listen_client_service_port=self._random_etcd_listen_client_service_port,
         )
-        targets.append(
+        self._resource_object.append(
             self._app_api.create_namespaced_deployment(
                 self._namespace, etcd_builder.build()
             )
         )
 
-        self._resource_object.extend(targets)
-
     def _create_vineyard_service(self):
-        targets = []
         labels = {"name": self._engine_name}  # vineyard in engine pod
         service_builder = ServiceBuilder(
             self._vineyard_service_name,
@@ -360,13 +413,11 @@ class KubernetesClusterLauncher(Launcher):
             port=self._vineyard_service_port,
             selector=labels,
         )
-        targets.append(
+        self._resource_object.append(
             self._core_api.create_namespaced_service(
                 self._namespace, service_builder.build()
             )
         )
-
-        self._resource_object.extend(targets)
 
     def _get_vineyard_service_endpoint(self):
         # Always len(endpoints) >= 1
@@ -423,7 +474,6 @@ class KubernetesClusterLauncher(Launcher):
 
     def _create_interactive_engine_service(self):
         logger.info("Launching GIE graph manager ...")
-        targets = []
         labels = {"app": self._gie_graph_manager_name}
         service_builder = ServiceBuilder(
             name=self._gie_graph_manager_service_name,
@@ -431,7 +481,7 @@ class KubernetesClusterLauncher(Launcher):
             port=self._interactive_engine_manager_port,
             selector=labels,
         )
-        targets.append(
+        self._resource_object.append(
             self._core_api.create_namespaced_service(
                 self._namespace, service_builder.build()
             )
@@ -475,13 +525,11 @@ class KubernetesClusterLauncher(Launcher):
             port=self._zookeeper_port,
         )
 
-        targets.append(
+        self._resource_object.append(
             self._app_api.create_namespaced_deployment(
                 self._namespace, graph_manager_builder.build()
             )
         )
-
-        self._resource_object.extend(targets)
 
     def _waiting_interactive_engine_service_ready(self):
         start_time = time.time()
@@ -623,30 +671,16 @@ class KubernetesClusterLauncher(Launcher):
         self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
         logger.info("GraphScope engines pod is ready.")
 
-    def _dump_cluster_logs(self):
-        log_dict = dict()
-        pod_items = self._core_api.list_namespaced_pod(self._namespace).to_dict()
-        for item in pod_items["items"]:
-            log_dict[item["metadata"]["name"]] = self._core_api.read_namespaced_pod_log(
-                name=item["metadata"]["name"], namespace=self._namespace
-            )
-        return log_dict
-
     def _dump_resource_object(self):
-        rlt = {}
-        for target in self._resource_object:
-            rlt.update(
-                get_kubernetes_object_info(api_client=self._api_client, target=target)
-            )
+        resource = {}
         if self._delete_namespace:
-            rlt[self._namespace] = "Namespace"
+            resource[self._namespace] = "Namespace"
         else:
             # coordinator info
-            rlt[self._coordinator_name] = "Deployment"
-            rlt[self._coordinator_service_name] = "Service"
+            resource[self._coordinator_name] = "Deployment"
+            resource[self._coordinator_service_name] = "Service"
 
-        with open(self._resource_object_path, "w") as f:
-            json.dump(rlt, f)
+        self._resource_object.dump_with_extra_resource(resource)
 
     def _get_etcd_service_endpoint(self):
         # Always len(endpoints) >= 1
