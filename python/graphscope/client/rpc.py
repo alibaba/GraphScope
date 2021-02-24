@@ -96,6 +96,7 @@ class GRPCClient(object):
     def waiting_service_ready(self, timeout_seconds=60, enable_k8s=True):
         begin_time = time.time()
         request = message_pb2.HeartBeatRequest()
+        response = None
         while True:
             try:
                 response = self._stub.HeartBeat(request)

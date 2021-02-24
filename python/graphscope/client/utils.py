@@ -83,6 +83,33 @@ class GSLogger(object):
 GSLogger.init()
 
 
+class CaptureKeyboardInterrupt(object):
+    """Context Manager for capture keyboard interrupt
+
+    Args:
+        func: function
+            Callback function when KeyboardInterrupt occurs.
+
+    Examples:
+        >>> with CaptureKeyboardInterrupt(func):
+        >>>     do_somethings()
+    """
+
+    def __init__(self, func=None):
+        self._func = func
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if exc_type is KeyboardInterrupt:
+            logger.info("KeyboardInterrupt Captured.")
+            if self._func:
+                self._func()
+            return True
+        return False
+
+
 def set_defaults(defaults):
     """Decorator to update default params to the latest defaults value.
 
