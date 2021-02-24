@@ -109,11 +109,11 @@ def get_app_sha256(attr):
             f"{app_type}.{app_class}.{graph_type}".encode("utf-8")
         ).hexdigest()
     else:
-        return hashlib.sha256(
-            f"{app_type}.{vd_type}.{md_type}.{pregel_combine}.{graph_type}".encode(
-                "utf-8"
-            )
-        ).hexdigest()
+        s = hashlib.sha256()
+        s.update(f"{app_type}.{app_class}.{graph_type}".encode("utf-8"))
+        if types_pb2.GAR in attr:
+            s.update(attr[types_pb2.GAR].s)
+        return s.hexdigest()
 
 
 def get_graph_sha256(attr):
