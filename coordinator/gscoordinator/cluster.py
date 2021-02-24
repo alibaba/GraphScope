@@ -84,18 +84,18 @@ class ResourceManager(object):
         self._resource_object = []
         self._meta_info = {}
 
-    def append(self, i):
-        self._resource_object.append(i)
+    def append(self, target):
+        self._resource_object.append(target)
         self._meta_info.update(
-            get_kubernetes_object_info(api_client=self._api_client, target=i)
+            get_kubernetes_object_info(api_client=self._api_client, target=target)
         )
         self.dump()
 
-    def extend(self, l):
-        self._resource_object.extend(l)
-        for i in l:
+    def extend(self, targets):
+        self._resource_object.extend(targets)
+        for target in targets:
             self._meta_info.update(
-                get_kubernetes_object_info(api_client=self._api_client, target=i)
+                get_kubernetes_object_info(api_client=self._api_client, target=target)
             )
         self.dump()
 
@@ -113,12 +113,12 @@ class ResourceManager(object):
         with open(self._resource_object_path, "w") as f:
             json.dump(self._meta_info, f)
 
-    def dump_with_extra_resource(self, r):
+    def dump_with_extra_resource(self, resource):
         """Also dump with extra resources. A typical scenario is
-        dump meta info of namespace for coordinator dangling handle.
+        dump meta info of namespace for coordinator dangling processing.
         """
         rlt = copy.deepcopy(self._meta_info)
-        rlt.update(r)
+        rlt.update(resource)
         with open(self._resource_object_path, "w") as f:
             json.dump(rlt, f)
 
