@@ -331,6 +331,8 @@ class Graph(object):
 
     @property
     def template_str(self):
+        if self._key is None:
+            raise RuntimeError("graph should be registered in remote.")
         if self._graph_type != types_pb2.DYNAMIC_PROPERTY:
             return "gs::DynamicFragment"
         elif self._graph_type == types_pb2.DYNAMIC_PROJECTED:

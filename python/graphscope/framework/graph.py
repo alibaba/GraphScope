@@ -203,6 +203,8 @@ class Graph(object):
 
     @property
     def template_str(self):
+        if self._key is None:
+            raise RuntimeError("graph should be registered in remote.")
         graph_type = self._graph_type
         # transform str/string to std::string
         oid_type = normalize_data_type_str(self._schema.oid_type)
