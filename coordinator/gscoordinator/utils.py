@@ -19,6 +19,7 @@
 
 import copy
 import glob
+import hashlib
 import json
 import logging
 import numbers
@@ -89,28 +90,53 @@ def get_lib_path(app_dir, app_name):
         lib_path = os.path.join(app_dir, "lib%s.dylib" % app_name)
     else:
         raise RuntimeError("Unsupported platform.")
-    assert os.path.isfile(lib_path), "Error occurs when building the frame library."
     return lib_path
 
 
-def compile_app(workspace: str, app_name: str, attr, engine_config: dict):
+def get_app_sha256(attr):
+    (
+        app_type,
+        app_header,
+        app_class,
+        vd_type,
+        md_type,
+        pregel_combine,
+    ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE)
+    graph_header, graph_type = _codegen_graph_info(attr)
+    logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
+    if app_type == "cpp_pie":
+        return hashlib.sha256(
+            f"{app_type}.{app_class}.{graph_type}".encode("utf-8")
+        ).hexdigest()
+    else:
+        s = hashlib.sha256()
+        s.update(f"{app_type}.{app_class}.{graph_type}".encode("utf-8"))
+        if types_pb2.GAR in attr:
+            s.update(attr[types_pb2.GAR].s)
+        return s.hexdigest()
+
+
+def get_graph_sha256(attr):
+    _, graph_class = _codegen_graph_info(attr)
+    return hashlib.sha256(graph_class.encode("utf-8")).hexdigest()
+
+
+def compile_app(workspace: str, library_name, attr, engine_config: dict):
     """Compile an application.
 
     Args:
         workspace (str): working dir.
-        app_name (str): target app_name.
+        library_name (str): name of library
         attr (`AttrValue`): All information needed to compile an app.
+        engine_config (dict): for options of experimental_on
 
     Returns:
         str: Path of the built library.
     """
-
-    app_dir = os.path.join(workspace, app_name)
+    app_dir = os.path.join(workspace, library_name)
     os.makedirs(app_dir, exist_ok=True)
 
-    # extract gar content
     _extract_gar(app_dir, attr)
-
     # codegen app and graph info
     # vd_type and md_type is None in cpp_pie
     (
@@ -120,7 +146,7 @@ def compile_app(workspace: str, app_name: str, attr, engine_config: dict):
         vd_type,
         md_type,
         pregel_combine,
-    ) = _codegen_app_info(app_dir, DEFAULT_GS_CONFIG_FILE, attr)
+    ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE)
     logger.info(
         "Codegened application type: %s, app header: %s, app_class: %s, vd_type: %s, md_type: %s, pregel_combine: %s",
         app_type,
@@ -171,7 +197,7 @@ def compile_app(workspace: str, app_name: str, attr, engine_config: dict):
         content = template.read()
         content = Template(content).safe_substitute(
             _analytical_engine_home=ANALYTICAL_ENGINE_HOME,
-            _frame_name=app_name,
+            _frame_name=library_name,
             _vd_type=vd_type,
             _md_type=md_type,
             _graph_type=graph_type,
@@ -208,45 +234,19 @@ def compile_app(workspace: str, app_name: str, attr, engine_config: dict):
     make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
     setattr(make_process, "stderr_watcher", make_stderr_watcher)
     make_process.wait()
-
-    return get_lib_path(app_dir, app_name)
-
-
-def generate_graph_type_sig(attr: dict):
-    graph_type = attr[types_pb2.GRAPH_TYPE].graph_type
-
-    if graph_type == types_pb2.ARROW_PROPERTY:
-        oid_type = attr[types_pb2.OID_TYPE].s.decode("utf-8")
-        vid_type = attr[types_pb2.VID_TYPE].s.decode("utf-8")
-        graph_signature = "vineyard::ArrowFragment<{},{}>".format(oid_type, vid_type)
-    elif graph_type == types_pb2.ARROW_PROJECTED:
-        oid_type = attr[types_pb2.OID_TYPE].s.decode("utf-8")
-        vid_type = attr[types_pb2.VID_TYPE].s.decode("utf-8")
-        vdata_type = attr[types_pb2.V_DATA_TYPE].s.decode("utf-8")
-        edata_type = attr[types_pb2.E_DATA_TYPE].s.decode("utf-8")
-        graph_signature = "gs::ArrowProjectedFragment<{},{},{},{}>".format(
-            oid_type, vid_type, vdata_type, edata_type
-        )
-    elif graph_type == types_pb2.DYNAMIC_PROJECTED:
-        vdata_type = attr[types_pb2.V_DATA_TYPE].s.decode("utf-8")
-        edata_type = attr[types_pb2.E_DATA_TYPE].s.decode("utf-8")
-        graph_signature = "gs::DynamicProjectedFragment<{},{}>".format(
-            vdata_type, edata_type
-        )
-    else:
-        raise ValueError("Unsupported graph type: {}".format(graph_type))
-    return graph_signature
+    lib_path = get_lib_path(app_dir, library_name)
+    assert os.path.isfile(lib_path), "Error occurs when building the frame library."
+    return lib_path
 
 
-def compile_graph_frame(
-    workspace: str, frame_name: str, attr: dict, engine_config: dict
-):
+def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config: dict):
     """Compile an application.
 
     Args:
         workspace (str): Working dir.
-        frame_name (str): Target app_name.
+        library_name (str): name of library
         attr (`AttrValue`): All information needed to compile a graph library.
+        engine_config (dict): for options of experimental_on
 
     Raises:
         ValueError: When graph_type is not supported.
@@ -255,14 +255,14 @@ def compile_graph_frame(
         str: Path of the built graph library.
     """
 
-    frame_dir = os.path.join(workspace, frame_name)
-    os.makedirs(frame_dir, exist_ok=True)
+    _, graph_class = _codegen_graph_info(attr)
 
-    graph_signature = generate_graph_type_sig(attr)
+    logger.info("Codegened graph frame type: %s", graph_class)
 
-    logger.info("Codegened graph frame type: %s", graph_signature)
+    library_dir = os.path.join(workspace, library_name)
+    os.makedirs(library_dir, exist_ok=True)
 
-    os.chdir(frame_dir)
+    os.chdir(library_dir)
 
     graph_type = attr[types_pb2.GRAPH_TYPE].graph_type
 
@@ -282,13 +282,13 @@ def compile_graph_frame(
         raise ValueError("Illegal graph type: {}".format(graph_type))
     # replace and generate cmakelist
     cmakelists_file_tmp = os.path.join(TEMPLATE_DIR, "CMakeLists.template")
-    cmakelists_file = os.path.join(frame_dir, "CMakeLists.txt")
+    cmakelists_file = os.path.join(library_dir, "CMakeLists.txt")
     with open(cmakelists_file_tmp, mode="r") as template:
         content = template.read()
         content = Template(content).safe_substitute(
             _analytical_engine_home=ANALYTICAL_ENGINE_HOME,
-            _frame_name=frame_name,
-            _graph_type=graph_signature,
+            _frame_name=library_name,
+            _graph_type=graph_class,
         )
         with open(cmakelists_file, mode="w") as f:
             f.write(content)
@@ -318,13 +318,13 @@ def compile_graph_frame(
     make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stdout)
     setattr(make_process, "stderr_watcher", make_stderr_watcher)
     make_process.wait()
+    lib_path = get_lib_path(library_dir, library_name)
+    assert os.path.isfile(lib_path), "Error occurs when building the frame library."
+    return lib_path
 
-    return get_lib_path(frame_dir, frame_name)
 
-
-def _extract_gar(workspace: str, attr):
+def _extract_gar(app_dir: str, attr):
     """Extract gar to workspace
-
     Args:
         workspace (str): Working directory
         attr (`AttrValue`): Optionally it can contains the bytes of gar.
@@ -334,10 +334,10 @@ def _extract_gar(workspace: str, attr):
         # if gar sent via bytecode in attr, overwrite.
         fp = BytesIO(attr[types_pb2.GAR].s)
     with zipfile.ZipFile(fp, "r") as zip_ref:
-        zip_ref.extractall(workspace)
+        zip_ref.extractall(app_dir)
 
 
-def _codegen_app_info(workspace: str, meta_file: str, attr):
+def _codegen_app_info(attr, meta_file: str):
     """Codegen application by instanize the template specialization.
 
     Args:
@@ -352,11 +352,15 @@ def _codegen_app_info(workspace: str, meta_file: str, attr):
         type: app_type
         app class: for fulfilling the CMakelists.
     """
+    fp = BUILTIN_APP_RESOURCE_PATH  # default is builtin app resources.
+    if types_pb2.GAR in attr:
+        # if gar sent via bytecode in attr, overwrite.
+        fp = BytesIO(attr[types_pb2.GAR].s)
+    with zipfile.ZipFile(fp, "r") as zip_ref:
+        with zip_ref.open(meta_file, "r") as f:
+            config_yaml = yaml.safe_load(f)
+
     algo = attr[types_pb2.APP_ALGO].s.decode("utf-8")
-
-    with open(os.path.join(workspace, meta_file), "r") as f:
-        config_yaml = yaml.safe_load(f)
-
     for app in config_yaml["app"]:
         if app["algo"] == algo:
             app_type = app["type"]  # cpp_pie or cython_pregel or cython_pie

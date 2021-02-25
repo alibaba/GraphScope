@@ -42,6 +42,7 @@ from graphscope.experimental.nx.convert import to_nx_graph
 from graphscope.experimental.nx.utils.other import empty_graph_in_engine
 from graphscope.experimental.nx.utils.other import parse_ret_as_dict
 from graphscope.framework import dag_utils
+from graphscope.framework import utils
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
@@ -255,7 +256,6 @@ class Graph(object):
 
         self._key = None
         self._op = None
-        self._graph_type = self._graph_type
         self._schema = GraphSchema()
         self._schema.init_nx_schema()
         create_empty_in_engine = attr.pop(
@@ -330,18 +330,17 @@ class Graph(object):
         return self._schema
 
     @property
-    def template_sigature(self):
+    def template_str(self):
         if self._key is None:
             raise RuntimeError("graph should be registered in remote.")
-        return hashlib.sha256(
-            "{}.{}.{}.{}.{}".format(
-                self._graph_type,
-                self._schema.oid_type,
-                self._schema.vid_type,
-                self._schema.vdata_type,
-                self._schema.edata_type,
-            ).encode("utf-8")
-        ).hexdigest()
+        if self._graph_type != types_pb2.DYNAMIC_PROPERTY:
+            return "gs::DynamicFragment"
+        elif self._graph_type == types_pb2.DYNAMIC_PROJECTED:
+            vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
+            edata_type = utils.data_type_to_cpp(self._schema.edata_type)
+            return f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
+        else:
+            raise ValueError(f"Unsupported graph type: {self._graph_type}")
 
     @property
     def graph_type(self):

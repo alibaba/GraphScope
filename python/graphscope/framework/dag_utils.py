@@ -51,8 +51,6 @@ def create_app(graph, app):
         types_pb2.E_DATA_TYPE: utils.s_to_attr(
             utils.data_type_to_cpp(graph.schema.edata_type)
         ),
-        types_pb2.APP_SIGNATURE: utils.s_to_attr(app.signature),
-        types_pb2.GRAPH_SIGNATURE: utils.s_to_attr(graph.template_sigature),
     }
     if app.gar is not None:
         config[types_pb2.GAR] = utils.bytes_to_attr(app.gar)
