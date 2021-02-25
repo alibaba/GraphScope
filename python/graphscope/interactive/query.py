@@ -100,7 +100,7 @@ class InteractiveQuery(object):
 
             # invoke load_from
             g = self._graphscope_session.load_from(
-                edges=[Loader(vineyard.ObjectName("__%s_vertex_stream" % name))],
+                edges=[Loader(vineyard.ObjectName("__%s_edge_stream" % name))],
                 vertices=[Loader(vineyard.ObjectName("__%s_vertex_stream" % name))],
                 generate_eid=False,
             )
