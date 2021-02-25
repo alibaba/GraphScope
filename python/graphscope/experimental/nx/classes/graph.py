@@ -376,6 +376,12 @@ class Graph(object):
         """
         return self.name
 
+    def __repr__(self):
+        s = "graphscope.nx.Graph\n"
+        s += "type: " + self.template_str.split("<")[0]
+        s += str(self._schema)
+        return s
+
     def __copy__(self):
         raise NetworkXError("not support shallow copy.")
 

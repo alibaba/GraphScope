@@ -66,6 +66,9 @@ class BaseContext(object):
         self._session_id = session_id
         self._saved_signature = self.signature
 
+    def __repr__(self):
+        return f"graphscope.{self.__class__.__name__} from graph {str(self._graph)}"
+
     @property
     def key(self):
         """Unique identifier of a context."""
