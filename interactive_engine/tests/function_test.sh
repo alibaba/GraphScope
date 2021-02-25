@@ -34,7 +34,7 @@ function _start {
     curl -XPOST http://localhost:${_port} -d 'import graphscope'
     curl -XPOST http://localhost:${_port} -d 'graphscope.set_option(show_log=True)'
     curl -XPOST http://localhost:${_port} -d 'from graphscope.framework.loader import Loader'
-    curl_sess="curl -XPOST http://localhost:${_port} -d 'session = graphscope.session(num_workers=${workers}, k8s_volumes={\"data\": {\"type\": \"hostPath\", \"field\": {\"path\": \"${GS_TEST_DIR}\", \"type\": \"Directory\"}, \"mounts\": {\"mountPath\": \"/testingdata\"}}}, k8s_coordinator_cpu=1.0, k8s_coordinator_mem='\''4Gi'\'', k8s_vineyard_cpu=1.0, k8s_vineyard_mem='\''4Gi'\'', k8s_vineyard_shared_mem='\''4Gi'\'', k8s_engine_cpu=1.0, k8s_engine_mem='\''4Gi'\'', k8s_gie_graph_manager_image='\''${gie_manager_image}'\'', k8s_gs_image='\''${gs_image}'\'')' --write-out %{http_code} --silent --output ./curl.tmp"
+    curl_sess="curl -XPOST http://localhost:${_port} -d 'session = graphscope.session(num_workers=${workers}, k8s_volumes={\"data\": {\"type\": \"hostPath\", \"field\": {\"path\": \"${GS_TEST_DIR}\", \"type\": \"Directory\"}, \"mounts\": {\"mountPath\": \"/testingdata\"}}}, k8s_coordinator_cpu=1.0, k8s_coordinator_mem='\''4Gi'\'', k8s_vineyard_cpu=1.0, k8s_vineyard_mem='\''4Gi'\'', k8s_vineyard_shared_mem='\''4Gi'\'', k8s_engine_cpu=1.0, k8s_engine_mem='\''4Gi'\'', k8s_etcd_cpu=2, k8s_gie_graph_manager_image='\''${gie_manager_image}'\'', k8s_gs_image='\''${gs_image}'\'')' --write-out %{http_code} --silent --output ./curl.tmp"
 
     echo $curl_sess
     code=`sh -c "$curl_sess"`
