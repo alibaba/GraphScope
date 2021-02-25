@@ -76,9 +76,11 @@ find_package(MPI REQUIRED)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
 
 find_package(Boost REQUIRED COMPONENTS system filesystem
-        # required by folly
-        context program_options regex thread)
+             # required by folly
+             context program_options regex thread)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+# eliminate a lot of warnings for newer version of boost library.
+add_compile_options(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
 include("cmake/FindGFlags.cmake")
 if (GFLAGS_FOUND)

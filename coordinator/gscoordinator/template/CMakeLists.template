@@ -29,6 +29,9 @@ endif ()
 
 include_directories(${CMAKE_SOURCE_DIR})
 
+# eliminate a lot of warnings for newer version of boost library.
+add_compile_options(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
+
 # find MPI----------------------------------------------------------------------
 find_package(MPI REQUIRED)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
