@@ -21,11 +21,11 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
+import vineyard
 
 import graphscope
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.loader import Loader
-from graphscope.framework.vineyard_object import VineyardObject
 
 
 @pytest.fixture
@@ -461,9 +461,7 @@ def test_errors_on_file_format(
     with pytest.raises(AnalyticalEngineInternalError, match="End Of File"):
         g3 = graphscope_session.load_from(edges=empty_file)
     with pytest.raises(AnalyticalEngineInternalError, match="Object not exists"):
-        g4 = graphscope_session.load_from(
-            VineyardObject(object_name="non_exist_vy_name")
-        )
+        g4 = graphscope_session.load_from(vineyard.ObjectName("non_exist_vy_name"))
 
 
 def test_error_on_non_existing_load_strategy(

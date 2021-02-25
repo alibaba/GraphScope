@@ -28,7 +28,6 @@ import pandas as pd
 from graphscope.client.session import get_default_session
 from graphscope.framework import utils
 from graphscope.framework.errors import check_argument
-from graphscope.framework.vineyard_object import VineyardObject
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import types_pb2
 
@@ -173,9 +172,9 @@ class Loader(object):
             self.process_location(source)
         elif isinstance(source, pd.DataFrame):
             self.process_pandas(source)
-        elif isinstance(source, VineyardObject):
-            self.process_vy_object(source)
-        elif vineyard is not None and isinstance(source, vineyard.ObjectID):
+        elif vineyard is not None and isinstance(
+            source, (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
+        ):
             self.process_vy_object(source)
         elif isinstance(source, Sequence):
             # Assume a list of numpy array are passed as COO matrix, with length >= 2.
@@ -293,10 +292,17 @@ class Loader(object):
 
     def process_vy_object(self, source):
         self.protocol = "vineyard"
-        if isinstance(source, vineyard.ObjectID):
-            self.source = repr(source)
+        # encoding: add a `o` prefix to object id, and a `s` prefix to object name.
+        if isinstance(source, vineyard.Object):
+            self.source = "o%s" % repr(source.id)
+        elif isinstance(source, vineyard.ObjectID):
+            self.source = "o%s" % repr(source)
+        elif isinstance(source, vineyard.ObjectName):
+            self.source = "s%s" % str(source)
         else:
-            self.source = repr(source.object_id)
+            raise ValueError(
+                "Invalid input source: not a vineyard's Object, ObjectID or ObjectName"
+            )
 
     def select_columns(self, columns: Sequence[Tuple[str, int]], include_all=False):
         for name, data_type in columns:

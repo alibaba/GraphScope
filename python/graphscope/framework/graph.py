@@ -21,6 +21,8 @@ import json
 import logging
 from typing import Mapping
 
+import vineyard
+
 from graphscope.client.session import get_session_by_id
 from graphscope.framework.dag_utils import add_column
 from graphscope.framework.dag_utils import copy_graph
@@ -40,7 +42,6 @@ from graphscope.framework.utils import i_to_attr
 from graphscope.framework.utils import s_to_attr
 from graphscope.framework.utils import transform_labeled_vertex_property_data_selector
 from graphscope.framework.utils import transform_vertex_range
-from graphscope.framework.vineyard_object import VineyardObject
 from graphscope.proto import types_pb2
 from graphscope.proto.graph_def_pb2 import GraphDef
 
@@ -92,7 +93,7 @@ class Graph(object):
                     - :class:`GraphDef`
                     - :class:`nx.Graph`
                     - :class:`Graph`
-                    - :class:`VineyardObject`
+                    - :class:`vineyard.Object`, :class:`vineyard.ObjectId` or :class:`vineyard.ObjectName`
         """
 
         # Don't import the :code:`NXGraph` in top-level statments to improve the
@@ -118,7 +119,9 @@ class Graph(object):
             graph_def = self._from_nx_graph(incoming_data)
         elif isinstance(incoming_data, Graph):
             graph_def = self._copy_from(incoming_data)
-        elif isinstance(incoming_data, VineyardObject):
+        elif isinstance(
+            incoming_data, (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
+        ):
             graph_def = self._from_vineyard(incoming_data)
         else:
             raise ValueError(
@@ -489,20 +492,24 @@ class Graph(object):
         """Load a graph from a already existed vineyard graph.
 
         Args:
-            vineyard_object (:class:`VineyardObject`): vineyard object, which contains a graph.
+            vineyard_object (:class:`vineyard.Object`, :class:`vineyard.ObjectID`
+                            or :class:`vineyard.ObjectName`): vineyard object,
+                            which represents a graph.
 
         Returns:
             A graph_def.
         """
-        if vineyard_object.object_id is not None:
-            return self._from_vineyard_id(vineyard_object.object_id)
-        elif vineyard_object.object_name is not None:
-            return self._from_vineyard_name(vineyard_object.object_name)
+        if isinstance(vineyard_object, vineyard.Object):
+            return self._from_vineyard_id(vineyard_object.id)
+        if isinstance(vineyard_object, vineyard.ObjectID):
+            return self._from_vineyard_id(vineyard_object)
+        if isinstance(vineyard_object, vineyard.ObjectName):
+            return self._from_vineyard_name(vineyard_object)
 
     def _from_vineyard_id(self, vineyard_id):
         config = {}
         config[types_pb2.IS_FROM_VINEYARD_ID] = b_to_attr(True)
-        config[types_pb2.VINEYARD_ID] = i_to_attr(vineyard_id)
+        config[types_pb2.VINEYARD_ID] = i_to_attr(int(vineyard_id))
         # FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard
         #
         # the metadata should be retrived from vineyard
@@ -515,7 +522,7 @@ class Graph(object):
     def _from_vineyard_name(self, vineyard_name):
         config = {}
         config[types_pb2.IS_FROM_VINEYARD_ID] = b_to_attr(True)
-        config[types_pb2.VINEYARD_NAME] = s_to_attr(vineyard_name)
+        config[types_pb2.VINEYARD_NAME] = s_to_attr(str(vineyard_name))
         # FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard
         #
         # the metadata should be retrived from vineyard
@@ -616,9 +623,7 @@ class Graph(object):
             deployment=deployment,
             hosts=hosts,
         )
-        return cls(
-            sess.session_id, VineyardObject(object_id=int(vineyard.ObjectID(graph_id)))
-        )
+        return cls(sess.session_id, vineyard.ObjectID(graph_id))
 
     def draw(self, vertices, hop=1):
         """Visualize the graph data in the result cell when the draw functions are invoked

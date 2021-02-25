@@ -29,7 +29,6 @@ from graphscope.dataset.ldbc import load_ldbc
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
-from graphscope.framework.vineyard_object import VineyardObject
 from graphscope.proto import types_pb2
 
 logger = logging.getLogger("graphscope")
@@ -51,7 +50,7 @@ def test_load_graph_copy(graphscope_session, arrow_property_graph):
     g2.unload()
     assert not g2.loaded()
     # test load from vineyard's graph
-    g3 = graphscope_session.load_from(VineyardObject(object_id=g.vineyard_id))
+    g3 = graphscope_session.load_from(vineyard.ObjectID(g.vineyard_id))
     assert g3.loaded()
 
 

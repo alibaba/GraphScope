@@ -32,4 +32,9 @@ RUN cd /tmp && \
     mkdir -p /opt/graphscope/dist && \
     cp -f wheelhouse/* /opt/graphscope/dist && \
     pip3 install wheelhouse/*.whl && \
+    cd /tmp/libvineyard/modules/io && \
+    python3 setup.py bdist_wheel && \
+    cp -f dist/* /opt/graphscope/dist && \
+    pip3 install dist/* && \
+    cd /tmp && \
     rm -fr /tmp/libvineyard /tmp/libgrape-lite
