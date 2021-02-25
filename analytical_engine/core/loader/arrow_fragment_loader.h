@@ -431,13 +431,13 @@ class ArrowFragmentLoader {
                    int index, int total_parts) {
     // a special code path when multiple labeled vertex batches are mixed.
     if (vertices.size() == 1 && vertices[0]->protocol == "vineyard") {
+      VLOG(2) << "read vertex table from vineyard: " << vertices[0]->values;
+      BOOST_LEAF_AUTO(sourceId, resolveVYObject(vertices[0]->values));
       auto read_procedure = [&]()
           -> boost::leaf::result<std::vector<std::shared_ptr<arrow::Table>>> {
-        BOOST_LEAF_AUTO(
-            tables,
-            vineyard::GatherVTables(
-                client_, {vineyard::ObjectIDFromString(vertices[0]->values)},
-                comm_spec_.local_id(), comm_spec_.local_num()));
+        BOOST_LEAF_AUTO(tables, vineyard::GatherVTables(
+                                    client_, {sourceId}, comm_spec_.local_id(),
+                                    comm_spec_.local_num()));
         if (tables.size() == 1 && tables[0] != nullptr) {
           std::shared_ptr<arrow::KeyValueMetadata> meta;
           if (tables[0]->schema()->metadata() == nullptr) {
@@ -487,9 +487,10 @@ class ArrowFragmentLoader {
           table = tmp;
         } else if (vertices[i]->protocol == "vineyard") {
           VLOG(2) << "read vertex table from vineyard: " << vertices[i]->values;
+          BOOST_LEAF_AUTO(sourceId, resolveVYObject(vertices[i]->values));
           VY_OK_OR_RAISE(vineyard::ReadTableFromVineyard(
-              client_, vineyard::ObjectIDFromString(vertices[i]->values), table,
-              comm_spec_.local_id(), comm_spec_.local_num()));
+              client_, sourceId, table, comm_spec_.local_id(),
+              comm_spec_.local_num()));
           if (table != nullptr) {
             VLOG(2) << "schema of vertex table: "
                     << table->schema()->ToString();
@@ -609,15 +610,17 @@ class ArrowFragmentLoader {
     // a special code path when multiple labeled edge batches are mixed.
     if (edges.size() == 1 && edges[0]->sub_labels.size() == 1 &&
         edges[0]->sub_labels[0].protocol == "vineyard") {
+      LOG(INFO) << "read edge table from vineyard: "
+                << edges[0]->sub_labels[0].values;
+      BOOST_LEAF_AUTO(sourceId,
+                      resolveVYObject(edges[0]->sub_labels[0].values));
       auto read_procedure =
           [&]() -> boost::leaf::result<
                     std::vector<std::vector<std::shared_ptr<arrow::Table>>>> {
         BOOST_LEAF_AUTO(tables,
-                        vineyard::GatherETables(
-                            client_,
-                            {{vineyard::ObjectIDFromString(
-                                edges[0]->sub_labels[0].values)}},
-                            comm_spec_.local_id(), comm_spec_.local_num()));
+                        vineyard::GatherETables(client_, {{sourceId}},
+                                                comm_spec_.local_id(),
+                                                comm_spec_.local_num()));
         if (tables.size() == 1 && tables[0].size() == 1 &&
             tables[0][0] != nullptr) {
           std::shared_ptr<arrow::KeyValueMetadata> meta;
@@ -684,9 +687,10 @@ class ArrowFragmentLoader {
           } else if (sub_labels[j].protocol == "vineyard") {
             LOG(INFO) << "read edge table from vineyard: "
                       << sub_labels[j].values;
+            BOOST_LEAF_AUTO(sourceId, resolveVYObject(sub_labels[j].values));
             VY_OK_OR_RAISE(vineyard::ReadTableFromVineyard(
-                client_, vineyard::ObjectIDFromString(sub_labels[j].values),
-                table, comm_spec_.local_id(), comm_spec_.local_num()));
+                client_, sourceId, table, comm_spec_.local_id(),
+                comm_spec_.local_num()));
             if (table == nullptr) {
               VLOG(2) << "edge table is null";
             } else {
@@ -716,6 +720,20 @@ class ArrowFragmentLoader {
       }
     }
     return tables;
+  }
+
+  boost::leaf::result<vineyard::ObjectID> resolveVYObject(
+      std::string const& source) {
+    vineyard::ObjectID sourceId = vineyard::InvalidObjectID();
+    // encoding: 'o' prefix for object id, and 's' prefix for object name.
+    CHECK_OR_RAISE(!source.empty() && (source[0] == 'o' || source[0] == 's'));
+    if (source[0] == 'o') {
+      sourceId = vineyard::ObjectIDFromString(source.substr(1));
+    } else {
+      VY_OK_OR_RAISE(client_.GetName(source.substr(1), sourceId, true));
+    }
+    CHECK_OR_RAISE(sourceId != vineyard::InvalidObjectID());
+    return sourceId;
   }
 
   vineyard::Client& client_;

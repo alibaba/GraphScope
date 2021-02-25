@@ -14,7 +14,7 @@ RUN cd /tmp && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.1.8 https://github.com/alibaba/libvineyard.git --depth=1 && \
+    git clone -b v0.1.11 https://github.com/alibaba/libvineyard.git --depth=1 && \
     cd libvineyard && \
     git submodule update --init && \
     mkdir -p /tmp/libvineyard/build && \
@@ -32,4 +32,9 @@ RUN cd /tmp && \
     mkdir -p /opt/graphscope/dist && \
     cp -f wheelhouse/* /opt/graphscope/dist && \
     pip3 install wheelhouse/*.whl && \
+    cd /tmp/libvineyard/modules/io && \
+    python3 setup.py bdist_wheel && \
+    cp -f dist/* /opt/graphscope/dist && \
+    pip3 install dist/* && \
+    cd /tmp && \
     rm -fr /tmp/libvineyard /tmp/libgrape-lite

@@ -82,6 +82,7 @@ def test_demo(data_dir):
         k8s_vineyard_mem="512Mi",
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
+        k8s_etcd_cpu=2,
         k8s_vineyard_shared_mem="2Gi",
         k8s_volumes=get_k8s_volumes(),
     )
@@ -121,6 +122,7 @@ def test_demo_distribute(data_dir, modern_graph_data_dir):
         k8s_vineyard_mem="512Mi",
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
+        k8s_etcd_cpu=2,
         k8s_vineyard_shared_mem="2Gi",
         k8s_volumes=get_k8s_volumes(),
     )
@@ -201,6 +203,7 @@ def test_multiple_session(data_dir):
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
         k8s_vineyard_shared_mem="2Gi",
+        k8s_etcd_cpu=2,
         k8s_volumes=get_k8s_volumes(),
     )
     info = sess.info
@@ -220,6 +223,7 @@ def test_multiple_session(data_dir):
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
         k8s_vineyard_shared_mem="2Gi",
+        k8s_etcd_cpu=2,
         k8s_volumes=get_k8s_volumes(),
     )
 
@@ -245,6 +249,7 @@ def test_query_modern_graph(modern_graph_data_dir):
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
         k8s_vineyard_shared_mem="2Gi",
+        k8s_etcd_cpu=2,
         k8s_volumes=get_k8s_volumes(),
     )
     graph = load_modern_graph(sess, modern_graph_data_dir)
@@ -278,6 +283,7 @@ def test_traversal_modern_graph(modern_graph_data_dir):
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
         k8s_vineyard_shared_mem="2Gi",
+        k8s_etcd_cpu=2,
         k8s_volumes=get_k8s_volumes(),
     )
     graph = load_modern_graph(sess, modern_graph_data_dir)
@@ -325,6 +331,7 @@ def test_serialize_roundtrip(p2p_property_dir):
         k8s_engine_cpu=0.1,
         k8s_engine_mem="1500Mi",
         k8s_vineyard_shared_mem="2Gi",
+        k8s_etcd_cpu=2,
         k8s_volumes=get_k8s_volumes(),
     )
     graph = sess.load_from(
@@ -346,7 +353,6 @@ def test_serialize_roundtrip(p2p_property_dir):
         generate_eid=False,
     )
     graph.serialize("/tmp/serialize")
-    graph.unload()
     new_graph = Graph.deserialize("/tmp/serialize", sess)
     pg = new_graph.project_to_simple(0, 0, 0, 2)
     ctx = graphscope.sssp(pg, src=6)

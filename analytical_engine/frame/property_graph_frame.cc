@@ -78,26 +78,19 @@ void LoadGraph(
               client.GetObject(frag_group_id));
           auto fid = comm_spec.WorkerToFrag(comm_spec.worker_id());
           auto frag_id = fg->Fragments().at(fid);
-          vineyard::ObjectMeta obj_meta;
-          VINEYARD_CHECK_OK(client.GetMetaData(frag_id, obj_meta));
-          vineyard::ObjectID new_frag_id;
-          VINEYARD_CHECK_OK(client.CreateMetaData(obj_meta, new_frag_id));
-          VINEYARD_CHECK_OK(client.Persist(new_frag_id));
-          auto new_frag = std::static_pointer_cast<_GRAPH_TYPE>(
-              client.GetObject(new_frag_id));
+          auto frag =
+              std::static_pointer_cast<_GRAPH_TYPE>(client.GetObject(frag_id));
 
-          VINEYARD_CHECK_OK(client.Persist(new_frag_id));
-          BOOST_LEAF_AUTO(
-              new_frag_group_id,
-              vineyard::ConstructFragmentGroup(client, new_frag_id, comm_spec));
+          BOOST_LEAF_AUTO(new_frag_group_id, vineyard::ConstructFragmentGroup(
+                                                 client, frag_id, comm_spec));
           gs::rpc::GraphDef graph_def;
 
           graph_def.set_key(graph_name);
           graph_def.set_vineyard_id(new_frag_group_id);
-          gs::set_graph_def(new_frag, graph_def);
+          gs::set_graph_def(frag, graph_def);
 
           auto wrapper = std::make_shared<gs::FragmentWrapper<_GRAPH_TYPE>>(
-              graph_name, graph_def, new_frag);
+              graph_name, graph_def, frag);
           return std::dynamic_pointer_cast<gs::IFragmentWrapper>(wrapper);
         } else {
           BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));

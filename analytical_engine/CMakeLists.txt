@@ -76,9 +76,11 @@ find_package(MPI REQUIRED)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
 
 find_package(Boost REQUIRED COMPONENTS system filesystem
-        # required by folly
-        context program_options regex thread)
+             # required by folly
+             context program_options regex thread)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+# eliminate a lot of warnings for newer version of boost library.
+add_compile_options(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
 include("cmake/FindGFlags.cmake")
 if (GFLAGS_FOUND)
@@ -105,7 +107,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.1.8 REQUIRED)
+find_package(vineyard 0.1.11 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 

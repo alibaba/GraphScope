@@ -94,22 +94,15 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       const std::string& copy_type) override {
     auto& meta = fragment_->meta();
     auto* client = dynamic_cast<vineyard::Client*>(meta.GetClient());
-    vineyard::ObjectMeta obj_meta;
-    VINEYARD_CHECK_OK(client->GetMetaData(fragment_->id(), obj_meta));
-    vineyard::ObjectID new_frag_id;
-    VINEYARD_CHECK_OK(client->CreateMetaData(obj_meta, new_frag_id));
-    VINEYARD_CHECK_OK(client->Persist(new_frag_id));
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
-                                       *client, new_frag_id, comm_spec));
-    auto new_frag =
-        std::static_pointer_cast<fragment_t>(client->GetObject(new_frag_id));
+                                       *client, fragment_->id(), comm_spec));
     auto dst_graph_def = graph_def_;
 
     dst_graph_def.set_key(dst_graph_name);
     dst_graph_def.set_vineyard_id(frag_group_id);
 
     auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
-        dst_graph_name, dst_graph_def, new_frag);
+        dst_graph_name, dst_graph_def, fragment_);
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
 

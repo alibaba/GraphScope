@@ -26,6 +26,7 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
+import vineyard
 
 from graphscope.client.session import get_default_session
 from graphscope.framework import dag_utils
@@ -34,13 +35,23 @@ from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
-from graphscope.framework.vineyard_object import VineyardObject
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import types_pb2
 
 __all__ = ["load_from"]
 
-LoaderVariants = Union[Loader, str, Sequence[np.ndarray], pd.DataFrame, VineyardObject]
+
+VineyardObjectTypes = (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
+
+LoaderVariants = Union[
+    Loader,
+    str,
+    Sequence[np.ndarray],
+    pd.DataFrame,
+    vineyard.Object,
+    vineyard.ObjectID,
+    vineyard.ObjectName,
+]
 
 
 class VertexLabel(object):
@@ -405,7 +416,7 @@ def normalize_parameter_edges(
     """
 
     def process_sub_label(items):
-        if isinstance(items, (Loader, str, pd.DataFrame, VineyardObject)):
+        if isinstance(items, (Loader, str, pd.DataFrame, *VineyardObjectTypes)):
             return EdgeSubLabel(items, properties=None, source=None, destination=None)
         elif isinstance(items, Sequence):
             if all([isinstance(item, np.ndarray) for item in items]):
@@ -422,11 +433,11 @@ def normalize_parameter_edges(
 
     def process_label(label, items):
         e_label = EdgeLabel(label)
-        if isinstance(items, (Loader, str, pd.DataFrame, VineyardObject)):
+        if isinstance(items, (Loader, str, pd.DataFrame, *VineyardObjectTypes)):
             e_label.add_sub_label(process_sub_label(items))
         elif isinstance(items, Sequence):
             if isinstance(
-                items[0], (Loader, str, pd.DataFrame, VineyardObject, np.ndarray)
+                items[0], (Loader, str, pd.DataFrame, *VineyardObjectTypes, np.ndarray)
             ):
                 e_label.add_sub_label(process_sub_label(items))
             else:
@@ -466,7 +477,7 @@ def normalize_parameter_vertices(
     """
 
     def process_label(label, items):
-        if isinstance(items, (Loader, str, pd.DataFrame, VineyardObject)):
+        if isinstance(items, (Loader, str, pd.DataFrame, *VineyardObjectTypes)):
             return VertexLabel(label=label, loader=items)
         elif isinstance(items, Sequence):
             if all([isinstance(item, np.ndarray) for item in items]):
@@ -606,7 +617,7 @@ def load_from(
     sess = get_default_session()
     if sess is None:
         raise ValueError("No default session found.")
-    if isinstance(edges, (Graph, nx.Graph, VineyardObject)):
+    if isinstance(edges, (Graph, nx.Graph, *VineyardObjectTypes)):
         return Graph(sess.session_id, edges)
     oid_type = utils.normalize_data_type_str(oid_type)
     e_labels = normalize_parameter_edges(edges)

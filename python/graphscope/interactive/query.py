@@ -98,22 +98,12 @@ class InteractiveQuery(object):
         def load_subgraph(name):
             import vineyard
 
-            host, port = self._graphscope_session.info["engine_config"][
-                "vineyard_rpc_endpoint"
-            ].split(":")
-            client = vineyard.connect(host, int(port))
-
-            # get vertex/edge stream id
-            vstream = client.get_name("__%s_vertex_stream" % name, True)
-            estream = client.get_name("__%s_edge_stream" % name, True)
-
             # invoke load_from
             g = self._graphscope_session.load_from(
-                edges=[Loader(estream)],
-                vertices=[Loader(vstream)],
+                edges=[Loader(vineyard.ObjectName("__%s_edge_stream" % name))],
+                vertices=[Loader(vineyard.ObjectName("__%s_vertex_stream" % name))],
                 generate_eid=False,
             )
-            client.put_name(vineyard.ObjectID(g.vineyard_id), graph_name)
             logger.info("subgraph has been loaded")
             return g
 
