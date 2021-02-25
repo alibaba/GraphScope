@@ -254,10 +254,7 @@ class Graph(object):
         return f"graphscope.Graph   {self.template_str}"
 
     def __repr__(self):
-        s = "graphscope.Graph\n"
-        s += "type: " + self.template_str.split("<")[0] + "\n\n"
-        s += str(self._schema)
-        return s
+        return f"graphscope.Graph\ntype: {self.template_str.split('<')[0]}\n\n{str(self._schema)}"
 
     def unload(self):
         """Unload this graph from graphscope engine."""
