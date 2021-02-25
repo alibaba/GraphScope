@@ -610,8 +610,10 @@ class ArrowFragmentLoader {
     // a special code path when multiple labeled edge batches are mixed.
     if (edges.size() == 1 && edges[0]->sub_labels.size() == 1 &&
         edges[0]->sub_labels[0].protocol == "vineyard") {
-      LOG(INFO) << "read edge table from vineyard: " << edges[0]->sub_labels[0].values;
-      BOOST_LEAF_AUTO(sourceId, resolveVYObject(edges[0]->sub_labels[0].values));
+      LOG(INFO) << "read edge table from vineyard: "
+                << edges[0]->sub_labels[0].values;
+      BOOST_LEAF_AUTO(sourceId,
+                      resolveVYObject(edges[0]->sub_labels[0].values));
       auto read_procedure =
           [&]() -> boost::leaf::result<
                     std::vector<std::vector<std::shared_ptr<arrow::Table>>>> {
