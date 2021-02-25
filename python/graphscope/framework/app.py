@@ -271,7 +271,9 @@ class App(object):
         self._saved_signature = self.signature
 
     def __repr__(self):
-        return f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo}, bounded_graph: {str(self._graph)}>"
+        s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo}"
+        s += f"bounded_graph: {str(self._graph)}>"
+        return s
 
     @property
     def key(self):

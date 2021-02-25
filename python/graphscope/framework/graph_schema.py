@@ -129,7 +129,8 @@ class GraphSchema:
             self._vdata_type != types_pb2.INVALID
             and self._edata_type != types_pb2.INVALID
         ):
-            s += f"vdata_type: {types_pb2.DataType.Name(self._vdata_type)}\nedata_type: {types_pb2.DataType.Name(self._edata_type)}\n"
+            s += f"vdata_type: {types_pb2.DataType.Name(self._vdata_type)}\n"
+            s += f"edata_type: {types_pb2.DataType.Name(self._edata_type)}\n"
         for index, label in enumerate(self._vertex_labels):
             props = list(self._vertex_properties[index].keys())
             s += f"label: {label}\ntype: VERTEX\nproperties: {props}\n\n"
