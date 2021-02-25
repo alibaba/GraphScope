@@ -346,7 +346,6 @@ def test_serialize_roundtrip(p2p_property_dir):
         generate_eid=False,
     )
     graph.serialize("/tmp/serialize")
-    graph.unload()
     new_graph = Graph.deserialize("/tmp/serialize", sess)
     pg = new_graph.project_to_simple(0, 0, 0, 2)
     ctx = graphscope.sssp(pg, src=6)
