@@ -21,6 +21,7 @@ import os
 
 import numpy as np
 import pytest
+import vineyard
 
 import graphscope
 from graphscope import property_sssp
