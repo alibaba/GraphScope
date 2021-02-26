@@ -45,9 +45,9 @@ aws_workers_template = "https://s3.us-west-2.amazonaws.com/amazon-eks/cloudforma
 
 def process_args(cloud_type):
     config = {}
-    config["access_key_id"] = click.prompt("Your access_key_id", type=str)
-    config["secret_access_key"] = click.prompt("Your secret_access_key", type=str)
-    config["region"] = click.prompt("Your region", type=str)
+    config["access_key_id"] = click.prompt("Your access_key_id please", type=str)
+    config["secret_access_key"] = click.prompt("Your secret_access_key please", type=str)
+    config["region"] = click.prompt("Your region please", type=str)
     config["cluster_name"] = click.prompt("The cluster name you want to use or create", type=str)
     default_k8s_version = ("1.18" if cloud_type == "aws" else "1.18.8-aliyun.1")
     config["k8s_version"] = click.prompt("k8s version, default",
@@ -586,22 +586,22 @@ class AliyunLauncher(Launcher):
                 sys.exit(1)
 
 
-if __name__ == "__main__":
-    """Parse command line flags and do operations."""
-    parser = argparse.ArgumentParser(
-        description="Script to launch a cluster on aliyun or aws."
-    )
-    parser.add_argument("--type", type=str)
-    args = parser.parse_args()
-
-    if args.type == "aws":
-        kwargs = process_args(args.type)
+@click.command()
+@click.option("--cloud_type", type=click.Choice(["aws", "aliyun"], case_sensitive=False), 
+              help="Cloud type to create cluster.")
+def launch(cloud_type):
+    """Utility module to launch cluster on aliyun or aws."""
+    if cloud_type == "aws":
+        kwargs = process_args(cloud_type)
         launcher = AWSLauncher(**kwargs)
-    elif args.type == "aliyun":
-        kwargs = process_args(args.type)
+    elif cloud_type == "aliyun":
+        kwargs = process_args(cloud_type)
         launcher = AliyunLauncher(**kwargs)
     else:
         print("Not support cloud type %s" % args.type)
 
     launcher.create_cluster()
 
+
+if __name__ == "__main__":
+    launch()
