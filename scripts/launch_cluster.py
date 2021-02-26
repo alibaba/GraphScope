@@ -63,19 +63,31 @@ def process_args(cloud_type):
 
 
 class Launcher(object):
-    pass
+    def launcher_cluster(self):
+        clusters = self._get_clusters()
+        if clusters and click.confim("Do you want to use existed cluster %s" % str(cluster)):
+            cluster_name = click.prompt("The cluster name you want to use", 
+                                        type=click.Choice(clusters, case_sensitive=False))
+        else:
+            config = self._get_cluster_config()
+            cluster = self._create_cluster(**config)
+            self._write_kube_config(cluster)
+    
+    def _get_cluster_config(self):
+        pass
+
+    def _create_cluster(**kw):
+        pass
+
+    def _write_kube_config(cluster):
+        pass
 
 
 class AWSLauncher(Launcher):
     def __init__(self,
                  access_key_id=None,
                  secret_access_key=None,
-                 region=None,
-                 cluster_name=None,
-                 k8s_version="1.18",
-                 instance_type="t2.medium",
-                 node_num=2,
-                 output_path=None):
+                 region=None):
         self._sess = boto3.session.Session(aws_access_key_id=access_key_id,
                                    aws_secret_access_key=secret_access_key,
                                    region_name=region)
@@ -89,13 +101,30 @@ class AWSLauncher(Launcher):
         self._node_group_min = 0
         self._node_group_max = node_num
         self._config_output_path = output_path
-
-    def get_role(self):
+    
+    def _get_clusters(self):
+        list_clusters_res = self._eks.list_cluster()
+        clusters = [arn.split("/")[-1] for arn in list_clusters_res["clusterArns"]]
+        return clusters
+    
+    def _get_cluster_config(self):
+        config = {}
+        config["cluster_name"] = click.prompt("The cluster name you want to create")
+        config["k8s_version"] = click.prompt("k8s version",
+                                         type=click.Choice(["1.18"], case_sensitive=False), default="1.18")
+        config["instance_type"] = click.prompt("Worker node instance type, defalut",
+                                               type=str, default="t2.medium")
+        config["node_num"] = click.prompt("Worker node num, default", type=int, default=2)
+        config_file = os.environ["HOME"] + "/.kube/config" 
+        config["output_path"] = click.prompt("output kube config location, default",
+                                              type=str, default=config_file)
+    
+    def get_role(self, role_name):
         iam = self._sess.client("iam")
         print("*** IAM role")
         try:
             # See if role exists.
-            role = iam.get_role(RoleName=self._k8s_admin_role_name)
+            role = iam.get_role(RoleName=role_name)
             print("IAM role exists.")
         except:
             print("IAM role does not exist.  Creating...")
@@ -114,21 +143,21 @@ class AWSLauncher(Launcher):
             })
             # Create role.
             iam.create_role(
-                RoleName=self._k8s_admin_role_name,
+                RoleName=role_name,
                 AssumeRolePolicyDocument=trust_policy,
                 Description="Role providing access to EKS resources from EKS"
             )
             # Add policies allowing access to EKS API.
             iam.attach_role_policy(
-                RoleName=self._k8s_admin_role_name,
+                RoleName=role_name,
                 PolicyArn="arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
             )
             iam.attach_role_policy(
-                RoleName=self._k8s_admin_role_name,
+                RoleName=role_name,
                 PolicyArn="arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
             )
 
-        role = iam.get_role(RoleName=self._k8s_admin_role_name)
+        role = iam.get_role(RoleName=role_name)
         return role["Role"]["Arn"]
     
     def stack_exists(self, cf, name):
@@ -138,19 +167,19 @@ class AWSLauncher(Launcher):
         except:
             return False
 
-    def get_vpc_stack(self):
+    def get_vpc_stack(self, vpc_name):
         # The VPC stack is a VPC and subnetworks to allow K8s communication.
         cf = self._sess.client("cloudformation")
 
         print("*** VPC stack")
-        if self.stack_exists(cf, self._vpc_name):
+        if self.stack_exists(cf, vpc_name):
             # stack exists, do nothing.
             print("VPC stack already exists.")
         else:
             print("Creating VPC stack...")
             # Create VPC stack.
             response = cf.create_stack(
-                StackName=self._vpc_name,
+                StackName=vpc_name,
                 TemplateURL=vpc_template,
                 Parameters=[],
                 TimeoutInMinutes=15,
@@ -182,7 +211,7 @@ class AWSLauncher(Launcher):
             print("VPC stack created")
 
         # Get output information from the stack: VPC ID, security group and subnet IDs.
-        stack = cf.describe_stacks(StackName=self._vpc_name)
+        stack = cf.describe_stacks(StackName=vpc_name)
         vpc_sg=None
         vpc_subnet_ids=None
         vpc_id=None
@@ -214,34 +243,49 @@ class AWSLauncher(Launcher):
             sys.exit(1)
         print("Cluster active.")
 
-    def create_cluster(self):
+    def _create_cluster(self, cluster_name=None, k8s_version=None, instance_type=None,
+                        node_num=2, **kw):
         eks = self._sess.client("eks")
         print("*** EKS cluster")
-        vpc_meta = self.get_vpc_stack()
+        vpc_name = cluster_name + "-vpc"
+        role_name = cluster_name + "-role"
+        workers_name = cluster_name + "-worker"
+        vpc_meta = self.get_vpc_stack(vpc_name)
+        role_arn = self.get_role(role_name)
+        print("Creating cluster (ETA ~10 minutes)...")
+        # Creating Kubernetes cluster.
+        response = eks.create_cluster(
+            name=cluster_name,
+            version=k8s_version,
+            roleArn=role_arn,
+            resourcesVpcConfig={
+                "subnetIds": vpc_meta["subnets"],
+                "securityGroupIds": [vpc_meta["sg"]],
+                'endpointPublicAccess': True
+            },
+        )
+        print("Cluster creation initiated.")
+        print("Waiting for completion (ETA 10 minutes)...")
+        self.create_cluster_completed(eks, cluster_name)
+
         try:
-            cluster = eks.describe_cluster(name=self._cluster_name)
-            print("Cluster already exists.")
+            waiter = eks.get_waiter('cluster_active')
+            res = waiter.wait(name=name)
         except:
-            print("Creating cluster (ETA ~10 minutes)...")
-            role_arn = self.get_role()
-            # Creating Kubernetes cluster.
-            response = eks.create_cluster(
-                name=self._cluster_name,
-                version=self._k8s_version,
-                roleArn=role_arn,
-                resourcesVpcConfig={
-                    "subnetIds": vpc_meta["subnets"],
-                    "securityGroupIds": [vpc_meta["sg"]],
-                    'endpointPublicAccess': True
-                },
-            )
-            print("Cluster creation initiated.")
-            print("Waiting for completion (ETA 10 minutes)...")
-            self.create_cluster_completed(eks, self._cluster_name)
+            print("Gave up waiting for cluster to create.")
+            sys.exit(1)
+        print("Cluster active.")
+
+        # create worker stack
+        self.create_worker_stack(workers_name, vpc_meta["id"], vpc_meta["sg"], vpc_meta["subnets"],
+                                 instance_type, node_num, config["path"])
+        
+        return cluster_name
 
         # Get cluster stuff
-        cluster = eks.describe_cluster(name=self._cluster_name)
+        cluster = eks.describe_cluster(name=cluster_name)
 
+        """
         # This spots the case where the cluster isn't in an expected state.
         status = cluster["cluster"]["status"]
         if status != "ACTIVE":
@@ -254,28 +298,30 @@ class AWSLauncher(Launcher):
         print("Cluster: %s" % cluster_ep)
         # write k8s config
         self.write_kube_config(cluster_cert, cluster_ep, self._output_path)
-        self.create_worker_stack(vpc_meta["id"], vpc_meta["sg"], vpc_meta["subnets"])
+        """
     
-    def create_worker_stack(self, vpc_id, vpc_sg, vpc_subnet_ids):
+    def create_worker_stack(self, cluster_name, vpc_id, vpc_sg, vpc_subnet_ids, output_path):
         # a stack of worker instances is created using CloudFormation.
         print("*** Workers stack.")
+        workers_name = cluster_name + "-workers"
         cf = self._sess.client("cloudformation")
-        if self.stack_exists(cf, self._workers_name):
+        if self.stack_exists(cf, workers_name):
             print("Workers stack already exists.")
         else:
             print("Creating workers stack...")
+            keypair_name = workers_name + "-keypair"
             # Create key pair
             ec2 = self._sess.client("ec2")
-            resp = ec2.create_key_pair(KeyName=self._cluster_name + "-keypair")
+            resp = ec2.create_key_pair(KeyName=keypair_name")
             # Create stack
             response = cf.create_stack(
-                StackName=self._workers_name,
+                StackName=workers_name,
                 TemplateURL=workers_template,
                 Capabilities=["CAPABILITY_IAM"],
                 Parameters=[
                     {
                         "ParameterKey": "ClusterName",
-                        "ParameterValue": self._cluster_name
+                        "ParameterValue": cluster_name
                     },
                     {
                         "ParameterKey": "ClusterControlPlaneSecurityGroup",
@@ -283,7 +329,7 @@ class AWSLauncher(Launcher):
                     },
                     {
                         "ParameterKey": "NodeGroupName",
-                        "ParameterValue": self._cluster_name + "-worker-group"
+                        "ParameterValue": cluster_name + "-worker-group"
                     },
                     {
                         "ParameterKey": "NodeAutoScalingGroupMinSize",
@@ -291,15 +337,15 @@ class AWSLauncher(Launcher):
                     },
                     {
                         "ParameterKey": "NodeAutoScalingGroupMaxSize",
-                        "ParameterValue": str(4)
+                        "ParameterValue": str(node_num)
                     },
                     {
                         "ParameterKey": "NodeInstanceType",
-                        "ParameterValue": self._instance_type
+                        "ParameterValue": instance_type
                     },
                     {
                         "ParameterKey": "KeyName",
-                        "ParameterValue": self._cluster_name + "-keypair"
+                        "ParameterValue": cluster_name + "-keypair"
                     },
                     {
                         "ParameterKey": "VpcId",
@@ -327,14 +373,14 @@ class AWSLauncher(Launcher):
                 # This is a water which waits for the stack deployment to complete.
                 waiter = cf.get_waiter('stack_create_complete')
                 res = waiter.wait(
-                    StackName=self._workers_name
+                    StackName=workers_name
                 )
             except:
                 print("Gave up waiting for stack to create.")
                 sys.exit(1)
             print("Worker stack created.")
 
-        stack = cf.describe_stacks(StackName=self._workers_name)
+        stack = cf.describe_stacks(StackName=workers_name)
         node_instance_role=None
         # We need NodeInstanceRole output.
         for v in stack["Stacks"][0]["Outputs"]:
@@ -350,10 +396,11 @@ class AWSLauncher(Launcher):
                 "      groups:\n        - system:bootstrappers\n        - system:nodes\n"
 
         print("Write config map...")
-        worker_auth = os.path.dirname(self._output_path) + "/aws-auth-cm.yaml"
-        with open(worker_auth, "w") as f:
+        worker_auth_path = output_path + "/aws-auth-cm.yaml"
+        with open(worker_auth_path, "w") as f:
             f.write(config)
         
+        """
         # add the worker resource to cluster
         resp = subprocess.call(["kubectl", "--kubeconfig=%s" % self._output_path, "apply",
                                 "-f", worker_auth])
@@ -363,8 +410,9 @@ class AWSLauncher(Launcher):
         
         print("kube config generated. Try:")
         print("  kubectl --kubeconfig=%s get nodes" % self._output_path)
+        """
 
-    def write_kube_config(self, cluster_cert, cluster_ep, path):
+    def write_kube_config(self, cluster_name, output_path):
         print("*** EKS configuration.")
         # This section creates a Kubernetes kubectl configuration file if one does
         # not exist.
@@ -402,7 +450,7 @@ class AWSLauncher(Launcher):
                                 "apiVersion": "client.authentication.k8s.io/v1alpha1",
                                 "command": "aws-iam-authenticator",
                                 "args": [
-                                    "token", "-i", self._cluster_name
+                                    "token", "-i", cluster_name
                                 ]
                             }
                         }
@@ -412,8 +460,9 @@ class AWSLauncher(Launcher):
 
             # Write in YAML.
             config_text=yaml.dump(cluster_config, default_flow_style=False)
-            open(path, "w").write(config_text)
-            print("Written to %s." % path)
+            with open(output_path, "w") as f:
+                f.write(config_text)
+            print("Written to %s." % output_path)
 
 
 class AliyunLauncher(Launcher):
