@@ -19,6 +19,7 @@
 """Utility module to launch cluster on aliyun or aws
 """
 
+import argparse
 import json
 import os
 import sys
@@ -30,8 +31,10 @@ import click
 import boto3
 
 from alibabacloud_cs20151215.client import Client as CS20151215Client
+from alibabacloud_ecs20140526.client import Client as Ecs20140526Client
 from alibabacloud_tea_openapi import models as open_api_models
 from alibabacloud_cs20151215 import models as cs20151215_models
+from alibabacloud_ecs20140526 import models as ecs_20140526_models
 from alibabacloud_vpc20160428.client import Client as Vpc20160428Client
 from alibabacloud_vpc20160428 import models as vpc_20160428_models
 
@@ -44,17 +47,17 @@ def process_args(cloud_type):
     config = {}
     config["access_key_id"] = click.prompt("Your access_key_id", type=str)
     config["secret_access_key"] = click.prompt("Your secret_access_key", type=str)
-    config["region"] = click.prmpt("Your region", type=str)
+    config["region"] = click.prompt("Your region", type=str)
     config["cluster_name"] = click.prompt("The cluster name you want to use or create", type=str)
-    default_k8s_version = ("1.18" if cloud_type == "aws" else "v1.18.8-aliyun.1")
-    config["k8s_version"] = click.prompt("k8s version, default %s" % default_k8s_version,
+    default_k8s_version = ("1.18" if cloud_type == "aws" else "1.18.8-aliyun.1")
+    config["k8s_version"] = click.prompt("k8s version, default",
                                          type=str, default=default_k8s_version)
     default_instance_type = ("t2.medium" if cloud_type == "aws" else "ecs.n4.large")
-    config["instance_type"] = click.prompt("Worker node instance type, defalut %s" % default_instance_type,
+    config["instance_type"] = click.prompt("Worker node instance type, defalut",
                                            type=str, default=default_instance_type)
-    config["node_num"] = click.prompt("Worker node num, default 2", type=int, defualt=2)
+    config["node_num"] = click.prompt("Worker node num, default", type=int, default=2)
     config_file = os.environ["HOME"] + "/.kube/config" 
-    config["output_path"] = click.prompt("output kube config location, default \"%s\"" % config_file,
+    config["output_path"] = click.prompt("output kube config location, default",
                                          type=str, default=config_file)
     return config
 
@@ -363,7 +366,6 @@ class AWSLauncher(Launcher):
 
     def write_kube_config(self, cluster_cert, cluster_ep, path):
         print("*** EKS configuration.")
-
         # This section creates a Kubernetes kubectl configuration file if one does
         # not exist.
         if os.path.isfile(path):
@@ -430,7 +432,7 @@ class AliyunLauncher(Launcher):
         self._cluster_name = cluster_name
         self._k8s_version = k8s_version
         self._vpc_name = cluster_name + "-vpc"
-        self._instance_type = self._instance_type
+        self._instance_type = instance_type
         self._node_num = node_num
         self._output_path = output_path
     
@@ -452,6 +454,7 @@ class AliyunLauncher(Launcher):
         if desc_response.body.total_count > 0:
             print("VPC already exists.")
             vpc_id = desc_response.body.vpcs.vpc[0].vpc_id
+            vswitch_ids=desc_response.body.vpcs.vpc[0].v_switch_ids.v_switch_id
         else:
             # create vpc
             print("Creating VPC and Switch...")
@@ -461,6 +464,16 @@ class AliyunLauncher(Launcher):
                 cidr_block='192.168.0.0/16'
             )
             vpc_id = client.create_vpc(create_vpc_request).body.vpc_id
+
+            # check vpc create complete
+            describe_vpcs_request = vpc_20160428_models.DescribeVpcsRequest(
+                vpc_id=vpc_id,
+                region_id=self._region
+            )
+            while True:
+                res = client.describe_vpcs(describe_vpcs_request)
+                if res.body.vpcs.vpc[0].status == "Available":
+                    break
 
             # get zones of region
             print("Creating switch...")
@@ -473,10 +486,12 @@ class AliyunLauncher(Launcher):
                 cidr_block='192.168.0.0/19',
                 vpc_id=vpc_id,
             )
-            client.create_vswitch(create_vswitch_request)
+            vswitch_res = client.create_vswitch(create_vswitch_request)
+            vswitch_ids = [vswitch_res.body.v_switch_id]
 
-        print("Get VPC ID: " + vpc_id)
-        return vpc_id
+        print("Get vpc ID: " + vpc_id)
+        print("Get vswitch ids: " + str(vswitch_ids))
+        return vpc_id, vswitch_ids
     
     def create_cluster(self):
         config = open_api_models.Config(
@@ -495,12 +510,20 @@ class AliyunLauncher(Launcher):
             print("Cluster already exists.")
             cluster_id = clusters[0].cluster_id
         else:
+            print("Create key-pair.")
+            config.endpoint = "ecs.%s.aliyuncs.com" % self._region
+            ecs = Ecs20140526Client(config)
+            create_key_pair_request = ecs_20140526_models.CreateKeyPairRequest(
+                region_id=self._region,
+                key_pair_name=self._cluster_name + '-KeyPair'
+            )
+            ecs.create_key_pair(create_key_pair_request)
+
             print("Creating Cluster.")
-            data_disk_0 = cs20151215_models.DataDisk()
             taint_0 = cs20151215_models.Taint()
             addon_0 = cs20151215_models.Addon()
             runtime = cs20151215_models.Runtime()
-            vpc_id = self.get_vpc()
+            vpc_id, vswitch_ids = self.get_vpc()
             create_cluster_request = cs20151215_models.CreateClusterRequest(
                 name=self._cluster_name,
                 region_id=self._region,
@@ -510,12 +533,14 @@ class AliyunLauncher(Launcher):
                 container_cidr='172.20.0.0/16',
                 service_cidr='172.21.0.0/20',
                 num_of_nodes=self._node_num,
+                key_pair=self._cluster_name + '-KeyPair',
                 addons=[
                     addon_0
                 ],
                 taints=[
                     taint_0
                 ],
+                vswitch_ids=vswitch_ids,
                 worker_instance_types=[
                     self._instance_type
                 ],
