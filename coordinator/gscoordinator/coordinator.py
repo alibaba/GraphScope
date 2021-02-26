@@ -424,10 +424,6 @@ class CoordinatorServiceServicer(
             )
 
     def CreateInteractiveInstance(self, request, context):
-        logger.info(
-            "Coordinator create interactive instance with object id %ld",
-            request.object_id,
-        )
         object_id = request.object_id
         gremlin_server_cpu = request.gremlin_server_cpu
         gremlin_server_mem = request.gremlin_server_mem

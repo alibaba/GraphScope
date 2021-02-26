@@ -30,9 +30,6 @@ JAVA_OPT="-server -verbose:gc -Xloggc:./gc.log -XX:+PrintGCDetails -XX:+PrintGCD
 cd /home/maxgraph
 mkdir -p /home/maxgraph/logs
 
-# wait for yarn ready1
-sleep 10
-
 set +x
 
 inner_config=/home/maxgraph/config/frontend.application.properties

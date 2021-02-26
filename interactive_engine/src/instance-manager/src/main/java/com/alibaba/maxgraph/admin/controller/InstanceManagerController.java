@@ -188,7 +188,7 @@ public class InstanceManagerController {
         long end = start + LAUNCH_MAX_TIME_LILL;
         while (start < end) {
             try {
-                Thread.sleep(10000);
+                Thread.sleep(1000);
                 client.submit("g.V().limit(1)").all().get();
                 client.close();
                 cluster.close();

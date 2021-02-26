@@ -894,7 +894,7 @@ class Session(object):
         handle_json_string = json.dumps(handle)
         return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")
 
-    def gremlin(self, graph, engine_params=None):
+    def gremlin(self, graph, engine_params=None, timeout_seconds=60):
         """Get a interactive engine handler to execute gremlin queries.
 
         Args:
@@ -902,6 +902,7 @@ class Session(object):
             engine_params (dict, optional): Configure startup parameters of interactive engine.
                 See a list of configurable keys in
                 `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`
+            timeout_seconds (int, optional): For waiting gremlin service ready. Defaults to 60.
 
         Raises:
             InvalidArgumentError: :code:`graph` is not a property graph or unloaded.
@@ -909,16 +910,34 @@ class Session(object):
         Returns:
             :class:`InteractiveQuery`
         """
+
         if (
             graph.vineyard_id in self._interactive_instance_dict
             and self._interactive_instance_dict[graph.vineyard_id] is not None
         ):
-            return self._interactive_instance_dict[graph.vineyard_id]
+            interactive_query = self._interactive_instance_dict[graph.vineyard_id]
+            if interactive_query.status == "running":
+                return interactive_query
+            elif interactive_query.status == "pending":
+                begin_time = time.time()
+                while True:
+                    time.sleep(1)
+                    if interactive_query.status == "running":
+                        return interactive_query
+                    if time.time() - begin_time >= timeout_seconds:
+                        raise TimeoutError("Launch gremlin server timeout")
 
         if not graph.loaded():
             raise InvalidArgumentError("The graph has already been unloaded")
         if not graph.graph_type == types_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
+
+        from graphscope.interactive.query import InteractiveQuery
+
+        interactive_query = InteractiveQuery(
+            graphscope_session=self, object_id=graph.vineyard_id
+        )
+        self._interactive_instance_dict[graph.vineyard_id] = interactive_query
 
         if engine_params is not None:
             engine_params = {
@@ -926,7 +945,6 @@ class Session(object):
             }
         else:
             engine_params = {}
-        from graphscope.interactive.query import InteractiveQuery
 
         response = self._grpc_client.create_interactive_engine(
             object_id=graph.vineyard_id,
@@ -935,13 +953,11 @@ class Session(object):
             gremlin_server_mem=gs_config.k8s_gie_gremlin_server_mem,
             engine_params=engine_params,
         )
-        interactive_query = InteractiveQuery(
-            graphscope_session=self,
-            object_id=graph.vineyard_id,
-            front_ip=response.frontend_host,
-            front_port=response.frontend_port,
+
+        interactive_query.set_frontend(
+            front_ip=response.frontend_host, front_port=response.frontend_port
         )
-        self._interactive_instance_dict[graph.vineyard_id] = interactive_query
+        interactive_query.status = "running"
         graph.attach_interactive_instance(interactive_query)
         return interactive_query
 

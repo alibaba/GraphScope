@@ -45,12 +45,19 @@ class InteractiveQuery(object):
     to get a `GraphTraversalSource` for further traversal.
     """
 
-    def __init__(self, graphscope_session, object_id, front_ip, front_port):
+    def __init__(
+        self, graphscope_session=None, object_id=None, front_ip=None, front_port=None
+    ):
+        self._status = "pending"
         self._graphscope_session = graphscope_session
         self._object_id = object_id
-        self._graph_url = "ws://%s:%d/gremlin" % (front_ip, front_port)
-        self._client = Client(self._graph_url, "g")
-        self._closed = False
+
+        if front_ip is not None and front_port is not None:
+            self._graph_url = "ws://%s:%d/gremlin" % (front_ip, front_port)
+            self._client = Client(self._graph_url, "g")
+        else:
+            self._graph_url = None
+            self._client = None
 
     def __repr__(self):
         return f"graphscope.InteractiveQuery <{self._graph_url}>"
@@ -69,9 +76,21 @@ class InteractiveQuery(object):
         """The gremlin graph url can be used with any standard gremlin console, e.g., thinkerpop."""
         return self._graph_url
 
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        self._status = value
+
+    def set_frontend(self, front_ip, front_port):
+        self._graph_url = "ws://%s:%d/gremlin" % (front_ip, front_port)
+        self._client = Client(self._graph_url, "g")
+
     def closed(self):
         """Return if the current instance is closed."""
-        return self._closed
+        return self._status == "closed"
 
     def subgraph(self, gremlin_script):
         """Create a subgraph, which input is the result of the execution of `gremlin_script`.
@@ -164,5 +183,5 @@ class InteractiveQuery(object):
     def close(self):
         """Close interactive instance and release resources"""
         if not self.closed():
-            self._closed = True
             self._graphscope_session._close_interactive_instance(self)
+            self._status = "closed"

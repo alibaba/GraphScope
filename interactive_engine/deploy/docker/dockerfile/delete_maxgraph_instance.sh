@@ -19,7 +19,7 @@ function _delete_maxgraph_instance {
     parallel_run "$kill_cmd" "$pod_hosts" $ENGINE_CONTAINER
 }
 function _delete_pod {
-    kubectl delete -f /root/maxgraph/pod_${object_id}.yaml
+    kubectl delete -f /root/maxgraph/pod_${object_id}.yaml --wait=false
     kubectl delete configmap config-${object_id}
     kubectl delete service gremlin-${object_id}
 }
