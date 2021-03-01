@@ -41,6 +41,22 @@ GraphScope 设计在 [Kubernetes (k8s)](https://kubernetes.io/) 管理的群集�
 ./scripts/prepare_env.sh
 ```
 
+### 部署AWS/阿里云
+除了本地 Kubernetes 集群设置脚本外，我们还提供了一个可在AWS或阿里云上创建 Kubernetes 集群的交互式脚本。这一脚本可以帮助用户使用已有的集群或创建新的 Kubernetes 集群，然后输出集群的配置文件。
+用法如下。
+
+- AWS
+```bash
+pip3 install click boto3
+./scripts/launch_cluster.py --cloud_type aws
+```
+
+- Aliyun
+```bash
+pip3 install click alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
+./script/alunch_cluster.py --cloud_type aliyun
+```
+
 ### 安装
 
 

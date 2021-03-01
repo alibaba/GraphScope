@@ -27,15 +27,25 @@ import time
 import yaml
 
 import click
-import boto3
 
-from alibabacloud_cs20151215.client import Client as CS20151215Client
-from alibabacloud_ecs20140526.client import Client as Ecs20140526Client
-from alibabacloud_tea_openapi import models as open_api_models
-from alibabacloud_cs20151215 import models as cs20151215_models
-from alibabacloud_ecs20140526 import models as ecs_20140526_models
-from alibabacloud_vpc20160428.client import Client as Vpc20160428Client
-from alibabacloud_vpc20160428 import models as vpc_20160428_models
+try:
+    import boto3
+except ImportError:
+    boto3 = None
+
+try:
+    from alibabacloud_cs20151215.client import Client as CS20151215Client
+    from alibabacloud_ecs20140526.client import Client as Ecs20140526Client
+    from alibabacloud_tea_openapi import models as open_api_models
+    from alibabacloud_cs20151215 import models as cs20151215_models
+    from alibabacloud_ecs20140526 import models as ecs_20140526_models
+    from alibabacloud_vpc20160428.client import Client as Vpc20160428Client
+    from alibabacloud_vpc20160428 import models as vpc_20160428_models
+except ImportError:
+    open_api_models = None
+    CS20151215Client = None 
+    Ecs20140526Client = None
+    Vpc20160428Client = None
 
 
 class Launcher(object):

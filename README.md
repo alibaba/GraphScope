@@ -40,6 +40,23 @@ On Windows, you may want to install [Ubuntu](https://ubuntu.com/blog/ubuntu-on-w
 ./scripts/prepare_env.sh
 ```
 
+### Deploy with AWS/Aliyun
+
+In addition to local cluster setup script, we also provide a interactive script to set up a Kubernetes cluster on AWS or Aliyun. The script would output a kube config file of the Kubernetes cluster.
+You can use the script as follows.
+
+- AWS
+```bash
+pip3 install click boto3
+./scripts/launch_cluster.py --cloud_type aws
+```
+
+- Aliyun
+```bash
+pip3 install click alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
+./script/alunch_cluster.py --cloud_type aliyun
+```
+
 ### Installation
 
 GraphScope client is distributed as a python package and can be easily installed with pip.
