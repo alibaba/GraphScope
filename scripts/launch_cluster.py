@@ -436,12 +436,12 @@ class AliyunLauncher(Launcher):
                  region=None,
                  output_path=None):
         config = open_api_models.Config(
-            access_key_id=self._access_key_id,
-            access_key_secret=self._secret_access_key
+            access_key_id=access_key_id,
+            access_key_secret=secret_access_key
         )
         config.endpoint = "cs.%s.aliyuncs.com" % region
         self._eks = CS20151215Client(config)
-        config.endpoint = "ecs.%s.aliyuncs.com" % self._region
+        config.endpoint = "ecs.%s.aliyuncs.com" % region
         self._ecs = Ecs20140526Client(config)
         config.endpoint = 'vpc.aliyuncs.com'
         self._vpc = Vpc20160428Client(config)
@@ -457,7 +457,7 @@ class AliyunLauncher(Launcher):
     def _get_cluster_config(self):
         config = {}
         config["cluster_name"] = click.prompt("The cluster name you want to create")
-        config["k8s_version"] = click.prompt("k8s version", type=click.Choice(["1.18.8-aliyun.1", "1.16.9-aliyun.1"], case_sensitive=False),
+        config["k8s_version"] = click.prompt("k8s version", type=click.Choice(["1.16.9-aliyun.1", "1.18.8-aliyun.1"], case_sensitive=False),
                                              default="1.18.8-aliyun.1")
         config["container_cidr"] = click.prompt("Container CIDR", default="172.20.0.0/16")
         config["service_cidr"] = click.prompt("Service CIDR", default="172.21.0.0/20")
@@ -465,7 +465,7 @@ class AliyunLauncher(Launcher):
         config["vswitch_cidr_block"] = click.prompt("vSwitch CIDR block", default="192.168.0.0/19")
         config["instance_type"] = click.prompt("Worker node instance type",
                                                type=str, default="ecs.g5.large")
-        config["node_num"] = click.prompt("Worker node num, default", type=int, default=2)
+        config["node_num"] = click.prompt("Worker node num", type=int, default=4)
         return config
 
     def _create_cluster(self, cluster_name=None, k8s_version=None, container_cidr=None,
@@ -580,6 +580,15 @@ class AliyunLauncher(Launcher):
             )
             vswitch_res = self._vpc.create_vswitch(create_vswitch_request)
             vswitch_ids = [vswitch_res.body.v_switch_id]
+            
+            # check vswitch create complete
+            describe_vswitch_request = vpc_20160428_models.DescribeVSwitchAttributesRequest(
+                v_switch_id=vswitch_ids[0]
+            )
+            while True:
+                res = self._vpc.describe_vswitch_attributes(describe_vswitch_request)
+                if res.body.status == "Available":
+                    break
 
         click.echo("Get vpc ID: " + vpc_id)
         click.echo("Get vswitch ids: " + str(vswitch_ids))
