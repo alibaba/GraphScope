@@ -165,6 +165,8 @@ class CoordinatorServiceServicer(
         Args:
             log_level (str): Log level of stdout handler
         """
+        if log_level:
+            log_level = log_level.upper()
         logger = logging.getLogger("graphscope")
         logger.setLevel(logging.DEBUG)
 
