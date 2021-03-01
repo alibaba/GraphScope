@@ -272,6 +272,12 @@ class DiGraph(Graph):
         self.graph.update(attr)
         self._saved_signature = self.signature
 
+    def __repr__(self):
+        s = "graphscope.nx.DiGraph\n"
+        s += "type: " + self.template_str.split("<")[0]
+        s += str(self._schema)
+        return s
+
     @property
     def adj(self):
         """Graph adjacency object holding the successors of each node.

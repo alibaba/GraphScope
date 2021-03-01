@@ -124,29 +124,19 @@ class GraphSchema:
             self._edge_relationships.append([("_", "_")])
 
     def __repr__(self):
-        s = "oid_type: {}\nvid_type: {}\n".format(self._oid_type, self._vid_type)
+        s = f"oid_type: {self._oid_type}\nvid_type: {self._vid_type}\n"
         if (
             self._vdata_type != types_pb2.INVALID
             and self._edata_type != types_pb2.INVALID
         ):
-            s += "vdata_type: {}\nedata_type: {}\n".format(
-                types_pb2.DataType.Name(self._vdata_type),
-                types_pb2.DataType.Name(self._edata_type),
-            )
+            s += f"vdata_type: {types_pb2.DataType.Name(self._vdata_type)}\n"
+            s += f"edata_type: {types_pb2.DataType.Name(self._edata_type)}\n"
         for index, label in enumerate(self._vertex_labels):
-            props = [
-                (prop_name, types_pb2.DataType.Name(prop_type))
-                for prop_name, prop_type in self._vertex_properties[index].items()
-            ]
-            s += "label: {}\ntype: VERTEX\nproperties: {}\n\n".format(label, props)
+            props = list(self._vertex_properties[index].keys())
+            s += f"label: {label}\ntype: VERTEX\nproperties: {props}\n\n"
         for index, label in enumerate(self.edge_labels):
-            props = [
-                (prop_name, types_pb2.DataType.Name(prop_type))
-                for prop_name, prop_type in self._edge_properties[index].items()
-            ]
-            s += """label: {}\ntype: EDGE\nproperties: {}\nrelations: {}\n\n""".format(
-                label, props, self._edge_relationships[index]
-            )
+            props = list(self._edge_properties[index].keys())
+            s += f"""label: {label}\ntype: EDGE\nproperties: {props}\nrelations: {self._edge_relationships[index]}\n\n"""
         return s
 
     def __str__(self):

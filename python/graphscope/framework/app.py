@@ -126,6 +126,9 @@ class AppAssets(object):
             # built_in apps has no gar resource.
             self._gar = None
 
+    def __repr__(self) -> str:
+        return f"graphscope.AppAssets <type: {self._type}, algorithm: {self._algo}>"
+
     @property
     def algo(self):
         """Algorithm name, e.g. sssp, pagerank.
@@ -268,7 +271,9 @@ class App(object):
         self._saved_signature = self.signature
 
     def __repr__(self):
-        return "<graphscope.App '%s'>" % self.key
+        s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo}"
+        s += f"bounded_graph: {str(self._graph)}>"
+        return s
 
     @property
     def key(self):

@@ -253,8 +253,11 @@ class Graph(object):
     def loaded(self):
         return self._key is not None
 
+    def __str__(self):
+        return f"graphscope.Graph   {self.template_str}"
+
     def __repr__(self):
-        return "<grape.Graph '%s'>" % self._key
+        return f"graphscope.Graph\ntype: {self.template_str.split('<')[0]}\n\n{str(self._schema)}"
 
     def unload(self):
         """Unload this graph from graphscope engine."""

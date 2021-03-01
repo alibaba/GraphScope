@@ -52,6 +52,9 @@ class InteractiveQuery(object):
         self._client = Client(self._graph_url, "g")
         self._closed = False
 
+    def __repr__(self):
+        return f"graphscope.InteractiveQuery <{self._graph_url}>"
+
     @property
     def object_id(self):
         """Get the vineyard object id of graph.
