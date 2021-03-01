@@ -619,22 +619,22 @@ class AliyunLauncher(Launcher):
 
 
 @click.command()
-@click.option("--cloud_type", type=click.Choice(["aws", "aliyun"], case_sensitive=False), 
+@click.option("--type", type=click.Choice(["aws", "aliyun"], case_sensitive=False), 
               help="Cloud type to launch cluster.")
-def launch(cloud_type):
+@click.option("--id", help="The access_key_id of cloud.")
+@click.option("--secret", help="The access_key_secret of cloud.")
+@click.option("--region", help="The region id.")
+@click.option("--output", help="The kube config file output path.", default=os.environ["HOME"] + "/.kube/config",
+              show_default=True)
+def launch(type, id, secret, region, output):
     """Utility script to launch cluster on AWS or Aliyun and output kube config file."""
 
-    access_key_id = click.prompt("Your access_key_id", type=str)
-    secret_access_key = click.prompt("Your secret_access_key", type=str)
-    region = click.prompt("Your region", type=str)
-    output_path = click.prompt("kube config output path, default",
-                               type=str, default=os.environ["HOME"] + "/.kube/config" )
-    if cloud_type == "aws":
-        launcher = AWSLauncher(access_key_id, secret_access_key, region, output_path)
-    elif cloud_type == "aliyun":
-        launcher = AliyunLauncher(access_key_id, secret_access_key, region, output_path)
+    if type == "aws":
+        launcher = AWSLauncher(id, secret, region, output)
+    elif type == "aliyun":
+        launcher = AliyunLauncher(id, secret, region, output)
     else:
-        click.echo("Not support cloud type %s" % args.type)
+        click.echo("Not support cloud type %s" % type)
 
     launcher.launch_cluster()
 
