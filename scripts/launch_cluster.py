@@ -83,8 +83,8 @@ class AWSLauncher(Launcher):
                  region=None,
                  output_path=None):
         sess = boto3.session.Session(aws_access_key_id=access_key_id,
-                                   aws_secret_access_key=secret_access_key,
-                                   region_name=region)
+                                     aws_secret_access_key=secret_access_key,
+                                     region_name=region)
         self._eks = sess.client("eks")
         self._cf = sess.client("cf")
         self._iam = sess.client("iam")
@@ -100,15 +100,14 @@ class AWSLauncher(Launcher):
     def _get_cluster_config(self):
         config = {}
         config["cluster_name"] = click.prompt("The cluster name you want to create")
-        config["k8s_version"] = click.prompt("k8s version",
-                                         type=click.Choice(["1.18"], case_sensitive=False), default="1.18")
-        config["instance_type"] = click.prompt("Worker node instance type, defalut",
-                                               type=str, default="t2.medium")
+        config["k8s_version"] = click.prompt("k8s version", type=click.Choice(["1.15", "1.16", "1.17", "1.18", "1.19"]),
+                                             default="1.18")
+        config["instance_type"] = click.prompt("Worker node instance type, defalut", default="t2.medium")
         config["node_num"] = click.prompt("Worker node num, default", type=int, default=4)
         return config
                     
     def _create_cluster(self, cluster_name=None, k8s_version=None, instance_type=None,
-                        node_num=2, **kw):
+                        node_num=4, **kw):
         click.echo("*** EKS cluster")
         vpc_name = cluster_name + "-vpc"
         role_name = cluster_name + "-role"
@@ -132,8 +131,8 @@ class AWSLauncher(Launcher):
         try:
             waiter = self._eks.get_waiter('cluster_active')
             res = waiter.wait(name=cluster_name)
-        except:
-            click.echo("Gave up waiting for cluster to create.")
+        except Exception as e:
+            click.echo("Error: %s, gave up waiting for cluster to create." % str(e))
             sys.exit(1)
         click.echo("Cluster active.")
 
@@ -210,10 +209,10 @@ class AWSLauncher(Launcher):
                 OnFailure='DELETE'
             )
             if response == None:
-                click.echo("Could not create VPC stack.")
+                click.echo("Response is None, create VPC stack failed.")
                 sys.exit(1)
             if not "StackId" in response:
-                click.echo("Could not create VPC stack.")
+                click.echo("StackId not in response, create VPC stack failed.")
                 sys.exit(1)
 
             # Get stack ID for later.
@@ -228,9 +227,9 @@ class AWSLauncher(Launcher):
                 waiter = self._cf.get_waiter('stack_create_complete')
                 # Wait for stack creation to complet
                 res = waiter.wait(StackName=vpc_name)
-            except:
+            except Exception as e:
                 # If waiter fails, that'll be the thing taking too long to deploy.
-                click.echo("Gave up waiting for stack to create.")
+                click.echo("Error: %s, gave up waiting for stack to create." % str(e))
                 sys.exit(1)
             click.echo("VPC stack created")
 
@@ -318,10 +317,10 @@ class AWSLauncher(Launcher):
             )
 
             if response == None:
-                click.echo("Could not create worker group stack.")
+                click.echo("Response is None, create worker group stack failed.")
                 sys.exit(1)
             if not "StackId" in response:
-                click.echo("Could not create worker group stack.")
+                click.echo("StackId not in response, create worker group stack failed.")
                 sys.exit(1)
             click.echo("Initiated workers (ETA 5-20 mins)...")
             click.echo("Waiting for workers stack creation to complete...")
@@ -332,8 +331,8 @@ class AWSLauncher(Launcher):
                 res = waiter.wait(
                     StackName=workers_name
                 )
-            except:
-                click.echo("Gave up waiting for stack to create.")
+            except Exception as e:
+                click.echo("Error: %s, gave up waiting for stack to create." % str(e))
                 sys.exit(1)
             click.echo("Worker stack created.")
 
@@ -446,8 +445,6 @@ class AliyunLauncher(Launcher):
         self._ecs = Ecs20140526Client(config)
         config.endpoint = 'vpc.aliyuncs.com'
         self._vpc = Vpc20160428Client(config)
-        # self._access_key_id = access_key_id
-        # self._secret_access_key = secret_access_key
         self._region = region
         self._output_path = output_path
 
@@ -460,8 +457,8 @@ class AliyunLauncher(Launcher):
     def _get_cluster_config(self):
         config = {}
         config["cluster_name"] = click.prompt("The cluster name you want to create")
-        config["k8s_version"] = click.prompt("k8s version",
-                                         type=click.Choice(["1.18.8-aliyun.1"], case_sensitive=False), default="1.18.8-aliyun.1")
+        config["k8s_version"] = click.prompt("k8s version", type=click.Choice(["1.18.8-aliyun.1", "1.16.9-aliyun.1"], case_sensitive=False),
+                                             default="1.18.8-aliyun.1")
         config["container_cidr"] = click.prompt("Container CIDR", default="172.20.0.0/16")
         config["service_cidr"] = click.prompt("Service CIDR", default="172.21.0.0/20")
         config["vpc_cidr_block"] = click.prompt("VPC CIDR block", default="192.168.0.0/16")
