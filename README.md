@@ -47,14 +47,14 @@ You can use the script as follows.
 
 - AWS
 ```bash
-pip3 install click boto3
+pip3 install click boto3 yaml
 ./scripts/launch_cluster.py --cloud_type aws
 ```
 
 - Aliyun
 ```bash
-pip3 install click alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
-./script/alunch_cluster.py --cloud_type aliyun
+pip3 install click yaml alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
+./script/launch_cluster.py --cloud_type aliyun
 ```
 
 ### Installation

@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Create a Kubernetes cluster on AWS/Aliyun using python sdk.  You should know that this
-# takes an absolute age, allow 20-30 mins.  That's just the speed stuff
-# deploys at.
+# Create a Kubernetes cluster on AWS/Aliyun using python sdk.  
 #
 # Notice: this script would require your AWS/Aliyun account's access_key_id and secret_access_key
-# to get access your clusters' information or create a Kubernetes cluster automatily, finaly output
+# to get access your clusters' information or create a Kubernetes cluster automatically, finaly output
 # a kube config of cluster. 
 # 
 # This assumes that kubectl and aws-iam-authenticator are in your PATH.
@@ -53,7 +51,7 @@ class Launcher(object):
         clusters = self._list_clusters()
         if clusters and click.confirm("Do you want to use existed clusters %s" % str(clusters)):
             cluster = click.prompt("The cluster name you want to use", 
-                                        type=click.Choice(clusters, case_sensitive=False))
+                                   type=click.Choice(clusters, case_sensitive=False))
         else:
             config = self._get_cluster_config()
             cluster = self._create_cluster(**config)
@@ -86,7 +84,7 @@ class AWSLauncher(Launcher):
                                      aws_secret_access_key=secret_access_key,
                                      region_name=region)
         self._eks = sess.client("eks")
-        self._cf = sess.client("cf")
+        self._cf = sess.client("cloudformation")
         self._iam = sess.client("iam")
         self._ec2 = sess.client("ec2")
         self._region = region
@@ -102,7 +100,7 @@ class AWSLauncher(Launcher):
         config["cluster_name"] = click.prompt("The cluster name you want to create")
         config["k8s_version"] = click.prompt("k8s version", type=click.Choice(["1.15", "1.16", "1.17", "1.18", "1.19"]),
                                              default="1.18")
-        config["instance_type"] = click.prompt("Worker node instance type, defalut", default="t2.medium")
+        config["instance_type"] = click.prompt("Worker node instance type, defalut", default="t4g.large")
         config["node_num"] = click.prompt("Worker node num, default", type=int, default=4)
         return config
                     
@@ -316,7 +314,7 @@ class AWSLauncher(Launcher):
                 OnFailure='DELETE'
             )
 
-            if response == None:
+            if response is None:
                 click.echo("Response is None, create worker group stack failed.")
                 sys.exit(1)
             if not "StackId" in response:
@@ -357,11 +355,12 @@ class AWSLauncher(Launcher):
             f.write(config)
         
         # add the worker resource to cluster
-        resp = subprocess.call(["kubectl", "--kubeconfig=%s" % self._output_path, "apply",
-                                "-f", worker_auth_file])
-        if resp != 0:
-            click.echo("The kubectl command didn't work.")
-            sys.exit(1)
+        try:
+            subprocess.run(["kubectl", "--kubeconfig=%s" % self._output_path, "apply",
+                           "-f", worker_auth_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except Exception as e:
+            click.echo("Error: %s" % str(e)) 
+            sys.exits(1)
         
         click.echo("kube config generated. Try:")
         click.echo("  kubectl --kubeconfig=%s get nodes" % self._output_path)
@@ -462,7 +461,7 @@ class AliyunLauncher(Launcher):
         config["container_cidr"] = click.prompt("Container CIDR", default="172.20.0.0/16")
         config["service_cidr"] = click.prompt("Service CIDR", default="172.21.0.0/20")
         config["vpc_cidr_block"] = click.prompt("VPC CIDR block", default="192.168.0.0/16")
-        config["vswitch_cidr_block"] = click.prompt("vSwitch CIDR block", default="192.168.0.0/19")
+        config["vswitch_cidr_block"] = click.prompt("VSwitch CIDR block", default="192.168.0.0/19")
         config["instance_type"] = click.prompt("Worker node instance type",
                                                type=str, default="ecs.g5.large")
         config["node_num"] = click.prompt("Worker node num", type=int, default=4)
@@ -595,6 +594,8 @@ class AliyunLauncher(Launcher):
         return vpc_id, vswitch_ids
     
     def wait_cluster_ready(self, cluster_id):
+        click.echo("Cluster creation initiated.")
+        click.echo("Waiting for completion (ETA 10 minutes)...")
         # Going to give up after 40 times 20 seconds.  
         cnt=40
         while True:
@@ -621,7 +622,7 @@ class AliyunLauncher(Launcher):
 @click.option("--cloud_type", type=click.Choice(["aws", "aliyun"], case_sensitive=False), 
               help="Cloud type to launch cluster.")
 def launch(cloud_type):
-    """Utility script to launch cluster on AWS or aliyun and output kube config file."""
+    """Utility script to launch cluster on AWS or Aliyun and output kube config file."""
 
     access_key_id = click.prompt("Your access_key_id", type=str)
     secret_access_key = click.prompt("Your secret_access_key", type=str)
