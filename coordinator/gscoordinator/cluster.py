@@ -289,6 +289,9 @@ class KubernetesClusterLauncher(Launcher):
     def get_pods_list(self):
         return self._pod_name_list
 
+    def waiting_for_delete(self):
+        return self._waiting_for_delete
+
     def get_namespace(self):
         return self._namespace
 

@@ -20,6 +20,7 @@ import datetime
 import logging
 import random
 from concurrent.futures import ThreadPoolExecutor
+from enum import Enum
 
 from gremlin_python.driver.client import Client
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
@@ -28,6 +29,15 @@ from gremlin_python.process.anonymous_traversal import traversal
 from graphscope.framework.loader import Loader
 
 logger = logging.getLogger("graphscope")
+
+
+class InteractiveQueryStatus(Enum):
+    """A enumeration class of current status of InteractiveQuery"""
+
+    Initializing = 0
+    Running = 1
+    Failed = 2
+    Closed = 3
 
 
 class InteractiveQuery(object):
@@ -45,12 +55,11 @@ class InteractiveQuery(object):
     to get a `GraphTraversalSource` for further traversal.
     """
 
-    def __init__(
-        self, graphscope_session=None, object_id=None, front_ip=None, front_port=None
-    ):
-        self._status = "pending"
-        self._graphscope_session = graphscope_session
+    def __init__(self, session, object_id, front_ip=None, front_port=None):
+        self._status = InteractiveQueryStatus.Initializing
+        self._session = session
         self._object_id = object_id
+        self._error_msg = ""
 
         if front_ip is not None and front_port is not None:
             self._graph_url = "ws://%s:%d/gremlin" % (front_ip, front_port)
@@ -84,13 +93,21 @@ class InteractiveQuery(object):
     def status(self, value):
         self._status = value
 
+    @property
+    def error_msg(self):
+        return self._error_msg
+
+    @error_msg.setter
+    def error_msg(self, error_msg):
+        self._error_msg = error_msg
+
     def set_frontend(self, front_ip, front_port):
         self._graph_url = "ws://%s:%d/gremlin" % (front_ip, front_port)
         self._client = Client(self._graph_url, "g")
 
     def closed(self):
         """Return if the current instance is closed."""
-        return self._status == "closed"
+        return self._status == InteractiveQueryStatus.Closed
 
     def subgraph(self, gremlin_script):
         """Create a subgraph, which input is the result of the execution of `gremlin_script`.
@@ -99,13 +116,15 @@ class InteractiveQuery(object):
             gremlin_script (str): gremlin script to be executed
 
         Raises:
-            RuntimeError: If the interactive instance is closed.
+            RuntimeError: If the interactive instance is not running.
 
         Returns:
             :class:`Graph`: constructed subgraph. which is also stored in vineyard.
         """
-        if self.closed():
-            raise RuntimeError("Interactive query is closed.")
+        if self._status != InteractiveQueryStatus.Running:
+            raise RuntimeError(
+                "Interactive query is unavailable with %s status.", str(self._status)
+            )
 
         now_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         random_num = random.randint(0, 10000000)
@@ -121,7 +140,7 @@ class InteractiveQuery(object):
             import vineyard
 
             # invoke load_from
-            g = self._graphscope_session.load_from(
+            g = self._session.load_from(
                 edges=[Loader(vineyard.ObjectName("__%s_edge_stream" % name))],
                 vertices=[Loader(vineyard.ObjectName("__%s_vertex_stream" % name))],
                 generate_eid=False,
@@ -150,19 +169,24 @@ class InteractiveQuery(object):
             query (str): Scripts that written in gremlin quering language.
 
         Raises:
-            RuntimeError: If the interactive script is closed
+            RuntimeError: If the interactive script is not running.
 
         Returns:
             execution results
         """
-        if self.closed():
-            raise RuntimeError("Interactive query is closed.")
+        if self._status != InteractiveQueryStatus.Running:
+            raise RuntimeError(
+                "Interactive query is unavailable with %s status.", str(self._status)
+            )
         return self._client.submit(query)
 
     def traversal_source(self):
         """Create a GraphTraversalSource and return.
         Once `g` has been created using a connection, we can start to write
         Gremlin traversals to query the remote graph.
+
+        Raises:
+            RuntimeError: If the interactive script is not running.
 
         Examples:
 
@@ -178,10 +202,14 @@ class InteractiveQuery(object):
         Returns:
             `GraphTraversalSource`
         """
+        if self._status != InteractiveQueryStatus.Running:
+            raise RuntimeError(
+                "Interactive query is unavailable with %s status.", str(self._status)
+            )
         return traversal().withRemote(DriverRemoteConnection(self._graph_url, "g"))
 
     def close(self):
         """Close interactive instance and release resources"""
         if not self.closed():
-            self._graphscope_session._close_interactive_instance(self)
-            self._status = "closed"
+            self._session._close_interactive_instance(self)
+            self._status = InteractiveQueryStatus.Closed

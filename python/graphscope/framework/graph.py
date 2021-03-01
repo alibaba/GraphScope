@@ -25,6 +25,7 @@ from typing import Mapping
 import vineyard
 
 from graphscope.client.session import get_session_by_id
+from graphscope.config import GSConfig as gs_config
 from graphscope.framework.dag_utils import add_column
 from graphscope.framework.dag_utils import copy_graph
 from graphscope.framework.dag_utils import create_graph
@@ -143,10 +144,11 @@ class Graph(object):
             self._saved_signature = self.signature
 
             # create gremlin server pod asynchronously
-            self._interactive_instance_launching_thread = threading.Thread(
-                target=self._launch_interactive_instance_impl, args=()
-            )
-            self._interactive_instance_launching_thread.start()
+            if gs_config.initializing_interactive_engine:
+                self._interactive_instance_launching_thread = threading.Thread(
+                    target=self._launch_interactive_instance_impl, args=()
+                )
+                self._interactive_instance_launching_thread.start()
 
     def __del__(self):
         # cleanly ignore all exceptions, cause session may already closed / destroyed.
@@ -172,7 +174,8 @@ class Graph(object):
             sess = get_session_by_id(self.session_id)
             sess.gremlin(self)
         except:  # noqa: E722
-            # suppress all exceptions
+            # Record error msg in `InteractiveQuery` when launching failed.
+            # Unexpect and suppress all exceptions here.
             pass
 
     @property
@@ -281,7 +284,10 @@ class Graph(object):
             raise RuntimeError("The graph is not registered in remote.")
         # close interactive instances first
         try:
-            if self._interactive_instance_launching_thread:
+            if (
+                self._interactive_instance_launching_thread is not None
+                and self._interactive_instance_launching_thread.is_alive()
+            ):
                 self._interactive_instance_launching_thread.join()
             self._close_interactive_instances()
         except Exception as e:

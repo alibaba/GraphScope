@@ -188,7 +188,7 @@ public class InstanceManagerController {
         long end = start + LAUNCH_MAX_TIME_LILL;
         while (start < end) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(10000);
                 client.submit("g.V().limit(1)").all().get();
                 client.close();
                 cluster.close();
@@ -274,7 +274,8 @@ public class InstanceManagerController {
     @RequestMapping("close")
     public CloseInstanceEntity closeInstance(@RequestParam("graphName") String graphName,
                                              @RequestParam("podNameList") String podNameList,
-                                             @RequestParam("containerName") String containerName) {
+                                             @RequestParam("containerName") String containerName,
+                                             @RequestParam("waitingForDelete") String waitingForDelete) {
         int errorCode;
         String errorMessage;
         try {
@@ -283,6 +284,7 @@ public class InstanceManagerController {
             closeCommandList.add(graphName);
             closeCommandList.add(podNameList);
             closeCommandList.add(containerName);
+            closeCommandList.add(waitingForDelete);
             String command = StringUtils.join(closeCommandList, " ");
             logger.info("start to close instance with command " + command);
             Process process = Runtime.getRuntime().exec(command);

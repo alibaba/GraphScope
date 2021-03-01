@@ -25,7 +25,6 @@ from urllib.parse import urlparse
 import numpy as np
 import pandas as pd
 
-from graphscope.client.session import get_default_session
 from graphscope.framework import utils
 from graphscope.framework.errors import check_argument
 from graphscope.proto import attr_value_pb2
@@ -276,6 +275,8 @@ class Loader(object):
         self.preprocessor = func
 
     def finish(self):
+        from graphscope.client.session import get_default_session
+
         if self.finished:
             return
         if self.preprocessor is not None:
