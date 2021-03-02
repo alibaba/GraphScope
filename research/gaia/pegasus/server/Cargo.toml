@@ -1,0 +1,23 @@
+[package]
+name = "pegasus_server"
+version = "0.1.0"
+authors = ["chenqiang.mcq <chenqiang.mcq@alibaba-inc.com>"]
+edition = "2018"
+
+[dependencies]
+pegasus_common = { path = "../common" }
+pegasus = { path = "../pegasus" }
+log = "0.4"
+crossbeam-utils = "0.6"
+#crossbeam-channel = "0.3.6"
+tonic = "0.3"
+prost = "0.6"
+tokio = { version = "0.2", features = ["macros", "sync"] }
+
+[build-dependencies]
+tonic-build = "0.3"
+
+[features]
+default = []
+# set to generate code in place(generated codes are in current codebase);
+gcip = []

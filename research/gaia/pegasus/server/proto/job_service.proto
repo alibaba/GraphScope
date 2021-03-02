@@ -1,0 +1,144 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+package protobuf;
+option java_package = "com.alibaba.pegasus.service.proto";
+option java_outer_classname = "PegasusClient";
+
+enum OpKind {
+    SOURCE          = 0;
+    EXCHANGE        = 1;
+    AGGREGATE       = 2;
+    BROADCAST       = 3;
+    MAP             = 4;
+    FLATMAP         = 5;
+    FILTER          = 6;
+    REPEAT          = 7;
+    SUBTASK         = 8;
+    SINK            = 9;
+    LIMIT           = 10;
+    SORT            = 11;
+    GROUP           = 12;
+    COUNT           = 13;
+    UNION           = 14;
+    DEDUP           = 15;
+}
+
+message Pipeline {}
+
+message Exchange {
+  bytes resource  = 1;
+}
+
+message Broadcast {
+  bytes resource = 1;
+}
+
+message Aggregate {
+  uint32 target = 1;
+}
+
+message ChannelDef {
+  oneof ch_kind {
+    Pipeline to_local    = 1;
+    Exchange to_another  = 2;
+    Broadcast to_others  = 3;
+    Aggregate to_one     = 4;
+  }
+}
+
+message OperatorDef {
+  OpKind  op_kind                     = 1;
+  ChannelDef ch                       = 2;
+  bytes resource                      = 3;
+  repeated NestedTask nested_task     = 4;
+}
+
+message NestedTask {
+  oneof param {
+    RepeatCond repeat_cond   = 1;
+    Joiner joiner            = 2;
+  }
+  repeated OperatorDef plan  = 3;
+}
+
+message RepeatCond {
+  uint32 times                  = 1;
+  bytes until                   = 2;
+}
+
+message Joiner {
+  bytes joiner                  = 1;
+}
+
+message Limit {
+  bool  global  = 1;
+  uint32 size   = 2;
+}
+
+message SortBy {
+  bool global = 1;
+  // negative limit means no limit;
+  int64 limit = 2;
+  bytes cmp   = 3;
+}
+
+enum AccumKind {
+  CNT       = 0;
+  SUM       = 1;
+  MAX       = 2;
+  MIN       = 3;
+  TO_LIST   = 4;
+  TO_SET    = 5;
+  CUSTOM    = 6;
+}
+
+message GroupBy {
+  bool global     = 1;
+  AccumKind accum = 2;
+  bytes get_key   = 3;
+  bytes resource  = 4;
+}
+
+message JobConfig {
+  uint64 job_id             = 1;
+  string job_name           = 2;
+  uint32 workers            = 3;
+  repeated uint64 servers   = 4;
+}
+
+message JobRequest {
+  JobConfig conf                = 1;
+  bytes source                  = 2;
+  repeated OperatorDef plan     = 3;
+}
+
+message JobError {
+  int32 err_code  = 1;
+  string err_msg  = 2;
+}
+
+message JobResponse {
+  uint64 job_id           = 1;
+  oneof result {
+    bytes data            = 2;
+    JobError err          = 3;
+  }
+}
+
+service JobService {
+  rpc Submit(JobRequest) returns(stream JobResponse) {}
+}
