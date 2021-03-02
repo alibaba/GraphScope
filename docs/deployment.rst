@@ -30,3 +30,20 @@ and learning engines.
 The image URIs for the engines are configurable, see more details in :ref:`Session`.
 
 
+Deploy with AWS/Aliyun
+----------------------------
+
+In addition to local cluster setup script, we also provide a interactive script to set up a Kubernetes cluster on AWS or Aliyun. The script would output a kube config file of the Kubernetes cluster.
+You can use the script as follows or use `./script/launch_cluster.py --help` to get the useage.
+
+* AWS
+.. code:: shell 
+
+    pip3 install click PyYaml boto3
+    ./scripts/launch_cluster.py --type aws --id your_access_key_id --secret your_access_key_secret --region your_region_name --output kube_config_path
+
+* Aliyun
+.. code:: shell 
+
+    pip3 install click PyYaml alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
+    ./scripts/launch_cluster.py --type aliyun --id your_access_key_id --secret your_access_key_secret --region your_region_id --output kube_config_path

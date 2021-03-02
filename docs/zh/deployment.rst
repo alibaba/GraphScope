@@ -24,3 +24,19 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 
 您可以根据需求配置引擎镜像地址等参数，请在 :ref:`Session` 中参阅更多的详细信息。
 
+
+### 在AWS/阿里云上部署集群
+我们提供了一个可在AWS或阿里云上创建 Kubernetes 集群的交互式脚本。这一脚本可以帮助用户使用已有的集群或创建新的 Kubernetes 集群，然后输出集群的配置文件。
+用法如下。你也可以通过 `./script/launch_cluster.py --help` 获得更详细的帮助信息。
+
+* AWS
+.. code:: shell 
+
+    pip3 install click PyYaml boto3
+    ./scripts/launch_cluster.py --type aws --id your_access_key_id --secret your_access_key_secret --region your_region_name --output kube_config_path
+
+* Aliyun
+.. code:: shell 
+
+    pip3 install click PyYaml alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
+    ./scripts/launch_cluster.py --type aliyun --id your_access_key_id --secret your_access_key_secret --region your_region_id --output kube_config_path

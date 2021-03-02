@@ -4,10 +4,10 @@
 # Create a Kubernetes cluster on AWS/Aliyun using python sdk.  
 #
 # Notice: this script would require your AWS/Aliyun account's access_key_id and secret_access_key
-# to get access your clusters' information or create a Kubernetes cluster automatically, finaly output
+# to get access your clusters' information or create a Kubernetes cluster automatically, finally output
 # a kube config of cluster. 
 # 
-# This assumes that kubectl and aws-iam-authenticator are in your PATH.
+# This script assumes that kubectl and aws-iam-authenticator are in your PATH.
 # 
 # This script works incrementally.  It creates things in sequence, and assumes
 # that if they already exist, they're good.  If you get things breaking
@@ -124,7 +124,7 @@ class AWSLauncher(Launcher):
                 'endpointPublicAccess': True
             },
         )
-        click.echo("Cluster creation initiated.")
+        click.echo("Start creating cluster.")
         click.echo("Waiting for completion (ETA 10 minutes)...")
         try:
             waiter = self._eks.get_waiter('cluster_active')
@@ -501,7 +501,7 @@ class AliyunLauncher(Launcher):
         )
         response = self._eks.create_cluster(create_cluster_request)
         cluster_id = response.body.cluster_id
-        click.echo("Cluster creation initiats.")
+        click.echo("Start creating cluster.")
         click.echo("Waiting for completion (ETA 10 minutes)...")
         # Wait for two minutes before doing the checking.
         time.sleep(120)
@@ -594,7 +594,7 @@ class AliyunLauncher(Launcher):
             # Get cluster status
             response = self._eks.describe_cluster_detail(cluster_id)
             status = response.body.state
-            click.echo("Cluster status: %s" % status)
+            click.echo("Checking cluster status: %s" % status)
             # Is it active? If so break out of loop
             if status == "running":
                 break
@@ -617,7 +617,14 @@ class AliyunLauncher(Launcher):
 @click.option("--output", help="The kube config file output path.", default=os.environ["HOME"] + "/.kube/config",
               show_default=True)
 def launch(type, id, secret, region, output):
-    """Utility script to launch cluster on AWS or Aliyun and output kube config file."""
+    """Interactive script to launch cluster on AWS or Aliyun and output kube config file.
+
+       Notice: this script would require your AWS/Aliyun account's access_key_id and secret_access_key
+       to get access your clusters' information or create a Kubernetes cluster automatically, finally output
+       a kube config of the cluster.
+
+       This script assumes that kubectl and aws-iam-authenticator are in your PATH.
+    """
 
     if type == "aws":
         launcher = AWSLauncher(id, secret, region, output)
