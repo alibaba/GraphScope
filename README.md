@@ -43,7 +43,7 @@ On Windows, you may want to install [Ubuntu](https://ubuntu.com/blog/ubuntu-on-w
 ### Deploy with AWS/Aliyun
 
 In addition to local cluster setup script, we also provide a interactive script to set up a Kubernetes cluster on AWS or Aliyun. The script would output a kube config file of the Kubernetes cluster.
-You can use the script as follows or use **./script/launch_cluster.py --help** to get the useage.
+You can use the script as follows or use `./script/launch_cluster.py --help` to get the useage.
 
 - AWS
 ```bash
