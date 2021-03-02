@@ -458,10 +458,10 @@ class AliyunLauncher(Launcher):
         config["cluster_name"] = click.prompt("The cluster name you want to create")
         config["k8s_version"] = click.prompt("k8s version", type=click.Choice(["1.16.9-aliyun.1", "1.18.8-aliyun.1"], case_sensitive=False),
                                              default="1.18.8-aliyun.1")
-        config["container_cidr"] = click.prompt("Container CIDR", default="172.20.0.0/16")
-        config["service_cidr"] = click.prompt("Service CIDR", default="172.21.0.0/20")
         config["vpc_cidr_block"] = click.prompt("VPC CIDR block", default="192.168.0.0/16")
         config["vswitch_cidr_block"] = click.prompt("VSwitch CIDR block", default="192.168.0.0/19")
+        config["container_cidr"] = click.prompt("Container CIDR", default="172.20.0.0/16")
+        config["service_cidr"] = click.prompt("Service CIDR", default="172.21.0.0/20")
         config["instance_type"] = click.prompt("Worker node instance type",
                                                type=str, default="ecs.g5.large")
         config["node_num"] = click.prompt("Worker node num", type=int, default=4)
@@ -478,9 +478,6 @@ class AliyunLauncher(Launcher):
         self._ecs.create_key_pair(create_key_pair_request)
 
         click.echo("Creating Cluster.")
-        taint_0 = cs20151215_models.Taint()
-        addon_0 = cs20151215_models.Addon()
-        runtime = cs20151215_models.Runtime()
         vpc_name = cluster_name + "-vpc"
         vpc_cidr_block = kw.pop("vpc_cidr_block")
         vswitch_cidr_block = kw.pop("vswitch_cidr_block")
@@ -489,18 +486,11 @@ class AliyunLauncher(Launcher):
             name=cluster_name,
             region_id=self._region,
             cluster_type='ManagedKubernetes',
-            runtime=runtime,
             vpcid=vpc_id,
             container_cidr=container_cidr,
             service_cidr=service_cidr,
             num_of_nodes=node_num,
             key_pair=keypair_name,
-            addons=[
-                addon_0
-            ],
-            taints=[
-                taint_0
-            ],
             vswitch_ids=vswitch_ids,
             worker_instance_types=[
                 instance_type
@@ -511,6 +501,8 @@ class AliyunLauncher(Launcher):
         )
         response = self._eks.create_cluster(create_cluster_request)
         cluster_id = response.body.cluster_id
+        click.echo("Cluster creation initiats.")
+        click.echo("Waiting for completion (ETA 10 minutes)...")
         # Wait for two minutes before doing the checking.
         time.sleep(120)
         self.wait_cluster_ready(cluster_id)
@@ -594,8 +586,6 @@ class AliyunLauncher(Launcher):
         return vpc_id, vswitch_ids
     
     def wait_cluster_ready(self, cluster_id):
-        click.echo("Cluster creation initiated.")
-        click.echo("Waiting for completion (ETA 10 minutes)...")
         # Going to give up after 40 times 20 seconds.  
         cnt=40
         while True:
