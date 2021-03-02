@@ -32,11 +32,11 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 * AWS
 .. code:: shell 
 
-    pip3 install click PyYaml boto3
+    pip3 install click PyYAML boto3
     ./scripts/launch_cluster.py --type aws --id your_access_key_id --secret your_access_key_secret --region your_region_name --output kube_config_path
 
 * Aliyun
 .. code:: shell 
 
-    pip3 install click PyYaml alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
+    pip3 install click PyYAML alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
     ./scripts/launch_cluster.py --type aliyun --id your_access_key_id --secret your_access_key_secret --region your_region_id --output kube_config_path
