@@ -1,0 +1,8 @@
+
+# Stable
+edition = "2018"
+match_block_trailing_comma = true
+use_try_shorthand = true
+binop_separator = "Front"
+use_small_heuristics = "Max"
+fn_args_layout = "Compressed"

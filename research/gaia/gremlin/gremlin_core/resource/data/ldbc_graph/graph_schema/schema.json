@@ -1,0 +1,472 @@
+{
+  "vertex_type_map": {
+    "PLACE": 0,
+    "PERSON": 1,
+    "COMMENT": 2,
+    "POST": 3,
+    "FORUM": 4,
+    "ORGANISATION": 5,
+    "TAGCLASS": 6,
+    "TAG": 7,
+    "COUNTRY": 8,
+    "CITY": 9,
+    "CONTINENT": 10,
+    "COMPANY": 11,
+    "UNIVERSITY": 12
+  },
+  "edge_type_map": {
+    "COMMENT_HASCREATOR_PERSON": [0, 2, 1],
+    "COMMENT_HASTAG_TAG": [1, 2, 7],
+    "COMMENT_ISLOCATEDIN_PLACE": [2, 2, 0],
+    "COMMENT_REPLYOF_COMMENT": [3, 2, 2],
+    "COMMENT_REPLYOF_POST": [4, 2, 3],
+    "FORUM_CONTAINEROF_POST": [5, 4, 3],
+    "FORUM_HASMEMBER_PERSON": [6, 4, 1],
+    "FORUM_HASMODERATOR_PERSON": [7, 4, 1],
+    "FORUM_HASTAG_TAG": [8, 4, 7],
+    "ORGANISATION_ISLOCATEDIN_PLACE": [9, 5, 0],
+    "PERSON_HASINTEREST_TAG": [10, 1, 7],
+    "PERSON_ISLOCATEDIN_PLACE": [11, 1, 0],
+    "PERSON_KNOWS_PERSON": [12, 1, 1],
+    "PERSON_LIKES_COMMENT": [13, 1, 10],
+    "PERSON_LIKES_POST": [14, 1, 3],
+    "PERSON_STUDYAT_ORGANISATION": [15, 1, 5],
+    "PERSON_WORKAT_ORGANISATION": [16, 1, 5],
+    "PLACE_ISPARTOF_PLACE": [17, 0, 0],
+    "POST_HASCREATOR_PERSON": [18, 3, 1],
+    "POST_HASTAG_TAG": [19, 3, 7],
+    "POST_ISLOCATEDIN_PLACE": [20, 3, 0],
+    "TAG_HASTYPE_TAGCLASS": [21, 7, 6],
+    "TAGCLASS_ISSUBCLASSOF_TAGCLASS": [22, 6, 6]
+  },
+  "vertex_prop": {
+    "TAGCLASS": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "FORUM": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "title",
+        "String"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ]
+    ],
+    "POST": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "imageFile",
+        "String"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ],
+      [
+        "locationIP",
+        "String"
+      ],
+      [
+        "browserUsed",
+        "String"
+      ],
+      [
+        "language",
+        "String"
+      ],
+      [
+        "content",
+        "String"
+      ],
+      [
+        "length",
+        "Integer"
+      ]
+    ],
+    "PERSON": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "firstName",
+        "String"
+      ],
+      [
+        "lastName",
+        "String"
+      ],
+      [
+        "gender",
+        "String"
+      ],
+      [
+        "birthday",
+        "Date"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ],
+      [
+        "locationIP",
+        "String"
+      ],
+      [
+        "browserUsed",
+        "String"
+      ]
+    ],
+    "TAG": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "PLACE": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ],
+      [
+        "~LABEL",
+        "LABEL"
+      ]
+    ],
+    "ORGANISATION": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "~LABEL",
+        "LABEL"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "COMMENT": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ],
+      [
+        "locationIP",
+        "String"
+      ],
+      [
+        "browserUsed",
+        "String"
+      ],
+      [
+        "content",
+        "String"
+      ],
+      [
+        "length",
+        "Integer"
+      ]
+    ]
+  },
+  "edge_prop": {
+    "COMMENT_HASCREATOR_PERSON": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "COMMENT_HASTAG_TAG": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "COMMENT_ISLOCATEDIN_PLACE": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "COMMENT_REPLYOF_COMMENT": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "COMMENT_REPLYOF_POST": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "FORUM_CONTAINEROF_POST": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "FORUM_HASMEMBER_PERSON": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ],
+      [
+        "joinDate",
+        "Date"
+      ]
+    ],
+    "FORUM_HASMODERATOR_PERSON": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "FORUM_HASTAG_TAG": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "ORGANISATION_ISLOCATEDIN_PLACE": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "PERSON_HASINTEREST_TAG": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "PERSON_ISLOCATEDIN_PLACE": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "PERSON_KNOWS_PERSON": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ]
+    ],
+    "PERSON_LIKES_COMMENT": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ]
+    ],
+    "PERSON_LIKES_POST": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ]
+    ],
+    "PERSON_STUDYAT_ORGANISATION": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ],
+      [
+        "classYear",
+        "Integer"
+      ]
+    ],
+    "PERSON_WORKAT_ORGANISATION": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ],
+      [
+        "workFrom",
+        "Integer"
+      ]
+    ],
+    "PLACE_ISPARTOF_PLACE": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "POST_HASCREATOR_PERSON": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "POST_HASTAG_TAG": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "POST_ISLOCATEDIN_PLACE": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "TAG_HASTYPE_TAGCLASS": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ],
+    "TAGCLASS_ISSUBCLASSOF_TAGCLASS": [
+      [
+        "start_id",
+        "ID"
+      ],
+      [
+        "end_id",
+        "ID"
+      ]
+    ]
+  }
+}
