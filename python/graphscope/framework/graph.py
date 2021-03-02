@@ -19,11 +19,13 @@
 import hashlib
 import json
 import logging
+import threading
 from typing import Mapping
 
 import vineyard
 
 from graphscope.client.session import get_session_by_id
+from graphscope.config import GSConfig as gs_config
 from graphscope.framework.dag_utils import add_column
 from graphscope.framework.dag_utils import copy_graph
 from graphscope.framework.dag_utils import create_graph
@@ -112,6 +114,7 @@ class Graph(object):
         self._session_id = session_id
         self._detached = False
 
+        self._interactive_instance_launching_thread = None
         self._interactive_instance_list = []
         self._learning_instance_list = []
 
@@ -140,6 +143,13 @@ class Graph(object):
             # init saved_signature (must be after init schema)
             self._saved_signature = self.signature
 
+            # create gremlin server pod asynchronously
+            if gs_config.initializing_interactive_engine:
+                self._interactive_instance_launching_thread = threading.Thread(
+                    target=self._launch_interactive_instance_impl, args=()
+                )
+                self._interactive_instance_launching_thread.start()
+
     def __del__(self):
         # cleanly ignore all exceptions, cause session may already closed / destroyed.
         try:
@@ -158,6 +168,15 @@ class Graph(object):
         for instance in self._learning_instance_list:
             instance.close()
         self._learning_instance_list.clear()
+
+    def _launch_interactive_instance_impl(self):
+        try:
+            sess = get_session_by_id(self.session_id)
+            sess.gremlin(self)
+        except:  # noqa: E722
+            # Record error msg in `InteractiveQuery` when launching failed.
+            # Unexpect and suppress all exceptions here.
+            pass
 
     @property
     def op(self):
@@ -265,6 +284,11 @@ class Graph(object):
             raise RuntimeError("The graph is not registered in remote.")
         # close interactive instances first
         try:
+            if (
+                self._interactive_instance_launching_thread is not None
+                and self._interactive_instance_launching_thread.is_alive()
+            ):
+                self._interactive_instance_launching_thread.join()
             self._close_interactive_instances()
         except Exception as e:
             logger.error("Failed to close interactive instances: %s" % e)

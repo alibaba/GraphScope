@@ -77,4 +77,12 @@ class GSConfig(object):
     show_log = False
     log_level = "INFO"
 
+    # GIE engine params
+    engine_params = None
+
+    # GIE instance will be created automatically when a property graph loaded.
+    # Otherwise, you should create a GIE instance manually by `sess.gremlin` if
+    # `initializing_interactive_engine` is False
+    initializing_interactive_engine = True
+
     timeout_seconds = 600

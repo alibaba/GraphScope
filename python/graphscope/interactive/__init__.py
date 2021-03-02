@@ -18,8 +18,10 @@
 
 # The gremlinpython has a async event loop, which may conflicts with
 # jupyter notebook's event loop.
+
 import nest_asyncio
 
 nest_asyncio.apply()
 
 from graphscope.interactive.query import InteractiveQuery
+from graphscope.interactive.query import InteractiveQueryStatus

@@ -53,7 +53,6 @@ fi
 
 cat $inner_config
 
-sleep 10
 #server_id=$RANDOM
 flag="maxgraph"$object_id"executor"
 RUST_BACKTRACE=full /home/maxgraph/executor --config $inner_config $flag $server_id 1>> logs_$object_id/maxgraph-executor.out 2>> logs_$object_id/maxgraph-executor.err &

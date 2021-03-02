@@ -57,6 +57,8 @@ from graphscope.framework.errors import K8sError
 from graphscope.framework.errors import LearningEngineInternalError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.operation import Operation
+from graphscope.interactive.query import InteractiveQuery
+from graphscope.interactive.query import InteractiveQueryStatus
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
@@ -894,12 +896,27 @@ class Session(object):
         handle_json_string = json.dumps(handle)
         return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")
 
+    @set_defaults(gs_config)
     def gremlin(self, graph, engine_params=None):
         """Get a interactive engine handler to execute gremlin queries.
+
+        Note that this method will be executed implicitly when a property graph created
+        and cache a instance of InteractiveQuery in session if `initializing_interactive_engine`
+        is True. If you want to create a new instance under the same graph by different params,
+        you should close the instance first.
+
+        .. code:: python
+
+            >>> # close and recreate InteractiveQuery.
+            >>> interactive_query = sess.gremlin(g)
+            >>> interactive_query.close()
+            >>> interactive_query = sess.gremlin(g, engine_params={"xxx":"xxx"})
+
 
         Args:
             graph (:class:`Graph`): Use the graph to create interactive instance.
             engine_params (dict, optional): Configure startup parameters of interactive engine.
+                You can also configure this param by `graphscope.set_option(engine_params={})`.
                 See a list of configurable keys in
                 `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`
 
@@ -909,16 +926,37 @@ class Session(object):
         Returns:
             :class:`InteractiveQuery`
         """
+
+        # self._interactive_instance_dict[graph.vineyard_id] will be None if
+        # InteractiveQuery closed
         if (
             graph.vineyard_id in self._interactive_instance_dict
             and self._interactive_instance_dict[graph.vineyard_id] is not None
         ):
-            return self._interactive_instance_dict[graph.vineyard_id]
+            interactive_query = self._interactive_instance_dict[graph.vineyard_id]
+            if interactive_query.status == InteractiveQueryStatus.Running:
+                return interactive_query
+            elif interactive_query.status == InteractiveQueryStatus.Failed:
+                raise InteractiveEngineInternalError(interactive_query.error_msg)
+            else:
+                # Initializing.
+                # while True is ok, as the status is either running or failed eventually after timeout.
+                while True:
+                    time.sleep(1)
+                    if interactive_query.status == InteractiveQueryStatus.Running:
+                        return interactive_query
+                    elif interactive_query.status == InteractiveQueryStatus.Failed:
+                        raise InteractiveEngineInternalError(
+                            interactive_query.error_msg
+                        )
 
         if not graph.loaded():
             raise InvalidArgumentError("The graph has already been unloaded")
         if not graph.graph_type == types_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
+
+        interactive_query = InteractiveQuery(session=self, object_id=graph.vineyard_id)
+        self._interactive_instance_dict[graph.vineyard_id] = interactive_query
 
         if engine_params is not None:
             engine_params = {
@@ -926,23 +964,26 @@ class Session(object):
             }
         else:
             engine_params = {}
-        from graphscope.interactive.query import InteractiveQuery
 
-        response = self._grpc_client.create_interactive_engine(
-            object_id=graph.vineyard_id,
-            schema_path=graph.schema_path,
-            gremlin_server_cpu=gs_config.k8s_gie_gremlin_server_cpu,
-            gremlin_server_mem=gs_config.k8s_gie_gremlin_server_mem,
-            engine_params=engine_params,
-        )
-        interactive_query = InteractiveQuery(
-            graphscope_session=self,
-            object_id=graph.vineyard_id,
-            front_ip=response.frontend_host,
-            front_port=response.frontend_port,
-        )
-        self._interactive_instance_dict[graph.vineyard_id] = interactive_query
-        graph.attach_interactive_instance(interactive_query)
+        try:
+            response = self._grpc_client.create_interactive_engine(
+                object_id=graph.vineyard_id,
+                schema_path=graph.schema_path,
+                gremlin_server_cpu=gs_config.k8s_gie_gremlin_server_cpu,
+                gremlin_server_mem=gs_config.k8s_gie_gremlin_server_mem,
+                engine_params=engine_params,
+            )
+        except Exception as e:
+            interactive_query.status = InteractiveQueryStatus.Failed
+            interactive_query.error_msg = str(e)
+            raise InteractiveEngineInternalError(str(e)) from e
+        else:
+            interactive_query.set_frontend(
+                front_ip=response.frontend_host, front_port=response.frontend_port
+            )
+            interactive_query.status = InteractiveQueryStatus.Running
+            graph.attach_interactive_instance(interactive_query)
+
         return interactive_query
 
     def learning(self, graph, nodes=None, edges=None, gen_labels=None):
@@ -1093,6 +1134,8 @@ def set_option(**kwargs):
         - k8s_engine_cpu
         - k8s_engine_mem
         - k8s_waiting_for_delete
+        - engine_params
+        - initializing_interactive_engine
         - timeout_seconds
 
     Args:
@@ -1138,6 +1181,8 @@ def get_option(key):
         - k8s_engine_cpu
         - k8s_engine_mem
         - k8s_waiting_for_delete
+        - engine_params
+        - initializing_interactive_engine
         - timeout_seconds
 
     Args:

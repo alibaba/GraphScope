@@ -424,10 +424,6 @@ class CoordinatorServiceServicer(
             )
 
     def CreateInteractiveInstance(self, request, context):
-        logger.info(
-            "Coordinator create interactive instance with object id %ld",
-            request.object_id,
-        )
         object_id = request.object_id
         gremlin_server_cpu = request.gremlin_server_cpu
         gremlin_server_mem = request.gremlin_server_mem
@@ -493,9 +489,12 @@ class CoordinatorServiceServicer(
             self._gie_graph_manager_service_name,
             self._k8s_namespace,
         )
-        close_url = (
-            "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s"
-            % (manager_host, object_id, pod_name_list, ENGINE_CONTAINER)
+        close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
+            manager_host,
+            object_id,
+            pod_name_list,
+            ENGINE_CONTAINER,
+            str(self._launcher.waiting_for_delete()),
         )
         logger.info("Coordinator close interactive instance with url[%s]" % close_url)
         try:
