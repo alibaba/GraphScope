@@ -19,6 +19,7 @@
 
 import json
 import os
+import shutil
 import sys
 import subprocess
 import time
@@ -44,6 +45,21 @@ except ImportError:
     CS20151215Client = None 
     Ecs20140526Client = None
     Vpc20160428Client = None
+
+
+def check_file_exist(file):
+    if os.path.isfile(file):
+        click.echo("%s exist already, please rmove or backup it and run script again." % file)
+        sys.exit(1)
+
+
+def check_kubectl_installed():
+    if shutil.which("kubectl") is None:
+        click.echo("kubectl not found in PATH, you need to install kubectl.")
+        sys.exit(1)
+    elif shutil.which("aws-iam-authenticator") is None:
+        click.echo("aws-iam-authenticator not found in PATH, you need to install aws-iam-authenticator first.")
+        sys.exit(1)
 
 
 class Launcher(object):
@@ -206,7 +222,7 @@ class AWSLauncher(Launcher):
                 TimeoutInMinutes=15,
                 OnFailure='DELETE'
             )
-            if response == None:
+            if response is None:
                 click.echo("Response is None, create VPC stack failed.")
                 sys.exit(1)
             if not "StackId" in response:
@@ -357,9 +373,9 @@ class AWSLauncher(Launcher):
         # add the worker resource to cluster
         try:
             subprocess.run(["kubectl", "--kubeconfig=%s" % self._output_path, "apply",
-                           "-f", worker_auth_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        except Exception as e:
-            click.echo("Error: %s" % str(e)) 
+                           "-f", worker_auth_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        except subprocess.CalledProcessError as e:
+            click.echo("Error: %s" % e.stderr) 
             sys.exits(1)
         
         click.echo("kube config generated. Try:")
@@ -604,16 +620,16 @@ class AliyunLauncher(Launcher):
             # Maybe give up after so many goes.
             cnt = cnt - 1
             if cnt <= 0:
-                click.echo("Given up waiting for cluster to go RINNING.")
+                click.echo("Given up waiting for cluster to go RUNNING.")
                 sys.exit(1)
 
 
 @click.command()
-@click.option("--type", type=click.Choice(["aws", "aliyun"], case_sensitive=False), 
-              help="Cloud type to launch cluster.")
-@click.option("--id", help="The access_key_id of cloud.")
-@click.option("--secret", help="The access_key_secret of cloud.")
-@click.option("--region", help="The region id.")
+@click.option("-t", "--type", "type", type=click.Choice(["aws", "aliyun"], case_sensitive=False), 
+              help="Cloud type to launch cluster.", required=True)
+@click.option("--id", help="The access_key_id of cloud.", required=True)
+@click.option("--secret", help="The access_key_secret of cloud.", required=True)
+@click.option("--region", help="The region id.", required=True)
 @click.option("--output", help="The kube config file output path.", default=os.environ["HOME"] + "/.kube/config",
               show_default=True)
 def launch(type, id, secret, region, output):
@@ -626,9 +642,15 @@ def launch(type, id, secret, region, output):
        This script assumes that kubectl and aws-iam-authenticator are in your PATH.
     """
 
+    check_file_exist(output)
+    check_kubectl_installed()
     if type == "aws":
+        if boto3 is None:
+            click.echo("boto3 module not found, please install by \"pip3 install boto3\".")
         launcher = AWSLauncher(id, secret, region, output)
     elif type == "aliyun":
+        if CS20151215Client is None:
+            click.echo("aliyun sdk not found, please install by \"pip3 install alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428\".")
         launcher = AliyunLauncher(id, secret, region, output)
     else:
         click.echo("Not support cloud type %s" % type)
