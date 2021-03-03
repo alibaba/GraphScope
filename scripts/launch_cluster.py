@@ -52,7 +52,7 @@ def check_requirements(cloud_type, file_path):
     click.echo("Checking requirements...")
     if os.path.isfile(file_path):
         click.echo(
-            "* %s already existed, please remove or mak a backup." % file_path
+            "* %s already existed, please remove or make a backup." % file_path
         )
         ready = False
 
