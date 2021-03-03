@@ -1,9 +1,9 @@
 Deployment
 ============
 
-The engines of GraphScope are distributed as a docker image. 
+The engines of GraphScope are distributed as a docker image.
 The `graphscope` python client will pull the image if they are not present.
-If you run GraphScope on a k8s cluster, make sure the cluster is able 
+If you run GraphScope on a k8s cluster, make sure the cluster is able
 to access the public registry.
 
 A session encapsulates the control and state of the GraphScope engines.
@@ -23,7 +23,7 @@ A cluster on k8s contains a pod running an etcd container for meta-data syncing,
 pod running the Coordinator, and a replica set of GraphScope engines.
 
 The Coordinator in GraphScope is the endpoint of the backend. It
-manages the connections from python client via grpc, 
+manages the connections from python client via grpc,
 and takes responsibility for applying or releasing the pods for interactive, analytical
 and learning engines.
 
@@ -37,13 +37,13 @@ In addition to local cluster setup script, we also provide a interactive script 
 You can use the script as follows or use `./script/launch_cluster.py --help` to get the useage.
 
 * AWS
-.. code:: shell 
+.. code:: shell
 
     pip3 install click PyYAML boto3
     ./scripts/launch_cluster.py --type aws --id your_access_key_id --secret your_access_key_secret --region your_region_name --output kube_config_path
 
 * Aliyun
-.. code:: shell 
+.. code:: shell
 
     pip3 install click PyYAML alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
     ./scripts/launch_cluster.py --type aliyun --id your_access_key_id --secret your_access_key_secret --region your_region_id --output kube_config_path
