@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,12 +25,15 @@ import org.apache.tinkerpop.gremlin.server.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class GremlinResultProcessor implements ResultProcessor {
     private static Logger logger = LoggerFactory.getLogger(GremlinResultProcessor.class);
     private Context writeResult;
-    private boolean hasResult = false;
+    private List<Object> resultCollectors = new ArrayList<>();
+    private boolean locked = false;
 
     public GremlinResultProcessor(Context writeResult) {
         this.writeResult = writeResult;
@@ -40,19 +43,16 @@ public class GremlinResultProcessor implements ResultProcessor {
     public void process(PegasusClient.JobResponse response) {
         synchronized (this) {
             try {
-                logger.info("start to process response {}", GremlinResult.Result.parseFrom(response.getData()));
-                if (!hasResult) {
-                    if (response.getResultCase() == PegasusClient.JobResponse.ResultCase.ERR) {
-                        MaxGraphOpProcessor.writeResultList(writeResult, Collections.EMPTY_LIST, ResponseStatusCode.SERVER_ERROR);
-                    } else {
-                        MaxGraphOpProcessor.writeResultList(writeResult, ResultParser.parseFrom(response), ResponseStatusCode.SUCCESS);
+                if (!locked) {
+                    logger.info("start to process response {}", GremlinResult.Result.parseFrom(response.getData()));
+                    if (response.getResultCase() == PegasusClient.JobResponse.ResultCase.DATA) {
+                        resultCollectors.addAll(ResultParser.parseFrom(response));
                     }
                 }
             } catch (Exception e) {
-                logger.error("exception is {}", e);
-                MaxGraphOpProcessor.writeResultList(writeResult, Collections.EMPTY_LIST, ResponseStatusCode.SERVER_ERROR);
-            } finally {
-                hasResult = true;
+                MaxGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(e.getMessage()), ResponseStatusCode.SERVER_ERROR);
+                // cannot write to this context any more
+                locked = true;
             }
         }
     }
@@ -60,10 +60,10 @@ public class GremlinResultProcessor implements ResultProcessor {
     @Override
     public void finish() {
         synchronized (this) {
-            if (!hasResult) {
+            if (!locked) {
                 logger.info("start to process finish");
-                MaxGraphOpProcessor.writeResultList(writeResult, Collections.EMPTY_LIST, ResponseStatusCode.SUCCESS);
-                hasResult = true;
+                MaxGraphOpProcessor.writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
+                locked = true;
             }
         }
     }
@@ -71,10 +71,10 @@ public class GremlinResultProcessor implements ResultProcessor {
     @Override
     public void error(Status status) {
         synchronized (this) {
-            if (!hasResult) {
+            if (!locked) {
                 logger.info("start to process error");
-                MaxGraphOpProcessor.writeResultList(writeResult, Collections.EMPTY_LIST, ResponseStatusCode.SERVER_ERROR);
-                hasResult = true;
+                MaxGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(status.toString()), ResponseStatusCode.SERVER_ERROR);
+                locked = true;
             }
         }
     }

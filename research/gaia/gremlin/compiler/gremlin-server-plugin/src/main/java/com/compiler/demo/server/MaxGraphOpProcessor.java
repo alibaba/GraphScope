@@ -1,10 +1,10 @@
 /**
  * This file is referred and derived from project apache/tinkerpop
- *
- *   https://github.com/apache/tinkerpop/blob/master/gremlin-server/src/main/java/org/apache/tinkerpop/gremlin/server/op/AbstractEvalOpProcessor.java
- *
+ * <p>
+ * https://github.com/apache/tinkerpop/blob/master/gremlin-server/src/main/java/org/apache/tinkerpop/gremlin/server/op/AbstractEvalOpProcessor.java
+ * <p>
  * which has the following license:
- *
+ * <p>
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -12,9 +12,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -156,10 +156,11 @@ public class MaxGraphOpProcessor extends StandardOpProcessor {
         final boolean useBinary = ctx.channel().attr(StateKey.USE_BINARY).get();
 
         if (statusCode == ResponseStatusCode.SERVER_ERROR) {
-            ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR).create());
-        }
-        if (resultList.isEmpty()) {
-            ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.NO_CONTENT).create());
+            ResponseMessage.Builder builder = ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR);
+            if (resultList.size() > 0) {
+                builder.statusMessage((String) resultList.get(0));
+            }
+            ctx.writeAndFlush(builder.create());
             return;
         }
 
