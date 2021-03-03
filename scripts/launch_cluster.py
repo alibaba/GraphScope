@@ -46,23 +46,39 @@ except ImportError:
     Vpc20160428Client = None
 
 
-def check_file_exist(file):
-    if os.path.isfile(file):
+def check_requirements(cloud_type, file_path):
+    # check output file is existed
+    ready = True
+    click.echo("Checking requirements...")
+    if os.path.isfile(file_path):
         click.echo(
-            "%s exist already, please rmove or backup it and run script again." % file
+            "* %s exist already, please rmove or backup it." % file_path
         )
-        sys.exit(1)
+        ready = False
 
-
-def check_kubectl_installed():
+    # check kubectl is installed.
     if shutil.which("kubectl") is None:
-        click.echo("kubectl not found in PATH, you need to install kubectl.")
-        sys.exit(1)
-    elif shutil.which("aws-iam-authenticator") is None:
-        click.echo(
-            "aws-iam-authenticator not found in PATH, you need to install aws-iam-authenticator first."
-        )
-        sys.exit(1)
+        click.echo("* kubectl not found in PATH, you need to install kubectl.")
+        ready = False
+
+    if cloud_type == "aws":
+        if boto3 is None:
+            click.echo(
+                "* boto3 module not found, please install by \"pip3 install boto3\"."
+            )
+            ready = False
+        if shutil.which("aws-iam-authenticator") is None:
+            click.echo(
+                "* aws-iam-authenticator not found in PATH, you need to install aws-iam-authenticator."
+            )
+            ready = False
+    elif cloud_type == "aliyun":
+        if CS20151215Client is None:
+            click.echo(
+                "* aliyun sdk not found, please install by \"pip3 install alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428\"."
+            )
+            ready = False
+    return ready
 
 
 class Launcher(object):
@@ -462,6 +478,7 @@ class AWSLauncher(Launcher):
 
         # Write in YAML.
         config_text = yaml.dump(cluster_config, default_flow_style=False)
+        os.makedirs(os.path.dirname(self._output_path), exist_ok=True)
         with open(self._output_path, "w") as f:
             f.write(config_text)
         click.echo("Written to %s." % self._output_path)
@@ -573,6 +590,7 @@ class AliyunLauncher(Launcher):
         config = self._eks.describe_cluster_user_kubeconfig(
             cluster_id, describe_cluster_user_kubeconfig_request
         ).body.config
+        os.makedirs(os.path.dirname(self._output_path), exist_ok=True)
         with open(self._output_path, "w") as f:
             f.write(config)
 
@@ -684,22 +702,21 @@ def launch(type, id, secret, region, output):
     to get access your clusters' information or create a Kubernetes cluster automatically, finally output
     a kube config of the cluster.
 
-    This script assumes that kubectl and aws-iam-authenticator are in your PATH.
+    This script assumes that kubectl in your PATH and if use AWS cluster, you also need to
+    install aws-iam-authenticator.
     """
 
-    check_file_exist(output)
-    check_kubectl_installed()
+    if not check_requirements(type, output):
+        click.echo(
+            "Requirements of the script not ready, please follow the promp to install requirement."
+       )
+        sys.exit(1)
+    else:
+        click.echo("Requirements fulfilled.")
+
     if type == "aws":
-        if boto3 is None:
-            click.echo(
-                "boto3 module not found, please install by \"pip3 install boto3\"."
-            )
         launcher = AWSLauncher(id, secret, region, output)
     elif type == "aliyun":
-        if CS20151215Client is None:
-            click.echo(
-                "aliyun sdk not found, please install by \"pip3 install alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428\"."
-            )
         launcher = AliyunLauncher(id, secret, region, output)
     else:
         click.echo("Not support cloud type %s" % type)
