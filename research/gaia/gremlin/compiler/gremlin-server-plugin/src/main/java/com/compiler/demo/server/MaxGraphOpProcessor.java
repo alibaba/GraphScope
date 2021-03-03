@@ -156,10 +156,11 @@ public class MaxGraphOpProcessor extends StandardOpProcessor {
         final boolean useBinary = ctx.channel().attr(StateKey.USE_BINARY).get();
 
         if (statusCode == ResponseStatusCode.SERVER_ERROR) {
-            ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR).create());
-        }
-        if (resultList.isEmpty()) {
-            ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.NO_CONTENT).create());
+            ResponseMessage.Builder builder = ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR);
+            if (resultList.size() > 0) {
+                builder.statusMessage((String) resultList.get(0));
+            }
+            ctx.writeAndFlush(builder.create());
             return;
         }
 
