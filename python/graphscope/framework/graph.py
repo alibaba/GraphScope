@@ -290,7 +290,10 @@ class Graph(object):
             ):
                 # join raises a RuntimeError if an attempt is made to join the current thread.
                 # this exception occurs when a object collected by gc mechanism contains a running thread.
-                if threading.current_thread() != self._interactive_instance_launching_thread:
+                if (
+                    threading.current_thread()
+                    != self._interactive_instance_launching_thread
+                ):
                     self._interactive_instance_launching_thread.join()
             self._close_interactive_instances()
         except Exception as e:
