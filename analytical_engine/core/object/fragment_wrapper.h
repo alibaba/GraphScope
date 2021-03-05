@@ -209,6 +209,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
 
     new_graph_def.set_key(dst_graph_name);
     new_graph_def.set_vineyard_id(frag_group_id);
+    new_graph_def.set_generate_eid(graph_def_.get_generate_eid());
 
     set_graph_def(new_frag, new_graph_def);
 

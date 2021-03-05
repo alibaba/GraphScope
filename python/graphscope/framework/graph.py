@@ -26,26 +26,11 @@ import vineyard
 
 from graphscope.client.session import get_session_by_id
 from graphscope.config import GSConfig as gs_config
-from graphscope.framework.dag_utils import add_column
-from graphscope.framework.dag_utils import copy_graph
-from graphscope.framework.dag_utils import create_graph
-from graphscope.framework.dag_utils import dynamic_to_arrow
-from graphscope.framework.dag_utils import graph_to_dataframe
-from graphscope.framework.dag_utils import graph_to_numpy
-from graphscope.framework.dag_utils import project_arrow_property_graph
-from graphscope.framework.dag_utils import unload_graph
+from graphscope.framework import dag_utils, utils, graph_utils
+
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
-from graphscope.framework.utils import b_to_attr
-from graphscope.framework.utils import data_type_to_cpp
-from graphscope.framework.utils import decode_dataframe
-from graphscope.framework.utils import decode_numpy
-from graphscope.framework.utils import i_to_attr
-from graphscope.framework.utils import normalize_data_type_str
-from graphscope.framework.utils import s_to_attr
-from graphscope.framework.utils import transform_labeled_vertex_property_data_selector
-from graphscope.framework.utils import transform_vertex_range
 from graphscope.proto import types_pb2
 from graphscope.proto.graph_def_pb2 import GraphDef
 
@@ -138,6 +123,7 @@ class Graph(object):
             self._vineyard_id = graph_def.vineyard_id
             self._graph_type = graph_def.graph_type
             self._directed = graph_def.directed
+            self._generate_eid = graph_def.generate_eid
             self._schema.get_schema_from_def(graph_def.schema_def)
             self._schema_path = graph_def.schema_path
             # init saved_signature (must be after init schema)
@@ -229,10 +215,10 @@ class Graph(object):
             raise RuntimeError("graph should be registered in remote.")
         graph_type = self._graph_type
         # transform str/string to std::string
-        oid_type = normalize_data_type_str(self._schema.oid_type)
+        oid_type = utils.normalize_data_type_str(self._schema.oid_type)
         vid_type = self._schema.vid_type
-        vdata_type = data_type_to_cpp(self._schema.vdata_type)
-        edata_type = data_type_to_cpp(self._schema.edata_type)
+        vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
+        edata_type = utils.data_type_to_cpp(self._schema.edata_type)
         if graph_type == types_pb2.ARROW_PROPERTY:
             template = f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
         elif graph_type == types_pb2.ARROW_PROJECTED:
@@ -297,7 +283,7 @@ class Graph(object):
         except Exception as e:
             logger.error("Failed to close learning instances: %s" % e)
         if not self._detached:
-            op = unload_graph(self)
+            op = dag_utils.unload_graph(self)
             op.eval()
         self._key = None
 
@@ -399,7 +385,7 @@ class Graph(object):
         if e_properties:
             edata_type = list(e_properties.values())[e_prop_id]
 
-        op = project_arrow_property_graph(
+        op = dag_utils.project_arrow_property_graph(
             self,
             v_label_id,
             v_prop_id,
@@ -432,7 +418,7 @@ class Graph(object):
             key: results._transform_selector(value) for key, value in selector.items()
         }
         selector = json.dumps(selector)
-        op = add_column(self, results, selector)
+        op = dag_utils.add_column(self, results, selector)
         graph_def = op.eval()
         return Graph(self.session_id, graph_def)
 
@@ -446,11 +432,11 @@ class Graph(object):
             `numpy.ndarray`
         """
         self.check_unmodified()
-        selector = transform_labeled_vertex_property_data_selector(self, selector)
-        vertex_range = transform_vertex_range(vertex_range)
-        op = graph_to_numpy(self, selector, vertex_range)
+        selector = utils.transform_labeled_vertex_property_data_selector(self, selector)
+        vertex_range = utils.transform_vertex_range(vertex_range)
+        op = dag_utils.graph_to_numpy(self, selector, vertex_range)
         ret = op.eval()
-        return decode_numpy(ret)
+        return utils.decode_numpy(ret)
 
     def to_dataframe(self, selector, vertex_range=None):
         """Select some elements of the graph and output as a pandas.DataFrame
@@ -468,15 +454,15 @@ class Graph(object):
             "selector of to_vineyard_dataframe must be a dict",
         )
         selector = {
-            key: transform_labeled_vertex_property_data_selector(self, value)
+            key: utils.transform_labeled_vertex_property_data_selector(self, value)
             for key, value in selector.items()
         }
         selector = json.dumps(selector)
-        vertex_range = transform_vertex_range(vertex_range)
+        vertex_range = utils.transform_vertex_range(vertex_range)
 
-        op = graph_to_dataframe(self, selector, vertex_range)
+        op = dag_utils.graph_to_dataframe(self, selector, vertex_range)
         ret = op.eval()
-        return decode_dataframe(ret)
+        return utils.decode_dataframe(ret)
 
     def is_directed(self):
         return self._directed
@@ -504,7 +490,7 @@ class Graph(object):
         if hasattr(incoming_graph, "_graph"):
             msg = "graph view can not convert to gs graph"
             raise TypeError(msg)
-        op = dynamic_to_arrow(incoming_graph)
+        op = dag_utils.dynamic_to_arrow(incoming_graph)
         graph_def = op.eval()
         return graph_def
 
@@ -519,7 +505,7 @@ class Graph(object):
         """
         check_argument(incoming_graph.graph_type == types_pb2.ARROW_PROPERTY)
         check_argument(incoming_graph.loaded())
-        op = copy_graph(incoming_graph)
+        op = dag_utils.copy_graph(incoming_graph)
         graph_def = op.eval()
         return graph_def
 
@@ -543,27 +529,27 @@ class Graph(object):
 
     def _from_vineyard_id(self, vineyard_id):
         config = {}
-        config[types_pb2.IS_FROM_VINEYARD_ID] = b_to_attr(True)
-        config[types_pb2.VINEYARD_ID] = i_to_attr(int(vineyard_id))
+        config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(True)
+        config[types_pb2.VINEYARD_ID] = utils.i_to_attr(int(vineyard_id))
         # FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard
         #
         # the metadata should be retrived from vineyard
-        config[types_pb2.OID_TYPE] = s_to_attr("int64_t")
-        config[types_pb2.VID_TYPE] = s_to_attr("uint64_t")
-        op = create_graph(self._session_id, types_pb2.ARROW_PROPERTY, attrs=config)
+        config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
+        config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
+        op = dag_utils.create_graph(self._session_id, types_pb2.ARROW_PROPERTY, attrs=config)
         graph_def = op.eval()
         return graph_def
 
     def _from_vineyard_name(self, vineyard_name):
         config = {}
-        config[types_pb2.IS_FROM_VINEYARD_ID] = b_to_attr(True)
-        config[types_pb2.VINEYARD_NAME] = s_to_attr(str(vineyard_name))
+        config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(True)
+        config[types_pb2.VINEYARD_NAME] = utils.s_to_attr(str(vineyard_name))
         # FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard
         #
         # the metadata should be retrived from vineyard
-        config[types_pb2.OID_TYPE] = s_to_attr("int64_t")
-        config[types_pb2.VID_TYPE] = s_to_attr("uint64_t")
-        op = create_graph(self._session_id, types_pb2.ARROW_PROPERTY, attrs=config)
+        config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
+        config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
+        op = dag_utils.create_graph(self._session_id, types_pb2.ARROW_PROPERTY, attrs=config)
         graph_def = op.eval()
         return graph_def
 
@@ -681,3 +667,24 @@ class Graph(object):
         # listen on the 1~2 hops operation of node
         graph.on_msg(graph.queryNeighbor)
         return graph
+
+    def add_vertices(self, vertices):
+        pass
+    
+    def add_edges(self, edges):
+        e_labels = graph_utils.normalize_parameter_edges(edges)
+        # Configurations inherited from input graph
+        # directed, oid_type, generate_eid
+        # CHECK:
+        # 1. edge's src/dst labels must existed in vertex_labels
+        # 2. label name not in existed edge labels
+        vertex_labels = self._schema.vertex_labels
+        edge_labels = self.schema.edge_labels
+        graph_utils.check_edge_validity(edges, vertex_labels)
+        for edge in edges:
+            check_argument(edge.label not in edge_labels, f"Duplicate label name with existing edge labels: {edge.label}")
+
+        config = graph_utils.assemble_op_config(e_labels, [], self._directed, self._schema.oid_type, self._generate_eid)
+        op = dag_utils.add_edges(self, attrs=config)
+        graph_def = op.eval()
+        return Graph(self.session_id, graph_def)

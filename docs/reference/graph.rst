@@ -24,6 +24,6 @@ Loader object
 Graph Functions
 ---------------
 
-.. currentmodule:: graphscope.framework.graph_utils
+.. currentmodule:: graphscope.framework.graph_builder
 
 .. autofunction:: load_from

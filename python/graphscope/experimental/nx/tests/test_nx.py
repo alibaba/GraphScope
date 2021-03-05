@@ -24,8 +24,8 @@ import graphscope
 import graphscope.experimental.nx as nx
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
-from graphscope.framework.graph_utils import g
-from graphscope.framework.graph_utils import load_from
+from graphscope.framework.graph_builder import g
+from graphscope.framework.graph_builder import load_from
 from graphscope.framework.loader import Loader
 from graphscope.proto import types_pb2
 

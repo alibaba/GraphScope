@@ -97,6 +97,35 @@ def create_graph(session_id, graph_type, **kwargs):
     )
     return op
 
+def add_edges(graph, **kwargs):
+    """Create an `CREATE_GRAPH` op, add op to default dag.
+
+    Args:
+        session_id (str): Refer to session that the graph will be create on.
+        graph_type (:enum:`GraphType`): GraphType defined in proto.types.proto.
+        **kwargs: additional properties respect to different `graph_type`.
+
+    Returns:
+        An op to create a graph in c++ side with necessary configurations.
+    """
+    config = {
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
+    }
+
+    if graph.graph_type == types_pb2.ARROW_PROPERTY:
+        attrs = kwargs.pop("attrs", None)
+        if attrs:
+            for k, v in attrs.items():
+                if isinstance(v, attr_value_pb2.AttrValue):
+                    config[k] = v
+    else:
+        raise ValueError(f"Not support add edges on graph type {graph.graph_type}")
+    op = Operation(
+        graph.session_id, types_pb2.ADD_EDGES, config=config, output_types=types_pb2.GRAPH
+    )
+    return op
+
+
 
 def dynamic_to_arrow(graph):
     """Create an op to transform a :class:`nx.Graph` object to :class:`Graph`.

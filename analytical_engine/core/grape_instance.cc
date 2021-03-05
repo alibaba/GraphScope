@@ -590,6 +590,29 @@ bl::result<rpc::GraphDef> GrapeInstance::copyGraph(
   return dst_wrapper->graph_def();
 }
 
+bl::result<rpc::GraphDef> GrapeInstance::addEdges(const rpc::GSParams& params) {
+  BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
+  BOOST_LEAF_AUTO(
+      src_wrapper,
+      object_manager_.GetObject<ILabeledFragmentWrapper>(graph_name));
+  if (frag_wrapper->graph_def().graph_type() != rpc::ARROW_PROPERTY) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "AddEdges is only avaiable for ArrowFragment");
+  }
+  std::string graph_name = "graph_" + generateId();
+
+  auto src_frag_id = frag_wrapper->id();
+  BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
+  BOOST_LEAF_AUTO(graph_utils,
+                  object_manager_.GetObject<PropertyGraphUtils>(type_sig));
+  BOOST_LEAF_AUTO(dst_wrapper,
+                  graph_utils->AddEdgesToGraph(src_frag_id, comm_spec_,
+                                               *client_, graph_name, params));
+  BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
+
+  return dst_wrapper->graph_def();
+}
+
 bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::graphToNumpy(
     const rpc::GSParams& params) {
   std::pair<std::string, std::string> range;
@@ -739,6 +762,11 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::COPY_GRAPH: {
     BOOST_LEAF_AUTO(graph_def, copyGraph(params));
+    r->set_graph_def(graph_def);
+    break;
+  }
+  case rpc::ADD_EDGES: {
+    BOOST_LEAF_AUTO(graph_def, addEdges(params));
     r->set_graph_def(graph_def);
     break;
   }

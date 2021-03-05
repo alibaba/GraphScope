@@ -82,12 +82,13 @@ enum OperationType {
   REPORT_GRAPH = 10;  // return scalar
   PROJECT_GRAPH = 11;
   COPY_GRAPH = 12;
+
   // data
   CONTEXT_TO_NUMPY = 50;
   CONTEXT_TO_DATAFRAME = 51;
   TO_VINEYARD_TENSOR=53;
   TO_VINEYARD_DATAFRAME=54;
-  ADD_COLUMN=55;
+  ADD_COLUMN=55;  // return graph, add a property to a kind of vertex.
 
   GRAPH_TO_NUMPY = 56;
   GRAPH_TO_DATAFRAME = 57;
@@ -194,8 +195,8 @@ enum ParamKey {
 }
 
 enum ModifyType {
-  ADD_NODES = 0;
-  ADD_EDGES = 1;
+  ADD_NODES = 0;  // return graph, add new label of vertices to a property graph
+  ADD_EDGES = 1;  // return graph, add new label of edges to a property graph
   DEL_NODES = 2;
   DEL_EDGES = 3;
   UPDATE_NODES = 4;
