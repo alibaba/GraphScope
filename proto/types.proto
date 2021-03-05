@@ -82,6 +82,8 @@ enum OperationType {
   REPORT_GRAPH = 10;  // return scalar
   PROJECT_GRAPH = 11;
   COPY_GRAPH = 12;
+  ADD_VERTICES = 0;  // return graph, add new label of vertices to a property graph
+  ADD_EDGES = 1;  // return graph, add new label of edges to a property graph
 
   // data
   CONTEXT_TO_NUMPY = 50;
@@ -195,12 +197,12 @@ enum ParamKey {
 }
 
 enum ModifyType {
-  ADD_NODES = 0;  // return graph, add new label of vertices to a property graph
-  ADD_EDGES = 1;  // return graph, add new label of edges to a property graph
-  DEL_NODES = 2;
-  DEL_EDGES = 3;
-  UPDATE_NODES = 4;
-  UPDATE_EDGES = 5;
+  NX_ADD_NODES = 0;
+  NX_ADD_EDGES = 1;
+  NX_DEL_NODES = 2;
+  NX_DEL_EDGES = 3;
+  NX_UPDATE_NODES = 4;
+  NX_UPDATE_EDGES = 5;
 }
 
 enum ReportType {

@@ -201,7 +201,7 @@ def modify_edges(graph, modify_type, edges):
 
     Args:
         graph (:class:`nx.Graph`): A nx graph.
-        modify_type (`type_pb2.(ADD_EDGES | DEL_EDGES | UPDATE_EDGES)`): The modify type
+        modify_type (`type_pb2.(NX_ADD_EDGES | NX_DEL_EDGES | NX_UPDATE_EDGES)`): The modify type
         edges (list): List of edges to be inserted into or delete from graph based on `modify_type`
 
     Returns:
@@ -226,7 +226,7 @@ def modify_vertices(graph, modify_type, vertices):
 
     Args:
         graph (:class:`nx.Graph`): A nx graph.
-        modify_type (`type_pb2.(ADD_NODES | DEL_NODES | UPDATE_NODES)`): The modify type
+        modify_type (`type_pb2.(NX_ADD_NODES | NX_DEL_NODES | NX_UPDATE_NODES)`): The modify type
         vertices (list): node list.
 
     Returns:
