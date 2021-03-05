@@ -672,7 +672,7 @@ class Graph(object):
         pass
     
     def add_edges(self, edges):
-        e_labels = graph_utils.normalize_parameter_edges(edges)
+        edges = graph_utils.normalize_parameter_edges(edges)
         # Configurations inherited from input graph
         # directed, oid_type, generate_eid
         # CHECK:
@@ -684,7 +684,7 @@ class Graph(object):
         for edge in edges:
             check_argument(edge.label not in edge_labels, f"Duplicate label name with existing edge labels: {edge.label}")
 
-        config = graph_utils.assemble_op_config(e_labels, [], self._directed, self._schema.oid_type, self._generate_eid)
+        config = graph_utils.assemble_op_config(edges , [], self._directed, self._schema.oid_type, self._generate_eid)
         op = dag_utils.add_edges(self, attrs=config)
         graph_def = op.eval()
         return Graph(self.session_id, graph_def)

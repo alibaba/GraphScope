@@ -109,6 +109,7 @@ def add_edges(graph, **kwargs):
         An op to create a graph in c++ side with necessary configurations.
     """
     config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
     }
 

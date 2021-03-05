@@ -82,8 +82,8 @@ enum OperationType {
   REPORT_GRAPH = 10;  // return scalar
   PROJECT_GRAPH = 11;
   COPY_GRAPH = 12;
-  ADD_VERTICES = 0;  // return graph, add new label of vertices to a property graph
-  ADD_EDGES = 1;  // return graph, add new label of edges to a property graph
+  ADD_VERTICES = 13;  // return graph, add new label of vertices to a property graph
+  ADD_EDGES = 14;  // return graph, add new label of edges to a property graph
 
   // data
   CONTEXT_TO_NUMPY = 50;

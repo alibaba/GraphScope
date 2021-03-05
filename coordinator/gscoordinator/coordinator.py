@@ -261,6 +261,7 @@ class CoordinatorServiceServicer(
             )
             or op.op == types_pb2.TRANSFORM_GRAPH
             or op.op == types_pb2.PROJECT_GRAPH
+            or op.op == types_pb2.ADD_EDGES
         ):
             try:
                 op = self._maybe_register_graph(op, request.session_id)
