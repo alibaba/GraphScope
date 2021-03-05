@@ -67,7 +67,7 @@ class PropertyGraphUtils : public GSObject {
         lib_path_(std::move(lib_path)),
         dl_handle_(nullptr),
         load_graph_(nullptr),
-        add_edges_to_graph(nullptr),
+        add_edges_to_graph_(nullptr),
         to_arrow_fragment_(nullptr),
         to_dynamic_fragment_(nullptr) {}
 

@@ -122,7 +122,7 @@ class ArrowFragmentLoader {
     std::vector<std::vector<std::shared_ptr<arrow::Table>>> e_tables;
     if (!efiles_.empty()) {
       auto load_e_procedure = [&]() {
-        return LoadEdgeTables(efiles_, comm_spec_.worker_id(),
+        return loadEdgeTables(efiles_, comm_spec_.worker_id(),
                               comm_spec_.worker_num());
       };
       BOOST_LEAF_AUTO(tmp_e,
@@ -130,7 +130,7 @@ class ArrowFragmentLoader {
       e_tables = tmp_e;
     } else {
       auto load_e_procedure = [&]() {
-        return LoadEdgeTables(graph_info_->edges, comm_spec_.worker_id(),
+        return loadEdgeTables(graph_info_->edges, comm_spec_.worker_id(),
                               comm_spec_.worker_num());
       };
       BOOST_LEAF_AUTO(tmp_e,
@@ -140,16 +140,16 @@ class ArrowFragmentLoader {
     return e_tables;
   }
 
-  boost::leaf::result<vindyard::ObjectID> AddEdges(ObjectID frag_id) {
+  boost::leaf::result<vineyard::ObjectID> AddEdges(vineyard::ObjectID frag_id) {
     BOOST_LEAF_AUTO(partitioner, initPartitioner());
-    auto partial_e_tables = LoadEdgeTables();
+    BOOST_LEAF_AUTO(partial_e_tables, LoadEdgeTables());
 
     auto basic_fragment_loader = std::make_shared<
         vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
         client_, comm_spec_, partitioner, directed_, true, generate_eid_);
-    auto frag = std::static_pointer_cast<ArrowFragment<oid_t, vid_t>>(
+    auto frag = std::static_pointer_cast<vineyard::ArrowFragment<oid_t, vid_t>>(
         client_.GetObject(frag_id));
-    PropertyGraphSchema schema = frag->schema();
+    auto schema = frag->schema();
     std::map<std::string, label_id_t> vertex_label_to_index;
     for (auto& entry : schema.vertex_entries()) {
       vertex_label_to_index[entry.label] = entry.id;
@@ -157,6 +157,7 @@ class ArrowFragmentLoader {
     basic_fragment_loader->set_vertex_label_to_index(
         std::move(vertex_label_to_index));
     basic_fragment_loader->set_vm_ptr(frag->GetVertexMap());
+    basic_fragment_loader->set_vertex_label_num(frag->vertex_label_num());
     for (auto& table_vec : partial_e_tables) {
       for (auto table : table_vec) {
         auto meta = table->schema()->metadata();
@@ -203,9 +204,8 @@ class ArrowFragmentLoader {
 
   boost::leaf::result<vineyard::ObjectID> LoadFragment() {
     BOOST_LEAF_AUTO(partitioner, initPartitioner());
-
-    auto partial_v_tables = LoadVertexTables();
-    auto partial_e_tables = LoadEdgeTables();
+    BOOST_LEAF_AUTO(partial_v_tables, LoadVertexTables());
+    BOOST_LEAF_AUTO(partial_e_tables, LoadEdgeTables());
 
     if (!partial_v_tables.empty()) {
       std::shared_ptr<
@@ -333,7 +333,7 @@ class ArrowFragmentLoader {
   }
 
   boost::leaf::result<vineyard::ObjectID> AddEdgesAsFragmentGroup(
-      ObjectID frag_id) {
+      vineyard::ObjectID frag_id) {
     BOOST_LEAF_AUTO(new_frag_id, AddEdges(frag_id));
     VY_OK_OR_RAISE(client_.Persist(new_frag_id));
     return vineyard::ConstructFragmentGroup(client_, new_frag_id, comm_spec_);
@@ -815,6 +815,12 @@ class ArrowFragmentLoader {
 
   bool directed_;
   bool generate_eid_;
+
+  std::function<void(vineyard::LocalIOAdaptor*)> io_deleter_ =
+      [](vineyard::LocalIOAdaptor* adaptor) {
+        VINEYARD_CHECK_OK(adaptor->Close());
+        delete adaptor;
+      };
 };
 
 }  // namespace gs
