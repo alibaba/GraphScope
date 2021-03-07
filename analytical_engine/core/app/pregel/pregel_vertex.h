@@ -55,13 +55,19 @@ class PregelVertex {
     compute_context_->set_vertex_value(*this, std::move(value));
   }
 
-  const VD_T& value() { return compute_context_->get_vertex_value(*this); }
+  const VD_T& value() {
+    return compute_context_->get_vertex_value(*this);
+  }
 
-  vertex_t vertex() const { return vertex_; }
+  virtual vertex_t vertex() const { return vertex_; }
 
-  adj_list_t outgoing_edges() { return fragment_->GetOutgoingAdjList(vertex_); }
+  virtual adj_list_t outgoing_edges() {
+    return fragment_->GetOutgoingAdjList(vertex_);
+  }
 
-  adj_list_t incoming_edges() { return fragment_->GetIncomingAdjList(vertex_); }
+  virtual adj_list_t incoming_edges() {
+    return fragment_->GetIncomingAdjList(vertex_);
+  }
 
   void send(const vertex_t& v, const MD_T& value) {
     compute_context_->send_message(v, value);
@@ -71,16 +77,18 @@ class PregelVertex {
     compute_context_->send_message(v, std::move(value));
   }
 
-  void vote_to_halt() { compute_context_->vote_to_halt(*this); }
+  virtual void vote_to_halt() { compute_context_->vote_to_halt(*this); }
 
-  void set_fragment(const fragment_t* fragment) { fragment_ = fragment; }
+  virtual void set_fragment(const fragment_t* fragment) {
+    fragment_ = fragment;
+  }
 
-  void set_compute_context(
+  virtual void set_compute_context(
       PregelComputeContext<fragment_t, VD_T, MD_T>* compute_comtext) {
     compute_context_ = compute_comtext;
   }
 
-  void set_vertex(vertex_t vertex) { vertex_ = vertex; }
+  virtual void set_vertex(vertex_t vertex) { vertex_ = vertex; }
 
  private:
   const fragment_t* fragment_;
