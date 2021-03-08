@@ -326,9 +326,6 @@ def process_edge(edge: EdgeLabel) -> attr_value_pb2.NameAttrList:
 
 
 def check_edge_validity(edges: Sequence[EdgeLabel], vertex_labels: Sequence[str]):
-    if not vertex_labels:
-        vertex_labels.append("_")
-
     for edge in edges:
         # Check source label and destination label
         check_argument(len(edge.sub_labels) != 0, "Edge label is malformed.")
@@ -339,25 +336,28 @@ def check_edge_validity(edges: Sequence[EdgeLabel], vertex_labels: Sequence[str]
                         "source label and destination label must be both specified or either unspecified"
                     )
 
-            # Handle default label. If edge doesn't specify label, then use default.
-            if not sub_label.source_label and not sub_label.destination_label:
-                check_argument(len(vertex_labels) == 1, "ambiguous vertex label")
-                if len(vertex_labels) == 1:
-                    sub_label.source_label = (
-                        sub_label.destination_label
-                    ) = vertex_labels[0]
-            check_argument(
-                sub_label.source_label in vertex_labels,
-                "source label not found in vertex labels",
-            )
-            check_argument(
-                sub_label.destination_label in vertex_labels,
-                "destination label not found in vertex labels",
-            )
             check_argument(
                 sub_label.source_vid != sub_label.destination_vid,
                 "source col and destination col cannot refer to the same col",
             )
+            # Handle default label. If edge doesn't specify label, then use default.
+            if not sub_label.source_label and not sub_label.destination_label:
+                check_argument(len(vertex_labels) <= 1, "ambiguous vertex label")
+                if len(vertex_labels) == 1:
+                    sub_label.source_label = vertex_labels[0]
+                    sub_label.destination_label = vertex_labels[0]
+                else:
+                    sub_label.source_label = "_"
+                    sub_label.destination_label = "_"
+            elif vertex_labels:
+                check_argument(
+                    sub_label.source_label in vertex_labels,
+                    "source label not found in vertex labels",
+                )
+                check_argument(
+                    sub_label.destination_label in vertex_labels,
+                    "destination label not found in vertex labels",
+                )
 
     return edges
 
