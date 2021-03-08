@@ -234,10 +234,11 @@ void ToDynamicFragment(
       });
 }
 
-void AddEdgesToGraph(vineyard::ObjectID frag_id,
-                     const grape::CommSpec& comm_spec, vineyard::Client& client,
-                     const std::string& graph_name,
-                     const gs::rpc::GSParams& params) {
+void AddEdgesToGraph(
+    vineyard::ObjectID frag_id, const grape::CommSpec& comm_spec,
+    vineyard::Client& client, const std::string& graph_name,
+    const gs::rpc::GSParams& params,
+    gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& fragment_wrapper) {
   using oid_t = typename _GRAPH_TYPE::oid_t;
   using vid_t = typename _GRAPH_TYPE::vid_t;
 
