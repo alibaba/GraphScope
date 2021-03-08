@@ -365,3 +365,35 @@ def test_serialize_roundtrip(p2p_property_dir):
         [[1.0, 260.0], [2.0, 229.0], [3.0, 310.0], [4.0, 256.0], [5.0, 303.0]]
     )
     assert np.all(ret == expect)
+
+
+def test_add_edges(modern_graph_data_dir):
+    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+    sess = graphscope.session(
+        num_workers=2,
+        k8s_gs_image=gs_image,
+        k8s_gie_graph_manager_image=gie_manager_image,
+        k8s_coordinator_cpu=0.5,
+        k8s_coordinator_mem="2500Mi",
+        k8s_vineyard_cpu=0.1,
+        k8s_vineyard_mem="512Mi",
+        k8s_engine_cpu=0.1,
+        k8s_engine_mem="1500Mi",
+        k8s_vineyard_shared_mem="2Gi",
+        k8s_etcd_cpu=2,
+        k8s_volumes=get_k8s_volumes(),
+    )
+    graph = load_modern_graph(sess, modern_graph_data_dir)
+    e = {"knows2": (
+        Loader(
+          os.path.join(modern_graph_data_dir, "knows.csv"),
+          header_row=True,
+          delimiter="|",
+        ),
+        ["weight"],
+        ("src_id", "person"),
+        ("dst_id", "person"),
+      )}
+
+    new_graph = graph.add_edges(e)
+    assert "knows2" in new_graph.schema.edge_labels

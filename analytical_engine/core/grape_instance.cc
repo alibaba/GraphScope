@@ -600,14 +600,15 @@ bl::result<rpc::GraphDef> GrapeInstance::addEdges(const rpc::GSParams& params) {
                     "AddEdges is only avaiable for ArrowFragment");
   }
 
-  auto src_frag_id = std::static_pointer_cast<vineyard::Object>(src_wrapper->fragment())->id();
+  auto src_frag_id =
+      std::static_pointer_cast<vineyard::Object>(src_wrapper->fragment())->id();
   BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
   BOOST_LEAF_AUTO(graph_utils,
                   object_manager_.GetObject<PropertyGraphUtils>(type_sig));
   std::string dst_graph_name = "graph_" + generateId();
-  BOOST_LEAF_AUTO(dst_wrapper,
-                  graph_utils->AddEdgesToGraph(src_frag_id, comm_spec_,
-                                               *client_, dst_graph_name, params));
+  BOOST_LEAF_AUTO(dst_wrapper, graph_utils->AddEdgesToGraph(
+                                   src_frag_id, comm_spec_, *client_,
+                                   dst_graph_name, params));
   BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
 
   return dst_wrapper->graph_def();
