@@ -26,8 +26,9 @@ import vineyard
 
 from graphscope.client.session import get_session_by_id
 from graphscope.config import GSConfig as gs_config
-from graphscope.framework import dag_utils, utils, graph_utils
-
+from graphscope.framework import dag_utils
+from graphscope.framework import graph_utils
+from graphscope.framework import utils
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
@@ -536,7 +537,9 @@ class Graph(object):
         # the metadata should be retrived from vineyard
         config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
         config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
-        op = dag_utils.create_graph(self._session_id, types_pb2.ARROW_PROPERTY, attrs=config)
+        op = dag_utils.create_graph(
+            self._session_id, types_pb2.ARROW_PROPERTY, attrs=config
+        )
         graph_def = op.eval()
         return graph_def
 
@@ -549,7 +552,9 @@ class Graph(object):
         # the metadata should be retrived from vineyard
         config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
         config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
-        op = dag_utils.create_graph(self._session_id, types_pb2.ARROW_PROPERTY, attrs=config)
+        op = dag_utils.create_graph(
+            self._session_id, types_pb2.ARROW_PROPERTY, attrs=config
+        )
         graph_def = op.eval()
         return graph_def
 
@@ -670,7 +675,7 @@ class Graph(object):
 
     def add_vertices(self, vertices):
         pass
-    
+
     def add_edges(self, edges):
         edges = graph_utils.normalize_parameter_edges(edges)
         # Configurations inherited from input graph
@@ -682,9 +687,14 @@ class Graph(object):
         edge_labels = self.schema.edge_labels
         graph_utils.check_edge_validity(edges, vertex_labels)
         for edge in edges:
-            check_argument(edge.label not in edge_labels, f"Duplicate label name with existing edge labels: {edge.label}")
+            check_argument(
+                edge.label not in edge_labels,
+                f"Duplicate label name with existing edge labels: {edge.label}",
+            )
 
-        config = graph_utils.assemble_op_config(edges , [], self._directed, self._schema.oid_type, self._generate_eid)
+        config = graph_utils.assemble_op_config(
+            edges, [], self._directed, self._schema.oid_type, self._generate_eid
+        )
         op = dag_utils.add_edges(self, attrs=config)
         graph_def = op.eval()
         return Graph(self.session_id, graph_def)

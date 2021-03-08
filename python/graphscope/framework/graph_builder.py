@@ -34,9 +34,12 @@ from graphscope.framework import utils
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
+from graphscope.framework.graph_utils import assemble_op_config
+from graphscope.framework.graph_utils import check_edge_validity
+from graphscope.framework.graph_utils import normalize_parameter_edges
+from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
 from graphscope.proto import types_pb2
-from graphscope.framework.graph_utils import normalize_parameter_edges, normalize_parameter_vertices, assemble_op_config, check_edge_validity
 
 __all__ = ["load_from"]
 
@@ -185,6 +188,7 @@ def load_from(
     graph = Graph(sess.session_id, graph_def)
     return graph
 
+
 def process_add_edges(graph, edges):
     e_labels = normalize_parameter_edges(edges)
     # Configurations inherited from input graph
@@ -196,9 +200,14 @@ def process_add_edges(graph, edges):
     edge_labels = graph.schema.edge_labels
     check_edge_validity(edges, vertex_labels)
     for edge in edges:
-        check_argument(edge.label not in edge_labels, f"Duplicate label name with existing edge labels: {edge.label}")
+        check_argument(
+            edge.label not in edge_labels,
+            f"Duplicate label name with existing edge labels: {edge.label}",
+        )
 
-    config = assemble_op_config(e_labels, [], graph._directed, graph.schema.oid_type, graph._generate_eid)
+    config = assemble_op_config(
+        e_labels, [], graph._directed, graph.schema.oid_type, graph._generate_eid
+    )
     op = dag_utils.add_edges(graph, attrs=config)
     graph_def = op.eval()
     return Graph(graph.session_id, graph_def)

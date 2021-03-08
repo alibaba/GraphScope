@@ -384,16 +384,18 @@ def test_add_edges(modern_graph_data_dir):
         k8s_volumes=get_k8s_volumes(),
     )
     graph = load_modern_graph(sess, modern_graph_data_dir)
-    e = {"knows2": (
-        Loader(
-          os.path.join(modern_graph_data_dir, "knows.csv"),
-          header_row=True,
-          delimiter="|",
-        ),
-        ["weight"],
-        ("src_id", "person"),
-        ("dst_id", "person"),
-      )}
+    e = {
+        "knows2": (
+            Loader(
+                os.path.join(modern_graph_data_dir, "knows.csv"),
+                header_row=True,
+                delimiter="|",
+            ),
+            ["weight"],
+            ("src_id", "person"),
+            ("dst_id", "person"),
+        )
+    }
 
     new_graph = graph.add_edges(e)
     assert "knows2" in new_graph.schema.edge_labels

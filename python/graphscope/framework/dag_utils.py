@@ -97,6 +97,7 @@ def create_graph(session_id, graph_type, **kwargs):
     )
     return op
 
+
 def add_edges(graph, **kwargs):
     """Create an `CREATE_GRAPH` op, add op to default dag.
 
@@ -122,10 +123,12 @@ def add_edges(graph, **kwargs):
     else:
         raise ValueError(f"Not support add edges on graph type {graph.graph_type}")
     op = Operation(
-        graph.session_id, types_pb2.ADD_EDGES, config=config, output_types=types_pb2.GRAPH
+        graph.session_id,
+        types_pb2.ADD_EDGES,
+        config=config,
+        output_types=types_pb2.GRAPH,
     )
     return op
-
 
 
 def dynamic_to_arrow(graph):

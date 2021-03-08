@@ -35,7 +35,6 @@ from graphscope.framework.loader import Loader
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import types_pb2
 
-
 VineyardObjectTypes = (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
 
 LoaderVariants = Union[
@@ -490,6 +489,3 @@ def normalize_parameter_vertices(
     else:
         v_labels.append(process_label("_", vertices))
     return v_labels
-
-
-
