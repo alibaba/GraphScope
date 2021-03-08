@@ -76,14 +76,6 @@ def test_demo(data_dir):
         num_workers=1,
         k8s_gs_image=gs_image,
         k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_etcd_cpu=2,
-        k8s_vineyard_shared_mem="2Gi",
         k8s_volumes=get_k8s_volumes(),
     )
     graph = load_ldbc(sess, data_dir)
@@ -113,17 +105,9 @@ def test_demo(data_dir):
 def test_demo_distribute(data_dir, modern_graph_data_dir):
     gs_image, gie_manager_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
-        num_workers=1,
+        num_workers=2,
         k8s_gs_image=gs_image,
         k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_etcd_cpu=2,
-        k8s_vineyard_shared_mem="2Gi",
         k8s_volumes=get_k8s_volumes(),
     )
     graph = load_ldbc(sess, data_dir)
@@ -242,14 +226,6 @@ def test_query_modern_graph(modern_graph_data_dir):
         num_workers=1,
         k8s_gs_image=gs_image,
         k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_vineyard_shared_mem="2Gi",
-        k8s_etcd_cpu=2,
         k8s_volumes=get_k8s_volumes(),
     )
     graph = load_modern_graph(sess, modern_graph_data_dir)
@@ -276,14 +252,6 @@ def test_traversal_modern_graph(modern_graph_data_dir):
         num_workers=1,
         k8s_gs_image=gs_image,
         k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_vineyard_shared_mem="2Gi",
-        k8s_etcd_cpu=2,
         k8s_volumes=get_k8s_volumes(),
     )
     graph = load_modern_graph(sess, modern_graph_data_dir)
@@ -324,14 +292,6 @@ def test_serialize_roundtrip(p2p_property_dir):
         num_workers=2,
         k8s_gs_image=gs_image,
         k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_vineyard_shared_mem="2Gi",
-        k8s_etcd_cpu=2,
         k8s_volumes=get_k8s_volumes(),
     )
     graph = sess.load_from(
@@ -373,14 +333,6 @@ def test_add_edges(modern_graph_data_dir):
         num_workers=2,
         k8s_gs_image=gs_image,
         k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_vineyard_shared_mem="2Gi",
-        k8s_etcd_cpu=2,
         k8s_volumes=get_k8s_volumes(),
     )
     graph = load_modern_graph(sess, modern_graph_data_dir)
