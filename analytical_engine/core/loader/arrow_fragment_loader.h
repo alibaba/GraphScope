@@ -198,7 +198,7 @@ class ArrowFragmentLoader {
     partial_e_tables.clear();
 
     BOOST_LEAF_CHECK(
-        basic_fragment_loader->ConstructEdges(frag->edge_label_num));
+        basic_fragment_loader->ConstructEdges(frag->edge_label_num()));
     return basic_fragment_loader->AddEdgesToFragment(frag);
   }
 
