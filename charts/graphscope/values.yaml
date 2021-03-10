@@ -1,0 +1,115 @@
+# Default values for graphscope.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  imagePullPolicy: Always
+  ## Optionally specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  ##
+  # imagePullSecrets:
+  #   - RegistryKeySecretName
+  volumes:
+    enabled: true
+    items:
+      data:
+        type: hostPath
+        field:
+          type: Directory
+          path: /testingdata
+        mounts:
+        - mountPath: /testingdata
+  
+
+coordinator:
+  service:
+    type: NodePort
+  image:
+    name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
+    tag: 0.2.0
+  resources:
+    requests:
+      cpu: 1.0
+      memory: 4Gi
+    limits:
+      cpu: 1.0
+      memory: 4Gi
+  extraEnv: {}
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 15
+    failureThreshold: 8
+    successThreshold: 1
+  timeout_seconds: 600
+
+
+engines:
+  num_workers: 2
+  log_level: INFO
+  gae:
+    image:
+      name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
+      tag: 0.2.0
+      resources:
+    resources:
+      requests:
+        cpu: 0.5
+        memory: 4Gi
+      limits:
+        cpu: 0.5
+        memory: 4Gi
+  gie:
+    graph_manager:
+      image:
+        name: registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager
+        tag: 0.2.0
+      resources:
+        requests:
+          cpu: 1.0
+          memory: 4Gi
+        limits:
+          cpu: 1.0
+          memory: 4Gi
+        
+
+vineyard:
+  image:
+    name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
+    tag: 0.2.0
+  resources:
+    requests:
+      cpu: 0.5
+      memory: 512Mi
+    limits:
+      cpu: 0.5
+      memory: 512Mi
+  shared_mem: 4Gi
+
+
+etcd:
+  image:
+    name: quay.io/coreos/etcd
+    tag: v3.4.13
+  resources:
+    requests:
+      cpu: 0.5
+      memory: 128Mi
+    limits:
+      cpu: 0.5
+      memory: 128Mi
+  
+
+zookeeper:
+  image:
+    name: zookeeper
+    tag: 3.4.14
+  resources:
+    requests:
+      cpu: 0.5
+      memory: 256Mi
+    limits:
+      cpu: 0.5
+      memory: 256Mi
