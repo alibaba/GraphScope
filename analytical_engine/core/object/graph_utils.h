@@ -172,8 +172,8 @@ class PropertyGraphUtils : public GSObject {
   std::string lib_path_;
   void* dl_handle_;
   LoadGraphT* load_graph_;
-  AddEdgesToGraphT* add_edges_to_graph_;
   AddVerticesToGraphT* add_vertices_to_graph_;
+  AddEdgesToGraphT* add_edges_to_graph_;
   ToArrowFragmentT* to_arrow_fragment_;
   ToDynamicFragmentT* to_dynamic_fragment_;
 };
