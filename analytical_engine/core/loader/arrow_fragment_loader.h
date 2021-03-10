@@ -140,6 +140,41 @@ class ArrowFragmentLoader {
     return e_tables;
   }
 
+  boost::leaf::result<vineyard::ObjectID> AddVertices(
+      vineyard::ObjectID frag_id) {
+    BOOST_LEAF_AUTO(partitioner, initPartitioner());
+    BOOST_LEAF_AUTO(partial_v_tables, LoadVertexTables());
+
+    auto basic_fragment_loader = std::make_shared<
+        vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
+        client_, comm_spec_, partitioner, directed_, true, generate_eid_);
+    auto frag = std::static_pointer_cast<vineyard::ArrowFragment<oid_t, vid_t>>(
+        client_.GetObject(frag_id));
+    for (auto table : partial_v_tables) {
+      auto meta = table->schema()->metadata();
+      if (meta == nullptr) {
+        RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                        "Metadata of input vertex tables shouldn't be empty.");
+      }
+      int label_meta_index = meta->FindKey(LABEL_TAG);
+      if (label_meta_index == -1) {
+        RETURN_GS_ERROR(
+            vineyard::ErrorCode::kInvalidValueError,
+            "Metadata of input vertex tables should contain label name.");
+      }
+      std::string label_name = meta->value(label_meta_index);
+      BOOST_LEAF_CHECK(
+          basic_fragment_loader->AddVertexTable(label_name, table));
+    }
+
+    partial_v_tables.clear();
+
+    BOOST_LEAF_CHECK(
+        basic_fragment_loader->ConstructVertices(frag->GetVertexMap()->id()));
+
+    return basic_fragment_loader->AddVerticesToFragment(frag);
+  }
+
   boost::leaf::result<vineyard::ObjectID> AddEdges(vineyard::ObjectID frag_id) {
     BOOST_LEAF_AUTO(partitioner, initPartitioner());
     BOOST_LEAF_AUTO(partial_e_tables, LoadEdgeTables());
@@ -330,6 +365,13 @@ class ArrowFragmentLoader {
 
       return basic_fragment_loader->ConstructFragment();
     }
+  }
+
+  boost::leaf::result<vineyard::ObjectID> AddVerticesAsFragmentGroup(
+      vineyard::ObjectID frag_id) {
+    BOOST_LEAF_AUTO(new_frag_id, AddVertices(frag_id));
+    VY_OK_OR_RAISE(client_.Persist(new_frag_id));
+    return vineyard::ConstructFragmentGroup(client_, new_frag_id, comm_spec_);
   }
 
   boost::leaf::result<vineyard::ObjectID> AddEdgesAsFragmentGroup(

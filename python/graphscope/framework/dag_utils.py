@@ -98,16 +98,47 @@ def create_graph(session_id, graph_type, **kwargs):
     return op
 
 
-def add_edges(graph, **kwargs):
-    """Create an `CREATE_GRAPH` op, add op to default dag.
+def add_vertices(graph, **kwargs):
+    """Create an `ADD_VERTICES` op, add op to default dag.
 
     Args:
-        session_id (str): Refer to session that the graph will be create on.
-        graph_type (:enum:`GraphType`): GraphType defined in proto.types.proto.
+        graph (:class:`Graph`): a :class:`Graph` instance.
         **kwargs: additional properties respect to different `graph_type`.
 
     Returns:
-        An op to create a graph in c++ side with necessary configurations.
+        An op to add vertices to a graph in c++ side with necessary configurations.
+    """
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
+    }
+
+    if graph.graph_type == types_pb2.ARROW_PROPERTY:
+        attrs = kwargs.pop("attrs", None)
+        if attrs:
+            for k, v in attrs.items():
+                if isinstance(v, attr_value_pb2.AttrValue):
+                    config[k] = v
+    else:
+        raise ValueError(f"Not support add vertices on graph type {graph.graph_type}")
+    op = Operation(
+        graph.session_id,
+        types_pb2.ADD_VERTICES,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
+def add_edges(graph, **kwargs):
+    """Create an `ADD_EDGES` op, add op to default dag.
+
+    Args:
+        graph (:class:`Graph`): a :class:`Graph` instance.
+        **kwargs: additional properties respect to different `graph_type`.
+
+    Returns:
+        An op to add edges to a graph in c++ side with necessary configurations.
     """
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),

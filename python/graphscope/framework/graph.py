@@ -674,11 +674,26 @@ class Graph(object):
         return graph
 
     def add_vertices(self, vertices):
-        pass
+        vertices = graph_utils.normalize_parameter_vertices(vertices)
+        # Configurations inherited from input graph
+        # oid_type
+        # CHECK label name not in existed edge labels
+        vertex_labels = self._schema.vertex_labels
+        for vertex in vertices:
+            check_argument(
+                vertex.label not in vertex_labels,
+                f"Duplicate label name with existing vertex labels: {vertex.label}",
+            )
+
+        config = graph_utils.assemble_op_config(
+            [], vertices, self._directed, self._schema.oid_type, self._generate_eid
+        )
+        op = dag_utils.add_vertices(self, attrs=config)
+        graph_def = op.eval()
+        return Graph(self.session_id, graph_def)
 
     def add_edges(self, edges):
         edges = graph_utils.normalize_parameter_edges(edges)
-        # Configurations inherited from input graph
         # directed, oid_type, generate_eid
         # CHECK:
         # 1. edge's src/dst labels must existed in vertex_labels

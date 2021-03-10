@@ -351,3 +351,28 @@ def test_add_edges(modern_graph_data_dir):
 
     new_graph = graph.add_edges(e)
     assert "knows2" in new_graph.schema.edge_labels
+
+
+def test_add_edges(modern_graph_data_dir):
+    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+    sess = graphscope.session(
+        num_workers=2,
+        k8s_gs_image=gs_image,
+        k8s_gie_graph_manager_image=gie_manager_image,
+        k8s_volumes=get_k8s_volumes(),
+    )
+    graph = load_modern_graph(sess, modern_graph_data_dir)
+    v = {
+        "person2": (
+            Loader(
+                os.path.join(modern_graph_data_dir, "person.csv"),
+                header_row=True,
+                delimiter="|",
+            ),
+            ["name", ("age", "int")],
+            "id",
+        )
+    }
+
+    new_graph = graph.add_vertices(v)
+    assert "person2" in new_graph.schema.vertex_labels

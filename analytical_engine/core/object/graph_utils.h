@@ -37,6 +37,12 @@ typedef void LoadGraphT(
     const std::string& graph_name, const rpc::GSParams& params,
     bl::result<std::shared_ptr<IFragmentWrapper>>& fragment_wrapper);
 
+typedef void AddVerticesToGraphT(
+    vineyard::ObjectID frag_id, const grape::CommSpec& comm_spec,
+    vineyard::Client& client, const std::string& graph_name,
+    const rpc::GSParams& params,
+    bl::result<std::shared_ptr<IFragmentWrapper>>& fragment_wrapper);
+
 typedef void AddEdgesToGraphT(
     vineyard::ObjectID frag_id, const grape::CommSpec& comm_spec,
     vineyard::Client& client, const std::string& graph_name,
@@ -67,6 +73,7 @@ class PropertyGraphUtils : public GSObject {
         lib_path_(std::move(lib_path)),
         dl_handle_(nullptr),
         load_graph_(nullptr),
+        add_vertices_to_graph_(nullptr),
         add_edges_to_graph_(nullptr),
         to_arrow_fragment_(nullptr),
         to_dynamic_fragment_(nullptr) {}
@@ -76,6 +83,11 @@ class PropertyGraphUtils : public GSObject {
     {
       BOOST_LEAF_AUTO(p_fun, get_func_ptr(lib_path_, dl_handle_, "LoadGraph"));
       load_graph_ = reinterpret_cast<LoadGraphT*>(p_fun);
+    }
+    {
+      BOOST_LEAF_AUTO(
+          p_fun, get_func_ptr(lib_path_, dl_handle_, "AddVerticesToGraph"));
+      add_vertices_to_graph_ = reinterpret_cast<AddVerticesToGraphT*>(p_fun);
     }
     {
       BOOST_LEAF_AUTO(p_fun,
@@ -101,6 +113,17 @@ class PropertyGraphUtils : public GSObject {
     bl::result<std::shared_ptr<IFragmentWrapper>> wrapper;
 
     load_graph_(comm_spec, client, graph_name, params, wrapper);
+    return wrapper;
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> AddVerticesToGraph(
+      vineyard::ObjectID frag_id, const grape::CommSpec& comm_spec,
+      vineyard::Client& client, const std::string& graph_name,
+      const rpc::GSParams& params) {
+    bl::result<std::shared_ptr<IFragmentWrapper>> wrapper;
+
+    add_vertices_to_graph_(frag_id, comm_spec, client, graph_name, params,
+                           wrapper);
     return wrapper;
   }
 
@@ -150,6 +173,7 @@ class PropertyGraphUtils : public GSObject {
   void* dl_handle_;
   LoadGraphT* load_graph_;
   AddEdgesToGraphT* add_edges_to_graph_;
+  AddVerticesToGraphT* add_vertices_to_graph_;
   ToArrowFragmentT* to_arrow_fragment_;
   ToDynamicFragmentT* to_dynamic_fragment_;
 };
