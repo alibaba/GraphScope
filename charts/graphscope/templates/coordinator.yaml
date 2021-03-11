@@ -14,7 +14,7 @@ spec:
       {{- else }}
       image: "{{ .Values.coordinator.image.name }}:{{ .Chart.AppVersion }}"
       {{- end }}
-      imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+      imagePullPolicy: {{ .Values.imagePullPolicy }}
       resources:
 {{ toYaml .Values.coordinator.resources | indent 8 }}
       env:
@@ -88,7 +88,7 @@ spec:
         - "{{ .Values.zookeeper.image.name }}:{{ .Chart.AppVersion }}"
         {{- end }}
         - "--k8s_image_pull_policy"
-        - {{ .Values.global.imagePullPolicy | quote }}
+        - {{ .Values.imagePullPolicy | quote }}
         - "--k8s_image_pull_secrets"
         - {{ include "graphscope.imagePullSecretsStr" . | default (printf "''") | trimAll "\n" | quote }}
         - "--k8s_coordinator_name"
@@ -119,8 +119,8 @@ spec:
         - "--k8s_engine_mem"
         - {{ .Values.engines.gae.resources.requests.memory }}
         - '--k8s_volumes'
-        {{- if .Values.global.volumes.enabled }}
-        - {{ mustToJson .Values.global.volumes.items | quote}}
+        {{- if .Values.volumes.enabled }}
+        - {{ mustToJson .Values.volumes.items | quote}}
         {{- else }}
         - "{}"
         {{- end }}

@@ -24,9 +24,9 @@ Create description information of chart as used by the label.
 Return the proper Docker Image Registry Secret Names
 */}}
 {{- define "graphscope.imagePullSecrets" -}}
-{{- if .Values.global.imagePullSecrets }}
+{{- if .Values.imagePullSecrets }}
 imagePullSecrets:
-{{- range .Values.global.imagePullSecrets }}
+{{- range .Values.imagePullSecrets }}
   - name: {{ . }}
 {{- end }}
 {{- end }}
@@ -37,8 +37,8 @@ imagePullSecrets:
 Transform the Docker Image Registry Secret Names to string with comma separated.
 */}}
 {{- define "graphscope.imagePullSecretsStr" -}}
-{{- if .Values.global.imagePullSecrets }}
-{{ join "," .Values.global.imagePullSecrets }}
+{{- if .Values.imagePullSecrets }}
+{{ join "," .Values.imagePullSecrets }}
 {{- end }}
 {{- end }}
 

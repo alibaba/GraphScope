@@ -2,27 +2,27 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-global:
-  imagePullPolicy: Always
-  ## Optionally specify an array of imagePullSecrets.
-  ## Secrets must be manually created in the namespace.
-  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-  ##
-  # imagePullSecrets:
-  #   - RegistryKeySecretName
-  #
-  ## Specify an array of volumes by setting enabled true.
-  ## Here is an example to mount hostpath `/testingdata` to `/tmp/testingdata` in pod.
-  volumes:
-    enabled: false
-    items:
-      data:
-        type: hostPath
-        field:
-          type: Directory
-          path: /testingdata
-        mounts:
-        - mountPath: /tmp/testingdata
+
+imagePullPolicy: Always
+## Optionally specify an array of imagePullSecrets.
+## Secrets must be manually created in the namespace.
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+##
+# imagePullSecrets:
+#   - RegistryKeySecretName
+#
+## Specify an array of volumes by setting enabled true.
+## Here is an example to mount hostpath `/testingdata` to `/tmp/testingdata` in pod.
+volumes:
+  enabled: false
+  items:
+    data:
+      type: hostPath
+      field:
+        type: Directory
+        path: /testingdata
+      mounts:
+      - mountPath: /tmp/testingdata
   
 
 coordinator:
@@ -30,7 +30,8 @@ coordinator:
     type: NodePort
   image:
     name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
-    tag: 0.2.0
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
   resources:
     requests:
       cpu: 1.0
@@ -46,6 +47,7 @@ coordinator:
     timeoutSeconds: 15
     failureThreshold: 8
     successThreshold: 1
+  # Waiting GraphScope instance ready until reached timeout.
   timeout_seconds: 1200
 
 
@@ -56,7 +58,8 @@ engines:
   gae:
     image:
       name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
-      tag: 0.2.0
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: ""
       resources:
     resources:
       requests:
@@ -69,7 +72,8 @@ engines:
     graph_manager:
       image:
         name: registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager
-        tag: 0.2.0
+        # Overrides the image tag whose default is the chart appVersion.
+        tag: ""
       resources:
         requests:
           cpu: 1.0
@@ -82,7 +86,8 @@ engines:
 vineyard:
   image:
     name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
-    tag: 0.2.0
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
   resources:
     requests:
       cpu: 0.5
@@ -97,6 +102,7 @@ vineyard:
 etcd:
   image:
     name: quay.io/coreos/etcd
+    # Overrides the image tag whose default is the chart appVersion.
     tag: v3.4.13
   resources:
     requests:
@@ -110,6 +116,7 @@ etcd:
 zookeeper:
   image:
     name: zookeeper
+    # Overrides the image tag whose default is the chart appVersion.
     tag: 3.4.14
   resources:
     requests:
