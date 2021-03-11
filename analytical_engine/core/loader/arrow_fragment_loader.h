@@ -192,7 +192,6 @@ class ArrowFragmentLoader {
     basic_fragment_loader->set_vertex_label_to_index(
         std::move(vertex_label_to_index));
     basic_fragment_loader->set_vm_ptr(frag->GetVertexMap());
-    basic_fragment_loader->set_vertex_label_num(frag->vertex_label_num());
     for (auto& table_vec : partial_e_tables) {
       for (auto table : table_vec) {
         auto meta = table->schema()->metadata();
@@ -232,8 +231,8 @@ class ArrowFragmentLoader {
 
     partial_e_tables.clear();
 
-    BOOST_LEAF_CHECK(
-        basic_fragment_loader->ConstructEdges(frag->edge_label_num()));
+    BOOST_LEAF_CHECK(basic_fragment_loader->ConstructEdges(
+        frag->edge_label_num(), frag->vertex_label_num()));
     return basic_fragment_loader->AddEdgesToFragment(frag);
   }
 
