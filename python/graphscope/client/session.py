@@ -184,6 +184,7 @@ class Session(object):
                 in environment. Note that it will overwrite explicit parameters. Defaults to None.
 
             addr (str, optional): The endpoint of a pre-launched GraphScope instance with '<ip>:<port>' format.
+                A new session id will be generated for each session connection.
 
             num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.
 
