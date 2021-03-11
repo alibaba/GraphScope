@@ -263,8 +263,12 @@ class Graph(object):
         return f"graphscope.Graph <{self.template_str}> {self._vineyard_id}"
 
     def __repr__(self):
-        return f"""graphscope.Graph\ntype: {self.template_str.split('<')[0]}\n
-                   vineyard_id: {self._vineyard_id}\n\n{str(self._schema)}"""
+        return (
+            "graphscope.Graph\n"
+            f"type: {self.template_str.split('<')[0]}\n"
+            f"vineyard_id: {self._vineyard_id}\n\n"
+            f"{str(self._schema)}"
+        )
 
     def unload(self):
         """Unload this graph from graphscope engine."""
