@@ -260,10 +260,11 @@ class Graph(object):
         return self._key is not None
 
     def __str__(self):
-        return f"graphscope.Graph   {self.template_str}"
+        return f"graphscope.Graph <{self.template_str}> {self._vineyard_id}"
 
     def __repr__(self):
-        return f"graphscope.Graph\ntype: {self.template_str.split('<')[0]}\n\n{str(self._schema)}"
+        return f"""graphscope.Graph\ntype: {self.template_str.split('<')[0]}\n
+                   vineyard_id: {self._vineyard_id}\n\n{str(self._schema)}"""
 
     def unload(self):
         """Unload this graph from graphscope engine."""

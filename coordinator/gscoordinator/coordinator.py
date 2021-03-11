@@ -305,7 +305,12 @@ class CoordinatorServiceServicer(
             )
 
         if response.status.code == error_codes_pb2.OK:
-            if op.op == types_pb2.CREATE_GRAPH:
+            if op.op in (
+                types_pb2.CREATE_GRAPH,
+                types_pb2.ADD_VERTICES,
+                types_pb2.ADD_EDGES,
+                types_pb2.ADD_COLUMN,
+            ):
                 schema_path = os.path.join("/tmp", response.graph_def.key + ".json")
                 self._object_manager.put(
                     response.graph_def.key,
