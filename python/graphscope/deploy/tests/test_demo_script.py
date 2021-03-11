@@ -313,7 +313,7 @@ def test_add_vertices_edges(gs_session_distributed, modern_graph_data_dir):
     }
 
     graph = graph.add_edges(e)
-    assert "knows2" in new_graph.schema.edge_labels
+    assert "knows2" in graph.schema.edge_labels
 
     interactive = gs_session_distributed.gremlin(graph)
     g = interactive.traversal_source()
