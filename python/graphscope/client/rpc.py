@@ -191,9 +191,14 @@ class GRPCClient(object):
         response = self._stub.CloseLearningInstance(request)
         return check_grpc_response(response)
 
-    def close(self):
+    def close(self, stop_instance=True):
+        """
+        Args:
+            stop_instance (bool, optional): If true,
+                also delete graphscope instance (such as pod) in closing process.
+        """
         if self._session_id:
-            self._close_session_impl()
+            self._close_session_impl(stop_instance=stop_instance)
             self._session_id = None
         if self._logs_fetching_thread:
             self._logs_fetching_thread.join(timeout=5)
@@ -210,6 +215,7 @@ class GRPCClient(object):
             response.session_id,
             json.loads(response.engine_config),
             response.pod_name_list,
+            response.num_workers,
         )
 
     @suppress_grpc_error
@@ -223,8 +229,10 @@ class GRPCClient(object):
                 logger.info(message, extra={"simple": True})
 
     @catch_grpc_error
-    def _close_session_impl(self):
-        request = message_pb2.CloseSessionRequest(session_id=self._session_id)
+    def _close_session_impl(self, stop_instance=True):
+        request = message_pb2.CloseSessionRequest(
+            session_id=self._session_id, stop_instance=stop_instance
+        )
         response = self._stub.CloseSession(request)
         return check_grpc_response(response)
 

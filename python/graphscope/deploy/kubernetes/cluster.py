@@ -132,6 +132,9 @@ class KubernetesCluster(object):
         timeout_seconds: int
             Timeout when setting up graphscope instance on kubernetes cluster.
 
+        dangling_timeout_seconds: int
+            Kill GraphScope instance after seconds of client disconnect.
+
         waiting_for_delete: bool
             Waiting for service delete or not.
     """
@@ -179,6 +182,7 @@ class KubernetesCluster(object):
         gie_graph_manager_mem=None,
         volumes=None,
         timeout_seconds=None,
+        dangling_timeout_seconds=None,
         waiting_for_delete=None,
         **kwargs
     ):
@@ -238,6 +242,7 @@ class KubernetesCluster(object):
 
         self._closed = False
         self._timeout_seconds = timeout_seconds
+        self._dangling_timeout_seconds = dangling_timeout_seconds
 
         # pods watcher
         self._coordinator_pods_watcher = []
@@ -454,6 +459,7 @@ class KubernetesCluster(object):
             engine_mem=self._engine_mem,
             volumes=self._volumes,
             timeout_seconds=self._timeout_seconds,
+            dangling_timeout_seconds=self._dangling_timeout_seconds,
             waiting_for_delete=self._waiting_for_delete,
             delete_namespace=self._delete_namespace,
         )

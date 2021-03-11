@@ -10,8 +10,11 @@ global:
   ##
   # imagePullSecrets:
   #   - RegistryKeySecretName
+  #
+  ## Specify an array of volumes by setting enabled true.
+  ## Here is an example to mount hostpath `/testingdata` to `/tmp/testingdata` in pod.
   volumes:
-    enabled: true
+    enabled: false
     items:
       data:
         type: hostPath
@@ -19,7 +22,7 @@ global:
           type: Directory
           path: /testingdata
         mounts:
-        - mountPath: /testingdata
+        - mountPath: /tmp/testingdata
   
 
 coordinator:
@@ -43,11 +46,12 @@ coordinator:
     timeoutSeconds: 15
     failureThreshold: 8
     successThreshold: 1
-  timeout_seconds: 600
+  timeout_seconds: 1200
 
 
 engines:
   num_workers: 2
+  # Available options of log_level: INFO, DEBUG
   log_level: INFO
   gae:
     image:
@@ -86,6 +90,7 @@ vineyard:
     limits:
       cpu: 0.5
       memory: 512Mi
+  ## Init size of vineyard shared memory.
   shared_mem: 4Gi
 
 
