@@ -104,18 +104,16 @@ def test_error_label_on_project_to_simple(arrow_property_graph):
     g = arrow_property_graph
     # g has vertex labels: v0, v1, v2, v3, each label has a property: weight
     # g has edge label: e0, e1, each label has a property: dist
-    with pytest.raises(ValueError, match="graph not contains the vertex label v4"):
+    with pytest.raises(ValueError, match="Label does not exists"):
         g.project_to_simple(v_label="v4", e_label="e0")
 
-    with pytest.raises(ValueError, match="graph not contains the edge label e2"):
+    with pytest.raises(ValueError, match="Label does not exists"):
         g.project_to_simple(v_label="v0", e_label="e2")
 
-    with pytest.raises(
-        ValueError, match="vertex label v0 not contains the property foo"
-    ):
+    with pytest.raises(ValueError, match="Property does not exists."):
         g.project_to_simple(v_label="v0", e_label="e0", v_prop="foo")
 
-    with pytest.raises(ValueError, match="edge label e0 not contains the property foo"):
+    with pytest.raises(ValueError, match="Property does not exists."):
         g.project_to_simple(v_label="v0", e_label="e0", e_prop="foo")
 
 

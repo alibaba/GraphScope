@@ -411,8 +411,8 @@ jobs:
     - name: Clean
       if: always()
       run: |
-        sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
 
   gie-test:
     runs-on: self-hosted
@@ -482,8 +482,8 @@ jobs:
     - name: Clean
       if: always()
       run: |
-        sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
 
   release-image:
     runs-on: ubuntu-20.04
@@ -526,5 +526,7 @@ jobs:
     - name: Clean
       if: always()
       run: |
-        sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest \
+            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest \
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
