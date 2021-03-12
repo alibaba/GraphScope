@@ -25,6 +25,36 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 您可以根据需求配置引擎镜像地址等参数，请在 :ref:`Session` 中参阅更多的详细信息。
 
 
+使用Helm部署GraphScope
+--------------------
+
+获取并添加仓库信息
+
+.. code:: bash
+
+    $ helm repo add graphscope https://dl.bintray.com/graphscope/charts/
+    $ helm update
+
+安装
+
+.. code:: bash
+
+    # Helm 3
+    $ helm install [RELEASE_NAME] graphscope/graphscope
+
+    # Helm 2
+    $ helm install --name [RELEASE_NAME] graphscope/graphscope
+
+检测GraphScope服务可用性
+
+.. code:: bash
+    
+    # Helm 3 or 2 
+    $ helm test [RELEASE_NAME]
+
+参考 `该链接 <https://github.com/alibaba/GraphScope/blob/main/charts/graphscope/README.md>`_ 以通过python客户端连接到预启动的GraphScope服务。
+
+
 在AWS/阿里云上部署集群
 ------------------------
 我们提供了一个可在AWS或阿里云上创建 Kubernetes 集群的交互式脚本。这一脚本可以帮助用户使用已有的集群或创建新的 Kubernetes 集群，然后输出集群的配置文件。
