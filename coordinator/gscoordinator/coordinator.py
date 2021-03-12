@@ -112,9 +112,8 @@ class CoordinatorServiceServicer(
         self._config_logging(log_level)
 
         # only one connection is allowed at the same time
-        self._session_id = "session_" + "".join(
-            [random.choice(string.ascii_lowercase) for _ in range(8)]
-        )
+        # generate session id  when a client connection is established
+        self._session_id = None
 
         # launch engines
         if len(GS_DEBUG_ENDPOINT) > 0:
@@ -142,10 +141,11 @@ class CoordinatorServiceServicer(
         self._analytical_engine_endpoint = None
 
         self._builtin_workspace = os.path.join(WORKSPACE, "builtin")
-        self._udf_app_workspace = os.path.join(WORKSPACE, self._session_id)
+        # udf app workspace should be bound to a specific session when client connect.
+        self._udf_app_workspace = None
 
         # control log fetching
-        self._closed = False
+        self._streaming_logs = True
 
         # dangling check
         self._dangling_seconds = dangling_seconds
@@ -159,6 +159,11 @@ class CoordinatorServiceServicer(
 
     def __del__(self):
         self._cleanup()
+
+    def _generate_session_id(self):
+        return "session_" + "".join(
+            [random.choice(string.ascii_lowercase) for _ in range(8)]
+        )
 
     def _config_logging(self, log_level):
         """Set log level basic on config.
@@ -193,10 +198,15 @@ class CoordinatorServiceServicer(
         self._request = request
         self._analytical_engine_config = self._get_engine_config()
 
+        # Generate session id
+        self._session_id = self._generate_session_id()
+        self._udf_app_workspace = os.path.join(WORKSPACE, self._session_id)
+
         return self._make_response(
             message_pb2.ConnectSessionResponse,
             code=error_codes_pb2.OK,
             session_id=self._session_id,
+            num_workers=self._launcher.num_workers,
             engine_config=json.dumps(self._analytical_engine_config),
             pod_name_list=self._pods_list,
         )
@@ -401,7 +411,7 @@ class CoordinatorServiceServicer(
         return op
 
     def FetchLogs(self, request, context):
-        while not self._closed:
+        while self._streaming_logs:
             try:
                 message = sys.stdout.poll(timeout=3)
             except queue.Empty:
@@ -422,13 +432,11 @@ class CoordinatorServiceServicer(
                 "Session handle does not match",
             )
 
-        if not self._closed:
-            self._cleanup()
-            self._request = None
-            self._closed = True
-            return self._make_response(
-                message_pb2.CloseSessionResponse, error_codes_pb2.OK
-            )
+        self._cleanup(stop_instance=request.stop_instance)
+        self._request = None
+        if request.stop_instance:
+            self._streaming_logs = False
+        return self._make_response(message_pb2.CloseSessionResponse, error_codes_pb2.OK)
 
     def CreateInteractiveInstance(self, request, context):
         object_id = request.object_id
@@ -567,7 +575,7 @@ class CoordinatorServiceServicer(
             resp.status.op.CopyFrom(op)
         return resp
 
-    def _cleanup(self, is_dangling=False):
+    def _cleanup(self, stop_instance=True, is_dangling=False):
         # clean up session resources.
         for key in self._object_manager.keys():
             obj = self._object_manager.get(key)
@@ -602,17 +610,18 @@ class CoordinatorServiceServicer(
                 self._analytical_engine_stub.RunStep(request)
 
         self._object_manager.clear()
-        self._analytical_engine_stub = None
 
         # cancel dangling detect timer
         if self._dangling_detecting_timer:
             self._dangling_detecting_timer.cancel()
 
         # close engines
-        self._launcher.stop(is_dangling=is_dangling)
+        if stop_instance:
+            self._analytical_engine_stub = None
+            self._analytical_engine_endpoint = None
+            self._launcher.stop(is_dangling=is_dangling)
 
         self._session_id = None
-        self._analytical_engine_endpoint = None
 
     def _create_grpc_stub(self):
         options = [
@@ -621,7 +630,7 @@ class CoordinatorServiceServicer(
         ]
 
         channel = grpc.insecure_channel(
-            self._launcher.get_analytical_engine_endpoint(), options=options
+            self._launcher.analytical_engine_endpoint, options=options
         )
         return engine_service_pb2_grpc.EngineServiceStub(channel)
 
@@ -845,8 +854,14 @@ def parse_sys_args():
     parser.add_argument(
         "--timeout_seconds",
         type=int,
-        default=60,
-        help="Launch failed after waiting timeout seconds Or cleanup graphscope instance after seconds of client disconnect.",
+        default=600,
+        help="Launch failed after waiting timeout seconds.",
+    )
+    parser.add_argument(
+        "--dangling_timeout_seconds",
+        type=int,
+        default=600,
+        help="Kill graphscope instance after seconds of client disconnect.",
     )
     parser.add_argument(
         "--waiting_for_delete",
@@ -913,7 +928,7 @@ def launch_graphscope():
 
     coordinator_service_servicer = CoordinatorServiceServicer(
         launcher=launcher,
-        dangling_seconds=args.timeout_seconds,
+        dangling_seconds=args.dangling_timeout_seconds,
         log_level=args.log_level,
     )
 

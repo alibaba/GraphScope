@@ -39,12 +39,20 @@ logger = logging.getLogger("graphscope")
 
 class Launcher(metaclass=ABCMeta):
     def __init__(self):
+        self._num_workers = None
         self._analytical_engine_endpoint = None
 
-    def get_analytical_engine_endpoint(self):
+    @property
+    def analytical_engine_endpoint(self):
         if self._analytical_engine_endpoint is None:
             raise RuntimeError("Get None value of analytical engine endpoint.")
         return str(self._analytical_engine_endpoint)
+
+    @property
+    def num_workers(self):
+        if self._num_workers is None:
+            raise RuntimeError("Get None value of workers number.")
+        return int(self._num_workers)
 
     @abstractmethod
     def type(self):

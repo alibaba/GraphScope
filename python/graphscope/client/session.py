@@ -145,6 +145,7 @@ class Session(object):
     def __init__(
         self,
         config=None,
+        addr=gs_config.addr,
         num_workers=gs_config.num_workers,
         k8s_namespace=gs_config.k8s_namespace,
         k8s_service_type=gs_config.k8s_service_type,
@@ -170,6 +171,7 @@ class Session(object):
         k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
+        dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -180,6 +182,9 @@ class Session(object):
                 session if file exist. If not specified, the global default configuration
                 :code:`DEFAULT_CONFIG_FILE` will be used, which get value of GS_CONFIG_PATH
                 in environment. Note that it will overwrite explicit parameters. Defaults to None.
+
+            addr (str, optional): The endpoint of a pre-launched GraphScope instance with '<ip>:<port>' format.
+                A new session id will be generated for each session connection.
 
             num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.
 
@@ -286,8 +291,10 @@ class Session(object):
 
             timeout_seconds (int, optional): For waiting service ready (or waiting for delete if
                 k8s_waiting_for_delete is True).
-                Also, after seconds of client disconnect, coordinator will clean up this graphscope instance.
-                Defaults to 600.
+
+            dangling_timeout_seconds (int, optional): After seconds of client disconnect,
+                coordinator will kill this graphscope instance. Defaults to 600.
+                Disable dangling check by setting -1.
 
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
 
@@ -315,6 +322,7 @@ class Session(object):
         num_workers = int(num_workers)
         self._config_params = {}
         self._accessable_params = (
+            "addr",
             "num_workers",
             "k8s_namespace",
             "k8s_service_type",
@@ -340,6 +348,7 @@ class Session(object):
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
+            "dangling_timeout_seconds",
         )
         saved_locals = locals()
         for param in self._accessable_params:
@@ -356,8 +365,6 @@ class Session(object):
 
         # update other optional params
         self._config_params.update(kw)
-
-        self._config_params["addr"] = kw.pop("addr", None)
 
         # Reserved keyword for local testing.
         run_on_local = kw.pop("run_on_local", False)
@@ -469,17 +476,17 @@ class Session(object):
         else:
             info["status"] = "active"
 
-        if self._session_type == types_pb2.K8S:
+        if self._session_type == types_pb2.REMOTE:
+            info["type"] = "remote"
+        elif self._session_type == types_pb2.K8S:
             info["type"] = "k8s"
             info["engine_hosts"] = ",".join(self._pod_name_list)
             info["namespace"] = self._config_params["k8s_namespace"]
         else:
             info["type"] = "hosts"
-            if self._config_params["addr"] is not None:
-                info["engine_hosts"] = self._engine_config["engine_hosts"]
-            else:
-                info["engine_hosts"] = ",".join(self._config_params["hosts"])
+            info["engine_hosts"] = ",".join(self._config_params["hosts"])
 
+        info["session_id"] = self.session_id
         info["num_workers"] = self._config_params["num_workers"]
         info["coordinator_endpoint"] = self._endpoint
         info["engine_config"] = self._engine_config
@@ -536,7 +543,9 @@ class Session(object):
         self._learning_instance_dict.clear()
 
         if self._grpc_client:
-            self._grpc_client.close()
+            self._grpc_client.close(
+                stop_instance=False if self._config_params["addr"] else True
+            )
             self._grpc_client = None
             _session_dict.pop(self._session_id, None)
 
@@ -547,7 +556,7 @@ class Session(object):
             self._proc.wait()
             self._proc = None
 
-        if self._config_params["enable_k8s"]:
+        if self._config_params["addr"] is None and self._config_params["enable_k8s"]:
             if self._k8s_cluster:
                 self._k8s_cluster.stop()
                 self._pod_name_list = []
@@ -675,7 +684,7 @@ class Session(object):
     def _connect(self):
         if self._config_params["addr"] is not None:
             # try connect to exist coordinator
-            self._session_type = types_pb2.HOSTS
+            self._session_type = types_pb2.REMOTE
             proc, endpoint = None, self._config_params["addr"]
         elif self._config_params["enable_k8s"]:
             if (
@@ -717,6 +726,9 @@ class Session(object):
                 volumes=self._config_params["k8s_volumes"],
                 waiting_for_delete=self._config_params["k8s_waiting_for_delete"],
                 timeout_seconds=self._config_params["timeout_seconds"],
+                dangling_timeout_seconds=self._config_params[
+                    "dangling_timeout_seconds"
+                ],
             )
             endpoint = self._k8s_cluster.start()
             if self._config_params["k8s_namespace"] is None:
@@ -745,6 +757,7 @@ class Session(object):
                 self._session_id,
                 self._engine_config,
                 self._pod_name_list,
+                self._config_params["num_workers"],
             ) = self._grpc_client.connect()
             _session_dict[self._session_id] = self
         except Exception:

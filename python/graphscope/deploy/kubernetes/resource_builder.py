@@ -897,6 +897,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         engine_mem,
         volumes,
         timeout_seconds,
+        dangling_timeout_seconds,
         waiting_for_delete,
         delete_namespace,
     ):
@@ -929,6 +930,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         self._engine_mem = engine_mem
         self._volumes_str = json.dumps(volumes)
         self._timeout_seconds = timeout_seconds
+        self._dangling_timeout_seconds = dangling_timeout_seconds
         self._waiting_for_delete = waiting_for_delete
         self._delete_namespace = delete_namespace
 
@@ -1040,6 +1042,8 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             self._volumes_str,
             "--timeout_seconds",
             str(self._timeout_seconds),
+            "--dangling_timeout_seconds",
+            str(self._dangling_timeout_seconds),
             "--waiting_for_delete",
             str(self._waiting_for_delete),
             "--k8s_delete_namespace",

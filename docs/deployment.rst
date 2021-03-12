@@ -30,6 +30,36 @@ and learning engines.
 The image URIs for the engines are configurable, see more details in :ref:`Session`.
 
 
+Deployment with Helm
+--------------------
+
+Get Repo Info
+
+.. code:: bash
+
+    $ helm repo add graphscope https://dl.bintray.com/graphscope/charts/
+    $ helm update
+
+Install Chart
+
+.. code:: bash
+
+    # Helm 3
+    $ helm install [RELEASE_NAME] graphscope/graphscope
+
+    # Helm 2
+    $ helm install --name [RELEASE_NAME] graphscope/graphscope
+
+Check Service Availability
+
+.. code:: bash
+    
+    # Helm 3 or 2 
+    $ helm test [RELEASE_NAME]
+
+Find `more details <https://github.com/alibaba/GraphScope/blob/main/charts/graphscope/README.md>`_ on how to connect a pre-launched service in python client.
+
+
 Deploy with AWS/Aliyun
 ----------------------------
 

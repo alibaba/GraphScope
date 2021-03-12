@@ -23,6 +23,9 @@ from graphscope.version import __version__
 
 
 class GSConfig(object):
+    # the endpoint of a pre-launched GraphScope instance.
+    addr = None
+
     k8s_namespace = None
 
     # image
@@ -86,3 +89,7 @@ class GSConfig(object):
     initializing_interactive_engine = True
 
     timeout_seconds = 600
+
+    # kill GraphScope instance after seconds of client disconnect
+    # disable dangling check by setting -1.
+    dangling_timeout_seconds = 600
