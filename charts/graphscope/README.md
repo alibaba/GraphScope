@@ -39,13 +39,22 @@ $ export NODE_PORT=$(kubectl --namespace [NAMESPACE] get services -o jsonpath="{
 $ echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
 ```
 
-## An Example to Connect service by Python Client.
+## An Example to (Re)connect service by Python Client.
 
 ```python
 import graphscope
 graphscope.set_option(show_log=True)
 sess = graphscope.session(addr='<ip>:<port>')
 ```
+
+The param `addr` is an endpoint for connecting a pre-launched service. Note that only one session can be connected to the service at the same time, but you can reconnect the same service after session close.
+
+```python
+# sess1 = graphscope.session(addr='<ip>:<port>')
+sess1.close()
+sess2 = graphscope.session(addr='<ip>:<port>')
+```
+
 See [*create a session*](https://graphscope.io/docs/reference/session.html) for command documentation.
 
 
