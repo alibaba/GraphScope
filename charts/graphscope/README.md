@@ -6,6 +6,7 @@ GraphScope charts
 [GraphScope](https://graphscope.io) is a unified distributed graph computing platform that provides a one-stop environment for performing diverse graph operations on a cluster of computers through a user-friendly Python interface. GraphScope makes multi-staged processing of large-scale graph data on compute clusters simple by combining several important pieces of Alibaba technology: including GRAPE, MaxGraph, and Graph-Learn (GL) for analytics, interactive, and graph neural networks (GNN) computation, respectively, and the [vineyard store](https://v6d.io/) that offers efficient in-memory data transfers.
 
 ## Get Repo Info
+
 ```shell
 $ helm repo add graphscope https://dl.bintray.com/graphscope/charts/
 $ helm update
@@ -13,6 +14,7 @@ $ helm update
 See [*helm repo*](https://helm.sh/docs/helm/helm_repo/) for command documentation.
 
 ## Install Chart
+
 ```shell
 # Helm 3
 $ helm install [RELEASE_NAME] graphscope/graphscope
@@ -25,6 +27,7 @@ See [*helm install*](https://helm.sh/docs/helm/helm_install/) for command docume
 
 
 ## Get GraphScope Service Endpoint 
+
 ```shell
 # Helm 3 or 2 
 # After installation, you can check service availability by:
@@ -37,6 +40,7 @@ $ echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
 ```
 
 ## An Example to Connect service by Python Client.
+
 ```python
 import graphscope
 graphscope.set_option(show_log=True)
@@ -46,6 +50,7 @@ See [*create a session*](https://graphscope.io/docs/reference/session.html) for 
 
 
 ## Uninstall Chart
+
 ```shell
 # Helm 3
 $ helm uninstall [RELEASE_NAME]
@@ -58,6 +63,7 @@ See [*helm uninstall*](https://helm.sh/docs/helm/helm_uninstall/) for command do
 
 
 ## Upgrading Chart
+
 ```shell
 # Helm 3 or 2
 $ helm upgrade [RELEASE_NAME] [CHART] --install
@@ -66,6 +72,7 @@ Sess [*helm upgrade*](https://helm.sh/docs/helm/helm_upgrade/) for command docum
 
 
 ## Configuration
+
 See [*Customizing the Chart Before Installing*](https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing). To see all configurable options with detailed comments, visit the chart's [values.yaml](https://github.com/alibaba/GraphScope/blob/main/charts/graphscope/values.yaml), or run these configuration commands:
 ```shell
 # Helm 2
@@ -75,6 +82,7 @@ $ helm inspect values graphscope/graphscope
 $ helm show values graphscope/graphscope
 ```
 In most cases, you want to mount volumes into GraphScope's pod for loading graph. Here is an example to do it:
+
 ```yaml
 # Mount hostpath `/testingdata` to `/tmp/testingdata` in pod.
 # cat values.yaml
@@ -95,6 +103,7 @@ $ helm install -f values.yaml graphscope/graphscope --generate-name
 ```
 
 ## Useful links
+
 - https://graphscope.io/
 - https://github.com/alibaba/GraphScope
 - https://try.graphscope.app/

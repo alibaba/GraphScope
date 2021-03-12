@@ -1,4 +1,4 @@
-The GraphScope has been installed.
+The GraphScope has been deployed.
 
 {{- if contains "NodePort" .Values.coordinator.service.type }}
 Get service address by:
