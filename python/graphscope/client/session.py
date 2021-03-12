@@ -1109,8 +1109,11 @@ def _launch_coordinator_on_local(config_params):
 
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "TRUE"
+    # Param `start_new_session=True` is for putting child process to a new process group
+    # so it won't get the signals from parent.
     process = subprocess.Popen(
         cmd,
+        start_new_session=True,
         cwd=COORDINATOR_HOME,
         universal_newlines=True,
         encoding="utf-8",
