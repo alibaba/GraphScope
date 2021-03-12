@@ -43,7 +43,7 @@ def pagerank(graph, delta=0.85, max_round=10):
         s = gs.session()
         g = s.load_from('The parameters for loading a graph...')
         pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
-        r = gs.k_core(pg, delta=0.85, max_round=10)
+        r = gs.pagerank(pg, delta=0.85, max_round=10)
         s.close()
 
     """
