@@ -320,6 +320,10 @@ class Graph(object):
         check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
         self.check_unmodified()
 
+        def check_out_of_range(id, length):
+            if id >= length or id < 0:
+                raise IndexError("id {} is out of range.".format(id))
+
         try:
             if isinstance(v_label, str):
                 v_label_id = self._schema.vertex_label_index(v_label)
@@ -336,10 +340,6 @@ class Graph(object):
         except ValueError as e:
             raise ValueError("Label does not exists.") from e
 
-        def check_out_of_range(id, length):
-            if id >= length or id < 0:
-                raise IndexError("id {} is out of range.".format(id))
-
         # Check relation v_label -> e_label <- v_label exists.
         relation = (v_label, v_label)
         if relation not in self._schema.edge_relationships[e_label_id]:
@@ -350,7 +350,7 @@ class Graph(object):
         try:
             if v_prop is None:
                 v_prop_id = -1
-                v_data_type = None
+                vdata_type = None
             else:
                 if isinstance(v_prop, str):
                     v_prop_id = self._schema.vertex_property_index(v_label_id, v_prop)
@@ -361,7 +361,7 @@ class Graph(object):
                 vdata_type = list(properties.values())[v_prop_id]
             if e_prop is None:
                 e_prop_id = -1
-                e_properties = [None]
+                edata_type = None
             else:
                 if isinstance(e_prop, str):
                     e_prop_id = self._schema.edge_property_index(e_label_id, e_prop)

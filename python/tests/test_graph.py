@@ -118,6 +118,7 @@ def test_error_label_on_project_to_simple(arrow_property_graph):
 
 
 def test_error_relationship_on_project_to_simple(arrow_modern_graph):
+    g = arrow_modern_graph
     with pytest.raises(
         ValueError,
         match="Graph doesn't contain such relationship: person -> created <- person",
