@@ -84,19 +84,19 @@ def test_project_to_simple_with_id(p2p_property_graph, sssp_result):
 def test_error_on_project_to_simple_id_out_of_range(arrow_property_graph):
     g = arrow_property_graph
     # g has 4 vertex labels and 2 edge labels, each label has 1 property
-    with pytest.raises(KeyError, match="id 5 is out of range"):
+    with pytest.raises(IndexError, match="id 5 is out of range"):
         g.project_to_simple(v_label=5, e_label=0)
 
-    with pytest.raises(KeyError, match="id 3 is out of range"):
+    with pytest.raises(IndexError, match="id 3 is out of range"):
         g.project_to_simple(v_label=0, e_label=3)
 
-    with pytest.raises(KeyError, match="id -1 is out of range"):
+    with pytest.raises(IndexError, match="id -1 is out of range"):
         g.project_to_simple(v_label=-1, e_label=3)
 
-    with pytest.raises(KeyError, match="id 2 is out of range"):
+    with pytest.raises(IndexError, match="id 2 is out of range"):
         g.project_to_simple(v_label=0, e_label=0, v_prop=2, e_prop=0)
 
-    with pytest.raises(KeyError, match="id 1 is out of range"):
+    with pytest.raises(IndexError, match="id 1 is out of range"):
         g.project_to_simple(v_label=0, e_label=0, v_prop=0, e_prop=1)
 
 
@@ -115,6 +115,19 @@ def test_error_label_on_project_to_simple(arrow_property_graph):
 
     with pytest.raises(ValueError, match="Property does not exists."):
         g.project_to_simple(v_label="v0", e_label="e0", e_prop="foo")
+
+
+def test_error_relationship_on_project_to_simple(arrow_modern_graph):
+    with pytest.raises(
+        ValueError,
+        match="Graph doesn't contain such relationship: person -> created <- person",
+    ):
+        g.project_to_simple(v_label="person", e_label="created")
+    with pytest.raises(
+        ValueError,
+        match="Graph doesn't contain such relationship: software -> knows <- software",
+    ):
+        g.project_to_simple(v_label="software", e_label="knows")
 
 
 def test_unload(graphscope_session):

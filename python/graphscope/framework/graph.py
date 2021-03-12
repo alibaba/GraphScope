@@ -325,27 +325,26 @@ class Graph(object):
                 v_label_id = self._schema.vertex_label_index(v_label)
             else:
                 v_label_id = v_label
-                v_label = self._schema.vertex_labels(v_label_id)
+                check_out_of_range(v_label_id, self._schema.vertex_label_num)
+                v_label = self._schema.vertex_labels[v_label_id]
             if isinstance(e_label, str):
                 e_label_id = self._schema.edge_label_index(e_label)
             else:
                 e_label_id = e_label
-                e_label = self._schema.edge_labels(e_label)
+                check_out_of_range(e_label_id, self._schema.edge_label_num)
+                e_label = self._schema.edge_labels[e_label]
         except ValueError as e:
             raise ValueError("Label does not exists.") from e
 
         def check_out_of_range(id, length):
             if id >= length or id < 0:
-                raise KeyError("id {} is out of range.".format(id))
-
-        check_out_of_range(v_label_id, self._schema.vertex_label_num)
-        check_out_of_range(e_label_id, self._schema.edge_label_num)
+                raise IndexError("id {} is out of range.".format(id))
 
         # Check relation v_label -> e_label <- v_label exists.
         relation = (v_label, v_label)
-        if relation not in self._schema.edge_relations[e_label_id]:
+        if relation not in self._schema.edge_relationships[e_label_id]:
             raise ValueError(
-                f"Graph doesn't contain such relationship {v_label} -> {e_label} <- {v_label}."
+                f"Graph doesn't contain such relationship: {v_label} -> {e_label} <- {v_label}."
             )
 
         try:
