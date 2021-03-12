@@ -30,7 +30,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.11
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.12
       options:
         --shm-size 4096m
     strategy:
@@ -135,7 +135,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.11
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.12
     steps:
     - name: Install Dependencies
       run: |
@@ -175,7 +175,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.11
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.12
     steps:
     - name: Install Dependencies
       run: |
@@ -409,6 +409,7 @@ jobs:
         fail_ci_if_error: true
 
     - name: Clean
+      if: always()
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
@@ -479,6 +480,7 @@ jobs:
         ./function_test.sh 8112 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
     - name: Clean
+      if: always()
       run: |
         sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
@@ -520,3 +522,9 @@ jobs:
                         registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest
+
+    - name: Clean
+      if: always()
+      run: |
+        sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true

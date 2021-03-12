@@ -1381,7 +1381,7 @@ class DynamicFragment {
         }
         src_fid = partitioner.GetPartitionId(src);
         dst_fid = partitioner.GetPartitionId(dst);
-        if (modify_type == rpc::ADD_EDGES) {
+        if (modify_type == rpc::NX_ADD_EDGES) {
           vm_ptr_->AddVertex(src_fid, src, src_gid);
           vm_ptr_->AddVertex(dst_fid, dst, dst_gid);
           if (src_fid == fid_) {
@@ -1406,13 +1406,13 @@ class DynamicFragment {
     }
 
     switch (modify_type) {
-    case rpc::ADD_EDGES:
+    case rpc::NX_ADD_EDGES:
       Insert(vertices, edges);
       break;
-    case rpc::UPDATE_EDGES:
+    case rpc::NX_UPDATE_EDGES:
       Update(vertices, edges);
       break;
-    case rpc::DEL_EDGES:
+    case rpc::NX_DEL_EDGES:
       Delete(vertices, edges);
       break;
     default:
@@ -1446,7 +1446,7 @@ class DynamicFragment {
           continue;
         }
         v_fid = partitioner.GetPartitionId(oid);
-        if (modify_type == rpc::ADD_NODES) {
+        if (modify_type == rpc::NX_ADD_NODES) {
           vm_ptr_->AddVertex(v_fid, oid, gid);
         } else {
           // UPDATE or DEL, if not exist the node, continue.
@@ -1454,7 +1454,7 @@ class DynamicFragment {
             continue;
           }
         }
-        if (v_fid == fid_ || (modify_type == rpc::DEL_NODES &&
+        if (v_fid == fid_ || (modify_type == rpc::NX_DEL_NODES &&
                               ovg2i_.find(gid) != ovg2i_.end())) {
           vertices.emplace_back(gid, v_data);
         }
@@ -1464,13 +1464,13 @@ class DynamicFragment {
       return;
 
     switch (modify_type) {
-    case rpc::ADD_NODES:
+    case rpc::NX_ADD_NODES:
       Insert(vertices, empty_edges);
       break;
-    case rpc::UPDATE_NODES:
+    case rpc::NX_UPDATE_NODES:
       Update(vertices, empty_edges);
       break;
-    case rpc::DEL_NODES:
+    case rpc::NX_DEL_NODES:
       Delete(vertices, empty_edges);
       break;
     default:

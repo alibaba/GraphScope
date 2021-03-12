@@ -558,7 +558,7 @@ class Graph(object):
                 continue
             if self._schema.add_vertex_properties(data):
                 nodes.append(json.dumps(node))
-        self._op = dag_utils.modify_vertices(self, types_pb2.ADD_NODES, nodes)
+        self._op = dag_utils.modify_vertices(self, types_pb2.NX_ADD_NODES, nodes)
         return self._op.eval()
 
     def remove_node(self, n):
@@ -617,7 +617,7 @@ class Graph(object):
         nodes = []
         for n in nodes_for_removing:
             nodes.append(json.dumps([n]))
-        self._op = dag_utils.modify_vertices(self, types_pb2.DEL_NODES, nodes)
+        self._op = dag_utils.modify_vertices(self, types_pb2.NX_DEL_NODES, nodes)
         return self._op.eval()
 
     @property
@@ -921,11 +921,11 @@ class Graph(object):
             edge = [u, v, data]
             edges.append(json.dumps(edge))
             if len(edges) > 10000:  # make sure messages size not larger than rpc max
-                op = dag_utils.modify_edges(self, types_pb2.ADD_EDGES, edges)
+                op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges)
                 op.eval()
                 edges.clear()
         if len(edges) > 0:
-            op = dag_utils.modify_edges(self, types_pb2.ADD_EDGES, edges)
+            op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges)
             op.eval()
 
     def add_weighted_edges_from(self, ebunch_to_add, weight="weight", **attr):
@@ -1019,7 +1019,7 @@ class Graph(object):
             if ne < 2:
                 raise ValueError("Edge tuple %s must be a 2-tuple or 3-tuple." % (e,))
             edges.append(json.dumps(e[:2]))  # ignore edge data if present
-        self._op = dag_utils.modify_edges(self, types_pb2.DEL_EDGES, edges)
+        self._op = dag_utils.modify_edges(self, types_pb2.NX_DEL_EDGES, edges)
         return self._op.eval()
 
     def set_edge_data(self, u, v, data):
@@ -1051,7 +1051,7 @@ class Graph(object):
 
         """
         edge = [json.dumps((u, v, data))]
-        self._op = dag_utils.modify_edges(self, types_pb2.UPDATE_EDGES, edge)
+        self._op = dag_utils.modify_edges(self, types_pb2.NX_UPDATE_EDGES, edge)
         return self._op.eval()
 
     def set_node_data(self, n, data):
@@ -1083,7 +1083,7 @@ class Graph(object):
 
         """
         node = [json.dumps((n, data))]
-        self._op = dag_utils.modify_vertices(self, types_pb2.UPDATE_NODES, node)
+        self._op = dag_utils.modify_vertices(self, types_pb2.NX_UPDATE_NODES, node)
         return self._op.eval()
 
     def update(self, edges=None, nodes=None):

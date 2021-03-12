@@ -98,6 +98,70 @@ def create_graph(session_id, graph_type, **kwargs):
     return op
 
 
+def add_vertices(graph, **kwargs):
+    """Create an `ADD_VERTICES` op, add op to default dag.
+
+    Args:
+        graph (:class:`Graph`): a :class:`Graph` instance.
+        **kwargs: additional properties respect to different `graph_type`.
+
+    Returns:
+        An op to add vertices to a graph in c++ side with necessary configurations.
+    """
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
+    }
+
+    if graph.graph_type == types_pb2.ARROW_PROPERTY:
+        attrs = kwargs.pop("attrs", None)
+        if attrs:
+            for k, v in attrs.items():
+                if isinstance(v, attr_value_pb2.AttrValue):
+                    config[k] = v
+    else:
+        raise ValueError(f"Not support add vertices on graph type {graph.graph_type}")
+    op = Operation(
+        graph.session_id,
+        types_pb2.ADD_VERTICES,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
+def add_edges(graph, **kwargs):
+    """Create an `ADD_EDGES` op, add op to default dag.
+
+    Args:
+        graph (:class:`Graph`): a :class:`Graph` instance.
+        **kwargs: additional properties respect to different `graph_type`.
+
+    Returns:
+        An op to add edges to a graph in c++ side with necessary configurations.
+    """
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
+    }
+
+    if graph.graph_type == types_pb2.ARROW_PROPERTY:
+        attrs = kwargs.pop("attrs", None)
+        if attrs:
+            for k, v in attrs.items():
+                if isinstance(v, attr_value_pb2.AttrValue):
+                    config[k] = v
+    else:
+        raise ValueError(f"Not support add edges on graph type {graph.graph_type}")
+    op = Operation(
+        graph.session_id,
+        types_pb2.ADD_EDGES,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
 def dynamic_to_arrow(graph):
     """Create an op to transform a :class:`nx.Graph` object to :class:`Graph`.
 
@@ -172,7 +236,7 @@ def modify_edges(graph, modify_type, edges):
 
     Args:
         graph (:class:`nx.Graph`): A nx graph.
-        modify_type (`type_pb2.(ADD_EDGES | DEL_EDGES | UPDATE_EDGES)`): The modify type
+        modify_type (`type_pb2.(NX_ADD_EDGES | NX_DEL_EDGES | NX_UPDATE_EDGES)`): The modify type
         edges (list): List of edges to be inserted into or delete from graph based on `modify_type`
 
     Returns:
@@ -197,7 +261,7 @@ def modify_vertices(graph, modify_type, vertices):
 
     Args:
         graph (:class:`nx.Graph`): A nx graph.
-        modify_type (`type_pb2.(ADD_NODES | DEL_NODES | UPDATE_NODES)`): The modify type
+        modify_type (`type_pb2.(NX_ADD_NODES | NX_DEL_NODES | NX_UPDATE_NODES)`): The modify type
         vertices (list): node list.
 
     Returns:

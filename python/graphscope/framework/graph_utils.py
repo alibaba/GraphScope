@@ -28,18 +28,12 @@ import numpy as np
 import pandas as pd
 import vineyard
 
-from graphscope.client.session import get_default_session
-from graphscope.framework import dag_utils
 from graphscope.framework import utils
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
-from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import types_pb2
-
-__all__ = ["load_from"]
-
 
 VineyardObjectTypes = (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
 
@@ -331,13 +325,7 @@ def process_edge(edge: EdgeLabel) -> attr_value_pb2.NameAttrList:
     return attr_list
 
 
-def _sanity_check(edges: Sequence[EdgeLabel], vertices: Sequence[VertexLabel]):
-    vertex_labels = []
-    for v in vertices:
-        vertex_labels.append(v.label)
-    if not vertex_labels:
-        vertex_labels.append("_")
-
+def check_edge_validity(edges: Sequence[EdgeLabel], vertex_labels: Sequence[str]):
     for edge in edges:
         # Check source label and destination label
         check_argument(len(edge.sub_labels) != 0, "Edge label is malformed.")
@@ -348,14 +336,20 @@ def _sanity_check(edges: Sequence[EdgeLabel], vertices: Sequence[VertexLabel]):
                         "source label and destination label must be both specified or either unspecified"
                     )
 
+            check_argument(
+                sub_label.source_vid != sub_label.destination_vid,
+                "source col and destination col cannot refer to the same col",
+            )
             # Handle default label. If edge doesn't specify label, then use default.
             if not sub_label.source_label and not sub_label.destination_label:
-                check_argument(len(vertex_labels) == 1, "ambiguous vertex label")
+                check_argument(len(vertex_labels) <= 1, "ambiguous vertex label")
                 if len(vertex_labels) == 1:
-                    sub_label.source_label = (
-                        sub_label.destination_label
-                    ) = vertex_labels[0]
-            if vertices is not None and len(vertices) > 0:
+                    sub_label.source_label = vertex_labels[0]
+                    sub_label.destination_label = vertex_labels[0]
+                else:
+                    sub_label.source_label = "_"
+                    sub_label.destination_label = "_"
+            elif vertex_labels:
                 check_argument(
                     sub_label.source_label in vertex_labels,
                     "source label not found in vertex labels",
@@ -364,15 +358,11 @@ def _sanity_check(edges: Sequence[EdgeLabel], vertices: Sequence[VertexLabel]):
                     sub_label.destination_label in vertex_labels,
                     "destination label not found in vertex labels",
                 )
-            check_argument(
-                sub_label.source_vid != sub_label.destination_vid,
-                "source col and destination col cannot refer to the same col",
-            )
 
-    return edges, vertices
+    return edges
 
 
-def _get_config(
+def assemble_op_config(
     edges: Sequence[EdgeLabel],
     vertices: Sequence[VertexLabel],
     directed: bool,
@@ -499,135 +489,3 @@ def normalize_parameter_vertices(
     else:
         v_labels.append(process_label("_", vertices))
     return v_labels
-
-
-def load_from(
-    edges: Union[
-        Mapping[str, Union[LoaderVariants, Sequence, Mapping]], LoaderVariants, Sequence
-    ],
-    vertices: Union[
-        Mapping[str, Union[LoaderVariants, Sequence, Mapping]],
-        LoaderVariants,
-        Sequence,
-        None,
-    ] = None,
-    directed=True,
-    oid_type="int64_t",
-    generate_eid=True,
-) -> Graph:
-    """Load a Arrow property graph using a list of vertex/edge specifications.
-
-    - Use Dict of tuples to setup a graph.
-        We can use a dict to set vertex and edge configurations,
-        which can be used to build graphs.
-
-        Examples:
-
-        .. code:: ipython
-
-            g = graphscope_session.load_from(
-                edges={
-                    "group": [
-                        (
-                            "file:///home/admin/group.e",
-                            ["group_id", "member_size"],
-                            ("leader_student_id", "student"),
-                            ("member_student_id", "student"),
-                        ),
-                        (
-                            "file:///home/admin/group_for_teacher_student.e",
-                            ["group_id", "group_name", "establish_date"],
-                            ("teacher_in_charge_id", "teacher"),
-                            ("member_student_id", "student"),
-                        ),
-                    ]
-                },
-                vertices={
-                    "student": (
-                        "file:///home/admin/student.v",
-                        ["name", "lesson_nums", "avg_score"],
-                        "student_id",
-                    ),
-                    "teacher": (
-                        "file:///home/admin/teacher.v",
-                        ["name", "salary", "age"],
-                        "teacher_id",
-                    ),
-                },
-            )
-
-        'e' is the label of edges, and 'v' is the label for vertices, edges are stored in the 'both_in_out' format
-        edges with label 'e' linking from 'v' to 'v'.
-
-    - Use Dict of dict to setup a graph.
-        We can also give each element inside the tuple a meaningful name,
-        makes it more understandable.
-
-        Examples:
-
-        .. code:: ipython
-
-            g = graphscope_session.load_from(
-                edges={
-                    "group": [
-                        {
-                            "loader": "file:///home/admin/group.e",
-                            "properties": ["group_id", "member_size"],
-                            "source": ("leader_student_id", "student"),
-                            "destination": ("member_student_id", "student"),
-                        },
-                        {
-                            "loader": "file:///home/admin/group_for_teacher_student.e",
-                            "properties": ["group_id", "group_name", "establish_date"],
-                            "source": ("teacher_in_charge_id", "teacher"),
-                            "destination": ("member_student_id", "student"),
-                        },
-                    ]
-                },
-                vertices={
-                    "student": {
-                        "loader": "file:///home/admin/student.v",
-                        "properties": ["name", "lesson_nums", "avg_score"],
-                        "vid": "student_id",
-                    },
-                    "teacher": {
-                        "loader": "file:///home/admin/teacher.v",
-                        "properties": ["name", "salary", "age"],
-                        "vid": "teacher_id",
-                    },
-                },
-            )
-
-    Args:
-        edges: Edge configuration of the graph
-        vertices (optional): Vertices configurations of the graph. Defaults to None.
-            If None, we assume all edge's src_label and dst_label are deduced and unambiguous.
-        directed (bool, optional): Indicate whether the graph
-            should be treated as directed or undirected.
-        oid_type (str, optional): ID type of graph. Can be "int64_t" or "string". Defaults to "int64_t".
-        generate_eid (bool, optional): Whether to generate a unique edge id for each edge. Generated eid will be placed
-            in third column. This feature is for cooperating with interactive engine.
-            If you only need to work with analytical engine, set it to False. Defaults to False.
-    """
-
-    # Don't import the :code:`nx` in top-level statments to improve the
-    # performance of :code:`import graphscope`.
-    from graphscope.experimental import nx
-
-    sess = get_default_session()
-    if sess is None:
-        raise ValueError("No default session found.")
-    if isinstance(edges, (Graph, nx.Graph, *VineyardObjectTypes)):
-        return Graph(sess.session_id, edges)
-    oid_type = utils.normalize_data_type_str(oid_type)
-    e_labels = normalize_parameter_edges(edges)
-    v_labels = normalize_parameter_vertices(vertices)
-    e_labels, v_labels = _sanity_check(e_labels, v_labels)
-    config = _get_config(e_labels, v_labels, directed, oid_type, generate_eid)
-    op = dag_utils.create_graph(sess.session_id, types_pb2.ARROW_PROPERTY, attrs=config)
-    graph_def = sess.run(op)
-    graph = Graph(sess.session_id, graph_def)
-    return graph
-
-
-g = load_from
