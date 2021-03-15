@@ -534,6 +534,12 @@ class ReplicaSetBuilder(object):
 class GSEngineBuilder(ReplicaSetBuilder):
     """Builder for graphscope analytical engine."""
 
+    _vineyard_requests_cpu = 0.5
+    _vineyard_requests_mem = "512Mi"
+
+    _engine_requests_cpu = 0.5
+    _engine_requests_mem = "4Gi"
+
     def __init__(self, name, labels, num_workers, image_pull_policy):
         self._name = name
         self._labels = labels
@@ -545,7 +551,16 @@ class GSEngineBuilder(ReplicaSetBuilder):
         )
 
     def add_vineyard_container(
-        self, name, image, cpu, mem, shared_mem, etcd_endpoint, port, **kwargs
+        self,
+        name,
+        image,
+        cpu,
+        mem,
+        shared_mem,
+        preemptive,
+        etcd_endpoint,
+        port,
+        **kwargs
     ):
         vineyard_command = " ".join(
             [
@@ -567,7 +582,11 @@ class GSEngineBuilder(ReplicaSetBuilder):
         cmd = ["bash", "-c", "%s" % ("; ".join(commands),)]
 
         resources_dict = {
-            "requests": ResourceBuilder(cpu, mem).build(),
+            "requests": ReplicaSetBuilder(
+                self._vineyard_requests_cpu, self._vineyard_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
             "limits": ResourceBuilder(cpu, mem).build(),
         }
 
@@ -612,11 +631,15 @@ class GSEngineBuilder(ReplicaSetBuilder):
             )
         )
 
-    def add_engine_container(self, name, image, cpu, mem, **kwargs):
+    def add_engine_container(self, name, image, cpu, mem, preemptive, **kwargs):
         cmd = ["tail", "-f", "/dev/null"]
 
         resources_dict = {
-            "requests": ResourceBuilder(cpu, mem).build(),
+            "requests": ResourceBuilder(
+                self._engine_requests_cpu, self._engine_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
             "limits": ResourceBuilder(cpu, mem).build(),
         }
 
@@ -673,6 +696,9 @@ class GSEngineBuilder(ReplicaSetBuilder):
 class GSEtcdBuilder(DeploymentBuilder):
     """Builder for graphscope etcd."""
 
+    _requests_cpu = 1.0
+    _requests_mem = "512Mi"
+
     def __init__(self, name, labels, image_pull_policy, replicas=1):
         self._name = name
         self._labels = labels
@@ -689,6 +715,7 @@ class GSEtcdBuilder(DeploymentBuilder):
         image,
         cpu,
         mem,
+        preemptive,
         listen_peer_service_port,
         listen_client_service_port,
         max_txn_ops=1024000,
@@ -717,7 +744,9 @@ class GSEtcdBuilder(DeploymentBuilder):
         ]
 
         resources_dict = {
-            "requests": ResourceBuilder(cpu, mem).build(),
+            "requests": ResourceBuilder(self._requests_cpu, self._requests_mem).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
             "limits": ResourceBuilder(cpu, mem).build(),
         }
 
@@ -763,6 +792,12 @@ class GSEtcdBuilder(DeploymentBuilder):
 class GSGraphManagerBuilder(DeploymentBuilder):
     """Builder for graphscope interactive graph manager."""
 
+    _manager_requests_cpu = 0.5
+    _manager_requests_mem = "1Gi"
+
+    _zookeeper_requests_cpu = 0.5
+    _zookeeper_requests_mem = "256Mi"
+
     def __init__(self, name, labels, image_pull_policy, replicas=1):
         self._name = name
         self._labels = labels
@@ -772,7 +807,7 @@ class GSGraphManagerBuilder(DeploymentBuilder):
             self._name, self._labels, self._replicas, self._image_pull_policy
         )
 
-    def add_manager_container(self, name, image, cpu, mem, port=8080):
+    def add_manager_container(self, name, image, cpu, mem, preemptive, port=8080):
         cmd = [
             "/bin/bash",
             "-c",
@@ -780,7 +815,11 @@ class GSGraphManagerBuilder(DeploymentBuilder):
         ]
 
         resources_dict = {
-            "requests": ResourceBuilder(cpu, mem).build(),
+            "requests": ResourceBuilder(
+                self._manager_requests_cpu, self._manager_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
             "limits": ResourceBuilder(cpu, mem).build(),
         }
 
@@ -821,9 +860,13 @@ class GSGraphManagerBuilder(DeploymentBuilder):
             )
         )
 
-    def add_zookeeper_container(self, name, image, cpu, mem, port=2181):
+    def add_zookeeper_container(self, name, image, cpu, mem, preemptive, port=2181):
         resources_dict = {
-            "requests": ResourceBuilder(cpu, mem).build(),
+            "requests": ResourceBuilder(
+                self._zookeeper_requests_cpu, self._zookeeper_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
             "limits": ResourceBuilder(cpu, mem).build(),
         }
 
@@ -856,6 +899,9 @@ class GSGraphManagerBuilder(DeploymentBuilder):
 class GSCoordinatorBuilder(DeploymentBuilder):
     """Builder for graphscope coordinator."""
 
+    _requests_cpu = 1.0
+    _requests_mem = "4Gi"
+
     def __init__(self, name, labels, image_pull_policy, replicas=1):
         self._name = name
         self._labels = labels
@@ -870,6 +916,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         name,
         port,
         num_workers,
+        preemptive,
         instance_id,
         log_level,
         namespace,
@@ -903,6 +950,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
     ):
         self._port = port
         self._num_workers = num_workers
+        self._preemptive = preemptive
         self._instance_id = instance_id
         self._log_level = log_level
         self._namespace = namespace
@@ -937,9 +985,9 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         cmd = self.build_container_command()
 
         resources_dict = {
-            "requests": ResourceBuilder(
-                self._coordinator_cpu, self._coordinator_mem
-            ).build(),
+            "requests": ResourceBuilder(self._requests_cpu, self._requests_mem).build()
+            if self._preemptive
+            else ResourceBuilder(self._coordinator_cpu, self._coordinator_mem).build(),
             "limits": ResourceBuilder(
                 self._coordinator_cpu, self._coordinator_mem
             ).build(),
@@ -992,6 +1040,8 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             str(self._port),
             "--num_workers",
             str(self._num_workers),
+            "--preemptive",
+            str(self._preemptive),
             "--instance_id",
             self._instance_id,
             "--log_level",

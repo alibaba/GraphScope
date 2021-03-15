@@ -75,6 +75,9 @@ class GSConfig(object):
 
     k8s_service_type = "NodePort"
 
+    # support resource preemption or resource guarantee
+    preemptive = True
+
     k8s_waiting_for_delete = False
     num_workers = 2
     show_log = False

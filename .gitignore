@@ -3,6 +3,8 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints
 *.egg-info/
+*.eggs
+python/*.eggs
 
 # coordinator
 coordinator/proto
