@@ -697,7 +697,7 @@ class GSEtcdBuilder(DeploymentBuilder):
     """Builder for graphscope etcd."""
 
     _requests_cpu = 1.0
-    _requests_mem = "512Mi"
+    _requests_mem = "256Mi"
 
     def __init__(self, name, labels, image_pull_policy, replicas=1):
         self._name = name
