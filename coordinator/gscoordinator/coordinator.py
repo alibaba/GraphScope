@@ -454,6 +454,7 @@ class CoordinatorServiceServicer(
             "schemaJson": schema_json,
             "podNameList": ",".join(self._pods_list),
             "containerName": ENGINE_CONTAINER,
+            "preemptive": str(self._launcher.preemptive),
             "gremlinServerCpu": str(gremlin_server_cpu),
             "gremlinServerMem": gremlin_server_mem,
         }
@@ -677,6 +678,14 @@ def parse_sys_args():
         type=int,
         default=4,
         help="The number of engine workers.",
+    )
+    parser.add_argument(
+        "--preemptive",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        default=True,
+        help="Support resource preemption or resource guarantee",
     )
     parser.add_argument(
         "--instance_id",
@@ -911,6 +920,7 @@ def launch_graphscope():
             image_pull_secrets=args.k8s_image_pull_secrets,
             volumes=args.k8s_volumes,
             num_workers=args.num_workers,
+            preemptive=args.preemptive,
             instance_id=args.instance_id,
             log_level=args.log_level,
             timeout_seconds=args.timeout_seconds,

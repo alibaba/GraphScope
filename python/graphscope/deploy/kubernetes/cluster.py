@@ -68,6 +68,9 @@ class KubernetesCluster(object):
         num_workers: int
             Number of workers to launch graphscope engine.
 
+        preemptive: bool, optional
+            Support resource preemption or resource guarantee.
+
         gs_image: str
             GraphScope engine image.
 
@@ -161,6 +164,7 @@ class KubernetesCluster(object):
         namespace=None,
         service_type=None,
         num_workers=None,
+        preemptive=None,
         gs_image=None,
         etcd_image=None,
         gie_graph_manager_image=None,
@@ -195,6 +199,7 @@ class KubernetesCluster(object):
         self._service_type = service_type
         self._gs_image = gs_image
         self._num_workers = num_workers
+        self._preemptive = preemptive
         self._etcd_image = etcd_image
         self._gie_graph_manager_image = gie_graph_manager_image
         self._zookeeper_image = zookeeper_image
@@ -432,6 +437,7 @@ class KubernetesCluster(object):
             name=self._coordinator_container_name,
             port=self._random_coordinator_service_port,
             num_workers=self._num_workers,
+            preemptive=self._preemptive,
             instance_id=self._instance_id,
             log_level=gs_config.log_level,
             namespace=self._namespace,

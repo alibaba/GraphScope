@@ -18,11 +18,11 @@ spec:
   - image: gremlin_image
     resources:
       requests:
-        cpu: gremlin_server_cpu
-        memory: gremlin_server_mem
+        cpu: requests_cpu
+        memory: requests_mem
       limits:
-        cpu: gremlin_server_cpu
-        memory: gremlin_server_mem
+        cpu: limits_cpu
+        memory: limits_mem
     name: gremlin-container
     imagePullPolicy: IfNotPresent
     args: ["/home/maxgraph/frontend-entrypoint.sh"]
@@ -35,11 +35,11 @@ spec:
   - image: coordinator_image
     resources:
       requests:
-        cpu: gremlin_server_cpu
-        memory: gremlin_server_mem
+        cpu: requests_cpu
+        memory: requests_mem
       limits:
-        cpu: gremlin_server_cpu
-        memory: gremlin_server_mem
+        cpu: limits_cpu
+        memory: limits_mem
     name: coordinator-container
     imagePullPolicy: IfNotPresent
     args: ["/home/maxgraph/coordinator-entrypoint.sh"]

@@ -93,6 +93,7 @@ public class InstanceManagerController {
                                                @RequestParam("schemaJson") String schemaJson,
                                                @RequestParam("podNameList") String podNameList,
                                                @RequestParam("containerName") String containerName,
+                                               @RequestParam("preemptive") String preemptive,
                                                @RequestParam("gremlinServerCpu") String gremlinServerCpu,
                                                @RequestParam("gremlinServerMem") String gremlinServerMem,
                                                @RequestParam("engineParams") String engineParams) throws Exception {
@@ -126,6 +127,7 @@ public class InstanceManagerController {
             createCommandList.add(schemaPath);
             createCommandList.add(podNameList);
             createCommandList.add(containerName);
+            createCommandList.add(preemptive);
             createCommandList.add(gremlinServerCpu);
             createCommandList.add(gremlinServerMem);
             createCommandList.add(engineParams);

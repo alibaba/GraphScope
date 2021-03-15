@@ -147,6 +147,7 @@ class Session(object):
         config=None,
         addr=gs_config.addr,
         num_workers=gs_config.num_workers,
+        preemptive=gs_config.preemptive,
         k8s_namespace=gs_config.k8s_namespace,
         k8s_service_type=gs_config.k8s_service_type,
         k8s_gs_image=gs_config.k8s_gs_image,
@@ -187,6 +188,11 @@ class Session(object):
                 A new session id will be generated for each session connection.
 
             num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.
+
+            preemptive (bool, optional): If True, GraphScope instance will treat resource params (e.g. k8s_coordinator_cpu)
+                as limits and provide the minimum available value as requests, but this will make pod has a `Burstable` QOS,
+                which can be preempted by other pods with high QOS. Otherwise, it will set both requests and limits with the
+                same value.
 
             k8s_namespace (str, optional): Contains the namespace to create all resource inside.
                 If param missing, it will try to read namespace from kubernetes context, or
@@ -324,6 +330,7 @@ class Session(object):
         self._accessable_params = (
             "addr",
             "num_workers",
+            "preemptive",
             "k8s_namespace",
             "k8s_service_type",
             "k8s_gs_image",
@@ -703,6 +710,7 @@ class Session(object):
                 service_type=self._config_params["k8s_service_type"],
                 num_workers=self._config_params["num_workers"],
                 gs_image=self._config_params["k8s_gs_image"],
+                preemptive=self._config_params["preemptive"],
                 etcd_image=self._config_params["k8s_etcd_image"],
                 gie_graph_manager_image=self._config_params[
                     "k8s_gie_graph_manager_image"

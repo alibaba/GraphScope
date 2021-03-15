@@ -176,6 +176,7 @@ class KubernetesClusterLauncher(Launcher):
         image_pull_secrets=None,
         volumes=None,
         num_workers=None,
+        preemptive=None,
         instance_id=None,
         log_level=None,
         timeout_seconds=None,
@@ -211,6 +212,7 @@ class KubernetesClusterLauncher(Launcher):
         self._namespace = namespace
         self._service_type = service_type
         self._num_workers = num_workers
+        self._preemptive = preemptive
 
         self._coordinator_name = coordinator_name
         self._coordinator_service_name = coordinator_service_name
@@ -298,6 +300,10 @@ class KubernetesClusterLauncher(Launcher):
     def get_gie_graph_manager_service_name(self):
         return self._gie_graph_manager_service_name
 
+    @property
+    def preemptive(self):
+        return self._preemptive
+
     def _create_engine_replicaset(self):
         logger.info("Launching GraphScope engines pod ...")
         labels = {"name": self._engine_name}
@@ -340,20 +346,22 @@ class KubernetesClusterLauncher(Launcher):
         engine_builder.add_simple_envs({"GLOG_v": str(self._glog_level)})
         # add vineyard container
         engine_builder.add_vineyard_container(
-            self._vineyard_container_name,
-            self._gs_image,
-            self._vineyard_cpu,
-            self._vineyard_mem,
-            self._vineyard_shared_mem,
-            self._etcd_endpoint,
-            self._vineyard_service_port,
+            name=self._vineyard_container_name,
+            image=self._gs_image,
+            cpu=self._vineyard_cpu,
+            mem=self._vineyard_mem,
+            shared_mem=self._vineyard_shared_mem,
+            preemptive=self._preemptive,
+            etcd_endpoint=self._etcd_endpoint,
+            port=self._vineyard_service_port,
         )
         # add engine container
         engine_builder.add_engine_container(
-            self._engine_container_name,
-            self._gs_image,
-            self._engine_cpu,
-            self._engine_mem,
+            name=self._engine_container_name,
+            image=self._gs_image,
+            cpu=self._engine_cpu,
+            mem=self._engine_mem,
+            preemptive=self._preemptive,
         )
         for name in self._image_pull_secrets:
             engine_builder.add_image_pull_secret(name)
@@ -399,6 +407,7 @@ class KubernetesClusterLauncher(Launcher):
             image=self._etcd_image,
             cpu=self._etcd_cpu,
             mem=self._etcd_mem,
+            preemptive=self._preemptive,
             listen_peer_service_port=self._random_etcd_listen_peer_service_port,
             listen_client_service_port=self._random_etcd_listen_client_service_port,
         )
@@ -516,6 +525,7 @@ class KubernetesClusterLauncher(Launcher):
             image=self._gie_graph_manager_image,
             cpu=self._gie_graph_manager_cpu,
             mem=self._gie_graph_manager_mem,
+            preemptive=self._preemptive,
             port=self._interactive_engine_manager_port,
         )
 
@@ -525,6 +535,7 @@ class KubernetesClusterLauncher(Launcher):
             image=self._zookeeper_image,
             cpu=self._zookeeper_cpu,
             mem=self._zookeeper_mem,
+            preemptive=self._preemptive,
             port=self._zookeeper_port,
         )
 

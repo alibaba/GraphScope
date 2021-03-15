@@ -35,11 +35,22 @@ function _create_pod {
     coordinator_image=$(printf '%s\n' "$coordinator_image" | sed -e 's/[\/&]/\\&/g')
     # node_host=`kubectl describe pods -l "app=manager" | grep "Node:" | head -1 | awk -F '[ /]+' '{print $2}'`
     kubectl create configmap $config_name --from-file /home/maxgraph/config_$object_id
-    sed -e "s/unique_pod_name/$pod_name/g" -e "s/unique_config_name/$config_name/g" \
-        -e "s/gremlin_image/$gremlin_image/g" -e "s/unique_object_id/$object_id/g" \
-        -e "s/gremlin_server_cpu/$gremlin_server_cpu/g" -e "s/gremlin_server_mem/$gremlin_server_mem/g" \
-        -e "s/coordinator_image/$coordinator_image/g" \
-        /root/maxgraph/pod.yaml > /root/maxgraph/pod_${object_id}.yaml
+
+    if [ "$preemptive" = "True" ]; then
+      sed -e "s/unique_pod_name/$pod_name/g" -e "s/unique_config_name/$config_name/g" \
+          -e "s/gremlin_image/$gremlin_image/g" -e "s/unique_object_id/$object_id/g" \
+          -e "s/requests_cpu/$requests_cpu/g" -e "s/requests_mem/$requests_mem/g" \
+          -e "s/limits_cpu/$gremlin_server_cpu/g" -e "s/limits_mem/$gremlin_server_mem/g" \
+          -e "s/coordinator_image/$coordinator_image/g" \
+          /root/maxgraph/pod.yaml > /root/maxgraph/pod_${object_id}.yaml
+    else
+      sed -e "s/unique_pod_name/$pod_name/g" -e "s/unique_config_name/$config_name/g" \
+          -e "s/gremlin_image/$gremlin_image/g" -e "s/unique_object_id/$object_id/g" \
+          -e "s/requests_cpu/$gremlin_server_cpu/g" -e "s/requests_mem/$gremlin_server_mem/g" \
+          -e "s/limits_cpu/$gremlin_server_cpu/g" -e "s/limits_mem/$gremlin_server_mem/g" \
+          -e "s/coordinator_image/$coordinator_image/g" \
+          /root/maxgraph/pod.yaml > /root/maxgraph/pod_${object_id}.yaml
+    fi
     kubectl apply -f /root/maxgraph/pod_${object_id}.yaml
 }
 function _render_schema_path {
@@ -99,8 +110,12 @@ export schema_path=$2
 export engine_count=`echo $3 | awk -F"," '{print NF}'`
 export pod_hosts=`echo $3 | awk -F"," '{for(i=1;i<=NF;++i) {print $i" "}}'`
 export ENGINE_CONTAINER=$4
-export gremlin_server_cpu=$5
-export gremlin_server_mem=$6
-export engine_paras=$7
+export preemptive=$5
+export gremlin_server_cpu=$6
+export gremlin_server_mem=$7
+export engine_paras=$8
 export launch_engine_cmd="export object_id=${object_id} && /home/maxgraph/executor-entrypoint.sh"
+
+export requests_cpu=1.0
+export requests_mem="1Gi"
 _create_maxgraph_instance
