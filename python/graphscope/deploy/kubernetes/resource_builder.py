@@ -696,8 +696,8 @@ class GSEngineBuilder(ReplicaSetBuilder):
 class GSEtcdBuilder(DeploymentBuilder):
     """Builder for graphscope etcd."""
 
-    _requests_cpu = 1.0
-    _requests_mem = "256Mi"
+    _requests_cpu = 0.5
+    _requests_mem = "128Mi"
 
     def __init__(self, name, labels, image_pull_policy, replicas=1):
         self._name = name
@@ -792,8 +792,8 @@ class GSEtcdBuilder(DeploymentBuilder):
 class GSGraphManagerBuilder(DeploymentBuilder):
     """Builder for graphscope interactive graph manager."""
 
-    _manager_requests_cpu = 0.5
-    _manager_requests_mem = "1Gi"
+    _manager_requests_cpu = 1.0
+    _manager_requests_mem = "4Gi"
 
     _zookeeper_requests_cpu = 0.5
     _zookeeper_requests_mem = "256Mi"
