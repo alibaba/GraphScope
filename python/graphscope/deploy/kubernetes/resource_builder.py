@@ -582,7 +582,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
         cmd = ["bash", "-c", "%s" % ("; ".join(commands),)]
 
         resources_dict = {
-            "requests": ReplicaSetBuilder(
+            "requests": ResourceBuilder(
                 self._vineyard_requests_cpu, self._vineyard_requests_mem
             ).build()
             if preemptive
