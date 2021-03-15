@@ -944,8 +944,15 @@ def launch_graphscope():
     logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
 
     server.start()
+
+    # handle SIGTERM signal
+    def terminate(signum, frame):
+        del coordinator_service_servicer  # noqa: F821
+
+    signal.signal(signal.SIGTERM, terminate)
+
     try:
-        # Grpc has handled SIGINT/SIGTERM
+        # Grpc has handled SIGINT
         server.wait_for_termination()
     except KeyboardInterrupt:
         del coordinator_service_servicer
