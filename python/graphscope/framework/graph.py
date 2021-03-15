@@ -317,85 +317,64 @@ class Graph(object):
             raise RuntimeError(
                 "The graph is not registered in remote, and can't project to simple"
             )
-        self.check_unmodified()
         check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
-        check_argument(isinstance(v_label, (int, str)))
-        check_argument(isinstance(e_label, (int, str)))
+        self.check_unmodified()
 
         def check_out_of_range(id, length):
-            if id < length and id > -1:
-                return id
+            if id >= length or id < 0:
+                raise IndexError("id {} is out of range.".format(id))
+
+        try:
+            if isinstance(v_label, str):
+                v_label_id = self._schema.vertex_label_index(v_label)
             else:
-                raise KeyError("id {} is out of range.".format(id))
-
-        try:
-            v_label_id = (
-                check_out_of_range(v_label, self._schema.vertex_label_num)
-                if isinstance(v_label, int)
-                else self._schema.vertex_label_index(v_label)
-            )
+                v_label_id = v_label
+                check_out_of_range(v_label_id, self._schema.vertex_label_num)
+                v_label = self._schema.vertex_labels[v_label_id]
+            if isinstance(e_label, str):
+                e_label_id = self._schema.edge_label_index(e_label)
+            else:
+                e_label_id = e_label
+                check_out_of_range(e_label_id, self._schema.edge_label_num)
+                e_label = self._schema.edge_labels[e_label]
         except ValueError as e:
+            raise ValueError("Label does not exists.") from e
+
+        # Check relation v_label -> e_label <- v_label exists.
+        relation = (v_label, v_label)
+        if relation not in self._schema.edge_relationships[e_label_id]:
             raise ValueError(
-                "graph not contains the vertex label {}.".format(v_label)
-            ) from e
+                f"Graph doesn't contain such relationship: {v_label} -> {e_label} <- {v_label}."
+            )
 
         try:
-            e_label_id = (
-                check_out_of_range(e_label, self._schema.edge_label_num)
-                if isinstance(e_label, int)
-                else self._schema.edge_label_index(e_label)
-            )
+            if v_prop is None:
+                v_prop_id = -1
+                vdata_type = None
+            else:
+                if isinstance(v_prop, str):
+                    v_prop_id = self._schema.vertex_property_index(v_label_id, v_prop)
+                else:
+                    v_prop_id = v_prop
+                properties = self._schema.vertex_properties[v_label_id]
+                check_out_of_range(v_prop_id, len(properties))
+                vdata_type = list(properties.values())[v_prop_id]
+            if e_prop is None:
+                e_prop_id = -1
+                edata_type = None
+            else:
+                if isinstance(e_prop, str):
+                    e_prop_id = self._schema.edge_property_index(e_label_id, e_prop)
+                else:
+                    e_prop_id = e_prop
+                properties = self._schema.edge_properties[e_label_id]
+                check_out_of_range(e_prop_id, len(properties))
+                edata_type = list(properties.values())[e_prop_id]
         except ValueError as e:
-            raise InvalidArgumentError(
-                "graph not contains the edge label {}.".format(e_label)
-            ) from e
-
-        if v_prop is None:
-            # NB: -1 means vertex property is None
-            v_prop_id = -1
-            v_properties = None
-        else:
-            check_argument(isinstance(v_prop, (int, str)))
-            v_properties = self._schema.vertex_properties[v_label_id]
-            try:
-                v_prop_id = (
-                    check_out_of_range(v_prop, len(v_properties))
-                    if isinstance(v_prop, int)
-                    else self._schema.vertex_property_index(v_label_id, v_prop)
-                )
-            except ValueError as e:
-                raise ValueError(
-                    "vertex label {} not contains the property {}".format(
-                        v_label, v_prop
-                    )
-                ) from e
-
-        if e_prop is None:
-            # NB: -1 means edge property is None
-            e_prop_id = -1
-            e_properties = None
-        else:
-            check_argument(isinstance(e_prop, (int, str)))
-            e_properties = self._schema.edge_properties[e_label_id]
-            try:
-                e_prop_id = (
-                    check_out_of_range(e_prop, len(e_properties))
-                    if isinstance(e_prop, int)
-                    else self._schema.edge_property_index(e_label_id, e_prop)
-                )
-            except ValueError as e:
-                raise ValueError(
-                    "edge label {} not contains the property {}".format(e_label, e_prop)
-                ) from e
+            raise ValueError("Property does not exists.") from e
 
         oid_type = self._schema.oid_type
         vid_type = self._schema.vid_type
-        vdata_type = None
-        if v_properties:
-            vdata_type = list(v_properties.values())[v_prop_id]
-        edata_type = None
-        if e_properties:
-            edata_type = list(e_properties.values())[e_prop_id]
 
         op = dag_utils.project_arrow_property_graph(
             self,
@@ -424,8 +403,8 @@ class Graph(object):
         check_argument(
             isinstance(selector, Mapping), "selector of add column must be a dict"
         )
-        self.check_unmodified()
         check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
+        self.check_unmodified()
         selector = {
             key: results._transform_selector(value) for key, value in selector.items()
         }
@@ -443,6 +422,7 @@ class Graph(object):
         Returns:
             `numpy.ndarray`
         """
+        check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
         self.check_unmodified()
         selector = utils.transform_labeled_vertex_property_data_selector(self, selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
@@ -460,6 +440,7 @@ class Graph(object):
         Returns:
             `pandas.DataFrame`
         """
+        check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
         self.check_unmodified()
         check_argument(
             isinstance(selector, Mapping),
