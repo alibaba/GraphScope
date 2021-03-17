@@ -241,8 +241,7 @@ class Graph(object):
 
         graphscope graph can convert to nx.Graph throught incomming_graph_data.
 
-        >>> g = Graph()
-        >>> g.load_from(vertices={}, edges={})
+        >>> g = gs.Graph()
         >>> G = nx.Graph(g)  # or DiGraph, etc
 
         """

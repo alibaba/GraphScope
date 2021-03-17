@@ -185,24 +185,17 @@ def test_error_on_used_after_close():
     s1 = graphscope.session(run_on_local=True)
 
     s1.close()
-    with pytest.raises(RuntimeError, match="Attempted to use a closed Session."):
-        load_graph(s1)
+    with pytest.raises(ValueError, match="Session not exists."):
+        g = load_graph(s1)
+        g._ensure_loaded()
 
     with pytest.raises(RuntimeError, match="No default session found."):
         g = graphscope.load_from(
             edges={
-                "e0": (
-                    "twitter_property_e_0#header_row=true",
-                    ["dist"],
-                    ("src_id", "v0"),
-                    ("dst_id", "v1"),
-                ),
-            },
-            vertices={
-                "v0": "{}/twitter_property_v_0#header_row=true",
-                "v1": "{}/twitter_property_v_1#header_row=true",
-            },
+                "e0": "twitter_property_e_0#header_row=true",
+            }
         )
+        g._ensure_loaded()
 
     # close after close
     s2 = graphscope.session(run_on_local=True)
@@ -231,22 +224,15 @@ def test_border_cases():
     with pytest.raises(RuntimeError, match="No default session found."):
         g = graphscope.load_from(
             edges={
-                "e0": (
-                    "twitter_property_e_0#header_row=true",
-                    ["dist"],
-                    ("src_id", "v0"),
-                    ("dst_id", "v1"),
-                ),
-            },
-            vertices={
-                "v0": "{}/twitter_property_v_0#header_row=true",
-                "v1": "{}/twitter_property_v_1#header_row=true",
-            },
+                "e0": "twitter_property_e_0#header_row=true",
+            }
         )
+        g._ensure_loaded()
     s1.as_default()
     assert graphscope.get_default_session() == s1
 
-    g3 = load_graph(s3)  # g3 is op of s3
+    g3 = load_graph(s3)
+    g3._ensure_loaded()  # g3 is op of s3
 
     with pytest.raises(
         ValueError,
@@ -268,15 +254,7 @@ def test_border_cases():
     with pytest.raises(RuntimeError, match="No default session found."):
         g = graphscope.load_from(
             edges={
-                "e0": (
-                    "twitter_property_e_0#header_row=true",
-                    ["dist"],
-                    ("src_id", "v0"),
-                    ("dst_id", "v1"),
-                ),
-            },
-            vertices={
-                "v0": "{}/twitter_property_v_0#header_row=true",
-                "v1": "{}/twitter_property_v_1#header_row=true",
-            },
+                "e0": "twitter_property_e_0#header_row=true",
+            }
         )
+        g._ensure_loaded()

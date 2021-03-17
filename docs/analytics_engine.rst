@@ -304,7 +304,7 @@ To run your own algorithms, you may trigger it in place where you defined it.
     import graphscope
 
     sess = graphscope.session()
-    g = sess.load_from("...")
+    g = graphscope.Graph(sess)
 
     # load my algorithm
     my_app = SSSP_Pregel()
@@ -327,7 +327,7 @@ Later, you can load your own algorithm from the gar package.
     import graphscope
 
     sess = graphscope.session()
-    g = sess.load_from("...")
+    g = graphscope.Session(sess)
 
     # load my algorithm from a gar package
     my_app = load_app('SSSP_Pregel', 'file:///var/graphscope/udf/my_sssp_pregel.gar')

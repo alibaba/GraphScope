@@ -280,7 +280,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
     import graphscope
 
     sess = graphscope.session()
-    g = sess.load_from("...")
+    g = graphscope.Graph(sess)
 
     # 加载自己的算法
     my_app = SSSP_Pregel()
@@ -301,7 +301,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
     import graphscope
 
     sess = graphscope.session()
-    g = sess.load_from("...")
+    g = graphscope.Graph(sess)
 
     # 从gar包中加载自己的算法
     my_app = load_app('SSSP_Pregel', 'file:///var/graphscope/udf/my_sssp_pregel.gar')

@@ -41,8 +41,8 @@ def k_shell(graph, k: int):
     .. code:: python
 
         import graphscope as gs
-        s = gs.session()
-        g = s.load_from('The parameters for loading a graph...')
+        sess = gs.session()
+        g = gs.Graph(sess)
         pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
         r = gs.k_shell(pg)
         s.close()

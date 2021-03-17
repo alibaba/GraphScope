@@ -112,39 +112,36 @@ To load this graph to GraphScope, one may use the code below.
 
 .. code:: python
 
-    g = sess.load_from(
-        vertices={
-            "paper": "paper.csv",
-            "author": "author.csv",
-            "institution": "institution.csv",
-            "field_of_study": "field_of_study.csv",
-        },
-        edges={
-            "affiliated": (
-                "author_affiliated_with_institution.csv",
-                [],
-                ("src_id", "author"),
-                ("dst_id", "institution"),
-            ),
-            "cites": (
-                "paper_cites_paper.csv",
-                [],
-                ("src_id", "paper"),
-                ("dst_id", "paper"),
-            ),
-            "hasTopic": (
-                "paper_has_topic_field_of_study.csv",
-                [],
-                ("src_id", "paper"),
-                ("dst_id", "field_of_study"),
-            ),
-            "writes": (
-                "author_writes_paper.csv",
-                [],
-                ("src_id", "author"),
-                ("dst_id", "paper"),
-            ),
-        }
+    g = graphscope.Graph(sess)
+    g = (
+        g.add_vertices("paper.csv", label="paper")
+        .add_vertices("author.csv", label="author")
+        .add_vertices("institution.csv", label="institution")
+        .add_vertices("field_of_study.csv", label="field_of_study")
+        .add_edges(
+            "author_affiliated_with_institution.csv",
+            label="affiliated",
+            src_label="author",
+            dst_label="institution",
+        )
+        .add_edges(
+            "paper_has_topic_field_of_study.csv",
+            label="hasTopic",
+            src_label="paper",
+            dst_label="field_of_study",
+        )
+        .add_edges(
+            "paper_cites_paper.csv",
+            label="cites",
+            src_label="paper",
+            dst_label="paper",
+        )
+        .add_edges(
+            "author_writes_paper.csv",
+            label="writes",
+            src_label="author",
+            dst_label="paper",
+        )
     )
 
 Alternatively, we provide a function to load this graph for convenience.

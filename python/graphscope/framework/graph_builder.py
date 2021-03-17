@@ -35,7 +35,6 @@ from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
 from graphscope.framework.graph_utils import assemble_op_config
-from graphscope.framework.graph_utils import check_edge_validity
 from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
@@ -72,6 +71,9 @@ def load_from(
     generate_eid=True,
 ) -> Graph:
     """Load a Arrow property graph using a list of vertex/edge specifications.
+
+    .. deprecated:: version 0.3
+       Use :class:`graphscope.Graph()` instead.
 
     - Use Dict of tuples to setup a graph.
         We can use a dict to set vertex and edge configurations,
@@ -174,43 +176,13 @@ def load_from(
     if sess is None:
         raise ValueError("No default session found.")
     if isinstance(edges, (Graph, nx.Graph, *VineyardObjectTypes)):
-        return Graph(sess.session_id, edges)
+        return Graph(sess, edges)
     oid_type = utils.normalize_data_type_str(oid_type)
-    e_labels = normalize_parameter_edges(edges)
+    if oid_type not in ("int64_t", "std::string"):
+        raise ValueError("oid_type can only be int64_t or string.")
     v_labels = normalize_parameter_vertices(vertices)
-    vertex_labels = []
-    for v in v_labels:
-        vertex_labels.append(v.label)
-    e_labels = check_edge_validity(e_labels, vertex_labels)
-    config = assemble_op_config(e_labels, v_labels, directed, oid_type, generate_eid)
-    op = dag_utils.create_graph(sess.session_id, types_pb2.ARROW_PROPERTY, attrs=config)
-    graph_def = sess.run(op)
-    graph = Graph(sess.session_id, graph_def)
-    return graph
-
-
-def process_add_edges(graph, edges):
     e_labels = normalize_parameter_edges(edges)
-    # Configurations inherited from input graph
-    # directed, oid_type, generate_eid
-    # CHECK:
-    # 1. edge's src/dst labels must existed in vertex_labels
-    # 2. label name not in existed edge labels
-    vertex_labels = graph.schema.vertex_labels
-    edge_labels = graph.schema.edge_labels
-    check_edge_validity(edges, vertex_labels)
-    for edge in edges:
-        check_argument(
-            edge.label not in edge_labels,
-            f"Duplicate label name with existing edge labels: {edge.label}",
-        )
-
-    config = assemble_op_config(
-        e_labels, [], graph._directed, graph.schema.oid_type, graph._generate_eid
-    )
-    op = dag_utils.add_edges(graph, attrs=config)
-    graph_def = op.eval()
-    return Graph(graph.session_id, graph_def)
-
-
-g = load_from
+    config = assemble_op_config(v_labels, e_labels, oid_type, directed, generate_eid)
+    op = dag_utils.create_graph(sess.session_id, types_pb2.ARROW_PROPERTY, attrs=config)
+    graph = Graph(sess, op)
+    return graph

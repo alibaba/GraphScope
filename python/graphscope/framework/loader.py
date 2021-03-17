@@ -242,7 +242,7 @@ class Loader(object):
         if vineyard is None:
             raise RuntimeError("Vineyard is not installed")
         # defer execution of `vineyard.io.open` because `read_options` is unknown
-        # until load_from has been fully processed.
+        # until loading statement has been fully processed.
 
         def func(source, storage_options, read_options, sess):
             info = sess.info

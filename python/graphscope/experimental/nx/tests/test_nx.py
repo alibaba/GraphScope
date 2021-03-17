@@ -24,8 +24,6 @@ import graphscope
 import graphscope.experimental.nx as nx
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
-from graphscope.framework.graph_builder import g
-from graphscope.framework.graph_builder import load_from
 from graphscope.framework.loader import Loader
 from graphscope.proto import types_pb2
 
@@ -42,153 +40,66 @@ def graphscope_session():
 
 
 def ldbc_sample_single_label(prefix, directed):
-    vertices = {
-        "comment": (
-            Loader(
-                os.path.join(prefix, "comment_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            ["creationDate", "locationIP", "browserUsed", "content", "length"],
-            "id",
-        ),
-    }
-    edges = {
-        "replyOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "comment_replyOf_comment_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Comment.id", "comment"),
-                ("Comment.id.1", "comment"),
-            ),
-        ],
-    }
-    return load_from(edges, vertices, directed=directed)
+    graph = graphscope.Graph(directed=directed)
+    graph = graph.add_vertices(
+        Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "comment_replyOf_comment_0_0.csv"), delimiter="|"),
+        "replyOf",
+    )
+    return graph
 
 
 def ldbc_sample_multi_labels(prefix, directed):
-    vertices = {
-        "comment": (
-            Loader(
-                os.path.join(prefix, "comment_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            ["creationDate", "locationIP", "browserUsed", "content", "length"],
-            "id",
-        ),
-        "person": (
-            Loader(
-                os.path.join(prefix, "person_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            [
-                "firstName",
-                "lastName",
-                "gender",
-                "birthday",
-                "creationDate",
-                "locationIP",
-                "browserUsed",
-            ],
-            "id",
-        ),
-        "post": (
-            Loader(
-                os.path.join(prefix, "post_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            [
-                "imageFile",
-                "creationDate",
-                "locationIP",
-                "browserUsed",
-                "language",
-                "content",
-                "length",
-            ],
-            "id",
-        ),
-    }
-    edges = {
-        "replyOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "comment_replyOf_post_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Comment.id", "comment"),
-                ("Post.id", "post"),
-            ),
-        ],
-        "knows": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_knows_person_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["creationDate"],
-                ("Person.id", "person"),
-                ("Person.id.1", "person"),
-            )
-        ],
-    }
-    return load_from(edges, vertices, directed=directed)
+    graph = graphscope.Graph(directed=directed)
+    graph = (
+        graph.add_vertices(
+            Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
+        )
+        .add_vertices(
+            Loader(os.path.join(prefix, "person_0_0.csv"), delimiter="|"), "person"
+        )
+        .add_vertices(
+            Loader(os.path.join(prefix, "post_0_0.csv"), delimiter="|"),
+            "post",
+        )
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "comment_replyOf_comment_0_0.csv"), delimiter="|"),
+        "replyOf",
+        src_label="comment",
+        dst_label="comment",
+    ).add_edges(
+        Loader(os.path.join(prefix, "person_knows_person_0_0.csv"), delimiter="|"),
+        "knows",
+        ["creationDate"],
+        src_label="person",
+        dst_label="person",
+    )
+    return graph
 
 
 def ldbc_sample_with_duplicated_oid(prefix, directed):
-    vertices = {
-        "place": (
-            Loader(
-                os.path.join(prefix, "place_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            ["name", "url", "type"],
-            "id",
-        ),
-        "person": (
-            Loader(
-                os.path.join(prefix, "person_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            [
-                "firstName",
-                "lastName",
-                "gender",
-                "birthday",
-                "creationDate",
-                "locationIP",
-                "browserUsed",
-            ],
-            "id",
-        ),
-    }
-    edges = {
-        "isPartOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "place_isPartOf_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Place.id", "place"),
-                ("Place.id.1", "place"),
-            )
-        ],
-        "knows": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_knows_person_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["creationDate"],
-                ("Person.id", "person"),
-                ("Person.id.1", "person"),
-            )
-        ],
-    }
-    return load_from(edges, vertices, directed=directed)
+    graph = graphscope.Graph(directed=directed)
+    graph = graph.add_vertices(
+        Loader(os.path.join(prefix, "place_0_0.csv"), delimiter="|"), "place"
+    ).add_vertices(
+        Loader(os.path.join(prefix, "person_0_0.csv"), delimiter="|"), "person"
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "place_isPartOf_place_0_0.csv"), delimiter="|"),
+        "isPartOf",
+        src_label="place",
+        dst_label="place",
+    ).add_edges(
+        Loader(os.path.join(prefix, "person_knows_person_0_0.csv"), delimiter="|"),
+        "knows",
+        ["creationDate"],
+        src_label="person",
+        dst_label="person",
+    )
+    return graph
 
 
 @pytest.mark.usefixtures("graphscope_session")
