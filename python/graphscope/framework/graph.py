@@ -201,7 +201,6 @@ class Graph(object):
         # Try to load
         if self._pending_op is not None:
             # Create a graph from scratch.
-            print('\n', self._unsealed_edges , '\n')
             graph_def = self._pending_op.eval()
             self._from_graph_def(graph_def)
             self._pending_op = None
@@ -323,12 +322,12 @@ class Graph(object):
         """Unload this graph from graphscope engine."""
         if self._session is None:
             raise RuntimeError("The graph has been unloaded")
- 
+
         if self._key is None:
             self._session = None
             self._pending_op = None
             return
- 
+
         # close interactive instances first
         try:
             if (
