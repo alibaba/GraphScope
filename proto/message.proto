@@ -20,7 +20,7 @@ package gs.rpc;
 import "proto/error_codes.proto";
 import "proto/graph_def.proto";
 import "proto/op_def.proto";
-import "proto/types.proto"
+import "proto/types.proto";
 
 message ResponseStatus {
   enum NullDetail { NULL_DETAIL = 0; }
