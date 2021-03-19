@@ -134,6 +134,7 @@ class CoordinatorServiceServicer(
             )
         else:
             self._pods_list = []  # locally launched
+            self._k8s_namespace = ""
 
         # analytical engine
         self._analytical_engine_stub = self._create_grpc_stub()
@@ -202,13 +203,19 @@ class CoordinatorServiceServicer(
         self._session_id = self._generate_session_id()
         self._udf_app_workspace = os.path.join(WORKSPACE, self._session_id)
 
+        # Session connected, fetch logs via gRPC.
+        self._streaming_logs = True
+        sys.stdout.drop(False)
+
         return self._make_response(
             message_pb2.ConnectSessionResponse,
             code=error_codes_pb2.OK,
             session_id=self._session_id,
+            session_type=self._launcher.type(),
             num_workers=self._launcher.num_workers,
             engine_config=json.dumps(self._analytical_engine_config),
             pod_name_list=self._pods_list,
+            namespace=self._k8s_namespace,
         )
 
     def HeartBeat(self, request, context):
@@ -417,9 +424,12 @@ class CoordinatorServiceServicer(
             except queue.Empty:
                 pass
             else:
-                yield self._make_response(
-                    message_pb2.FetchLogsResponse, error_codes_pb2.OK, message=message
-                )
+                if self._streaming_logs:
+                    yield self._make_response(
+                        message_pb2.FetchLogsResponse,
+                        error_codes_pb2.OK,
+                        message=message,
+                    )
 
     def CloseSession(self, request, context):
         """
@@ -434,8 +444,11 @@ class CoordinatorServiceServicer(
 
         self._cleanup(stop_instance=request.stop_instance)
         self._request = None
-        if request.stop_instance:
-            self._streaming_logs = False
+
+        # Session closed, stop streaming logs
+        sys.stdout.drop(True)
+        self._streaming_logs = False
+
         return self._make_response(message_pb2.CloseSessionResponse, error_codes_pb2.OK)
 
     def CreateInteractiveInstance(self, request, context):
@@ -941,9 +954,6 @@ def launch_graphscope():
         dangling_seconds=args.dangling_timeout_seconds,
         log_level=args.log_level,
     )
-
-    # after GraphScope ready, fetch logs via gRPC.
-    sys.stdout.drop(False)
 
     # register gRPC server
     server = grpc.server(futures.ThreadPoolExecutor(os.cpu_count() or 1))

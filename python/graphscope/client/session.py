@@ -403,9 +403,16 @@ class Session(object):
         if kw:
             raise ValueError("Not recognized value: ", list(kw.keys()))
 
-        logger.info(
-            "Initializing graphscope session with parameters: %s", self._config_params
-        )
+        if self._config_params["addr"]:
+            logger.info(
+                "Connecting graphscope session with address: %s",
+                self._config_params["addr"],
+            )
+        else:
+            logger.info(
+                "Initializing graphscope session with parameters: %s",
+                self._config_params,
+            )
 
         self._closed = False
 
@@ -691,7 +698,6 @@ class Session(object):
     def _connect(self):
         if self._config_params["addr"] is not None:
             # try connect to exist coordinator
-            self._session_type = types_pb2.REMOTE
             proc, endpoint = None, self._config_params["addr"]
         elif self._config_params["enable_k8s"]:
             if (
@@ -703,7 +709,6 @@ class Session(object):
                 **self._config_params["k8s_client_config"]
             )
             proc = None
-            self._session_type = types_pb2.K8S
             self._k8s_cluster = KubernetesCluster(
                 api_client=api_client,
                 namespace=self._config_params["k8s_namespace"],
@@ -748,7 +753,6 @@ class Session(object):
         ):
             # lanuch coordinator with hosts
             proc, endpoint = _launch_coordinator_on_local(self._config_params)
-            self._session_type = types_pb2.HOSTS
         else:
             raise RuntimeError("Session initialize failed.")
 
@@ -756,17 +760,21 @@ class Session(object):
         self._grpc_client = GRPCClient(endpoint)
         self._grpc_client.waiting_service_ready(
             timeout_seconds=self._config_params["timeout_seconds"],
-            enable_k8s=self._config_params["enable_k8s"],
         )
 
-        # connect to rpc server
+        # connect and fetch logs from rpc server
         try:
             (
                 self._session_id,
+                self._session_type,
                 self._engine_config,
                 self._pod_name_list,
                 self._config_params["num_workers"],
+                self._config_params["k8s_namespace"],
             ) = self._grpc_client.connect()
+            # fetch logs
+            if self._config_params["enable_k8s"]:
+                self._grpc_client.fetch_logs()
             _session_dict[self._session_id] = self
         except Exception:
             if proc is not None and proc.poll() is None:
