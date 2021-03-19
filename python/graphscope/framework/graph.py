@@ -99,7 +99,11 @@ class Graph(object):
         self._interactive_instance_list = []
         self._learning_instance_list = []
 
+        # Hold uncompleted operation for lazy evaluation
         self._pending_op = None
+        # Hold a reference to base graph of modify operation,
+        # to avoid being garbage collected
+        self._base_graph = None
 
         oid_type = utils.normalize_data_type_str(oid_type)
         if oid_type not in ("int64_t", "std::string"):
@@ -179,8 +183,6 @@ class Graph(object):
         self._v_labels = self._schema.vertex_labels
         self._e_labels = self._schema.edge_labels
         self._e_relationships = self._schema.edge_relationships
-        # init saved_signature (must be after init schema)
-        self._saved_signature = self.signature
 
         # create gremlin server pod asynchronously
         if gs_config.initializing_interactive_engine:
@@ -190,22 +192,25 @@ class Graph(object):
             self._interactive_instance_launching_thread.start()
 
     def _ensure_loaded(self):
-        if self._key is not None:
+        if self._key is not None and self._pending_op is None:
             return
         # Unloaded
         if self._session is None:
             raise RuntimeError("The graph has been unloaded")
         # Empty graph
         if self._key is None and self._pending_op is None:
-            raise RuntimeError("Cannot load or unload an empty graph.")
+            raise RuntimeError("Empty graph.")
         # Try to load
         if self._pending_op is not None:
             # Create a graph from scratch.
             graph_def = self._pending_op.eval()
             self._from_graph_def(graph_def)
             self._pending_op = None
+            self._base_graph = None
             self._unsealed_vertices.clear()
             self._unsealed_edges.clear()
+            # init saved_signature (must be after init schema)
+            self._saved_signature = self.signature
 
     @property
     def key(self):
@@ -372,7 +377,7 @@ class Graph(object):
         self._ensure_loaded()
         check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
 
-        self.check_unmodified()
+        self._check_unmodified()
 
         def check_out_of_range(id, length):
             if id >= length or id < 0:
@@ -458,7 +463,7 @@ class Graph(object):
             isinstance(selector, Mapping), "selector of add column must be a dict"
         )
         check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
-        self.check_unmodified()
+        self._check_unmodified()
         selector = {
             key: results._transform_selector(value) for key, value in selector.items()
         }
@@ -771,8 +776,10 @@ class Graph(object):
         graph._v_labels = v_labels
         graph._e_labels = e_labels
         graph._e_relationships = e_relations
-
-        graph._key = self._key  # propage info about whether is a loaded graph.
+        # propage info about whether is a loaded graph.
+        # graph._key = self._key
+        if mutation_func:
+            graph._base_graph = self._base_graph or self
         return graph
 
     def add_vertices(self, vertices, label="_", properties=None, vid_field=0):
@@ -852,11 +859,11 @@ class Graph(object):
 
         if is_from_existed_graph:
             if label in self._e_labels and label not in self._unsealed_edges:
-                raise RuntimeError("Cannot add new relation to existed graph.")
+                raise ValueError("Cannot add new relation to existed graph.")
             if src_label is None or dst_label is None:
-                raise RuntimeError("src label and dst label cannot be None.")
+                raise ValueError("src label and dst label cannot be None.")
             if src_label not in self._v_labels or dst_label not in self._v_labels:
-                raise RuntimeError("src label or dst_label not existed in graph.")
+                raise ValueError("src label or dst_label not existed in graph.")
         else:
             if src_label is None and dst_label is None:
                 check_argument(len(self._v_labels) <= 1, "ambiguous vertex label")
@@ -920,15 +927,15 @@ class Graph(object):
         if label not in self._v_labels:
             raise ValueError(f"label {label} not in vertices.")
         if label not in self._unsealed_vertices:
-            raise RuntimeError(
+            raise ValueError(
                 "Remove vertices from a loaded graph doesn't supported yet"
             )
         # Check whether safe to remove
         for rel in self._e_relationships:
             for sub_rel in rel:
                 if label in sub_rel:
-                    raise RuntimeError(
-                        f"Vertex {label} has usage in edge {sub_rel}, please remove that edge first."
+                    raise ValueError(
+                        f"Vertex {label} has usage in relation {sub_rel}, please remove that edge first."
                     )
         unsealed_vertices = deepcopy(self._unsealed_vertices)
         v_labels = deepcopy(self._v_labels)
@@ -946,7 +953,7 @@ class Graph(object):
         if label not in self._e_labels:
             raise ValueError(f"label {label} not in edges")
         if label not in self._unsealed_edges:
-            raise RuntimeError("Remove edges from a loaded graph doesn't supported yet")
+            raise ValueError("Remove edges from a loaded graph doesn't supported yet")
 
         unsealed_edges = deepcopy(self._unsealed_edges)
         e_labels = deepcopy(self._e_labels)
@@ -961,7 +968,7 @@ class Graph(object):
                     if dst_label is None or dst_label == sub_rel[1]:
                         remove_list.append(sub_rel)
         if not remove_list:
-            raise RuntimeError("Cannot find edges to remove.")
+            raise ValueError("Cannot find edges to remove.")
 
         # Remove the edge label
         if src_label is None and dst_label is None:
@@ -984,4 +991,5 @@ class Graph(object):
         )
 
 
-g = Graph
+def g(incoming_data):
+    return Graph(incoming_data=incoming_data)

@@ -359,6 +359,9 @@ class Graph(object):
     def name(self, s):
         self.graph["name"] = s
 
+    def loaded(self):
+        return self.key is not None
+
     def __str__(self):
         """Returns the graph name.
 

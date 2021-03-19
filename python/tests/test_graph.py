@@ -175,20 +175,10 @@ def test_error_on_project_to_simple_wrong_graph_type_2(dynamic_property_graph):
         sdg.project_to_simple()
 
 
-@pytest.mark.skip()
-def test_error_on_graph_init(graphscope_session):
-    with pytest.raises(ValueError, match="Failed to create a graph"):
-        g = Graph(graphscope_session.session_id)
-
-
-@pytest.mark.skip("Why such strange behaviour? Shouldn't we raise in __init__?")
 def test_error_on_operation_on_graph(graphscope_session):
-    g = Graph(graphscope_session.session_id)
-    with pytest.raises(RuntimeError, match="The graph is not registered in remote"):
+    g = Graph(graphscope_session)
+    with pytest.raises(RuntimeError, match="Empty graph"):
         g.project_to_simple(v_label=0, v_prop=0, e_label=0, e_prop=0)
-
-    with pytest.raises(RuntimeError, match="The graph is not registered in remote"):
-        g.unload()
 
     with pytest.raises(AssertionError):
         property_sssp(g, src=6)
@@ -351,3 +341,150 @@ def test_project_to_simple_string_eprop(graphscope_session):
     sg = g.project_to_simple(
         v_label="person", e_label="knows", v_prop="firstName", e_prop="creationDate"
     )
+
+
+def test_add_vertices_edges(graphscope_session):
+    prefix = os.path.expandvars("${GS_TEST_DIR}/modern_graph")
+    graph = Graph(graphscope_session)
+    graph = graph.add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person")
+    graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "knows")
+
+    assert graph.schema.vertex_labels == ["person"]
+    assert graph.schema.edge_labels == ["knows"]
+
+    with pytest.raises(ValueError, match="src label and dst label cannot be None"):
+        graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "created")
+    with pytest.raises(ValueError, match="src label or dst_label not existed in graph"):
+        graph = graph.add_edges(
+            Loader(f"{prefix}/created.csv", delimiter="|"),
+            "created",
+            src_label="person",
+            dst_label="software",
+        )
+
+    graph = graph.add_vertices(
+        Loader(f"{prefix}/software.csv", delimiter="|"), "software"
+    )
+
+    with pytest.raises(ValueError, match="Cannot add new relation to existed graph"):
+        graph = graph.add_edges(
+            Loader(f"{prefix}/knows.csv", delimiter="|"),
+            "knows",
+            src_label="software",
+            dst_label="software",
+        )
+
+    graph = graph.add_edges(
+        Loader(f"{prefix}/created.csv", delimiter="|"),
+        "created",
+        src_label="person",
+        dst_label="software",
+    )
+
+    assert graph.schema.vertex_labels == ["person", "software"]
+    assert graph.schema.edge_labels == ["knows", "created"]
+
+
+def test_error_on_remove_vertices_edges(graphscope_session):
+    prefix = os.path.expandvars("${GS_TEST_DIR}/modern_graph")
+    graph = Graph(graphscope_session)
+    graph = graph.add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person")
+    graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "knows")
+
+    graph = graph.add_vertices(
+        Loader(f"{prefix}/software.csv", delimiter="|"), "software"
+    )
+    graph = graph.add_edges(
+        Loader(f"{prefix}/created.csv", delimiter="|"),
+        "created",
+        src_label="person",
+        dst_label="software",
+    )
+
+    with pytest.raises(ValueError, match="Vertex software has usage in relation"):
+        graph = graph.remove_vertices("software")
+
+    with pytest.raises(ValueError, match="label xxx not in vertices"):
+        graph = graph.remove_vertices("xxx")
+    with pytest.raises(ValueError, match="label xxx not in edges"):
+        graph = graph.remove_edges("xxx")
+    with pytest.raises(ValueError, match="Cannot find edges to remove"):
+        graph = graph.remove_edges("knows", src_label="xxx", dst_label="xxx")
+
+    assert graph.loaded()
+    with pytest.raises(
+        ValueError, match="Remove vertices from a loaded graph doesn't supported yet"
+    ):
+        graph = graph.remove_vertices("person")
+    with pytest.raises(
+        ValueError, match="Remove edges from a loaded graph doesn't supported yet"
+    ):
+        graph = graph.remove_edges("knows")
+
+
+def test_remove_vertices_edges(graphscope_session):
+    prefix = os.path.expandvars("${GS_TEST_DIR}/modern_graph")
+    graph = (
+        Graph(graphscope_session)
+        .add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person")
+        .add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "knows")
+    )
+
+    another_graph = graph.add_vertices(
+        Loader(f"{prefix}/software.csv", delimiter="|"), "software"
+    ).add_edges(
+        Loader("{prefix}/created.csv", delimiter="|"),
+        "created",
+        src_label="person",
+        dst_label="software",
+    )
+
+    another_graph = another_graph.remove_edges("created")
+    another_graph = another_graph.remove_vertices("software")
+
+    assert graph.schema.vertex_labels == another_graph.schema.vertex_labels
+    assert graph.schema.edge_labels == another_graph.schema.edge_labels
+
+
+def test_multiple_add_vertices_edges(graphscope_session):
+    prefix = os.path.expandvars("${GS_TEST_DIR}/modern_graph")
+    graph = Graph(graphscope_session)
+    graph = graph.add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person")
+    graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "knows")
+    graph = graph.add_vertices(
+        Loader(f"{prefix}/software.csv", delimiter="|"), "software"
+    )
+    graph = graph.add_edges(
+        Loader(f"{prefix}/created.csv", delimiter="|"),
+        "created",
+        src_label="person",
+        dst_label="software",
+    )
+
+    assert graph.schema.vertex_labels == ["person", "software"]
+    assert graph.schema.edge_labels == ["created", "knows"]
+
+    graph = graph.add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person2")
+    graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "knows2")
+    graph = graph.add_vertices(
+        Loader(f"{prefix}/software.csv", delimiter="|"), "software2"
+    )
+    graph = graph.add_edges(
+        Loader(f"{prefix}/created.csv", delimiter="|"),
+        "created2",
+        src_label="person",
+        dst_label="software",
+    )
+
+    assert sorted(graph.schema.vertex_labels) == [
+        "person",
+        "person2",
+        "software",
+        "software2",
+    ]
+    assert sorted(graph.schema.edge_labels) == [
+        "created",
+        "created2",
+        "knows",
+        "knows2",
+    ]

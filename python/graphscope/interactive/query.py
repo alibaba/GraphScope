@@ -148,7 +148,7 @@ class InteractiveQuery(object):
             graph = graph.add_edges(
                 Loader(vineyard.ObjectName("__%s_edge_stream" % name))
             )
-            graph._load()
+            graph._ensure_loaded()
             logger.info("subgraph has been loaded")
             return graph
 
