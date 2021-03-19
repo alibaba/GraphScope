@@ -9,7 +9,7 @@ GraphScope charts
 
 ```shell
 $ helm repo add graphscope https://dl.bintray.com/graphscope/charts/
-$ helm update
+$ helm repo update
 ```
 See [*helm repo*](https://helm.sh/docs/helm/helm_repo/) for command documentation.
 
@@ -27,6 +27,8 @@ See [*helm install*](https://helm.sh/docs/helm/helm_install/) for command docume
 
 
 ## Get GraphScope Service Endpoint 
+
+Note that it may take a few minutes for pulling image at first time, you can watch the status by running `helm test` many times.
 
 ```shell
 # Helm 3 or 2 

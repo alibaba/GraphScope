@@ -93,7 +93,7 @@ class GRPCClient(object):
         self._session_id = None
         self._logs_fetching_thread = None
 
-    def waiting_service_ready(self, timeout_seconds=60, enable_k8s=True):
+    def waiting_service_ready(self, timeout_seconds=60):
         begin_time = time.time()
         request = message_pb2.HeartBeatRequest()
         # Do not drop this line, which is for handling KeyboardInterrupt.
@@ -106,9 +106,6 @@ class GRPCClient(object):
                 response = None
             finally:
                 if response is not None:
-                    # connnect to coordinator, fetch log
-                    if enable_k8s:
-                        self.fetch_logs()
                     if response.status.code == error_codes_pb2.OK:
                         logger.info("GraphScope coordinator service connected.")
                         break
@@ -213,9 +210,11 @@ class GRPCClient(object):
         self._session_id = response.session_id
         return (
             response.session_id,
+            response.session_type,
             json.loads(response.engine_config),
             response.pod_name_list,
             response.num_workers,
+            response.namespace,
         )
 
     @suppress_grpc_error
