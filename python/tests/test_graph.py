@@ -145,14 +145,14 @@ def test_unload(graphscope_session):
 
     assert not graph.loaded()
 
-    with pytest.raises(RuntimeError, match="The graph has been unloaded"):
+    with pytest.raises(RuntimeError, match="The graph is not loaded"):
         graph.unload()
 
-    with pytest.raises(RuntimeError, match="The graph has been unloaded"):
+    with pytest.raises(RuntimeError, match="The graph is not loaded"):
         graph.project_to_simple(v_label="person", e_label="knows")
     with pytest.raises(AssertionError):
         g2 = Graph(graphscope_session, graph)
-    with pytest.raises(RuntimeError, match="The graph has been unloaded"):
+    with pytest.raises(RuntimeError, match="The graph is not loaded"):
         property_sssp(graph, src=6)
 
 
@@ -180,7 +180,7 @@ def test_error_on_operation_on_graph(graphscope_session):
     with pytest.raises(RuntimeError, match="Empty graph"):
         g.project_to_simple(v_label=0, v_prop=0, e_label=0, e_prop=0)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(RuntimeError):
         property_sssp(g, src=6)
 
 

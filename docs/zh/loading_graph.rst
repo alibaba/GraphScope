@@ -13,175 +13,54 @@ GraphScope 以
 
 .. code:: python
 
-    load_from(edges, vertices)
+    def add_vertices(self, vertices, label="_", properties=[], vid_field=0):
+        pass
 
-`edges` 是一个 `Dict`（字典），字典中的每一项键值对都代表一个边类的标签。具体来说，每一项的键是标签的名字，
-其值则是一个 `Tuple`（元组） 或 `List`（列表），包含以下几项：
+    def add_edges(self, edges, label="_", properties=[], src_label=None, dst_label=None, src_field=0, dst_field=1):
+        pass
 
-- :ref:`Loader Object`，代表数据源，告知 `graphscope` 可以在哪里找到源数据，可以是文件路径，或者 numpy 数组等；
-- 一组属性名字。属性名应当与数据中的首行表头中的名字相一致。可选项，如果省略或为空，除起始点列和目标点列之外的所有列都将会作为属性载入；
-- 定义边的起始点的元组，格式为（起点列名，起点标签名）；
-- 定义边的目标点的元组，格式为（目标列名，目标标签名）；
+    def remove_vertices(self, label):
+        pass
 
-一个实际的例子如下：
+    def remove_edges(self, label, src_label=None, dst_label=None):
+        pass
 
-.. code:: python
+这些方法可以增量的构建一个属性图。
 
-    edges={
-        # 一个边类，标签名为 "group"
-        "group": (
-            # 数据源，在这里是本地文件路径
-            "file:///home/admin/group.e",
-            # 选择 group.e 中的若干列作为属性载入
-            ["group_id", "member_size"],
-            # 'leader_student_id' 列作为起始点列, 起始点标签为 'student'
-            ("leader_student_id", "student"),
-            # 'member_student_id' 列作为目标点列, 目标点标签为 'student'
-            ("member_student_id", "student")
-        )
-    }
-
-另外，还可以用字典来定义图模型，其中有若干个保留字作为字典中的键，分别为 `loader`, `properties`, `source` 和 `destination`。
-以下例子中的图模型的定义和上例完全一致。
+首先，我们创建一个会话，然后在此会话内创建图。
 
 .. code:: python
 
-    edges = {
-        "group": {
-                "loader": "file:///home/admin/group.e",
-                "properties": ["group_id", "member_size"],
-                "source": ("leader_teacher_id", "teacher"),
-                "destination": ("member_teacher_id", "teacher"),
-            },
-        }
+    sess = graphscope.session()
+    graph = graphscope.Graph(sess)
 
-在某些情况下，一种边的标签可能连接了两种及以上的点。例如，在下面的属性图中，有一个名为 `group` 的边标签，
-连接了两种点标签，即既有学生之间组成的 `group`，又有教师和学生之间组成的 `group`。
-在这种情况下，`group` 边类接受一组定义的列表。
-
-.. code:: python
-
-    edges={
-        # 标签名为 "group" 的边类
-        "group": [
-            (
-                "file:///home/admin/group.e",
-                ["group_id", "member_size"],
-                ("leader_student_id", "student"),
-                ("member_student_id", "student")
-            ),
-            (
-                "file:///home/admin/group_for_teacher_student.e",
-                ["group_id", "group_name", "establish_date"],
-                ("teacher_in_charge_id", "teacher"),
-                ("member_student_id", "student")
-            )
-        ]
-    }
-
-值得注意的是，对于同一个标签的多个定义，其属性列表的数量和类型应该一致，最好名字也一致，
-因为同一个标签的所有定义的数据都将会被放入同一张表，属性名将会使用第一个定义中指定的名字。
-
-定义边类时可以省略某些项。
-比如，属性列表可以为空，表示载入所有列。
-
-.. code:: python
-
-    edges={
-        "group": (
-            "file:///home/admin/group.e",
-            [],
-            ("leader_student_id", "student"),
-            ("member_student_id", "student")
-        )
-    }
-
-另外，所有的属性名都可以由索引来指代（索引从0开始）。
-在下例中，第一列被指定为起始点的ID，第二列被指定为目标点的ID。
-
-.. code:: python
-
-    edges={
-        "group": (
-            "/home/admin/group.e",
-            ["group_id", "member_size"],
-            # 0 代表第1列，用作起始点ID列
-            (0, "student"),
-            # 1 代表第二列，用作目标点ID列
-            (1, "student"),
-        )
-    }
-
-如果属性图中只有一个点标签，那么可以省略起始点和目标点标签的名字（默认边的两端都为这一种点标签）
-
-.. code:: python
-
-    edges={
-        "group": (
-            "file:///home/admin/group.e",
-            ["group_id", "member_size",]
-            # 省略起始点和目标点的点标签名字
-            "leader_student_id",
-            "member_student_id",
-        )
-    }
-
-在极简的情况下，边的定义可以只包含一个数据源。
-默认情况下，第一列被用作起始点ID，第二列被用作目标点ID，剩余所有列被用作属性。
-
-.. code:: python
-
-    edges={
-        "group": "file:///home/admin/group.e"
-    }
-
-
-同边类似，`vertices` 通常也是一个字典，包含点标签的名字以及其具体定义。定义包含如下几项：
+我们可以向图内添加一个点标签。相关的参数含义如下：
 
 - :ref:`Loader Object`，代表数据源，指示 `graphscope` 可以在哪里找到源数据，可以为文件路径，或者 numpy 数组等；
+- 点标签的名字；
 - 一组属性名字。属性名应当与数据中的首行表头中的名字相一致。可选项，如果省略或为空，除ID列之外的所有列都将会作为属性载入；
 - 作为ID列的列名，此列将会载入边时被用来做起始点ID或目标点ID。
 
-如下是一个点定义的例子:
+来看一个例子。
 
 .. code:: python
-
-    vertices={
-        "student": (
-            # 标签为 student 的数据源
-            "file:///home/admin/student.v",
-            # 载入为属性的列名
-            ["name", "lesson_number", "avg_score"],
-            # 用此列作为 ID
-            "student_id"
-        )
-    }
-
-
-与边类似，每个点的定义也可以是一个字典，其保留字为 `loader`, `properties` 和 `vid`。
-
-.. code:: python
-
-    vertices={
-        "student": {
-            "loader": "file:///home/admin/student.v",
-            "properties": ["name", "lesson_nums", "avg_score"],
-            "vid": "student_id",
-        },
-    },
+        
+    graph = graph.add_vertices(
+        "file:///home/admin/student.v",  # 数据源
+        label="student",  # 标签名
+        properties=["name", "lesson_number", "avg_score"],  # 列名，被作为属性载入
+        vid_field="student_id"  # ID 列名
+    )
 
 我们也可以省略点定义的某些项。
 
 - 属性列表可以为空，代表所有列都将作为属性；
-- vid 可以用索引来表示。
-
-在极简情况下，点的定义可以只包含一个数据源。此时，第 1 列被用作 ID 列，其余列都将作为属性。
+- vid 可以用索引来表示。默认值为0，代表第一列。
 
 .. code:: python
+        
+    graph.add_vertices("file:///home/admin/student.v", label="student")
 
-    vertices={
-        "student": "file:///home/admin/student.v"
-    }
 
 在完整的图定义中，`vertices` 可以被整体省略。
 `graphscope` 将会从边的起始点和目标点中提取点ID，将 `_` 作为点标签名字。
@@ -195,39 +74,148 @@ GraphScope 以
         )
 
 
-来看一个完整的例子:
+
+我们可以再向图内添加一个边标签。相关的参数含义如下：
+
+- :ref:`Loader Object`，代表数据源，告知 `graphscope` 可以在哪里找到源数据，可以是文件路径，或者 numpy 数组等；
+- 边标签的名字；
+- 一组属性名字。属性名应当与数据中的首行表头中的名字相一致。可选项，如果省略或为空，除起始点列和目标点列之外的所有列都将会作为属性载入；
+- 起点标签名；
+- 终点标签名；
+- 起点的ID列名；
+- 终点的ID列名。
+
+让我们看一个例子。
 
 .. code:: python
 
-    g = graphscope_session.load_from(
-        edges={
-            "group": [
-                (
-                    "file:///home/admin/group.e",
-                    ["group_id", "member_size"],
-                    ("leader_student_id", "student"),
-                    ("member_student_id", "student"),
-                ),
-                (
-                    "file:///home/admin/group_for_teacher_student.e",
-                    ["group_id", "group_name", "establish_date"],
-                    ("teacher_in_charge_id", "teacher"),
-                    ("member_student_id", "student"),
-                ),
-            ]
-        },
-        vertices={
-            "student": (
-                "/home/admin/student.v",
-                ["name", "lesson_nums", "avg_score"],
-                "student_id",
-            ),
-            "teacher": (
-                "/home/admin/teacher.v",
-                ["name", "salary", "age"],
-                "teacher_id",
-            ),
-        },
+    graph = graph.add_edges(
+        "file:///home/admin/group.e",  # 数据源
+        label="group",  # 标签名
+        properties=["group_id", "member_size"],  # 选择数据中的一些列，作为属性载入
+        src_label="student",  # 起始点标签名
+        dst_label="student",  # 终点标签名
+        src_field="leader_student_id",  # 使用 `leader_student_id` 列作为起始点ID列
+        dst_field="member_student_id",  # 使用 `member_student_id` 列作为终点ID列
+    )
+
+
+在一些情况下，一种边的标签可能连接了两种及以上的点。例如，在下面的属性图中，有一个名为 `group` 的边标签，
+连接了两种点标签，即既有学生之间组成的 `group`，又有教师和学生之间组成的 `group`。
+在这种情况下，可以添加两次名为 `group` 的边，但是有不同的起始点标签和终点标签。
+
+
+.. code:: python
+
+    graph = graph.add_edges("file:///home/admin/group.e",
+            label="group",
+            properties=["group_id", "member_size"],
+            src_label="student", dst_label="student",
+            src_field="leader_student_id", dst_field="member_student_id"
+        )
+
+    graph = graph.add_edges("file:///home/admin/group_for_teacher_student.e",
+        label="group",
+        properties=["group_id", "member_size"],
+        src_label="teacher", dst_label="student",
+        src_field="teacher_in_charge_id", dst_field="member_student_id"
+    )
+
+值得注意的是，对于同一个标签的多个定义，其属性列表的数量和类型应该一致，最好名字也一致，
+因为同一个标签的所有定义的数据都将会被放入同一张表，属性名将会使用第一个定义中指定的名字。
+
+
+定义边类时可以省略某些项。
+比如，属性列表可以为空，表示载入所有列。
+
+.. code:: python
+
+    graph = graph.add_edges(
+        "file:///home/admin/group.e",
+        label="group",
+        src_label="student", dst_label="student",
+        src_field="leader_student_id", dst_field="member_student_id"
+    )
+
+
+另外，所有的属性名都可以由索引来指代（索引从0开始）。
+在下例中，第一列被指定为起始点的ID，第二列被指定为目标点的ID。
+
+.. code:: python
+
+    graph = graph.add_edges(
+    "file:///home/admin/group.e",
+    label="group",
+    src_label="student", dst_label="student",
+    src_field=0, dst_field=1,
+    )
+
+`src_field` 默认为 0， `dst_field` 默认为 1， 所以若边数据使用第一列为起始点ID，第二列为终点ID，
+则参数可使用默认值。
+
+.. code:: python
+
+    graph = graph.add_edges(
+    "file:///home/admin/group.e",
+    label="group",
+    src_label="student", dst_label="student",
+    )
+
+如果图中只存在一个点标签，那么可以省略指定点标签。
+GraphScope 将会推断起始点标签和终点标签为这一个点标签。
+
+.. code:: python
+    graph = graphscope.Graph(sess)
+    graph = graph.add_vertices("file:///home/admin/student.v", label="student")
+    graph = graph.add_edges("file:///home/admin/group.e", label="group")
+    # GraphScope 会将 `src_label` 和 `dst_label` 自动赋值为 `student`.
+
+
+更进一步，我们可以完全省略掉点。 GraphScope 将会从边的起始点和目标点中提取点ID，将 `_` 作为点标签名字。
+注意此时将不允许图中有手动配置的点，即只适合在很简单的图中使用。
+
+.. code:: python
+
+    graph = graphscope.Graph(sess)
+    graph.add_edges("file:///home/admin/group.e", label="group")
+    # 载图后，图中将会包含一个点标签，名为 `_`, 和一个边标签，名为 `group`.
+
+类 `Graph` 有三个配置元信息的参数，分别为：
+
+- `oid_type`, 可以为 `int64_t` 或 `string`. 默认为 `int64_t`，会有更快的速度，和使用更少的内存.
+- `directed`, bool, 默认为`True`. 指示载入无向图还是有向图.
+- `generate_eid`, bool, 默认为 `True`. 指示是否为每条边分配一个全局唯一的ID.
+
+
+让我们看一个完整的例子：
+
+.. code:: python
+
+    sess = graphscope.session()
+    graph = graphscope.Graph(sess)
+    
+    graph = graph.add_vertices(
+        "/home/admin/student.v",
+        "student",
+        ["name", "lesson_nums", "avg_score"],
+        "student_id",
+    )
+    graph = graph.add_vertices(
+        "/home/admin/teacher.v", "teacher", ["name", "salary", "age"], "teacher_id"
+    )
+    graph = graph.add_edges(
+        "file:///home/admin/group.e",
+        "group",
+        ["group_id", "member_size"],
+        src_label="student",
+        dst_label="student",
+    )
+    graph = graph.add_edges(
+        "file:///home/admin/group_for_teacher_student.e",
+        "group",
+        ["group_id", "member_size"],
+        src_label="teacher",
+        dst_label="student",
     )
 
 这里是一个更复杂的载入 LDBC-SNB 属性图的 `例子 <https://github.com/alibaba/GraphScope/blob/main/python/graphscope/dataset/ldbc.py>`_ 。
@@ -288,6 +276,89 @@ GraphScope 以
 ``_initiate_upload`` and ``_fetch_range`` 这几个方法就可以实现基本的read，write功能。最后通过 ``fsspec.register_implementation('protocol_name', 'protocol_file_system')`` 注册自定义的resolver。
 
 
-+------------------------------+---------------------------------------------+
-| :meth:`graphscope.load_from` | Loading from local filesystem, OSS, or ODPS |
-+------------------------------+---------------------------------------------+
+理解惰性载图
+----------
+
+GraphScope 中的图直到被使用时才会被真正载入。
+**被使用** 指任何涉及到远端的东西被用到时，比如图的 `key`, `vineyard_id`，完整的带有数据类型的图的定义，或者
+是有应用在图上查询，等等。
+
+当迭代式地建图时，图内部会存储一些基本的点标签，边标签信息，可以通过 `print(graph)` 来查看这些信息并不会触发载图过程。
+来看一个例子
+
+.. code:: python
+
+    sess = graphscope.session()
+    graph = graphscope.Graph(sess)
+
+    graph = graph.add_vertices("/home/admin/student.v", "student")
+    graph = graph.add_edges( "file:///home/admin/group.e", "group", src_label="student", dst_label="student")
+    # 这里并不会真正载入图
+    print(graph)
+    # 这一步将会触发载图，因为有些信息只有在载入图后才能获得
+    print(graph.key)
+    print(graph.schema)
+    graphscope.sssp(graph, src=6)
+    # 调用 `loaded()` 也会自动触发载图
+    assert graph.loaded() == True
+
+得益于惰性的载图，我们可以在真正载图前去除一些点或边标签，以解决偶尔写错的情况。
+但是当图已经被载入后，便不可以去除。
+
+.. code:: python
+
+    sess = graphscope.session()
+    graph = graphscope.Graph(sess)
+
+    graph = graph.add_vertices("/home/admin/student.v", "student")
+    graph = graph.add_vertices( "/home/admin/teacher.v", "teacher")
+    graph = graph.add_edges("file:///home/admin/group.e", "group", src_label="student", dst_label="student")
+    graph = graph.add_edges("file:///home/admin/group_for_teacher_student.e", "group", src_label="teacher", dst_label="student")
+
+    # 查看基本的schema，不触发载图
+    print(graph)
+
+    # 不可以去除尚有被边引用的点
+    # graph = graph.remove_vertices("teacher")  # 错误。存在边的起点或终点为这个点
+
+    # src_label 和 dst_label 可以被用来过滤边. 若没有指定，便去除整个边标签
+    graph = graph.remove_edges("group", src_label="teacher", dst_label="student")
+
+    # 现在我们可以去除点标签 `teacher`
+    graph = graph.remove_vertices("teacher")
+
+    print(graph)
+
+    # 触发载图
+    print(graph.key)
+
+    # 现在不可以再去除边
+    # graph = graph.remove_edges("group")
+
+然而，我们可以再为已经载入的图添加点或边。
+这一步仍然是惰性的，所以我们可以去除尚未被载入的点或边。
+
+.. code:: python
+
+    sess = graphscope.session()
+    graph = graphscope.Graph(sess)
+
+    graph = graph.add_vertices("/home/admin/student.v", "student")
+    graph = graph.add_edges("file:///home/admin/group.e", "group", src_label="student", dst_label="student")
+
+    print(graph.key)  # 触发载图
+
+    # 为载入的图加入更多点和边
+
+    graph = graph.add_vertices("/home/admin/teacher.v", "teacher")
+
+    graph = graph.add_edges("file:///home/admin/group_for_teacher_student.e", "group", src_label="teacher", dst_label="student")
+
+    print(graph)  # 不触发载图
+
+    # 可以去除掉尚未被载入的点或边
+    graph = graph.remove_edges("group", src_label="teacher", dst_label="student")
+    graph = graph.remove_vertices("teacher")
+
+    # 但是不能去除原图中被载入的点或边
+    # graph = graph.remove_edges("group", src_label="student", dst_label="student")

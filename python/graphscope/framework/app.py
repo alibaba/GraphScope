@@ -261,7 +261,7 @@ class App(object):
         """
         app_assets.is_compatible(graph)
         if not graph.loaded():
-            raise RuntimeError("The graph has been unloaded.")
+            raise RuntimeError("The graph is not loaded.")
 
         self._key = None
         self._graph = graph
