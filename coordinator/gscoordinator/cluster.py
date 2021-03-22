@@ -390,32 +390,30 @@ class KubernetesClusterLauncher(Launcher):
 
         time.sleep(1)
 
-        # create etcd deployment
+        # create distributed etcd with 3 pods
         etcd_builder = self._gs_etcd_builder_cls(
-            name=self._etcd_name,
-            labels=labels,
-            replicas=1,
-            image_pull_policy=self._image_pull_policy,
-        )
-
-        for name in self._image_pull_secrets:
-            etcd_builder.add_image_pull_secret(name)
-
-        etcd_builder.add_etcd_container(
-            name=self._etcd_container_name,
+            name_prefix=self._etcd_name,
+            container_name=self._etcd_container_name,
             service_name=self._etcd_service_name,
             image=self._etcd_image,
             cpu=self._etcd_cpu,
             mem=self._etcd_mem,
             preemptive=self._preemptive,
+            labels=labels,
+            image_pull_policy=self._image_pull_policy,
+            num_pods=3,
+            restart_policy="Always",
+            image_pull_secrets=self._image_pull_secrets,
             listen_peer_service_port=self._random_etcd_listen_peer_service_port,
             listen_client_service_port=self._random_etcd_listen_client_service_port,
         )
-        self._resource_object.append(
-            self._app_api.create_namespaced_deployment(
-                self._namespace, etcd_builder.build()
+
+        for pod_builder in etcd_builder.build():
+            self._resource_object.append(
+                self._core_api.create_namespaced_pod(
+                    self._namespace, pod_builder.build()
+                )
             )
-        )
 
     def _create_vineyard_service(self):
         labels = {"name": self._engine_name}  # vineyard in engine pod
