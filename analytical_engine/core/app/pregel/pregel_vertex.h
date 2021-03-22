@@ -55,9 +55,7 @@ class PregelVertex {
     compute_context_->set_vertex_value(*this, std::move(value));
   }
 
-  const VD_T& value() {
-    return compute_context_->get_vertex_value(*this);
-  }
+  const VD_T& value() { return compute_context_->get_vertex_value(*this); }
 
   virtual vertex_t vertex() const { return vertex_; }
 

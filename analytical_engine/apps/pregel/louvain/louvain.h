@@ -182,14 +182,12 @@ class PregelLouvain
   }
 
   // Get the total edge weight of the graph.
-  edata_t getTotalEdgeWeight(compute_context_t& context,
-                             pregel_vertex_t& v) {
+  edata_t getTotalEdgeWeight(compute_context_t& context, pregel_vertex_t& v) {
     auto& state = v.state();
     if (state.reset_total_edge_weight) {
       // we just aggregate the total edge weight in previous step.
-      state.total_edge_weight =
-          context.template get_aggregated_value<edata_t>(
-              edge_weight_aggregator);
+      state.total_edge_weight = context.template get_aggregated_value<edata_t>(
+          edge_weight_aggregator);
       state.reset_total_edge_weight = false;
     }
     return state.total_edge_weight;
@@ -397,7 +395,7 @@ class PregelLouvain
   }
 
   void compressCommunities(pregel_vertex_t& vertex,
-                            grape::IteratorPair<md_t*>& messages) {
+                           grape::IteratorPair<md_t*>& messages) {
     auto community_id = vertex.get_gid();
     edata_t weight = 0;
     std::map<vid_t, edata_t> edge_map;

@@ -221,9 +221,7 @@ class PregelComputeContext {
     }
   }
 
-  const vineyard::IdParser<vid_t>& vid_parser() const {
-    return vid_parser_;
-  }
+  const vineyard::IdParser<vid_t>& vid_parser() const { return vid_parser_; }
 
   std::unordered_map<std::string, std::shared_ptr<IAggregator>>& aggregators() {
     return aggregators_;

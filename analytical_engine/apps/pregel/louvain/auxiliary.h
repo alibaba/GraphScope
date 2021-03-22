@@ -27,9 +27,8 @@
 namespace gs {
 
 // aggregators define
-constexpr char change_aggregator[] =  "change_aggregator";
-constexpr char edge_weight_aggregator[] =
-    "total_edge_weight_aggregator";
+constexpr char change_aggregator[] = "change_aggregator";
+constexpr char edge_weight_aggregator[] = "total_edge_weight_aggregator";
 constexpr char actual_quality_aggregator[] = "actual_quality_aggregator";
 
 // major phase of louvain
@@ -43,7 +42,6 @@ constexpr int terminate_step = -9;
 constexpr int phase_one_minor_step_0 = 0;
 constexpr int phase_one_minor_step_1 = 1;
 constexpr int phase_one_minor_step_2 = 2;
-
 
 template <typename VID_T>
 struct LouvainNodeState {

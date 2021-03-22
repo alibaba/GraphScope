@@ -115,11 +115,11 @@ class LouvainAppBase
     {
       // Sync Aggregator
       ctx.compute_context().aggregate(change_aggregator,
-                                     ctx.GetLocalChangeSum());
+                                      ctx.GetLocalChangeSum());
       ctx.compute_context().aggregate(edge_weight_aggregator,
-                                     ctx.GetLocalEdgeWeightSum());
+                                      ctx.GetLocalEdgeWeightSum());
       ctx.compute_context().aggregate(actual_quality_aggregator,
-                                     ctx.GetLocalQualitySum());
+                                      ctx.GetLocalQualitySum());
       for (auto& pair : ctx.compute_context().aggregators()) {
         grape::InArchive iarc;
         std::vector<grape::InArchive> oarcs;
@@ -202,8 +202,8 @@ class LouvainAppBase
           ctx.compute_context().template get_aggregated_value<int64_t>(
               change_aggregator);
       ctx.change_history().push_back(totalChange);
-      bool to_halt = decide_to_halt(
-          ctx.change_history(), ctx.tolerance(), ctx.min_progress());
+      bool to_halt = decide_to_halt(ctx.change_history(), ctx.tolerance(),
+                                    ctx.min_progress());
       ctx.set_halt(to_halt);
       if (ctx.halt()) {
         LOG(INFO) << "super step " << current_super_step << " decided to halt.";
@@ -296,7 +296,7 @@ class LouvainAppBase
  private:
   // sync community id from community hub to community members.
   void syncCommunity(const fragment_t& frag, context_t& ctx,
-                      message_manager_t& messages) {
+                     message_manager_t& messages) {
     auto& vid_parser = ctx.compute_context().vid_parser();
     auto& comm_result = ctx.compute_context().vertex_data();
     auto inner_vertices = frag.InnerVertices();
