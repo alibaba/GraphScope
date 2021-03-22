@@ -315,7 +315,7 @@ def test_add_vertices_edges(gs_session_distributed, modern_graph_data_dir):
 
 
 def test_serialize_roundtrip(gs_session_distributed, p2p_property_dir):
-    graph = Graph(gs_session_distributed)
+    graph = Graph(gs_session_distributed, generate_eid=False)
     graph = graph.add_vertices(f"{p2p_property_dir}/p2p-31_property_v_0", "person")
     graph = graph.add_edges(
         f"{p2p_property_dir}/p2p-31_property_e_0",
