@@ -832,6 +832,12 @@ def parse_sys_args():
         help="Memory of engine container, suffix with ['Mi', 'Gi', 'Ti'].",
     )
     parser.add_argument(
+        "--k8s_etcd_num_pods",
+        type=int,
+        default=3,
+        help="The number of etcd pods.",
+    )
+    parser.add_argument(
         "--k8s_etcd_cpu",
         type=float,
         default=1.0,
@@ -918,6 +924,7 @@ def launch_graphscope():
             gie_graph_manager_image=args.k8s_gie_graph_manager_image,
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,
+            etcd_num_pods=args.k8s_etcd_num_pods,
             etcd_cpu=args.k8s_etcd_cpu,
             etcd_mem=args.k8s_etcd_mem,
             zookeeper_cpu=args.k8s_zookeeper_cpu,
