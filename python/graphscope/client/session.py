@@ -158,6 +158,7 @@ class Session(object):
         k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
         k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
         k8s_coordinator_mem=gs_config.k8s_coordinator_mem,
+        k8s_etcd_num_pods=gs_config.k8s_etcd_num_pods,
         k8s_etcd_cpu=gs_config.k8s_etcd_cpu,
         k8s_etcd_mem=gs_config.k8s_etcd_mem,
         k8s_zookeeper_cpu=gs_config.k8s_zookeeper_cpu,
@@ -227,6 +228,8 @@ class Session(object):
             k8s_coordinator_cpu (float, optional): Minimum number of CPU cores request for coordinator pod. Defaults to 1.0.
 
             k8s_coordinator_mem (str, optional): Minimum number of memory request for coordinator pod. Defaults to '4Gi'.
+
+            k8s_etcd_num_pods (int, optional): The number of etcd pods. Defaults to 3.
 
             k8s_etcd_cpu (float, optional): Minimum number of CPU cores request for etcd pod. Defaults to 0.5.
 
@@ -341,6 +344,7 @@ class Session(object):
             "k8s_zookeeper_image",
             "k8s_coordinator_cpu",
             "k8s_coordinator_mem",
+            "k8s_etcd_num_pods",
             "k8s_etcd_cpu",
             "k8s_etcd_mem",
             "k8s_zookeeper_cpu",
@@ -726,6 +730,7 @@ class Session(object):
                 vineyard_cpu=self._config_params["k8s_vineyard_cpu"],
                 vineyard_mem=self._config_params["k8s_vineyard_mem"],
                 vineyard_shared_mem=self._config_params["k8s_vineyard_shared_mem"],
+                etcd_num_pods=self._config_params["k8s_etcd_num_pods"],
                 etcd_cpu=self._config_params["k8s_etcd_cpu"],
                 etcd_mem=self._config_params["k8s_etcd_mem"],
                 zookeeper_cpu=self._config_params["k8s_zookeeper_cpu"],

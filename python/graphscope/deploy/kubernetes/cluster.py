@@ -89,6 +89,9 @@ class KubernetesCluster(object):
         image_pull_secrets: list of str, optional
             A list of secret name used to pulling image. Defaults to None.
 
+        etcd_num_pods: int
+            The number of etcd pods.
+
         etcd_cpu: float
             Minimum number of CPU cores request for etcd pod.
 
@@ -178,6 +181,7 @@ class KubernetesCluster(object):
         engine_mem=None,
         coordinator_cpu=None,
         coordinator_mem=None,
+        etcd_num_pods=None,
         etcd_cpu=None,
         etcd_mem=None,
         zookeeper_cpu=None,
@@ -211,6 +215,7 @@ class KubernetesCluster(object):
         elif not isinstance(self._image_pull_secrets, list):
             self._image_pull_secrets = [self._image_pull_secrets]
 
+        self._etcd_num_pods = etcd_num_pods
         self._etcd_cpu = etcd_cpu
         self._etcd_mem = etcd_mem
         self._zookeeper_cpu = zookeeper_cpu
@@ -452,6 +457,7 @@ class KubernetesCluster(object):
             coordinator_cpu=self._coordinator_cpu,
             coordinator_mem=self._coordinator_mem,
             coordinator_service_name=self._coordinator_service_name,
+            etcd_num_pods=self._etcd_num_pods,
             etcd_cpu=self._etcd_cpu,
             etcd_mem=self._etcd_mem,
             zookeeper_cpu=self._zookeeper_cpu,

@@ -1049,6 +1049,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         coordinator_cpu,
         coordinator_mem,
         coordinator_service_name,
+        etcd_num_pods,
         etcd_cpu,
         etcd_mem,
         zookeeper_cpu,
@@ -1083,6 +1084,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         self._coordinator_cpu = coordinator_cpu
         self._coordinator_mem = coordinator_mem
         self._coordinator_service_name = coordinator_service_name
+        self._etcd_num_pods = etcd_num_pods
         self._etcd_cpu = etcd_cpu
         self._etcd_mem = etcd_mem
         self._zookeeper_cpu = zookeeper_cpu
@@ -1184,6 +1186,8 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             self._coordinator_name,
             "--k8s_coordinator_service_name",
             self._coordinator_service_name,
+            "--k8s_etcd_num_pods",
+            str(self._etcd_num_pods),
             "--k8s_etcd_cpu",
             str(self._etcd_cpu),
             "--k8s_etcd_mem",

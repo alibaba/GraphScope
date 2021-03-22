@@ -161,6 +161,7 @@ class KubernetesClusterLauncher(Launcher):
         gie_graph_manager_image=None,
         coordinator_name=None,
         coordinator_service_name=None,
+        etcd_num_pods=None,
         etcd_cpu=None,
         etcd_mem=None,
         zookeeper_cpu=None,
@@ -231,6 +232,7 @@ class KubernetesClusterLauncher(Launcher):
 
         # etcd pod info
         self._etcd_image = etcd_image
+        self._etcd_num_pods = etcd_num_pods
         self._etcd_cpu = etcd_cpu
         self._etcd_mem = etcd_mem
 
@@ -390,7 +392,7 @@ class KubernetesClusterLauncher(Launcher):
 
         time.sleep(1)
 
-        # create distributed etcd with 3 pods
+        # create etcd cluster
         etcd_builder = self._gs_etcd_builder_cls(
             name_prefix=self._etcd_name,
             container_name=self._etcd_container_name,
@@ -401,7 +403,7 @@ class KubernetesClusterLauncher(Launcher):
             preemptive=self._preemptive,
             labels=labels,
             image_pull_policy=self._image_pull_policy,
-            num_pods=3,
+            num_pods=self._etcd_num_pods,
             restart_policy="Always",
             image_pull_secrets=self._image_pull_secrets,
             listen_peer_service_port=self._random_etcd_listen_peer_service_port,
