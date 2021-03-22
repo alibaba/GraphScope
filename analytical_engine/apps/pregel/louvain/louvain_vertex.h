@@ -28,6 +28,14 @@ limitations under the License.
 
 namespace gs {
 
+/**
+ * @brief LouvainVertex is a specific PregelVertex for louvain alorithm.
+ * LouvainVertex provides communication-related method to send messages to
+ * certain fragment and also can access to context of louvain.
+ * @tparam FRAG_T
+ * @tparam VD_T
+ * @tparam MD_T
+ */
 template <typename FRAG_T, typename VD_T, typename MD_T>
 class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
   using fragment_t = FRAG_T;

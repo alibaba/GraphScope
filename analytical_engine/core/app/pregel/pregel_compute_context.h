@@ -156,20 +156,30 @@ class PregelComputeContext {
   void activate(const vertex_t& v) {
     if (halted_[v] == true) {
       halted_[v] = false;
-      size_t one = 1;
-      __sync_fetch_and_sub(&voted_to_halt_num_, one);
+      // size_t one = 1;
+      // __sync_fetch_and_sub(&voted_to_halt_num_, one);
     }
   }
 
   void vote_to_halt(const pregel_vertex_t& vertex) {
     if (halted_[vertex.vertex()] == false) {
       halted_[vertex.vertex()] = true;
-      size_t one = 1;
-      grape::atomic_add(voted_to_halt_num_, one);
+      // size_t one = 1;
+      // grape::atomic_add(voted_to_halt_num_, one);
     }
   }
 
-  bool all_halted() { return voted_to_halt_num_ == inner_vertex_num_; }
+  bool all_halted() {
+    auto inner_vertices = fragment_->InnerVertices();
+    size_t cnt = 0;
+    for (auto& v : inner_vertices) {
+      if (halted_[v]) {
+        ++cnt;
+      }
+    }
+    return cnt == inner_vertex_num_;
+    // return voted_to_halt_num_ == inner_vertex_num_;
+  }
 
   typename FRAG_T::template vertex_array_t<std::vector<MD_T>>& messages_in() {
     return messages_in_;
