@@ -241,8 +241,7 @@ class Graph(object):
 
         graphscope graph can convert to nx.Graph throught incomming_graph_data.
 
-        >>> g = Graph()
-        >>> g.load_from(vertices={}, edges={})
+        >>> g = gs.Graph()
         >>> G = nx.Graph(g)  # or DiGraph, etc
 
         """
@@ -359,6 +358,9 @@ class Graph(object):
     @name.setter
     def name(self, s):
         self.graph["name"] = s
+
+    def loaded(self):
+        return self.key is not None
 
     def __str__(self):
         """Returns the graph name.

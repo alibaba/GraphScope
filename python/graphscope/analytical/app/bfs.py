@@ -39,8 +39,8 @@ def bfs(graph, src=0):
     .. code:: python
 
         import graphscope as gs
-        s = gs.session()
-        g = s.load_from('The parameters for loading a graph...')
+        sess = gs.session()
+        g = gs.Graph(sess)
         pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
         r = gs.bfs(pg, 6)  # use 6 as source vertex
         s.close()
@@ -65,8 +65,8 @@ def property_bfs(graph, src=0):
     .. code:: python
 
         import graphscope as gs
-        s = gs.session()
-        g = s.load_from('The parameters for loading a graph...')
+        sess = gs.session()
+        g = gs.Graph(sess)
         r = gs.property_bfs(g, 6)  # use 6 as source vertex
         s.close()
 

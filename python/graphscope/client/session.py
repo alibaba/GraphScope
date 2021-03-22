@@ -104,15 +104,17 @@ class Session(object):
         >>> import graphscope as gs
 
         >>> # use session object explicitly
-        >>> s = gs.session()
-        >>> g = s.load_from('xxx')
+        >>> sess = gs.session()
+        >>> g = gs.Graph(sess)
+        >>> pg = g.project_to_simple('v', 'e', None, 'dist')
         >>> r = s.sssp(g, 4)
         >>> s.close()
 
         >>> # or use a session as default
         >>> s = gs.session().as_default()
-        >>> g = gs.load_from('xxx')
-        >>> r = gs.sssp(g, 4)
+        >>> g = gs.Graph()
+        >>> pg = g.project_to_simple('v', 'e', None, 'dist')
+        >>> r = gs.sssp(pg, 4)
         >>> s.close()
 
     We support setup a service cluster and create a RPC session in following ways:
@@ -1011,7 +1013,7 @@ class Session(object):
                 front_ip=response.frontend_host, front_port=response.frontend_port
             )
             interactive_query.status = InteractiveQueryStatus.Running
-            graph.attach_interactive_instance(interactive_query)
+            graph._attach_interactive_instance(interactive_query)
 
         return interactive_query
 
@@ -1059,7 +1061,7 @@ class Session(object):
 
         learning_graph = LearningGraph(handle, config, graph.vineyard_id, self)
         self._learning_instance_dict[graph.vineyard_id] = learning_graph
-        graph.attach_learning_instance(learning_graph)
+        graph._attach_learning_instance(learning_graph)
         return learning_graph
 
 

@@ -197,7 +197,7 @@ def dynamic_to_arrow(graph):
     }
 
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.TRANSFORM_GRAPH,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -223,7 +223,7 @@ def arrow_to_dynamic(graph):
         types_pb2.VID_TYPE: utils.s_to_attr(graph.schema.vid_type),
     }
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.TRANSFORM_GRAPH,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -248,7 +248,7 @@ def modify_edges(graph, modify_type, edges):
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
     config[types_pb2.EDGES] = utils.list_str_to_attr(edges)
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.MODIFY_EDGES,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -273,7 +273,7 @@ def modify_vertices(graph, modify_type, vertices):
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
     config[types_pb2.NODES] = utils.list_str_to_attr(vertices)
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.MODIFY_VERTICES,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -306,7 +306,7 @@ def run_app(graph, app, *args, **kwargs):
     query_args.args.extend(params)
 
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.RUN_APP,
         config=config,
         output_types=types_pb2.RESULTS,
@@ -369,7 +369,7 @@ def report_graph(
 
     config[types_pb2.EDGE_KEY] = utils.s_to_attr(str(key) if key is not None else "")
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.REPORT_GRAPH,
         config=config,
         output_types=types_pb2.RESULTS,
@@ -415,7 +415,7 @@ def project_arrow_property_graph(
         types_pb2.E_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(e_data_type)),
     }
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.PROJECT_GRAPH,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -447,7 +447,7 @@ def project_dynamic_property_graph(graph, v_prop, e_prop, v_prop_type, e_prop_ty
     }
 
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.PROJECT_GRAPH,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -476,7 +476,7 @@ def copy_graph(graph, copy_type="identical"):
     }
 
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.COPY_GRAPH,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -514,7 +514,7 @@ def unload_graph(graph):
     if hasattr(graph, "vineyard_id"):
         config[types_pb2.VINEYARD_ID] = utils.i_to_attr(graph.vineyard_id)
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.UNLOAD_GRAPH,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -651,7 +651,7 @@ def add_column(graph, results, selector):
         types_pb2.SELECTOR: utils.s_to_attr(selector),
     }
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.ADD_COLUMN,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -678,7 +678,7 @@ def graph_to_numpy(graph, selector=None, vertex_range=None):
     if vertex_range is not None:
         config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.GRAPH_TO_NUMPY,
         config=config,
         output_types=types_pb2.TENSOR,
@@ -705,7 +705,7 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
     if vertex_range is not None:
         config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.GRAPH_TO_DATAFRAME,
         config=config,
         output_types=types_pb2.DATAFRAME,

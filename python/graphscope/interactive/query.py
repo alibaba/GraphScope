@@ -139,14 +139,18 @@ class InteractiveQuery(object):
         def load_subgraph(name):
             import vineyard
 
-            # invoke load_from
-            g = self._session.load_from(
-                edges=[Loader(vineyard.ObjectName("__%s_edge_stream" % name))],
-                vertices=[Loader(vineyard.ObjectName("__%s_vertex_stream" % name))],
-                generate_eid=False,
+            import graphscope
+
+            graph = graphscope.Graph(self._session, generate_eid=False)
+            graph = graph.add_vertices(
+                Loader(vineyard.ObjectName("__%s_vertex_stream" % name))
             )
+            graph = graph.add_edges(
+                Loader(vineyard.ObjectName("__%s_edge_stream" % name))
+            )
+            graph._ensure_loaded()
             logger.info("subgraph has been loaded")
-            return g
+            return graph
 
         pool = ThreadPoolExecutor()
         subgraph_task = pool.submit(load_subgraph, (graph_name,))

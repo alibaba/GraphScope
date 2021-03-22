@@ -287,34 +287,25 @@ def test_traversal_modern_graph(gs_session, modern_graph_data_dir):
 
 def test_add_vertices_edges(gs_session_distributed, modern_graph_data_dir):
     graph = load_modern_graph(gs_session_distributed, modern_graph_data_dir)
-    v = {
-        "person2": (
-            Loader(
-                os.path.join(modern_graph_data_dir, "person.csv"),
-                header_row=True,
-                delimiter="|",
-            ),
-            ["name", ("age", "int")],
-            "id",
-        )
-    }
-    graph = graph.add_vertices(v)
+    graph = graph.add_vertices(
+        Loader(os.path.join(modern_graph_data_dir, "person.csv"), delimiter="|"),
+        "person2",
+        ["name", ("age", "int")],
+        "id",
+    )
     assert "person2" in graph.schema.vertex_labels
 
-    e = {
-        "knows2": (
-            Loader(
-                os.path.join(modern_graph_data_dir, "knows.csv"),
-                header_row=True,
-                delimiter="|",
-            ),
-            ["weight"],
-            ("src_id", "person2"),
-            ("dst_id", "person2"),
-        )
-    }
+    graph = graph.add_edges(
+        Loader(
+            os.path.join(modern_graph_data_dir, "knows.csv"),
+            delimiter="|",
+        ),
+        "knows2",
+        ["weight"],
+        src_label="person2",
+        dst_label="person2",
+    )
 
-    graph = graph.add_edges(e)
     assert "knows2" in graph.schema.edge_labels
 
     interactive = gs_session_distributed.gremlin(graph)
@@ -324,26 +315,17 @@ def test_add_vertices_edges(gs_session_distributed, modern_graph_data_dir):
 
 
 def test_serialize_roundtrip(gs_session_distributed, p2p_property_dir):
-    graph = gs_session_distributed.load_from(
-        edges={
-            "knows": (
-                Loader(
-                    "{}/p2p-31_property_e_0".format(p2p_property_dir), header_row=True
-                ),
-                ["src_label_id", "dst_label_id", "dist"],
-                ("src_id", "person"),
-                ("dst_id", "person"),
-            ),
-        },
-        vertices={
-            "person": Loader(
-                "{}/p2p-31_property_v_0".format(p2p_property_dir), header_row=True
-            ),
-        },
-        generate_eid=False,
+    graph = Graph(gs_session_distributed, generate_eid=False)
+    graph = graph.add_vertices(f"{p2p_property_dir}/p2p-31_property_v_0", "person")
+    graph = graph.add_edges(
+        f"{p2p_property_dir}/p2p-31_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
     )
-    graph.serialize("/tmp/serialize")
-    new_graph = Graph.deserialize("/tmp/serialize", gs_session_distributed)
+
+    graph.save_to("/tmp/serialize")
+    new_graph = Graph.load_from("/tmp/serialize", gs_session_distributed)
     pg = new_graph.project_to_simple(0, 0, 0, 2)
     ctx = graphscope.sssp(pg, src=6)
     ret = (

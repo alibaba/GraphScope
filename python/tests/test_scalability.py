@@ -31,24 +31,10 @@ def p2p_property_graph(num_workers, directed=True):
     graphscope.set_option(show_log=True)
     graphscope.set_option(initializing_interactive_engine=False)
     sess = graphscope.session(num_workers=num_workers, run_on_local=True)
-
-    g = sess.load_from(
-        edges={
-            "knows": (
-                Loader("{}/p2p-31_property_e_0".format(data_dir), header_row=True),
-                ["src_label_id", "dst_label_id", "dist"],
-                ("src_id", "person"),
-                ("dst_id", "person"),
-            ),
-        },
-        vertices={
-            "person": Loader(
-                "{}/p2p-31_property_v_0".format(data_dir), header_row=True
-            ),
-        },
-        directed=directed,
-    )
-    return sess, g
+    graph = graphscope.Graph(sess, directed=directed)
+    graph = graph.add_vertices("{}/p2p-31_property_v_0".format(data_dir), "person")
+    graph = graph.add_edges("{}/p2p-31_property_e_0".format(data_dir), "knows")
+    return sess, graph
 
 
 def test_sssp():

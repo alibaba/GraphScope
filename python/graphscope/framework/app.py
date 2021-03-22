@@ -260,6 +260,8 @@ class App(object):
             TypeError: The type of app_assets incorrect.
         """
         app_assets.is_compatible(graph)
+        if not graph.loaded():
+            raise RuntimeError("The graph is not loaded.")
 
         self._key = None
         self._graph = graph

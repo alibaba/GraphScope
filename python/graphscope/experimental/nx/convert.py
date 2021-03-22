@@ -177,7 +177,9 @@ def from_gs_graph(gs_graph, dst_nx_graph):
 
     Examples
     --------
-    >>> gs_g = load_from(vertices={}, edges={})
+    >>> import graphscope as gs
+    >>> from graphscope.experimental import nx
+    >>> gs_g = gs.Graph()
     >>> nx_g = nx.Graph(gs_g)
     """
     if dst_nx_graph.is_directed() != gs_graph.is_directed():

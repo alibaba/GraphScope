@@ -132,39 +132,28 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
 请下载数据并将其解压缩到本地的挂载目录（在本例中为`〜/test_data`）。
 
 ```python
-g = sess.load_from(
-    vertices={
-        "paper": "/testingdata/ogbn_mag_small/paper.csv",
-        "author": "/testingdata/ogbn_mag_small/author.csv",
-        "institution": "/testingdata/ogbn_mag_small/institution.csv",
-        "field_of_study": "/testingdata/ogbn_mag_small/field_of_study.csv",
-    },
-    edges={
-        "affiliated": (
-            "/testingdata/ogbn_mag_small/author_affiliated_with_institution.csv",
-            [],
-            ("src_id", "author"),
-            ("dst_id", "institution"),
-        ),
-        "cites": (
-            "/testingdata/ogbn_mag_small/paper_cites_paper.csv",
-            [],
-            ("src_id", "paper"),
-            ("dst_id", "paper"),
-        ),
-        "hasTopic": (
-            "/testingdata/ogbn_mag_small/paper_has_topic_field_of_study.csv",
-            [],
-            ("src_id", "paper"),
-            ("dst_id", "field_of_study"),
-        ),
-        "writes": (
-            "/testingdata/ogbn_mag_small/author_writes_paper.csv",
-            [],
-            ("src_id", "author"),
-            ("dst_id", "paper"),
-        ),
-    },
+g = graphscope.Graph(sess)
+g = (
+    g.add_vertices("/testingdata/ogbn_mag_small/paper.csv", label="paper")
+    .add_vertices("/testingdata/ogbn_mag_small/author.csv", label="author")
+    .add_vertices("/testingdata/ogbn_mag_small/institution.csv", label="institution")
+    .add_vertices("/testingdata/ogbn_mag_small/field_of_study.csv", label="field_of_study")
+    .add_edges(
+        "/testingdata/ogbn_mag_small/author_affiliated_with_institution.csv",
+        label="affiliated", src_label="author", dst_label="institution",
+    )
+    .add_edges(
+        "/testingdata/ogbn_mag_small/paper_has_topic_field_of_study.csv",
+        label="hasTopic", src_label="paper", dst_label="field_of_study",
+    )
+    .add_edges(
+        "/testingdata/ogbn_mag_small/paper_cites_paper.csv",
+        label="cites", src_label="paper", dst_label="paper",
+    )
+    .add_edges(
+        "/testingdata/ogbn_mag_small/author_writes_paper.csv",
+        label="writes", src_label="author", dst_label="paper",
+    )
 )
 ```
 

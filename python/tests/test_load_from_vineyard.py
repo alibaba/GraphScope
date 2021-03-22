@@ -18,12 +18,9 @@
 
 import os
 
-import numpy as np
-import pandas as pd
 import pytest
 
 import graphscope
-from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.loader import Loader
 
 
@@ -38,33 +35,8 @@ def p2p_31_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property")):
 
 
 @pytest.fixture
-def lesson_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
-    return "vineyard://%s/lesson.v#header_row=true&delimiter=," % data_dir
-
-
-@pytest.fixture
 def student_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return "vineyard://%s/student.v#header_row=true&delimiter=," % data_dir
-
-
-@pytest.fixture
-def teacher_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
-    return "vineyard://%s/teacher.v#header_row=true&delimiter=," % data_dir
-
-
-@pytest.fixture
-def score_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
-    return "vineyard://%s/score.e#header_row=true&delimiter=," % data_dir
-
-
-@pytest.fixture
-def student_teacher_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
-    return "vineyard://%s/student_teacher.e#header_row=true&delimiter=," % data_dir
-
-
-@pytest.fixture
-def teacher_lesson_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
-    return "vineyard://%s/teacher_lesson.e#header_row=true&delimiter=," % data_dir
 
 
 @pytest.fixture
@@ -72,49 +44,19 @@ def student_group_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")
     return "vineyard://%s/group.e#header_row=true&delimiter=," % data_dir
 
 
-@pytest.fixture
-def teacher_group_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
-    return "vineyard://%s/teacher_group.e#header_row=true&delimiter=," % data_dir
-
-
-@pytest.fixture
-def friend_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
-    return "vineyard://%s/friend.e#header_row=true&delimiter=," % data_dir
+@pytest.mark.skip("requires vineyard's io adaptors installed properly")
+def test_p2p(graphscope_session, p2p_31_e, p2p_31_v):
+    graph = graphscope.Graph(graphscope_session)
+    graph = graph.add_vertices(Loader(p2p_31_v, session=graphscope_session), "person")
+    graph = graph.add_edges(Loader(p2p_31_e, session=graphscope_session), "knows")
+    assert graph.schema is not None
 
 
 @pytest.mark.skip("requires vineyard's io adaptors installed properly")
-def test_p2p_form_loader(graphscope_session, p2p_31_e, p2p_31_v):
-    g = graphscope_session.load_from(
-        edges={
-            "group": {
-                "loader": Loader(p2p_31_e, session=graphscope_session),
-            }
-        },
-        vertices={
-            "student": {
-                "loader": Loader(p2p_31_v, session=graphscope_session),
-            }
-        },
+def test_group(graphscope_session, student_group_e, student_v):
+    graph = graphscope.Graph(graphscope_session)
+    graph = graph.add_vertices(Loader(student_v, session=graphscope_session), "student")
+    graph = graph.add_edges(
+        Loader(student_group_e, session=graphscope_session), "group"
     )
-
-
-@pytest.mark.skip("requires vineyard's io adaptors installed properly")
-def test_dict_in_dict_form_loader(graphscope_session, student_group_e, student_v):
-    g = graphscope_session.load_from(
-        edges={
-            "group": {
-                "loader": Loader(student_group_e, session=graphscope_session),
-                "properties": ["member_size"],
-                "source": ("leader_student_id", "student"),
-                "destination": ("member_student_id", "student"),
-                "load_strategy": "both_out_in",
-            }
-        },
-        vertices={
-            "student": {
-                "loader": Loader(student_v, session=graphscope_session),
-                "properties": ["name", "lesson_nums", "avg_score"],
-                "vid": "student_id",
-            }
-        },
-    )
+    assert graph.schema is not None

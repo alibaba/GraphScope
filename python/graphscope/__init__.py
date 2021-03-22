@@ -26,7 +26,7 @@ from graphscope.client.session import session
 from graphscope.client.session import set_option
 from graphscope.framework.errors import *
 from graphscope.framework.graph import Graph
-from graphscope.framework.graph_builder import g
+from graphscope.framework.graph import g
 from graphscope.framework.graph_builder import load_from
 from graphscope.version import __version__
 

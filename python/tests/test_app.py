@@ -53,7 +53,7 @@ def test_create_app():
     a3 = AppAssets(algo="sssp_has_path")
 
 
-def test_compatible_with_arrow_graph(arrow_property_graph, arrow_project_graph):
+def test_compatible_with_arrow_graph(arrow_property_graph):
     # bfs
     with pytest.raises(
         InvalidArgumentError,
@@ -65,7 +65,7 @@ def test_compatible_with_arrow_graph(arrow_property_graph, arrow_project_graph):
 @pytest.mark.skipif(
     os.environ.get("EXPERIMENTAL_ON") != "ON", reason="dynamic graph is in experimental"
 )
-def test_compatible_with_dynamic_graph(dynamic_property_graph, dynamic_project_graph):
+def test_compatible_with_dynamic_graph(dynamic_property_graph):
     # bfs
     with pytest.raises(
         InvalidArgumentError,

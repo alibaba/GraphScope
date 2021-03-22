@@ -41,8 +41,8 @@ def sssp(graph, src=0):
     .. code:: python
 
         import graphscope as gs
-        s = gs.session()
-        g = s.load_from('The parameters for loading a graph...')
+        sess = gs.session()
+        g = gs.Graph(sess)
         pg = g.project_to_simple(v_label='vlabel', e_label='elabel', v_prop=None, e_prop='distance')
         r = gs.sssp(pg, src=0)
         s.close()
