@@ -465,15 +465,20 @@ def test_multiple_add_vertices_edges(graphscope_session):
     assert graph.schema.edge_labels == ["created", "knows"]
 
     graph = graph.add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person2")
-    graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "knows2")
+    graph = graph.add_edges(
+        Loader(f"{prefix}/knows.csv", delimiter="|"),
+        "knows2",
+        src_label="person2",
+        dst_label="person2",
+    )
     graph = graph.add_vertices(
         Loader(f"{prefix}/software.csv", delimiter="|"), "software2"
     )
     graph = graph.add_edges(
         Loader(f"{prefix}/created.csv", delimiter="|"),
         "created2",
-        src_label="person",
-        dst_label="software",
+        src_label="person2",
+        dst_label="software2",
     )
 
     assert sorted(graph.schema.vertex_labels) == [

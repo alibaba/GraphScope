@@ -696,7 +696,7 @@ class Graph(object):
             deployment=deployment,
             hosts=hosts,
         )
-        return cls(sess.session_id, vineyard.ObjectID(graph_id))
+        return cls(sess, vineyard.ObjectID(graph_id))
 
     def draw(self, vertices, hop=1):
         """Visualize the graph data in the result cell when the draw functions are invoked
