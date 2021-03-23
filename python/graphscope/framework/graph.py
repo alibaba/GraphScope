@@ -184,13 +184,6 @@ class Graph(object):
         self._e_labels = self._schema.edge_labels
         self._e_relationships = self._schema.edge_relationships
 
-        # create gremlin server pod asynchronously
-        if gs_config.initializing_interactive_engine:
-            self._interactive_instance_launching_thread = threading.Thread(
-                target=self._launch_interactive_instance_impl, args=()
-            )
-            self._interactive_instance_launching_thread.start()
-
     def _ensure_loaded(self):
         if self._key is not None and self._pending_op is None:
             return
@@ -211,6 +204,12 @@ class Graph(object):
             self._unsealed_edges.clear()
             # init saved_signature (must be after init schema)
             self._saved_signature = self.signature
+            # create gremlin server pod asynchronously
+            if gs_config.initializing_interactive_engine:
+                self._interactive_instance_launching_thread = threading.Thread(
+                    target=self._launch_interactive_instance_impl, args=()
+                )
+                self._interactive_instance_launching_thread.start()
 
     @property
     def key(self):

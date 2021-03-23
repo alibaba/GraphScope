@@ -103,7 +103,7 @@ class CoordinatorServiceServicer(
 
     """
 
-    def __init__(self, launcher, dangling_seconds, log_level="INFO"):
+    def __init__(self, launcher, dangling_timeout_seconds, log_level="INFO"):
         self._launcher = launcher
 
         self._request = None
@@ -149,10 +149,15 @@ class CoordinatorServiceServicer(
         self._streaming_logs = True
 
         # dangling check
-        self._dangling_seconds = dangling_seconds
-        if self._dangling_seconds >= 0:
+        self._dangling_timeout_seconds = dangling_timeout_seconds
+        if self._dangling_timeout_seconds >= 0:
             self._dangling_detecting_timer = threading.Timer(
-                interval=self._dangling_seconds, function=self._cleanup, args=(True,)
+                interval=self._dangling_timeout_seconds,
+                function=self._cleanup,
+                args=(
+                    True,
+                    True,
+                ),
             )
             self._dangling_detecting_timer.start()
 
@@ -219,13 +224,21 @@ class CoordinatorServiceServicer(
         )
 
     def HeartBeat(self, request, context):
-        if self._dangling_seconds >= 0:
+        if self._request and self._request.dangling_timeout_seconds >= 0:
             # Reset dangling detect timer
-            self._dangling_detecting_timer.cancel()
+            if self._dangling_detecting_timer:
+                self._dangling_detecting_timer.cancel()
+
             self._dangling_detecting_timer = threading.Timer(
-                interval=self._dangling_seconds, function=self._cleanup, args=(True,)
+                interval=self._request.dangling_timeout_seconds,
+                function=self._cleanup,
+                args=(
+                    self._request.cleanup_instance,
+                    True,
+                ),
             )
             self._dangling_detecting_timer.start()
+
         # analytical engine
         request = message_pb2.HeartBeatRequest()
         try:
@@ -442,7 +455,9 @@ class CoordinatorServiceServicer(
                 "Session handle does not match",
             )
 
-        self._cleanup(stop_instance=request.stop_instance)
+        self._cleanup(
+            cleanup_instance=self._request.cleanup_instance, is_dangling=False
+        )
         self._request = None
 
         # Session closed, stop streaming logs
@@ -589,7 +604,7 @@ class CoordinatorServiceServicer(
             resp.status.op.CopyFrom(op)
         return resp
 
-    def _cleanup(self, stop_instance=True, is_dangling=False):
+    def _cleanup(self, cleanup_instance=True, is_dangling=False):
         # clean up session resources.
         for key in self._object_manager.keys():
             obj = self._object_manager.get(key)
@@ -625,12 +640,14 @@ class CoordinatorServiceServicer(
 
         self._object_manager.clear()
 
+        self._request = None
+
         # cancel dangling detect timer
         if self._dangling_detecting_timer:
             self._dangling_detecting_timer.cancel()
 
         # close engines
-        if stop_instance:
+        if cleanup_instance:
             self._analytical_engine_stub = None
             self._analytical_engine_endpoint = None
             self._launcher.stop(is_dangling=is_dangling)
@@ -958,7 +975,7 @@ def launch_graphscope():
 
     coordinator_service_servicer = CoordinatorServiceServicer(
         launcher=launcher,
-        dangling_seconds=args.dangling_timeout_seconds,
+        dangling_timeout_seconds=args.dangling_timeout_seconds,
         log_level=args.log_level,
     )
 
@@ -974,7 +991,8 @@ def launch_graphscope():
 
     # handle SIGTERM signal
     def terminate(signum, frame):
-        del coordinator_service_servicer  # noqa: F821
+        global coordinator_service_servicer
+        del coordinator_service_servicer
 
     signal.signal(signal.SIGTERM, terminate)
 
