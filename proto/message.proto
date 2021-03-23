@@ -40,6 +40,8 @@ message ResponseStatus {
 ////////////////////////////////////////////////////////////////////////////////
 
 message ConnectSessionRequest {
+  bool cleanup_instance = 1;
+  int32 dangling_timeout_seconds = 2;
 }
 
 message ConnectSessionResponse {
@@ -129,7 +131,6 @@ message CloseSessionRequest {
   // REQUIRED: session_id must be returned by a CreateSession call
   // to the same master service.
   string session_id = 1;
-  bool stop_instance = 2;
 }
 
 message CloseSessionResponse {

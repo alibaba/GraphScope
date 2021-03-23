@@ -563,9 +563,7 @@ class Session(object):
         self._learning_instance_dict.clear()
 
         if self._grpc_client:
-            self._grpc_client.close(
-                stop_instance=False if self._config_params["addr"] else True
-            )
+            self._grpc_client.close()
             self._grpc_client = None
             _session_dict.pop(self._session_id, None)
 
@@ -778,7 +776,12 @@ class Session(object):
                 self._pod_name_list,
                 self._config_params["num_workers"],
                 self._config_params["k8s_namespace"],
-            ) = self._grpc_client.connect()
+            ) = self._grpc_client.connect(
+                cleanup_instance=False if self._config_params["addr"] else True,
+                dangling_timeout_seconds=self._config_params[
+                    "dangling_timeout_seconds"
+                ],
+            )
             # fetch logs
             if self._config_params["enable_k8s"]:
                 self._grpc_client.fetch_logs()

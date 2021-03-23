@@ -117,8 +117,11 @@ class GRPCClient(object):
                         msg = response.status.error_msg
                     raise ConnectionError("Connect coordinator timeout, {}".format(msg))
 
-    def connect(self):
-        return self._connect_session_impl()
+    def connect(self, cleanup_instance=True, dangling_timeout_seconds=60):
+        return self._connect_session_impl(
+            cleanup_instance=cleanup_instance,
+            dangling_timeout_seconds=dangling_timeout_seconds,
+        )
 
     @property
     def session_id(self):
@@ -188,21 +191,28 @@ class GRPCClient(object):
         response = self._stub.CloseLearningInstance(request)
         return check_grpc_response(response)
 
-    def close(self, stop_instance=True):
-        """
-        Args:
-            stop_instance (bool, optional): If true,
-                also delete graphscope instance (such as pod) in closing process.
-        """
+    def close(self):
         if self._session_id:
-            self._close_session_impl(stop_instance=stop_instance)
+            self._close_session_impl()
             self._session_id = None
         if self._logs_fetching_thread:
             self._logs_fetching_thread.join(timeout=5)
 
     @catch_grpc_error
-    def _connect_session_impl(self):
-        request = message_pb2.ConnectSessionRequest()
+    def _connect_session_impl(self, cleanup_instance=True, dangling_timeout_seconds=60):
+        """
+        Args:
+            cleanup_instance (bool, optional): If True, also delete graphscope
+                instance (such as pod) in closing process.
+            dangling_timeout_seconds (int, optional): After seconds of client
+                disconnect, coordinator will kill this graphscope instance.
+                Disable dangling check by setting -1.
+
+        """
+        request = message_pb2.ConnectSessionRequest(
+            cleanup_instance=cleanup_instance,
+            dangling_timeout_seconds=dangling_timeout_seconds,
+        )
 
         response = self._stub.ConnectSession(request)
         response = check_grpc_response(response)
@@ -228,10 +238,8 @@ class GRPCClient(object):
                 logger.info(message, extra={"simple": True})
 
     @catch_grpc_error
-    def _close_session_impl(self, stop_instance=True):
-        request = message_pb2.CloseSessionRequest(
-            session_id=self._session_id, stop_instance=stop_instance
-        )
+    def _close_session_impl(self):
+        request = message_pb2.CloseSessionRequest(session_id=self._session_id)
         response = self._stub.CloseSession(request)
         return check_grpc_response(response)
 
