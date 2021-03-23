@@ -305,6 +305,7 @@ class Session(object):
 
             dangling_timeout_seconds (int, optional): After seconds of client disconnect,
                 coordinator will kill this graphscope instance. Defaults to 600.
+                Expect this value to be greater than 5 (heartbeat interval).
                 Disable dangling check by setting -1.
 
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
@@ -777,7 +778,7 @@ class Session(object):
                 self._config_params["num_workers"],
                 self._config_params["k8s_namespace"],
             ) = self._grpc_client.connect(
-                cleanup_instance=False if self._config_params["addr"] else True,
+                cleanup_instance=not bool(self._config_params["addr"]),
                 dangling_timeout_seconds=self._config_params[
                     "dangling_timeout_seconds"
                 ],

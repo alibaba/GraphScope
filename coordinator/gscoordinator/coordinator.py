@@ -229,24 +229,14 @@ class CoordinatorServiceServicer(
             if self._dangling_detecting_timer:
                 self._dangling_detecting_timer.cancel()
 
-            if self._request.cleanup_instance:
-                self._dangling_detecting_timer = threading.Timer(
-                    interval=self._request.dangling_timeout_seconds,
-                    function=self._cleanup,
-                    args=(
-                        True,
-                        True,
-                    ),
-                )
-            else:
-                self._dangling_detecting_timer = threading.Timer(
-                    interval=self._request.dangling_timeout_seconds,
-                    function=self._cleanup,
-                    args=(
-                        False,
-                        True,
-                    ),
-                )
+            self._dangling_detecting_timer = threading.Timer(
+                interval=self._request.dangling_timeout_seconds,
+                function=self._cleanup,
+                args=(
+                    self._request.cleanup_instance,
+                    True,
+                ),
+            )
             self._dangling_detecting_timer.start()
 
         # analytical engine
