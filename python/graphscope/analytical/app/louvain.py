@@ -18,6 +18,7 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.errors import InvalidArgumentError
 
 __all__ = [
     "louvain",
@@ -25,7 +26,7 @@ __all__ = [
 
 
 @not_compatible_for("arrow_property", "dynamic_property")
-def louvain(graph, min_progress=50, progress_tries=2):
+def louvain(graph, min_progress=100, progress_tries=2):
     """Compute best partition on the `graph` by louvain.
 
     Args:
@@ -59,4 +60,6 @@ def louvain(graph, min_progress=50, progress_tries=2):
         s.close()
 
     """
+    if graph.is_directed():
+        raise InvalidArgumentError("Louvain not support directed graph.")
     return AppAssets(algo="louvain")(graph, min_progress, progress_tries)
