@@ -342,8 +342,7 @@ def test_app_on_undirected_graph(
     assert np.all(ctx10.to_numpy("r", vertex_range={"begin": 1, "end": 4}) == [0, 0, 0])
 
     # louvain
-    ctx10 = louvain(p2p_project_undirected_graph, min_progress=50,
-                    progress_tries=2)
+    ctx10 = louvain(p2p_project_undirected_graph, min_progress=50, progress_tries=2)
 
 
 def test_run_app_on_string_oid_graph(p2p_project_directed_graph_string):
