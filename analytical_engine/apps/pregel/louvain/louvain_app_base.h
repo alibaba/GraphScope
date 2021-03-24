@@ -210,6 +210,8 @@ class LouvainAppBase
                                     ctx.progress_tries());
       ctx.set_halt(to_halt);
       if (ctx.halt()) {
+        // if halt, first aggregate actual quality in Compute of vertices and
+        // then start phase 2 in next super step.
         VLOG(1) << "super step " << current_super_step << " decided to halt.";
         messages.ForceContinue();
       }
@@ -217,7 +219,8 @@ class LouvainAppBase
               << " pass: " << current_iteration / 2
               << " total change: " << total_change;
     } else if (ctx.halt()) {
-      // aggregate actual quality produce in previous step.
+      // after decide_to_halt and aggregate actual quality in previous super
+      // step, here we check terminate computaion or start phase 2.
       double actual_quality =
           ctx.compute_context().template get_aggregated_value<double>(
               actual_quality_aggregator);
@@ -232,7 +235,7 @@ class LouvainAppBase
         LOG(INFO) << "computation complete, ACTUAL QUALITY: " << actual_quality;
         return;
       } else if (ctx.compute_context().superstep() > 0) {
-        // just halt phase 1
+        // just halt phase 1 start phase 2.
         VLOG(1) << "super step: " << current_super_step
                 << " decided to halt, ACTUAL QUALITY: " << actual_quality
                 << " previous QUALITY: " << ctx.prev_quality();
