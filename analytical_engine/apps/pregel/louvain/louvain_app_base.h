@@ -177,7 +177,7 @@ class LouvainAppBase
           });
       {
         std::vector<std::thread> threads(thrd_num);
-        for (uint32_t tid = 0; tid < thrd_num_msg; ++tid) {
+        for (uint32_t tid = 0; tid < thrd_num; ++tid) {
           threads[tid] = std::thread(
               [&frag, &ctx, &thrd_num, &buffer](uint32_t tid) {
                 for (uint32_t index = 0; index < thrd_num; ++index) {
@@ -210,12 +210,12 @@ class LouvainAppBase
                                     ctx.min_progress());
       ctx.set_halt(to_halt);
       if (ctx.halt()) {
-        LOG(INFO) << "super step " << current_super_step << " decided to halt.";
+        VLOG(1) << "super step " << current_super_step << " decided to halt.";
         messages.ForceContinue();
       }
       VLOG(1) << "[INFO]: superstep: " << current_super_step
               << " pass: " << current_iteration / 2
-              << " total change: " << totalChange;
+              << " total change: " << total_change;
     } else if (ctx.halt()) {
       // aggregate actual quality produce in previous step.
       double actual_quality =

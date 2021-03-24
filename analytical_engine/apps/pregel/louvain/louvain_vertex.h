@@ -31,7 +31,7 @@ namespace gs {
 /**
  * @brief LouvainVertex is a specific PregelVertex for louvain alorithm.
  * LouvainVertex provides communication-related method to send messages to
- * certain fragment and also can access to context of louvain.
+ * certain fragment and also access to context of louvain.
  * @tparam FRAG_T
  * @tparam VD_T
  * @tparam MD_T
@@ -52,17 +52,19 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
   using vd_t = VD_T;
   using md_t = MD_T;
 
-  state_t& state() { return context_->GetVertexState(vertex_); }
+  state_t& state() { return context_->GetVertexState(this->vertex_); }
 
   void send_by_gid(vid_t dst_gid, const md_t& md) {
-    compute_context_->send_p2p_message(dst_gid, md, tid_);
+    this->compute_context_->send_p2p_message(dst_gid, md, tid_);
   }
 
   void set_context(context_t* context) { context_ = context; }
 
-  vid_t get_gid() { return fragment_->Vertex2Gid(vertex_); }
+  vid_t get_gid() { return this->fragment_->Vertex2Gid(this->vertex_); }
 
-  vid_t get_vertex_gid(const vertex_t& v) { return fragment_->Vertex2Gid(v); }
+  vid_t get_vertex_gid(const vertex_t& v) {
+    return this->fragment_->Vertex2Gid(v);
+  }
 
   size_t edge_size() {
     if (!this->use_fake_edges()) {
@@ -73,22 +75,22 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
   }
 
   bool use_fake_edges() const {
-    return context_->GetVertexState(vertex_).use_fake_edges;
+    return context_->GetVertexState(this->vertex_).use_fake_edges;
   }
 
   const std::map<vid_t, edata_t>& fake_edges() const {
-    return context_->GetVertexState(vertex_).fake_edges;
+    return context_->GetVertexState(this->vertex_).fake_edges;
   }
 
   edata_t get_edge_value(const vid_t& dst_id) {
     if (!this->use_fake_edges()) {
       for (auto& edge : this->incoming_edges()) {
-        if (fragment_->Vertex2Gid(edge.get_neighbor()) == dst_id) {
+        if (this->fragment_->Vertex2Gid(edge.get_neighbor()) == dst_id) {
           return static_cast<edata_t>(edge.get_data());
         }
       }
       for (auto& edge : this->outgoing_edges()) {
-        if (fragment_->Vertex2Gid(edge.get_neighbor()) == dst_id) {
+        if (this->fragment_->Vertex2Gid(edge.get_neighbor()) == dst_id) {
           return static_cast<edata_t>(edge.get_data());
         }
       }
@@ -105,17 +107,17 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
   }
 
   std::vector<vid_t>& nodes_in_self_community() {
-    return context_->GetVertexState(vertex_).nodes_in_community;
+    return context_->GetVertexState(this->vertex_).nodes_in_community;
   }
 
   int tid() { return tid_; }
   void set_tid(int id) { tid_ = id; }
 
   PregelComputeContext<fragment_t, VD_T, MD_T>* compute_context() {
-    return compute_context_;
+    return this->compute_context_;
   }
 
-  const fragment_t* fragment() { return fragment_; }
+  const fragment_t* fragment() { return this->fragment_; }
   context_t* context() { return context_; }
 
  private:
