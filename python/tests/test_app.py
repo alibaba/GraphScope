@@ -185,7 +185,7 @@ def test_run_app_on_directed_graph(
     with pytest.raises(
         InvalidArgumentError, match="Louvain not support directed graph."
     ):
-        louvain(p2p_project_directed_graphg)
+        louvain(p2p_project_directed_graph)
 
 
 def test_app_on_undirected_graph(
