@@ -26,7 +26,7 @@ __all__ = [
 
 
 @not_compatible_for("arrow_property", "dynamic_property")
-def louvain(graph, min_progress=100, progress_tries=2):
+def louvain(graph, min_progress=1000, progress_tries=1):
     """Compute best partition on the `graph` by louvain.
 
     Args:

@@ -150,18 +150,29 @@ struct LouvainMessage {
   }
 };
 
-// util function to decide wether we should halt the phase.
+/**
+ * Determine if progress is still being made or if the computaion should halt.
+ *
+ * @param history change history of the pass.
+ * @param min_progress The minimum delta X required to be considered progress.
+ * where X is the number of nodes that have changed their community on a
+ * particular pass.
+ * @param progress_tries Number of times the minimum.progress setting is not met
+ * before exiting form the current level and compressing the graph
+ * @return true
+ * @return false
+ */
 bool decide_to_halt(const std::vector<int64_t>& history, int min_progress,
                     int progress_tries) {
   // halt if the most recent change was 0
   if (0 == history.back()) {
     return true;
   }
-  // halt if the change count has increased tolerance times
+  // halt if the change count has increased progress_tries times
   int64_t previous = history.front();
   int count = 0;
   for (const auto& cur : history) {
-    if (cur >= previous - min_progress) {
+    if (previous - cur <= min_progress) {
       count++;
     }
     previous = cur;
