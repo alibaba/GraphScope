@@ -59,4 +59,4 @@ def louvain(graph, min_progress=50, progress_tries=2):
         s.close()
 
     """
-    return AppAssets(algo="louvain")(graph, tolerance, min_progress)
+    return AppAssets(algo="louvain")(graph, min_progress, progress_tries)
