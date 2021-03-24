@@ -16,7 +16,6 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_VERTEX_H_
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_VERTEX_H_
 
-#include <list>
 #include <map>
 #include <string>
 #include <utility>

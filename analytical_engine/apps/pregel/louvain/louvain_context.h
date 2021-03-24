@@ -16,14 +16,7 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_CONTEXT_H_
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_CONTEXT_H_
 
-#include <list>
-#include <map>
-#include <string>
-#include <utility>
 #include <vector>
-
-#include "boost/property_tree/json_parser.hpp"
-#include "boost/property_tree/ptree.hpp"
 
 #include "grape/grape.h"
 

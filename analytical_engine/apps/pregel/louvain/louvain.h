@@ -16,14 +16,8 @@
 #ifndef ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_H_
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_H_
 
-#include <algorithm>
-#include <limits>
 #include <map>
-#include <memory>
-#include <set>
-#include <sstream>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "apps/pregel/louvain/auxiliary.h"
