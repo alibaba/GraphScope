@@ -177,7 +177,6 @@ class PregelComputeContext {
       }
     }
     return true;
-    // return voted_to_halt_num_ == inner_vertex_num_;
   }
 
   typename FRAG_T::template vertex_array_t<std::vector<MD_T>>& messages_in() {

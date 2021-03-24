@@ -54,27 +54,11 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
 
   state_t& state() { return context_->GetVertexState(vertex_); }
 
-  vertex_t vertex() const { return vertex_; }
-
-  adj_list_t outgoing_edges() { return fragment_->GetOutgoingAdjList(vertex_); }
-
-  adj_list_t incoming_edges() { return fragment_->GetIncomingAdjList(vertex_); }
-
   void send_by_gid(vid_t dst_gid, const md_t& md) {
     compute_context_->send_p2p_message(dst_gid, md, tid_);
   }
 
-  void vote_to_halt() { compute_context_->vote_to_halt(*this); }
-
-  void set_fragment(const fragment_t* fragment) { fragment_ = fragment; }
-
-  void set_compute_context(compute_context_t* compute_context) {
-    compute_context_ = compute_context;
-  }
-
   void set_context(context_t* context) { context_ = context; }
-
-  void set_vertex(vertex_t vertex) { vertex_ = vertex; }
 
   vid_t get_gid() { return fragment_->Vertex2Gid(vertex_); }
 
@@ -136,10 +120,7 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
 
  private:
   int tid_;
-  const fragment_t* fragment_;
-  PregelComputeContext<fragment_t, VD_T, MD_T>* compute_context_;
   context_t* context_;
-  vertex_t vertex_;
 };
 }  // namespace gs
 

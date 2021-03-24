@@ -303,7 +303,6 @@ class LouvainAppBase
   }
 
  private:
-
   // sync community id from community hub to community members.
   void syncCommunity(const fragment_t& frag, context_t& ctx,
                      message_manager_t& messages) {

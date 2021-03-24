@@ -57,13 +57,13 @@ class PregelVertex {
 
   const VD_T& value() { return compute_context_->get_vertex_value(*this); }
 
-  virtual vertex_t vertex() const { return vertex_; }
+  vertex_t vertex() const { return vertex_; }
 
-  virtual adj_list_t outgoing_edges() {
+  adj_list_t outgoing_edges() {
     return fragment_->GetOutgoingAdjList(vertex_);
   }
 
-  virtual adj_list_t incoming_edges() {
+  adj_list_t incoming_edges() {
     return fragment_->GetIncomingAdjList(vertex_);
   }
 
@@ -75,20 +75,20 @@ class PregelVertex {
     compute_context_->send_message(v, std::move(value));
   }
 
-  virtual void vote_to_halt() { compute_context_->vote_to_halt(*this); }
+  void vote_to_halt() { compute_context_->vote_to_halt(*this); }
 
-  virtual void set_fragment(const fragment_t* fragment) {
+  void set_fragment(const fragment_t* fragment) {
     fragment_ = fragment;
   }
 
-  virtual void set_compute_context(
+  void set_compute_context(
       PregelComputeContext<fragment_t, VD_T, MD_T>* compute_comtext) {
     compute_context_ = compute_comtext;
   }
 
-  virtual void set_vertex(vertex_t vertex) { vertex_ = vertex; }
+  void set_vertex(vertex_t vertex) { vertex_ = vertex; }
 
- private:
+ protected:
   const fragment_t* fragment_;
   PregelComputeContext<fragment_t, VD_T, MD_T>* compute_context_;
 
