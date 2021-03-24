@@ -25,17 +25,18 @@ __all__ = [
 
 
 @not_compatible_for("arrow_property", "dynamic_property")
-def louvain(graph, tolerance=3, min_progress=100):
-    """Compute best partition on the `graph`.
+def louvain(graph, min_progress=50, progress_tries=2):
+    """Compute best partition on the `graph` by louvain.
 
     Args:
         graph (:class:`Graph`): A projected simple graph.
-        tolerance: number of times the min_progress setting is not met
-                   before exiting form the current level and compressing the graph
         min_progress: The minimum delta X required to be considered progress, where X is the number of nodes
                       that have changed their community on a particular pass.
-                       Delta X is then the difference in number of nodes that changed communities
-                       on the current pass compared to the previous pass.
+                      Delta X is then the difference in number of nodes that changed communities
+                      on the current pass compared to the previous pass.
+        progress_tries: number of times the min_progress setting is not met
+                        before exiting form the current level and compressing the graph.
+
 
     Returns:
         :class:`VertexDataContext`: A context with each vertex assigned with id of community it belongs to.

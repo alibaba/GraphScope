@@ -56,8 +56,8 @@ class LouvainContext
             fragment),
         compute_context_(this->data()) {}
 
-  void Init(grape::ParallelMessageManager& messages, int tolerance,
-            int min_progress) {
+  void Init(grape::ParallelMessageManager& messages, int min_progress,
+            int progress_tries) {
     auto& frag = this->fragment();
     auto inner_vertices = frag.InnerVertices();
 
@@ -65,8 +65,8 @@ class LouvainContext
     compute_context_.set_fragment(&frag);
     compute_context_.set_parallel_message_manager(&messages);
 
-    this->tolerance_ = tolerance;
     this->min_progress_ = min_progress;
+    this->progress_tries_ = progress_tries;
 
     vertex_state_.Init(inner_vertices);
     halt_ = false;
@@ -136,8 +136,8 @@ class LouvainContext
   double prev_quality() { return prev_quality_; }
   void set_prev_quality(double value) { prev_quality_ = value; }
 
-  int tolerance() { return tolerance_; }
   int min_progress() { return min_progress_; }
+  int progress_tries() { return progress_tries_; }
 
  private:
   std::vector<int64_t> change_history_;
@@ -151,8 +151,8 @@ class LouvainContext
 
   bool halt_;  // phase-1 halt
   double prev_quality_;
-  int tolerance_;
   int min_progress_;
+  int progress_tries_;
 };
 
 }  // namespace gs

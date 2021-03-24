@@ -154,8 +154,8 @@ struct LouvainMessage {
 };
 
 // util function to decide wether we should halt the phase.
-bool decide_to_halt(const std::vector<int64_t>& history, int tolerance,
-                    int min_progress) {
+bool decide_to_halt(const std::vector<int64_t>& history, int min_progress,
+                    int progress_tries) {
   // halt if the most recent change was 0
   if (0 == history.back()) {
     return true;
@@ -169,7 +169,7 @@ bool decide_to_halt(const std::vector<int64_t>& history, int tolerance,
     }
     previous = cur;
   }
-  return (count > tolerance);
+  return (count > progress_tries);
 }
 
 }  // namespace gs

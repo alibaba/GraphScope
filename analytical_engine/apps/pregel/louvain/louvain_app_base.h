@@ -206,8 +206,8 @@ class LouvainAppBase
               change_aggregator);
       ctx.change_history().push_back(total_change);
       // check whether to halt phase-1
-      bool to_halt = decide_to_halt(ctx.change_history(), ctx.tolerance(),
-                                    ctx.min_progress());
+      bool to_halt = decide_to_halt(ctx.change_history(), ctx.min_progress(),
+                                    ctx.progress_tries());
       ctx.set_halt(to_halt);
       if (ctx.halt()) {
         VLOG(1) << "super step " << current_super_step << " decided to halt.";
