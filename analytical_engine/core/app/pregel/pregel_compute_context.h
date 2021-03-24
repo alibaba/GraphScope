@@ -164,8 +164,6 @@ class PregelComputeContext {
   void vote_to_halt(const pregel_vertex_t& vertex) {
     if (halted_[vertex.vertex()] == false) {
       halted_[vertex.vertex()] = true;
-      // size_t one = 1;
-      // grape::atomic_add(voted_to_halt_num_, one);
     }
   }
 

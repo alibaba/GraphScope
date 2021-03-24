@@ -32,8 +32,8 @@ limitations under the License.
 namespace gs {
 
 /**
- * @brief PregelContext holds the computation result with
- * grape::VertexDataContext.
+ * @brief Context of louvain that holds the computation result with
+ * grape::VertexDataContext and some state of louvain process.
  * @tparam FRAG_T
  * @tparam COMPUTE_CONTEXT_T
  */

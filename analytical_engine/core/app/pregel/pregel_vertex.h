@@ -59,13 +59,9 @@ class PregelVertex {
 
   vertex_t vertex() const { return vertex_; }
 
-  adj_list_t outgoing_edges() {
-    return fragment_->GetOutgoingAdjList(vertex_);
-  }
+  adj_list_t outgoing_edges() { return fragment_->GetOutgoingAdjList(vertex_); }
 
-  adj_list_t incoming_edges() {
-    return fragment_->GetIncomingAdjList(vertex_);
-  }
+  adj_list_t incoming_edges() { return fragment_->GetIncomingAdjList(vertex_); }
 
   void send(const vertex_t& v, const MD_T& value) {
     compute_context_->send_message(v, value);
@@ -77,9 +73,7 @@ class PregelVertex {
 
   void vote_to_halt() { compute_context_->vote_to_halt(*this); }
 
-  void set_fragment(const fragment_t* fragment) {
-    fragment_ = fragment;
-  }
+  void set_fragment(const fragment_t* fragment) { fragment_ = fragment; }
 
   void set_compute_context(
       PregelComputeContext<fragment_t, VD_T, MD_T>* compute_comtext) {
