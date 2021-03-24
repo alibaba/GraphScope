@@ -182,7 +182,9 @@ def test_run_app_on_directed_graph(
         sorted(ctx5.to_numpy("r", vertex_range={"begin": 1, "end": 4})) == [5, 5, 6]
     )
 
-    with pytest.raises(InvalidArgumentError, match="Louvain not support directed graph."):
+    with pytest.raises(
+        InvalidArgumentError, match="Louvain not support directed graph."
+    ):
         louvain(p2p_project_directed_graphg)
 
 
