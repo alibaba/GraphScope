@@ -113,12 +113,11 @@ class PregelLouvain
       if (!state.is_from_louvain_vertex_reader) {
         // not from the disk but from the previous round's result
         state.community = v.get_gid();
-        edata_t edge_weight_aggregation = 0;
+        state.node_weight = 0;
         // It must use fake edges since we already set them last round.
         for (auto& e : v.fake_edges()) {
-          edge_weight_aggregation += e.second;
+          state.node_weight += e.second;
         }
-        state.node_weight = edge_weight_aggregation;
       }
       state.reset_total_edge_weight = true;
       v.context()->local_total_edge_weight()[v.tid()] +=
@@ -140,13 +139,13 @@ class PregelLouvain
       v.vote_to_halt();
       return;
     }
-    // at the start of each full pass check to see if progress is still being
-    // made, if not halt
+    // at the start of each full pass check to see wether progress is still
+    // being made, if not halt
     if (current_minor_step == phase_one_minor_step_1 && current_iteration > 0 &&
         current_iteration % 2 == 0) {
-      state.changed = 0;  // change count is per pass
+      state.changed = 0;  // reset changed.
       if (v.context()->halt()) {
-        // stage 2
+        // phase-1 halt, calculate current actual quality and return.
         double q = calculateActualQuality(v, context, messages);
         replaceNodeEdgesWithCommunityEdges(v, messages);
         v.context()->local_actual_quality()[v.tid()] += q;
@@ -181,7 +180,6 @@ class PregelLouvain
     context.aggregate(actual_quality_aggregator, quality);
   }
 
-  // Get the total edge weight of the graph.
   edata_t getTotalEdgeWeight(compute_context_t& context, pregel_vertex_t& v) {
     auto& state = v.state();
     if (state.reset_total_edge_weight) {
@@ -207,19 +205,20 @@ class PregelLouvain
       state.community = messages.begin()->community_id;
       state.community_sigma_total = messages.begin()->community_sigma_total;
     }
+    md_t out_message(state.community, state.community_sigma_total, 0.0,
+                     vertex.get_gid(), 0);
     if (vertex.use_fake_edges()) {
       for (const auto& edge : vertex.fake_edges()) {
-        md_t out_message(state.community, state.community_sigma_total,
-                         edge.second, vertex.get_gid(), edge.first);
+        out_message.edge_weight = edge.second;
+        out_message.dst_id = edge.first;
         vertex.send_by_gid(edge.first, out_message);
       }
     } else {
       for (auto& edge : vertex.outgoing_edges()) {
-        auto nei_gid = vertex.fragment()->Vertex2Gid(edge.get_neighbor());
-        md_t out_message(state.community, state.community_sigma_total,
-                         static_cast<edata_t>(edge.get_data()),
-                         vertex.get_gid(), nei_gid);
-        vertex.send_by_gid(nei_gid, out_message);
+        auto neighbor_gid = vertex.fragment()->Vertex2Gid(edge.get_neighbor());
+        out_message.edge_weight = static_cast<edata_t>(edge.get_data());
+        out_message.dst_id = neighbor_gid;
+        vertex.send_by_gid(neighbor_gid, out_message);
       }
     }
   }
@@ -239,10 +238,8 @@ class PregelLouvain
     std::map<vid_t, md_t> community_map;
     for (auto& message : messages) {
       vid_t community_id = message.community_id;
-      edata_t weight = message.edge_weight;
       if (community_map.find(community_id) != community_map.end()) {
-        community_map[community_id].edge_weight =
-            community_map[community_id].edge_weight + weight;
+        community_map[community_id].edge_weight += message.edge_weight;
       } else {
         community_map[community_id] = message;
       }
@@ -278,9 +275,9 @@ class PregelLouvain
       assert(best_community_id == c.community_id);
       state.community = c.community_id;
       state.community_sigma_total = c.community_sigma_total;
-      state.changed = 1;  // commuity changed.
+      state.changed = 1;  // community changed.
     }
-    // send node weight to the community hub to be summed in next super step
+    // send node weight to the community hub to sum in next super step
     md_t message(state.community, state.node_weight + state.internal_weight, 0,
                  vertex.get_gid(), state.community);
     vertex.send_by_gid(state.community, message);
@@ -390,7 +387,6 @@ class PregelLouvain
     }
     message.dst_id = state.community;
     vertex.send_by_gid(state.community, message);
-
     vertex.vote_to_halt();
   }
 

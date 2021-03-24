@@ -171,13 +171,12 @@ class PregelComputeContext {
 
   bool all_halted() {
     auto inner_vertices = fragment_->InnerVertices();
-    size_t cnt = 0;
     for (auto& v : inner_vertices) {
-      if (halted_[v]) {
-        ++cnt;
+      if (!halted_[v]) {
+        return false;
       }
     }
-    return cnt == inner_vertex_num_;
+    return true;
     // return voted_to_halt_num_ == inner_vertex_num_;
   }
 

@@ -113,7 +113,7 @@ class LouvainAppBase
             });
 
     {
-      // Sync Aggregator
+      // sync aggregator
       ctx.compute_context().aggregate(change_aggregator,
                                       ctx.GetLocalChangeSum());
       ctx.compute_context().aggregate(edge_weight_aggregator,
@@ -149,12 +149,14 @@ class LouvainAppBase
     auto outer_vertices = frag.OuterVertices();
 
     int current_super_step = ctx.compute_context().superstep();
+    // the minor step in phase 1
     int current_minor_step = current_super_step % 3;
+    // the current iteration, two iterations make a full pass.
     int current_iteration = current_super_step / 3;
 
-    LOG(INFO) << "current super step: " << current_super_step
-              << " current minor step: " << current_minor_step
-              << " current iteration: " << current_iteration;
+    VLOG(1) << "current super step: " << current_super_step
+            << " current minor step: " << current_minor_step
+            << " current iteration: " << current_iteration;
 
     if (current_super_step == terminate_step) {
       // get result messages and terminate
@@ -171,11 +173,11 @@ class LouvainAppBase
           thrd_num, std::vector<std::vector<md_t>>(thrd_num));
       messages.ParallelProcess<md_t>(
           thrd_num, [&thrd_num, &buffer](int tid, md_t const& msg) {
-            buffer[tid][msg.dst_id % thrd_num].emplace_back(msg);
+            buffer[tid][msg.dst_id % thrd_num].emplace_back(std::move(msg));
           });
       {
         std::vector<std::thread> threads(thrd_num);
-        for (uint32_t tid = 0; tid < thrd_num; ++tid) {
+        for (uint32_t tid = 0; tid < thrd_num_msg; ++tid) {
           threads[tid] = std::thread(
               [&frag, &ctx, &thrd_num, &buffer](uint32_t tid) {
                 for (uint32_t index = 0; index < thrd_num; ++index) {
@@ -198,37 +200,43 @@ class LouvainAppBase
 
     if (current_minor_step == phase_one_minor_step_1 && current_iteration > 0 &&
         current_iteration % 2 == 0) {
-      int64_t totalChange =
+      // aggreate total change
+      int64_t total_change =
           ctx.compute_context().template get_aggregated_value<int64_t>(
               change_aggregator);
-      ctx.change_history().push_back(totalChange);
+      ctx.change_history().push_back(total_change);
+      // check whether to halt phase-1
       bool to_halt = decide_to_halt(ctx.change_history(), ctx.tolerance(),
                                     ctx.min_progress());
       ctx.set_halt(to_halt);
       if (ctx.halt()) {
         LOG(INFO) << "super step " << current_super_step << " decided to halt.";
+        messages.ForceContinue();
       }
-      LOG(INFO) << "[INFO]: superstep: " << current_super_step
-                << " pass: " << current_iteration / 2
-                << " totalChange: " << totalChange;
+      VLOG(1) << "[INFO]: superstep: " << current_super_step
+              << " pass: " << current_iteration / 2
+              << " total change: " << totalChange;
     } else if (ctx.halt()) {
+      // aggregate actual quality produce in previous step.
       double actual_quality =
           ctx.compute_context().template get_aggregated_value<double>(
               actual_quality_aggregator);
       // after one pass if already decided halt, that means the pass yield no
       // changes, so we halt computation.
       if (current_super_step <= 14 || actual_quality <= ctx.prev_quality()) {
-        // the louvain computation complete.
-        LOG(INFO) << "computation complete, ACTUAL QUALITY: " << actual_quality;
+        // turn to sync community result
         ctx.compute_context().set_superstep(sync_result_step);
         syncCommunity(frag, ctx, messages);
         messages.ForceContinue();
+
+        LOG(INFO) << "computation complete, ACTUAL QUALITY: " << actual_quality;
         return;
       } else if (ctx.compute_context().superstep() > 0) {
-        // phase 1 halt
-        LOG(INFO) << "super step: " << current_super_step
-                  << " decided to halt, ACTUAL QUALITY: " << actual_quality
-                  << " previous QUALITY: " << ctx.prev_quality();
+        // just halt phase 1
+        VLOG(1) << "super step: " << current_super_step
+                << " decided to halt, ACTUAL QUALITY: " << actual_quality
+                << " previous QUALITY: " << ctx.prev_quality();
+
         // start phase 2 to compress community.
         ctx.compute_context().set_superstep(phase_two_start_step);
         ctx.set_prev_quality(actual_quality);
@@ -237,8 +245,8 @@ class LouvainAppBase
       }
     }
 
-    // At the start of each pass, every alive node send to their
-    // communities node info, we active the node.
+    // At the start of each pass, every alive node need to their
+    // communities node info to neighbors, so we active the node.
     if (ctx.compute_context().superstep() == phase_two_start_step) {
       ForEach(inner_vertices, [&ctx](int tid, vertex_t v) {
         if (ctx.GetVertexState(v).is_alived_community) {
@@ -267,7 +275,7 @@ class LouvainAppBase
     });
 
     {
-      // Sync Aggregator
+      // sync aggregator
       ctx.compute_context().aggregate(change_aggregator,
                                       ctx.GetLocalChangeSum());
       ctx.compute_context().aggregate(edge_weight_aggregator,
@@ -288,12 +296,14 @@ class LouvainAppBase
     }
 
     ctx.compute_context().clear_for_next_round();
+
     if (!ctx.compute_context().all_halted()) {
       messages.ForceContinue();
     }
   }
 
  private:
+
   // sync community id from community hub to community members.
   void syncCommunity(const fragment_t& frag, context_t& ctx,
                      message_manager_t& messages) {
