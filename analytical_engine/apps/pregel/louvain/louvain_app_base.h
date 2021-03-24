@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_APP_BASE_H_
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_APP_BASE_H_
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>

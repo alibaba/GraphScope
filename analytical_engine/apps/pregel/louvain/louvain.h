@@ -17,7 +17,7 @@
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_H_
 
 #include <map>
-#include <string>
+#include <utility>
 #include <vector>
 
 #include "apps/pregel/louvain/auxiliary.h"
