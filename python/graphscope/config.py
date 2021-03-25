@@ -26,6 +26,9 @@ class GSConfig(object):
     # the endpoint of a pre-launched GraphScope instance.
     addr = None
 
+    # "k8s" or "hosts"
+    cluster_type = "k8s"
+
     k8s_namespace = None
 
     # image

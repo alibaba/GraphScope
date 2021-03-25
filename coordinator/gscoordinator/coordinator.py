@@ -216,7 +216,7 @@ class CoordinatorServiceServicer(
             message_pb2.ConnectSessionResponse,
             code=error_codes_pb2.OK,
             session_id=self._session_id,
-            session_type=self._launcher.type(),
+            cluster_type=self._launcher.type(),
             num_workers=self._launcher.num_workers,
             engine_config=json.dumps(self._analytical_engine_config),
             pod_name_list=self._pods_list,
@@ -749,12 +749,10 @@ def parse_sys_args():
         help="Socket path to connect to vineyard, random socket will be created if param missing.",
     )
     parser.add_argument(
-        "--enable_k8s",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=False,
-        help="Deploy graphscope components on kubernetes.",
+        "--cluster_type",
+        type=str,
+        default="k8s",
+        help="Deploy graphscope components on local or kubernetes cluster.",
     )
     parser.add_argument(
         "--k8s_namespace",
@@ -971,7 +969,7 @@ def launch_graphscope():
     args = parse_sys_args()
     logger.info("Launching with args %s", args)
 
-    if args.enable_k8s:
+    if args.cluster_type == "k8s":
         launcher = KubernetesClusterLauncher(
             namespace=args.k8s_namespace,
             service_type=args.k8s_service_type,
@@ -1010,14 +1008,17 @@ def launch_graphscope():
             waiting_for_delete=args.waiting_for_delete,
             delete_namespace=args.k8s_delete_namespace,
         )
-    else:
+    elif args.cluster_type == "hosts":
         launcher = LocalLauncher(
             num_workers=args.num_workers,
             hosts=args.hosts,
             vineyard_socket=args.vineyard_socket,
+            shared_mem=args.k8s_vineyard_shared_mem,
             log_level=args.log_level,
             timeout_seconds=args.timeout_seconds,
         )
+    else:
+        raise RuntimeError("Expect hosts or k8s of cluster_type parameter")
 
     coordinator_service_servicer = CoordinatorServiceServicer(
         launcher=launcher,
@@ -1038,7 +1039,7 @@ def launch_graphscope():
     # handle SIGTERM signal
     def terminate(signum, frame):
         global coordinator_service_servicer
-        del coordinator_service_servicer
+        coordinator_service_servicer._cleanup()
 
     signal.signal(signal.SIGTERM, terminate)
 
@@ -1046,7 +1047,7 @@ def launch_graphscope():
         # Grpc has handled SIGINT
         server.wait_for_termination()
     except KeyboardInterrupt:
-        del coordinator_service_servicer
+        coordinator_service_servicer._cleanup()
 
 
 if __name__ == "__main__":

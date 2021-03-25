@@ -49,8 +49,8 @@ spec:
         - python3
         - "-m"
         - gscoordinator
-        - "--enable_k8s"
-        - "true"
+        - "--cluster_type"
+        - "k8s"
         - "--port"
         - "59001"
         - "--num_workers"

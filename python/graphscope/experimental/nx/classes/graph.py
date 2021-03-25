@@ -2069,7 +2069,7 @@ class Graph(object):
 
         if v_prop is None:
             v_prop = str(v_prop)
-            v_prop_type = types_pb2.NULL
+            v_prop_type = types_pb2.NULLVALUE
         else:
             check_argument(isinstance(v_prop, str))
             v_label = self._schema.vertex_labels[0]
@@ -2085,7 +2085,7 @@ class Graph(object):
 
         if e_prop is None:
             e_prop = str(e_prop)
-            e_prop_type = types_pb2.NULL
+            e_prop_type = types_pb2.NULLVALUE
         else:
             check_argument(isinstance(e_prop, str))
             e_label = self._schema.edge_labels[0]

@@ -250,7 +250,7 @@ def unify_type(t):
         elif t in ("str", "string", "std::string"):
             return types_pb2.STRING
         elif t in ("empty", "grape::emptytype"):
-            return types_pb2.NULL
+            return types_pb2.NULLVALUE
     elif isinstance(t, type):
         if t is int:
             return types_pb2.LONG
@@ -278,7 +278,7 @@ def data_type_to_cpp(t):
         return "double"
     elif t == types_pb2.STRING:
         return "std::string"
-    elif t is None or t == types_pb2.NULL:
+    elif t is None or t == types_pb2.NULLVALUE:
         return "grape::EmptyType"
     elif t == types_pb2.INVALID:
         return ""
