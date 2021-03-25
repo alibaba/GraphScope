@@ -154,3 +154,11 @@ app:
     src: benchmarks/apps/bfs/property_bfs.h
     compatible_graph:
       - vineyard::ArrowFragment
+  - algo: louvain
+    type: cpp_pie
+    class_name: gs::LouvainAppBase
+    src: apps/pregel/louvain/louvain_app_base.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment

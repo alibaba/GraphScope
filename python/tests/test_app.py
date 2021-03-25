@@ -32,6 +32,7 @@ from graphscope import hits
 from graphscope import k_core
 from graphscope import k_shell
 from graphscope import katz_centrality
+from graphscope import louvain
 from graphscope import lpa
 from graphscope import pagerank
 from graphscope import property_sssp
@@ -180,6 +181,11 @@ def test_run_app_on_directed_graph(
     assert np.all(
         sorted(ctx5.to_numpy("r", vertex_range={"begin": 1, "end": 4})) == [5, 5, 6]
     )
+
+    with pytest.raises(
+        InvalidArgumentError, match="Louvain not support directed graph."
+    ):
+        louvain(p2p_project_directed_graph)
 
 
 def test_app_on_undirected_graph(
@@ -339,6 +345,9 @@ def test_app_on_undirected_graph(
         == [[1, 0], [2, 0], [3, 0]]
     )
     assert np.all(ctx10.to_numpy("r", vertex_range={"begin": 1, "end": 4}) == [0, 0, 0])
+
+    # louvain
+    ctx10 = louvain(p2p_project_undirected_graph, min_progress=50, progress_tries=2)
 
 
 def test_run_app_on_string_oid_graph(p2p_project_directed_graph_string):
