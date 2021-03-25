@@ -156,8 +156,6 @@ class PregelComputeContext {
   void activate(const vertex_t& v) {
     if (halted_[v] == true) {
       halted_[v] = false;
-      // size_t one = 1;
-      // __sync_fetch_and_sub(&voted_to_halt_num_, one);
     }
   }
 
