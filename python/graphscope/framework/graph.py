@@ -78,6 +78,7 @@ class Graph(object):
             session_id (str): Session id of the session the graph is created in.
             incoming_data: Graph can be initialized through various type of sources,
                 which can be one of:
+
                     - :class:`Operation`
                     - :class:`nx.Graph`
                     - :class:`Graph`
@@ -820,6 +821,7 @@ class Graph(object):
     ):
         """Add edges to graph.
         1. Add edges to a uninitialized graph.
+
             i.   src_label and dst_label both unspecified. In this case, current graph must
                  has 0 (we deduce vertex label from edge table, and set vertex label name to '_'),
                  or 1 vertex label (we set src_label and dst label to this).
@@ -828,6 +830,7 @@ class Graph(object):
                  we deduce all vertex labels from edge tables.
                  Note that you either provide all vertex labels, or let graphscope deduce all vertex labels.
                  We don't support mixed style.
+
         2. Add edges to a existed graph.
             Must add a new kind of edge label, not a new relation to builded graph.
             But you can add a new relation to uninitialized part of the graph.

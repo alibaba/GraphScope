@@ -165,6 +165,7 @@ GraphScope 以
 GraphScope 将会推断起始点标签和终点标签为这一个点标签。
 
 .. code:: python
+
     graph = sess.g()
     graph = graph.add_vertices("file:///home/admin/student.v", label="student")
     graph = graph.add_edges("file:///home/admin/group.e", label="group")
