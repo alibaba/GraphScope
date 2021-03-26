@@ -112,7 +112,7 @@ To load this graph to GraphScope, one may use the code below.
 
 .. code:: python
 
-    g = graphscope.Graph(sess)
+    g = sess.g()
     g = (
         g.add_vertices("paper.csv", label="paper")
         .add_vertices("author.csv", label="author")

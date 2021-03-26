@@ -46,7 +46,7 @@ def student_group_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")
 
 @pytest.mark.skip("requires vineyard's io adaptors installed properly")
 def test_p2p(graphscope_session, p2p_31_e, p2p_31_v):
-    graph = graphscope.Graph(graphscope_session)
+    graph = graphscope.graphscope_session.g()
     graph = graph.add_vertices(Loader(p2p_31_v, session=graphscope_session), "person")
     graph = graph.add_edges(Loader(p2p_31_e, session=graphscope_session), "knows")
     assert graph.schema is not None
@@ -54,7 +54,7 @@ def test_p2p(graphscope_session, p2p_31_e, p2p_31_v):
 
 @pytest.mark.skip("requires vineyard's io adaptors installed properly")
 def test_group(graphscope_session, student_group_e, student_v):
-    graph = graphscope.Graph(graphscope_session)
+    graph = graphscope.graphscope_session.g()
     graph = graph.add_vertices(Loader(student_v, session=graphscope_session), "student")
     graph = graph.add_edges(
         Loader(student_group_e, session=graphscope_session), "group"

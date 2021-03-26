@@ -34,7 +34,7 @@ def load_ldbc(sess, prefix, directed=True):
     Returns:
         :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
     """
-    graph = Graph(sess, directed=directed)
+    graph = sess.g(directed=directed)
     graph = (
         graph.add_vertices(
             Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"),

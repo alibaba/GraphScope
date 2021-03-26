@@ -123,7 +123,7 @@ To load this graph to GraphScope, one may use the code below with the [data file
 
 
 ```python
-g = graphscope.Graph(sess)
+g = sess.g()
 g = (
     g.add_vertices("/testingdata/ogbn_mag_small/paper.csv", label="paper")
     .add_vertices("/testingdata/ogbn_mag_small/author.csv", label="author")

@@ -56,6 +56,7 @@ from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import K8sError
 from graphscope.framework.errors import LearningEngineInternalError
 from graphscope.framework.errors import check_argument
+from graphscope.framework.graph import Graph
 from graphscope.framework.operation import Operation
 from graphscope.interactive.query import InteractiveQuery
 from graphscope.interactive.query import InteractiveQueryStatus
@@ -105,14 +106,14 @@ class Session(object):
 
         >>> # use session object explicitly
         >>> sess = gs.session()
-        >>> g = gs.Graph(sess)
+        >>> g = sess.g()
         >>> pg = g.project_to_simple('v', 'e', None, 'dist')
         >>> r = s.sssp(g, 4)
         >>> s.close()
 
         >>> # or use a session as default
         >>> s = gs.session().as_default()
-        >>> g = gs.Graph()
+        >>> g = g()
         >>> pg = g.project_to_simple('v', 'e', None, 'dist')
         >>> r = gs.sssp(pg, 4)
         >>> s.close()
@@ -801,6 +802,9 @@ class Session(object):
         """Get configuration of the session."""
         return self._config_params
 
+    def g(self, incoming_data=None, oid_type="int64", directed=True, generate_eid=True):
+        return Graph(self, incoming_data, oid_type, directed, generate_eid)
+
     def load_from(self, *args, **kwargs):
         """Load a graph within the session.
         See more information in :meth:`graphscope.load_from`.
@@ -1312,3 +1316,7 @@ class _DefaultSessionStack(object):
 
 
 _default_session_stack = _DefaultSessionStack()  # pylint: disable=protected-access
+
+
+def g(incoming_data=None, oid_type="int64", directed=True, generate_eid=True):
+    return get_default_session().g(incoming_data, oid_type, directed, generate_eid)

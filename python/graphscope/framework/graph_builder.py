@@ -176,7 +176,7 @@ def load_from(
     if sess is None:
         raise ValueError("No default session found.")
     if isinstance(edges, (Graph, nx.Graph, *VineyardObjectTypes)):
-        return Graph(sess, edges)
+        return sess.g(edges)
     oid_type = utils.normalize_data_type_str(oid_type)
     if oid_type not in ("int64_t", "std::string"):
         raise ValueError("oid_type can only be int64_t or string.")
@@ -184,5 +184,5 @@ def load_from(
     e_labels = normalize_parameter_edges(edges)
     config = assemble_op_config(v_labels, e_labels, oid_type, directed, generate_eid)
     op = dag_utils.create_graph(sess.session_id, types_pb2.ARROW_PROPERTY, attrs=config)
-    graph = Graph(sess, op)
+    graph = sess.g(op)
     return graph

@@ -20,13 +20,12 @@ from graphscope.analytical.app import *
 from graphscope.analytical.udf import declare
 from graphscope.analytical.udf.types import Vertex
 from graphscope.client.session import Session
+from graphscope.client.session import g
 from graphscope.client.session import get_default_session
 from graphscope.client.session import get_option
 from graphscope.client.session import session
 from graphscope.client.session import set_option
 from graphscope.framework.errors import *
-from graphscope.framework.graph import Graph
-from graphscope.framework.graph import g
 from graphscope.framework.graph_builder import load_from
 from graphscope.version import __version__
 

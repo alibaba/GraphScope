@@ -22,9 +22,9 @@ import pytest
 
 import graphscope
 import graphscope.experimental.nx as nx
+from graphscope.client.session import g
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
-from graphscope.framework.graph import g
 from graphscope.framework.loader import Loader
 from graphscope.proto import types_pb2
 
@@ -41,7 +41,7 @@ def graphscope_session():
 
 
 def ldbc_sample_single_label(prefix, directed):
-    graph = graphscope.Graph(directed=directed)
+    graph = graphscope.g(directed=directed)
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
     )
@@ -53,7 +53,7 @@ def ldbc_sample_single_label(prefix, directed):
 
 
 def ldbc_sample_multi_labels(prefix, directed):
-    graph = graphscope.Graph(directed=directed)
+    graph = graphscope.g(directed=directed)
     graph = (
         graph.add_vertices(
             Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"

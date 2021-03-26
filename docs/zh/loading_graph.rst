@@ -32,7 +32,7 @@ GraphScope 以
 .. code:: python
 
     sess = graphscope.session()
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
 
 我们可以向图内添加一个点标签。相关的参数含义如下：
 
@@ -165,7 +165,7 @@ GraphScope 以
 GraphScope 将会推断起始点标签和终点标签为这一个点标签。
 
 .. code:: python
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
     graph = graph.add_vertices("file:///home/admin/student.v", label="student")
     graph = graph.add_edges("file:///home/admin/group.e", label="group")
     # GraphScope 会将 `src_label` 和 `dst_label` 自动赋值为 `student`.
@@ -176,7 +176,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。
 
 .. code:: python
 
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
     graph.add_edges("file:///home/admin/group.e", label="group")
     # 载图后，图中将会包含一个点标签，名为 `_`, 和一个边标签，名为 `group`.
 
@@ -192,7 +192,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。
 .. code:: python
 
     sess = graphscope.session()
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
     
     graph = graph.add_vertices(
         "/home/admin/student.v",
@@ -289,7 +289,7 @@ GraphScope 中的图直到被使用时才会被真正载入。
 .. code:: python
 
     sess = graphscope.session()
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
 
     graph = graph.add_vertices("/home/admin/student.v", "student")
     graph = graph.add_edges( "file:///home/admin/group.e", "group", src_label="student", dst_label="student")
@@ -308,7 +308,7 @@ GraphScope 中的图直到被使用时才会被真正载入。
 .. code:: python
 
     sess = graphscope.session()
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
 
     graph = graph.add_vertices("/home/admin/student.v", "student")
     graph = graph.add_vertices( "/home/admin/teacher.v", "teacher")

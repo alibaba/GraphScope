@@ -25,12 +25,10 @@ from typing import Mapping
 
 import vineyard
 
-from graphscope.client.session import get_default_session
 from graphscope.config import GSConfig as gs_config
 from graphscope.framework import dag_utils
 from graphscope.framework import graph_utils
 from graphscope.framework import utils
-from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.graph_utils import EdgeLabel
@@ -57,7 +55,7 @@ class Graph(object):
         >>> import graphscope as gs
         >>> from graphscope.framework.loader import Loader
         >>> sess = gs.session()
-        >>> graph = Graph(sess)
+        >>> graph = sess.g()
         >>> graph = graph.add_vertices("person.csv","person")
         >>> graph = graph.add_vertices("software.csv", "software")
         >>> graph = graph.add_edges("knows.csv", "knows", src_label="person", dst_label="person")
@@ -68,7 +66,7 @@ class Graph(object):
 
     def __init__(
         self,
-        session=None,
+        session,
         incoming_data=None,
         oid_type="int64",
         directed=True,
@@ -90,8 +88,6 @@ class Graph(object):
         self._graph_type = types_pb2.ARROW_PROPERTY
         self._vineyard_id = 0
         self._schema = GraphSchema()
-        if session is None:
-            session = get_default_session()
         self._session = session
         self._detached = False
 
@@ -921,74 +917,3 @@ class Graph(object):
             relations,
             func,
         )
-
-    def remove_vertices(self, label):
-        if label not in self._v_labels:
-            raise ValueError(f"label {label} not in vertices.")
-        if label not in self._unsealed_vertices:
-            raise ValueError(
-                "Remove vertices from a loaded graph doesn't supported yet"
-            )
-        # Check whether safe to remove
-        for rel in self._e_relationships:
-            for sub_rel in rel:
-                if label in sub_rel:
-                    raise ValueError(
-                        f"Vertex {label} has usage in relation {sub_rel}, please remove that edge first."
-                    )
-        unsealed_vertices = deepcopy(self._unsealed_vertices)
-        v_labels = deepcopy(self._v_labels)
-        unsealed_vertices.pop(label)
-        v_labels.remove(label)
-        return self._construct_graph(
-            unsealed_vertices,
-            self._unsealed_edges,
-            v_labels,
-            self._e_labels,
-            self._e_relationships,
-        )
-
-    def remove_edges(self, label, src_label=None, dst_label=None):
-        if label not in self._e_labels:
-            raise ValueError(f"label {label} not in edges")
-        if label not in self._unsealed_edges:
-            raise ValueError("Remove edges from a loaded graph doesn't supported yet")
-
-        unsealed_edges = deepcopy(self._unsealed_edges)
-        e_labels = deepcopy(self._e_labels)
-        relations = deepcopy(self._e_relationships)
-        # Calculate the items to remove
-        remove_list = []
-
-        label_idx = e_labels.index(label)
-        for rel in relations[label_idx]:
-            for sub_rel in rel:
-                if src_label is None or src_label == sub_rel[0]:
-                    if dst_label is None or dst_label == sub_rel[1]:
-                        remove_list.append(sub_rel)
-        if not remove_list:
-            raise ValueError("Cannot find edges to remove.")
-
-        # Remove the edge label
-        if src_label is None and dst_label is None:
-            unsealed_edges.pop(label)
-            e_labels.pop(label_idx)
-            relations.pop(label_idx)
-        else:
-            cur_label = unsealed_edges[label]
-            for sub_rel in remove_list:
-                cur_label.sub_labels.pop(sub_rel)
-                relations[label_idx].remove(sub_rel)
-            # Remove entire label if no relations still exists.
-            if not relations[label_idx]:
-                unsealed_edges.pop(label)
-                e_labels.pop(label_idx)
-                relations.pop(label_idx)
-
-        return self._construct_graph(
-            self._unsealed_vertices, unsealed_edges, self._v_labels, e_labels, relations
-        )
-
-
-def g(incoming_data):
-    return Graph(incoming_data=incoming_data)

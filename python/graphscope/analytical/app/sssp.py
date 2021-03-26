@@ -42,7 +42,7 @@ def sssp(graph, src=0):
 
         import graphscope as gs
         sess = gs.session()
-        g = gs.Graph(sess)
+        g = gs.g()
         pg = g.project_to_simple(v_label='vlabel', e_label='elabel', v_prop=None, e_prop='distance')
         r = gs.sssp(pg, src=0)
         s.close()

@@ -162,7 +162,7 @@ def test_dict_in_dict_form_loader_deprecated(
 def test_complete_form_loader(graphscope_session, student_group_e, student_v):
     # a complete form for loading from ev files.
     # types are inferred from Loader.
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(
         student_v, "student", ["name", "lesson_nums", "avg_score"], "student_id"
     )
@@ -206,7 +206,7 @@ def test_complete_form_loader_deprecated(
 
 
 def test_properties_omitted_loader(graphscope_session, student_group_e, student_v):
-    graph = Graph(graphscope_session, generate_eid=False)
+    graph = graphscope_session.g(generate_eid=False)
     graph = graph.add_vertices(student_v, "student", [], "student_id")
     graph = graph.add_edges(student_group_e, "group", [])
     assert len(graph.schema.vertex_properties[0]) == 4
@@ -216,7 +216,7 @@ def test_properties_omitted_loader(graphscope_session, student_group_e, student_
 def test_properties_omitted_loader_with_generate_eid(
     graphscope_session, student_group_e, student_v
 ):
-    graph = Graph(graphscope_session, generate_eid=True)
+    graph = graphscope_session.g(generate_eid=True)
     graph = graph.add_vertices(student_v, "student", [], "student_id")
     graph = graph.add_edges(student_group_e, "group", [])
     assert len(graph.schema.vertex_properties[0]) == 4
@@ -226,7 +226,7 @@ def test_properties_omitted_loader_with_generate_eid(
 def test_loader_with_specified_data_type(
     graphscope_session, student_group_e, student_v
 ):
-    graph = Graph(graphscope_session, oid_type="string", generate_eid=False)
+    graph = graphscope_session.g(oid_type="string", generate_eid=False)
     graph = graph.add_vertices(
         student_v,
         "student",
@@ -245,7 +245,7 @@ def test_loader_with_specified_data_type(
 def test_multi_src_dst_edge_loader(
     graphscope_session, student_group_e, teacher_group_e, student_v, teacher_v
 ):
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(
         student_v, "student", ["name", "lesson_nums", "avg_score"], "student_id"
     )
@@ -275,7 +275,7 @@ def test_multi_src_dst_edge_loader(
 
 def test_vid_omitted_form_loader(graphscope_session, student_group_e, student_v):
     # vid can be omit, the first column will be used as vid;
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(
         student_v, "student", ["name", "lesson_nums", "avg_score"]
     )
@@ -294,7 +294,7 @@ def test_vid_omitted_form_loader(graphscope_session, student_group_e, student_v)
 def test_v_property_omitted_form_loader(graphscope_session, student_group_e, student_v):
     # properties for v can be omit, all columns will be load,
     # the first one used as vid by # default. default vlabel would be '_';
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(student_v, "student")
     graph = graph.add_edges(
         student_group_e,
@@ -308,13 +308,13 @@ def test_v_property_omitted_form_loader(graphscope_session, student_group_e, stu
 
 def test_vertices_omitted_form_loader(graphscope_session, student_group_e):
     # vertices can be omit.
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_edges(student_group_e)
     assert graph.loaded()
 
 
 def test_all_omitted_form_loader(graphscope_session, student_group_e):
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_edges(student_group_e, "group")
     assert graph.loaded()
 
@@ -322,21 +322,21 @@ def test_all_omitted_form_loader(graphscope_session, student_group_e):
 def test_multiple_e_all_omitted_form_loader(
     graphscope_session, student_group_e, friend_e
 ):
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_edges(student_group_e, "group")
     graph = graph.add_edges(friend_e, "friend")
     assert graph.loaded()
 
 
 def test_load_from_numpy(graphscope_session, student_group_e_array, student_v_array):
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(student_v_array)
     graph = graph.add_edges(student_group_e_array)
     assert graph.loaded()
 
 
 def test_load_from_pandas(graphscope_session, student_group_e_df, student_v_df):
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(student_v_df)
     graph = graph.add_edges(student_group_e_df)
     assert graph.loaded()
@@ -351,7 +351,7 @@ def test_errors_on_files(
             graphscope_session, vineyard.ObjectName("non_exist_vy_name")
         )._ensure_loaded()
     return
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     with pytest.raises(AnalyticalEngineInternalError, match="IOError"):
         non_existing_file = "file:///abc"
         graph.add_edges(Loader(non_existing_file))._ensure_loaded()
@@ -368,7 +368,7 @@ def test_errors_on_files(
 def test_error_on_non_default_and_non_existing_v_label(
     graphscope_session, student_group_e, student_v
 ):
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(student_v, "student")
     with pytest.raises(ValueError, match="src label or dst_label not existed in graph"):
         graph = graph.add_edges(student_group_e, "group", src_label="v", dst_label="v")
@@ -379,7 +379,7 @@ def test_error_on_non_default_and_non_existing_v_label(
 
 
 def test_error_on_src_dst_refer_to_same_col(graphscope_session, student_group_e):
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     with pytest.raises(AssertionError, match="cannot refer to the same field"):
         graph = graph.add_edges(
             student_group_e,
@@ -394,7 +394,7 @@ def test_error_on_src_dst_refer_to_same_col(graphscope_session, student_group_e)
 def test_error_on_ambigious_default_label(
     graphscope_session, student_group_e, student_v, teacher_v
 ):
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(student_v, "student")
     graph = graph.add_vertices(teacher_v, "teacher")
 
@@ -403,7 +403,7 @@ def test_error_on_ambigious_default_label(
 
 
 def test_error_on_duplicate_labels(graphscope_session, student_group_e, student_v):
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(student_v, "student")
     with pytest.raises(ValueError, match="Label student already existed in graph"):
         graph = graph.add_vertices(student_v, "student")
@@ -421,7 +421,7 @@ def test_load_complex_graph(
     teacher_v,
     lesson_v,
 ):
-    graph = Graph(graphscope_session, oid_type="string")
+    graph = graphscope_session.g(oid_type="string")
     graph = graph.add_vertices(
         student_v, "student", ["name", "lesson_nums", "avg_score"], "student_id"
     )
@@ -468,7 +468,7 @@ def test_load_complex_graph_by_index(
     teacher_v,
     lesson_v,
 ):
-    graph = Graph(graphscope_session, oid_type="string")
+    graph = graphscope_session.g(oid_type="string")
     graph = graph.add_vertices(
         student_v, "student", ["name", "lesson_nums", "avg_score"], 0
     )
@@ -515,7 +515,7 @@ def test_Load_complex_graph_variants(
     teacher_v_oss,
     lesson_v_mars,
 ):
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(
         student_v_array, "student", ["name", "lesson_nums", "avg_score"], "student_id"
     )
