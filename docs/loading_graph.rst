@@ -10,7 +10,16 @@ in which the edges/vertices are labeled and each label may have many properties.
 Building a Graph
 -------------------------
 
-To load a property graph to GraphScope, we provide a class `Graph`, and several methods:
+To load a property graph to GraphScope, we provide a method `g()` defined in `Session`.
+
+First, we create a session, then a graph instance inside that session.
+
+.. code:: python
+
+    sess = graphscope.session()
+    graph = sess.g()
+
+The class `Graph` has several methods:
 
 .. code:: python
 
@@ -20,21 +29,7 @@ To load a property graph to GraphScope, we provide a class `Graph`, and several 
     def add_edges(self, edges, label="_", properties=[], src_label=None, dst_label=None, src_field=0, dst_field=1):
         pass
 
-    def remove_vertices(self, label):
-        pass
-
-    def remove_edges(self, label, src_label=None, dst_label=None):
-        pass
-
 These methods helps users to construct the schema of the property graph iteratively.
-
-First, we create a session, then a graph instance inside that session.
-
-.. code:: python
-
-    sess = graphscope.session()
-    graph = graphscope.Graph(sess)
-
 
 We can add a kind of vertices to graph.
 
@@ -168,7 +163,7 @@ If there is only one vertex label in the graph, the label of vertices can be omi
 GraphScope will infer the source and destination vertex label is that very label.
 
 .. code:: python
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
     graph = graph.add_vertices("file:///home/admin/student.v", label="student")
     graph = graph.add_edges("file:///home/admin/group.e", label="group")
     # GraphScope will assign `src_label` and `dst_label` to `student` automatically.
@@ -183,7 +178,7 @@ It only serve the most simple cases.
 
 .. code:: python
 
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
     graph.add_edges("file:///home/admin/group.e", label="group")
     # After loaded, the graph will have an vertex label called `_`, and an edge label called `group`.
 
@@ -200,7 +195,7 @@ Let's make the example complete:
 .. code:: python
 
     sess = graphscope.session()
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
     
     graph = graph.add_vertices(
         "/home/admin/student.v",
@@ -247,7 +242,7 @@ from pandas dataframes or numpy ndarrays.
 
     # use a dataframe as datasource, properties omitted, col_0/col_1 will be used as src/dst by default.
     # (for vertices, col_0 will be used as vertex_id by default)
-    graph = graphscope.Graph(sess).add_vertices(df_v).add_edges(df_e)
+    graph = sess.g().add_vertices(df_v).add_edges(df_e)
 
 
 Or load from numpy ndarrays
@@ -259,7 +254,7 @@ Or load from numpy ndarrays
     array_e = [df_e[col].values for col in ['leader_student_id', 'member_student_id', 'member_size']]
     array_v = [df_v[col].values for col in ['student_id', 'lesson_nums', 'avg_score']]
 
-    graph = graphscope.Graph(sess).add_vertices(array_v).add_edges(array_e)
+    graph = sess.g().add_vertices(array_v).add_edges(array_e)
 
 
 Graphs from Given Location
@@ -289,95 +284,3 @@ User can implement customized driver to support additional data sources. Take `o
 is used as resolve to specific protocol scheme, and `AbstractBufferFile` to do read and write.
 The only methods user need to override is ``_upload_chunk``,
 ``_initiate_upload`` and ``_fetch_range``. In the end user need to use ``fsspec.register_implementation('protocol_name', 'protocol_file_system')`` to register corresponding resolver.
-
-
-Understand the lazy evaluation of graph.
----------------------------------------
-
-Graphs in GraphScope are not loaded until used.
-When we say **used**, we means that anything related to the remote is touched, such as
-the `key` of the graph, the `vineyard_id`, the complete schema with data types, or
-applications is quering the query, etc.
-
-When building graph iteratively, graph itself will store some basic schema, user are free to
-inspect the basic schema without trigger the loading process by `print(graph)`.
-Let's see an example:
-
-.. code:: python
-
-    sess = graphscope.session()
-    graph = graphscope.Graph(sess)
-
-    graph = graph.add_vertices("/home/admin/student.v", "student")
-    graph = graph.add_edges( "file:///home/admin/group.e", "group", src_label="student", dst_label="student")
-    # This will not actually load the graph.
-    print(graph)
-    # But these will load the graph, cause more detailed information can only be known after loading.
-    print(graph.key)
-    print(graph.schema)
-    graphscope.sssp(graph, src=6)
-    # call `loaded` also will automatically load the graph.
-    assert graph.loaded() == True
-
-
-Thanks to the lazy evaluation of graph loading, we can remove some vertices or edges before the actually loading,
-but we cannot remove after the graph is loaded.
-
-.. code:: python
-
-    sess = graphscope.session()
-    graph = graphscope.Graph(sess)
-
-    graph = graph.add_vertices("/home/admin/student.v", "student")
-    graph = graph.add_vertices( "/home/admin/teacher.v", "teacher")
-    graph = graph.add_edges("file:///home/admin/group.e", "group", src_label="student", dst_label="student")
-    graph = graph.add_edges("file:///home/admin/group_for_teacher_student.e", "group", src_label="teacher", dst_label="student")
-
-    # inspect the schema without loading
-    print(graph)
-
-    # the related edge must be removed before an vertex is removed.
-    # graph = graph.remove_vertices("teacher")  # Error, cause some edges is rely on that vertex.
-
-    # src_label and dst_label is used to filter edges. When not specified, means remove the edge label entirely.
-    graph = graph.remove_edges("group", src_label="teacher", dst_label="student")
-
-    # Now we can remove the vertex
-    graph = graph.remove_vertices("teacher")
-
-    print(graph)
-
-    # Trigger the loading.
-    print(graph.key)
-
-    # Now the remove is forbidden.
-    # graph = graph.remove_edges("group")
-
-
-But we can add more vertices and edges to a loaded graph.
-The adding is also lazy evaluated, so we can even remove unprocessed vertices and edges.
-
-.. code:: python
-
-    sess = graphscope.session()
-    graph = graphscope.Graph(sess)
-
-    graph = graph.add_vertices("/home/admin/student.v", "student")
-    graph = graph.add_edges("file:///home/admin/group.e", "group", src_label="student", dst_label="student")
-
-    print(graph.key)  # trigger the loading
-
-    # Add more vertices and edges to a loaded graph.
-
-    graph = graph.add_vertices("/home/admin/teacher.v", "teacher")
-
-    graph = graph.add_edges("file:///home/admin/group_for_teacher_student.e", "group", src_label="teacher", dst_label="student")
-
-    print(graph)  # does not trigger the loading.
-
-    # So we can remove unprocessed vertices or edges
-    graph = graph.remove_edges("group", src_label="teacher", dst_label="student")
-    graph = graph.remove_vertices("teacher")
-
-    # But cannot remove the labels that are in loaded graph.
-    # graph = graph.remove_edges("group", src_label="student", dst_label="student")

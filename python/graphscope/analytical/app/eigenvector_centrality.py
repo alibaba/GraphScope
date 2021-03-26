@@ -43,7 +43,7 @@ def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
 
         import graphscope as gs
         sess = gs.session()
-        g = gs.Graph(sess)
+        g = sess.g()
         pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
         r = gs.eigenvector_centrality(pg)
         s.close()

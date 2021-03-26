@@ -41,7 +41,7 @@ def clustering(graph):
 
         import graphscope as gs
         sess = gs.session()
-        g = gs.Graph(sess)
+        g = sess.g()
         pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
         r = gs.clustering(pg)
         s.close()

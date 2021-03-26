@@ -32,7 +32,7 @@ GraphScope 以
 .. code:: python
 
     sess = graphscope.session()
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
 
 我们可以向图内添加一个点标签。相关的参数含义如下：
 
@@ -165,7 +165,7 @@ GraphScope 以
 GraphScope 将会推断起始点标签和终点标签为这一个点标签。
 
 .. code:: python
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
     graph = graph.add_vertices("file:///home/admin/student.v", label="student")
     graph = graph.add_edges("file:///home/admin/group.e", label="group")
     # GraphScope 会将 `src_label` 和 `dst_label` 自动赋值为 `student`.
@@ -176,7 +176,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。
 
 .. code:: python
 
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
     graph.add_edges("file:///home/admin/group.e", label="group")
     # 载图后，图中将会包含一个点标签，名为 `_`, 和一个边标签，名为 `group`.
 
@@ -192,7 +192,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。
 .. code:: python
 
     sess = graphscope.session()
-    graph = graphscope.Graph(sess)
+    graph = sess.g()
     
     graph = graph.add_vertices(
         "/home/admin/student.v",
@@ -274,91 +274,3 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。
 用户可以方便的实现自己的driver来支持更多的数据源，比如参照 `ossfs <https://github.com/alibaba/libvineyard/blob/main/modules/io/adaptors/ossfs.py>`_ driver的实现方式。
 用户需要继承 `AbstractFileSystem` 类用来做scheme对应的resolver， 以及 `AbstractBufferedFile`。用户仅需要实现 ``_upload_chunk``,
 ``_initiate_upload`` and ``_fetch_range`` 这几个方法就可以实现基本的read，write功能。最后通过 ``fsspec.register_implementation('protocol_name', 'protocol_file_system')`` 注册自定义的resolver。
-
-
-理解惰性载图
-----------
-
-GraphScope 中的图直到被使用时才会被真正载入。
-**被使用** 指任何涉及到远端的东西被用到时，比如图的 `key`, `vineyard_id`，完整的带有数据类型的图的定义，或者
-是有应用在图上查询，等等。
-
-当迭代式地建图时，图内部会存储一些基本的点标签，边标签信息，可以通过 `print(graph)` 来查看这些信息并不会触发载图过程。
-来看一个例子
-
-.. code:: python
-
-    sess = graphscope.session()
-    graph = graphscope.Graph(sess)
-
-    graph = graph.add_vertices("/home/admin/student.v", "student")
-    graph = graph.add_edges( "file:///home/admin/group.e", "group", src_label="student", dst_label="student")
-    # 这里并不会真正载入图
-    print(graph)
-    # 这一步将会触发载图，因为有些信息只有在载入图后才能获得
-    print(graph.key)
-    print(graph.schema)
-    graphscope.sssp(graph, src=6)
-    # 调用 `loaded()` 也会自动触发载图
-    assert graph.loaded() == True
-
-得益于惰性的载图，我们可以在真正载图前去除一些点或边标签，以解决偶尔写错的情况。
-但是当图已经被载入后，便不可以去除。
-
-.. code:: python
-
-    sess = graphscope.session()
-    graph = graphscope.Graph(sess)
-
-    graph = graph.add_vertices("/home/admin/student.v", "student")
-    graph = graph.add_vertices( "/home/admin/teacher.v", "teacher")
-    graph = graph.add_edges("file:///home/admin/group.e", "group", src_label="student", dst_label="student")
-    graph = graph.add_edges("file:///home/admin/group_for_teacher_student.e", "group", src_label="teacher", dst_label="student")
-
-    # 查看基本的schema，不触发载图
-    print(graph)
-
-    # 不可以去除尚有被边引用的点
-    # graph = graph.remove_vertices("teacher")  # 错误。存在边的起点或终点为这个点
-
-    # src_label 和 dst_label 可以被用来过滤边. 若没有指定，便去除整个边标签
-    graph = graph.remove_edges("group", src_label="teacher", dst_label="student")
-
-    # 现在我们可以去除点标签 `teacher`
-    graph = graph.remove_vertices("teacher")
-
-    print(graph)
-
-    # 触发载图
-    print(graph.key)
-
-    # 现在不可以再去除边
-    # graph = graph.remove_edges("group")
-
-然而，我们可以再为已经载入的图添加点或边。
-这一步仍然是惰性的，所以我们可以去除尚未被载入的点或边。
-
-.. code:: python
-
-    sess = graphscope.session()
-    graph = graphscope.Graph(sess)
-
-    graph = graph.add_vertices("/home/admin/student.v", "student")
-    graph = graph.add_edges("file:///home/admin/group.e", "group", src_label="student", dst_label="student")
-
-    print(graph.key)  # 触发载图
-
-    # 为载入的图加入更多点和边
-
-    graph = graph.add_vertices("/home/admin/teacher.v", "teacher")
-
-    graph = graph.add_edges("file:///home/admin/group_for_teacher_student.e", "group", src_label="teacher", dst_label="student")
-
-    print(graph)  # 不触发载图
-
-    # 可以去除掉尚未被载入的点或边
-    graph = graph.remove_edges("group", src_label="teacher", dst_label="student")
-    graph = graph.remove_vertices("teacher")
-
-    # 但是不能去除原图中被载入的点或边
-    # graph = graph.remove_edges("group", src_label="student", dst_label="student")

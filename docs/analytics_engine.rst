@@ -304,7 +304,7 @@ To run your own algorithms, you may trigger it in place where you defined it.
     import graphscope
 
     sess = graphscope.session()
-    g = graphscope.Graph(sess)
+    g = sess.g()
 
     # load my algorithm
     my_app = SSSP_Pregel()

@@ -132,7 +132,7 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
 请下载数据并将其解压缩到本地的挂载目录（在本例中为`〜/test_data`）。
 
 ```python
-g = graphscope.Graph(sess)
+g = sess.g()
 g = (
     g.add_vertices("/testingdata/ogbn_mag_small/paper.csv", label="paper")
     .add_vertices("/testingdata/ogbn_mag_small/author.csv", label="author")

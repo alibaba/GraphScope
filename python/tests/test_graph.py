@@ -43,7 +43,7 @@ def test_graph_schema(arrow_property_graph):
 
 def test_load_graph_copy(graphscope_session, arrow_property_graph):
     g = arrow_property_graph
-    g2 = Graph(graphscope_session, g)
+    g2 = graphscope_session.g(g)
     assert g.key != g2.key
     assert g.vineyard_id != g2.vineyard_id
     assert str(g.schema) == str(g2.schema)
@@ -51,7 +51,7 @@ def test_load_graph_copy(graphscope_session, arrow_property_graph):
     g2.unload()
     assert not g2.loaded()
     # test load from vineyard's graph
-    g3 = Graph(graphscope_session, vineyard.ObjectID(g.vineyard_id))
+    g3 = graphscope_session.g(vineyard.ObjectID(g.vineyard_id))
     assert g3.loaded()
 
 
@@ -132,10 +132,10 @@ def test_error_relationship_on_project_to_simple(arrow_modern_graph):
 
 
 def test_unload(graphscope_session):
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     prefix = os.path.expandvars("${GS_TEST_DIR}/property")
     graph = (
-        Graph(graphscope_session)
+        graphscope_session.g()
         .add_vertices(f"{prefix}/p2p-31_property_v_0", "person")
         .add_edges(f"{prefix}/p2p-31_property_e_0", "knows")
     )
@@ -151,7 +151,7 @@ def test_unload(graphscope_session):
     with pytest.raises(RuntimeError, match="The graph is not loaded"):
         graph.project_to_simple(v_label="person", e_label="knows")
     with pytest.raises(AssertionError):
-        g2 = Graph(graphscope_session, graph)
+        g2 = graphscope_session.g(graph)
     with pytest.raises(RuntimeError, match="The graph is not loaded"):
         property_sssp(graph, src=6)
 
@@ -176,7 +176,7 @@ def test_error_on_project_to_simple_wrong_graph_type_2(dynamic_property_graph):
 
 
 def test_error_on_operation_on_graph(graphscope_session):
-    g = Graph(graphscope_session)
+    g = graphscope_session.g()
     with pytest.raises(RuntimeError, match="Empty graph"):
         g.project_to_simple(v_label=0, v_prop=0, e_label=0, e_prop=0)
 
@@ -345,7 +345,7 @@ def test_project_to_simple_string_eprop(graphscope_session):
 
 def test_add_vertices_edges(graphscope_session):
     prefix = os.path.expandvars("${GS_TEST_DIR}/modern_graph")
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person")
     graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "knows")
 
@@ -385,9 +385,10 @@ def test_add_vertices_edges(graphscope_session):
     assert graph.schema.edge_labels == ["knows", "created"]
 
 
+@pytest.mark.skip("use project to simulate remove.")
 def test_error_on_remove_vertices_edges(graphscope_session):
     prefix = os.path.expandvars("${GS_TEST_DIR}/modern_graph")
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person")
     graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "knows")
 
@@ -422,10 +423,11 @@ def test_error_on_remove_vertices_edges(graphscope_session):
         graph = graph.remove_edges("knows")
 
 
+@pytest.mark.skip("use project to simulate remove.")
 def test_remove_vertices_edges(graphscope_session):
     prefix = os.path.expandvars("${GS_TEST_DIR}/modern_graph")
     graph = (
-        Graph(graphscope_session)
+        graphscope_session.g()
         .add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person")
         .add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "knows")
     )
@@ -448,7 +450,7 @@ def test_remove_vertices_edges(graphscope_session):
 
 def test_multiple_add_vertices_edges(graphscope_session):
     prefix = os.path.expandvars("${GS_TEST_DIR}/modern_graph")
-    graph = Graph(graphscope_session)
+    graph = graphscope_session.g()
     graph = graph.add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person")
     graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "knows")
     graph = graph.add_vertices(

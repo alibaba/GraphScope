@@ -40,7 +40,7 @@ def cdlp(graph, max_round=10):
 
         import graphscope as gs
         sess = gs.session()
-        g = gs.Graph(sess)
+        g = sess.g()
         pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
         r = gs.cdlp(g, max_round=10)
         s.close()

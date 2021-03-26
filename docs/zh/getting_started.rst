@@ -98,7 +98,7 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
 
 .. code:: python
 
-    g = graphscope.Graph(sess)
+    g = sess.g()
     g = (
         g.add_vertices("paper.csv", label="paper")
         .add_vertices("author.csv", label="author")
