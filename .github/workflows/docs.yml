@@ -63,10 +63,6 @@ jobs:
         python3 -m black --check --diff .
         python3 -m flake8 .
 
-    - name: Setup tmate session
-      if: true
-      uses: mxschmitt/action-tmate@v2
-
     - name: Generate Docs
       shell: bash
       run: |
@@ -78,7 +74,7 @@ jobs:
         make graphscope-docs
 
         # generate a stable version
-        tag=$(git describe --exact-match --tags HEAD 2>/dev/null)
+        tag=$(git describe --exact-match --tags HEAD 2>/dev/null || true)
         if [ ! -z "tag" ];
         then
           export TAG_VER=stable
