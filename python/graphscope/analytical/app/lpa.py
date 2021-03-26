@@ -40,7 +40,7 @@ def lpa(graph, max_round=10):
 
         import graphscope as gs
         sess = gs.session()
-        g = gs.g()
+        g = sess.g()
         r = gs.lpa(g)
         s.close()
 

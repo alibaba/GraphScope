@@ -82,7 +82,7 @@ def ldbc_sample_multi_labels(prefix, directed):
 
 
 def ldbc_sample_with_duplicated_oid(prefix, directed):
-    graph = graphscope.Graph(directed=directed)
+    graph = graphscope.g(directed=directed)
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "place_0_0.csv"), delimiter="|"), "place"
     ).add_vertices(

@@ -43,7 +43,7 @@ def degree_centrality(graph, centrality_type="both"):
 
         import graphscope as gs
         sess = gs.session()
-        g = gs.g()
+        g = sess.g()
         pg = g.project_to_simple(v_label="vlabel", e_label="elabel")
         r = gs.degree_centrality(pg, centrality_type="both")
         s.close()

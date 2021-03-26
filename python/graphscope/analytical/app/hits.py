@@ -46,7 +46,7 @@ def hits(graph, tolerance=0.01, max_round=100, normalized=True):
 
         import graphscope as gs
         sess = gs.session()
-        g = gs.g()
+        g = sess.g()
         pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
         r = gs.hits(pg)
         s.close()

@@ -39,7 +39,7 @@ def wcc(graph):
 
         import graphscope as gs
         sess = gs.session()
-        g = gs.g()
+        g = sess.g()
         pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
         r = gs.wcc(pg)
         s.close()

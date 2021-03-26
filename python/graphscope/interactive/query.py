@@ -141,7 +141,7 @@ class InteractiveQuery(object):
 
             import graphscope
 
-            graph = graphscope.Graph(self._session, generate_eid=False)
+            graph = self._session.g(generate_eid=False)
             graph = graph.add_vertices(
                 Loader(vineyard.ObjectName("__%s_vertex_stream" % name))
             )
