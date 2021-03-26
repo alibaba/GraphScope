@@ -102,16 +102,16 @@ class BaseContext(object):
         """Return context data as numpy array
 
         Args:
-        selector (str): Describes how to select values of context.
-            See more details in derived context class.
-        vertex_range (dict): optional, default to None.
-            Works as slicing. The expression {'begin': m, 'end': n} select a portion
-            of vertices from `m` to, but not including `n`. Type of `m`, `n` must be identical with vertices'
-            oid type.
-            Omitting the first index starts the slice at the beginning of the vertices,
-            and omitting the second index extends the slice to the end of the vertices.
-            Note the comparision is not based on numeric order, but on alphabetic order.
-        axis (int): optional, default to 0.
+            selector (str): Describes how to select values of context.
+                See more details in derived context class.
+            vertex_range (dict): optional, default to None.
+                Works as slicing. The expression {'begin': m, 'end': n} select a portion
+                of vertices from `m` to, but not including `n`. Type of `m`, `n` must be identical with vertices'
+                oid type.
+                Omitting the first index starts the slice at the beginning of the vertices,
+                and omitting the second index extends the slice to the end of the vertices.
+                Note the comparision is not based on numeric order, but on alphabetic order.
+            axis (int): optional, default to 0.
 
         Returns:
             numpy.ndarray.
@@ -211,6 +211,7 @@ class BaseContext(object):
         It first write results to a vineyard dataframe, and let vineyard
         do the data dumping job.
         `fd` must meet specific formats, with auth information if needed. As follows:
+
             - local
                 `file:///tmp/result_path`
             - oss
@@ -348,7 +349,7 @@ class VertexPropertyContext(BaseContext):
         return utils.transform_vertex_property_data_selector(selector)
 
 
-class LabelVertexPropertyContext(BaseContext):
+class LabeledVertexPropertyContext(BaseContext):
     """The labeld kind of context with properties.
     This context has several vertex labels and edge labels,
     And each label has several properties.
@@ -387,6 +388,6 @@ def create_context(context_type, session_id, context_key, graph):
     elif context_type == "vertex_property":
         return VertexPropertyContext(session_id, context_key, graph)
     elif context_type == "labeled_vertex_property":
-        return LabelVertexPropertyContext(session_id, context_key, graph)
+        return LabeledVertexPropertyContext(session_id, context_key, graph)
     else:
         raise InvalidArgumentError("Not supported context type: " + context_type)

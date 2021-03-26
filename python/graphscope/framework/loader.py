@@ -96,6 +96,7 @@ class Loader(object):
         """Initialize a loader with configurable options.
         Note: Loader cannot be reused since it may change inner state when constructing
         information for loading a graph.
+
         Args:
             source (str or value):
                 The data source to be load, which could be one of the followings:

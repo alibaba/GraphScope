@@ -68,7 +68,17 @@ jobs:
         # Install pip dependencies, build builtin gar, and generate proto stuffs.
         sudo apt update
         sudo apt install -y doxygen
+
+        # generate a taged version
         make graphscope-docs
+
+        # generate a stable version
+        tag=$(git describe --exact-match --tags HEAD 2>/dev/null)
+        if [ ! -z "tag" ];
+        then
+          export TAG_VER=stable
+          make graphscope-docs
+        fi
 
     - name: Upload Docs
       if: ${{ github.ref == 'refs/heads/main' }}
@@ -81,10 +91,29 @@ jobs:
 
         git fetch origin gh-pages --no-recurse-submodules
         git checkout gh-pages
+
         cd docs/
-        rm -rf !(_build)
-        mv _build/html/* ./
-        mv _build/html/.nojekyll ./
+        rm -rf !(_build|latest|stable|v*)
+
+        if [ -d "_build/latest" ];
+        then
+            rm -rf latest
+            cp -R _build/latest/html ./latest
+        else
+            tag=$(git describe --exact-match --tags HEAD)
+
+            rm -rf latest
+            cp -R _build/${tag}/html ./latest
+
+            rm -rf ${tag}
+            cp -R _build/${tag}/html ./${tag}
+        fi
+
+        if [ -d "_build/stable" ];
+        then
+            cp -R _build/stable/html/* ./
+        fi
+
         rm -rf _build/
         rm -rf ../learning_engine/ || true
         rm -rf ../python || true

@@ -163,6 +163,7 @@ If there is only one vertex label in the graph, the label of vertices can be omi
 GraphScope will infer the source and destination vertex label is that very label.
 
 .. code:: python
+
     graph = sess.g()
     graph = graph.add_vertices("file:///home/admin/student.v", label="student")
     graph = graph.add_edges("file:///home/admin/group.e", label="group")

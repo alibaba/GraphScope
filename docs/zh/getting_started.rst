@@ -66,6 +66,7 @@
 对于 macOS，创建会话需要使用 LoadBalancer 服务类型（默认是 NodePort）。
 
 .. code:: python
+
     sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
 
 
