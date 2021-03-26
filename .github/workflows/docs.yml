@@ -63,6 +63,10 @@ jobs:
         python3 -m black --check --diff .
         python3 -m flake8 .
 
+    - name: Setup tmate session
+      if: true
+      uses: mxschmitt/action-tmate@v2
+
     - name: Generate Docs
       shell: bash
       run: |
