@@ -176,6 +176,7 @@ class Session(object):
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
+        with_mars=gs_config.with_mars,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -310,6 +311,8 @@ class Session(object):
 
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
 
+            with_mars (bool, optional): Launch graphscope with mars. Defaults to False.
+
             **kw (dict, optional): Other optional parameters will be put to :code:`**kw`.
                 - k8s_minikube_vm_driver: Deprecated.
 
@@ -363,6 +366,7 @@ class Session(object):
             "k8s_waiting_for_delete",
             "timeout_seconds",
             "dangling_timeout_seconds",
+            "with_mars",
         )
         saved_locals = locals()
         for param in self._accessable_params:
@@ -748,6 +752,7 @@ class Session(object):
                 dangling_timeout_seconds=self._config_params[
                     "dangling_timeout_seconds"
                 ],
+                with_mars=self._config_params["with_mars"],
             )
             endpoint = self._k8s_cluster.start()
             if self._config_params["k8s_namespace"] is None:

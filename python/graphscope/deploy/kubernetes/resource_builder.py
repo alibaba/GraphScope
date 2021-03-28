@@ -692,6 +692,62 @@ class GSEngineBuilder(ReplicaSetBuilder):
             )
         )
 
+    def add_mars_worker_container(self, name, image, cpu, mem, port):
+        cmd = [
+            "python3",
+            "-m",
+            "mars.deploy.kubernetes.worker",
+            "-p",
+            str(port),
+        ]
+
+        resources_dict = {
+            "requests": ResourceBuilder(
+                cpu, mem,
+            ).build(),
+        }
+
+        post_start_command = []
+        pre_stop_command = []
+        lifecycle_dict = _remove_nones(
+            {
+                "postStart": {
+                    "exec": {"command": post_start_command},
+                }
+                if post_start_command
+                else None,
+                "preStop": {
+                    "exec": {"command": pre_stop_command},
+                }
+                if pre_stop_command
+                else None,
+            }
+        )
+
+        volumeMounts = []
+        for vol in self._volumes:
+            for vol_mount in vol.build_mount():
+                volumeMounts.append(vol_mount)
+
+        super().add_container(
+            _remove_nones(
+                {
+                    "command": cmd,
+                    "env": [env.build() for env in self._envs.values()] or None,
+                    "image": image,
+                    "name": name,
+                    "imagePullPolicy": self._image_pull_policy,
+                    "resources": dict((k, v) for k, v in resources_dict.items() if v)
+                    or None,
+                    "ports": [PortBuilder(port).build()],
+                    "volumeMounts": volumeMounts or None,
+                    "livenessProbe": None,
+                    "readinessProbe": None,
+                    "lifecycle": lifecycle_dict or None,
+                }
+            )
+        )
+
 
 class PodBuilder(object):
     """Base builder for k8s pod."""
@@ -1066,6 +1122,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         dangling_timeout_seconds,
         waiting_for_delete,
         delete_namespace,
+        with_mars,
     ):
         self._port = port
         self._num_workers = num_workers
@@ -1101,6 +1158,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         self._dangling_timeout_seconds = dangling_timeout_seconds
         self._waiting_for_delete = waiting_for_delete
         self._delete_namespace = delete_namespace
+        self._with_mars = with_mars
 
         cmd = self.build_container_command()
 
@@ -1220,5 +1278,101 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             str(self._waiting_for_delete),
             "--k8s_delete_namespace",
             str(self._delete_namespace),
+            "--with_mars",
+            str(self._with_mars),
+        ]
+        return cmd
+
+
+class GSMarsSchedulerBuilder(DeploymentBuilder):
+    """Builder for mars scheduler."""
+
+    _rc_name = "marsscheduler""
+    _requests_cpu = 1.0
+    _requests_mem = "4Gi"
+
+    def __init__(self, name, labels, image_pull_policy, replicas=1):
+        self._name = name
+        self._labels = labels
+        self._replicas = replicas
+        self._image_pull_policy = image_pull_policy
+        super().__init__(
+            self._name, self._labels, self._replicas, self._image_pull_policy
+        )
+
+    def add_scheduler_container(
+        self,
+        name,
+        port,
+        preemptive,
+        namespace,
+        service_type,
+        image,
+        image_pull_policy,
+        image_pull_secrets,
+    ):
+        self._port = port
+        self._preemptive = preemptive
+        self._namespace = namespace
+        self._service_type = service_type
+        self._image = image
+        self._image_pull_policy = image_pull_policy
+        self._image_pull_secrets_str = image_pull_secrets
+
+        cmd = self.build_container_command()
+
+        resources_dict = {
+            "requests": ResourceBuilder(self._requests_cpu, self._requests_mem).build()
+        }
+
+        volumeMounts = []
+        # for vol in self._volumes:
+        #     for vol_mount in vol.build_mount():
+        #         volumeMounts.append(vol_mount)
+
+        # FIXME: modify pre stop command
+        pre_stop_command = ["python3", "/usr/local/bin/pre_stop.py"]
+        lifecycle_dict = _remove_nones(
+            {
+                "preStop": {
+                    "exec": {"command": pre_stop_command},
+                }
+            }
+        )
+
+        super().add_container(
+            _remove_nones(
+                {
+                    "command": cmd,
+                    "env": [env.build() for env in self._envs.values()] or None,
+                    "image": self._image,
+                    "name": name,
+                    "imagePullPolicy": self._image_pull_policy,
+                    "resources": dict((k, v) for k, v in resources_dict.items() if v)
+                    or None,
+                    "ports": [PortBuilder(self._port).build()],
+                    "volumeMounts": volumeMounts or None,
+                    "livenessProbe": None,
+                    "readinessProbe": self.build_readiness_probe().build(),
+                    "lifecycle": lifecycle_dict,
+                }
+            )
+        )
+
+    def build_readiness_probe(self):
+        readiness_cmd = [
+            "python3",
+            "-m",
+            "mars.deploy.kubernetes.probe",
+        ]
+        return ExecProbeBuilder(readiness_cmd, timeout=60, failure_thresh=10)
+
+    def build_container_command(self):
+        cmd = [
+            "python3",
+            "-m",
+            "mars.deploy.kubernetes.scheduler",
+            "-p",
+            str(self._port),
         ]
         return cmd

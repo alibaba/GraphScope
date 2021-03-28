@@ -963,6 +963,7 @@ def launch_graphscope():
             timeout_seconds=args.timeout_seconds,
             waiting_for_delete=args.waiting_for_delete,
             delete_namespace=args.k8s_delete_namespace,
+            with_mars=args.with_mars
         )
     else:
         launcher = LocalLauncher(

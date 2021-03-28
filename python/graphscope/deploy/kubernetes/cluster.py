@@ -143,6 +143,9 @@ class KubernetesCluster(object):
 
         waiting_for_delete: bool
             Waiting for service delete or not.
+
+        with_mars: bool
+            Launch graphscope with mars.
     """
 
     _coordinator_builder_cls = GSCoordinatorBuilder
@@ -192,6 +195,7 @@ class KubernetesCluster(object):
         timeout_seconds=None,
         dangling_timeout_seconds=None,
         waiting_for_delete=None,
+        with_mars=None,
         **kwargs
     ):
         self._api_client = api_client
@@ -253,6 +257,8 @@ class KubernetesCluster(object):
         self._closed = False
         self._timeout_seconds = timeout_seconds
         self._dangling_timeout_seconds = dangling_timeout_seconds
+
+        self._with_mars = with_mars
 
         # pods watcher
         self._coordinator_pods_watcher = []
@@ -474,6 +480,7 @@ class KubernetesCluster(object):
             dangling_timeout_seconds=self._dangling_timeout_seconds,
             waiting_for_delete=self._waiting_for_delete,
             delete_namespace=self._delete_namespace,
+            with_mars=self._with_mars,
         )
 
         targets.append(

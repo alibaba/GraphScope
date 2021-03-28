@@ -97,3 +97,6 @@ class GSConfig(object):
     # kill GraphScope instance after seconds of client disconnect
     # disable dangling check by setting -1.
     dangling_timeout_seconds = 600
+
+    # launch graphscope with mars
+    with_mars = False

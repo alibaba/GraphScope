@@ -47,6 +47,8 @@ except ImportError:
 from graphscope.deploy.kubernetes.resource_builder import GSEngineBuilder
 from graphscope.deploy.kubernetes.resource_builder import GSEtcdBuilder
 from graphscope.deploy.kubernetes.resource_builder import GSGraphManagerBuilder
+from graphscope.deploy.kubernetes.resource_builder import GSMarsSchedulerBuilder
+from graphscope.deploy.kubernetes.resource_builder import GSMarsWebBuilder
 from graphscope.deploy.kubernetes.resource_builder import ServiceBuilder
 from graphscope.deploy.kubernetes.resource_builder import VolumeBuilder
 from graphscope.deploy.kubernetes.resource_builder import resolve_volume_builder
@@ -127,6 +129,8 @@ class KubernetesClusterLauncher(Launcher):
     _gs_etcd_builder_cls = GSEtcdBuilder
     _gs_engine_builder_cls = GSEngineBuilder
     _gs_graph_manager_builder_cls = GSGraphManagerBuilder
+    _gs_mars_scheduler_builder_cls = GSMarsSchedulerBuilder
+    _gs_mars_web_builder_cls = GSMarsWebBuilder
 
     _etcd_name_prefix = "gs-etcd-"
     _etcd_service_name_prefix = "gs-etcd-service-"
@@ -142,6 +146,9 @@ class KubernetesClusterLauncher(Launcher):
     _engine_container_name = "engine"  # fixed
     _gie_manager_container_name = "manager"
     _gie_zookeeper_container_name = "zookeeper"
+    _mars_scheduler_name = "marsscheduler"  # fixed
+    _mars_web_name = "marsweb"  # fixed
+    _mars_worker_container_name = "marsworker"  # fixed
 
     _interactive_engine_manager_port = 8080  # fixed
     _zookeeper_port = 2181  # fixed
@@ -150,6 +157,10 @@ class KubernetesClusterLauncher(Launcher):
     _random_etcd_listen_client_service_port = random.randint(58001, 59000)
 
     _vineyard_service_port = 9600  # fixed
+
+    _mars_scheduler_port = 7103
+    _mars_web_port = 7104
+    _mars_worker_port = 7105
 
     def __init__(
         self,
@@ -183,6 +194,7 @@ class KubernetesClusterLauncher(Launcher):
         timeout_seconds=None,
         waiting_for_delete=None,
         delete_namespace=None,
+        with_mars=None,
         **kwargs
     ):
         try:
@@ -209,6 +221,7 @@ class KubernetesClusterLauncher(Launcher):
         self._vineyard_service_name = (
             self._vineyard_service_name_prefix + self._instance_id
         )
+        self._mars_service_name = "marsservice"
 
         self._namespace = namespace
         self._service_type = service_type
@@ -270,6 +283,8 @@ class KubernetesClusterLauncher(Launcher):
         self._timeout_seconds = timeout_seconds
         self._waiting_for_delete = waiting_for_delete
         self._delete_namespace = delete_namespace
+
+        self._with_mars = with_mars
 
         self._analytical_engine_process = None
 
@@ -365,6 +380,15 @@ class KubernetesClusterLauncher(Launcher):
             mem=self._engine_mem,
             preemptive=self._preemptive,
         )
+        if self._with_mars:
+            # add mars worker container
+            engine_builder.add_mars_worker_container(
+                name=self._mars_worker_container_name,
+                image=self._gs_image,
+                cpu=0.5,
+                mem="4Gi",
+                port=self._mars_worker_port,
+            )
         for name in self._image_pull_secrets:
             engine_builder.add_image_pull_secret(name)
 
@@ -595,10 +619,94 @@ class KubernetesClusterLauncher(Launcher):
             time.sleep(2)
         logger.info("GIE graph manager service is ready.")
 
+    def _create_mars_scheduler(self):
+        logger.info("Launching mars scheduler...")
+        labels = {"mars/service-type": self._mars_scheduler_name}
+        mars_scheduler_builder = self._gs_mars_scheduler_builder_cls(
+            name=self._mars_scheduler_name,
+            labels=labels,
+            replicas=1,
+            image_pull_policy=self._image_pull_policy,
+        )
+
+        # TODO: add simple env
+        # env = {}
+        # mars_scheduler_builder.add_simple_envs(envs)
+
+        # add container
+        mars_scheduler_builder.add_scheduler_container(
+            name=self._mars_scheduler_name,
+            port=self._mars_scheduler_port,
+            preemtive=self._preemptive,
+            namespace=self._namespace,
+            service_type=self._service_type,
+            image=self._gs_image,
+            image_pull_policy=self._image_pull_policy,
+            image_pull_secrets=",".join(self._image_pull_secrets),
+        )
+
+        self._resource_object.append(
+            self._app_api.create_namespaced_deployment(
+                self._namespace, mars_scheduler_builder.build()
+            )
+        )
+
+    def _create_mars_web(self):
+        logger.info("Launching mars web...")
+        labels = {"mars/service-type": self._mars_web_name}
+        service_builder = ServiceBuilder(
+            name=self._mars_service_name,
+            service_type="ClusterIP",
+            port=self._mars_web_port,
+            selector=labels,
+        )
+        self._resource_object.append(
+            self._core_api.create_namespaced_service(
+                self._namespace, service_builder.build()
+            )
+        )
+
+        time.sleep(1)
+
+        # create mars web deployment
+        mars_web_builder = self._gs_mars_web_builder_cls(
+            name=self._mars_web_name,
+            labels=labels,
+            replicas=1,
+            image_pull_policy=self._image_pull_policy,
+        )
+
+        # TODO: add simple env
+        # env = {}
+        # mars_scheduler_builder.add_simple_envs(envs)
+
+        # add container
+        mars_web_builder.add_web_container(
+            name=self._mars_web_name,
+            port=self._mars_web_port,
+            preemtive=self._preemptive,
+            namespace=self._namespace,
+            service_type=self._service_type,
+            image=self._gs_image,
+            image_pull_policy=self._image_pull_policy,
+            image_pull_secrets=",".join(self._image_pull_secrets),
+        )
+
+        self._resource_object.append(
+            self._app_api.create_namespaced_deployment(
+                self._namespace, mars_web_builder.build()
+            )
+        )
+
     def _create_services(self):
         # create interactive engine service
         self._create_interactive_engine_service()
         self._waiting_interactive_engine_service_ready()
+
+        if self._with_mars:
+            # scheduler used by mars
+            self._create_mars_scheduler()
+            self._create_mars_web()
 
         # etcd used by vineyard
         self._create_etcd()
