@@ -181,13 +181,15 @@ def arrow_property_graph_lpa(graphscope_session):
 
 @pytest.fixture(scope="module")
 def arrow_project_graph(arrow_property_graph):
-    pg = arrow_property_graph.project_to_simple(0, 0, 0, 0)
+    pg = arrow_property_graph.project(vertices={"v0": ["id"]}, edges={"e0": ["weight"]})
     yield pg
 
 
 @pytest.fixture(scope="module")
 def arrow_project_undirected_graph(arrow_property_graph_undirected):
-    pg = arrow_property_graph_undirected.project_to_simple(0, 0, 0, 0)
+    pg = arrow_property_graph_undirected.project(
+        vertices={"v0": ["id"]}, edges={"e0": ["weight"]}
+    )
     yield pg
 
 
@@ -235,25 +237,31 @@ def p2p_property_graph_undirected(graphscope_session):
 
 @pytest.fixture(scope="module")
 def p2p_project_directed_graph(p2p_property_graph):
-    pg = p2p_property_graph.project_to_simple(0, 0, 0, 2)
+    pg = p2p_property_graph.project(
+        vertices={"person": ["weight"]}, edges={"knows": ["dist"]}
+    )
     yield pg
 
 
 @pytest.fixture(scope="module")
 def p2p_project_undirected_graph(p2p_property_graph_undirected):
-    pg = p2p_property_graph_undirected.project_to_simple(0, 0, 0, 2)
+    pg = p2p_property_graph_undirected.project(
+        vertices={"person": ["weight"]}, edges={"knows": ["dist"]}
+    )
     yield pg
 
 
 @pytest.fixture(scope="module")
 def p2p_project_directed_graph_string(p2p_property_graph_string):
-    pg = p2p_property_graph_string.project_to_simple(0, 0, 0, 2)
+    pg = p2p_property_graph_string.project(
+        vertices={"person": ["weight"]}, edges={"knows": ["dist"]}
+    )
     yield pg
 
 
 @pytest.fixture(scope="module")
 def projected_pg_no_edge_data(arrow_property_graph):
-    pg = arrow_property_graph.project_to_simple(0, 0, None, None)
+    pg = arrow_property_graph.project(vertices={"v0": []}, edges={"e0": []})
     yield pg
 
 
@@ -385,7 +393,7 @@ def property_context(arrow_property_graph):
 
 @pytest.fixture(scope="module")
 def simple_context(arrow_property_graph):
-    sg = arrow_property_graph.project_to_simple(0, 0, 0, 0)
+    sg = arrow_property_graph.project(vertices={"v0": ["id"]}, edges={"e0": ["weight"]})
     return sssp(sg, 20)
 
 

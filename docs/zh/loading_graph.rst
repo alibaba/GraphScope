@@ -19,11 +19,6 @@ GraphScope 以
     def add_edges(self, edges, label="_", properties=[], src_label=None, dst_label=None, src_field=0, dst_field=1):
         pass
 
-    def remove_vertices(self, label):
-        pass
-
-    def remove_edges(self, label, src_label=None, dst_label=None):
-        pass
 
 这些方法可以增量的构建一个属性图。
 

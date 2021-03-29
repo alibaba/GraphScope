@@ -209,8 +209,8 @@ def test_properties_omitted_loader(graphscope_session, student_group_e, student_
     graph = graphscope_session.g(generate_eid=False)
     graph = graph.add_vertices(student_v, "student", [], "student_id")
     graph = graph.add_edges(student_group_e, "group", [])
-    assert len(graph.schema.vertex_properties[0]) == 4
-    assert len(graph.schema.edge_properties[0]) == 2
+    assert len(graph.schema.get_vertex_properties("student")) == 4
+    assert len(graph.schema.get_edge_properties("group")) == 2
 
 
 def test_properties_omitted_loader_with_generate_eid(
@@ -219,8 +219,8 @@ def test_properties_omitted_loader_with_generate_eid(
     graph = graphscope_session.g(generate_eid=True)
     graph = graph.add_vertices(student_v, "student", [], "student_id")
     graph = graph.add_edges(student_group_e, "group", [])
-    assert len(graph.schema.vertex_properties[0]) == 4
-    assert len(graph.schema.edge_properties[0]) == 3
+    assert len(graph.schema.get_vertex_properties("student")) == 4
+    assert len(graph.schema.get_edge_properties("group")) == 3
 
 
 def test_loader_with_specified_data_type(
@@ -236,10 +236,13 @@ def test_loader_with_specified_data_type(
     graph = graph.add_edges(
         student_group_e, "group", ["group_id", ("member_size", "int")]
     )
-    assert graph.schema.vertex_properties == [
-        {"name": 21, "lesson_nums": 11, "avg_score": 18, "student_id": 21}
+    assert [p.type for p in graph.schema.get_vertex_properties("student")] == [
+        21,
+        11,
+        18,
+        21,
     ]
-    assert graph.schema.edge_properties == [{"group_id": 21, "member_size": 11}]
+    assert [p.type for p in graph.schema.get_edge_properties("group")] == [21, 11]
 
 
 def test_multi_src_dst_edge_loader(

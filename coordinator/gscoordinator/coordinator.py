@@ -290,7 +290,7 @@ class CoordinatorServiceServicer(
                 and op.attr[types_pb2.GRAPH_TYPE].graph_type == types_pb2.ARROW_PROPERTY
             )
             or op.op == types_pb2.TRANSFORM_GRAPH
-            or op.op == types_pb2.PROJECT_GRAPH
+            or op.op == types_pb2.PROJECT_TO_SIMPLE
             or op.op == types_pb2.ADD_EDGES
             or op.op == types_pb2.ADD_VERTICES
         ):

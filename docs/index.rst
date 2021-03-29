@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba
-==================================================
+======================================================================
 
 GraphScope is a unified distributed graph computing platform 
 that provides a one-stop environment for performing diverse graph 
@@ -25,6 +25,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    tutorials
    deployment
    loading_graph
+   graph_transformation
    interactive_engine
    analytics_engine
    learning_engine

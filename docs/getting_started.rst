@@ -206,7 +206,7 @@ to generate the structural features of each paper node.
     sub_graph = interactive.subgraph("g.V().has('year', inside(2014, 2020)).outE('cites')")
 
     # project the projected graph to simple graph.
-    simple_g = sub_graph.project_to_simple(vlabel="paper", elabel="cites")
+    simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
 
     ret1 = graphscope.kcore(simple_g, k=5)
     ret2 = graphscope.triangle(simple_g)

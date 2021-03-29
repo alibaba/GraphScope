@@ -129,16 +129,23 @@ class TestGraphTransformation(object):
         assert self._schema_equal(gs_g.schema, nx_g.schema)
 
     def _schema_equal(self, gs_schema, nx_schema):
-        v_props = dict()
-        for properties in gs_schema.vertex_properties:
-            v_props.update(properties)
-        e_props = dict()
-        for properties in gs_schema.edge_properties:
-            e_props.update(properties)
-        return (
-            v_props == nx_schema.vertex_properties[0]
-            and e_props == nx_schema.edge_properties[0]
-        )
+        v_props = {}
+        for entry in gs_schema._valid_vertex_entries():
+            for prop in entry.properties:
+                v_props[prop.name] = prop.type
+        e_props = {}
+        for entry in gs_schema._valid_edge_entries():
+            for prop in entry.properties:
+                e_props[prop.name] = prop.type
+        gs_v_props = {
+            prop.name: prop.type
+            for prop in list(nx_schema._valid_vertex_entries())[0].properties
+        }
+        gs_e_props = {
+            prop.name: prop.type
+            for prop in list(nx_schema._valid_edge_entries())[0].properties
+        }
+        return v_props == gs_v_props and e_props == gs_e_props
 
     # nx to gs
     def test_empty_nx_to_gs(self):

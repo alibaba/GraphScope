@@ -23,6 +23,7 @@
 #include "core/fragment/dynamic_fragment.h"
 #include "core/fragment/dynamic_fragment_reporter.h"
 #include "core/grape_instance.h"
+#include "core/io/property_parser.h"
 #include "core/launcher.h"
 #include "core/object/app_entry.h"
 #include "core/object/graph_utils.h"
@@ -153,6 +154,28 @@ bl::result<void> GrapeInstance::unloadApp(const rpc::GSParams& params) {
 }
 
 bl::result<rpc::GraphDef> GrapeInstance::projectGraph(
+    const rpc::GSParams& params) {
+  BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
+  BOOST_LEAF_AUTO(project_infos, gs::ParseProjectPropertyGraph(params));
+  BOOST_LEAF_AUTO(
+      frag_wrapper,
+      object_manager_.GetObject<ILabeledFragmentWrapper>(graph_name));
+
+  if (frag_wrapper->graph_def().graph_type() != rpc::ARROW_PROPERTY) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "projectGraph is only available for ArrowFragment");
+  }
+
+  std::string dst_graph_name = "graph_" + generateId();
+
+  BOOST_LEAF_AUTO(new_frag_wrapper,
+                  frag_wrapper->Project(comm_spec_, dst_graph_name,
+                                        project_infos[0], project_infos[1]));
+  BOOST_LEAF_CHECK(object_manager_.PutObject(new_frag_wrapper));
+  return new_frag_wrapper->graph_def();
+}
+
+bl::result<rpc::GraphDef> GrapeInstance::projectToSimple(
     const rpc::GSParams& params) {
   std::string projected_id = "graph_projected_" + generateId();
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
@@ -743,6 +766,11 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::PROJECT_GRAPH: {
     BOOST_LEAF_AUTO(graph_def, projectGraph(params));
+    r->set_graph_def(graph_def);
+    break;
+  }
+  case rpc::PROJECT_TO_SIMPLE: {
+    BOOST_LEAF_AUTO(graph_def, projectToSimple(params));
     r->set_graph_def(graph_def);
     break;
   }

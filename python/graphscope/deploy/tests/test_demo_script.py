@@ -125,7 +125,7 @@ def test_demo(gs_session, data_dir):
 
     # Analytical engine
     # project the projected graph to simple graph.
-    simple_g = sub_graph.project_to_simple(v_label="person", e_label="knows")
+    simple_g = sub_graph.project(vertices={"person": []}, edges={"knows": []})
 
     pr_result = graphscope.pagerank(simple_g, delta=0.8)
     tc_result = graphscope.triangles(simple_g)
@@ -166,7 +166,7 @@ def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir
 
     # Analytical engine
     # project the projected graph to simple graph.
-    simple_g = sub_graph.project_to_simple(v_label="person", e_label="knows")
+    simple_g = sub_graph.project(vertices={"person": []}, edges={"knows": []})
 
     pr_result = graphscope.pagerank(simple_g, delta=0.8)
     tc_result = graphscope.triangles(simple_g)
@@ -326,7 +326,7 @@ def test_serialize_roundtrip(gs_session_distributed, p2p_property_dir):
 
     graph.save_to("/tmp/serialize")
     new_graph = Graph.load_from("/tmp/serialize", gs_session_distributed)
-    pg = new_graph.project_to_simple(0, 0, 0, 2)
+    pg = new_graph.project(vertices={"person": []}, edges={"knows": ["dist"]})
     ctx = graphscope.sssp(pg, src=6)
     ret = (
         ctx.to_dataframe({"node": "v.id", "r": "r"}, vertex_range={"end": 6})

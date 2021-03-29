@@ -36,6 +36,7 @@ BuiltIn operations
    run_app
    report_graph
    project_arrow_property_graph
+   project_arrow_property_graph_to_simple
    project_dynamic_property_graph
    unload_app
    unload_graph

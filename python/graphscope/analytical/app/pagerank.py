@@ -19,10 +19,12 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.app import project_to_simple
 
 __all__ = ["pagerank"]
 
 
+@project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def pagerank(graph, delta=0.85, max_round=10):
     """Evalute PageRank on a graph.
@@ -42,7 +44,7 @@ def pagerank(graph, delta=0.85, max_round=10):
         import graphscope as gs
         sess = gs.session()
         g = sess.g()
-        pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.pagerank(pg, delta=0.85, max_round=10)
         s.close()
 

@@ -194,7 +194,7 @@ papers = interactive.execute("g.V().has('author', 'id', 2).out('writes').where(_
 sub_graph = interactive.subgraph("g.V().has('year', inside(2014, 2020)).outE('cites')")
 
 # project the projected graph to simple graph.
-simple_g = sub_graph.project_to_simple(v_label="paper", e_label="cites")
+simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
 
 ret1 = graphscope.k_core(simple_g, k=5)
 ret2 = graphscope.triangles(simple_g)

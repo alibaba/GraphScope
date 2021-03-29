@@ -41,7 +41,7 @@ def test_sssp():
     prev_result = None
     for num_workers in (1, 2, 3, 4):
         sess, g = p2p_property_graph(num_workers, True)
-        sg = g.project_to_simple(0, 0, 0, 2)
+        sg = g.project(vertices={"person": ["id"]}, edges={"knows": ["dist"]})
 
         ctx = sssp(sg, 6)
         curr_result = (

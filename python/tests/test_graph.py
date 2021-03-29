@@ -56,8 +56,8 @@ def test_load_graph_copy(graphscope_session, arrow_property_graph):
 
 
 def test_project_to_simple_with_name(p2p_property_graph, sssp_result):
-    pg = p2p_property_graph.project_to_simple(
-        v_label="person", v_prop="weight", e_label="knows", e_prop="dist"
+    pg = p2p_property_graph.project(
+        vertices={"person": ["weight"]}, edges={"knows": ["dist"]}
     )
     ctx = sssp(pg, src=6)
     r = (
@@ -70,7 +70,9 @@ def test_project_to_simple_with_name(p2p_property_graph, sssp_result):
 
 
 def test_project_to_simple_with_id(p2p_property_graph, sssp_result):
-    pg = p2p_property_graph.project_to_simple(0, 0, 0, 2)
+    pg = p2p_property_graph.project(
+        vertices={"person": ["id"]}, edges={"knows": ["dist"]}
+    )
     ctx = sssp(pg, src=6)
     r = (
         ctx.to_dataframe({"node": "v.id", "r": "r"})
@@ -81,54 +83,41 @@ def test_project_to_simple_with_id(p2p_property_graph, sssp_result):
     assert np.allclose(r, sssp_result["directed"])
 
 
-def test_error_on_project_to_simple_id_out_of_range(arrow_property_graph):
-    g = arrow_property_graph
-    # g has 4 vertex labels and 2 edge labels, each label has 1 property
-    with pytest.raises(IndexError, match="id 5 is out of range"):
-        g.project_to_simple(v_label=5, e_label=0)
-
-    with pytest.raises(IndexError, match="id 3 is out of range"):
-        g.project_to_simple(v_label=0, e_label=3)
-
-    with pytest.raises(IndexError, match="id -1 is out of range"):
-        g.project_to_simple(v_label=-1, e_label=3)
-
-    with pytest.raises(IndexError, match="id 2 is out of range"):
-        g.project_to_simple(v_label=0, e_label=0, v_prop=2, e_prop=0)
-
-    with pytest.raises(IndexError, match="id 1 is out of range"):
-        g.project_to_simple(v_label=0, e_label=0, v_prop=0, e_prop=1)
-
-
 def test_error_label_on_project_to_simple(arrow_property_graph):
     g = arrow_property_graph
     # g has vertex labels: v0, v1, v2, v3, each label has a property: weight
     # g has edge label: e0, e1, each label has a property: dist
-    with pytest.raises(ValueError, match="Label does not exists"):
-        g.project_to_simple(v_label="v4", e_label="e0")
+    with pytest.raises(KeyError, match="v4"):
+        pg = g.project(vertices={"v4": []}, edges={"e0": []})
+        pg._project_to_simple()
 
-    with pytest.raises(ValueError, match="Label does not exists"):
-        g.project_to_simple(v_label="v0", e_label="e2")
+    with pytest.raises(KeyError, match="e2"):
+        pg = g.project(vertices={"v0": []}, edges={"e2": []})
+        pg._project_to_simple()
 
-    with pytest.raises(ValueError, match="Property does not exists."):
-        g.project_to_simple(v_label="v0", e_label="e0", v_prop="foo")
+    with pytest.raises(KeyError, match="foo"):
+        pg = g.project(vertices={"v0": ["foo"]}, edges={"e0": []})
+        pg._project_to_simple()
 
-    with pytest.raises(ValueError, match="Property does not exists."):
-        g.project_to_simple(v_label="v0", e_label="e0", e_prop="foo")
+    with pytest.raises(KeyError, match="foo"):
+        pg = g.project(vertices={"v0": []}, edges={"e0": ["foo"]})
+        pg._project_to_simple()
 
 
 def test_error_relationship_on_project_to_simple(arrow_modern_graph):
     g = arrow_modern_graph
     with pytest.raises(
         ValueError,
-        match="Graph doesn't contain such relationship: person -> created <- person",
+        match="Cannot find a valid relation",
     ):
-        g.project_to_simple(v_label="person", e_label="created")
+        pg = g.project(vertices={"person": []}, edges={"created": []})
+        pg._project_to_simple()
     with pytest.raises(
         ValueError,
-        match="Graph doesn't contain such relationship: software -> knows <- software",
+        match="Cannot find a valid relation",
     ):
-        g.project_to_simple(v_label="software", e_label="knows")
+        pg = g.project(vertices={"software": []}, edges={"knows": []})
+        pg._project_to_simple()
 
 
 def test_unload(graphscope_session):
@@ -149,7 +138,8 @@ def test_unload(graphscope_session):
         graph.unload()
 
     with pytest.raises(RuntimeError, match="The graph is not loaded"):
-        graph.project_to_simple(v_label="person", e_label="knows")
+        pg = graph.project(vertices={"person": []}, edges={"knows": []})
+        pg._project_to_simple()
     with pytest.raises(AssertionError):
         g2 = graphscope_session.g(graph)
     with pytest.raises(RuntimeError, match="The graph is not loaded"):
@@ -157,12 +147,13 @@ def test_unload(graphscope_session):
 
 
 def test_error_on_project_to_simple_wrong_graph_type(arrow_property_graph):
-    sg = arrow_property_graph.project_to_simple(
-        v_label=0, v_prop=0, e_label=0, e_prop=0
-    )
-    assert sg._graph_type == types_pb2.ARROW_PROJECTED
+    sg = arrow_property_graph.project(vertices={"v0": []}, edges={"e0": []})
+    pg = sg._project_to_simple()
+    assert pg._graph_type == types_pb2.ARROW_PROJECTED
     with pytest.raises(AssertionError):
-        sg.project_to_simple(v_label=0, v_prop=0, e_label=0, e_prop=0)
+        pg._project_to_simple()
+    with pytest.raises(AssertionError):
+        pg.project(vertices={"v0": []}, edges={"e0": []})
 
 
 @pytest.mark.skipif(
@@ -178,26 +169,18 @@ def test_error_on_project_to_simple_wrong_graph_type_2(dynamic_property_graph):
 def test_error_on_operation_on_graph(graphscope_session):
     g = graphscope_session.g()
     with pytest.raises(RuntimeError, match="Empty graph"):
-        g.project_to_simple(v_label=0, v_prop=0, e_label=0, e_prop=0)
+        pg = g.project(vertices={"v": []}, edges={"e": []})
+        pg._project_to_simple()._ensure_loaded()
 
     with pytest.raises(RuntimeError):
         property_sssp(g, src=6)
 
 
 def test_error_on_app_query_non_compatible_graph(arrow_property_graph):
-    g = arrow_property_graph
-    # return a arrow property graph
-    with pytest.raises(
-        InvalidArgumentError,
-        match="Not compatible for arrow_property dynamic_property type",
-    ):
-        sssp(g, src=6)
-
-    sg = g.project_to_simple(
-        v_label=0, e_label=0
-    )  # edata is empty, not compatible with sssp
+    pg = arrow_property_graph.project(vertices={"v0": []}, edges={"e0": []})
+    # edata is empty, not compatible with sssp
     with pytest.raises(graphscope.framework.errors.CompilationError):
-        sssp(sg, 4)
+        sssp(pg, 4)
 
 
 @pytest.mark.skip(reason="appendonly graph not ready.")
@@ -238,37 +221,10 @@ def test_error_on_transform_graph():
 def test_load_only_from_efile(
     arrow_property_graph, arrow_property_graph_only_from_efile
 ):
-    assert (
-        arrow_property_graph.schema.edge_properties
-        == arrow_property_graph_only_from_efile.schema.edge_properties
+    sg1 = arrow_property_graph.project(vertices={"v0": []}, edges={"e0": ["weight"]})
+    sg2 = arrow_property_graph_only_from_efile.project(
+        vertices={"v0": []}, edges={"e0": ["weight"]}
     )
-    assert (
-        arrow_property_graph.schema.edge_relationships
-        == arrow_property_graph_only_from_efile.schema.edge_relationships
-    )
-    assert (
-        arrow_property_graph.schema.vertex_label_num
-        == arrow_property_graph_only_from_efile.schema.vertex_label_num
-    )
-    assert (
-        arrow_property_graph.schema.oid_type
-        == arrow_property_graph_only_from_efile.schema.oid_type
-    )
-    assert (
-        arrow_property_graph.schema.vid_type
-        == arrow_property_graph_only_from_efile.schema.vid_type
-    )
-    assert (
-        arrow_property_graph_only_from_efile.schema.vertex_labels
-        == arrow_property_graph.schema.vertex_labels
-    )
-    assert arrow_property_graph_only_from_efile.schema.vertex_properties == [
-        {"id": types_pb2.LONG},
-        {"id": types_pb2.LONG},
-    ]
-
-    sg1 = arrow_property_graph.project_to_simple(0, 0, 0, 0)
-    sg2 = arrow_property_graph_only_from_efile.project_to_simple(0, 0, 0, 0)
     simple_ctx1 = sssp(sg1, 20)
     simple_ctx2 = sssp(sg2, 20)
     v_out1 = simple_ctx1.to_numpy("v.id")
@@ -308,13 +264,13 @@ def test_graph_to_dataframe(arrow_property_graph):
 
 
 def test_error_on_add_column(arrow_property_graph, property_context):
-    with pytest.raises(ValueError, match="'non_exist_label' is not in list"):
+    with pytest.raises(KeyError, match="non_exist_label"):
         out = arrow_property_graph.add_column(
             property_context,
             {"id": "v:non_exist_label.id", "result": "r:non_exist_label.age"},
         )
 
-    with pytest.raises(ValueError, match="'non_exist_prop' is not in list"):
+    with pytest.raises(KeyError, match="non_exist_prop"):
         out = arrow_property_graph.add_column(
             property_context, {"id": "v:v0.non_exist_prop"}
         )
@@ -328,8 +284,8 @@ def test_error_on_add_column(arrow_property_graph, property_context):
 
 @pytest.mark.skip(reason="Issue 366")
 def test_project_to_simple_string_vprop(arrow_modern_graph):
-    sg = arrow_modern_graph.project_to_simple(
-        v_label="person", e_label="knows", v_prop="name", e_prop="weight"
+    sg = arrow_modern_graph.project(
+        vertices={"person": ["name"]}, edges={"knows": ["weight"]}
     )
     assert sg
 
@@ -338,9 +294,10 @@ def test_project_to_simple_string_vprop(arrow_modern_graph):
 def test_project_to_simple_string_eprop(graphscope_session):
     data_dir = os.path.expandvars("${GS_TEST_DIR}/load_ldbc")
     g = load_ldbc(graphscope_session, data_dir)
-    sg = g.project_to_simple(
-        v_label="person", e_label="knows", v_prop="firstName", e_prop="creationDate"
+    sg = g.project(
+        vertices={"person": ["firstName"]}, edges={"knows": ["creationDate"]}
     )
+    sg._project_to_simple()._ensure_loaded()
 
 
 def test_add_vertices_edges(graphscope_session):
@@ -495,3 +452,44 @@ def test_multiple_add_vertices_edges(graphscope_session):
         "knows",
         "knows2",
     ]
+
+
+def test_project_subgraph(arrow_modern_graph):
+    graph = arrow_modern_graph
+
+    graph = graph.project(
+        edges={"created": ["eid"], "knows": None},
+        vertices={"person": None, "software": ["id"]},
+    )
+    assert graph.schema.vertex_labels == ["person", "software"]
+    assert graph.schema.edge_labels == ["created", "knows"]
+    assert [p.id for p in graph.schema.get_vertex_properties("person")] == [0, 1, 2]
+    assert [p.id for p in graph.schema.get_vertex_properties("software")] == [2]
+    assert [p.id for p in graph.schema.get_edge_properties("created")] == [0]
+    assert [p.id for p in graph.schema.get_edge_properties("knows")] == [0, 1]
+
+    graph = graph.project(edges={"knows": ["eid"]}, vertices={"person": None})
+
+    assert graph.schema.vertex_labels == ["person"]
+    assert graph.schema.edge_labels == ["knows"]
+    assert [p.id for p in graph.schema.get_vertex_properties("person")] == [0, 1, 2]
+    assert [p.id for p in graph.schema.get_edge_properties("knows")] == [0]
+
+    with pytest.raises(ValueError, match="weight not exist in properties"):
+        graph = graph.project(edges={"knows": ["weight"]}, vertices={"person": []})
+
+    graph = graph.project(edges={"knows": []}, vertices={"person": []})
+    assert not graph.schema.get_vertex_properties("person")
+    assert not graph.schema.get_edge_properties("knows")
+
+    ret = graphscope.wcc(graph)
+
+    assert graph.add_column(ret, {"cc": "r"}).schema
+
+
+def test_error_on_project(arrow_property_graph):
+    graph = arrow_property_graph
+    with pytest.raises(AssertionError, match="Cannot project to simple"):
+        graphscope.sssp(graph, 4)
+    g2 = graph.project(vertices={"v0": []}, edges={"e0": []})
+    assert g2.schema.edge_relationships == [[("v0", "v0")]]

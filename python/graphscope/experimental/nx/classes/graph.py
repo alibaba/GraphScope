@@ -332,7 +332,7 @@ class Graph(object):
     def template_str(self):
         if self._key is None:
             raise RuntimeError("graph should be registered in remote.")
-        if self._graph_type != types_pb2.DYNAMIC_PROPERTY:
+        if self._graph_type == types_pb2.DYNAMIC_PROPERTY:
             return "gs::DynamicFragment"
         elif self._graph_type == types_pb2.DYNAMIC_PROJECTED:
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
@@ -380,7 +380,7 @@ class Graph(object):
 
     def __repr__(self):
         s = "graphscope.nx.Graph\n"
-        s += "type: " + self.template_str.split("<")[0]
+        s += "type: " + self.template_str.split("<")[0] + "\n"
         s += str(self._schema)
         return s
 
@@ -558,7 +558,7 @@ class Graph(object):
                 node = [n, data]
             if not isinstance(node[0], (int, str)):
                 continue
-            if self._schema.add_vertex_properties(data):
+            if self._schema.add_nx_vertex_properties(data):
                 nodes.append(json.dumps(node))
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_ADD_NODES, nodes)
         return self._op.eval()
@@ -919,7 +919,7 @@ class Graph(object):
             if not isinstance(u, (int, str)) or not isinstance(v, (int, str)):
                 continue
             # FIXME: support dynamic data type in same property
-            self._schema.add_edge_properties(data)
+            self._schema.add_nx_edge_properties(data)
             edge = [u, v, data]
             edges.append(json.dumps(edge))
             if len(edges) > 10000:  # make sure messages size not larger than rpc max
@@ -2072,9 +2072,13 @@ class Graph(object):
             v_prop_type = types_pb2.NULL
         else:
             check_argument(isinstance(v_prop, str))
-            if v_prop in self._schema.vertex_properties[0]:
-                v_prop_type = self._schema.vertex_properties[0][v_prop]
-            else:
+            v_label = self._schema.vertex_labels[0]
+            try:
+                v_prop_id = self._schema.get_vertex_property_id(v_label, v_prop)
+                v_prop_type = self._schema.get_vertex_properties(v_label)[
+                    v_prop_id
+                ].type
+            except KeyError:
                 raise InvalidArgumentError(
                     "graph not contains the vertex property {}".format(v_prop)
                 )
@@ -2084,9 +2088,11 @@ class Graph(object):
             e_prop_type = types_pb2.NULL
         else:
             check_argument(isinstance(e_prop, str))
-            if e_prop in self._schema.edge_properties[0]:
-                e_prop_type = self._schema.edge_properties[0][e_prop]
-            else:
+            e_label = self._schema.edge_labels[0]
+            try:
+                e_prop_id = self._schema.get_edge_property_id(e_label, e_prop)
+                e_prop_type = self._schema.get_edge_properties(e_label)[e_prop_id].type
+            except KeyError:
                 raise InvalidArgumentError(
                     "graph not contains the edge property {}".format(e_prop)
                 )

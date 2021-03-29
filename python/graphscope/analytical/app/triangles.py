@@ -19,10 +19,12 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.app import project_to_simple
 
 __all__ = ["triangles"]
 
 
+@project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def triangles(graph):
     """Evaluate triangle counting of the graph G.
@@ -40,7 +42,7 @@ def triangles(graph):
         import graphscope as gs
         sess = gs.session()
         g = sess.g()
-        pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.triangles(pg)
         s.close()
 

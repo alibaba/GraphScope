@@ -107,14 +107,14 @@ class Session(object):
         >>> # use session object explicitly
         >>> sess = gs.session()
         >>> g = sess.g()
-        >>> pg = g.project_to_simple('v', 'e', None, 'dist')
+        >>> pg = g.project(vertices={'v': []}, edges={'e': ['dist']})
         >>> r = s.sssp(g, 4)
         >>> s.close()
 
         >>> # or use a session as default
         >>> s = gs.session().as_default()
         >>> g = g()
-        >>> pg = g.project_to_simple('v', 'e', None, 'dist')
+        >>> pg = g.project(vertices={'v': []}, edges={'e': ['dist']})
         >>> r = gs.sssp(pg, 4)
         >>> s.close()
 
