@@ -170,6 +170,7 @@ class KubernetesClusterLauncher(Launcher):
         gie_graph_manager_mem=None,
         engine_cpu=None,
         engine_mem=None,
+        vineyard_daemonset=None,
         vineyard_cpu=None,
         vineyard_mem=None,
         vineyard_shared_mem=None,
@@ -203,12 +204,6 @@ class KubernetesClusterLauncher(Launcher):
         self._gie_graph_manager_name = (
             self._gie_graph_manager_name_prefix + self._instance_id
         )
-        self._gie_graph_manager_service_name = (
-            self._gie_graph_manager_service_name_prefix + self._instance_id
-        )
-        self._vineyard_service_name = (
-            self._vineyard_service_name_prefix + self._instance_id
-        )
 
         self._namespace = namespace
         self._service_type = service_type
@@ -226,6 +221,7 @@ class KubernetesClusterLauncher(Launcher):
         self._engine_mem = engine_mem
 
         # vineyard container info
+        self._vineyard_daemonset = vineyard_daemonset
         self._vineyard_cpu = vineyard_cpu
         self._vineyard_mem = vineyard_mem
         self._vineyard_shared_mem = vineyard_shared_mem
@@ -278,6 +274,17 @@ class KubernetesClusterLauncher(Launcher):
         self._graphlearn_services = dict()
         self._learning_instance_processes = {}
 
+        # component service name
+        self._gie_graph_manager_service_name = (
+            self._gie_graph_manager_service_name_prefix + self._instance_id
+        )
+        if self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            self._vineyard_service_name = self._vineyard_daemonset + "-rpc"
+        else:
+            self._vineyard_service_name = (
+                self._vineyard_service_name_prefix + self._instance_id
+            )
+
     def __del__(self):
         self.stop()
 
@@ -318,11 +325,21 @@ class KubernetesClusterLauncher(Launcher):
         )
         # volume1 is for vineyard ipc socket
         # MaxGraph: /home/maxgraph/data/vineyard
+        if self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            vineyard_socket_volume_type = "hostPath"
+            vineyard_socket_volume_fields = {
+                "type": "Directory",
+                "path": "/var/run/vineyard-%s-%s"
+                % (self._namespace, self._vineyard_daemonset),
+            }
+        else:
+            vineyard_socket_volume_type = "emptyDir"
+            vineyard_socket_volume_fields = {}
         engine_builder.add_volume(
             VolumeBuilder(
                 name="vineyard-ipc-volume",
-                type="emptyDir",
-                field={},
+                type=vineyard_socket_volume_type,
+                field=vineyard_socket_volume_fields,
                 mounts_list=[
                     {"mountPath": "/tmp/vineyard_workspace"},
                     {"mountPath": "/home/maxgraph/data/vineyard"},
@@ -347,16 +364,17 @@ class KubernetesClusterLauncher(Launcher):
         # add env
         engine_builder.add_simple_envs({"GLOG_v": str(self._glog_level)})
         # add vineyard container
-        engine_builder.add_vineyard_container(
-            name=self._vineyard_container_name,
-            image=self._gs_image,
-            cpu=self._vineyard_cpu,
-            mem=self._vineyard_mem,
-            shared_mem=self._vineyard_shared_mem,
-            preemptive=self._preemptive,
-            etcd_endpoint=self._etcd_endpoint,
-            port=self._vineyard_service_port,
-        )
+        if not self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            engine_builder.add_vineyard_container(
+                name=self._vineyard_container_name,
+                image=self._gs_image,
+                cpu=self._vineyard_cpu,
+                mem=self._vineyard_mem,
+                shared_mem=self._vineyard_shared_mem,
+                preemptive=self._preemptive,
+                etcd_endpoint=self._etcd_endpoint,
+                port=self._vineyard_service_port,
+            )
         # add engine container
         engine_builder.add_engine_container(
             name=self._engine_container_name,
@@ -606,7 +624,8 @@ class KubernetesClusterLauncher(Launcher):
         logger.info("Etcd is ready, endpoint is {}".format(self._etcd_endpoint))
 
         self._create_engine_replicaset()
-        self._create_vineyard_service()
+        if not self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            self._create_vineyard_service()
 
     def _waiting_for_services_ready(self):
         start_time = time.time()
@@ -795,6 +814,17 @@ class KubernetesClusterLauncher(Launcher):
                                 self._coordinator_name
                             )
                         )
+
+    def _exists_vineyard_daemonset(self, release):
+        # check if vineyard daemonset exists.
+        if not release:
+            return False
+        try:
+            self._app_api.read_namespaced_daemon_set(release, self._namespace)
+        except K8SApiException:
+            return False
+        else:
+            return True
 
     def start(self):
         try:

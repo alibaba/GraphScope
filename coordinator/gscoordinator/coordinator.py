@@ -819,6 +819,12 @@ def parse_sys_args():
         help="A list of secret name, comma separated.",
     )
     parser.add_argument(
+        "--k8s_vineyard_daemonset",
+        type=str,
+        default="",
+        help="Try to use the existing vineyard DaemonSet with name 'k8s_vineyard_daemonset'.",
+    )
+    parser.add_argument(
         "--k8s_vineyard_cpu",
         type=float,
         default=1.0,
@@ -950,6 +956,7 @@ def launch_graphscope():
             gie_graph_manager_mem=args.k8s_gie_graph_manager_mem,
             engine_cpu=args.k8s_engine_cpu,
             engine_mem=args.k8s_engine_mem,
+            vineyard_daemonset=args.k8s_vineyard_daemonset,
             vineyard_cpu=args.k8s_vineyard_cpu,
             vineyard_mem=args.k8s_vineyard_mem,
             vineyard_shared_mem=args.k8s_vineyard_shared_mem,

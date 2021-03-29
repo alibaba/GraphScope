@@ -108,6 +108,8 @@ spec:
         - {{ .Values.engines.gie.graph_manager.resources.requests.cpu | quote }}
         - "--k8s_gie_graph_manager_mem"
         - {{ .Values.engines.gie.graph_manager.resources.requests.memory }}
+        - "--k8s_vineyard_daemonset"
+        - {{ .Values.vineyard.daemonset }}
         - "--k8s_vineyard_cpu"
         - {{ .Values.vineyard.resources.requests.cpu | quote }}
         - "--k8s_vineyard_mem"

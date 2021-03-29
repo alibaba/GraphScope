@@ -1056,6 +1056,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         zookeeper_mem,
         gie_graph_manager_cpu,
         gie_graph_manager_mem,
+        vineyard_daemonset,
         vineyard_cpu,
         vineyard_mem,
         vineyard_shared_mem,
@@ -1091,6 +1092,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         self._zookeeper_mem = zookeeper_mem
         self._gie_graph_manager_cpu = gie_graph_manager_cpu
         self._gie_graph_manager_mem = gie_graph_manager_mem
+        self._vineyard_daemonset = vineyard_daemonset
         self._vineyard_cpu = vineyard_cpu
         self._vineyard_mem = vineyard_mem
         self._vineyard_shared_mem = vineyard_shared_mem
@@ -1200,6 +1202,8 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             str(self._gie_graph_manager_cpu),
             "--k8s_gie_graph_manager_mem",
             self._gie_graph_manager_mem,
+            "--k8s_vineyard_daemonset",
+            str(self._vineyard_daemonset),
             "--k8s_vineyard_cpu",
             str(self._vineyard_cpu),
             "--k8s_vineyard_mem",
