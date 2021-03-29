@@ -14,9 +14,9 @@
 //! limitations under the License.
 
 
-use maxgraph_store::db::api::{Vertex, Edge, GraphStorage, GraphResult, EdgeResultIter, PropIter, ValueRef, ValueType};
+use maxgraph_store::db::api::{Vertex, Edge, GraphStorage, GraphResult, EdgeResultIter, PropIter, ValueRef, ValueType, EdgeDirection, VertexWrapper, VertexResultIter};
 use std::sync::Arc;
-use maxgraph_store::api::{GlobalGraphQuery, SnapshotId, PartitionVertexIds, LabelId, Condition, PropId, VertexId, PartitionId};
+use maxgraph_store::api::{GlobalGraphQuery, SnapshotId, PartitionVertexIds, LabelId, Condition, PropId, VertexId, PartitionId, PartitionLabeledVertexIds};
 use maxgraph_store::db::graph::vertex::VertexImpl;
 use maxgraph_store::db::graph::edge::EdgeImpl;
 use store::v2::global_vertex_iterator::GlobalVertexIteratorImpl;
@@ -24,9 +24,11 @@ use store::v2::global_edge_iterator::GlobalEdgeIteratorImpl;
 use store::v2::edge_iterator::EdgeIterator;
 use store::{LocalStoreVertex, LocalStoreEdge};
 use maxgraph_store::api::graph_schema::Schema;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::vec::IntoIter;
 use maxgraph_store::api::prelude::Property;
+use std::iter::FromIterator;
+use itertools::Itertools;
 
 pub struct GlobalGraph<V, E>
     where V: 'static + Vertex,
@@ -53,6 +55,51 @@ impl<V, E> GlobalGraph<V, E>
             None => {None},
             Some(_) => {unimplemented!()},
         }
+    }
+
+    fn parse_vertex<VV: Vertex>(vertex_wrapper: VV, output_prop_ids: Option<&Vec<PropId>>)
+        -> LocalStoreVertex {
+        let mut vertex = LocalStoreVertex::new(vertex_wrapper.get_id(), vertex_wrapper.get_label() as u32);
+        let mut property_iter = vertex_wrapper.get_properties_iter();
+        let prop_set;
+        let prop_filter = if let Some(prop_ids) = output_prop_ids {
+            prop_set = HashSet::<&u32>::from_iter(prop_ids);
+            Some(&prop_set)
+        } else {
+            None
+        };
+        while let Some((property_id, value_ref)) = property_iter.next() {
+            if let Some(filter) = prop_filter {
+                if !filter.contains(&(property_id as u32)) {
+                    continue;
+                }
+            }
+            vertex.add_property(property_id as u32, Self::parse_val_ref(value_ref).unwrap());
+        }
+        vertex
+    }
+
+    fn parse_edge<EE: Edge>(item: EE, output_prop_ids: Option<&Vec<PropId>>) -> LocalStoreEdge {
+        let src_vertex = LocalStoreVertex::new(item.get_src_id(), item.get_kind().src_vertex_label_id as u32);
+        let dst_vertex = LocalStoreVertex::new(item.get_dst_id(), item.get_kind().dst_vertex_label_id as u32);
+        let mut edge = LocalStoreEdge::new(src_vertex, dst_vertex, item.get_kind().edge_label_id as u32, item.get_id().inner_id);
+        let mut property_iter = item.get_properties_iter();
+        let prop_set;
+        let prop_filter = if let Some(prop_ids) = output_prop_ids {
+            prop_set = HashSet::<&u32>::from_iter(prop_ids);
+            Some(&prop_set)
+        } else {
+            None
+        };
+        while let Some((property_id, value_ref)) = property_iter.next() {
+            if let Some(filter) = prop_filter {
+                if !filter.contains(&(property_id as u32)) {
+                    continue;
+                }
+            }
+            edge.add_property(property_id as u32, Self::parse_val_ref(value_ref).unwrap());
+        }
+        return edge;
     }
 
     fn parse_val_ref(val_ref: ValueRef) -> GraphResult<Property> {
@@ -103,39 +150,140 @@ impl<V, E> GlobalGraph<V, E>
         Ok(p)
     }
 
-    fn get_out_edges<'a>(&'a self, si: SnapshotId, partition_id: PartitionId, src_id: VertexId, label: Option<LabelId>,
-                         condition: Option<&Condition>) -> Option<GraphResult<Box<dyn EdgeResultIter<E=E> + 'a>>> {
-        match self.graph_partitions.get(&partition_id) {
+    fn get_edges_iter<'a>(&'a self, si: SnapshotId, partition_id: PartitionId, src_id: VertexId, label: Option<LabelId>,
+                          condition: Option<&Condition>, direction: EdgeDirection) -> GraphResult<Option<Box<dyn EdgeResultIter<E=E> + 'a>>> {
+        Ok(match self.graph_partitions.get(&partition_id) {
             None => {
                 None
             },
             Some(partition) => {
-                Some(partition.get_out_edges(si, src_id, Self::convert_label_id(label), Self::convert_condition(condition)))
+                match direction {
+                    EdgeDirection::In => {
+                        Some(partition.get_in_edges(si, src_id, Self::convert_label_id(label), Self::convert_condition(condition))?)
+                    },
+                    EdgeDirection::Out => {
+                        Some(partition.get_out_edges(si, src_id, Self::convert_label_id(label), Self::convert_condition(condition))?)
+                    },
+                    EdgeDirection::Both => {
+                        unimplemented!()
+                    },
+                }
             },
-        }
+        })
+    }
+
+    fn get_vertex(&self, si: SnapshotId, partition_id: PartitionId, id: VertexId, label_id: Option<LabelId>) -> GraphResult<Option<VertexWrapper<V>>> {
+        Ok(match self.graph_partitions.get(&partition_id) {
+            None => {
+                None
+            },
+            Some(partition) => {
+                partition.get_vertex(si, id, Self::convert_label_id(label_id))?
+            },
+        })
     }
 
     fn get_edge_iter_vec<'a>(&'a self, si: SnapshotId, src_ids: Vec<PartitionVertexIds>, edge_labels: &Vec<LabelId>,
-                             condition: Option<&Condition>) -> Vec<(i64, Vec<Box<dyn EdgeResultIter<E=E> + 'a>>)> {
+                             condition: Option<&Condition>, direction: EdgeDirection) -> GraphResult<Vec<(i64, Vec<Box<dyn EdgeResultIter<E=E> + 'a>>)>> {
         let mut res = vec![];
         for (partition_id, vertex_ids) in src_ids {
             for vertex_id in vertex_ids {
                 let mut edge_iters = vec![];
                 if edge_labels.is_empty() {
-                    if let Some(iter_res) = self.get_out_edges(si, partition_id, vertex_id, None, condition) {
-                        edge_iters.push(iter_res.unwrap());
+                    if let Some(iter_res) = self.get_edges_iter(si, partition_id, vertex_id, None, condition, direction)? {
+                        edge_iters.push(iter_res);
                     };
                 } else {
                     for label_id in edge_labels {
-                        if let Some(iter_res) = self.get_out_edges(si, partition_id, vertex_id, Some(*label_id), condition) {
-                            edge_iters.push(iter_res.unwrap());
+                        if let Some(iter_res) = self.get_edges_iter(si, partition_id, vertex_id, Some(*label_id), condition, direction)? {
+                            edge_iters.push(iter_res);
                         }
                     }
                 }
                 res.push((vertex_id, edge_iters));
             }
         }
-        res
+        Ok(res)
+    }
+
+    fn scan_vertex_iter<'a>(&'a self, si: SnapshotId, partition_id: PartitionId, label: Option<LabelId>, condition: Option<&Condition>)
+                            -> GraphResult<Option<Box<dyn VertexResultIter<V=V> + 'a>>> {
+        Ok(match self.graph_partitions.get(&partition_id) {
+            None => {
+                None
+            },
+            Some(partition) => {
+                Some(partition.query_vertices(si, Self::convert_label_id(label), Self::convert_condition(condition))?)
+            },
+        })
+    }
+
+    fn scan_vertex_iter_vec<'a>(&'a self, si: SnapshotId, labels: &Vec<LabelId>, partitions: &Vec<PartitionId>, condition: Option<&Condition>)
+                                -> GraphResult<Vec<Box<dyn VertexResultIter<V=V> + 'a>>> {
+        let mut res = vec![];
+        let partition_ids = if partitions.is_empty() {
+            self.graph_partitions.keys().map(|x| *x).collect_vec()
+        } else {
+            partitions.clone()
+        };
+        for partition_id in partition_ids {
+            if labels.is_empty() {
+                if let Some(iter) = self.scan_vertex_iter(si, partition_id, None, condition)? {
+                    res.push(iter);
+                } else {
+                    for label_id in labels {
+                        if let Some(iter) = self.scan_vertex_iter(si, partition_id, Some(*label_id), condition)? {
+                            res.push(iter);
+                        }
+                    }
+                }
+            }
+        }
+        Ok(res)
+    }
+
+    fn scan_edge_iter<'a>(&'a self, si: SnapshotId, partition_id: PartitionId, label: Option<LabelId>, condition: Option<&Condition>)
+                            -> GraphResult<Option<Box<dyn EdgeResultIter<E=E> + 'a>>> {
+        Ok(match self.graph_partitions.get(&partition_id) {
+            None => {
+                None
+            },
+            Some(partition) => {
+                Some(partition.query_edges(si, Self::convert_label_id(label), Self::convert_condition(condition))?)
+            },
+        })
+    }
+
+    fn scan_edge_iter_vec<'a>(&'a self, si: SnapshotId, labels: &Vec<LabelId>, partitions: &Vec<PartitionId>, condition: Option<&Condition>)
+                                -> GraphResult<Vec<Box<dyn EdgeResultIter<E=E> + 'a>>> {
+        let mut res = vec![];
+        let partition_ids = if partitions.is_empty() {
+            self.graph_partitions.keys().map(|x| *x).collect_vec()
+        } else {
+            partitions.clone()
+        };
+        for partition_id in partition_ids {
+            if labels.is_empty() {
+                if let Some(iter) = self.scan_edge_iter(si, partition_id, None, condition)? {
+                    res.push(iter);
+                } else {
+                    for label_id in labels {
+                        if let Some(iter) = self.scan_edge_iter(si, partition_id, Some(*label_id), condition)? {
+                            res.push(iter);
+                        }
+                    }
+                }
+            }
+        }
+        Ok(res)
+    }
+
+    fn get_limit(raw_limit: usize) -> usize {
+        if raw_limit > 0 {
+            raw_limit
+        } else {
+            usize::max_value()
+        }
     }
 }
 
@@ -149,14 +297,15 @@ impl<V, E> GlobalGraphQuery for GlobalGraph<V, E>
 
     fn get_out_vertex_ids(&self, si: SnapshotId, src_ids: Vec<PartitionVertexIds>, edge_labels: &Vec<LabelId>, condition: Option<&Condition>,
                           dedup_prop_ids: Option<&Vec<PropId>>, limit: usize) -> Box<dyn Iterator<Item=(VertexId, Self::VI)>> {
-        let res = self.get_edge_iter_vec(si, src_ids, edge_labels, condition);
+        let res = self.get_edge_iter_vec(si, src_ids, edge_labels, condition, EdgeDirection::Out).unwrap();
         Box::new(
             res.into_iter().map(|(vertex_id, edge_iter_vec)|
                 (
                     vertex_id,
                     EdgeIterator::new(edge_iter_vec)
-                         .map(|item| LocalStoreVertex::new(item.get_dst_id(), item.get_kind().dst_vertex_label_id as u32))
-                         .collect::<Vec<LocalStoreVertex>>().into_iter()
+                        .map(|item| LocalStoreVertex::new(item.get_dst_id(), item.get_kind().dst_vertex_label_id as u32))
+                        .take(Self::get_limit(limit))
+                        .collect::<Vec<LocalStoreVertex>>().into_iter()
                 )
             ).collect::<Vec<(i64, IntoIter<LocalStoreVertex>)>>().into_iter()
         )
@@ -164,70 +313,151 @@ impl<V, E> GlobalGraphQuery for GlobalGraph<V, E>
 
     fn get_out_edges(&self, si: SnapshotId, src_ids: Vec<PartitionVertexIds>, edge_labels: &Vec<LabelId>, condition: Option<&Condition>,
                      dedup_prop_ids: Option<&Vec<PropId>>, output_prop_ids: Option<&Vec<PropId>>, limit: usize) -> Box<dyn Iterator<Item=(VertexId, Self::EI)>> {
-        let res = self.get_edge_iter_vec(si, src_ids, edge_labels, condition);
+        let res = self.get_edge_iter_vec(si, src_ids, edge_labels, condition, EdgeDirection::Out).unwrap();
         Box::new(res.into_iter().map(|(vertex_id, edge_iter_vec)| {
             (
                 vertex_id,
-                EdgeIterator::new(edge_iter_vec).map(|item| {
-                    let src_vertex = LocalStoreVertex::new(item.get_src_id(), item.get_kind().src_vertex_label_id as u32);
-                    let dst_vertex = LocalStoreVertex::new(item.get_dst_id(), item.get_kind().dst_vertex_label_id as u32);
-                    let mut edge = LocalStoreEdge::new(src_vertex, dst_vertex, item.get_kind().edge_label_id as u32, item.get_id().inner_id);
-                    let mut property_iter = item.get_properties_iter();
-                    while let Some((property_id, value_ref)) = property_iter.next() {
-                        edge.add_property(property_id as u32, Self::parse_val_ref(value_ref).unwrap());
-                    }
-                    return edge;
-                }).collect::<Vec<LocalStoreEdge>>().into_iter()
+                EdgeIterator::new(edge_iter_vec)
+                    .map(|e| Self::parse_edge(e, output_prop_ids))
+                    .take(Self::get_limit(limit))
+                    .collect::<Vec<LocalStoreEdge>>()
+                    .into_iter()
             )
         }).collect::<Vec<(i64, IntoIter<LocalStoreEdge>)>>().into_iter())
     }
 
-    fn get_in_vertex_ids(&self, si: i64, dst_ids: Vec<(u32, Vec<i64>)>, edge_labels: &Vec<u32>, condition: Option<&Condition>, dedup_prop_ids: Option<&Vec<u32>>, limit: usize) -> Box<dyn Iterator<Item=(i64, Self::VI)>> {
+    fn get_in_vertex_ids(&self, si: SnapshotId, src_ids: Vec<PartitionVertexIds>, edge_labels: &Vec<LabelId>, condition: Option<&Condition>,
+                         dedup_prop_ids: Option<&Vec<PropId>>, limit: usize) -> Box<dyn Iterator<Item=(i64, Self::VI)>> {
+        let res = self.get_edge_iter_vec(si, src_ids, edge_labels, condition, EdgeDirection::In).unwrap();
+        Box::new(
+            res.into_iter().map(|(vertex_id, edge_iter_vec)|
+                (
+                    vertex_id,
+                    EdgeIterator::new(edge_iter_vec)
+                        .map(|item| LocalStoreVertex::new(item.get_src_id(), item.get_kind().src_vertex_label_id as u32))
+                        .take(Self::get_limit(limit))
+                        .collect::<Vec<LocalStoreVertex>>().into_iter()
+                )
+            ).collect::<Vec<(i64, IntoIter<LocalStoreVertex>)>>().into_iter()
+        )
+    }
+
+    fn get_in_edges(&self, si: SnapshotId, src_ids: Vec<PartitionVertexIds>, edge_labels: &Vec<LabelId>, condition: Option<&Condition>,
+                    dedup_prop_ids: Option<&Vec<PropId>>, output_prop_ids: Option<&Vec<PropId>>, limit: usize) -> Box<dyn Iterator<Item=(VertexId, Self::EI)>> {
+        let res = self.get_edge_iter_vec(si, src_ids, edge_labels, condition, EdgeDirection::In).unwrap();
+        Box::new(res.into_iter().map(|(vertex_id, edge_iter_vec)| {
+            (
+                vertex_id,
+                EdgeIterator::new(edge_iter_vec)
+                    .map(|e| Self::parse_edge(e, output_prop_ids))
+                    .take(Self::get_limit(limit))
+                    .collect::<Vec<LocalStoreEdge>>()
+                    .into_iter()
+            )
+        }).collect::<Vec<(i64, IntoIter<LocalStoreEdge>)>>().into_iter())
+    }
+
+    fn count_out_edges(&self, si: SnapshotId, src_ids: Vec<PartitionVertexIds>, edge_labels: &Vec<LabelId>, condition: Option<&Condition>) -> Box<dyn Iterator<Item=(i64, usize)>> {
+        let res = self.get_edge_iter_vec(si, src_ids, edge_labels, condition, EdgeDirection::Out).unwrap();
+        Box::new(res.into_iter().map(|(vertex_id, edge_iter_vec)| {
+            (
+                vertex_id,
+                EdgeIterator::new(edge_iter_vec).count()
+            )
+        }).collect::<Vec<(i64, usize)>>().into_iter())
+    }
+
+    fn count_in_edges(&self, si: SnapshotId, src_ids: Vec<PartitionVertexIds>, edge_labels: &Vec<LabelId>, condition: Option<&Condition>) -> Box<dyn Iterator<Item=(i64, usize)>> {
+        let res = self.get_edge_iter_vec(si, src_ids, edge_labels, condition, EdgeDirection::In).unwrap();
+        Box::new(res.into_iter().map(|(vertex_id, edge_iter_vec)| {
+            (
+                vertex_id,
+                EdgeIterator::new(edge_iter_vec).count()
+            )
+        }).collect::<Vec<(i64, usize)>>().into_iter())
+    }
+
+    fn get_vertex_properties(&self, si: SnapshotId, ids: Vec<PartitionLabeledVertexIds>, output_prop_ids: Option<&Vec<PropId>>) -> Self::VI {
+        let mut id_iter = ids.into_iter().flat_map(move |(partition, label_id_vec)| {
+            label_id_vec.into_iter().flat_map(move |(label_id, ids)| {
+                ids.into_iter().map(move |id| {
+                    (partition, label_id, id)
+                })
+            })
+        });
+        let mut res = vec![];
+        while let Some((partition, label_id, id)) = id_iter.next() {
+            if let Some(v) = self.get_vertex(si, partition, id, label_id).unwrap() {
+                res.push(Self::parse_vertex(v, output_prop_ids));
+            }
+        }
+        return res.into_iter();
+    }
+
+    fn get_edge_properties(&self, si: SnapshotId, ids: Vec<PartitionLabeledVertexIds>,  output_prop_ids: Option<&Vec<PropId>>)
+        -> Self::EI {
         unimplemented!()
     }
 
-    fn get_in_edges(&self, si: i64, dst_ids: Vec<(u32, Vec<i64>)>, edge_labels: &Vec<u32>, condition: Option<&Condition>, dedup_prop_ids: Option<&Vec<u32>>, output_prop_ids: Option<&Vec<u32>>, limit: usize) -> Box<dyn Iterator<Item=(i64, Self::EI)>> {
-        unimplemented!()
+    fn get_all_vertices(&self, si: SnapshotId, labels: &Vec<LabelId>, condition: Option<&Condition>, dedup_prop_ids: Option<&Vec<PropId>>,
+                        output_prop_ids: Option<&Vec<PropId>>, limit: usize, partition_ids: &Vec<PartitionId>) -> Self::VI {
+        let iter_vec = self.scan_vertex_iter_vec(si, labels, partition_ids, condition).unwrap();
+        let real_limit = Self::get_limit(limit);
+        let mut res = vec![];
+        for mut iter in iter_vec {
+            while let Some(v) = iter.next() {
+                res.push(Self::parse_vertex(v, output_prop_ids));
+                if res.len() >= real_limit {
+                    return res.into_iter();
+                }
+            }
+        }
+        return res.into_iter();
     }
 
-    fn count_out_edges(&self, si: i64, src_ids: Vec<(u32, Vec<i64>)>, edge_labels: &Vec<u32>, condition: Option<&Condition>) -> Box<dyn Iterator<Item=(i64, usize)>> {
-        unimplemented!()
-    }
-
-    fn count_in_edges(&self, si: i64, dst_ids: Vec<(u32, Vec<i64>)>, edge_labels: &Vec<u32>, condition: Option<&Condition>) -> Box<dyn Iterator<Item=(i64, usize)>> {
-        unimplemented!()
-    }
-
-    fn get_vertex_properties(&self, si: i64, ids: Vec<(u32, Vec<(Option<u32>, Vec<i64>)>)>, output_prop_ids: Option<&Vec<u32>>) -> Self::VI {
-        unimplemented!()
-    }
-
-    fn get_edge_properties(&self, si: i64, ids: Vec<(u32, Vec<(Option<u32>, Vec<i64>)>)>, output_prop_ids: Option<&Vec<u32>>) -> Self::EI {
-        unimplemented!()
-    }
-
-    fn get_all_vertices(&self, si: i64, labels: &Vec<u32>, condition: Option<&Condition>, dedup_prop_ids: Option<&Vec<u32>>, output_prop_ids: Option<&Vec<u32>>, limit: usize, partition_ids: &Vec<u32>) -> Self::VI {
-        unimplemented!()
-    }
-
-    fn get_all_edges(&self, si: i64, labels: &Vec<u32>, condition: Option<&Condition>, dedup_prop_ids: Option<&Vec<u32>>, output_prop_ids: Option<&Vec<u32>>, limit: usize, partition_ids: &Vec<u32>) -> Self::EI {
-        unimplemented!()
+    fn get_all_edges(&self, si: SnapshotId, labels: &Vec<LabelId>, condition: Option<&Condition>, dedup_prop_ids: Option<&Vec<PropId>>,
+                     output_prop_ids: Option<&Vec<PropId>>, limit: usize, partition_ids: &Vec<PartitionId>) -> Self::EI {
+        let iter_vec = self.scan_edge_iter_vec(si, labels, partition_ids, condition).unwrap();
+        let real_limit = Self::get_limit(limit);
+        let mut res = vec![];
+        for mut iter in iter_vec {
+            while let Some(e) = iter.next() {
+                res.push(Self::parse_edge(e, output_prop_ids));
+                if res.len() >= real_limit {
+                    return res.into_iter();
+                }
+            }
+        }
+        return res.into_iter();
     }
 
     fn count_all_vertices(&self, si: i64, labels: &Vec<u32>, condition: Option<&Condition>, partition_ids: &Vec<u32>) -> u64 {
-        unimplemented!()
+        let iter_vec = self.scan_vertex_iter_vec(si, labels, partition_ids, condition).unwrap();
+        let mut count = 0;
+        for mut iter in iter_vec {
+            while let Some(v) = iter.next() {
+                count += 1;
+            }
+        }
+        return count;
     }
 
     fn count_all_edges(&self, si: i64, labels: &Vec<u32>, condition: Option<&Condition>, partition_ids: &Vec<u32>) -> u64 {
-        unimplemented!()
+        let iter_vec = self.scan_edge_iter_vec(si, labels, partition_ids, condition).unwrap();
+        let mut count = 0;
+        for mut iter in iter_vec {
+            while let Some(v) = iter.next() {
+                count += 1;
+            }
+        }
+        return count;
     }
 
-    fn translate_vertex_id(&self, vertex_id: i64) -> i64 {
-        unimplemented!()
+    fn translate_vertex_id(&self, vertex_id: VertexId) -> VertexId {
+        vertex_id
     }
 
     fn get_schema(&self, si: i64) -> Option<Arc<dyn Schema>> {
         unimplemented!()
     }
 }
-
