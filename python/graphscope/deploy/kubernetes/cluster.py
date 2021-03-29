@@ -110,6 +110,9 @@ class KubernetesCluster(object):
         gie_graph_manager_mem: str
             Minimum number of memory request for graph manager container.
 
+        vineyard_daemonset: str
+            The name of Helm deployment for vineyard DaemonSet.
+
         vineyard_cpu: float
             Minimum number of CPU cores request for vineyard container.
 
@@ -174,6 +177,7 @@ class KubernetesCluster(object):
         zookeeper_image=None,
         image_pull_policy=None,
         image_pull_secrets=None,
+        vineyard_daemonset=None,
         vineyard_cpu=None,
         vineyard_mem=None,
         vineyard_shared_mem=None,
@@ -223,6 +227,7 @@ class KubernetesCluster(object):
         self._gie_graph_manager_cpu = gie_graph_manager_cpu
         self._gie_graph_manager_mem = gie_graph_manager_mem
 
+        self._vineyard_daemonset = vineyard_daemonset
         self._vineyard_cpu = vineyard_cpu
         self._vineyard_mem = vineyard_mem
         self._vineyard_shared_mem = vineyard_shared_mem
@@ -464,6 +469,7 @@ class KubernetesCluster(object):
             zookeeper_mem=self._zookeeper_mem,
             gie_graph_manager_cpu=self._gie_graph_manager_cpu,
             gie_graph_manager_mem=self._gie_graph_manager_mem,
+            vineyard_daemonset=self._vineyard_daemonset,
             vineyard_cpu=self._vineyard_cpu,
             vineyard_mem=self._vineyard_mem,
             vineyard_shared_mem=self._vineyard_shared_mem,

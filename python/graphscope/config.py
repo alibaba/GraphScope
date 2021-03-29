@@ -64,6 +64,7 @@ class GSConfig(object):
     k8s_gie_gremlin_server_mem = "1Gi"
 
     # vineyard resource configuration
+    k8s_vineyard_daemonset = ""
     k8s_vineyard_cpu = 0.5
     k8s_vineyard_mem = "512Mi"
     k8s_vineyard_shared_mem = "4Gi"

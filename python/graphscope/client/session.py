@@ -168,6 +168,7 @@ class Session(object):
         k8s_zookeeper_mem=gs_config.k8s_zookeeper_mem,
         k8s_gie_graph_manager_cpu=gs_config.k8s_gie_graph_manager_cpu,
         k8s_gie_graph_manager_mem=gs_config.k8s_gie_graph_manager_mem,
+        k8s_vineyard_daemonset=gs_config.k8s_vineyard_daemonset,
         k8s_vineyard_cpu=gs_config.k8s_vineyard_cpu,
         k8s_vineyard_mem=gs_config.k8s_vineyard_mem,
         k8s_vineyard_shared_mem=gs_config.k8s_vineyard_shared_mem,
@@ -217,6 +218,10 @@ class Session(object):
             k8s_gie_graph_manager_image (str, optional): The GraphScope interactive engine's graph manager image.
 
             k8s_zookeeper_image (str, optional): The image of zookeeper, which used by GIE graph manager.
+
+            k8s_vineyard_daemonset (str, optional): The name of vineyard Helm deployment to use. GraphScope will try to
+                discovery the daemonset from kubernetes cluster, then use it if exists, and fallback to launching
+                a bundled vineyard container otherwise.
 
             k8s_vineyard_cpu (float, optional): Minimum number of CPU cores request for vineyard container. Defaults to 0.5.
 
@@ -355,6 +360,7 @@ class Session(object):
             "k8s_zookeeper_mem",
             "k8s_gie_graph_manager_cpu",
             "k8s_gie_graph_manager_mem",
+            "k8s_vineyard_daemonset",
             "k8s_vineyard_cpu",
             "k8s_vineyard_mem",
             "k8s_vineyard_shared_mem",
@@ -729,6 +735,7 @@ class Session(object):
                 zookeeper_image=self._config_params["k8s_zookeeper_image"],
                 image_pull_policy=self._config_params["k8s_image_pull_policy"],
                 image_pull_secrets=self._config_params["k8s_image_pull_secrets"],
+                vineyard_daemonset=self._config_params["k8s_vineyard_daemonset"],
                 vineyard_cpu=self._config_params["k8s_vineyard_cpu"],
                 vineyard_mem=self._config_params["k8s_vineyard_mem"],
                 vineyard_shared_mem=self._config_params["k8s_vineyard_shared_mem"],
