@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+import base64
+import json
 import logging
 import os
 import random
@@ -101,6 +103,8 @@ class LocalLauncher(Launcher):
         self._vineyardd_process = None
         # analytical engine
         self._analytical_engine_process = None
+        # learning instance processes
+        self._learning_instance_processes = {}
 
     def type(self):
         return types_pb2.HOSTS
@@ -231,6 +235,50 @@ class LocalLauncher(Launcher):
         setattr(process, "stdout_watcher", stdout_watcher)
 
         self._analytical_engine_process = process
+
+    def create_learning_instance(self, object_id, handle, config):
+        # prepare argument
+        handle = json.loads(base64.b64decode(handle.encode("utf-8")).decode("utf-8"))
+
+        server_list = []
+        for i in range(self._num_workers):
+            server_list.append(
+                "localhost:{0}".format(str(self._get_free_port("localhost")))
+            )
+        hosts = ",".join(server_list)
+        handle["server"] = hosts
+        print("handle", handle)
+        handle = base64.b64encode(json.dumps(handle).encode("utf-8")).decode("utf-8")
+
+        # launch the server
+        self._learning_instance_processes[object_id] = []
+        for index in range(self._num_workers):
+            cmd = [
+                sys.executable,
+                "-m",
+                "gscoordinator.learning",
+                handle,
+                config,
+                str(index),
+            ]
+            logger.info("launching learning server: %s", " ".join(cmd))
+            proc = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            )
+            stdout_watcher = PipeWatcher(proc.stdout, sys.stdout)
+            setattr(proc, "stdout_watcher", stdout_watcher)
+            self._learning_instance_processes[object_id].append(proc)
+
+        return server_list
+
+    def close_learning_instance(self, object_id):
+        if object_id not in self._learning_instance_processes:
+            return
+
+        # terminate the process
+        for proc in self._learning_instance_processes[object_id]:
+            self._stop_subprocess(proc)
+        self._learning_instance_processes.clear()
 
     def _stop_vineyard(self):
         self._stop_subprocess(self._vineyardd_process)

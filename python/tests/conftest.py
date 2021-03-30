@@ -71,6 +71,26 @@ def twitter_v_0():
 
 
 @pytest.fixture(scope="module")
+def modern_graph():
+    return "{}/modern_graph".format(test_repo_dir)
+
+
+@pytest.fixture(scope="module")
+def ldbc_sample():
+    return "{}/ldbc_sample".format(test_repo_dir)
+
+
+@pytest.fixture(scope="module")
+def p2p_property():
+    return "{}/property".format(test_repo_dir)
+
+
+@pytest.fixture(scope="module")
+def ogbn_mag_small():
+    return "{}/ogbn_mag_small".format(test_repo_dir)
+
+
+@pytest.fixture(scope="module")
 def twitter_v_1():
     return "{}/twitter_v_1".format(new_property_dir)
 
