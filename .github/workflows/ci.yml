@@ -412,7 +412,7 @@ jobs:
                                 --set vineyard.image.tag=${{ github.sha }} \
                                 --set imagePullPolicy=IfNotPresent \
                                 ./graphscope
-        helm test graphscope --timeout 300m0s
+        helm test graphscope --timeout 5m0s
 
     - name: Upload Coverage
       uses: codecov/codecov-action@v1
