@@ -403,17 +403,13 @@ jobs:
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./graphscope/deploy/tests/
     - name: Helm test
-      env:
-        GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
-        GIE_MANAGER_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
-        IMAGE_SHA: ${{ github.sha }}
       run: |
-        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash || true
+        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
         cd charts
-        helm install graphscope --set coordinator.image.tag=${IMAGE_SHA} \
-                                --set engines.gae.image.tag=${IMAGE_SHA} \
-                                --set engines.gie.graph_manager.image.tag=${IMAGE_SHA} \
-                                --set vineyard.image.tag=${IMAGE_SHA} \
+        helm install graphscope --set coordinator.image.tag=${{ github.sha }} \
+                                --set engines.gae.image.tag=${{ github.sha }} \
+                                --set engines.gie.graph_manager.image.tag=${{ github.sha }} \
+                                --set vineyard.image.tag=${{ github.sha }} \
                                 --set imagePullPolicy=IfNotPresent \
                                 ./graphscope
         helm test graphscope --timeout 5m0s
