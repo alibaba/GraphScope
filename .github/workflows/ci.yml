@@ -414,6 +414,7 @@ jobs:
                                 --set engines.gae.image.tag=${IMAGE_SHA} \
                                 --set engines.gie.graph_manager.image.tag=${IMAGE_SHA} \
                                 --set vineyard.image.tag=${IMAGE_SHA} \
+                                --set imagePullPolicy=IfNotPresent \
                                 ./graphscope
         helm test graphscope --timeout 5m0s
 
@@ -429,6 +430,7 @@ jobs:
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
             registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
         helm uninstall graphscope || true
+        kubectl delete pod graphscope-test-rpc-service --wait=false || true
 
   gie-test:
     runs-on: self-hosted
