@@ -390,6 +390,8 @@ jobs:
         python3 -m pip install pytest-cov --user
         pushd python && sudo -E python3 setup.py develop && popd
 
+        pip3 install git+https://github.com/mars-project/mars.git#egg=pymars[distributed]
+
     - name: Kubernetes test
       env:
         CHANGE_MINIKUBE_NONE_USER: true

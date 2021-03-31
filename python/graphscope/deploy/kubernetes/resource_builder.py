@@ -258,6 +258,32 @@ class ContainerEnvBuilder(object):
         return result
 
 
+class ContainerFieldRefEnvBuilder(object):
+    """Builder for k8s container environments."""
+
+    def __init__(self, name, field):
+        self._name = name
+        self._field = field
+
+    def build(self):
+        result = dict(name=self._name)
+        result["valueFrom"] = {
+            "fieldRef": {
+                "fieldPath": self._field,
+            }
+        }
+        return result
+
+
+BASE_MACHINE_ENVS = {
+    "MY_NODE_NAME": "spec.nodeName",
+    "MY_POD_NAME": "metadata.name",
+    "MY_POD_NAMESPACE": "metadata.namespace",
+    "MY_POD_IP": "status.podIP",
+    "MY_HOST_NAME": "status.podIP",
+}
+
+
 class PortBuilder(object):
     """Builder for k8s container port definition."""
 
@@ -412,21 +438,31 @@ class DeploymentBuilder(object):
         self._containers = []
         self._volumes = []
         self._envs = dict()
-
         self._image_pull_secrets = []
+
+        self.add_field_envs(BASE_MACHINE_ENVS)
 
     def set_image_pull_policy(self, policy):
         self._image_pull_policy = policy
 
     def add_env(self, name, value=None):
-        self._envs[name] = ContainerEnvBuilder(name, value)
+        if value:
+            self._envs[name] = ContainerEnvBuilder(name, value)
 
-    def add_container(self, ctn):
-        self._containers.append(ctn)
+    def add_field_env(self, name, field=None):
+        if field:
+            self._envs[name] = ContainerFieldRefEnvBuilder(name, field)
 
     def add_simple_envs(self, envs):
         for k, v in envs.items() or ():
             self.add_env(k, v)
+
+    def add_field_envs(self, envs):
+        for k, v in envs.items() or ():
+            self.add_field_env(k, v)
+
+    def add_container(self, ctn):
+        self._containers.append(ctn)
 
     def add_volume(self, vol):
         self._volumes.append(vol)
@@ -480,18 +516,29 @@ class ReplicaSetBuilder(object):
         self._envs = dict()
         self._image_pull_secrets = []
 
+        self.add_field_envs(BASE_MACHINE_ENVS)
+
     def set_image_pull_policy(self, policy):
         self._image_pull_policy = policy
 
     def add_env(self, name, value=None):
-        self._envs[name] = ContainerEnvBuilder(name, value)
+        if value:
+            self._envs[name] = ContainerEnvBuilder(name, value)
 
-    def add_container(self, ctn):
-        self._containers.append(ctn)
+    def add_field_env(self, name, field=None):
+        if field:
+            self._envs[name] = ContainerFieldRefEnvBuilder(name, field)
 
     def add_simple_envs(self, envs):
         for k, v in envs.items() or ():
             self.add_env(k, v)
+
+    def add_field_envs(self, envs):
+        for k, v in envs.items() or ():
+            self.add_field_env(k, v)
+
+    def add_container(self, ctn):
+        self._containers.append(ctn)
 
     def add_volume(self, vol):
         self._volumes.append(vol)
@@ -540,6 +587,11 @@ class GSEngineBuilder(ReplicaSetBuilder):
     _engine_requests_cpu = 0.5
     _engine_requests_mem = "4Gi"
 
+    _mars_worker_requests_cpu = 0.5
+    _mars_worker_requests_mem = "4Gi"
+    _mars_scheduler_requests_cpu = 0.5
+    _mars_scheduler_requests_mem = "2Gi"
+
     def __init__(self, name, labels, num_workers, image_pull_policy):
         self._name = name
         self._labels = labels
@@ -558,7 +610,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
         mem,
         shared_mem,
         preemptive,
-        etcd_endpoint,
+        etcd_endpoints,
         port,
         **kwargs
     ):
@@ -566,7 +618,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
             [
                 "vineyardd",
                 "--size=%s" % str(shared_mem),
-                "--etcd_endpoint=http://%s" % etcd_endpoint,
+                '--etcd_endpoint="%s"' % (";".join(etcd_endpoints),),
                 "--socket=%s" % self._ipc_socket_file,
                 "--etcd_prefix=vineyard",
             ]
@@ -574,7 +626,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
         commands = []
         commands.append(
             "while ! curl --output /dev/null --silent --head --connect-timeout 1 %s"
-            % etcd_endpoint
+            % etcd_endpoints[0]
         )
         commands.append("do sleep 1 && echo -n .")
         commands.append("done")
@@ -661,8 +713,9 @@ class GSEngineBuilder(ReplicaSetBuilder):
         )
 
         readiness_cmd = [
-            "ls",
-            "%s" % self._ipc_socket_file,
+            "/bin/bash",
+            "-c",
+            "ls %s 2>/dev/null" % self._ipc_socket_file,
         ]
         readiness_probe = ExecProbeBuilder(readiness_cmd)
 
@@ -688,6 +741,110 @@ class GSEngineBuilder(ReplicaSetBuilder):
                     "livenessProbe": None,
                     "readinessProbe": readiness_probe.build(),
                     "lifecycle": lifecycle_dict or None,
+                }
+            )
+        )
+
+    def add_mars_worker_container(
+        self, name, image, cpu, mem, preemptive, port, scheduler_endpoint
+    ):
+        cmd = [
+            "while ! ls $VINEYARD_IPC_SOCKET 2>/dev/null; do sleep 1 && echo -n .; done",
+            ";",
+            "python3",
+            "-m",
+            "mars.worker.__main__",
+            "-a",
+            "$MY_POD_IP",
+            "-p",
+            str(port),
+            "-s",
+            scheduler_endpoint,
+            "--log-level=debug",
+            "--ignore-avail-mem",
+            "--spill-dir=/tmp/mars",
+        ]
+        cmd = ["bash", "-c", " ".join(cmd)]
+
+        resources_dict = {
+            "requests": ResourceBuilder(
+                self._mars_worker_requests_cpu, self._mars_worker_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
+            "limits": ResourceBuilder(cpu, mem).build(),
+        }
+
+        volumeMounts = []
+        for vol in self._volumes:
+            for vol_mount in vol.build_mount():
+                volumeMounts.append(vol_mount)
+
+        probe = TcpProbeBuilder(port=port, timeout=15, period=10, failure_thresh=8)
+
+        super().add_container(
+            _remove_nones(
+                {
+                    "command": cmd,
+                    "env": [env.build() for env in self._envs.values()] or None,
+                    "image": image,
+                    "name": name,
+                    "imagePullPolicy": self._image_pull_policy,
+                    "resources": dict((k, v) for k, v in resources_dict.items() if v)
+                    or None,
+                    "ports": [PortBuilder(port).build()],
+                    "volumeMounts": volumeMounts or None,
+                    "livenessProbe": None,
+                    "readinessProbe": probe.build(),
+                }
+            )
+        )
+
+    def add_mars_scheduler_container(self, name, image, cpu, mem, preemptive, port):
+        cmd = [
+            "while ! ls $VINEYARD_IPC_SOCKET 2>/dev/null; do sleep 1 && echo -n .; done",
+            ";",
+            "python3",
+            "-m",
+            "mars.scheduler.__main__",
+            "-a",
+            "$MY_POD_IP",
+            "-p",
+            str(port),
+            "--log-level=debug",
+        ]
+        cmd = ["bash", "-c", " ".join(cmd)]
+
+        resources_dict = {
+            "requests": ResourceBuilder(
+                self._mars_scheduler_requests_cpu, self._mars_scheduler_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
+            "limits": ResourceBuilder(cpu, mem).build(),
+        }
+
+        volumeMounts = []
+        for vol in self._volumes:
+            for vol_mount in vol.build_mount():
+                volumeMounts.append(vol_mount)
+
+        probe = TcpProbeBuilder(port=port, timeout=15, period=10, failure_thresh=8)
+
+        super().add_container(
+            _remove_nones(
+                {
+                    "command": cmd,
+                    "env": [env.build() for env in self._envs.values()] or None,
+                    "image": image,
+                    "name": name,
+                    "imagePullPolicy": self._image_pull_policy,
+                    "resources": dict((k, v) for k, v in resources_dict.items() if v)
+                    or None,
+                    "ports": [PortBuilder(port).build()],
+                    "volumeMounts": volumeMounts or None,
+                    "livenessProbe": None,
+                    "readinessProbe": probe.build(),
                 }
             )
         )
@@ -807,22 +964,20 @@ class GSEtcdBuilder(object):
         for i in range(self._num_pods):
             name = "%s-%s" % (self._name_prefix, str(i))
             pods_name.append(name)
-            initial_cluster += "%s=%s," % (
+            initial_cluster += "%s=http://%s:%s," % (
                 name,
-                "http://%s:%s"
-                % (
-                    "%s.%s" % (name, self._service_name),
-                    str(self._listen_peer_service_port),
-                ),
+                name,
+                self._listen_peer_service_port,
             )
-        # remove last comma
+        # drop last comma
         initial_cluster = initial_cluster[0:-1]
 
-        pods_builder = []
+        pods_builders, svc_builders = [], []
         for _, name in enumerate(pods_name):
+            pod_labels = {"etcd_name": name}
             pod_builder = PodBuilder(
                 name=name,
-                labels=self._labels,
+                labels={**self._labels, **pod_labels},
                 hostname=name,
                 subdomain=self._service_name,
                 restart_policy=self._restart_policy,
@@ -837,18 +992,13 @@ class GSEtcdBuilder(object):
                 name,
                 "--max-txn-ops=%s" % self._max_txn_ops,
                 "--initial-advertise-peer-urls",
-                "http://%s:%s"
-                % (
-                    "%s.%s" % (name, self._service_name),
-                    str(self._listen_peer_service_port),
-                ),
-                "--advertise-client-urls=http://%s:%s"
-                % (name, str(self._listen_client_service_port)),
+                "http://%s:%s" % (name, self._listen_peer_service_port),
+                "--advertise-client-urls",
+                "http://%s:%s" % (name, self._listen_client_service_port),
                 "--data-dir=/var/lib/etcd",
                 "--listen-client-urls=http://0.0.0.0:%s"
-                % str(self._listen_client_service_port),
-                "--listen-peer-urls=http://0.0.0.0:%s"
-                % str(self._listen_peer_service_port),
+                % self._listen_client_service_port,
+                "--listen-peer-urls=http://0.0.0.0:%s" % self._listen_peer_service_port,
                 "--initial-cluster",
                 initial_cluster,
                 "--initial-cluster-state",
@@ -892,10 +1042,20 @@ class GSEtcdBuilder(object):
                     }
                 )
             )
+            pods_builders.append(pod_builder)
 
-            pods_builder.append(pod_builder)
+            service_builder = ServiceBuilder(
+                name,
+                service_type="ClusterIP",
+                port=[
+                    self._listen_peer_service_port,
+                    self._listen_client_service_port,
+                ],
+                selector=pod_labels,
+            )
+            svc_builders.append(service_builder)
 
-        return pods_builder
+        return pods_builders, svc_builders
 
     def build_liveness_probe(self):
         liveness_cmd = [
@@ -1062,6 +1222,11 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         vineyard_shared_mem,
         engine_cpu,
         engine_mem,
+        mars_worker_cpu,
+        mars_worker_mem,
+        mars_scheduler_cpu,
+        mars_scheduler_mem,
+        with_mars,
         volumes,
         timeout_seconds,
         dangling_timeout_seconds,
@@ -1098,6 +1263,11 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         self._vineyard_shared_mem = vineyard_shared_mem
         self._engine_cpu = engine_cpu
         self._engine_mem = engine_mem
+        self._mars_worker_cpu = mars_worker_cpu
+        self._mars_worker_mem = mars_worker_mem
+        self._mars_scheduler_cpu = mars_scheduler_cpu
+        self._mars_scheduler_mem = mars_scheduler_mem
+        self._with_mars = with_mars
         self._volumes_str = json.dumps(volumes)
         self._timeout_seconds = timeout_seconds
         self._dangling_timeout_seconds = dangling_timeout_seconds
@@ -1214,6 +1384,16 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             str(self._engine_cpu),
             "--k8s_engine_mem",
             self._engine_mem,
+            "--k8s_mars_worker_cpu",
+            str(self._mars_worker_cpu),
+            "--k8s_mars_worker_mem",
+            self._mars_worker_mem,
+            "--k8s_mars_scheduler_cpu",
+            str(self._mars_scheduler_cpu),
+            "--k8s_mars_scheduler_mem",
+            self._mars_scheduler_mem,
+            "--k8s_with_mars",
+            str(self._with_mars),
             "--k8s_volumes",
             self._volumes_str,
             "--timeout_seconds",
