@@ -41,7 +41,7 @@ This template exists as a way to implement a language menu just as what
 {% block footer %}
   {{ footer }}
 
-  <div class="rst-versions shift-up" data-toggle="rst-versions" role="note" aria-label="versions">
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Read the Docs</span>
       v: {{ version }}
@@ -86,7 +86,11 @@ This template exists as a way to implement a language menu just as what
           {% endif %}
         {% endfor %}
       </dl>
+    </div>
+  </div>
 
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
       <dl>
         <dt>{{ _('Languages') }}</dt>
         <dd><a href="{{ pathto('index.html', 1) }}">en</a></dd>
