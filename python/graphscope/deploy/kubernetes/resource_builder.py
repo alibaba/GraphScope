@@ -610,7 +610,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
         mem,
         shared_mem,
         preemptive,
-        etcd_endpoint,
+        etcd_endpoints,
         port,
         **kwargs
     ):
@@ -618,7 +618,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
             [
                 "vineyardd",
                 "--size=%s" % str(shared_mem),
-                "--etcd_endpoint=http://%s" % etcd_endpoint,
+                '--etcd_endpoint="%s"' % (";".join(etcd_endpoints),),
                 "--socket=%s" % self._ipc_socket_file,
                 "--etcd_prefix=vineyard",
             ]
@@ -626,7 +626,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
         commands = []
         commands.append(
             "while ! curl --output /dev/null --silent --head --connect-timeout 1 %s"
-            % etcd_endpoint
+            % etcd_endpoints[0]
         )
         commands.append("do sleep 1 && echo -n .")
         commands.append("done")
@@ -713,8 +713,9 @@ class GSEngineBuilder(ReplicaSetBuilder):
         )
 
         readiness_cmd = [
-            "ls",
-            "%s" % self._ipc_socket_file,
+            "/bin/bash",
+            "-c",
+            "ls %s 2>/dev/null" % self._ipc_socket_file,
         ]
         readiness_probe = ExecProbeBuilder(readiness_cmd)
 
@@ -748,6 +749,8 @@ class GSEngineBuilder(ReplicaSetBuilder):
         self, name, image, cpu, mem, preemptive, port, scheduler_endpoint
     ):
         cmd = [
+            "while ! ls $VINEYARD_IPC_SOCKET 2>/dev/null; do sleep 1 && echo -n .; done",
+            ";",
             "python3",
             "-m",
             "mars.worker.__main__",
@@ -777,6 +780,8 @@ class GSEngineBuilder(ReplicaSetBuilder):
             for vol_mount in vol.build_mount():
                 volumeMounts.append(vol_mount)
 
+        probe = TcpProbeBuilder(port=port, timeout=15, period=10, failure_thresh=8)
+
         super().add_container(
             _remove_nones(
                 {
@@ -790,13 +795,15 @@ class GSEngineBuilder(ReplicaSetBuilder):
                     "ports": [PortBuilder(port).build()],
                     "volumeMounts": volumeMounts or None,
                     "livenessProbe": None,
-                    "readinessProbe": None,
+                    "readinessProbe": probe.build(),
                 }
             )
         )
 
     def add_mars_scheduler_container(self, name, image, cpu, mem, preemptive, port):
         cmd = [
+            "while ! ls $VINEYARD_IPC_SOCKET 2>/dev/null; do sleep 1 && echo -n .; done",
+            ";",
             "python3",
             "-m",
             "mars.scheduler.__main__",
@@ -822,6 +829,8 @@ class GSEngineBuilder(ReplicaSetBuilder):
             for vol_mount in vol.build_mount():
                 volumeMounts.append(vol_mount)
 
+        probe = TcpProbeBuilder(port=port, timeout=15, period=10, failure_thresh=8)
+
         super().add_container(
             _remove_nones(
                 {
@@ -835,7 +844,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
                     "ports": [PortBuilder(port).build()],
                     "volumeMounts": volumeMounts or None,
                     "livenessProbe": None,
-                    "readinessProbe": None,
+                    "readinessProbe": probe.build(),
                 }
             )
         )
@@ -955,22 +964,20 @@ class GSEtcdBuilder(object):
         for i in range(self._num_pods):
             name = "%s-%s" % (self._name_prefix, str(i))
             pods_name.append(name)
-            initial_cluster += "%s=%s," % (
+            initial_cluster += "%s=http://%s:%s," % (
                 name,
-                "http://%s:%s"
-                % (
-                    "%s.%s" % (name, self._service_name),
-                    str(self._listen_peer_service_port),
-                ),
+                name,
+                self._listen_peer_service_port,
             )
-        # remove last comma
+        # drop last comma
         initial_cluster = initial_cluster[0:-1]
 
-        pods_builder = []
+        pods_builders, svc_builders = [], []
         for _, name in enumerate(pods_name):
+            pod_labels = {"etcd_name": name}
             pod_builder = PodBuilder(
                 name=name,
-                labels=self._labels,
+                labels={**self._labels, **pod_labels},
                 hostname=name,
                 subdomain=self._service_name,
                 restart_policy=self._restart_policy,
@@ -985,18 +992,13 @@ class GSEtcdBuilder(object):
                 name,
                 "--max-txn-ops=%s" % self._max_txn_ops,
                 "--initial-advertise-peer-urls",
-                "http://%s:%s"
-                % (
-                    "%s.%s" % (name, self._service_name),
-                    str(self._listen_peer_service_port),
-                ),
-                "--advertise-client-urls=http://%s:%s"
-                % (name, str(self._listen_client_service_port)),
+                "http://%s:%s" % (name, self._listen_peer_service_port),
+                "--advertise-client-urls",
+                "http://%s:%s" % (name, self._listen_client_service_port),
                 "--data-dir=/var/lib/etcd",
                 "--listen-client-urls=http://0.0.0.0:%s"
-                % str(self._listen_client_service_port),
-                "--listen-peer-urls=http://0.0.0.0:%s"
-                % str(self._listen_peer_service_port),
+                % self._listen_client_service_port,
+                "--listen-peer-urls=http://0.0.0.0:%s" % self._listen_peer_service_port,
                 "--initial-cluster",
                 initial_cluster,
                 "--initial-cluster-state",
@@ -1040,10 +1042,20 @@ class GSEtcdBuilder(object):
                     }
                 )
             )
+            pods_builders.append(pod_builder)
 
-            pods_builder.append(pod_builder)
+            service_builder = ServiceBuilder(
+                name,
+                service_type="ClusterIP",
+                port=[
+                    self._listen_peer_service_port,
+                    self._listen_client_service_port,
+                ],
+                selector=pod_labels,
+            )
+            svc_builders.append(service_builder)
 
-        return pods_builder
+        return pods_builders, svc_builders
 
     def build_liveness_probe(self):
         liveness_cmd = [

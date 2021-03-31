@@ -242,7 +242,7 @@ class KubernetesClusterLauncher(Launcher):
 
         # etcd pod info
         self._etcd_image = etcd_image
-        self._etcd_num_pods = etcd_num_pods
+        self._etcd_num_pods = max(1, etcd_num_pods)
         self._etcd_cpu = etcd_cpu
         self._etcd_mem = etcd_mem
 
@@ -390,6 +390,10 @@ class KubernetesClusterLauncher(Launcher):
 
         # add vineyard container
         if not self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            port = self._random_etcd_listen_client_service_port
+            etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
+            for i in range(self._etcd_num_pods):
+                etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
             scheduler_builder.add_vineyard_container(
                 name=self._vineyard_container_name,
                 image=self._gs_image,
@@ -397,7 +401,7 @@ class KubernetesClusterLauncher(Launcher):
                 mem=self._vineyard_mem,
                 shared_mem=self._vineyard_shared_mem,
                 preemptive=self._preemptive,
-                etcd_endpoint=self._etcd_endpoint,
+                etcd_endpoints=etcd_endpoints,
                 port=self._vineyard_service_port,
             )
 
@@ -488,6 +492,10 @@ class KubernetesClusterLauncher(Launcher):
 
         # add vineyard container
         if not self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            port = self._random_etcd_listen_client_service_port
+            etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
+            for i in range(self._etcd_num_pods):
+                etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
             engine_builder.add_vineyard_container(
                 name=self._vineyard_container_name,
                 image=self._gs_image,
@@ -495,7 +503,7 @@ class KubernetesClusterLauncher(Launcher):
                 mem=self._vineyard_mem,
                 shared_mem=self._vineyard_shared_mem,
                 preemptive=self._preemptive,
-                etcd_endpoint=self._etcd_endpoint,
+                etcd_endpoints=etcd_endpoints,
                 port=self._vineyard_service_port,
             )
 
@@ -556,11 +564,14 @@ class KubernetesClusterLauncher(Launcher):
             listen_client_service_port=self._random_etcd_listen_client_service_port,
         )
 
-        for pod_builder in etcd_builder.build():
+        pods, services = etcd_builder.build()
+        for svc in services:
             self._resource_object.append(
-                self._core_api.create_namespaced_pod(
-                    self._namespace, pod_builder.build()
-                )
+                self._core_api.create_namespaced_service(self._namespace, svc.build())
+            )
+        for pod in pods:
+            self._resource_object.append(
+                self._core_api.create_namespaced_pod(self._namespace, pod.build())
             )
 
     def _create_mars_service(self):
