@@ -113,7 +113,7 @@ RUN mkdir -p /home/maxgraph/native
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/home/maxgraph/native
 
 # install mars
-RUN pip3 install pip install git+https://github.com/mars-project/mars.git
+RUN pip3 install git+https://github.com/mars-project/mars.git#egg=pymars[distributed]
 
 # enable debugging
 ENV RUST_BACKTRACE=1

@@ -914,7 +914,7 @@ def parse_sys_args():
     )
     parser.add_argument(
         "--k8s_mars_worker_mem",
-        type=float,
+        type=str,
         default="4Gi",
         help="Memory of mars worker container, default: 4Gi",
     )
@@ -926,7 +926,7 @@ def parse_sys_args():
     )
     parser.add_argument(
         "--k8s_mars_scheduler_mem",
-        type=float,
+        type=str,
         default="2Gi",
         help="Memory of mars scheduler container, default: 2Gi",
     )

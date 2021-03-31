@@ -587,6 +587,11 @@ class GSEngineBuilder(ReplicaSetBuilder):
     _engine_requests_cpu = 0.5
     _engine_requests_mem = "4Gi"
 
+    _mars_worker_requests_cpu = 0.5
+    _mars_worker_requests_mem = "4Gi"
+    _mars_scheduler_requests_cpu = 0.5
+    _mars_scheduler_requests_mem = "2Gi"
+
     def __init__(self, name, labels, num_workers, image_pull_policy):
         self._name = name
         self._labels = labels
@@ -747,7 +752,8 @@ class GSEngineBuilder(ReplicaSetBuilder):
             "-m",
             "mars.worker.__main__",
             "-a",
-            "$MY_POD_IP" "-p",
+            "$MY_POD_IP",
+            "-p",
             str(port),
             "-s",
             scheduler_endpoint,
@@ -755,10 +761,11 @@ class GSEngineBuilder(ReplicaSetBuilder):
             "--ignore-avail-mem",
             "--spill-dir=/tmp/mars",
         ]
+        cmd = ["bash", "-c", " ".join(cmd)]
 
         resources_dict = {
             "requests": ResourceBuilder(
-                self._engine_requests_cpu, self._engine_requests_mem
+                self._mars_worker_requests_cpu, self._mars_worker_requests_mem
             ).build()
             if preemptive
             else ResourceBuilder(cpu, mem).build(),
@@ -794,14 +801,16 @@ class GSEngineBuilder(ReplicaSetBuilder):
             "-m",
             "mars.scheduler.__main__",
             "-a",
-            "$MY_POD_IP" "-p",
+            "$MY_POD_IP",
+            "-p",
             str(port),
             "--log-level=debug",
         ]
+        cmd = ["bash", "-c", " ".join(cmd)]
 
         resources_dict = {
             "requests": ResourceBuilder(
-                self._engine_requests_cpu, self._engine_requests_mem
+                self._mars_scheduler_requests_cpu, self._mars_scheduler_requests_mem
             ).build()
             if preemptive
             else ResourceBuilder(cpu, mem).build(),
@@ -1371,7 +1380,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             str(self._mars_scheduler_cpu),
             "--k8s_mars_scheduler_mem",
             self._mars_scheduler_mem,
-            "--with_mars",
+            "--k8s_with_mars",
             str(self._with_mars),
             "--k8s_volumes",
             self._volumes_str,

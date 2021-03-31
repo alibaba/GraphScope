@@ -344,7 +344,7 @@ class KubernetesClusterLauncher(Launcher):
         labels = {"name": self._mars_scheduler_name}
         # create engine replicaset
         scheduler_builder = self._gs_mars_scheduler_builder_cls(
-            name=self._engine_name,
+            name=self._mars_scheduler_name,
             labels=labels,
             num_workers=1,
             image_pull_policy=self._image_pull_policy,
