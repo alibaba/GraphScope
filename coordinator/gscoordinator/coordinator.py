@@ -677,8 +677,10 @@ class CoordinatorServiceServicer(
         if self._launcher_type == types_pb2.K8S:
             config["vineyard_service_name"] = self._launcher.get_vineyard_service_name()
             config["vineyard_rpc_endpoint"] = self._launcher.get_vineyard_rpc_endpoint()
+            config['mars_endpoint'] = self._launcher.get_mars_scheduler_endpoint()
         else:
             config["engine_hosts"] = self._launcher.hosts
+            config['mars_endpoint'] = None
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):

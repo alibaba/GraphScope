@@ -281,6 +281,7 @@ class KubernetesClusterLauncher(Launcher):
 
         self._analytical_engine_endpoint = None
         self._vineyard_service_endpoint = None
+        self._mars_service_endpoint = None
 
         self._closed = False
         self._glog_level = parse_as_glog_level(log_level)
@@ -318,6 +319,9 @@ class KubernetesClusterLauncher(Launcher):
 
     def get_vineyard_rpc_endpoint(self):
         return self._vineyard_service_endpoint
+
+    def get_mars_scheduler_endpoint(self):
+        return self._mars_service_endpoint
 
     def get_pods_list(self):
         return self._pod_name_list
@@ -597,6 +601,16 @@ class KubernetesClusterLauncher(Launcher):
         )
         return endpoints[0]
 
+    def _get_mars_scheduler_service_endpoint(self):
+        # Always len(endpoints) >= 1
+        endpoints = get_service_endpoints(
+            api_client=self._api_client,
+            namespace=self._namespace,
+            name=self._mars_service_name,
+            type=self._service_type,
+        )
+        return endpoints[0]
+
     def _create_graphlearn_service(self, object_id, start_port, num_workers):
         targets = []
         labels = {"name": self._engine_name}
@@ -845,6 +859,10 @@ class KubernetesClusterLauncher(Launcher):
 
         # get vineyard service endpoint
         self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
+        logger.debug('vineyard rpc runs on %s', self._vineyard_service_endpoint)
+        if self._with_mars:
+            self._mars_service_endpoint = self._get_mars_scheduler_service_endpoint()
+            logger.debug('mars scheduler runs on %s', self._mars_service_endpoint)
         logger.info("GraphScope engines pod is ready.")
 
     def _dump_resource_object(self):
@@ -980,6 +998,10 @@ class KubernetesClusterLauncher(Launcher):
             logger.info(
                 "Vineyard service endpoint: {}".format(self._vineyard_service_endpoint)
             )
+            if self._with_mars:
+                logger.info(
+                    "Mars service endpoint: {}".format(self._mars_service_endpoint)
+                )
             self._launch_analytical_engine_locally()
         except Exception as e:
             time.sleep(1)

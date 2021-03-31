@@ -525,6 +525,11 @@ class Session(object):
                 raise exp
 
     @property
+    def engine_config(self):
+        """Show the engine configration associated with session in json format."""
+        return self._engine_config
+
+    @property
     def info(self):
         """Show all resources info associated with session in json format."""
         info = {}
