@@ -402,6 +402,18 @@ jobs:
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./graphscope/deploy/tests/
+    - name: Helm test
+      run: |
+        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+        cd charts
+        helm install graphscope --set coordinator.image.tag=${{ github.sha }} \
+                                --set engines.gae.image.tag=${{ github.sha }} \
+                                --set engines.gie.graph_manager.image.tag=${{ github.sha }} \
+                                --set vineyard.image.tag=${{ github.sha }} \
+                                --set imagePullPolicy=IfNotPresent \
+                                ./graphscope
+        helm test graphscope --timeout 5m0s
+
     - name: Upload Coverage
       uses: codecov/codecov-action@v1
       with:
@@ -413,6 +425,8 @@ jobs:
       run: |
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
             registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        helm uninstall graphscope || true
+        kubectl delete pod graphscope-test-rpc-service --wait=false || true
 
   gie-test:
     runs-on: self-hosted

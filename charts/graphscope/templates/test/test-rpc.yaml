@@ -8,6 +8,6 @@ spec:
   containers:
     - name: curl
       image: curlimages/curl:7.65.3
-      command: ["curl"]
-      args: ['{{ include "graphscope.fullname" . }}-coordinator-service.{{ .Release.Namespace }}:59001', '--output', '-']
+      command: ['sh']
+      args: ['-c', 'while ! curl {{ include "graphscope.fullname" . }}-coordinator-service.{{ .Release.Namespace }}:59001 --output -; do sleep 1 && echo -n .; done']
   restartPolicy: Never
