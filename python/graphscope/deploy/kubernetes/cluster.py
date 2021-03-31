@@ -128,6 +128,21 @@ class KubernetesCluster(object):
         engine_mem: str
             Minimum number of memory request for engine container.
 
+        mars_worker_cpu: float:
+            Minimum number of CPU cores request for mars worker container.
+
+        mars_worker_mem: str:
+            Minimum number of memory request for mars worker container.
+
+        mars_scheduler_cpu: float:
+            Minimum number of CPU cores request for mars scheduler container.
+
+        mars_scheduler_mem: str:
+            Minimum number of memory request for mars scheduler container.
+
+        with_mars: bool
+            Launch graphscope with mars.
+
         coordinator_cpu: float
             Minimum number of CPU cores request for coordinator pod.
 
@@ -190,6 +205,11 @@ class KubernetesCluster(object):
         etcd_mem=None,
         zookeeper_cpu=None,
         zookeeper_mem=None,
+        mars_worker_cpu=None,
+        mars_worker_mem=None,
+        mars_scheduler_cpu=None,
+        mars_scheduler_mem=None,
+        with_mars=None,
         gie_graph_manager_cpu=None,
         gie_graph_manager_mem=None,
         volumes=None,
@@ -233,6 +253,13 @@ class KubernetesCluster(object):
         self._vineyard_shared_mem = vineyard_shared_mem
         self._engine_cpu = engine_cpu
         self._engine_mem = engine_mem
+
+        self._mars_worker_cpu = mars_worker_cpu
+        self._mars_worker_mem = mars_worker_mem
+        self._mars_scheduler_cpu = mars_scheduler_cpu
+        self._mars_scheduler_mem = mars_scheduler_mem
+        self._with_mars = with_mars
+
         self._waiting_for_delete = waiting_for_delete
 
         self._instance_id = random_string(6)
@@ -475,6 +502,11 @@ class KubernetesCluster(object):
             vineyard_shared_mem=self._vineyard_shared_mem,
             engine_cpu=self._engine_cpu,
             engine_mem=self._engine_mem,
+            mars_worker_cpu=self._mars_worker_cpu,
+            mars_worker_mem=self._mars_worker_mem,
+            mars_scheduler_cpu=self._mars_scheduler_cpu,
+            mars_scheduler_mem=self._mars_scheduler_mem,
+            with_mars=self._with_mars,
             volumes=self._volumes,
             timeout_seconds=self._timeout_seconds,
             dangling_timeout_seconds=self._dangling_timeout_seconds,
@@ -627,8 +659,7 @@ class KubernetesCluster(object):
                                     and time.time() - start_time > self._timeout_seconds
                                 ):
                                     logger.info(
-                                        "Deleting namespace %s timeout"
-                                        % self._namespace
+                                        "Deleting namespace %s timeout", self._namespace
                                     )
                                     break
             self._closed = True

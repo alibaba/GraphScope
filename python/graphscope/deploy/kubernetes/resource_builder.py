@@ -258,6 +258,32 @@ class ContainerEnvBuilder(object):
         return result
 
 
+class ContainerFieldRefEnvBuilder(object):
+    """Builder for k8s container environments."""
+
+    def __init__(self, name, field):
+        self._name = name
+        self._field = field
+
+    def build(self):
+        result = dict(name=self._name)
+        result["valueFrom"] = {
+            "fieldRef": {
+                "fieldPath": self._field,
+            }
+        }
+        return result
+
+
+BASE_MACHINE_ENVS = {
+    "MY_NODE_NAME": "spec.nodeName",
+    "MY_POD_NAME": "metadata.name",
+    "MY_POD_NAMESPACE": "metadata.namespace",
+    "MY_POD_IP": "status.podIP",
+    "MY_HOST_NAME": "status.podIP",
+}
+
+
 class PortBuilder(object):
     """Builder for k8s container port definition."""
 
@@ -412,21 +438,31 @@ class DeploymentBuilder(object):
         self._containers = []
         self._volumes = []
         self._envs = dict()
-
         self._image_pull_secrets = []
+
+        self.add_field_envs(BASE_MACHINE_ENVS)
 
     def set_image_pull_policy(self, policy):
         self._image_pull_policy = policy
 
     def add_env(self, name, value=None):
-        self._envs[name] = ContainerEnvBuilder(name, value)
+        if value:
+            self._envs[name] = ContainerEnvBuilder(name, value)
 
-    def add_container(self, ctn):
-        self._containers.append(ctn)
+    def add_field_env(self, name, field=None):
+        if field:
+            self._envs[name] = ContainerFieldRefEnvBuilder(name, field)
 
     def add_simple_envs(self, envs):
         for k, v in envs.items() or ():
             self.add_env(k, v)
+
+    def add_field_envs(self, envs):
+        for k, v in envs.items() or ():
+            self.add_field_env(k, v)
+
+    def add_container(self, ctn):
+        self._containers.append(ctn)
 
     def add_volume(self, vol):
         self._volumes.append(vol)
@@ -480,18 +516,29 @@ class ReplicaSetBuilder(object):
         self._envs = dict()
         self._image_pull_secrets = []
 
+        self.add_field_envs(BASE_MACHINE_ENVS)
+
     def set_image_pull_policy(self, policy):
         self._image_pull_policy = policy
 
     def add_env(self, name, value=None):
-        self._envs[name] = ContainerEnvBuilder(name, value)
+        if value:
+            self._envs[name] = ContainerEnvBuilder(name, value)
 
-    def add_container(self, ctn):
-        self._containers.append(ctn)
+    def add_field_env(self, name, field=None):
+        if field:
+            self._envs[name] = ContainerFieldRefEnvBuilder(name, field)
 
     def add_simple_envs(self, envs):
         for k, v in envs.items() or ():
             self.add_env(k, v)
+
+    def add_field_envs(self, envs):
+        for k, v in envs.items() or ():
+            self.add_field_env(k, v)
+
+    def add_container(self, ctn):
+        self._containers.append(ctn)
 
     def add_volume(self, vol):
         self._volumes.append(vol)
@@ -688,6 +735,98 @@ class GSEngineBuilder(ReplicaSetBuilder):
                     "livenessProbe": None,
                     "readinessProbe": readiness_probe.build(),
                     "lifecycle": lifecycle_dict or None,
+                }
+            )
+        )
+
+    def add_mars_worker_container(
+        self, name, image, cpu, mem, preemptive, port, scheduler_endpoint
+    ):
+        cmd = [
+            "python3",
+            "-m",
+            "mars.worker.__main__",
+            "-a",
+            "$MY_POD_IP" "-p",
+            str(port),
+            "-s",
+            scheduler_endpoint,
+            "--log-level=debug",
+            "--ignore-avail-mem",
+            "--spill-dir=/tmp/mars",
+        ]
+
+        resources_dict = {
+            "requests": ResourceBuilder(
+                self._engine_requests_cpu, self._engine_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
+            "limits": ResourceBuilder(cpu, mem).build(),
+        }
+
+        volumeMounts = []
+        for vol in self._volumes:
+            for vol_mount in vol.build_mount():
+                volumeMounts.append(vol_mount)
+
+        super().add_container(
+            _remove_nones(
+                {
+                    "command": cmd,
+                    "env": [env.build() for env in self._envs.values()] or None,
+                    "image": image,
+                    "name": name,
+                    "imagePullPolicy": self._image_pull_policy,
+                    "resources": dict((k, v) for k, v in resources_dict.items() if v)
+                    or None,
+                    "ports": [PortBuilder(port).build()],
+                    "volumeMounts": volumeMounts or None,
+                    "livenessProbe": None,
+                    "readinessProbe": None,
+                }
+            )
+        )
+
+    def add_mars_scheduler_container(self, name, image, cpu, mem, preemptive, port):
+        cmd = [
+            "python3",
+            "-m",
+            "mars.scheduler.__main__",
+            "-a",
+            "$MY_POD_IP" "-p",
+            str(port),
+            "--log-level=debug",
+        ]
+
+        resources_dict = {
+            "requests": ResourceBuilder(
+                self._engine_requests_cpu, self._engine_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
+            "limits": ResourceBuilder(cpu, mem).build(),
+        }
+
+        volumeMounts = []
+        for vol in self._volumes:
+            for vol_mount in vol.build_mount():
+                volumeMounts.append(vol_mount)
+
+        super().add_container(
+            _remove_nones(
+                {
+                    "command": cmd,
+                    "env": [env.build() for env in self._envs.values()] or None,
+                    "image": image,
+                    "name": name,
+                    "imagePullPolicy": self._image_pull_policy,
+                    "resources": dict((k, v) for k, v in resources_dict.items() if v)
+                    or None,
+                    "ports": [PortBuilder(port).build()],
+                    "volumeMounts": volumeMounts or None,
+                    "livenessProbe": None,
+                    "readinessProbe": None,
                 }
             )
         )
@@ -1062,6 +1201,11 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         vineyard_shared_mem,
         engine_cpu,
         engine_mem,
+        mars_worker_cpu,
+        mars_worker_mem,
+        mars_scheduler_cpu,
+        mars_scheduler_mem,
+        with_mars,
         volumes,
         timeout_seconds,
         dangling_timeout_seconds,
@@ -1098,6 +1242,11 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         self._vineyard_shared_mem = vineyard_shared_mem
         self._engine_cpu = engine_cpu
         self._engine_mem = engine_mem
+        self._mars_worker_cpu = mars_worker_cpu
+        self._mars_worker_mem = mars_worker_mem
+        self._mars_scheduler_cpu = mars_scheduler_cpu
+        self._mars_scheduler_mem = mars_scheduler_mem
+        self._with_mars = with_mars
         self._volumes_str = json.dumps(volumes)
         self._timeout_seconds = timeout_seconds
         self._dangling_timeout_seconds = dangling_timeout_seconds
@@ -1214,6 +1363,16 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             str(self._engine_cpu),
             "--k8s_engine_mem",
             self._engine_mem,
+            "--k8s_mars_worker_cpu",
+            str(self._mars_worker_cpu),
+            "--k8s_mars_worker_mem",
+            self._mars_worker_mem,
+            "--k8s_mars_scheduler_cpu",
+            str(self._mars_scheduler_cpu),
+            "--k8s_mars_scheduler_mem",
+            self._mars_scheduler_mem,
+            "--with_mars",
+            str(self._with_mars),
             "--k8s_volumes",
             self._volumes_str,
             "--timeout_seconds",

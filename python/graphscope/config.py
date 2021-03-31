@@ -73,6 +73,15 @@ class GSConfig(object):
     k8s_engine_cpu = 0.5
     k8s_engine_mem = "4Gi"
 
+    # mars resource configuration
+    mars_worker_cpu = 0.5
+    mars_worker_mem = "4Gi"
+    mars_scheduler_cpu = 0.5
+    mars_scheduler_mem = "2Gi"
+
+    # launch graphscope with mars
+    with_mars = False
+
     k8s_volumes = {}
 
     k8s_service_type = "NodePort"

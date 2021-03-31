@@ -174,10 +174,15 @@ class Session(object):
         k8s_vineyard_shared_mem=gs_config.k8s_vineyard_shared_mem,
         k8s_engine_cpu=gs_config.k8s_engine_cpu,
         k8s_engine_mem=gs_config.k8s_engine_mem,
+        k8s_mars_worker_cpu=gs_config.mars_worker_cpu,
+        k8s_mars_worker_mem=gs_config.mars_worker_mem,
+        k8s_mars_scheduler_cpu=gs_config.mars_scheduler_cpu,
+        k8s_mars_scheduler_mem=gs_config.mars_scheduler_mem,
         k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
+        with_mars=gs_config.with_mars,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -254,6 +259,21 @@ class Session(object):
 
             k8s_gie_graph_manager_mem (str, optional):
                 Minimum number of memory request for graphmanager container. Defaults to '4Gi'.
+
+            k8s_mars_worker_cpu (float, optional):
+                Minimum number of CPU cores request for mars worker container. Defaults to 0.5.
+
+            k8s_mars_worker_mem (str, optional):
+                Minimum number of memory request for mars worker container. Defaults to '4Gi'.
+
+            k8s_mars_scheduler_cpu (float, optional):
+                Minimum number of CPU cores request for mars scheduler container. Defaults to 0.5.
+
+            k8s_mars_scheduler_mem (str, optional):
+                Minimum number of memory request for mars scheduler container. Defaults to '2Gi'.
+
+            with_mars (bool, optional):
+                Launch graphscope with mars. Defaults to False.
 
             k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the
                 containers in a pod. Defaults to {}.
@@ -366,6 +386,11 @@ class Session(object):
             "k8s_vineyard_shared_mem",
             "k8s_engine_cpu",
             "k8s_engine_mem",
+            "k8s_mars_worker_cpu",
+            "k8s_mars_worker_mem",
+            "k8s_mars_scheduler_cpu",
+            "k8s_mars_scheduler_mem",
+            "with_mars",
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
@@ -393,6 +418,12 @@ class Session(object):
             self._config_params["enable_k8s"] = True
         else:
             self._run_on_local()
+
+        # mars cannot work with run-on-local mode
+        if run_on_local and self._config_params["with_mars"]:
+            raise NotImplementedError(
+                "Mars cluster cannot be launched along with local GraphScope deployment"
+            )
 
         # deprecated params handle
         if "show_log" in kw:
@@ -704,7 +735,7 @@ class Session(object):
             return response.result
         else:
             raise InvalidArgumentError(
-                "Not recognized output type: %s", op.output_types
+                "Not recognized output type: %s" % op.output_types
             )
 
     def _connect(self):
@@ -748,6 +779,11 @@ class Session(object):
                 gie_graph_manager_mem=self._config_params["k8s_gie_graph_manager_mem"],
                 engine_cpu=self._config_params["k8s_engine_cpu"],
                 engine_mem=self._config_params["k8s_engine_mem"],
+                mars_worker_cpu=self._config_params["k8s_mars_worker_cpu"],
+                mars_worker_mem=self._config_params["k8s_mars_worker_mem"],
+                mars_scheduler_cpu=self._config_params["k8s_mars_scheduler_cpu"],
+                mars_scheduler_mem=self._config_params["k8s_mars_scheduler_mem"],
+                with_mars=self._config_params["with_mars"],
                 coordinator_cpu=float(self._config_params["k8s_coordinator_cpu"]),
                 coordinator_mem=self._config_params["k8s_coordinator_mem"],
                 volumes=self._config_params["k8s_volumes"],
@@ -1182,11 +1218,17 @@ def set_option(**kwargs):
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu
         - k8s_coordinator_mem
+        - k8s_vineyard_daemonset
         - k8s_vineyard_cpu
         - k8s_vineyard_mem
         - k8s_vineyard_shared_mem
         - k8s_engine_cpu
         - k8s_engine_mem
+        - k8s_mars_worker_cpu
+        - k8s_mars_worker_mem
+        - k8s_mars_scheduler_cpu
+        - k8s_mars_scheduler_mem
+        - with_mars
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
@@ -1229,11 +1271,17 @@ def get_option(key):
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu
         - k8s_coordinator_mem
+        - k8s_vineyard_daemonset
         - k8s_vineyard_cpu
         - k8s_vineyard_mem
         - k8s_vineyard_shared_mem
         - k8s_engine_cpu
         - k8s_engine_mem
+        - k8s_mars_worker_cpu
+        - k8s_mars_worker_mem
+        - k8s_mars_scheduler_cpu
+        - k8s_mars_scheduler_mem
+        - with_mars
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
