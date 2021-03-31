@@ -677,10 +677,10 @@ class CoordinatorServiceServicer(
         if self._launcher_type == types_pb2.K8S:
             config["vineyard_service_name"] = self._launcher.get_vineyard_service_name()
             config["vineyard_rpc_endpoint"] = self._launcher.get_vineyard_rpc_endpoint()
-            config['mars_endpoint'] = self._launcher.get_mars_scheduler_endpoint()
+            config["mars_endpoint"] = self._launcher.get_mars_scheduler_endpoint()
         else:
             config["engine_hosts"] = self._launcher.hosts
-            config['mars_endpoint'] = None
+            config["mars_endpoint"] = None
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
@@ -899,6 +899,38 @@ def parse_sys_args():
         help="Memory of graph manager container, suffix with ['Mi', 'Gi', 'Ti'].",
     )
     parser.add_argument(
+        "--k8s_with_mars",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        default=False,
+        help="Enable mars or not.",
+    )
+    parser.add_argument(
+        "--k8s_mars_worker_cpu",
+        type=float,
+        default=0.5,
+        help="Cpu cores of mars worker container, default: 0.5",
+    )
+    parser.add_argument(
+        "--k8s_mars_worker_mem",
+        type=float,
+        default="4Gi",
+        help="Memory of mars worker container, default: 4Gi",
+    )
+    parser.add_argument(
+        "--k8s_mars_scheduler_cpu",
+        type=float,
+        default=0.5,
+        help="Cpu cores of mars scheduler container, default: 0.5",
+    )
+    parser.add_argument(
+        "--k8s_mars_scheduler_mem",
+        type=float,
+        default="2Gi",
+        help="Memory of mars scheduler container, default: 2Gi",
+    )
+    parser.add_argument(
         "--k8s_volumes",
         type=str,
         default="{}",
@@ -962,11 +994,11 @@ def launch_graphscope():
             vineyard_cpu=args.k8s_vineyard_cpu,
             vineyard_mem=args.k8s_vineyard_mem,
             vineyard_shared_mem=args.k8s_vineyard_shared_mem,
-            mars_worker_cpu=args.mars_worker_cpu,
-            mars_worker_mem=args.mars_worker_mem,
-            mars_scheduler_cpu=args.mars_scheduler_cpu,
-            mars_scheduler_mem=args.mars_scheduler_mem,
-            with_mars=args.with_mars,
+            mars_worker_cpu=args.k8s_mars_worker_cpu,
+            mars_worker_mem=args.k8s_mars_worker_mem,
+            mars_scheduler_cpu=args.k8s_mars_scheduler_cpu,
+            mars_scheduler_mem=args.k8s_mars_scheduler_mem,
+            with_mars=args.k8s_with_mars,
             image_pull_policy=args.k8s_image_pull_policy,
             image_pull_secrets=args.k8s_image_pull_secrets,
             volumes=args.k8s_volumes,

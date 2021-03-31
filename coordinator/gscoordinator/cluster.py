@@ -859,10 +859,10 @@ class KubernetesClusterLauncher(Launcher):
 
         # get vineyard service endpoint
         self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
-        logger.debug('vineyard rpc runs on %s', self._vineyard_service_endpoint)
+        logger.debug("vineyard rpc runs on %s", self._vineyard_service_endpoint)
         if self._with_mars:
             self._mars_service_endpoint = self._get_mars_scheduler_service_endpoint()
-            logger.debug('mars scheduler runs on %s', self._mars_service_endpoint)
+            logger.debug("mars scheduler runs on %s", self._mars_service_endpoint)
         logger.info("GraphScope engines pod is ready.")
 
     def _dump_resource_object(self):
