@@ -105,13 +105,14 @@ jobs:
         popd
 
     - name: Install GraphScope Python Client
-      env:
-        WITH_LEARNING_ENGINE: ON
       run: |
+        export WITH_LEARNING_ENGINE=ON
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
         pushd python
         pip3 install -U setuptools
         pip3 install -r requirements.txt -r requirements-dev.txt
-        python3 setup.py install --user
+        python3 setup.py bdist_wheel
+        pip3 install ./dist/*.whl
         popd
 
     - name: Install GraphScope Coordinator
@@ -178,3 +179,7 @@ jobs:
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR} 
         cp ${GITHUB_WORKSPACE}/python/tests/test_run_locally.py /tmp/test_run_locally.py
         python3 -m pytest -s -v /tmp/test_run_locally.py
+
+    - name: Setup tmate session debug
+      if: always()
+      uses: mxschmitt/action-tmate@v2
