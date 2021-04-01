@@ -79,7 +79,7 @@ def gs_session():
     sess.close()
 
 
-def test_mars_session(gs_session, data_dir):
+def test_mars_session(gs_session):
     from mars import dataframe as md
     from mars import tensor as mt
     from mars.session import new_session
