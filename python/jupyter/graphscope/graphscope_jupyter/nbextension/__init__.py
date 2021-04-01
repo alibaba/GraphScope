@@ -16,5 +16,13 @@
 # limitations under the License.
 #
 
-version_info = (0, 0, 4)
-__version__ = ".".join(map(str, version_info))
+
+def _jupyter_nbextension_paths():
+    return [
+        {
+            "section": "notebook",
+            "src": "nbextension/static",
+            "dest": "graphscope-jupyter",
+            "require": "graphscope-jupyter/extension",
+        }
+    ]

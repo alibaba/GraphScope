@@ -694,28 +694,6 @@ class Graph(object):
         )
         return cls(sess, vineyard.ObjectID(graph_id))
 
-    def draw(self, vertices, hop=1):
-        """Visualize the graph data in the result cell when the draw functions are invoked
-
-        Args:
-            vertices (list): selected vertices.
-            hop (int): draw induced subgraph with hop extension. Defaults to 1.
-
-        Returns:
-            A GraphModel.
-        """
-        from ipygraphin import GraphModel
-
-        self._ensure_loaded()
-        interactive_query = self._session.gremlin(self)
-
-        graph = GraphModel()
-        graph.queryGraphData(vertices, hop, interactive_query)
-
-        # listen on the 1~2 hops operation of node
-        graph.on_msg(graph.queryNeighbor)
-        return graph
-
     def _construct_graph(
         self, vertices, edges, v_labels, e_labels, e_relations, mutation_func=None
     ):

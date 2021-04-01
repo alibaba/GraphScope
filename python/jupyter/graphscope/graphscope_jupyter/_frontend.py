@@ -20,5 +20,7 @@
 Information about the frontend package of the widgets.
 """
 
-module_name = "jupyter-graphin"
-module_version = "^0.0.4"
+from ._version import __version__
+
+module_name = "graphscope-jupyter"
+module_version = "^%s" % __version__

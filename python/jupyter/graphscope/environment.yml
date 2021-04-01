@@ -1,8 +1,8 @@
-name: ipygraphin
+name: graphscope-jupyter
 channels:
   - conda-forge
 dependencies:
-  - ipygraphin>=1.0.3
+  - graphscope-jupyter>=0.1.0
   - jupyterlab=2
   - matplotlib-base
   - networkx

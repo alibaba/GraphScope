@@ -1,4 +1,4 @@
-# ipygraphin
+# graphscope-jupyter
 
 The project structure refers to **(ipycytoscape)[https://github.com/QuantStack/ipycytoscape/tree/1.1.0]**.
 
@@ -8,22 +8,24 @@ A widget enabling interactive graph visualization with [Graphin](https://github.
 
 ## Installation
 
+Note that graphscope-jupyter requires jupyterlab 2.x (e.g., `2.3.0a0`) and is known unusable with jupyterlab 3.x.
+
 With `mamba`:
 
 ```
-mamba install -c conda-forge ipygraphin
+mamba install -c conda-forge graphscope-jupyter
 ```
 
 With `conda`:
 
 ```
-conda install -c conda-forge ipygraphin
+conda install -c conda-forge graphscope-jupyter
 ```
 
 With `pip`:
 
 ```bash
-pip install ipygraphin
+pip install graphscope-jupyter
 ```
 
 #### For jupyterlab users:
@@ -47,7 +49,7 @@ jupyter lab build
 You may also need to manually enable the nbextension:
 
 ```bash
-jupyter nbextension enable --py [--sys-prefix|--user|--system] ipygraphin
+jupyter nbextension enable --py [--sys-prefix|--user|--system] graphscope-jupyter
 ```
 
 ## For a development installation:
@@ -57,18 +59,18 @@ jupyter nbextension enable --py [--sys-prefix|--user|--system] ipygraphin
 While not required, we recommend creating a conda environment to work in:
 
 ```bash
-conda create -n ipygraphin -c conda-forge jupyterlab nodejs networkx
-conda activate ipygraphin
+conda create -n graphscope -c conda-forge jupyterlab nodejs networkx
+conda activate graphscope
 
 # clone repo
 git clone https://github.com/alibaba/GraphScope.git
-cd GraphScope/python/jupyter/ipygraphin
+cd GraphScope/python/jupyter/graphscope
 
 # Install python package for development, runs npm install and npm run build
 pip install -e .
 ```
 
-When developing ipygraphin, you need to manually enable the extension with the
+When developing graphscope-jupyter, you need to manually enable the extension with the
 notebook / lab frontend. For lab, this is done by the command:
 
 ```
@@ -79,8 +81,8 @@ jupyter labextension install .
 For classic notebook, you can run:
 
 ```
-jupyter nbextension install --sys-prefix --symlink --overwrite --py ipygraphin
-jupyter nbextension enable --sys-prefix --py ipygraphin
+jupyter nbextension install --sys-prefix --symlink --overwrite --py graphscope-jupyter
+jupyter nbextension enable --sys-prefix --py graphscope-jupyter
 ```
 
 Note that the `--symlink` flag doesn't work on Windows, so you will here have to run
@@ -125,7 +127,7 @@ If you make a change to the python code then you need to restart the notebook ke
 Install necessary dependencies with pip:
 
 ```
-cd GraphScope/python/jupyter/ipygraphin
+cd GraphScope/python/jupyter/graphscope
 pip install -e .
 ```
 

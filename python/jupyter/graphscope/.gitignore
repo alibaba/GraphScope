@@ -145,14 +145,17 @@ $RECYCLE.BIN/
 # ----
 
 **/node_modules/
-ipygraphin/labextension/*.tgz
-ipygraphin/nbextension/static/
+graphscope-jupyter/labextension/*.tgz
+graphscope-jupyter/nbextension/static/
+graphscope_jupyter/labextension/*.tgz
+graphscope_jupyter/nbextension/static/
 
 # Coverage data
 # -------------
 **/coverage/
 
 # Packed lab extensions
-ipygraphin/labextension
+graphscope-jupyter/labextension
+graphscope_jupyter/labextension
 
 MANIFEST

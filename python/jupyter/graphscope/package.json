@@ -1,7 +1,7 @@
 {
-  "name": "jupyter-graphin",
-  "version": "0.0.4",
-  "description": "A Graphin Jupyter Widget",
+  "name": "graphscope-jupyter",
+  "version": "0.2.1",
+  "description": "A GraphScope Jupyter Extension, including Graphin Widget, etc.",
   "keywords": [
     "jupyter",
     "jupyter notebook",
@@ -34,14 +34,14 @@
   },
   "scripts": {
     "build": "npm run build:lib && npm run build:nbextension",
-    "build:labextension": "npm run clean:labextension && mkdirp ipygraphin/labextension && cd ipygraphin/labextension && npm pack ../..",
+    "build:labextension": "npm run clean:labextension && mkdirp graphscope-jupyter/labextension && cd graphscope-jupyter/labextension && npm pack ../..",
     "build:lib": "tsc",
     "build:nbextension": "webpack -p",
     "build:all": "npm run build:labextension && npm run build:nbextension",
     "clean": "npm run clean:lib && npm run clean:nbextension",
     "clean:lib": "rimraf lib",
-    "clean:labextension": "rimraf ipygraphin/labextension",
-    "clean:nbextension": "rimraf ipygraphin/nbextension/static/index.js",
+    "clean:labextension": "rimraf graphscope-jupyter/labextension",
+    "clean:nbextension": "rimraf graphscope-jupyter/nbextension/static/index.js",
     "lint": "eslint . --ext .ts --fix",
     "lint-check": "eslint . --ext .ts",
     "prepack": "npm run build:lib",

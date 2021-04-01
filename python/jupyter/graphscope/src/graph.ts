@@ -17,7 +17,7 @@ import '../css/index.css';
 import {
   ISerializers,
   WidgetModel,
-  DOMWidgetView
+  DOMWidgetView,
 } from '@jupyter-widgets/base';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -38,14 +38,14 @@ export class GraphModel extends WidgetModel {
       nodes: [],
       edges: [],
       value: '',
-      zoom: false
+      zoom: false,
     };
   }
 
   static serializers: ISerializers = {
     nodes: { deserialize: widgets.unpack_models },
     edges: { deserialize: widgets.unpack_models },
-    ...WidgetModel.serializers
+    ...WidgetModel.serializers,
   };
 
   static model_module = MODULE_NAME;
@@ -59,7 +59,7 @@ export class GraphView extends DOMWidgetView {
   constructor(params: any) {
     super({
       model: params.model,
-      options: params.options
+      options: params.options,
     });
 
     this.el.addEventListener('contextmenu', this.onClick.bind(this));
@@ -70,7 +70,7 @@ export class GraphView extends DOMWidgetView {
     evt.preventDefault();
     this.send({
       type: 'contextmenu',
-      params: evt
+      params: evt,
     });
   }
 
@@ -106,7 +106,7 @@ export class GraphView extends DOMWidgetView {
     console.log('queryNeighbors', nodeId, degree, model);
     this.send({
       nodeId,
-      degree
+      degree,
     });
     // setData({
     //   nodes: [...this.graphData.nodes, ...newData.nodes],
@@ -144,7 +144,7 @@ export class GraphView extends DOMWidgetView {
             data: data,
             hasMinimap: true,
             hasContextMenu: true,
-            zoomCanvas: this.model.get('zoom')
+            zoomCanvas: this.model.get('zoom'),
           },
           null
         ),

@@ -21,7 +21,7 @@ import { IJupyterWidgetRegistry } from '@jupyter-widgets/base';
 
 import { MODULE_NAME, MODULE_VERSION } from './version';
 
-const EXTENSION_ID = 'jupyter-graphin:plugin';
+const EXTENSION_ID = 'graphscope-jupyter:plugin';
 
 /**
  * The example plugin.
@@ -30,7 +30,7 @@ const examplePlugin: IPlugin<Application<Widget>, void> = {
   id: EXTENSION_ID,
   requires: [IJupyterWidgetRegistry as any],
   activate: activateWidgetExtension,
-  autoStart: true
+  autoStart: true,
 };
 
 export default examplePlugin;
@@ -47,6 +47,6 @@ function activateWidgetExtension(
     version: MODULE_VERSION,
 
     exports: async () =>
-      await import(/* webpackChunkName: "jupyter-graphin" */ './index')
+      await import(/* webpackChunkName: "graphscope-jupyter" */ './index'),
   });
 }

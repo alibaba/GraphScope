@@ -21,13 +21,14 @@ from setupbase import install_npm
 from setuptools import setup
 
 # The name of the project
-name = "ipygraphin"
+name = "graphscope-jupyter"
+package_name = "graphscope_jupyter"
 
 # Ensure a valid python version
 ensure_python(">=3.4")
 
 # Get our version
-version = get_version(pjoin(name, "_version.py"))
+version = get_version(pjoin(package_name, "_version.py"))
 
 nb_path = pjoin(HERE, name, "nbextension", "static")
 lab_path = pjoin(HERE, name, "labextension")
@@ -38,12 +39,12 @@ jstargets = [
     pjoin(HERE, "lib", "plugin.js"),
 ]
 
-package_data_spec = {name: ["nbextension/static/*.*js*", "labextension/*.tgz"]}
+package_data_spec = {package_name: ["nbextension/static/*.*js*", "labextension/*.tgz"]}
 
 data_files_spec = [
-    ("share/jupyter/nbextensions/jupyter-graphin", nb_path, "*.js*"),
+    ("share/jupyter/nbextensions/graphscope-jupyter", nb_path, "*.js*"),
     ("share/jupyter/lab/extensions", lab_path, "*.tgz"),
-    ("etc/jupyter/nbconfig/notebook.d", HERE, "jupyter-graphin.json"),
+    ("etc/jupyter/nbconfig/notebook.d", HERE, "graphscope-jupyter.json"),
 ]
 
 
@@ -71,9 +72,9 @@ setup_args = dict(
     scripts=glob(pjoin("scripts", "*")),
     cmdclass=cmdclass,
     packages=find_packages(),
-    author="baizn",
-    author_email="576375879@qq.com",
-    url="https://github.com/antvis/G6",
+    author="Alibaba Damo Academy",
+    author_email="graphscope@alibaba-inc.com",
+    url="https://github.com/alibaba/GraphScope",
     license="BSD",
     platforms="Linux, Mac OS X, Windows",
     keywords=["Jupyter", "Widgets", "IPython"],
@@ -93,6 +94,7 @@ setup_args = dict(
     install_requires=[
         "ipywidgets>=7.0.0",
         "spectate>=0.4.1",
+        "traitlets",
         "networkx",
     ],
     extras_require={
