@@ -102,8 +102,11 @@ class LocalLauncher(Launcher):
         self._timeout_seconds = timeout_seconds
 
         if "GRAPHSCOPE_PREFIX" not in os.environ:
-            raise RuntimeError("Can't found GRAPHSCOPE_PREFIX in environment.")
-        self._graphscope_prefix = os.environ["GRAPHSCOPE_PREFIX"]
+            # only launch GAE
+            logger.info("Can't found GRAPHSCOPE_PREFIX in environment.")
+            self._graphscope_prefix = None
+        else:
+            self._graphscope_prefix = os.environ["GRAPHSCOPE_PREFIX"]
 
         # zookeeper
         self._zk_process = None
@@ -130,7 +133,8 @@ class LocalLauncher(Launcher):
         return True
 
     def stop(self, is_dangling=False):
-        self._stop_interactive_engine_service()
+        if self._graphscope_prefix is not None:
+            self._stop_interactive_engine_service()
         self._stop_vineyard()
         self._stop_analytical_engine()
 
@@ -272,7 +276,8 @@ class LocalLauncher(Launcher):
 
     def _create_services(self):
         # create GIE graph manager
-        self._create_interactive_engine_service()
+        if self._graphscope_prefix is not None:
+            self._create_interactive_engine_service()
         # create vineyard
         self._create_vineyard()
         # create GAE rpc service

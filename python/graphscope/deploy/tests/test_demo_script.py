@@ -212,7 +212,6 @@ def test_multiple_session(data_dir):
     )
     info = sess.info
     assert info["status"] == "active"
-    assert info["type"] == "k8s"
     assert len(info["engine_hosts"].split(",")) == 1
 
     sess2 = graphscope.session(
@@ -225,7 +224,6 @@ def test_multiple_session(data_dir):
 
     info = sess2.info
     assert info["status"] == "active"
-    assert info["type"] == "k8s"
     assert len(info["engine_hosts"].split(",")) == 2
 
     sess2.close()

@@ -169,6 +169,7 @@ jobs:
         export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
         export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
         export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 
         pip3 install pytest tensorflow --user
 
