@@ -68,7 +68,7 @@ jobs:
         pip3 install libclang parsec setuptools wheel twine --user
 
     - name: Setup tmate session
-      if: false
+      if: true
       uses: mxschmitt/action-tmate@v2
 
     - name: Install libgrape-lite

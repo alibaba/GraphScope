@@ -538,9 +538,11 @@ class Session(object):
             info["status"] = "active"
 
         if self._cluster_type == types_pb2.K8S:
+            info["type"] = "k8s"
             info["engine_hosts"] = ",".join(self._pod_name_list)
             info["namespace"] = self._config_params["k8s_namespace"]
         else:
+            info["type"] = "hosts"
             info["engine_hosts"] = ",".join(self._config_params["hosts"])
 
         info["cluster_type"] = str(self._cluster_type)
