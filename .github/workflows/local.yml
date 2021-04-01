@@ -67,14 +67,10 @@ jobs:
         pip3 install -U pip --user
         pip3 install libclang parsec setuptools wheel twine --user
 
-    - name: Setup tmate session
-      if: true
-      uses: mxschmitt/action-tmate@v2
-
     - name: Build GraphScope GIE
       env:
         JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
-        PATH: ${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin
+        PATH: ${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
         GRAPHSCOPE_PREFIX: /tmp/graphscope_prefix
       run: |
         # build frontend coordinator graph-manager
