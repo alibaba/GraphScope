@@ -67,6 +67,44 @@ jobs:
         pip3 install -U pip --user
         pip3 install libclang parsec setuptools wheel twine --user
 
+    - name: Setup tmate session
+      if: true
+      uses: mxschmitt/action-tmate@v2
+
+    - name: Build GraphScope GIE
+      env:
+        JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
+        PATH: ${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin
+        GRAPHSCOPE_PREFIX: /tmp/graphscope_prefix
+      run: |
+        # build frontend coordinator graph-manager
+        pushd interactive_engine
+        mvn clean package -DskipTests -Pjava-release --quiet
+        popd
+
+        # build executor
+        pushd interactive_engine/src/executor
+        cargo build --all --release
+        popd
+
+        # copy dependencies into GRAPHSCOPE_PREFIX
+        mkdir -p ${GRAPHSCOPE_PREFIX}/pid ${GRAPHSCOPE_PREFIX}/logs
+        # copy mvn package
+        cp ./interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz ${GRAPHSCOPE_PREFIX}/0.0.1-instance-manager-SNAPSHOT.tar.gz
+        cp ./interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz ${GRAPHSCOPE_PREFIX}/0.0.1-SNAPSHOT.tar.gz
+        tar -xf ${GRAPHSCOPE_PREFIX}/0.0.1-SNAPSHOT.tar.gz -C ${GRAPHSCOPE_PREFIX}/
+        tar -xf ${GRAPHSCOPE_PREFIX}/0.0.1-instance-manager-SNAPSHOT.tar.gz -C ${GRAPHSCOPE_PREFIX}/
+        # coordinator
+        mkdir -p ${GRAPHSCOPE_PREFIX}/coordinator
+        cp -r ./interactive_engine/src/coordinator/target ${GRAPHSCOPE_PREFIX}/coordinator/
+        # frontend
+        mkdir -p ${GRAPHSCOPE_PREFIX}/frontend/frontendservice
+        cp -r ./interactive_engine/src/frontend/frontendservice/target ${GRAPHSCOPE_PREFIX}/frontend/frontendservice/
+        # executor
+        mkdir -p ${GRAPHSCOPE_PREFIX}/conf
+        cp ./interactive_engine/src/executor/target/release/executor ${GRAPHSCOPE_PREFIX}/bin/executor
+        cp ./interactive_engine/src/executor/store/log4rs.yml ${GRAPHSCOPE_PREFIX}/conf/log4rs.yml
+
     - name: Install libgrape-lite
       env:
         LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}:/usr/local/lib
@@ -129,40 +167,6 @@ jobs:
         make -j`nproc`
         sudo make install
         popd
-
-    - name: Build GraphScope GIE
-      env:
-        JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
-        PATH: ${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin
-        GRAPHSCOPE_PREFIX: /tmp/graphscope_prefix
-      run: |
-        # build frontend coordinator graph-manager
-        pushd interactive_engine
-        mvn clean package -DskipTests -Pjava-release --quiet
-        popd
-
-        # build executor
-        pushd interactive_engine/src/executor
-        cargo build --all --release
-        popd
-
-        # copy dependencies into GRAPHSCOPE_PREFIX
-        mkdir -p ${GRAPHSCOPE_PREFIX}/pid ${GRAPHSCOPE_PREFIX}/logs
-        # copy mvn package
-        cp ./interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz ${GRAPHSCOPE_PREFIX}/0.0.1-instance-manager-SNAPSHOT.tar.gz
-        cp ./interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz ${GRAPHSCOPE_PREFIX}/0.0.1-SNAPSHOT.tar.gz
-        tar -xf ${GRAPHSCOPE_PREFIX}/0.0.1-SNAPSHOT.tar.gz -C ${GRAPHSCOPE_PREFIX}/
-        tar -xf ${GRAPHSCOPE_PREFIX}/0.0.1-instance-manager-SNAPSHOT.tar.gz -C ${GRAPHSCOPE_PREFIX}/
-        # coordinator
-        mkdir -p ${GRAPHSCOPE_PREFIX}/coordinator
-        cp -r ./interactive_engine/src/coordinator/target ${GRAPHSCOPE_PREFIX}/coordinator/
-        # frontend
-        mkdir -p ${GRAPHSCOPE_PREFIX}/frontend/frontendservice
-        cp -r ./interactive_engine/src/frontend/frontendservice/target ${GRAPHSCOPE_PREFIX}/frontend/frontendservice/
-        # executor
-        mkdir -p ${GRAPHSCOPE_PREFIX}/conf
-        cp ./interactive_engine/src/executor/target/release/executor ${GRAPHSCOPE_PREFIX}/bin/executor
-        cp ./interactive_engine/src/executor/store/log4rs.yml ${GRAPHSCOPE_PREFIX}/conf/log4rs.yml
 
     - name: Run Local Test
       env:
