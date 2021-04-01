@@ -68,11 +68,11 @@ jobs:
         pip3 install libclang parsec setuptools wheel twine --user
 
     - name: Build GraphScope GIE
-      env:
-        JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
-        PATH: ${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
-        GRAPHSCOPE_PREFIX: /tmp/graphscope_prefix
       run: |
+        export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+        export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
+        export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
+
         # build frontend coordinator graph-manager
         pushd interactive_engine
         mvn clean package -DskipTests -Pjava-release --quiet
@@ -106,9 +106,8 @@ jobs:
       uses: mxschmitt/action-tmate@v2
 
     - name: Install libgrape-lite
-      env:
-        LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}:/usr/local/lib
       run: |
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
         git clone -b master --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git
         cd libgrape-lite
         mkdir build && cd build
@@ -117,9 +116,8 @@ jobs:
         sudo make install
 
     - name: Install libvineyard
-      env:
-        LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}:/usr/local/lib
       run: |
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
         git clone -b v0.1.14 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
         cd libvineyard
         git submodule update --init
@@ -130,9 +128,8 @@ jobs:
         popd
 
     - name: Build GraphScope GLE
-      env:
-        LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}:/usr/local/lib
       run: |
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
         pushd learning_engine/graph-learn
         git submodule update --init third_party/pybind11
         mkdir cmake-build && pushd cmake-build
@@ -159,9 +156,8 @@ jobs:
         popd
 
     - name: Build GraphScope GAE
-      env:
-        LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}:/usr/local/lib
       run: |
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
         mkdir analytical_engine/build && pushd analytical_engine/build
         cmake ..
         make -j`nproc`
@@ -169,11 +165,11 @@ jobs:
         popd
 
     - name: Run Local Test
-      env:
-        JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
-        PATH: ${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin
-        GRAPHSCOPE_PREFIX: /tmp/graphscope_prefix
       run: |
+        export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+        export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
+        export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
+
         pip3 install pytest tensorflow --user
 
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
