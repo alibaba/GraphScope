@@ -162,7 +162,9 @@ def test_launch_session_from_dict():
 
 
 def test_config_dict_has_highest_priority(local_config_file):
-    s = graphscope.session(cluster_type="hosts", config=local_config_file, num_workers=2)
+    s = graphscope.session(
+        cluster_type="hosts", config=local_config_file, num_workers=2
+    )
 
     info = s.info
     assert info["status"] == "active"

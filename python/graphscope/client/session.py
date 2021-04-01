@@ -62,7 +62,6 @@ from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
-
 DEFAULT_CONFIG_FILE = os.environ.get(
     "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/session.json")
 )
@@ -409,7 +408,7 @@ class Session(object):
         self._cluster_type = self._parse_cluster_type()
 
         # mars cannot work with run-on-local mode
-        if run_on_local and self._config_params["with_mars"]:
+        if self._cluster_type == types_pb2.HOSTS and self._config_params["with_mars"]:
             raise NotImplementedError(
                 "Mars cluster cannot be launched along with local GraphScope deployment"
             )
@@ -926,26 +925,26 @@ class Session(object):
 
         def group_property_types(props):
             weighted, labeled, i, f, s, attr_types = "false", "false", 0, 0, 0, {}
-            for field_name, field_type in props.items():
-                if field_type in [types_pb2.STRING]:
+            for prop in props:
+                if prop.type in [types_pb2.STRING]:
                     s += 1
-                    attr_types[field_name] = "s"
-                elif field_type in (types_pb2.FLOAT, types_pb2.DOUBLE):
+                    attr_types[prop.name] = "s"
+                elif prop.type in (types_pb2.FLOAT, types_pb2.DOUBLE):
                     f += 1
-                    attr_types[field_name] = "f"
+                    attr_types[prop.name] = "f"
                 else:
                     i += 1
-                    attr_types[field_name] = "i"
-                if field_name == "weight":
+                    attr_types[prop.name] = "i"
+                if prop.name == "weight":
                     weighted = "true"
-                elif field_name == "label":
+                elif prop.name == "label":
                     labeled = "true"
             return weighted, labeled, i, f, s, attr_types
 
         node_schema, node_attribute_types = [], dict()
-        for index, label in enumerate(graph.schema.vertex_labels):
+        for label in graph.schema.vertex_labels:
             weighted, labeled, i, f, s, attr_types = group_property_types(
-                graph.schema.vertex_properties[index]
+                graph.schema.get_vertex_properties(label)
             )
             node_schema.append(
                 "{}:{}:{}:{}:{}:{}".format(label, weighted, labeled, i, f, s)
@@ -953,11 +952,11 @@ class Session(object):
             node_attribute_types[label] = attr_types
 
         edge_schema, edge_attribute_types = [], dict()
-        for index, label in enumerate(graph.schema.edge_labels):
+        for label in graph.schema.edge_labels:
             weighted, labeled, i, f, s, attr_types = group_property_types(
-                graph.schema.edge_properties[index]
+                graph.schema.get_edge_properties(label)
             )
-            for rel in graph.schema.edge_relationships[index]:
+            for rel in graph.schema.get_relationships(label):
                 edge_schema.append(
                     "{}:{}:{}:{}:{}:{}:{}:{}".format(
                         rel[0], label, rel[1], weighted, labeled, i, f, s

@@ -32,7 +32,7 @@ jobs:
         submodules: true
 
     - name: Setup tmate session
-      if: true
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Install Dependencies for Linux
@@ -53,8 +53,8 @@ jobs:
 
         # install zookeeper
         wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz
-        cp /tmp/zookeeper-3.4.14/confg/zoo_sample.cfg /tmp/zookeeper-3.4.14/confg/zoo.cfg
         tar xf zookeeper-3.4.14.tar.gz -C /tmp/
+        cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
         sudo ln -s /tmp/zookeeper-3.4.14 /usr/local/zookeeper
 
         # rust
@@ -62,6 +62,10 @@ jobs:
         sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         curl -sf -L https://static.rust-lang.org/rustup.sh | sudo sh -s -- -y --profile minimal --default-toolchain 1.48.0
         source ~/.cargo/env
+
+        # install python packages for vineyard codegen
+        pip3 install -U pip --user
+        pip3 install libclang parsec setuptools wheel twine --user
 
     - name: Install libgrape-lite
       env:
@@ -86,18 +90,6 @@ jobs:
         cmake .. -DBUILD_VINEYARD_PYPI_PACKAGES=ON -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_IO_OSS=ON
         sudo make install vineyard_client_python -j`nproc`
         popd
-        # build & install vineyard for python
-        python3 setup.py bdist_wheel
-        sudo pip3 install dist/*.whl -U
-        # build & install vineyard-io
-        pushd modules/io
-        python3 setup.py bdist_wheel
-        sudo pip3 install dist/*.whl -U
-        popd
-
-    - name: Setup tmate session
-      if: false
-      uses: mxschmitt/action-tmate@v2
 
     - name: Build GraphScope GAE
       env:
@@ -153,18 +145,18 @@ jobs:
         cp ./interactive_engine/src/executor/target/release/executor ${GRAPHSCOPE_PREFIX}/bin/executor
         cp ./interactive_engine/src/executor/store/log4rs.yml ${GRAPHSCOPE_PREFIX}/conf/log4rs.yml
 
-    - name: Install GraphScope Coordinator
-      run: |
-        pushd coordinator
-        sudo python3 setup.py install
-        popd
-
     - name: Install GraphScope Python Client
       env:
         WITH_LEARNING_ENGINE: ON
       run: |
         pushd python
-        sudo python3 setup.py install
+        python3 setup.py install --user
+        popd
+
+    - name: Install GraphScope Coordinator
+      run: |
+        pushd coordinator
+        python3 setup.py install --user
         popd
 
     - name: Run Local Test
@@ -173,7 +165,9 @@ jobs:
         PATH: ${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin
         GRAPHSCOPE_PREFIX: /tmp/graphscope_prefix
       run: |
+        pip3 install pytest tensorflow --user
+
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR} 
-        cp python/test/test_run_local.py /tmp/test_run_local.py
-        python3 -m pytest -s -v /tmp/test_run_local.py
+        cp ${GITHUB_WORKSPACE}/python/tests/test_run_locally.py /tmp/test_run_locally.py
+        python3 -m pytest -s -v /tmp/test_run_locally.py

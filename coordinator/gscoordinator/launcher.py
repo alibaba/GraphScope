@@ -161,7 +161,7 @@ class LocalLauncher(Launcher):
         zk_sh = shutil.which("zkServer.sh")
         if not zk_sh:
             raise RuntimeError("zkServer.sh command not found.")
-        cmd = [zk_sh, 'start-foreground']
+        cmd = [zk_sh, "start-foreground"]
 
         process = subprocess.Popen(
             cmd,
@@ -182,13 +182,16 @@ class LocalLauncher(Launcher):
         start_time = time.time()
         while not is_port_in_use(self._hosts.split(",")[0], self._zookeeper_port):
             time.sleep(1)
-            if self._timeout_seconds and self._timeout_seconds + start_time < time.time():
+            if (
+                self._timeout_seconds
+                and self._timeout_seconds + start_time < time.time()
+            ):
                 raise RuntimeError("Launch zookeeper service failed.")
 
     def _launch_graph_manager(self):
         port = self._get_free_port(self._hosts.split(",")[0])
-        gm_sh = os.path.join(self._graphscope_prefix, 'bin', 'start.sh')
-        cmd = ["bash", gm_sh, 'local', str(port)]
+        gm_sh = os.path.join(self._graphscope_prefix, "bin", "start.sh")
+        cmd = ["bash", gm_sh, "local", str(port)]
         print(" ".join(cmd))
 
         process = subprocess.Popen(
@@ -211,12 +214,14 @@ class LocalLauncher(Launcher):
         logger.info("Server is initializing graph manager")
         while not is_port_in_use(self._hosts.split(",")[0], port):
             time.sleep(1)
-            if self._timeout_seconds and self._timeout_seconds + start_time < time.time():
+            if (
+                self._timeout_seconds
+                and self._timeout_seconds + start_time < time.time()
+            ):
                 raise RuntimeError("Launch GraphManager service failed.")
 
         logger.info("Server is initializing graph manager")
         self._graph_manager_endpoint = "{0}:{1}".format(self._hosts.split(",")[0], port)
-
 
     def _create_interactive_engine_service(self):
         self._launch_zookeeper()
@@ -369,10 +374,10 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._graph_manager_process)
         self._graph_manager_endpoint = None
 
-        gm_stop_sh = os.path.join(self._graphscope_prefix, 'bin', 'stop.sh')
+        gm_stop_sh = os.path.join(self._graphscope_prefix, "bin", "stop.sh")
         cmd = ["bash", gm_stop_sh]
 
-        process = subprocess.Popen(
+        process = subprocess.Popen(  # noqa: F841
             cmd,
             start_new_session=True,
             cwd=os.getcwd(),

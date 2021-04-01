@@ -483,29 +483,34 @@ class CoordinatorServiceServicer(
                 self._gie_graph_manager_service_name,
                 self._k8s_namespace,
             )
-            params.update({
-                "schemaJson": schema_json,
-                "podNameList": ",".join(self._pods_list),
-                "containerName": ENGINE_CONTAINER,
-                "preemptive": str(self._launcher.preemptive),
-                "gremlinServerCpu": str(gremlin_server_cpu),
-                "gremlinServerMem": gremlin_server_mem,
-            })
+            params.update(
+                {
+                    "schemaJson": schema_json,
+                    "podNameList": ",".join(self._pods_list),
+                    "containerName": ENGINE_CONTAINER,
+                    "preemptive": str(self._launcher.preemptive),
+                    "gremlinServerCpu": str(gremlin_server_cpu),
+                    "gremlinServerMem": gremlin_server_mem,
+                }
+            )
             post_url = "%s/instance/create" % manager_host
             engine_params = [
-                "{}:{}".format(key, value) for key, value in request.engine_params.items()
+                "{}:{}".format(key, value)
+                for key, value in request.engine_params.items()
             ]
             params["engineParams"] = "'{}'".format(";".join(engine_params))
         else:
             manager_host = self._launcher.graph_manager_endpoint
-            params.update({"vineyardIpcSocket": self._launcher.vineyard_socket, "schemaPath": request.schema_path})
+            params.update(
+                {
+                    "vineyardIpcSocket": self._launcher.vineyard_socket,
+                    "schemaPath": request.schema_path,
+                }
+            )
             post_url = "http://%s/instance/create_local" % manager_host
 
         post_data = urllib.parse.urlencode(params).encode("utf-8")
-        try:
-            create_res = urllib.request.urlopen(url=post_url, data=post_data)
-        except Exception as e:
-            print(str(e))
+        create_res = urllib.request.urlopen(url=post_url, data=post_data)
         res_json = json.load(create_res)
         error_code = res_json["errorCode"]
         if error_code == 0:
@@ -556,7 +561,10 @@ class CoordinatorServiceServicer(
             )
         else:
             manager_host = self._launcher.graph_manager_endpoint
-            close_url = "http://%s/instance/close_local?graphName=%ld" % (manager_host, object_id)
+            close_url = "http://%s/instance/close_local?graphName=%ld" % (
+                manager_host,
+                object_id,
+            )
         logger.info("Coordinator close interactive instance with url[%s]" % close_url)
         try:
             close_res = urllib.request.urlopen(close_url).read()

@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -x
-
 object_id=$1
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
@@ -24,6 +22,6 @@ coordinator_id=`cat $WORKSPACE/pid/coordinator_$object_id.pid`
 frontend_id=`cat $WORKSPACE/pid/frontend_$object_id.pid`
 executor_id=`cat $WORKSPACE/pid/executor_$object_id.pid`
 
-sudo kill -9 $coordinator_id || true
-sudo kill -9 $frontend_id || true
-sudo kill -9 $executor_id || true
+sudo kill $coordinator_id || true
+sudo kill $frontend_id || true
+sudo kill $executor_id || true

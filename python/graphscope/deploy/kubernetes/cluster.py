@@ -34,7 +34,6 @@ from kubernetes.client import CoreV1Api
 from kubernetes.client.rest import ApiException as K8SApiException
 
 from graphscope.config import GSConfig as gs_config
-from graphscope.deploy.launcher import Launcher
 from graphscope.deploy.kubernetes.resource_builder import ClusterRoleBindingBuilder
 from graphscope.deploy.kubernetes.resource_builder import ClusterRoleBuilder
 from graphscope.deploy.kubernetes.resource_builder import GSCoordinatorBuilder
@@ -47,6 +46,7 @@ from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import try_to_read_namespace_from_context
 from graphscope.deploy.kubernetes.utils import wait_for_deployment_complete
+from graphscope.deploy.launcher import Launcher
 from graphscope.framework.errors import K8sError
 from graphscope.framework.utils import random_string
 

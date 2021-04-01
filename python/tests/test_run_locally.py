@@ -39,8 +39,9 @@ test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 
 def train(config, graph):
     from graphscope.learning.examples import GCN
-    from graphscope.learning.graphlearn.python.model.tf.optimizer import \
-        get_tf_optimizer
+    from graphscope.learning.graphlearn.python.model.tf.optimizer import (
+        get_tf_optimizer,
+    )
     from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
 
     def model_fn():
@@ -86,10 +87,7 @@ def ogbn_mag_small():
 
 
 def test_demo(sess, ogbn_mag_small):
-    print(sess.info["engine_config"]["vineyard_socket"])
     graph = load_ogbn_mag(sess, ogbn_mag_small)
-    print(graph.vineyard_id)
-    print(graph.schema_path)
 
     # Interactive engine
     interactive = sess.gremlin(graph)
@@ -101,15 +99,13 @@ def test_demo(sess, ogbn_mag_small):
         "g.V().has('year', inside(2014, 2020)).outE('cites')"
     )
 
-    simple_g = sub_graph.project_to_simple(v_label="paper", e_label="cites")
+    simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
 
     ret1 = graphscope.k_core(simple_g, k=5)
     ret2 = graphscope.triangles(simple_g)
 
     sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
-    print(sub_graph.schema)
     sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
-    print(sub_graph.schema)
 
     # GLE on ogbn_mag_small graph
     paper_features = []

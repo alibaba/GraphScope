@@ -88,7 +88,7 @@ public class InstanceManagerController {
         }
     }
 
-		@RequestMapping(value = "create_local", method = RequestMethod.POST)
+    @RequestMapping(value = "create_local", method = RequestMethod.POST)
     public CreateInstanceEntity createLocalInstance(@RequestParam("graphName") String graphName,
                                                     @RequestParam("schemaPath") String schemaPath,
                                                     @RequestParam("vineyardIpcSocket") String vineyardIpcSocket) throws Exception{
