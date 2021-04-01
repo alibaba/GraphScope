@@ -105,6 +105,10 @@ jobs:
         cp ./interactive_engine/src/executor/target/release/executor ${GRAPHSCOPE_PREFIX}/bin/executor
         cp ./interactive_engine/src/executor/store/log4rs.yml ${GRAPHSCOPE_PREFIX}/conf/log4rs.yml
 
+    - name: Setup tmate session
+      if: always()
+      uses: mxschmitt/action-tmate@v2
+
     - name: Install libgrape-lite
       env:
         LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}:/usr/local/lib
