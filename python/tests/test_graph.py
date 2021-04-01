@@ -27,12 +27,14 @@ import graphscope
 from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.dataset.ldbc import load_ldbc
+from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 from graphscope.proto import types_pb2
 
 logger = logging.getLogger("graphscope")
+prefix = os.path.expandvars("${GS_TEST_DIR}")
 
 
 def test_graph_schema(arrow_property_graph):
@@ -457,15 +459,35 @@ def test_multiple_add_vertices_edges(graphscope_session):
 def test_project_subgraph(arrow_modern_graph):
     graph = arrow_modern_graph
 
+    sub_graph = graph.project(vertices={}, edges={})
+    assert sub_graph.schema.vertex_labels == []
+    assert sub_graph.schema.edge_labels == []
+    with pytest.raises(
+        InvalidArgumentError,
+        match="Check failed: Cannot project to simple, vertex label number is not one.",
+    ):
+        graphscope.wcc(sub_graph)
+
+    # project a sub_graph only contain person nodes
+    sub_graph = graph.project(vertices={"person": None}, edges={})
+    assert sub_graph.schema.vertex_labels == ["person"]
+    assert sub_graph.schema.edge_labels == []
+    # FIXME: wcc can run on the sub_graph
+    with pytest.raises(
+        InvalidArgumentError,
+        match="Check failed: Cannot project to simple, edge label number is not one.",
+    ):
+        graphscope.wcc(sub_graph)
+
     graph = graph.project(
-        edges={"created": ["eid"], "knows": None},
-        vertices={"person": None, "software": ["id"]},
+        vertices={"person": None, "software": ["name", "id"]},
+        edges={"created": ["eid", "weight"], "knows": None},
     )
     assert graph.schema.vertex_labels == ["person", "software"]
     assert graph.schema.edge_labels == ["created", "knows"]
     assert [p.id for p in graph.schema.get_vertex_properties("person")] == [0, 1, 2]
-    assert [p.id for p in graph.schema.get_vertex_properties("software")] == [2]
-    assert [p.id for p in graph.schema.get_edge_properties("created")] == [0]
+    assert [p.id for p in graph.schema.get_vertex_properties("software")] == [0, 2]
+    assert [p.id for p in graph.schema.get_edge_properties("created")] == [0, 1]
     assert [p.id for p in graph.schema.get_edge_properties("knows")] == [0, 1]
 
     graph = graph.project(edges={"knows": ["eid"]}, vertices={"person": None})
@@ -483,13 +505,112 @@ def test_project_subgraph(arrow_modern_graph):
     assert not graph.schema.get_edge_properties("knows")
 
     ret = graphscope.wcc(graph)
+    graph = graph.add_column(ret, {"cc": "r"})
+    assert len(graph.schema.get_vertex_properties("person")) == 1
+    assert graph.schema.get_vertex_properties("person")[0].name == "cc"
 
-    assert graph.add_column(ret, {"cc": "r"}).schema
 
-
-def test_error_on_project(arrow_property_graph):
+def test_error_on_project(arrow_property_graph, ldbc_graph):
     graph = arrow_property_graph
     with pytest.raises(AssertionError, match="Cannot project to simple"):
         graphscope.sssp(graph, 4)
     g2 = graph.project(vertices={"v0": []}, edges={"e0": []})
     assert g2.schema.edge_relationships == [[("v0", "v0")]]
+
+    ldbc = ldbc_graph
+    # vertices empty
+    with pytest.raises(
+        ValueError, match="Cannot find a valid relation in given vertices and edges"
+    ):
+        sub_graph = ldbc.project(vertices={}, edges={"knows": None})
+
+    # project not related vertex and edge
+    with pytest.raises(
+        ValueError, match="Cannot find a valid relation in given vertices and edges"
+    ):
+        sub_graph = ldbc.project(vertices={"person": None}, edges={"hasInterest": None})
+
+    sub_graph = ldbc.project(
+        vertices={"person": None, "tag": None, "tagclass": None},
+        edges={"knows": None, "hasInterest": None},
+    )
+
+    # project with not existed vertex
+    with pytest.raises(ValueError, match="Vertex comment not exist in graph"):
+        sub_graph.project(vertices={"comment": None}, edges={"knows": None})
+
+    # project with not existed edge
+    with pytest.raises(ValueError, match="Edge isSubclassOf not exist in graph"):
+        sub_graph.project(vertices={"tagclass": None}, edges={"isSubclassOf": None})
+
+    # more than one property on vertex can not project to simple
+    sub_graph = ldbc.project(
+        vertices={"person": ["id", "firstName"]}, edges={"knows": ["eid"]}
+    )
+    with pytest.raises(InvalidArgumentError):
+        sub_graph._project_to_simple()
+
+    # more than one property on edge can not project to simple
+    sub_graph = ldbc.project(
+        vertices={"person": ["id"]}, edges={"knows": ["eid", "creationDate"]}
+    )
+    with pytest.raises(InvalidArgumentError):
+        sub_graph._project_to_simple()
+
+
+def test_add_column(ldbc_graph, arrow_modern_graph):
+    ldbc = ldbc_graph
+    modern = arrow_modern_graph
+
+    sub_graph_1 = ldbc.project(vertices={"person": []}, edges={"knows": ["eid"]})
+    sub_graph_2 = ldbc.project(
+        vertices={"person": None, "tag": None}, edges={"hasInterest": None}
+    )
+    sub_graph_3 = ldbc.project(
+        vertices={"tag": None, "tagclass": None}, edges={"hasType": None}
+    )
+    sub_graph_4 = modern.project(vertices={"person": []}, edges={"knows": ["eid"]})
+
+    ret = graphscope.wcc(sub_graph_1)
+
+    # the ret can add to the graph queried on
+    g1 = sub_graph_1.add_column(ret, selector={"cc": "r"})
+    assert g1.schema.get_vertex_properties("person")[0].id == 8
+    assert g1.schema.get_vertex_properties("person")[0].name == "cc"
+    # the ret can add to the origin graph
+    g2 = ldbc.add_column(ret, selector={"cc": "r"})
+    assert g2.schema.get_vertex_properties("person")[8].id == 8
+    assert g2.schema.get_vertex_properties("person")[8].name == "cc"
+    # the ret can add to the graph tha contain the same vertex label with sub_graph_1
+    g3 = sub_graph_2.add_column(ret, selector={"cc": "r"})
+    assert g3.schema.get_vertex_properties("person")[8].id == 8
+    assert g3.schema.get_vertex_properties("person")[8].name == "cc"
+    # the ret can not add to sub_graph_3
+    # FIXME: should raise error in add_column.
+    g4 = sub_graph_3.add_column(ret, selector={"cc": "r"})
+    with pytest.raises(AnalyticalEngineInternalError):
+        print(g4.schema)
+    # the ret can not add to sub_graph_4
+    # FIXME: should raise error in add_column.
+    g5 = sub_graph_4.add_column(ret, selector={"cc": "r"})
+    with pytest.raises(AnalyticalEngineInternalError):
+        print(g4.schema)
+
+    sub_graph_5 = sub_graph_3.add_vertices(
+        Loader(os.path.join(prefix, "ldbc_sample/person_0_0.csv"), delimiter="|"),
+        "person",
+        [
+            "firstName",
+            "lastName",
+            "gender",
+            "birthday",
+            "creationDate",
+            "locationIP",
+            "browserUsed",
+        ],
+        "id",
+    )
+    # FIXME: raise error in add_column
+    g6 = sub_graph_5.add_column(ret, selector={"cc": "r"})
+    with pytest.raises(AnalyticalEngineInternalError):
+        print(g6.schema)

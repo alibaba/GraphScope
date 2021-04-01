@@ -45,10 +45,11 @@ def louvain(graph, min_progress=1000, progress_tries=1):
         :class:`VertexDataContext`: A context with each vertex assigned with id of community it belongs to.
 
     References:
-    .. [1] Blondel, V.D. et al. Fast unfolding of communities in
-    large networks. J. Stat. Mech 10008, 1-12(2008).
-    .. [2] https://github.com/Sotera/distributed-graph-analytics
-    .. [3] https://sotera.github.io/distributed-graph-analytics/louvain/
+        [1] Blondel, V.D. et al. Fast unfolding of communities in large networks. J. Stat. Mech 10008, 1-12(2008).
+
+        [2] https://github.com/Sotera/distributed-graph-analytics
+
+        [3] https://sotera.github.io/distributed-graph-analytics/louvain/
 
     Examples:
 
@@ -57,7 +58,7 @@ def louvain(graph, min_progress=1000, progress_tries=1):
         import graphscope as gs
         s = gs.session()
         g = s.load_from('The parameters for loading a graph...')
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": ["weight"]})
         r = gs.louvain(pg)
         s.close()
 

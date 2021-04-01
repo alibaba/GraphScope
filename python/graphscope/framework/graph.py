@@ -364,11 +364,11 @@ class Graph(object):
         check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
         check_argument(
             self.schema.vertex_label_num == 1,
-            "Cannot project to simple, vertex label number is more than 1.",
+            "Cannot project to simple, vertex label number is not one.",
         )
         check_argument(
             self.schema.edge_label_num == 1,
-            "Cannot project to simple, edge label number is more than 1.",
+            "Cannot project to simple, edge label number is not one.",
         )
         # Check relation v_label -> e_label <- v_label exists.
         v_label = self.schema.vertex_labels[0]
