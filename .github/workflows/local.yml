@@ -87,7 +87,8 @@ jobs:
         git submodule update --init
         mkdir build && pushd build
         cmake .. -DBUILD_VINEYARD_PYPI_PACKAGES=ON -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_IO_OSS=ON
-        sudo make install vineyard_client_python -j`nproc`
+        make -j`nproc`
+        sudo make install
         popd
 
     - name: Build GraphScope GLE
@@ -98,7 +99,8 @@ jobs:
         git submodule update --init third_party/pybind11
         mkdir cmake-build && pushd cmake-build
         cmake .. -DWITH_VINEYARD=ON -DTESTING=OFF
-        sudo make install -j`nproc` && popd
+        make -j`nproc`
+        sudo make install
         popd
 
     - name: Install GraphScope Python Client
@@ -124,7 +126,8 @@ jobs:
       run: |
         mkdir analytical_engine/build && pushd analytical_engine/build
         cmake ..
-        sudo make install -j`nproc`
+        make -j`nproc`
+        sudo make install
         popd
 
     - name: Build GraphScope GIE
@@ -135,10 +138,10 @@ jobs:
       run: |
         # build frontend coordinator graph-manager
         pushd interactive_engine
-        mvn clean package -DskipTests -Pjava-release
+        mvn clean package -DskipTests -Pjava-release --quiet
         popd
 
-        # build exector
+        # build executor
         pushd interactive_engine/src/executor
         cargo build --all --release
         popd
