@@ -67,23 +67,6 @@ jobs:
         pip3 install -U pip --user
         pip3 install libclang parsec setuptools wheel twine --user
 
-    - name: Install GraphScope Python Client
-      env:
-        WITH_LEARNING_ENGINE: ON
-      run: |
-        pushd python
-        pip3 install -U setuptools
-        pip3 install -r requirements.txt -r requirements-dev.txt
-        python3 setup.py install --user
-        popd
-
-    - name: Install GraphScope Coordinator
-      run: |
-        pushd coordinator
-        pip3 install -r requirements.txt -r requirements-dev.txt
-        python3 setup.py install --user
-        popd
-
     - name: Install libgrape-lite
       env:
         LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}:/usr/local/lib
@@ -107,15 +90,6 @@ jobs:
         sudo make install vineyard_client_python -j`nproc`
         popd
 
-    - name: Build GraphScope GAE
-      env:
-        LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}:/usr/local/lib
-      run: |
-        mkdir analytical_engine/build && pushd analytical_engine/build
-        cmake ..
-        sudo make install -j`nproc`
-        popd
-
     - name: Build GraphScope GLE
       env:
         LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}:/usr/local/lib
@@ -125,6 +99,32 @@ jobs:
         mkdir cmake-build && pushd cmake-build
         cmake .. -DWITH_VINEYARD=ON -DTESTING=OFF
         sudo make install -j`nproc` && popd
+        popd
+
+    - name: Install GraphScope Python Client
+      env:
+        WITH_LEARNING_ENGINE: ON
+      run: |
+        pushd python
+        pip3 install -U setuptools
+        pip3 install -r requirements.txt -r requirements-dev.txt
+        python3 setup.py install --user
+        popd
+
+    - name: Install GraphScope Coordinator
+      run: |
+        pushd coordinator
+        pip3 install -r requirements.txt -r requirements-dev.txt
+        python3 setup.py install --user
+        popd
+
+    - name: Build GraphScope GAE
+      env:
+        LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}:/usr/local/lib
+      run: |
+        mkdir analytical_engine/build && pushd analytical_engine/build
+        cmake ..
+        sudo make install -j`nproc`
         popd
 
     - name: Build GraphScope GIE
