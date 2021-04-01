@@ -34,7 +34,6 @@ from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
 graphscope.set_option(show_log=True)
-graphscope.set_option(with_mars=True)
 logger = logging.getLogger("graphscope")
 
 
