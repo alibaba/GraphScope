@@ -233,6 +233,33 @@ inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
   return graph;
 }
 
+inline bl::result<std::vector<std::map<int, std::vector<int>>>>
+ParseProjectPropertyGraph(const gs::rpc::GSParams& params) {
+  BOOST_LEAF_AUTO(list, params.Get<rpc::AttrValue_ListValue>(
+                            rpc::ARROW_PROPERTY_DEFINITION));
+  auto& items = list.func();
+  std::map<int, std::vector<int>> vertices, edges;
+  CHECK_EQ(items.size(), 2);
+  {
+    auto item = items[0];
+    for (auto& pair : item.attr()) {
+      auto props = pair.second.list().i();
+      vertices[pair.first] = {props.begin(), props.end()};
+    }
+  }
+  {
+    auto item = items[1];
+    for (auto& pair : item.attr()) {
+      auto props = pair.second.list().i();
+      edges[pair.first] = {props.begin(), props.end()};
+    }
+  }
+  std::vector<std::map<int, std::vector<int>>> res;
+  res.push_back(vertices);
+  res.push_back(edges);
+  return res;
+}
+
 }  // namespace gs
 
 #endif  // ANALYTICAL_ENGINE_CORE_IO_PROPERTY_PARSER_H_

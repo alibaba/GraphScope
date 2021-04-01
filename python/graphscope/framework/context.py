@@ -48,7 +48,7 @@ class BaseContext(object):
     .. code:: python
 
         >>> g = get_test_property_graph()
-        >>> sg = g.project_to_simple('person', 'knows', 'id', 'weight')
+        >>> sg = g.project(vertices={'person': ['id']}, edges={'knows': ['weight']})
         >>> ret = sssp(sg, 20)
         >>> out = ret.to_numpy('r')
         >>> out.shape

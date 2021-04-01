@@ -93,6 +93,8 @@ class GrapeInstance : public Subscriber {
 
   bl::result<rpc::GraphDef> projectGraph(const rpc::GSParams& params);
 
+  bl::result<rpc::GraphDef> projectToSimple(const rpc::GSParams& params);
+
   bl::result<void> modifyVertices(const rpc::GSParams& params,
                                   const std::vector<std::string>& vertices);
 

@@ -343,7 +343,7 @@ void build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
   auto entry_ptr = static_cast<entry_t *>(vertex);
   entry_ptr->AddProperty(/* id, */ name,
                          vineyard::detail::PropertyTypeToDataType(prop_type));
-  entry_ptr->props.rbegin()->id = id;
+  entry_ptr->props_.rbegin()->id = id;
 }
 
 void build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char *name,
@@ -356,7 +356,7 @@ void build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char *name,
   auto entry_ptr = static_cast<entry_t *>(edge);
   entry_ptr->AddProperty(/* id, */ name,
                          vineyard::detail::PropertyTypeToDataType(prop_type));
-  entry_ptr->props.rbegin()->id = id;
+  entry_ptr->props_.rbegin()->id = id;
 }
 
 void build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,

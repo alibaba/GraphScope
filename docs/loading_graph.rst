@@ -228,7 +228,7 @@ A more complex example to load LDBC snb graph can be find `here <https://github.
 Graphs from Numpy and Pandas
 ----------------------------
 
-The datasource aforementioned is an object of :ref`Loader`. A loader wraps
+The datasource aforementioned is an object of :ref:`Loader`. A loader wraps
 a location or the data itself. `graphscope` supports load a graph
 from pandas dataframes or numpy ndarrays.
 

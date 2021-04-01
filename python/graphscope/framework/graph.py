@@ -21,7 +21,9 @@ import json
 import logging
 import threading
 from copy import deepcopy
+from typing import List
 from typing import Mapping
+from typing import Union
 
 import vineyard
 
@@ -35,6 +37,7 @@ from graphscope.framework.graph_utils import EdgeLabel
 from graphscope.framework.graph_utils import EdgeSubLabel
 from graphscope.framework.graph_utils import VertexLabel
 from graphscope.framework.operation import Operation
+from graphscope.proto import attr_value_pb2
 from graphscope.proto import types_pb2
 
 logger = logging.getLogger("graphscope")
@@ -124,7 +127,7 @@ class Graph(object):
 
             if isinstance(incoming_data, Operation):
                 self._pending_op = incoming_data
-                if self._pending_op.type == types_pb2.PROJECT_GRAPH:
+                if self._pending_op.type == types_pb2.PROJECT_TO_SIMPLE:
                     self._graph_type = types_pb2.ARROW_PROJECTED
             elif isinstance(incoming_data, nx.Graph):
                 self._pending_op = self._from_nx_graph(incoming_data)
@@ -356,82 +359,42 @@ class Graph(object):
         self._session = None
         self._pending_op = None
 
-    def project_to_simple(self, v_label="_", e_label="_", v_prop=None, e_prop=None):
-        """Project a property graph to a simple graph, useful for analytical engine.
-        Will translate name represented label or property to index, which is broadedly used
-        in internal engine.
-
-        Args:
-            v_label (str, optional): vertex label to project. Defaults to "_".
-            e_label (str, optional): edge label to project. Defaults to "_".
-            v_prop (str, optional): vertex property of the v_label. Defaults to None.
-            e_prop (str, optional): edge property of the e_label. Defaults to None.
-
-        Returns:
-            :class:`Graph`: A `Graph` instance, which graph_type is `ARROW_PROJECTED`
-        """
+    def _project_to_simple(self):
         self._ensure_loaded()
         check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
-
-        self._check_unmodified()
-
-        def check_out_of_range(id, length):
-            if id >= length or id < 0:
-                raise IndexError("id {} is out of range.".format(id))
-
-        try:
-            if isinstance(v_label, str):
-                v_label_id = self._schema.vertex_label_index(v_label)
-            else:
-                v_label_id = v_label
-                check_out_of_range(v_label_id, self._schema.vertex_label_num)
-                v_label = self._schema.vertex_labels[v_label_id]
-            if isinstance(e_label, str):
-                e_label_id = self._schema.edge_label_index(e_label)
-            else:
-                e_label_id = e_label
-                check_out_of_range(e_label_id, self._schema.edge_label_num)
-                e_label = self._schema.edge_labels[e_label]
-        except ValueError as e:
-            raise ValueError("Label does not exists.") from e
-
+        check_argument(
+            self.schema.vertex_label_num == 1,
+            "Cannot project to simple, vertex label number is more than 1.",
+        )
+        check_argument(
+            self.schema.edge_label_num == 1,
+            "Cannot project to simple, edge label number is more than 1.",
+        )
         # Check relation v_label -> e_label <- v_label exists.
+        v_label = self.schema.vertex_labels[0]
+        e_label = self.schema.edge_labels[0]
         relation = (v_label, v_label)
-        if relation not in self._schema.edge_relationships[e_label_id]:
-            raise ValueError(
-                f"Graph doesn't contain such relationship: {v_label} -> {e_label} <- {v_label}."
-            )
+        check_argument(
+            relation in self._schema.get_relationships(e_label),
+            f"Cannot project to simple, Graph doesn't contain such relationship: {v_label} -> {e_label} <- {v_label}.",
+        )
+        v_props = self.schema.get_vertex_properties(v_label)
+        e_props = self.schema.get_edge_properties(e_label)
+        check_argument(len(v_props) <= 1)
+        check_argument(len(e_props) <= 1)
 
-        try:
-            if v_prop is None:
-                v_prop_id = -1
-                vdata_type = None
-            else:
-                if isinstance(v_prop, str):
-                    v_prop_id = self._schema.vertex_property_index(v_label_id, v_prop)
-                else:
-                    v_prop_id = v_prop
-                properties = self._schema.vertex_properties[v_label_id]
-                check_out_of_range(v_prop_id, len(properties))
-                vdata_type = list(properties.values())[v_prop_id]
-            if e_prop is None:
-                e_prop_id = -1
-                edata_type = None
-            else:
-                if isinstance(e_prop, str):
-                    e_prop_id = self._schema.edge_property_index(e_label_id, e_prop)
-                else:
-                    e_prop_id = e_prop
-                properties = self._schema.edge_properties[e_label_id]
-                check_out_of_range(e_prop_id, len(properties))
-                edata_type = list(properties.values())[e_prop_id]
-        except ValueError as e:
-            raise ValueError("Property does not exists.") from e
-
+        v_label_id = self.schema.get_vertex_label_id(v_label)
+        e_label_id = self.schema.get_edge_label_id(e_label)
+        v_prop_id, vdata_type = (
+            (v_props[0].id, v_props[0].type) if v_props else (-1, None)
+        )
+        e_prop_id, edata_type = (
+            (e_props[0].id, e_props[0].type) if e_props else (-1, None)
+        )
         oid_type = self._schema.oid_type
         vid_type = self._schema.vid_type
 
-        op = dag_utils.project_arrow_property_graph(
+        op = dag_utils.project_arrow_property_graph_to_simple(
             self,
             v_label_id,
             v_prop_id,
@@ -442,7 +405,9 @@ class Graph(object):
             oid_type,
             vid_type,
         )
-        return Graph(self._session, op)
+        graph = Graph(self._session, op)
+        graph._base_graph = self
+        return graph
 
     def add_column(self, results, selector):
         """Add the results as a column to the graph. Modification rules are given by the selector.
@@ -465,7 +430,9 @@ class Graph(object):
         }
         selector = json.dumps(selector)
         op = dag_utils.add_column(self, results, selector)
-        return Graph(self._session, op)
+        graph = Graph(self._session, op)
+        graph._base_graph = self
+        return graph
 
     def to_numpy(self, selector, vertex_range=None):
         """Select some elements of the graph and output to numpy.
@@ -920,3 +887,64 @@ class Graph(object):
             relations,
             func,
         )
+
+    def project(
+        self,
+        vertices: Mapping[str, Union[List[str], None]],
+        edges: Mapping[str, Union[List[str], None]],
+    ):
+        check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
+
+        def get_all_v_props_id(label) -> List[int]:
+            props = self.schema.get_vertex_properties(label)
+            return [
+                self.schema.get_vertex_property_id(label, prop.name) for prop in props
+            ]
+
+        def get_all_e_props_id(label) -> List[int]:
+            props = self.schema.get_edge_properties(label)
+            return [
+                self.schema.get_edge_property_id(label, prop.name) for prop in props
+            ]
+
+        vertex_collections = {}
+        edge_collections = {}
+
+        for label, props in vertices.items():
+            label_id = self.schema.get_vertex_label_id(label)
+            if props is None:
+                vertex_collections[label_id] = get_all_v_props_id(label)
+            else:
+                vertex_collections[label_id] = sorted(
+                    [self.schema.get_vertex_property_id(label, prop) for prop in props]
+                )
+        for label, props in edges.items():
+            # find whether exist a valid relation
+            relations = self.schema.get_relationships(label)
+            valid = False
+            for src, dst in relations:
+                if src in vertices and dst in vertices:
+                    valid = True
+                    break
+            if not valid:
+                raise ValueError(
+                    "Cannot find a valid relation in given vertices and edges"
+                )
+
+            label_id = self.schema.get_edge_label_id(label)
+            if props is None:
+                edge_collections[label_id] = get_all_e_props_id(label)
+            else:
+                edge_collections[label_id] = sorted(
+                    [self.schema.get_edge_property_id(label, prop) for prop in props]
+                )
+
+        vertex_collections = dict(sorted(vertex_collections.items()))
+        edge_collections = dict(sorted(edge_collections.items()))
+
+        op = dag_utils.project_arrow_property_graph(
+            self, vertex_collections, edge_collections
+        )
+        graph = Graph(self._session, op)
+        graph._base_graph = self
+        return graph

@@ -61,6 +61,11 @@ class ILabeledFragmentWrapper : public IFragmentWrapper {
   explicit ILabeledFragmentWrapper(std::string id)
       : IFragmentWrapper(std::move(id), ObjectType::kLabeledFragmentWrapper) {}
 
+  virtual bl::result<std::shared_ptr<ILabeledFragmentWrapper>> Project(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::map<int, std::vector<int>>& vertices,
+      const std::map<int, std::vector<int>>& edges) = 0;
+
   virtual bl::result<std::shared_ptr<ILabeledFragmentWrapper>> AddColumn(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       std::shared_ptr<IContextWrapper>& ctx_wrapper,

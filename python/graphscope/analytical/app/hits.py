@@ -19,10 +19,12 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.app import project_to_simple
 
 __all__ = ["hits"]
 
 
+@project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def hits(graph, tolerance=0.01, max_round=100, normalized=True):
     """Compute HITS on `graph`.
@@ -47,7 +49,7 @@ def hits(graph, tolerance=0.01, max_round=100, normalized=True):
         import graphscope as gs
         sess = gs.session()
         g = sess.g()
-        pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.hits(pg)
         s.close()
 

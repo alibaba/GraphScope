@@ -18,6 +18,7 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.app import project_to_simple
 
 __all__ = [
     "sssp",
@@ -25,6 +26,7 @@ __all__ = [
 ]
 
 
+@project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def sssp(graph, src=0):
     """Compute single source shortest path on the `graph`.
@@ -43,7 +45,7 @@ def sssp(graph, src=0):
         import graphscope as gs
         sess = gs.session()
         g = sess.g()
-        pg = g.project_to_simple(v_label='vlabel', e_label='elabel', v_prop=None, e_prop='distance')
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.sssp(pg, src=0)
         s.close()
 

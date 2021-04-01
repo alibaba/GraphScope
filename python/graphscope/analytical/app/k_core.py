@@ -19,10 +19,12 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.app import project_to_simple
 
 __all__ = ["k_core"]
 
 
+@project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def k_core(graph, k: int):
     """K-cores of the graph are connected components that are left after
@@ -43,7 +45,7 @@ def k_core(graph, k: int):
         import graphscope as gs
         sess = gs.session()
         g = sess.g()
-        pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.k_core(pg)
         s.close()
 

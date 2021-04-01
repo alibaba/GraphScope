@@ -253,12 +253,12 @@ MGPropertyGraphSchema MGPropertyGraphSchema::TransformToMaxGraph() {
   MGPropertyGraphSchema new_schema;
   std::set<std::string> prop_names;
   for (const auto& entry : vertex_entries_) {
-    for (const auto& prop : entry.props) {
+    for (const auto& prop : entry.props_) {
       prop_names.insert(prop.name);
     }
   }
   for (const auto& entry : edge_entries_) {
-    for (const auto& prop : entry.props) {
+    for (const auto& prop : entry.props_) {
       prop_names.insert(prop.name);
     }
   }
@@ -271,9 +271,10 @@ MGPropertyGraphSchema MGPropertyGraphSchema::TransformToMaxGraph() {
   }
   for (const auto& entry : vertex_entries_) {
     Entry new_entry = entry;
-    new_entry.mapping.resize(new_entry.props.size(), -1);
+    new_entry.mapping.resize(new_entry.props_.size(), -1);
     new_entry.reverse_mapping.resize(maximum_possible_mg_prop_id, -1);
-    for (auto& prop : new_entry.props) {
+    new_entry.valid_properties.resize(maximum_possible_mg_prop_id, 1);
+    for (auto& prop : new_entry.props_) {
       int new_id = name_to_idx[prop.name];
       new_entry.mapping[prop.id] = new_id;
       new_entry.reverse_mapping[new_id] = prop.id;
@@ -284,10 +285,11 @@ MGPropertyGraphSchema MGPropertyGraphSchema::TransformToMaxGraph() {
   int vertex_label_num = vertex_entries_.size();
   for (const auto& entry : edge_entries_) {
     Entry new_entry = entry;
-    new_entry.mapping.resize(new_entry.props.size(), -1);
+    new_entry.mapping.resize(new_entry.props_.size(), -1);
     new_entry.reverse_mapping.resize(maximum_possible_mg_prop_id, -1);
+    new_entry.valid_properties.resize(maximum_possible_mg_prop_id, 1);
     new_entry.id += vertex_label_num;
-    for (auto& prop : new_entry.props) {
+    for (auto& prop : new_entry.props_) {
       int new_id = name_to_idx[prop.name];
       new_entry.mapping[prop.id] = new_id;
       new_entry.reverse_mapping[new_id] = prop.id;

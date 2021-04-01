@@ -106,6 +106,31 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
 
+  bl::result<std::shared_ptr<ILabeledFragmentWrapper>> Project(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::map<int, std::vector<int>>& vertices,
+      const std::map<int, std::vector<int>>& edges) override {
+    auto& meta = fragment_->meta();
+    auto* client = dynamic_cast<vineyard::Client*>(meta.GetClient());
+    BOOST_LEAF_AUTO(new_frag_id, fragment_->Project(*client, vertices, edges));
+    VINEYARD_CHECK_OK(client->Persist(new_frag_id));
+    BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
+                                       *client, new_frag_id, comm_spec));
+    auto new_frag = client->GetObject<fragment_t>(new_frag_id);
+
+    rpc::GraphDef new_graph_def;
+
+    new_graph_def.set_key(dst_graph_name);
+    new_graph_def.set_vineyard_id(frag_group_id);
+    new_graph_def.set_generate_eid(graph_def_.generate_eid());
+
+    set_graph_def(new_frag, new_graph_def);
+
+    auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
+        dst_graph_name, new_graph_def, new_frag);
+    return std::dynamic_pointer_cast<ILabeledFragmentWrapper>(wrapper);
+  }
+
   bl::result<std::shared_ptr<ILabeledFragmentWrapper>> AddColumn(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       std::shared_ptr<IContextWrapper>& ctx_wrapper,
@@ -141,14 +166,6 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       vm_id_from_ctx =
           client->GetObject<vineyard::ArrowFragmentBase>(frag_meta.GetId())
               ->vertex_map_id();
-    }
-
-    if (vm_id_from_ctx != fragment_->vertex_map_id()) {
-      RETURN_GS_ERROR(
-          vineyard::ErrorCode::kIllegalStateError,
-          "ctx holds a vertex map id = " + std::to_string(vm_id_from_ctx) +
-              ", but the vertex map id of fragment is " +
-              std::to_string(fragment_->vertex_map_id()));
     }
 
     std::map<label_id_t,
@@ -196,6 +213,47 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selectors));
       BOOST_LEAF_ASSIGN(columns,
                         vp_ctx_wrapper->ToArrowArrays(comm_spec, selectors));
+    }
+    vineyard::ObjectMeta ctx_meta, cur_meta;
+    VINEYARD_CHECK_OK(client->GetMetaData(vm_id_from_ctx, ctx_meta));
+    VINEYARD_CHECK_OK(
+        client->GetMetaData(fragment_->vertex_map_id(), cur_meta));
+    auto ctx_fnum = ctx_meta.GetKeyValue<fid_t>("fnum");
+    auto cur_fnum = cur_meta.GetKeyValue<fid_t>("fnum");
+    if (ctx_fnum != cur_fnum) {
+      RETURN_GS_ERROR(
+          vineyard::ErrorCode::kIllegalStateError,
+          "Fragment number of context differ from the destination fragment");
+    }
+
+    for (const auto& pair : columns) {
+      if (fragment_->schema().GetVertexLabelName(pair.first).empty()) {
+        RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
+                        "Label id " + std::to_string(pair.first) +
+                            " is invalid in the destination fragment");
+      }
+      for (fid_t i = 0; i < cur_fnum; ++i) {
+        auto name =
+            "o2g_" + std::to_string(i) + "_" + std::to_string(pair.first);
+        auto id_in_ctx = ctx_meta.GetMemberMeta(name).GetId();
+        auto id_in_cur = cur_meta.GetMemberMeta(name).GetId();
+        if (id_in_ctx != id_in_cur) {
+          RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
+                          "Vertex datastructure " + name +
+                              "in context differ from vertex map of the "
+                              "destination fragment");
+        }
+        name = "oid_arrays_" + std::to_string(i) + "_" +
+               std::to_string(pair.first);
+        id_in_ctx = ctx_meta.GetMemberMeta(name).GetId();
+        id_in_cur = cur_meta.GetMemberMeta(name).GetId();
+        if (id_in_ctx != id_in_cur) {
+          RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
+                          "Vertex datastructure " + name +
+                              "in context differ from vertex map of the "
+                              "destionation fragment");
+        }
+      }
     }
 
     auto new_frag_id = fragment_->AddVertexColumns(*client, columns);

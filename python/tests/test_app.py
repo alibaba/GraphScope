@@ -54,15 +54,6 @@ def test_create_app():
     a3 = AppAssets(algo="sssp_has_path")
 
 
-def test_compatible_with_arrow_graph(arrow_property_graph):
-    # bfs
-    with pytest.raises(
-        InvalidArgumentError,
-        match="Not compatible for arrow_property dynamic_property type",
-    ):
-        bfs(arrow_property_graph, src=4)
-
-
 @pytest.mark.skipif(
     os.environ.get("EXPERIMENTAL_ON") != "ON", reason="dynamic graph is in experimental"
 )
@@ -79,7 +70,8 @@ def test_errors_on_create_app(arrow_property_graph, arrow_project_graph):
     # builtin-property app is incompatible with projected graph
     with pytest.raises(graphscope.CompilationError):
         a = AppAssets(algo="property_sssp")
-        a(arrow_project_graph, 4)
+        pg = arrow_project_graph._project_to_simple()
+        a(pg, 4)
 
     # builtin app is incompatible with property graph
     with pytest.raises(graphscope.CompilationError):

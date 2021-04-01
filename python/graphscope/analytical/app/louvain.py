@@ -18,6 +18,7 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.app import project_to_simple
 from graphscope.framework.errors import InvalidArgumentError
 
 __all__ = [
@@ -25,6 +26,7 @@ __all__ = [
 ]
 
 
+@project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def louvain(graph, min_progress=1000, progress_tries=1):
     """Compute best partition on the `graph` by louvain.
@@ -55,7 +57,7 @@ def louvain(graph, min_progress=1000, progress_tries=1):
         import graphscope as gs
         s = gs.session()
         g = s.load_from('The parameters for loading a graph...')
-        pg = g.project_to_simple(v_label='vlabel', e_label='elabel', v_prop=None, e_prop='weight')
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.louvain(pg)
         s.close()
 

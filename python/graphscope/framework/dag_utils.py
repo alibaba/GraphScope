@@ -377,7 +377,32 @@ def report_graph(
     return op
 
 
-def project_arrow_property_graph(
+def project_arrow_property_graph(graph, vertex_collections, edge_collections):
+    check_argument(graph.graph_type == types_pb2.ARROW_PROPERTY)
+    attr = attr_value_pb2.AttrValue()
+    v_attr = attr_value_pb2.NameAttrList()
+    e_attr = attr_value_pb2.NameAttrList()
+    for label, props in vertex_collections.items():
+        v_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
+    for label, props in edge_collections.items():
+        e_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
+    attr.list.func.extend([v_attr, e_attr])
+
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
+        types_pb2.ARROW_PROPERTY_DEFINITION: attr,
+    }
+    op = Operation(
+        graph.session_id,
+        types_pb2.PROJECT_GRAPH,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
+def project_arrow_property_graph_to_simple(
     graph,
     v_label_id,
     v_prop_id,
@@ -416,7 +441,7 @@ def project_arrow_property_graph(
     }
     op = Operation(
         graph.session_id,
-        types_pb2.PROJECT_GRAPH,
+        types_pb2.PROJECT_TO_SIMPLE,
         config=config,
         output_types=types_pb2.GRAPH,
     )
@@ -448,7 +473,7 @@ def project_dynamic_property_graph(graph, v_prop, e_prop, v_prop_type, e_prop_ty
 
     op = Operation(
         graph.session_id,
-        types_pb2.PROJECT_GRAPH,
+        types_pb2.PROJECT_TO_SIMPLE,
         config=config,
         output_types=types_pb2.GRAPH,
     )
