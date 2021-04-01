@@ -68,7 +68,7 @@ jobs:
         pip3 install libclang parsec setuptools wheel twine --user
 
     - name: Setup tmate session
-      if: true
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Install libgrape-lite
@@ -118,7 +118,8 @@ jobs:
       run: |
         pushd coordinator
         pip3 install -r requirements.txt -r requirements-dev.txt
-        python3 setup.py install --user
+        python3 setup.py bdist_wheel
+        pip3 install ./dist/*.whl
         popd
 
     - name: Build GraphScope GAE
