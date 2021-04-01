@@ -25,6 +25,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import time
 from abc import ABCMeta
 from abc import abstractmethod
 
@@ -81,6 +82,7 @@ class LocalLauncher(Launcher):
     """
 
     _vineyard_socket_prefix = "/tmp/vineyard.sock."
+    _zookeeper_port = 2181  # fixed
 
     def __init__(
         self,
@@ -99,6 +101,15 @@ class LocalLauncher(Launcher):
         self._glog_level = parse_as_glog_level(log_level)
         self._timeout_seconds = timeout_seconds
 
+        if "GRAPHSCOPE_PREFIX" not in os.environ:
+            raise RuntimeError("Can't found GRAPHSCOPE_PREFIX in environment.")
+        self._graphscope_prefix = os.environ["GRAPHSCOPE_PREFIX"]
+
+        # zookeeper
+        self._zk_process = None
+        # graph manager
+        self._graph_manager_endpoint = None
+        self._graph_manager_process = None
         # vineyardd
         self._vineyardd_process = None
         # analytical engine
@@ -132,14 +143,84 @@ class LocalLauncher(Launcher):
     def hosts(self):
         return self._hosts
 
+    @property
+    def graph_manager_endpoint(self):
+        return self._graph_manager_endpoint
+
+    @property
+    def vineyard_socket(self):
+        return self._vineyard_socket
+
     def _get_free_port(self, host):
         port = random.randint(60001, 65535)
         while is_port_in_use(host, port):
             port = random.randint(60001, 65535)
         return port
 
+    def _launch_zookeeper(self):
+        zk_sh = shutil.which("zkServer.sh")
+        if not zk_sh:
+            raise RuntimeError("zkServer.sh command not found.")
+        cmd = [zk_sh, 'start-foreground']
+
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=os.environ.copy(),
+            universal_newlines=True,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=sys.stderr,
+            bufsize=1,
+        )
+
+        logger.info("Server is initializing zookeeper.")
+        self._zk_process = process
+
+        start_time = time.time()
+        while not is_port_in_use(self._hosts.split(",")[0], self._zookeeper_port):
+            time.sleep(1)
+            if self._timeout_seconds and self._timeout_seconds + start_time < time.time():
+                raise RuntimeError("Launch zookeeper service failed.")
+
+    def _launch_graph_manager(self):
+        port = self._get_free_port(self._hosts.split(",")[0])
+        gm_sh = os.path.join(self._graphscope_prefix, 'bin', 'start.sh')
+        cmd = ["bash", gm_sh, 'local', str(port)]
+        print(" ".join(cmd))
+
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=os.environ.copy(),
+            universal_newlines=True,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=sys.stderr,
+            bufsize=1,
+        )
+
+        logger.info("Server is initializing graph manager")
+        self._graph_manager_process = process
+
+        start_time = time.time()
+        logger.info("Server is initializing graph manager")
+        while not is_port_in_use(self._hosts.split(",")[0], port):
+            time.sleep(1)
+            if self._timeout_seconds and self._timeout_seconds + start_time < time.time():
+                raise RuntimeError("Launch GraphManager service failed.")
+
+        logger.info("Server is initializing graph manager")
+        self._graph_manager_endpoint = "{0}:{1}".format(self._hosts.split(",")[0], port)
+
+
     def _create_interactive_engine_service(self):
-        pass
+        self._launch_zookeeper()
+        self._launch_graph_manager()
 
     def _find_vineyardd(self):
         vineyardd = ""
@@ -152,7 +233,7 @@ class LocalLauncher(Launcher):
         return vineyardd
 
     def _create_vineyard(self):
-        if self._vineyard_socket is None:
+        if not self._vineyard_socket:
             ts = get_timestamp()
             vineyard_socket = "{0}{1}".format(self._vineyard_socket_prefix, ts)
             cmd = [self._find_vineyardd()]
@@ -247,7 +328,6 @@ class LocalLauncher(Launcher):
             )
         hosts = ",".join(server_list)
         handle["server"] = hosts
-        print("handle", handle)
         handle = base64.b64encode(json.dumps(handle).encode("utf-8")).decode("utf-8")
 
         # launch the server
@@ -284,7 +364,26 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._vineyardd_process)
 
     def _stop_interactive_engine_service(self):
-        pass
+        self._stop_subprocess(self._zk_process)
+        # stop shell process
+        self._stop_subprocess(self._graph_manager_process)
+        self._graph_manager_endpoint = None
+
+        gm_stop_sh = os.path.join(self._graphscope_prefix, 'bin', 'stop.sh')
+        cmd = ["bash", gm_stop_sh]
+
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=os.environ.copy(),
+            universal_newlines=True,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=sys.stderr,
+            bufsize=1,
+        )
 
     def _stop_analytical_engine(self):
         self._stop_subprocess(self._analytical_engine_process)

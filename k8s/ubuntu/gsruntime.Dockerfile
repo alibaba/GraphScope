@@ -13,10 +13,9 @@ RUN apt update -y && apt install -y \
     ca-certificates ccache cmake curl etcd git \
     libbrotli-dev libbz2-dev libcurl4-openssl-dev libdouble-conversion-dev libevent-dev libgflags-dev \
     libboost-all-dev libgoogle-glog-dev libgrpc-dev libgrpc++-dev libgtest-dev libgsasl7-dev \
-    libtinfo5 libkrb5-dev liblz4-dev libprotobuf-dev librdkafka-dev \
-    libre2-dev libsnappy-dev libssl-dev libunwind-dev \
-    libutf8proc-dev libxml2-dev libz-dev libzstd-dev lsb-release maven openjdk-8-jdk \
-    perl protobuf-compiler-grpc python3-pip telnet uuid-dev vim wget zip zlib1g-dev && \
+    libtinfo5 libkrb5-dev liblz4-dev libprotobuf-dev librdkafka-dev libre2-dev libsnappy-dev \
+    libssl-dev libunwind-dev libutf8proc-dev libxml2-dev libz-dev libzstd-dev lsb-release maven openjdk-8-jdk \
+    perl protobuf-compiler-grpc python3-pip sudo telnet uuid-dev vim wget zip zlib1g-dev && \
   rm -fr /var/lib/apt/lists/*
 
 # apache arrow 1.0.1
@@ -49,6 +48,14 @@ RUN cd /tmp && \
     cd /tmp && \
     rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
 
+# zookeeper
+RUN wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz && \
+    tar xf zookeeper-3.4.14.tar.gz -C /usr/local/ && \
+    cd /usr/local && ln -s zookeeper-3.4.14 zookeeper && \
+    mkdir -p /usr/local/zookeeper/data && \
+    mkdir -p /usr/local/zookeeper/logs && \
+    cp /usr/local/zookeeper/conf/zoo_sample.cfg /usr/local/zookeeper/conf/zoo.cfg
+
 # pip dependencies
 RUN pip3 install -U pip && \
   pip3 --no-cache-dir install auditwheel daemons grpcio-tools gremlinpython hdfs3 fsspec oss2 s3fs ipython kubernetes \
@@ -63,7 +70,8 @@ RUN cd /tmp && \
       sh -s -- -y --profile minimal --default-toolchain 1.48.0 && \
   echo "source ~/.cargo/env" >> ~/.bashrc
 
-ENV PATH=${PATH}:/usr/local/go/bin
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+ENV PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 
 # for programming output

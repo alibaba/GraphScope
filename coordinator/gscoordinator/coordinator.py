@@ -470,29 +470,42 @@ class CoordinatorServiceServicer(
         object_id = request.object_id
         gremlin_server_cpu = request.gremlin_server_cpu
         gremlin_server_mem = request.gremlin_server_mem
-        manager_host = MAXGRAPH_MANAGER_HOST % (
-            self._gie_graph_manager_service_name,
-            self._k8s_namespace,
-        )
+
         with open(request.schema_path) as file:
             schema_json = file.read()
-        post_url = "%s/instance/create" % manager_host
+
         params = {
             "graphName": "%s" % object_id,
-            "schemaJson": schema_json,
-            "podNameList": ",".join(self._pods_list),
-            "containerName": ENGINE_CONTAINER,
-            "preemptive": str(self._launcher.preemptive),
-            "gremlinServerCpu": str(gremlin_server_cpu),
-            "gremlinServerMem": gremlin_server_mem,
         }
-        engine_params = [
-            "{}:{}".format(key, value) for key, value in request.engine_params.items()
-        ]
-        params["engineParams"] = "'{}'".format(";".join(engine_params))
+
+        if self._launcher_type == types_pb2.K8S:
+            manager_host = MAXGRAPH_MANAGER_HOST % (
+                self._gie_graph_manager_service_name,
+                self._k8s_namespace,
+            )
+            params.update({
+                "schemaJson": schema_json,
+                "podNameList": ",".join(self._pods_list),
+                "containerName": ENGINE_CONTAINER,
+                "preemptive": str(self._launcher.preemptive),
+                "gremlinServerCpu": str(gremlin_server_cpu),
+                "gremlinServerMem": gremlin_server_mem,
+            })
+            post_url = "%s/instance/create" % manager_host
+            engine_params = [
+                "{}:{}".format(key, value) for key, value in request.engine_params.items()
+            ]
+            params["engineParams"] = "'{}'".format(";".join(engine_params))
+        else:
+            manager_host = self._launcher.graph_manager_endpoint
+            params.update({"vineyardIpcSocket": self._launcher.vineyard_socket, "schemaPath": request.schema_path})
+            post_url = "http://%s/instance/create_local" % manager_host
 
         post_data = urllib.parse.urlencode(params).encode("utf-8")
-        create_res = urllib.request.urlopen(url=post_url, data=post_data)
+        try:
+            create_res = urllib.request.urlopen(url=post_url, data=post_data)
+        except Exception as e:
+            print(str(e))
         res_json = json.load(create_res)
         error_code = res_json["errorCode"]
         if error_code == 0:
@@ -528,18 +541,22 @@ class CoordinatorServiceServicer(
 
     def CloseInteractiveInstance(self, request, context):
         object_id = request.object_id
-        pod_name_list = ",".join(self._pods_list)
-        manager_host = MAXGRAPH_MANAGER_HOST % (
-            self._gie_graph_manager_service_name,
-            self._k8s_namespace,
-        )
-        close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
-            manager_host,
-            object_id,
-            pod_name_list,
-            ENGINE_CONTAINER,
-            str(self._launcher.waiting_for_delete()),
-        )
+        if self._launcher_type == types_pb2.K8S:
+            manager_host = MAXGRAPH_MANAGER_HOST % (
+                self._gie_graph_manager_service_name,
+                self._k8s_namespace,
+            )
+            pod_name_list = ",".join(self._pods_list)
+            close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
+                manager_host,
+                object_id,
+                pod_name_list,
+                ENGINE_CONTAINER,
+                str(self._launcher.waiting_for_delete()),
+            )
+        else:
+            manager_host = self._launcher.graph_manager_endpoint
+            close_url = "http://%s/instance/close_local?graphName=%ld" % (manager_host, object_id)
         logger.info("Coordinator close interactive instance with url[%s]" % close_url)
         try:
             close_res = urllib.request.urlopen(close_url).read()
