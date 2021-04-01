@@ -67,6 +67,20 @@ jobs:
         pip3 install -U pip --user
         pip3 install libclang parsec setuptools wheel twine --user
 
+    - name: Install GraphScope Python Client
+      env:
+        WITH_LEARNING_ENGINE: ON
+      run: |
+        pushd python
+        python3 setup.py install --user
+        popd
+
+    - name: Install GraphScope Coordinator
+      run: |
+        pushd coordinator
+        python3 setup.py install --user
+        popd
+
     - name: Install libgrape-lite
       env:
         LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}:/usr/local/lib
@@ -77,7 +91,6 @@ jobs:
         cmake ..
         make -j`nproc`
         sudo make install
-
 
     - name: Install libvineyard
       env:
@@ -144,20 +157,6 @@ jobs:
         mkdir -p ${GRAPHSCOPE_PREFIX}/conf
         cp ./interactive_engine/src/executor/target/release/executor ${GRAPHSCOPE_PREFIX}/bin/executor
         cp ./interactive_engine/src/executor/store/log4rs.yml ${GRAPHSCOPE_PREFIX}/conf/log4rs.yml
-
-    - name: Install GraphScope Python Client
-      env:
-        WITH_LEARNING_ENGINE: ON
-      run: |
-        pushd python
-        python3 setup.py install --user
-        popd
-
-    - name: Install GraphScope Coordinator
-      run: |
-        pushd coordinator
-        python3 setup.py install --user
-        popd
 
     - name: Run Local Test
       env:

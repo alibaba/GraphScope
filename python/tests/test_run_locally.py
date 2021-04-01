@@ -39,9 +39,8 @@ test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 
 def train(config, graph):
     from graphscope.learning.examples import GCN
-    from graphscope.learning.graphlearn.python.model.tf.optimizer import (
-        get_tf_optimizer,
-    )
+    from graphscope.learning.graphlearn.python.model.tf.optimizer import \
+        get_tf_optimizer
     from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
 
     def model_fn():
