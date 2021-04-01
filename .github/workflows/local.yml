@@ -72,12 +72,15 @@ jobs:
         WITH_LEARNING_ENGINE: ON
       run: |
         pushd python
+        pip3 install -U setuptools
+        pip3 install -r requirements.txt -r requirements-dev.txt
         python3 setup.py install --user
         popd
 
     - name: Install GraphScope Coordinator
       run: |
         pushd coordinator
+        pip3 install -r requirements.txt -r requirements-dev.txt
         python3 setup.py install --user
         popd
 
