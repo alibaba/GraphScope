@@ -82,7 +82,7 @@ class VertexLabel(object):
         elif self.loader.deduced_properties:
             self.add_properties(self.loader.deduced_properties)
         self.loader.select_columns(
-            self.properties, include_all=bool(not self.raw_properties)
+            self.properties, include_all=bool(self.raw_properties is None)
         )
         self.loader.finish()
         self._finished = True
@@ -163,7 +163,7 @@ class EdgeSubLabel(object):
         elif self.loader.deduced_properties:
             self.add_properties(self.loader.deduced_properties)
         self.loader.select_columns(
-            self.properties, include_all=bool(not self.raw_properties)
+            self.properties, include_all=bool(self.raw_properties is None)
         )
         self.loader.finish()
         self._finished = True
