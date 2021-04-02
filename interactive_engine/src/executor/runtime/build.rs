@@ -40,6 +40,7 @@ fn main() {
     println!("cargo:rustc-link-lib=vineyard_client");
     println!("cargo:rustc-link-lib=vineyard_basic");
     println!("cargo:rustc-link-lib=mpi");
+    println!("cargo:rustc-link-lib=mpi_cxx");
     println!("cargo:rustc-link-lib=gflags");
     println!("cargo:rustc-link-lib=arrow");
     println!("cargo:rustc-link-lib=glog");
