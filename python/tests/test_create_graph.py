@@ -218,7 +218,7 @@ def test_prop_is_empty_loader(graphscope_session, student_group_e, student_v):
     graph = graph.add_vertices(student_v, "student", [], "student_id")
     graph = graph.add_edges(student_group_e, "group", [])
     assert len(graph.schema.get_vertex_properties("student")) == 1
-    assert len(graph.schema.get_edge_properties("group")) == 1
+    assert len(graph.schema.get_edge_properties("group")) == 0
 
 
 def test_properties_omitted_loader_with_generate_eid(
