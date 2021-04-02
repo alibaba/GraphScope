@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>载图 &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">目录</span></p>
+        <p><span class="caption-text">目录</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
@@ -103,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API 参考</span></p>
+<p><span class="caption-text">API 参考</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
@@ -173,12 +174,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="loading-graphs">
+  <section id="loading-graphs">
 <span id="id1"></span><h1>载图<a class="headerlink" href="#loading-graphs" title="Permalink to this headline">¶</a></h1>
 <p>GraphScope 以
 <a class="reference external" href="https://github.com/tinkerpop/blueprints/wiki/Property-Graph-Model">属性图</a> 建模图数据。
 图上的点/边都带有标签（label），每个标签都可能带有许多属性（property）。</p>
-<div class="section" id="id3">
+<section id="id3">
 <h2>配置图<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p>我们提供了一个函数用来定义一个属性图的模型（schema），并以将属性图载入 GraphScope：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">add_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[],</span> <span class="n">vid_field</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -349,8 +350,8 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 </pre></div>
 </div>
 <p>这里是一个更复杂的载入 LDBC-SNB 属性图的 <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/python/graphscope/dataset/ldbc.py">例子</a> 。</p>
-</div>
-<div class="section" id="numpy-pandas">
+</section>
+<section id="numpy-pandas">
 <h2>从 Numpy 和 Pandas 中载图<a class="headerlink" href="#numpy-pandas" title="Permalink to this headline">¶</a></h2>
 <p>上文提到的数据源是一个 <a class="reference internal" href="../reference/graph.html#loader-object"><span class="std std-ref">Loader object</span></a> 的类。<cite>Loader</cite> 包含文件路径或者数据本身。
 <cite>graphscope</cite> 支持从 <cite>pandas.DataFrame</cite> 或 <cite>numpy.ndarray</cite> 中载图。</p>
@@ -375,8 +376,8 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 <span class="n">g2</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">load_graph</span><span class="p">(</span><span class="n">edges</span><span class="o">=</span><span class="n">array_e</span><span class="p">,</span> <span class="n">vertices</span><span class="o">=</span><span class="n">array_v</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="id5">
+</section>
+<section id="id5">
 <h2>从文件路径载图<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <p>当 <cite>loader</cite> 包含文件路径时，它可能仅包含一个字符串。
 文件路径应遵循 URI 标准。当收到包含文件路径的载图请求时， <cite>graphscope</cite> 将会解析 URI，调用相应的载图模块。</p>
@@ -393,8 +394,8 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 <p>用户可以方便的实现自己的driver来支持更多的数据源，比如参照 <a class="reference external" href="https://github.com/alibaba/libvineyard/blob/main/modules/io/adaptors/ossfs.py">ossfs</a> driver的实现方式。
 用户需要继承 <cite>AbstractFileSystem</cite> 类用来做scheme对应的resolver， 以及 <cite>AbstractBufferedFile</cite>。用户仅需要实现 <code class="docutils literal notranslate"><span class="pre">_upload_chunk</span></code>,
 <code class="docutils literal notranslate"><span class="pre">_initiate_upload</span></code> and <code class="docutils literal notranslate"><span class="pre">_fetch_range</span></code> 这几个方法就可以实现基本的read，write功能。最后通过 <code class="docutils literal notranslate"><span class="pre">fsspec.register_implementation('protocol_name',</span> <span class="pre">'protocol_file_system')</span></code> 注册自定义的resolver。</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -481,6 +482,16 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/zh/index.html">v0.3.0</a></dd>
               
             
 

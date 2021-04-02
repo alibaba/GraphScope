@@ -116,8 +116,8 @@ Transform to simple graph implicitly
 ------------------------------------
 
 When an algorithm that only works on simple graph query a property graph, the property graph will
-be converted to a simple graph implicitly. If such transformation cannot be performed (Graph has more than 1 vertex
-label or edge label， or has more than 1 property), an exception will be raised.
+be converted to a simple graph implicitly. If such transformation cannot be performed (the vertex label num and
+edge label num is not one, or has more than 1 property on vertex/edge), an exception will be raised.
 
 .. code:: python
 

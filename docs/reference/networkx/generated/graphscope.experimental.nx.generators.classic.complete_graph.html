@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>graphscope.experimental.nx.generators.classic.complete_graph &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
@@ -98,7 +99,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../python_index.html">Python API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../session.html">Session</a></li>
@@ -197,14 +198,38 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="graphscope-experimental-nx-generators-classic-complete-graph">
+  <section id="graphscope-experimental-nx-generators-classic-complete-graph">
 <h1>graphscope.experimental.nx.generators.classic.complete_graph<a class="headerlink" href="#graphscope-experimental-nx-generators-classic-complete-graph" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="graphscope.experimental.nx.generators.classic.complete_graph">
-<code class="sig-prename descclassname">graphscope.experimental.nx.generators.classic.</code><code class="sig-name descname">complete_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">create_using</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.generators.classic.complete_graph" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<code class="sig-prename descclassname">graphscope.experimental.nx.generators.classic.</code><code class="sig-name descname">complete_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">create_using</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/graphscope/experimental/nx/generators/classic.html#complete_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.experimental.nx.generators.classic.complete_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the complete graph <cite>K_n</cite> with n nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em><em> or </em><em>iterable container of nodes</em>) – If n is an integer, nodes are from range(n).
+If n is a container of nodes, those nodes appear in the graph.</p></li>
+<li><p><strong>create_using</strong> (<em>NetworkX graph constructor</em><em>, </em><em>optional</em><em> (</em><em>default=nx.Graph</em><em>)</em>) – Graph type to create. If graph instance, then cleared before populated.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+<span class="go">9</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+<span class="go">36</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mi">14</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+<span class="go">[11, 12, 13]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
 </div>
+</dd></dl>
+
+</section>
 
 
            </div>
@@ -291,6 +316,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Developing Your Own Model &mdash; GraphScope  documentation</title>
@@ -83,7 +84,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -96,7 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -164,7 +165,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="developing-your-own-model">
+  <section id="developing-your-own-model">
 <h1>Developing Your Own Model<a class="headerlink" href="#developing-your-own-model" title="Permalink to this headline">¶</a></h1>
 <p>In this document, we will introduce how to use the basic APIs provided
 by <strong>GL</strong> to cooperate with deep learning engines, such as TensorFlow,
@@ -174,8 +175,8 @@ example which is the most popular model in graph neural network. In
 introduced some basic concepts used in developing algorithms, such as
 ʻEgoGraph<code class="docutils literal notranslate"><span class="pre">,</span> <span class="pre">ʻEgoTensor</span></code> encoder, etc. Please understand these basic
 concepts before continuing to read.</p>
-</div>
-<div class="section" id="how-to-build-a-graph-learning-algorithm">
+</section>
+<section id="how-to-build-a-graph-learning-algorithm">
 <h1>How to Build a Graph Learning Algorithm<a class="headerlink" href="#how-to-build-a-graph-learning-algorithm" title="Permalink to this headline">¶</a></h1>
 <p>In general, it requires the following four steps to build an algorithm</p>
 <ul>
@@ -218,7 +219,7 @@ loss functions, optimizers and training processes.</p>
 </li>
 </ul>
 <p>Next, we introduce how to implement a GCN model using the above 4 steps.</p>
-<div class="section" id="sampling">
+<section id="sampling">
 <h2>Sampling<a class="headerlink" href="#sampling" title="Permalink to this headline">¶</a></h2>
 <p>We use the Cora dataset as the node classification example. We provide a
 simple data conversion script <code class="docutils literal notranslate"><span class="pre">cora.py</span></code> to convert the original Cora
@@ -302,8 +303,8 @@ are so we use ‘full’ for sampling. We aggregate the sampling results in
 </div>
 <p>We can get the <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> corresponding to the previous <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code>
 from <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code>.</p>
-</div>
-<div class="section" id="encoder">
+</section>
+<section id="encoder">
 <h2>Encoder<a class="headerlink" href="#encoder" title="Permalink to this headline">¶</a></h2>
 <p>Next, we first use the feature encoder to encode the original features.
 In this example, we use <code class="docutils literal notranslate"><span class="pre">IdentityEncoder</span></code> that returns itself, because
@@ -332,8 +333,8 @@ model, please refer to the implementation of GraphSAGE.</p>
     <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="n">encoder</span><span class="p">,</span> <span class="s2">&quot;edge&quot;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s2">&quot;dst&quot;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="loss-function-and-training-process">
+</section>
+<section id="loss-function-and-training-process">
 <h2>Loss Function and Training Process<a class="headerlink" href="#loss-function-and-training-process" title="Permalink to this headline">¶</a></h2>
 <p>For the Cora node classification model, we can select the corresponding
 classification loss function in TensorFlow. Then, we combine the encoder
@@ -382,8 +383,8 @@ directory for the complete code.</p>
 <p>We have implemented GCN, GAT, GraphSage, DeepWalk, LINE, TransE,
 Bipartite GraphSage, sample-based GCN and GAT models, which can be used
 as a starting point for building a similar model.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -461,6 +462,16 @@ as a starting point for building a similar model.</p>
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

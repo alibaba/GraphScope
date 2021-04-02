@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Install from pip &mdash; GraphScope  documentation</title>
@@ -83,7 +84,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -96,7 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -164,7 +165,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="install-from-pip">
+  <section id="install-from-pip">
 <h1>Install from pip<a class="headerlink" href="#install-from-pip" title="Permalink to this headline">¶</a></h1>
 <p>We build the wheel package with<code class="docutils literal notranslate"><span class="pre">g++</span> <span class="pre">5.4.0</span></code> and <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">2.7</span></code> on
 <code class="docutils literal notranslate"><span class="pre">Ubuntu</span> <span class="pre">16.04</span></code>. If you have the same environment, you can download and
@@ -174,40 +175,40 @@ based on <strong>TensorFlow 1.12</strong>. To run the example models, please ins
 <strong>TensorFlow 1.12</strong>. Users who only rely on system interfaces for model
 development can modify the source code slightly and remove the relevant
 part of <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">*tf*</span></code> in the <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file.</p>
-<div class="section" id="get-wheel-package">
+<section id="get-wheel-package">
 <h2>Get wheel package<a class="headerlink" href="#get-wheel-package" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget http://graph-learn-whl.oss-cn-zhangjiakou.aliyuncs.com/graphlearn-0.1-cp27-cp27mu-linux_x86_64.whl
 </pre></div>
 </div>
-</div>
-<div class="section" id="install-using-pip">
+</section>
+<section id="install-using-pip">
 <h2>Install using pip<a class="headerlink" href="#install-using-pip" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo pip install graphlearn-0.1-cp27-cp27mu-linux_x86_64.whl
 </pre></div>
 </div>
-</div>
-<div class="section" id="install-tensorflow">
+</section>
+<section id="install-tensorflow">
 <h2>Install TensorFlow<a class="headerlink" href="#install-tensorflow" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo pip install <span class="nv">tensorflow</span><span class="o">==</span><span class="m">1</span>.12.0
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="build-from-source">
+</section>
+</section>
+<section id="build-from-source">
 <h1>Build from source<a class="headerlink" href="#build-from-source" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="install-git">
+<section id="install-git">
 <h2>Install git<a class="headerlink" href="#install-git" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt-get install git-all
 </pre></div>
 </div>
-</div>
-<div class="section" id="install-dependent-libraries">
+</section>
+<section id="install-dependent-libraries">
 <h2>Install dependent libraries<a class="headerlink" href="#install-dependent-libraries" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt-get install autoconf automake libtool cmake python-numpy
 </pre></div>
 </div>
-</div>
-<div class="section" id="compile">
+</section>
+<section id="compile">
 <h2>Compile<a class="headerlink" href="#compile" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/alibaba/graph-learn.git
 <span class="nb">cd</span> graph-learn
@@ -216,23 +217,23 @@ make <span class="nb">test</span>
 make python
 </pre></div>
 </div>
-</div>
-<div class="section" id="install">
+</section>
+<section id="install">
 <h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo pip install dist/your_wheel_name.whl
 </pre></div>
 </div>
-</div>
-<div class="section" id="run-test">
+</section>
+<section id="run-test">
 <h2>Run test<a class="headerlink" href="#run-test" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span> env.sh
 ./test_cpp_ut.sh
 ./test_python_ut.sh
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="docker-image">
+</section>
+</section>
+<section id="docker-image">
 <h1>Docker image<a class="headerlink" href="#docker-image" title="Permalink to this headline">¶</a></h1>
 <p>You can download our docker image to run <strong>GL</strong> projects.</p>
 <p>CPU version:</p>
@@ -246,7 +247,7 @@ make python
 <p>You can also refer to our Dockerfile to build your own image. Please
 checkout this <a class="reference external" href="../docker_image/README.md">document</a>.</p>
 <p><a class="reference external" href="../README.md">Home</a></p>
-</div>
+</section>
 
 
            </div>
@@ -324,6 +325,16 @@ checkout this <a class="reference external" href="../docker_image/README.md">doc
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

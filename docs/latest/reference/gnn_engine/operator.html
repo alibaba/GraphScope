@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Defining Your Own Operator &mdash; GraphScope  documentation</title>
@@ -83,7 +84,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -96,7 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -164,7 +165,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="defining-your-own-operator">
+  <section id="defining-your-own-operator">
 <h1>Defining Your Own Operator<a class="headerlink" href="#defining-your-own-operator" title="Permalink to this headline">¶</a></h1>
 <p>In <strong>GL</strong>, an <strong>operator</strong> is a basic executable unit. The system
 function is represented by the operators. For example, a graph sampler
@@ -172,8 +173,8 @@ is a kind of operator. Operators can be <strong>extended</strong> according to
 requirements. Usually, we just focus on the local implementation when
 customizing an operator. The system framework will help run it
 distributedly.</p>
-</div>
-<div class="section" id="programming-interface">
+</section>
+<section id="programming-interface">
 <h1>Programming Interface<a class="headerlink" href="#programming-interface" title="Permalink to this headline">¶</a></h1>
 <p>To customize an <strong>operator</strong>, class
 <a class="reference external" href="../graphlearn/core/operator/operator.h">Operator</a> should be
@@ -203,8 +204,8 @@ to be partitioned should be placed into <code class="docutils literal notranslat
 operators. You can just use the
 <a class="reference external" href="../graphlearn/core/partition/partitioner.h">Partitioner</a> in most
 cases.</p>
-</div>
-<div class="section" id="distributed-runtime-design">
+</section>
+<section id="distributed-runtime-design">
 <h1>Distributed Runtime Design<a class="headerlink" href="#distributed-runtime-design" title="Permalink to this headline">¶</a></h1>
 <p><strong>GL</strong> follows the principle that the <strong>computation happens where the
 data is placed</strong>. In distributed mode, all severs can communicate with
@@ -216,14 +217,16 @@ just compute in place of the corresponding raw data.</p>
 <p>As above, we propose the <strong>Partition-Stitch</strong> computing pattern for
 operators. Developers just need care about the next three functions
 <strong>Partition()</strong>, <strong>Process()</strong>, <strong>Stitch()</strong>.</p>
-<div class="figure align-default" id="id1">
+<figure class="align-default" id="id1">
 <img alt="op" src="reference/gnn_engine/images/operator_runtime.png" />
-<p class="caption"><span class="caption-text">op</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
-</div>
-</div>
-<div class="section" id="implement-a-new-operator">
+<figcaption>
+<p><span class="caption-text">op</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="implement-a-new-operator">
 <h1>Implement a New Operator<a class="headerlink" href="#implement-a-new-operator" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="clone-source-code">
+<section id="clone-source-code">
 <h2>Clone source code<a class="headerlink" href="#clone-source-code" title="Permalink to this headline">¶</a></h2>
 <p>To <strong>implement</strong> an operator, you should clone the source code first.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/alibaba/graph-learn.git
@@ -232,8 +235,8 @@ git submodule update --init
 </div>
 <p>Refer to <a class="reference external" href="install.md#build-from-source">building from source</a> to
 build pass.</p>
-</div>
-<div class="section" id="implement-your-operator-class">
+</section>
+<section id="implement-your-operator-class">
 <h2>Implement your operator class<a class="headerlink" href="#implement-your-operator-class" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyOperator</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Operator</span> <span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
@@ -246,8 +249,8 @@ build pass.</p>
 <p>If you need to rewrite the <strong>Partition()</strong> and <strong>Stitch()</strong>, you should
 customize request and response class, which inherits from <strong>OpRequest</strong>
 and <strong>OpResponse</strong>.</p>
-</div>
-<div class="section" id="register-operator">
+</section>
+<section id="register-operator">
 <h2>Register Operator<a class="headerlink" href="#register-operator" title="Permalink to this headline">¶</a></h2>
 <p>Each operator has a <strong>unique name</strong>. Register the operator with its name
 and class name.</p>
@@ -258,8 +261,8 @@ and class name.</p>
 <strong>OpRequest.Name()</strong>. Refer to an existed operator, such as
 <a class="reference external" href="../graphlearn/core/operator/sampler/random_sampler.cc">RandomSampler</a>
 for details.</p>
-</div>
-<div class="section" id="compile">
+</section>
+<section id="compile">
 <h2>Compile<a class="headerlink" href="#compile" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">graph</span><span class="o">-</span><span class="n">learn</span>
 <span class="n">make</span> <span class="n">clean</span>
@@ -272,9 +275,9 @@ that, you can make the python package and install it.</p>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">dist</span><span class="o">/</span><span class="n">your_wheel_name</span><span class="o">.</span><span class="n">whl</span> <span class="o">-</span><span class="n">U</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="how-to-use-an-operator">
+</section>
+</section>
+<section id="how-to-use-an-operator">
 <h1>How to Use an Operator<a class="headerlink" href="#how-to-use-an-operator" title="Permalink to this headline">¶</a></h1>
 <p>For example, if a new sampler named <strong>xxxSampler</strong>, you can call it like
 this:</p>
@@ -283,7 +286,7 @@ this:</p>
 </div>
 <p>More information about <strong>API</strong> refer to <a class="reference external" href="query.md">this</a>.</p>
 <p><a class="reference external" href="../README.md">Home</a></p>
-</div>
+</section>
 
 
            </div>
@@ -361,6 +364,16 @@ this:</p>
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Graph &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
@@ -98,7 +99,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="python_index.html">Python API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
@@ -185,9 +186,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="graph">
+  <section id="graph">
 <span id="id1"></span><h1>Graph<a class="headerlink" href="#graph" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="graph-object">
+<section id="graph-object">
 <h2>Graph object<a class="headerlink" href="#graph-object" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="graphscope.framework.graph.Graph">
@@ -255,7 +256,7 @@ which can be one of:</p>
 
 <dl class="py method">
 <dt id="graphscope.framework.graph.Graph.add_edges">
-<code class="sig-name descname">add_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">'_'</span></em>, <em class="sig-param"><span class="n">properties</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">src_label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dst_label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">src_field</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">dst_field</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.add_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.add_edges" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">'_'</span></em>, <em class="sig-param"><span class="n">properties</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">src_label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dst_label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">src_field</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">dst_field</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.add_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.add_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add edges to graph.
 1. Add edges to a uninitialized graph.</p>
 <blockquote>
@@ -469,8 +470,8 @@ a <cite>path_{worker_id}</cite> file to storage.
 
 </dd></dl>
 
-</div>
-<div class="section" id="loader-object">
+</section>
+<section id="loader-object">
 <h2>Loader object<a class="headerlink" href="#loader-object" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="graphscope.framework.loader.Loader">
@@ -518,8 +519,8 @@ See more additional info in <cite>Loading Graph</cite> section of Docs, and impl
 
 </dd></dl>
 
-</div>
-<div class="section" id="graph-functions">
+</section>
+<section id="graph-functions">
 <h2>Graph Functions<a class="headerlink" href="#graph-functions" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="graphscope.framework.graph_builder.load_from">
@@ -628,8 +629,8 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
 </dl>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -716,6 +717,16 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

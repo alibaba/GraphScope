@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Quick Start &mdash; GraphScope  documentation</title>
@@ -83,7 +84,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -96,7 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -164,15 +165,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="quick-start">
+  <section id="quick-start">
 <h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
 <p>This tutorial has three parts: - How to quickly try out a graph learning
 model using <strong>GL</strong>. - How to import data into <strong>GL</strong>, and use the graph
 data, graph sampling and negative sampling APIs. - How to develop your
 own GNN models using <strong>GL</strong> and Tensorflow using <strong>GraphSAGE</strong> as an
 example.</p>
-</div>
-<div class="section" id="trying-out-the-built-in-models">
+</section>
+<section id="trying-out-the-built-in-models">
 <h1>1 Trying out the built-in models<a class="headerlink" href="#trying-out-the-built-in-models" title="Permalink to this headline">¶</a></h1>
 <p>We have implemented in <strong>GL</strong> a set of popular GNN models, such as
 <strong>GCN</strong>, <strong>GraphSAGE</strong>, and some datasets, such as <strong>cora</strong>, <strong>ppi</strong>. To
@@ -187,8 +188,8 @@ python cora.py
 python train_supervised.py
 </pre></div>
 </div>
-</div>
-<div class="section" id="how-to-use-the-gl-apis">
+</section>
+<section id="how-to-use-the-gl-apis">
 <h1>2 How to use the <strong>GL</strong> APIs<a class="headerlink" href="#how-to-use-the-gl-apis" title="Permalink to this headline">¶</a></h1>
 <p><strong>GL</strong> provides a large collection of basic APIs for developing GNN
 models. In this part, we will go through how to use them to (1)
@@ -298,13 +299,13 @@ python <span class="nv">$HERE</span>/test.py <span class="se">\</span>
   --job_name<span class="o">=</span><span class="s2">&quot;client&quot;</span> --task_index<span class="o">=</span><span class="m">1</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="developing-a-gnn-model">
+</section>
+<section id="developing-a-gnn-model">
 <h1>3 Developing a GNN model<a class="headerlink" href="#developing-a-gnn-model" title="Permalink to this headline">¶</a></h1>
 <p>Next we will go through how to develop a supervised <strong>GraphSAGE</strong> model
 using <strong>GL</strong> and <strong>TensorFlow</strong>, and train it on the Cora dataset.
 Please refer to <a class="reference external" href="algo_en.md">Developing Your Own Model</a> for details.</p>
-<div class="section" id="data-preparation">
+<section id="data-preparation">
 <h2>3.1 Data Preparation<a class="headerlink" href="#data-preparation" title="Permalink to this headline">¶</a></h2>
 <p>We use the open-source dataset Cora as an example. The Cora dataset
 contains papers from the machine learning field, and the citation
@@ -350,8 +351,8 @@ data format is described through <code class="docutils literal notranslate"><spa
 <span class="n">edge_decoder</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="graph-construction">
+</section>
+<section id="graph-construction">
 <h2>3.2 Graph Construction<a class="headerlink" href="#graph-construction" title="Permalink to this headline">¶</a></h2>
 <p>Graph construction is the process of loading the vertex and edge data
 into memory. After construction, the graph can be queries and sampled.</p>
@@ -383,8 +384,8 @@ into memory. After construction, the graph can be queries and sampled.</p>
 <span class="n">g</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="graph-sampling">
+</section>
+<section id="graph-sampling">
 <h2>3.3 Graph Sampling<a class="headerlink" href="#graph-sampling" title="Permalink to this headline">¶</a></h2>
 <p>GraphSAGE requires graph sampling to generate input for the neural
 network. Here, we use the following sampling steps: (1) sample a batch
@@ -410,8 +411,8 @@ through graph traversal.</p>
       <span class="k">break</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="gnn-model">
+</section>
+<section id="gnn-model">
 <h2>3.4 GNN Model<a class="headerlink" href="#gnn-model" title="Permalink to this headline">¶</a></h2>
 <p>In this part, we use the TensorFlow Estimator as an example to
 demonstrate developing a GNN model on <strong>GL</strong>.</p>
@@ -510,8 +511,8 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
 <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">input_fn</span><span class="o">=</span><span class="n">sample_input_fn</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -589,6 +590,16 @@ demonstrate developing a GNN model on <strong>GL</strong>.</p>
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

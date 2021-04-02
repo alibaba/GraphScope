@@ -83,7 +83,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
@@ -96,7 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -192,9 +192,6 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">import</span> <span class="nn">signal</span>
-<span class="kn">import</span> <span class="nn">socket</span>
-<span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">import</span> <span class="nn">time</span>
@@ -212,7 +209,8 @@
 <span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="k">import</span> <span class="n">GSLogger</span>
 <span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="k">import</span> <span class="n">set_defaults</span>
 <span class="kn">from</span> <span class="nn">graphscope.config</span> <span class="k">import</span> <span class="n">GSConfig</span> <span class="k">as</span> <span class="n">gs_config</span>
-<span class="kn">from</span> <span class="nn">graphscope.deploy.kubernetes.cluster</span> <span class="k">import</span> <span class="n">KubernetesCluster</span>
+<span class="kn">from</span> <span class="nn">graphscope.deploy.hosts.cluster</span> <span class="k">import</span> <span class="n">HostsClusterLauncher</span>
+<span class="kn">from</span> <span class="nn">graphscope.deploy.kubernetes.cluster</span> <span class="k">import</span> <span class="n">KubernetesClusterLauncher</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="ne">ConnectionError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">FatalError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">GRPCError</span>
@@ -228,17 +226,6 @@
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">message_pb2</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">op_def_pb2</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">types_pb2</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">gscoordinator</span>
-
-    <span class="n">COORDINATOR_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">gscoordinator</span><span class="o">.</span><span class="vm">__file__</span><span class="p">,</span> <span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="s2">&quot;..&quot;</span><span class="p">))</span>
-<span class="k">except</span> <span class="n">ModuleNotFoundError</span><span class="p">:</span>
-    <span class="c1"># If gscoordinator is not installed, try to locate it by relative path,</span>
-    <span class="c1"># which is strong related with the directory structure of GraphScope</span>
-    <span class="n">COORDINATOR_HOME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="vm">__file__</span><span class="p">,</span> <span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="s2">&quot;coordinator&quot;</span><span class="p">)</span>
-    <span class="p">)</span>
 
 <span class="n">DEFAULT_CONFIG_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
     <span class="s2">&quot;GS_CONFIG_PATH&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;~/.graphscope/session.json&quot;</span><span class="p">)</span>
@@ -313,6 +300,7 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cluster_type</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">cluster_type</span><span class="p">,</span>
         <span class="n">addr</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">addr</span><span class="p">,</span>
         <span class="n">num_workers</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span>
         <span class="n">preemptive</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">preemptive</span><span class="p">,</span>
@@ -361,6 +349,9 @@
 
 <span class="sd">            addr (str, optional): The endpoint of a pre-launched GraphScope instance with &#39;&lt;ip&gt;:&lt;port&gt;&#39; format.</span>
 <span class="sd">                A new session id will be generated for each session connection.</span>
+
+<span class="sd">            cluster_type (str, optional): Deploy GraphScope instance on hosts or k8s cluster. Defaults to k8s.</span>
+<span class="sd">                Available options: &quot;k8s&quot; and &quot;hosts&quot;. Note that only support deployed on localhost with hosts mode.</span>
 
 <span class="sd">            num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.</span>
 
@@ -526,6 +517,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_accessable_params</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;addr&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cluster_type&quot;</span><span class="p">,</span>
             <span class="s2">&quot;num_workers&quot;</span><span class="p">,</span>
             <span class="s2">&quot;preemptive&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_namespace&quot;</span><span class="p">,</span>
@@ -577,15 +569,11 @@
         <span class="c1"># update other optional params</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
 
-        <span class="c1"># Reserved keyword for local testing.</span>
-        <span class="n">run_on_local</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;run_on_local&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">run_on_local</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_run_on_local</span><span class="p">()</span>
+        <span class="c1"># initial setting of cluster_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_cluster_type</span><span class="p">()</span>
 
         <span class="c1"># mars cannot work with run-on-local mode</span>
-        <span class="k">if</span> <span class="n">run_on_local</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;with_mars&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;with_mars&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s2">&quot;Mars cluster cannot be launched along with local GraphScope deployment&quot;</span>
             <span class="p">)</span>
@@ -626,14 +614,10 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="c1"># set _session_type in self._connect()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">INVALID_SESSION</span>
+        <span class="c1"># coordinator service endpoint</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="c1"># need clean up when session exit</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_proc</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_k8s_cluster</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_sending_thread</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span> <span class="o">=</span> <span class="kc">None</span>
@@ -657,7 +641,7 @@
         <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">)</span>
         <span class="c1"># create and connect session</span>
         <span class="k">with</span> <span class="n">CaptureKeyboardInterrupt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_proc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -689,6 +673,19 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">slient</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">exp</span>
 
+    <span class="k">def</span> <span class="nf">_parse_cluster_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># get the cluster type after connecting</span>
+            <span class="k">return</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNDEFINED</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;cluster_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;hosts&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_run_on_local</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;cluster_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;k8s&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expect hosts or k8s of cluster_type parameter&quot;</span><span class="p">)</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">engine_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Show the engine configration associated with session in json format.&quot;&quot;&quot;</span>
@@ -705,9 +702,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;active&quot;</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">REMOTE</span><span class="p">:</span>
-            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;remote&quot;</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span><span class="p">:</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;k8s&quot;</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span><span class="p">)</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;namespace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">]</span>
@@ -715,9 +710,10 @@
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;hosts&quot;</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">])</span>
 
+        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;cluster_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span><span class="p">)</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;session_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span>
-        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;coordinator_endpoint&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;coordinator_endpoint&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span>
         <span class="k">return</span> <span class="n">info</span>
 
@@ -741,7 +737,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_endpoint</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_deregister_default</span><span class="p">()</span>
 
@@ -777,16 +773,10 @@
             <span class="n">_session_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="c1"># clean up</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># coordinator&#39;s GRPCServer.wait_for_termination works for SIGINT (Ctrl-C)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_proc</span><span class="o">.</span><span class="n">send_signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_proc</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_proc</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k8s_cluster</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_k8s_cluster</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span> <span class="o">=</span> <span class="p">[]</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span> <span class="o">=</span> <span class="p">[]</span></div>
 
     <span class="k">def</span> <span class="nf">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Close a interactive instance.&quot;&quot;&quot;</span>
@@ -911,8 +901,8 @@
     <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># try connect to exist coordinator</span>
-            <span class="n">proc</span><span class="p">,</span> <span class="n">endpoint</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span><span class="p">:</span>
             <span class="k">if</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_image&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
                 <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gs_image&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
@@ -921,8 +911,7 @@
             <span class="n">api_client</span> <span class="o">=</span> <span class="n">kube_config</span><span class="o">.</span><span class="n">new_client_from_config</span><span class="p">(</span>
                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
             <span class="p">)</span>
-            <span class="n">proc</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_k8s_cluster</span> <span class="o">=</span> <span class="n">KubernetesCluster</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="o">=</span> <span class="n">KubernetesClusterLauncher</span><span class="p">(</span>
                 <span class="n">api_client</span><span class="o">=</span><span class="n">api_client</span><span class="p">,</span>
                 <span class="n">namespace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">],</span>
                 <span class="n">service_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_service_type&quot;</span><span class="p">],</span>
@@ -963,21 +952,30 @@
                     <span class="s2">&quot;dangling_timeout_seconds&quot;</span>
                 <span class="p">],</span>
             <span class="p">)</span>
-            <span class="n">endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k8s_cluster</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k8s_cluster</span><span class="o">.</span><span class="n">get_namespace</span><span class="p">()</span>
         <span class="k">elif</span> <span class="p">(</span>
-            <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span>
             <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span>
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
         <span class="p">):</span>
             <span class="c1"># lanuch coordinator with hosts</span>
-            <span class="n">proc</span><span class="p">,</span> <span class="n">endpoint</span> <span class="o">=</span> <span class="n">_launch_coordinator_on_local</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="o">=</span> <span class="n">HostsClusterLauncher</span><span class="p">(</span>
+                <span class="n">hosts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">],</span>
+                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">],</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">],</span>
+                <span class="n">vineyard_socket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">],</span>
+                <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;timeout_seconds&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Session initialize failed.&quot;</span><span class="p">)</span>
 
+        <span class="c1"># launching graphscope service</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="o">.</span><span class="n">coordinator_endpoint</span>
+
         <span class="c1"># waiting service ready</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span> <span class="o">=</span> <span class="n">GRPCClient</span><span class="p">(</span><span class="n">endpoint</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span> <span class="o">=</span> <span class="n">GRPCClient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">waiting_service_ready</span><span class="p">(</span>
             <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;timeout_seconds&quot;</span><span class="p">],</span>
         <span class="p">)</span>
@@ -986,7 +984,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_session_type</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">],</span>
@@ -998,18 +996,12 @@
                 <span class="p">],</span>
             <span class="p">)</span>
             <span class="c1"># fetch logs</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">fetch_logs</span><span class="p">()</span>
             <span class="n">_session_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">proc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">proc</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
-                <span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: E722</span>
-                    <span class="k">pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">raise</span>
-
-        <span class="k">return</span> <span class="n">proc</span><span class="p">,</span> <span class="n">endpoint</span>
 
 <div class="viewcode-block" id="Session.get_config"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get configuration of the session.&quot;&quot;&quot;</span>
@@ -1029,7 +1021,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;localhost&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_k8s&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="nf">_get_gl_handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Dump a handler for GraphLearn for interaction.</span>
@@ -1101,26 +1092,26 @@
 
         <span class="k">def</span> <span class="nf">group_property_types</span><span class="p">(</span><span class="n">props</span><span class="p">):</span>
             <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span> <span class="o">=</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">field_type</span> <span class="ow">in</span> <span class="n">props</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">field_type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">STRING</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">prop</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">STRING</span><span class="p">]:</span>
                     <span class="n">s</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="n">attr_types</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;s&quot;</span>
-                <span class="k">elif</span> <span class="n">field_type</span> <span class="ow">in</span> <span class="p">(</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DOUBLE</span><span class="p">):</span>
+                    <span class="n">attr_types</span><span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;s&quot;</span>
+                <span class="k">elif</span> <span class="n">prop</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DOUBLE</span><span class="p">):</span>
                     <span class="n">f</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="n">attr_types</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;f&quot;</span>
+                    <span class="n">attr_types</span><span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;f&quot;</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="n">attr_types</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;i&quot;</span>
-                <span class="k">if</span> <span class="n">field_name</span> <span class="o">==</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span>
+                    <span class="n">attr_types</span><span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;i&quot;</span>
+                <span class="k">if</span> <span class="n">prop</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span>
                     <span class="n">weighted</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
-                <span class="k">elif</span> <span class="n">field_name</span> <span class="o">==</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="n">prop</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span>
                     <span class="n">labeled</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
             <span class="k">return</span> <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span>
 
         <span class="n">node_schema</span><span class="p">,</span> <span class="n">node_attribute_types</span> <span class="o">=</span> <span class="p">[],</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">vertex_labels</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">vertex_labels</span><span class="p">:</span>
             <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span> <span class="o">=</span> <span class="n">group_property_types</span><span class="p">(</span>
-                <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">vertex_properties</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_vertex_properties</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">node_schema</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
@@ -1128,11 +1119,11 @@
             <span class="n">node_attribute_types</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr_types</span>
 
         <span class="n">edge_schema</span><span class="p">,</span> <span class="n">edge_attribute_types</span> <span class="o">=</span> <span class="p">[],</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">edge_labels</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">edge_labels</span><span class="p">:</span>
             <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span> <span class="o">=</span> <span class="n">group_property_types</span><span class="p">(</span>
-                <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">edge_properties</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_edge_properties</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
             <span class="p">)</span>
-            <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">edge_relationships</span><span class="p">[</span><span class="n">index</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_relationships</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
                 <span class="n">edge_schema</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                         <span class="n">rel</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="p">,</span> <span class="n">rel</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span>
@@ -1292,83 +1283,6 @@
 
 
 <span class="n">session</span> <span class="o">=</span> <span class="n">Session</span>
-
-
-<span class="k">def</span> <span class="nf">_is_port_in_use</span><span class="p">(</span><span class="n">port</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Check whether port of localhost is used</span>
-
-<span class="sd">    Returns: bool</span>
-<span class="sd">      True if port already in used.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">connect_ex</span><span class="p">((</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span>
-
-
-<span class="k">def</span> <span class="nf">_launch_coordinator_on_local</span><span class="p">(</span><span class="n">config_params</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Launch coordinator locally using specific configuration.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        config_params (dict): Specific configurations,</span>
-<span class="sd">          in which we will look at several specific keys:</span>
-<span class="sd">            port: Port used to launch coordinator, use random port if None.</span>
-<span class="sd">            num_workers: Workers number.</span>
-<span class="sd">            hosts: Hosts name of workers.</span>
-<span class="sd">            timeout_seconds: Wait until reached timeout.</span>
-<span class="sd">            vineyard_socket: Vineyard socket path. Use default path if None.</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        process: instance of Popen object.</span>
-<span class="sd">        endpoint (str): The endpoint to connect to coordinator.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">port</span> <span class="o">=</span> <span class="n">config_params</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">port</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># use random port</span>
-        <span class="n">port</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">60801</span><span class="p">,</span> <span class="mi">63801</span><span class="p">)</span>
-        <span class="k">while</span> <span class="n">_is_port_in_use</span><span class="p">(</span><span class="n">port</span><span class="p">):</span>
-            <span class="n">port</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">60801</span><span class="p">,</span> <span class="mi">63801</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># check port conflict</span>
-        <span class="k">if</span> <span class="n">_is_port_in_use</span><span class="p">(</span><span class="n">port</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Port already used.&quot;</span><span class="p">)</span>
-
-    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
-        <span class="s2">&quot;-m&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;gscoordinator&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;--num_workers&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">])),</span>
-        <span class="s2">&quot;--hosts&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">])),</span>
-        <span class="s2">&quot;--log_level&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gs_config</span><span class="o">.</span><span class="n">log_level</span><span class="p">),</span>
-        <span class="s2">&quot;--timeout_seconds&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config_params</span><span class="p">[</span><span class="s2">&quot;timeout_seconds&quot;</span><span class="p">]),</span>
-        <span class="s2">&quot;--port&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">port</span><span class="p">)),</span>
-    <span class="p">]</span>
-
-    <span class="k">if</span> <span class="n">config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">]:</span>
-        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--vineyard_socket&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">])])</span>
-
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Client is initializing coordinator.&quot;</span><span class="p">)</span>
-
-    <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">env</span><span class="p">[</span><span class="s2">&quot;PYTHONUNBUFFERED&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;TRUE&quot;</span>
-    <span class="c1"># Param `start_new_session=True` is for putting child process to a new process group</span>
-    <span class="c1"># so it won&#39;t get the signals from parent.</span>
-    <span class="n">process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
-        <span class="n">cmd</span><span class="p">,</span>
-        <span class="n">start_new_session</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">cwd</span><span class="o">=</span><span class="n">COORDINATOR_HOME</span><span class="p">,</span>
-        <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
-        <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-        <span class="n">stdout</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="k">if</span> <span class="n">gs_config</span><span class="o">.</span><span class="n">show_log</span> <span class="k">else</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-        <span class="n">stderr</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span> <span class="k">if</span> <span class="n">gs_config</span><span class="o">.</span><span class="n">show_log</span> <span class="k">else</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-        <span class="n">bufsize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">process</span><span class="p">,</span> <span class="s2">&quot;localhost:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">port</span>
 
 
 <div class="viewcode-block" id="set_option"><a class="viewcode-back" href="../../../reference/generated/graphscope.set_option.html#graphscope.set_option">[docs]</a><span class="k">def</span> <span class="nf">set_option</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1622,6 +1536,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

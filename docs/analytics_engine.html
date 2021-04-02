@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GraphScope Analytical Engine &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
@@ -105,7 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -173,7 +174,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="graphscope-analytical-engine">
+  <section id="graphscope-analytical-engine">
 <h1>GraphScope Analytical Engine<a class="headerlink" href="#graphscope-analytical-engine" title="Permalink to this headline">¶</a></h1>
 <p>The analytical engine in GraphScope derives from
 <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">GRAPE</a>,
@@ -185,7 +186,7 @@ with only minor changes and get parallelized to handle large graphs efficiently.
 In addition to the ease of programming, GRAPE is designed to be
 highly efficient and flexible, to cope the scale,
 variety and complexity from real-life graph applications.</p>
-<div class="section" id="built-in-algorithms">
+<section id="built-in-algorithms">
 <h2>Built-in Algorithms<a class="headerlink" href="#built-in-algorithms" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope analytical engine provides many common used algorithms,
 including connectivity and path
@@ -229,8 +230,8 @@ property graph or not is described in its docstring.</p>
 <li><p><a class="reference internal" href="reference/app.html#graphscope.wcc" title="graphscope.wcc"><code class="xref py py-func docutils literal notranslate"><span class="pre">wcc()</span></code></a></p></li>
 </ul>
 <p>The list is continuously growing.</p>
-</div>
-<div class="section" id="result-processing">
+</section>
+<section id="result-processing">
 <h2>Result Processing<a class="headerlink" href="#result-processing" title="Permalink to this headline">¶</a></h2>
 <p>When finish a computation, the results are wrapped as <a class="reference internal" href="reference/context.html#context"><span class="std std-ref">Context</span></a>
 and preserved on the distributed machines.</p>
@@ -285,8 +286,8 @@ Here are some examples for selectors on result processing.</p>
 </pre></div>
 </div>
 <p>See more details in <a class="reference internal" href="reference/context.html#context"><span class="std std-ref">Context</span></a> and <a class="reference internal" href="reference/selector.html#selector"><span class="std std-ref">Selector</span></a>.</p>
-</div>
-<div class="section" id="writing-your-own-algorithms-in-pie">
+</section>
+<section id="writing-your-own-algorithms-in-pie">
 <h2>Writing Your Own Algorithms in PIE<a class="headerlink" href="#writing-your-own-algorithms-in-pie" title="Permalink to this headline">¶</a></h2>
 <p>Users may write their own algorithms if the built-in algorithms
 do not meet their needs. <cite>graphscope</cite> enables users to write
@@ -376,8 +377,8 @@ can be found in <a class="reference internal" href="reference/cython_sdk.html#cy
 over a fragment, rather than considering the communication and message passing
 in the distributed setting. In this case, the classic dijkstra algorithm and its
 incremental version works for large graphs partitioned on a cluster.</p>
-</div>
-<div class="section" id="writing-algorithms-in-pregel">
+</section>
+<section id="writing-algorithms-in-pregel">
 <h2>Writing Algorithms in Pregel<a class="headerlink" href="#writing-algorithms-in-pregel" title="Permalink to this headline">¶</a></h2>
 <p>In addition to the sub-graph based PIE model,
 <cite>graphscope</cite> supports vertex-centric
@@ -435,8 +436,8 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
         <span class="k">return</span> <span class="n">ret</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="run-your-own-algorithms">
+</section>
+<section id="run-your-own-algorithms">
 <h2>Run Your Own Algorithms<a class="headerlink" href="#run-your-own-algorithms" title="Permalink to this headline">¶</a></h2>
 <p>To run your own algorithms, you may trigger it in place where you defined it.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -474,8 +475,8 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
 <li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang. <a class="reference external" href="http://www.vldb.org/pvldb/vol10/p1889-fan.pdf">GRAPE: Parallelizing Sequential Graph Computations.</a>, The 43rd International Conference on Very Large Data Bases (VLDB), demo, 2017 (the Best Demo Award).</p></li>
 <li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang, Zeyu Zheng, Bohan Zhang, Yang Cao, and Chao Tian. <a class="reference external" href="https://dl.acm.org/doi/10.1145/3035918.3035942">Parallelizing Sequential Graph Computations.</a>, ACM SIG Conference on Management of Data (SIGMOD), 2017 (the Best Paper Award).</p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -562,6 +563,16 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

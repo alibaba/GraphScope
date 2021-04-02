@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Loading Graphs &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
@@ -103,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -171,12 +172,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="loading-graphs">
+  <section id="loading-graphs">
 <span id="id1"></span><h1>Loading Graphs<a class="headerlink" href="#loading-graphs" title="Permalink to this headline">¶</a></h1>
 <p>GraphScope models graph data as
 <a class="reference external" href="https://github.com/tinkerpop/blueprints/wiki/Property-Graph-Model">Property Graph</a>,
 in which the edges/vertices are labeled and each label may have many properties.</p>
-<div class="section" id="building-a-graph">
+<section id="building-a-graph">
 <h2>Building a Graph<a class="headerlink" href="#building-a-graph" title="Permalink to this headline">¶</a></h2>
 <p>To load a property graph to GraphScope, we provide a method <cite>g()</cite> defined in <cite>Session</cite>.</p>
 <p>First, we create a session, then a graph instance inside that session.</p>
@@ -348,8 +349,8 @@ It only serve the most simple cases.</p>
 </pre></div>
 </div>
 <p>A more complex example to load LDBC snb graph can be find <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/python/graphscope/dataset/ldbc.py">here</a>.</p>
-</div>
-<div class="section" id="graphs-from-numpy-and-pandas">
+</section>
+<section id="graphs-from-numpy-and-pandas">
 <h2>Graphs from Numpy and Pandas<a class="headerlink" href="#graphs-from-numpy-and-pandas" title="Permalink to this headline">¶</a></h2>
 <p>The datasource aforementioned is an object of <span class="xref std std-ref">Loader</span>. A loader wraps
 a location or the data itself. <cite>graphscope</cite> supports load a graph
@@ -375,8 +376,8 @@ from pandas dataframes or numpy ndarrays.</p>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="n">array_v</span><span class="p">)</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">array_e</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="graphs-from-given-location">
+</section>
+<section id="graphs-from-given-location">
 <h2>Graphs from Given Location<a class="headerlink" href="#graphs-from-given-location" title="Permalink to this headline">¶</a></h2>
 <p>When a loader wraps a location, it may only contains a str.
 The string follows the standard of URI. When receiving a request for loading graph
@@ -399,8 +400,8 @@ directly be passed to corresponding storage class. Like <cite>host</cite> and <c
 is used as resolve to specific protocol scheme, and <cite>AbstractBufferFile</cite> to do read and write.
 The only methods user need to override is <code class="docutils literal notranslate"><span class="pre">_upload_chunk</span></code>,
 <code class="docutils literal notranslate"><span class="pre">_initiate_upload</span></code> and <code class="docutils literal notranslate"><span class="pre">_fetch_range</span></code>. In the end user need to use <code class="docutils literal notranslate"><span class="pre">fsspec.register_implementation('protocol_name',</span> <span class="pre">'protocol_file_system')</span></code> to register corresponding resolver.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -487,6 +488,16 @@ The only methods user need to override is <code class="docutils literal notransl
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

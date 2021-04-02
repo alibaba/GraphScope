@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
@@ -12,35 +13,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
-    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css"
+        href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
     <!-- Customisation  -->
     <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
 
 </head>
+
 <body class="home-template">
 
     <header class="main-header post-head no-cover">
-    <nav class="main-nav  clearfix">
-        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
-        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
-    </nav>
-</header>
+        <nav class="main-nav  clearfix">
+            <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+            <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+        </nav>
+    </header>
 
-<main class="content" role="main">
+    <main class="content" role="main">
 
-    <article class="post">
+        <article class="post">
 
-        <header class="post-header">
-            <h1 class="post-title">A Review of Programming Models for Parallel Graph Processing</h1>
-            <section class="post-meta">
-                
-                on Tech
-                
-                <time class="post-date" datetime=" 2021-03-25">25 Mar 2021</time>
-            </section>
-        </header>
+            <header class="post-header">
+                <h1 class="post-title">A Review of Programming Models for Parallel Graph Processing</h1>
+                <section class="post-meta">
 
-        <!--         <header class="post-header">
+                    on Tech
+
+                    <time class="post-date" datetime=" 2021-03-25">25 Mar 2021</time>
+                </section>
+            </header>
+
+            <!--         <header class="post-header">
             <a id="blog-logo" href="https://graphscope.io">
                 
                     <span class="blog-title">GraphScope</span>
@@ -48,29 +51,48 @@
             </a>
         </header> -->
 
-        <!-- <span class="post-meta">
+            <!-- <span class="post-meta">
             <time datetime="2021-03-25">25 Mar 2021</time>
             
                 on Tech
             
         </span> -->
 
-        <!-- <h1 class="post-title">A Review of Programming Models for Parallel Graph Processing</h1> -->
+            <!-- <h1 class="post-title">A Review of Programming Models for Parallel Graph Processing</h1> -->
 
-        <section class="post-content">
-            <p><img src="/blog/assets/images/programing-models.jpg" alt="programing-models" />
-To explore underlying insights hidden in graph data, many graph analytics algorithms, e.g., PageRank and single source shortest paths (the Dijkstra’s algorithm), have been designed to solve different problems.</p>
+            <section class="post-content">
+                <p><img src="/blog/assets/images/programing-models.jpg" alt="programing-models" />
+                    To explore underlying insights hidden in graph data, many graph analytics algorithms, e.g., PageRank
+                    and single source shortest paths (the Dijkstra’s algorithm), have been designed to solve different
+                    problems.</p>
 
-<p>In a single machine environment, developers can easily implement sequential solutions to these algorithms as they have a global view of the graph and can freely iterate through all vertices and edges. Current graph data in real industrial scenarios usually consists of billions of vertices and trillions of edges. Such a graph has to be divided into multiple partitions, and stored and processed in a distributed/parallel way. To allow developers to succinctly express graph algorithms under such environment, many programming models for parallel graph processing have been proposed. In this post, we would like to introduce some commonly used programming models, and further discuss their pros and cons.</p>
+                <p>In a single machine environment, developers can easily implement sequential solutions to these
+                    algorithms as they have a global view of the graph and can freely iterate through all vertices and
+                    edges. Current graph data in real industrial scenarios usually consists of billions of vertices and
+                    trillions of edges. Such a graph has to be divided into multiple partitions, and stored and
+                    processed in a distributed/parallel way. To allow developers to succinctly express graph algorithms
+                    under such environment, many programming models for parallel graph processing have been proposed. In
+                    this post, we would like to introduce some commonly used programming models, and further discuss
+                    their pros and cons.</p>
 
-<h4 id="think-like-a-vertex">Think like a vertex</h4>
+                <h4 id="think-like-a-vertex">Think like a vertex</h4>
 
-<p>The vertex-centric model proposed in Pregel[1] follows the philosophy of “think like a vertex”, where each vertex contains information about itself as well as all its adjacent edges, and the computation is expressed at the level of a single vertex. More specifically, the entire computation process is divided into multiple iterations (called <em>supersteps</em>), and in each superstep, all vertices execute the same user-defined function (called <em>vertex program</em>) that expresses the logic of a given algorithm. The vertex program defines how each vertex processes incoming messages (sent in the previous superstep), and sends messages to other vertices (for the next superstep). The iterations terminate until no messages are sent from any vertex, indicating a halt.</p>
+                <p>The vertex-centric model proposed in Pregel[1] follows the philosophy of “think like a vertex”, where
+                    each vertex contains information about itself as well as all its adjacent edges, and the computation
+                    is expressed at the level of a single vertex. More specifically, the entire computation process is
+                    divided into multiple iterations (called <em>supersteps</em>), and in each superstep, all vertices
+                    execute the same user-defined function (called <em>vertex program</em>) that expresses the logic of
+                    a given algorithm. The vertex program defines how each vertex processes incoming messages (sent in
+                    the previous superstep), and sends messages to other vertices (for the next superstep). The
+                    iterations terminate until no messages are sent from any vertex, indicating a halt.</p>
 
-<p><img src="/blog/assets/images/vertex-messaging.png" alt="vertex-model" /></p>
+                <p><img src="/blog/assets/images/vertex-messaging.png" alt="vertex-model" /></p>
 
-<p>With the vertex-centric model, the vertex program of single source shortest paths (SSSP) is expressed as follows.</p>
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">VertexProgramForSSSP</span><span class="p">():</span>
+                <p>With the vertex-centric model, the vertex program of single source shortest paths (SSSP) is expressed
+                    as follows.</p>
+                <div class="language-python highlighter-rouge">
+                    <div class="highlight">
+                        <pre class="highlight"><code><span class="k">def</span> <span class="nf">VertexProgramForSSSP</span><span class="p">():</span>
     <span class="c1"># receive and merge incoming messages
 </span>    <span class="n">incoming_msgs</span> <span class="o">=</span> <span class="n">ReceiveMessages</span><span class="p">()</span>
     <span class="n">merged_msg</span> <span class="o">=</span> <span class="n">Reduce</span><span class="p">(</span><span class="n">incoming_msgs</span><span class="p">,</span> <span class="n">MIN</span><span class="p">)</span>
@@ -83,20 +105,24 @@ To explore underlying insights hidden in graph data, many graph analytics algori
 </span>    <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">dist</span> <span class="o">+</span> <span class="n">edge_weight</span> <span class="o">&lt;</span> <span class="n">neighbor_dist</span><span class="p">:</span>
             <span class="n">SendMessage</span><span class="p">(</span><span class="n">neighbor</span><span class="p">,</span> <span class="n">dist</span> <span class="o">+</span> <span class="n">edge_weight</span><span class="p">)</span>
-</code></pre></div></div>
+</code></pre>
+                    </div>
+                </div>
 
-<p>However, the performance of Pregel drops dramatically when facing natural graphs which follow a power-law distribution. To solve this problem, PowerGraph[2] proposed the GAS (Gather-Apply-Scatter) programming model for the vertex-cut graph partitioning strategy. The <em>Gather</em> function runs locally on each partition and then one accumulator is sent from each mirror to the master. The master runs the <em>Apply</em> function and then sends the updated vertex data to all mirrors. Finally, the <em>Scatter</em> phase is run in parallel on mirrors to update the data on adjacent edges.</p>
+                <p>However, the performance of Pregel drops dramatically when facing natural graphs which follow a
+                    power-law distribution. To solve this problem, PowerGraph[2] proposed the GAS (Gather-Apply-Scatter)
+                    programming model for the vertex-cut graph partitioning strategy. The <em>Gather</em> function runs
+                    locally on each partition and then one accumulator is sent from each mirror to the master. The
+                    master runs the <em>Apply</em> function and then sends the updated vertex data to all mirrors.
+                    Finally, the <em>Scatter</em> phase is run in parallel on mirrors to update the data on adjacent
+                    edges.</p>
 
-<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">print_hi</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
-  <span class="nb">puts</span> <span class="s2">"Hi, </span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">"</span>
-<span class="k">end</span>
-<span class="n">print_hi</span><span class="p">(</span><span class="s1">'Tom'</span><span class="p">)</span>
-<span class="c1">#=&gt; prints 'Hi, Tom' to STDOUT.</span></code></pre></figure>
+                <p><img src="/blog/assets/images/gas.png" alt="gas-model" /></p>
 
-<p><img src="/blog/assets/images/gas.png" alt="gas-model" /></p>
-
-<p>Following the GAS abstraction, the SSSP can be implemented as follows.</p>
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">GASForSSSP</span><span class="p">():</span>
+                <p>Following the GAS abstraction, the SSSP can be implemented as follows.</p>
+                <div class="language-python highlighter-rouge">
+                    <div class="highlight">
+                        <pre class="highlight"><code><span class="k">def</span> <span class="nf">GASForSSSP</span><span class="p">():</span>
     <span class="c1"># gather_nbrs: ALL_NBRS
 </span>    <span class="k">def</span> <span class="nf">gather</span><span class="p">(</span><span class="n">D_u</span><span class="p">,</span> <span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">),</span> <span class="n">D_v</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">D_v</span> <span class="o">+</span> <span class="n">D</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">u</span><span class="p">)</span>
@@ -116,26 +142,41 @@ To explore underlying insights hidden in graph data, many graph analytics algori
 	    <span class="k">return</span> <span class="n">NULL</span>
 	<span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">D_u</span> <span class="o">+</span> <span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
-</code></pre></div></div>
+</code></pre>
+                    </div>
+                </div>
 
-<h5 id="pros">Pros:</h5>
-<ul>
-  <li>Powerful expressiveness to express various graph algorithms.</li>
-  <li>The vertex program is easy to run parallelly.</li>
-</ul>
+                <h5 id="pros">Pros:</h5>
+                <ul>
+                    <li>Powerful expressiveness to express various graph algorithms.</li>
+                    <li>The vertex program is easy to run parallelly.</li>
+                </ul>
 
-<h5 id="cons">Cons:</h5>
-<ul>
-  <li>Existing sequential (single-machine) graph algorithms have to be modified to comply with the “think like a vertex” principle.</li>
-  <li>Each vertex is very short-sighted: it only has information about its 1-hop neighbors, and thus information is propagated through the graph slowly, one hop at a time. As a result, it may take many computation iterations to propagate a piece of information from a source to a destination.</li>
-</ul>
+                <h5 id="cons">Cons:</h5>
+                <ul>
+                    <li>Existing sequential (single-machine) graph algorithms have to be modified to comply with the
+                        “think like a vertex” principle.</li>
+                    <li>Each vertex is very short-sighted: it only has information about its 1-hop neighbors, and thus
+                        information is propagated through the graph slowly, one hop at a time. As a result, it may take
+                        many computation iterations to propagate a piece of information from a source to a destination.
+                    </li>
+                </ul>
 
-<h4 id="think-like-a-graph">Think like a graph</h4>
+                <h4 id="think-like-a-graph">Think like a graph</h4>
 
-<p>To tackle the problem of short-sighted vertices in the vertex-centric model, the subgraph-centric (a.k.a. block-centric, partition-centric) programming model[3, 4] is proposed. Different from the vertex-centric model, the subgraph-centric model focuses on the entire subgraph, and is labeled as “think like a graph”. For the vertex-centric model, it uses the information of 1-hop neighbors to update the value of each vertex in one superstep. Instead, the subgraph-centric model leverages information within the whole subgraph. In addition, each vertex can send messages to any vertex in the graph, instead of 1-hop neighbors. In this way, the communication overhead and the number of supersteps are greatly reduced.</p>
+                <p>To tackle the problem of short-sighted vertices in the vertex-centric model, the subgraph-centric
+                    (a.k.a. block-centric, partition-centric) programming model[3, 4] is proposed. Different from the
+                    vertex-centric model, the subgraph-centric model focuses on the entire subgraph, and is labeled as
+                    “think like a graph”. For the vertex-centric model, it uses the information of 1-hop neighbors to
+                    update the value of each vertex in one superstep. Instead, the subgraph-centric model leverages
+                    information within the whole subgraph. In addition, each vertex can send messages to any vertex in
+                    the graph, instead of 1-hop neighbors. In this way, the communication overhead and the number of
+                    supersteps are greatly reduced.</p>
 
-<p>The SSSP is expressed as follows in the subgraph-centric model.</p>
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">ComputeSSSP</span><span class="p">(</span><span class="n">subgraph</span><span class="p">,</span> <span class="n">messages</span><span class="p">):</span>
+                <p>The SSSP is expressed as follows in the subgraph-centric model.</p>
+                <div class="language-python highlighter-rouge">
+                    <div class="highlight">
+                        <pre class="highlight"><code><span class="k">def</span> <span class="nf">ComputeSSSP</span><span class="p">(</span><span class="n">subgraph</span><span class="p">,</span> <span class="n">messages</span><span class="p">):</span>
     <span class="c1"># vertices with improved distances
 </span>    <span class="n">openset</span> <span class="o">=</span> <span class="n">NULL</span> 
     <span class="k">if</span> <span class="n">superstep</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># initialize distances
@@ -168,35 +209,52 @@ To explore underlying insights hidden in graph data, many graph analytics algori
 		<span class="n">openset</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span> <span class="c1"># distance has improved
 </span>	<span class="n">openset</span><span class="p">.</span><span class="n">remove</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="c1"># done with this local vertex
 </span>    <span class="k">return</span> <span class="n">boundaryOpenset</span> 
-</code></pre></div></div>
+</code></pre>
+                    </div>
+                </div>
 
-<h5 id="pros-1">Pros:</h5>
-<ul>
-  <li>The same expressiveness with the vertex-centric model.</li>
-  <li>Offer lower communication overhead, lower scheduling overhead, and lower memory overhead compared with vertex-centric approaches.</li>
-</ul>
+                <h5 id="pros-1">Pros:</h5>
+                <ul>
+                    <li>The same expressiveness with the vertex-centric model.</li>
+                    <li>Offer lower communication overhead, lower scheduling overhead, and lower memory overhead
+                        compared with vertex-centric approaches.</li>
+                </ul>
 
-<h5 id="cons-1">Cons:</h5>
-<ul>
-  <li>Still need to recast existing sequential graph algorithms into the new programming model.</li>
-  <li>Developers need to know a lot of concepts (e.g., internal and boundary vertices), causing the implementation challenge.</li>
-</ul>
+                <h5 id="cons-1">Cons:</h5>
+                <ul>
+                    <li>Still need to recast existing sequential graph algorithms into the new programming model.</li>
+                    <li>Developers need to know a lot of concepts (e.g., internal and boundary vertices), causing the
+                        implementation challenge.</li>
+                </ul>
 
-<h4 id="think-sequential-run-parallel">Think sequential, run parallel</h4>
+                <h4 id="think-sequential-run-parallel">Think sequential, run parallel</h4>
 
-<p>To make parallel graph computations accessible to average users while achieving high performance at the same time, the PIE (PEval-IncEval-Assemble) programming model[5] is proposed. In this model, users only need to provide three functions,</p>
-<ul>
-  <li>(1) PEval, a sequential (single-machine) function for given a query, computes the answer on a local partition;</li>
-  <li>(2) IncEval, a sequential incremental function, computes changes to the old output by treating incoming messages as updates; and</li>
-  <li>(3) Assemble, which collects partial answers, and combines them into a complete answer.</li>
-</ul>
+                <p>To make parallel graph computations accessible to average users while achieving high performance at
+                    the same time, the PIE (PEval-IncEval-Assemble) programming model[5] is proposed. In this model,
+                    users only need to provide three functions,</p>
+                <ul>
+                    <li>(1) PEval, a sequential (single-machine) function for given a query, computes the answer on a
+                        local partition;</li>
+                    <li>(2) IncEval, a sequential incremental function, computes changes to the old output by treating
+                        incoming messages as updates; and</li>
+                    <li>(3) Assemble, which collects partial answers, and combines them into a complete answer.</li>
+                </ul>
 
-<p>The PIE model works on a graph G and each worker maintains a partition of G. Given a query, each worker first executes PEval against its local partition, to compute partial answers in parallel. Then each worker may exchange partial results with other workers via synchronous message passing. Upon receiving messages, each worker incrementally computes IncEval. The incremental step iterates until no further messages can be generated. At this point, Assemble pulls partial answers and assembles the final result. In this way, the PIE model parallelizes existing sequential graph algorithms, without revising their logic and workflow.</p>
+                <p>The PIE model works on a graph G and each worker maintains a partition of G. Given a query, each
+                    worker first executes PEval against its local partition, to compute partial answers in parallel.
+                    Then each worker may exchange partial results with other workers via synchronous message passing.
+                    Upon receiving messages, each worker incrementally computes IncEval. The incremental step iterates
+                    until no further messages can be generated. At this point, Assemble pulls partial answers and
+                    assembles the final result. In this way, the PIE model parallelizes existing sequential graph
+                    algorithms, without revising their logic and workflow.</p>
 
-<p><img src="/blog/assets/images/gs-workflow.png" alt="vertex-model" /></p>
+                <p><img src="/blog/assets/images/gs-workflow.png" alt="vertex-model" /></p>
 
-<p>The following pseudo-code shows how SSSP is expressed in the PIE model, where the Dijkstra’s algorithm is directly used for the computation of parallel SSSP.</p>
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span>
+                <p>The following pseudo-code shows how SSSP is expressed in the PIE model, where the Dijkstra’s
+                    algorithm is directly used for the computation of parallel SSSP.</p>
+                <div class="language-python highlighter-rouge">
+                    <div class="highlight">
+                        <pre class="highlight"><code><span class="k">def</span> <span class="nf">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span>
     <span class="n">heap</span> <span class="o">=</span> <span class="n">VertexHeap</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">updates</span><span class="p">:</span>
 	<span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">updates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
@@ -226,28 +284,40 @@ To explore underlying insights hidden in graph data, many graph analytics algori
     
 <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span>
     <span class="n">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span>
-</code></pre></div></div>
+</code></pre>
+                    </div>
+                </div>
 
-<p>Currently, the PIE model has been developed and evaluated in the graph analytical engine of GraphScope. On the LDBC Graph Analytics benchmark, GraphScope outperforms other state-of-the-art graph processing systems (see link). Welcome to try and develop your own graph algorithms with GraphScope.</p>
+                <p>Currently, the PIE model has been developed and evaluated in the graph analytical engine of
+                    GraphScope. On the LDBC Graph Analytics benchmark, GraphScope outperforms other state-of-the-art
+                    graph processing systems (see link). Welcome to try and develop your own graph algorithms with
+                    GraphScope.</p>
 
-<h4 id="references">References</h4>
+                <h4 id="references">References</h4>
 
-<ul>
-  <li>Some images in this article are cited from [2] and https://twitter.com/katestarbird/status/1358088750765539329/photo/1.</li>
-  <li>[1] Malewicz, Grzegorz, et al. “Pregel: a system for large-scale graph processing.” Proceedings of the 2010 ACM SIGMOD International Conference on Management of data. 2010.</li>
-  <li>[2] Gonzalez, Joseph E., et al. “Powergraph: Distributed graph-parallel computation on natural graphs.” 10th USENIX Symposium on Operating Systems Design and Implementation (OSDI 12). 2012.</li>
-  <li>[3] Tian, Yuanyuan, et al. “From” think like a vertex” to” think like a graph”.” Proceedings of the VLDB Endowment 7.3 (2013): 193-204.</li>
-  <li>[4] Yan, Da, et al. “Blogel: A block-centric framework for distributed computation on real-world graphs.” Proceedings of the VLDB Endowment 7.14 (2014): 1981-1992.</li>
-  <li>[5] Fan, Wenfei, et al. “Parallelizing sequential graph computations.” ACM Transactions on Database Systems (TODS) 43.4 (2018): 1-39.</li>
-</ul>
+                <ul>
+                    <li>Some images in this article are cited from [2] and
+                        https://twitter.com/katestarbird/status/1358088750765539329/photo/1.</li>
+                    <li>[1] Malewicz, Grzegorz, et al. “Pregel: a system for large-scale graph processing.” Proceedings
+                        of the 2010 ACM SIGMOD International Conference on Management of data. 2010.</li>
+                    <li>[2] Gonzalez, Joseph E., et al. “Powergraph: Distributed graph-parallel computation on natural
+                        graphs.” 10th USENIX Symposium on Operating Systems Design and Implementation (OSDI 12). 2012.
+                    </li>
+                    <li>[3] Tian, Yuanyuan, et al. “From” think like a vertex” to” think like a graph”.” Proceedings of
+                        the VLDB Endowment 7.3 (2013): 193-204.</li>
+                    <li>[4] Yan, Da, et al. “Blogel: A block-centric framework for distributed computation on real-world
+                        graphs.” Proceedings of the VLDB Endowment 7.14 (2014): 1981-1992.</li>
+                    <li>[5] Fan, Wenfei, et al. “Parallelizing sequential graph computations.” ACM Transactions on
+                        Database Systems (TODS) 43.4 (2018): 1-39.</li>
+                </ul>
 
-        </section>
+            </section>
 
-        
 
-        <!-- <footer class="post-footer"> -->
-        <!-- If we want to display author's name and bio -->
-        <!-- 
+
+            <!-- <footer class="post-footer"> -->
+            <!-- If we want to display author's name and bio -->
+            <!-- 
                 <figure class="author-image">
                     <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
                     <span class="hidden">GSTeam@Alibaba's Picture</span></a>
@@ -262,8 +332,8 @@ To explore underlying insights hidden in graph data, many graph analytics algori
                 </section>
              -->
 
-        <!-- Share links section -->
-        <!-- <section class="share">
+            <!-- Share links section -->
+            <!-- <section class="share">
     <h4>Share this post</h4>
     <a class="icon-twitter" href="http://twitter.com/share?text=A Review of Programming Models for Parallel Graph Processing&amp;url=https://graphscope.io/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing.html"
         onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
@@ -279,24 +349,24 @@ To explore underlying insights hidden in graph data, many graph analytics algori
     </a>
 </section> -->
 
-        <!-- Disqus comments -->
-        <!--  -->
+            <!-- Disqus comments -->
+            <!--  -->
 
-        <!-- </footer> -->
+            <!-- </footer> -->
 
-    </article>
+        </article>
 
-</main>
+    </main>
     <footer class="site-footer clearfix">
-      <section class="copyright">
-        <a href="/blog">GraphScope</a> &copy; 
-              2021 &bull; All rights reserved.
-      </section>
-      <section class="poweredby">Made with Jekyll using 
-        <a href="http://github.com/rosario/kasper">Kasper theme</a>
-      </section>
+        <section class="copyright">
+            <a href="/blog">GraphScope</a> &copy;
+            2021 &bull; All rights reserved.
+        </section>
+        <section class="poweredby">Made with Jekyll using
+            <a href="http://github.com/rosario/kasper">Kasper theme</a>
+        </section>
     </footer>
-    
+
     <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
     <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
     <script type="text/javascript" src="/blog/assets/js/index.js"></script>
@@ -304,16 +374,17 @@ To explore underlying insights hidden in graph data, many graph analytics algori
     <!-- Google Analytics Tracking code -->
     <script type="text/javascript">
 
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
-      _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+        _gaq.push(['_trackPageview']);
 
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
+        (function () {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
 
-    </script>   
+    </script>
 </body>
+
 </html>

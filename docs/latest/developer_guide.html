@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Developer Guide &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
@@ -107,7 +108,7 @@
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -175,12 +176,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="developer-guide">
+  <section id="developer-guide">
 <h1>Developer Guide<a class="headerlink" href="#developer-guide" title="Permalink to this headline">¶</a></h1>
 <p>GraphScope has been developed by an active team of software engineers and researchers.
 Any contributions from the open-source community to improve this project are  greatly appreciated!</p>
 <p>GraphScope is licensed under Apache License 2.0.</p>
-<div class="section" id="building-and-testing">
+<section id="building-and-testing">
 <h2>Building and Testing<a class="headerlink" href="#building-and-testing" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope has many dependencies.</p>
 <p>To make life easier, we provide two docker images with all needed dependencies
@@ -221,13 +222,13 @@ python3 setup.py install
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/test.sh --all --image graphscope/graphscope:SHORTSHA
 </pre></div>
 </div>
-</div>
-<div class="section" id="build-python-wheels">
+</section>
+<section id="build-python-wheels">
 <h2>Build Python Wheels<a class="headerlink" href="#build-python-wheels" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope’s python client can run on Linux and MacOS, which can be installed from wheel packages we
 distributed on <a class="reference external" href="https://pypi.org/project/graphscope">pypi</a>. For developers, the wheel packages could
 be built via the following procedure:</p>
-<div class="section" id="linux">
+<section id="linux">
 <h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
 <p>The wheel packages for Linux is built inside the manylinux2010 environment. The pre-built docker image
 is available via</p>
@@ -246,8 +247,8 @@ make graphscope-manylinux2010
 make graphscope-manylinux2010-py<span class="o">{</span><span class="m">36</span>,37,38,39<span class="o">}</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="macos">
+</section>
+<section id="macos">
 <h3>MacOS<a class="headerlink" href="#macos" title="Permalink to this headline">¶</a></h3>
 <p>The wheel packages for MacOS could be built directly on Mac. Assuming you are in the root directory of
 GraphScope repository:</p>
@@ -260,15 +261,15 @@ GraphScope repository:</p>
 </div>
 <p>Note that if you want to build wheel packages for different Python versions, you may need to install multiple
 version of Python using <cite>conda</cite> or <cite>pyenv</cite>.</p>
-</div>
-</div>
-<div class="section" id="code-format">
+</section>
+</section>
+<section id="code-format">
 <h2>Code Format<a class="headerlink" href="#code-format" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope follows the <a class="reference external" href="https://google.github.io/styleguide/cppguide.html">Google Style Guide</a>
 for C++ and <a class="reference external" href="https://github.com/psf/black#the-black-code-style">black</a> for python.</p>
 <p>Please reformat your code with <code class="docutils literal notranslate"><span class="pre">clang-format</span></code> and <code class="docutils literal notranslate"><span class="pre">black</span></code> if your Pull Request violates the CI.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -355,6 +356,16 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

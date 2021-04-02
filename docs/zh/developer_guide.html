@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>开发者指南 &mdash; GraphScope  documentation</title>
@@ -84,7 +85,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">目录</span></p>
+        <p><span class="caption-text">目录</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
@@ -106,7 +107,7 @@
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">API 参考</span></p>
+<p><span class="caption-text">API 参考</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
@@ -176,12 +177,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="id1">
+  <section id="id1">
 <h1>开发者指南<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>GraphScope 的背后有一群活跃的工程人员和研究人员团队来推进日常的开发和维护。
 我们热忱欢迎来自开源社区的、为改善该项目所做的任何贡献！</p>
 <p>GraphScope 遵循 Apache License 2.0 的开源协议。</p>
-<div class="section" id="id2">
+<section id="id2">
 <h2>构建和测试<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <p>构建 GraphScope 需要一些第三方的工具和依赖。为了让开发者更容易上手，我们提供了两个安装了所需依赖的 docker 镜像。</p>
 <blockquote>
@@ -219,13 +220,13 @@ python3 setup.py install
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/test.sh --all --image graphscope/graphscope:SHORTSHA
 </pre></div>
 </div>
-</div>
-<div class="section" id="python-wheels">
+</section>
+<section id="python-wheels">
 <h2>构建 Python Wheels<a class="headerlink" href="#python-wheels" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope 的 Python 客户端可以在 Linux 和 macOS 上运行，Python Wheel 包通过
 在 <a class="reference external" href="https://pypi.org/project/graphscope">pypi</a> 分发。 对于开发人员而言，Wheel 包也可以
 通过以下过程构建：</p>
-<div class="section" id="linux">
+<section id="linux">
 <h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
 <p>Linux 下的 Wheel 分发包在 manylinux2010 的环境下构建，该编译环境的镜像地址可以这样获得：</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-manylinux2010:latest
@@ -242,8 +243,8 @@ make graphscope-manylinux2010
 make graphscope-manylinux2010-py<span class="o">{</span><span class="m">36</span>,37,38,39<span class="o">}</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="macos">
+</section>
+<section id="macos">
 <h3>macOS<a class="headerlink" href="#macos" title="Permalink to this headline">¶</a></h3>
 <p>为 macOS 准备的 Wheel 分发包可以直接在 macOS 下构建。在代码根目录运行如下命令：</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 setup.py bdist_wheel
@@ -254,15 +255,15 @@ make graphscope-manylinux2010-py<span class="o">{</span><span class="m">36</span
 </pre></div>
 </div>
 <p>请注意，如果你需要该分发包能支持不同的 Python 版本，你可能需要通过 <cite>conda</cite> 或者 <cite>pyenv</cite> 安装多个 Python 的版本</p>
-</div>
-</div>
-<div class="section" id="id3">
+</section>
+</section>
+<section id="id3">
 <h2>代码风格<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope 遵循 <a class="reference external" href="https://google.github.io/styleguide/cppguide.html">Google C++ 代码风格</a>
 和 <a class="reference external" href="https://github.com/psf/black#the-black-code-style">black Python 风格</a> 。</p>
 <p>如果你的代码没有通过CI的风格检查，你可以使用 <code class="docutils literal notranslate"><span class="pre">clang-format</span></code> 或 <code class="docutils literal notranslate"><span class="pre">black</span></code> 格式化你的代码。</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -347,6 +348,16 @@ make graphscope-manylinux2010-py<span class="o">{</span><span class="m">36</span
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/zh/index.html">v0.3.0</a></dd>
               
             
 

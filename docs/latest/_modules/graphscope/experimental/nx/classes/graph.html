@@ -83,7 +83,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../getting_started.html">Getting Started</a></li>
@@ -96,7 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -2234,7 +2234,7 @@
 
         <span class="k">if</span> <span class="n">v_prop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">v_prop</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v_prop</span><span class="p">)</span>
-            <span class="n">v_prop_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL</span>
+            <span class="n">v_prop_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NULLVALUE</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">check_argument</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v_prop</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span>
             <span class="n">v_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">vertex_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -2250,7 +2250,7 @@
 
         <span class="k">if</span> <span class="n">e_prop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">e_prop</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e_prop</span><span class="p">)</span>
-            <span class="n">e_prop_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL</span>
+            <span class="n">e_prop_type</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NULLVALUE</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">check_argument</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">e_prop</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span>
             <span class="n">e_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">edge_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -2351,6 +2351,16 @@
             
               
                 <dd><a href="../../../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

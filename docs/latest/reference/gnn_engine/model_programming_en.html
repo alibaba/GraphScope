@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Graph Learning Model &mdash; GraphScope  documentation</title>
@@ -83,7 +84,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -96,7 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -164,9 +165,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="graph-learning-model">
+  <section id="graph-learning-model">
 <h1>Graph Learning Model<a class="headerlink" href="#graph-learning-model" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
+<section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>There are two ways to develop a graph learning model. The first is to
 compute base on the whole graph directly. The examples are GCN and GAT
@@ -189,8 +190,8 @@ embedding algorithms, etc. It also compatible with common deep learning
 algorithms including TensorFlow and PyTorch. Currently, our model
 implementations are based on TensorFlow. The ones are based on PyTorch
 are under development.</p>
-<p align="center"></p></div>
-<div class="section" id="data-model">
+<p align="center"></p></section>
+<section id="data-model">
 <h2>Data model<a class="headerlink" href="#data-model" title="Permalink to this headline">¶</a></h2>
 <p>To build and training models, <strong>GL</strong> first samples data from subgraphs
 and then perform computation. Next, we introduce the basic data model.</p>
@@ -203,8 +204,8 @@ for unsupervised training.</p>
 It can be converted to different tensor format, <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>, based on
 the different deep learning engine. <strong>GL</strong> uses <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> to convert
 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> to <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> that is the training data.</p>
-<p align="center"></p></div>
-<div class="section" id="encoder">
+<p align="center"></p></section>
+<section id="encoder">
 <h2>Encoder<a class="headerlink" href="#encoder" title="Permalink to this headline">¶</a></h2>
 <p>All graph learning models can be abstracted as using an encoder to
 encode <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> into vectors of nodes, edges or subgraphs</p>
@@ -217,8 +218,8 @@ nodes/edges,implemented with different graph convolutional layers.</p>
 different graph learning models. We introduce in detail how to develope
 a GNN model in <a class="reference external" href="algo_en.md">Custom Algorithm</a></p>
 <p><a class="reference external" href="../README.md">Home</a></p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -296,6 +297,16 @@ a GNN model in <a class="reference external" href="algo_en.md">Custom Algorithm<
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

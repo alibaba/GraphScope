@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.generators.social.karate\_club\_graph
+================================================================
+
+.. currentmodule:: graphscope.experimental.nx.generators.social
+
+.. autofunction:: karate_club_graph

@@ -1,0 +1,6 @@
+﻿graphscope.experimental.nx.DiGraph.neighbors
+============================================
+
+.. currentmodule:: graphscope.experimental.nx
+
+.. automethod:: DiGraph.neighbors

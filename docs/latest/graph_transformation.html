@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Graph Transformations &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
@@ -104,7 +105,7 @@
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -172,7 +173,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="graph-transformations">
+  <section id="graph-transformations">
 <span id="graph-transformation"></span><h1>Graph Transformations<a class="headerlink" href="#graph-transformations" title="Permalink to this headline">¶</a></h1>
 <p>We introduce a series of method that can append more labels to a existed grpah, and
 do projection over existed graph. We will also show how to make a complex property graph
@@ -195,7 +196,7 @@ to build a graph iteratively.</p>
 <p>Further, we can use them to attach more vertex labels and edge labels to a existed graph.
 But this won’t modify the source graph, instead, it will return a new graph, which is based
 on the source graph.</p>
-<div class="section" id="attach-new-labels">
+<section id="attach-new-labels">
 <h2>Attach new labels<a class="headerlink" href="#attach-new-labels" title="Permalink to this headline">¶</a></h2>
 <p>Take LDBC-SNB Property Graph as an example，We now load a subset of labels, as the source graph.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -231,8 +232,8 @@ on the source graph.</p>
 <p>We can see each operation of <cite>add</cite> will produce a new graph.
 In implementation detail, their common labels will share the common memory, so it won’t
 copy the source graph.</p>
-</div>
-<div class="section" id="projection">
+</section>
+<section id="projection">
 <h2>Projection<a class="headerlink" href="#projection" title="Permalink to this headline">¶</a></h2>
 <p>In some scenario, we need to extract a subgraph from a complex graph. We do that by <cite>project</cite>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">project</span><span class="p">(</span>
@@ -257,12 +258,12 @@ copy the source graph.</p>
 <span class="k">print</span><span class="p">(</span><span class="n">sub_graph2</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="transform-to-simple-graph-implicitly">
+</section>
+<section id="transform-to-simple-graph-implicitly">
 <h2>Transform to simple graph implicitly<a class="headerlink" href="#transform-to-simple-graph-implicitly" title="Permalink to this headline">¶</a></h2>
 <p>When an algorithm that only works on simple graph query a property graph, the property graph will
-be converted to a simple graph implicitly. If such transformation cannot be performed (Graph has more than 1 vertex
-label or edge label， or has more than 1 property), an exception will be raised.</p>
+be converted to a simple graph implicitly. If such transformation cannot be performed (the vertex label num and
+edge label num is not one, or has more than 1 property on vertex/edge), an exception will be raised.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">wcc</span>
 
 <span class="n">ret</span> <span class="o">=</span> <span class="n">wcc</span><span class="p">(</span><span class="n">sub_graph2</span><span class="p">)</span>
@@ -271,8 +272,8 @@ label or edge label， or has more than 1 property), an exception will be raised
 <span class="c1"># wcc(sub_graph)  # Error! More than 1 property.</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="add-results-back-to-graph-as-a-property">
+</section>
+<section id="add-results-back-to-graph-as-a-property">
 <h2>Add results back to graph as a property<a class="headerlink" href="#add-results-back-to-graph-as-a-property" title="Permalink to this headline">¶</a></h2>
 <p>The result <cite>ret</cite> produced in previous step can be add to a graph as a property of vertex.</p>
 <p>Note the result can not only be added to the graph it directly queried on, but also the graph which produced
@@ -284,8 +285,8 @@ the queried graph by <cite>project</cite>, as long as the vertex label that will
 <span class="n">new_graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;cc&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -372,6 +373,16 @@ the queried graph by <cite>project</cite>, as long as the vertex label that will
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

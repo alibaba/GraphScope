@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>graphscope.experimental.nx.generators.classic.empty_graph &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
@@ -98,7 +99,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../../python_index.html">Python API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../../session.html">Session</a></li>
@@ -197,14 +198,83 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="graphscope-experimental-nx-generators-classic-empty-graph">
+  <section id="graphscope-experimental-nx-generators-classic-empty-graph">
 <h1>graphscope.experimental.nx.generators.classic.empty_graph<a class="headerlink" href="#graphscope-experimental-nx-generators-classic-empty-graph" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="graphscope.experimental.nx.generators.classic.empty_graph">
-<code class="sig-prename descclassname">graphscope.experimental.nx.generators.classic.</code><code class="sig-name descname">empty_graph</code><span class="sig-paren">(</span><em class="sig-param">n=0</em>, <em class="sig-param">create_using=None</em>, <em class="sig-param">default=&lt;class 'graphscope.experimental.nx.classes.graph.Graph'&gt;</em>, <em class="sig-param">**kw</em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.generators.classic.empty_graph" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<code class="sig-prename descclassname">graphscope.experimental.nx.generators.classic.</code><code class="sig-name descname">empty_graph</code><span class="sig-paren">(</span><em class="sig-param">n=0</em>, <em class="sig-param">create_using=None</em>, <em class="sig-param">default=&lt;class 'graphscope.experimental.nx.classes.graph.Graph'&gt;</em>, <em class="sig-param">**kw</em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/graphscope/experimental/nx/generators/classic.html#empty_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.experimental.nx.generators.classic.empty_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the empty graph with n nodes and zero edges.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em><em> or </em><em>iterable container of nodes</em><em> (</em><em>default = 0</em><em>)</em>) – If n is an integer, nodes are from <cite>range(n)</cite>.
+If n is a container of nodes, those nodes appear in the graph.</p></li>
+<li><p><strong>create_using</strong> (<em>Graph Instance</em><em>, </em><em>Constructor</em><em> or </em><em>None</em>) – Indicator of type of graph to return.
+If a Graph-type instance, then clear and use it.
+If None, use the <cite>default</cite> constructor.
+If a constructor, call it to create an empty graph.</p></li>
+<li><p><strong>default</strong> (<em>Graph constructor</em><em> (</em><em>optional</em><em>, </em><em>default = nx.Graph</em><em>)</em>) – The constructor to use if create_using is None.
+If None, then nx.Graph is used.
+This is used when passing an unknown <cite>create_using</cite> value
+through your home-grown function to <cite>empty_graph</cite> and
+you want a default constructor other than nx.Graph.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
+<span class="go">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="s2">&quot;ABC&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+<span class="go">[&#39;A&#39;, &#39;B&#39;, &#39;C&#39;]</span>
+</pre></div>
 </div>
+<p class="rubric">Notes</p>
+<p>The variable create_using should be a Graph Constructor or a
+“graph”-like object. Constructors, e.g. <cite>nx.Graph</cite> or <cite>nx.MultiGraph</cite>
+will be used to create the returned graph. “graph”-like objects
+will be cleared (nodes and edges will be removed) and refitted as
+an empty “graph” with nodes specified in n. This capability
+is useful for specifying the class-nature of the resulting empty
+“graph” (i.e. Graph, DiGraph, MyWeirdGraphClass, etc.).</p>
+<p>The variable create_using has three main uses:
+Firstly, the variable create_using can be used to create an
+empty digraph, multigraph, etc.  For example,</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>will create an empty digraph on n nodes.</p>
+<p>Secondly, one can pass an existing graph (digraph, multigraph,
+etc.) via create_using. For example, if G is an existing graph
+(resp. digraph, multigraph, etc.), then empty_graph(n, create_using=G)
+will empty G (i.e. delete all nodes and edges using G.clear())
+and then add n nodes and zero edges, and return the modified graph.</p>
+<p>Thirdly, when constructing your home-grown graph creation function
+you can use empty_graph to construct the graph by passing a user
+defined create_using to empty_graph. In this case, if you want the
+default constructor to be other than nx.Graph, specify <cite>default</cite>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">mygraph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">create_using</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">G</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">mygraph</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">mygraph</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">()</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>See also create_empty_copy(G).</p>
+</dd></dl>
+
+</section>
 
 
            </div>
@@ -291,6 +361,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

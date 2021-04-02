@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>图分析引擎 &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">目录</span></p>
+        <p><span class="caption-text">目录</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
@@ -105,7 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API 参考</span></p>
+<p><span class="caption-text">API 参考</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
@@ -175,14 +176,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="id1">
+  <section id="id1">
 <h1>图分析引擎<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p>GraphScope 的图分析引擎继承了 <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">GRAPE</a> ，
 该系统于 SIGMOD2017 上首次提出并获得最佳论文奖。</p>
 <p>与以往的系统的不同，GRAPE 支持将串行图算法自动并行化。在 GRAPE 中，
 只需进行很小的更改即可轻松地将串行算法即插即用，使其并行化的运行在分布式环境，并高效地处理大规模图数据。
 除了易于编程外，GRAPE 还被设计为高效且可拓展的系统，可灵活应对现实中图应用多变的规模、多样性和复杂性。</p>
-<div class="section" id="id2">
+<section id="id2">
 <h2>内置算法<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通性分析算法、路径分析算法、社区检测和中心度计算等类型。</p>
 <p>内置算法可以在图上轻松调用。例如，</p>
@@ -223,8 +224,8 @@
 <li><p><a class="reference internal" href="../reference/app.html#graphscope.wcc" title="graphscope.wcc"><code class="xref py py-func docutils literal notranslate"><span class="pre">wcc()</span></code></a></p></li>
 </ul>
 <p>算法的支持列表会随着不断增加持续更新中。</p>
-</div>
-<div class="section" id="id3">
+</section>
+<section id="id3">
 <h2>对计算结果的处理<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p>当完成一次图计算，计算结果会被包装成 <a class="reference internal" href="../reference/context.html#context"><span class="std std-ref">Context</span></a> 类，保存在分布式集群的内存中。</p>
 <p>用户可能希望将结果传到客户端进行处理，或是写入云中某位置或分布式文件系统。GraphScope 支持用户通过以下方法来获取结果数据。</p>
@@ -277,8 +278,8 @@
 </pre></div>
 </div>
 <p>可以查看 <a class="reference internal" href="../reference/context.html#context"><span class="std std-ref">Context</span></a> 和 <a class="reference internal" href="../reference/selector.html#selector"><span class="std std-ref">Selector</span></a> 获取更多细节。</p>
-</div>
-<div class="section" id="pie">
+</section>
+<section id="pie">
 <h2>使用 PIE 编程模型自定义算法<a class="headerlink" href="#pie" title="Permalink to this headline">¶</a></h2>
 <p>如果内置算法无法满足需求，用户可以编写自己的算法。用户可以通过 <cite>graphscope</cite> 在纯 Python 模式
 下使用 <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">PIE</a> 编程模型编写算法。</p>
@@ -361,8 +362,8 @@
 </div>
 <p>如代码所示，用户仅需要设计和实现单分区的串行算法，而不需要考虑分布式环境中的分区通信和消息传递。
 在这种情况下，经典的 Dijkstra 算法及其增量版本就可以用于在集群上的大规模图数据计算。</p>
-</div>
-<div class="section" id="pregel">
+</section>
+<section id="pregel">
 <h2>使用 Pregel 编程模型自定义算法<a class="headerlink" href="#pregel" title="Permalink to this headline">¶</a></h2>
 <p>除了基于子图的 PIE 模型之外，<cite>graphscope</cite> 也支持以顶点为中心的 <cite>Pregel</cite> 编程模型。
 您可以通过实现以下算法类来在 <cite>Pregel</cite> 模型中开发算法。</p>
@@ -418,8 +419,8 @@
         <span class="k">return</span> <span class="n">ret</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="id5">
+</section>
+<section id="id5">
 <h2>运行自定义算法<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <p>运行自定义算法，用户需要在定义算法后调用算法。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -457,8 +458,8 @@
 <li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang. <a class="reference external" href="http://www.vldb.org/pvldb/vol10/p1889-fan.pdf">GRAPE: Parallelizing Sequential Graph Computations.</a>, The 43rd International Conference on Very Large Data Bases (VLDB), demo, 2017 (the Best Demo Award).</p></li>
 <li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang, Zeyu Zheng, Bohan Zhang, Yang Cao, and Chao Tian. <a class="reference external" href="https://dl.acm.org/doi/10.1145/3035918.3035942">Parallelizing Sequential Graph Computations.</a>, ACM SIG Conference on Management of Data (SIGMOD), 2017 (the Best Paper Award).</p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -545,6 +546,16 @@
             
               
                 <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/zh/index.html">v0.3.0</a></dd>
               
             
 

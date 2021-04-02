@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Deployment &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
@@ -93,6 +94,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Deployment</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#deployment-with-helm">Deployment with Helm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#deploy-with-aws-aliyun">Deploy with AWS/Aliyun</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deployment-on-local">Deployment on local</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
@@ -102,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -170,7 +172,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="deployment">
+  <section id="deployment">
 <h1>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h1>
 <p>The engines of GraphScope are distributed as a docker image.
 The <cite>graphscope</cite> python client will pull the image if they are not present.
@@ -192,7 +194,7 @@ manages the connections from python client via grpc,
 and takes responsibility for applying or releasing the pods for interactive, analytical
 and learning engines.</p>
 <p>The image URIs for the engines are configurable, see more details in <a class="reference internal" href="reference/session.html#session"><span class="std std-ref">Session</span></a>.</p>
-<div class="section" id="deployment-with-helm">
+<section id="deployment-with-helm">
 <h2>Deployment with Helm<a class="headerlink" href="#deployment-with-helm" title="Permalink to this headline">¶</a></h2>
 <p>Get Repo Info</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm repo add graphscope https://dl.bintray.com/graphscope/charts/
@@ -213,8 +215,8 @@ $ helm <span class="nb">test</span> <span class="o">[</span>RELEASE_NAME<span cl
 </pre></div>
 </div>
 <p>Find <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/charts/graphscope/README.md">more details</a> on how to connect a pre-launched service in python client.</p>
-</div>
-<div class="section" id="deploy-with-aws-aliyun">
+</section>
+<section id="deploy-with-aws-aliyun">
 <h2>Deploy with AWS/Aliyun<a class="headerlink" href="#deploy-with-aws-aliyun" title="Permalink to this headline">¶</a></h2>
 <p>In addition to local cluster setup script, we also provide a interactive script to set up a Kubernetes cluster on AWS or Aliyun. The script would output a kube config file of the Kubernetes cluster.
 You can use the script as follows or use <cite>./script/launch_cluster.py –help</cite> to get the useage.</p>
@@ -232,8 +234,28 @@ You can use the script as follows or use <cite>./script/launch_cluster.py –hel
 ./scripts/launch_cluster.py --type aliyun --id your_access_key_id --secret your_access_key_secret --region your_region_id --output kube_config_path
 </pre></div>
 </div>
+</section>
+<section id="deployment-on-local">
+<h2>Deployment on local<a class="headerlink" href="#deployment-on-local" title="Permalink to this headline">¶</a></h2>
+<p>we provide scripts to install dependencies and build GraphScope on local.</p>
+<ul class="simple">
+<li><p>install independencies</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./script/install_denpendencies.sh
+<span class="nb">export</span> <span class="nv">JAVA_HOME</span><span class="o">=</span>/usr/lib/jvm/java-8-openjdk-amd64
+<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="si">${</span><span class="nv">JAVA_HOME</span><span class="si">}</span>/bin:<span class="si">${</span><span class="nv">PATH</span><span class="si">}</span>:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
+<span class="nb">export</span> <span class="nv">GRAPHSCOPE_PREFIX</span><span class="o">=</span>/tmp/graphscope_prefix
+<span class="nb">export</span> <span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="si">${</span><span class="nv">LD_LIBRARY_PATH</span><span class="si">}</span>:/usr/local/lib
+</pre></div>
 </div>
+<ul class="simple">
+<li><p>build GraphScope on local</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./script/build.sh
+</pre></div>
 </div>
+</section>
+</section>
 
 
            </div>
@@ -320,6 +342,16 @@ You can use the script as follows or use <cite>./script/launch_cluster.py –hel
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

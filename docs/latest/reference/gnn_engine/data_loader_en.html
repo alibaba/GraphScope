@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Data Source &mdash; GraphScope  documentation</title>
@@ -83,7 +84,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -96,7 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -164,12 +165,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="data-source">
+  <section id="data-source">
 <h1>Data Source<a class="headerlink" href="#data-source" title="Permalink to this headline">¶</a></h1>
 <p>This document is used to explain the data format supported by GraphLearn
 and the API to describe and parse it.</p>
-</div>
-<div class="section" id="data-format">
+</section>
+<section id="data-format">
 <h1>1 Data format<a class="headerlink" href="#data-format" title="Permalink to this headline">¶</a></h1>
 <p>Graph data can be divided into <strong>vertex data</strong> and <strong>edge data</strong>.
 Generally, vertex data contains <strong>vertex ID</strong> and <strong>attribute</strong>,
@@ -190,7 +191,7 @@ have labels. We abstract the data formats of these typical settings as
 vertex or edge containing attributes, weights, and labels. For vertex
 data sources and edge data sources, these three can co-exist or
 partially exist at the same time.</p>
-<div class="section" id="basic-format">
+<section id="basic-format">
 <h2>1.1 Basic format<a class="headerlink" href="#basic-format" title="Permalink to this headline">¶</a></h2>
 <p>The basic vertex data only contains the ID of a vertex. The type of ID
 is bigint and each ID uniquely represents one vertex. However, in many
@@ -225,8 +226,8 @@ independently, without attaching attributes, weights, and labels.</p>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="attribute-format-attributed">
+</section>
+<section id="attribute-format-attributed">
 <h2>1.2 Attribute format（ATTRIBUTED）<a class="headerlink" href="#attribute-format-attributed" title="Permalink to this headline">¶</a></h2>
 <p>The attribute format is used to express the attribute information of a
 vertex or an edge. In general, vertices have attributes by default
@@ -290,8 +291,8 @@ specify <strong>ATTRIBUTED</strong> to inform the system in the API description.
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="weight-format-weighted">
+</section>
+<section id="weight-format-weighted">
 <h2>1.3 Weight format（WEIGHTED）<a class="headerlink" href="#weight-format-weighted" title="Permalink to this headline">¶</a></h2>
 <p>The weight format is used to express a vertex or an edge with weight.
 Similar to attributes, the weight has only one column, which is of type
@@ -349,8 +350,8 @@ the specified <strong>WEIGHTED</strong> to inform the system, in the API descrip
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="label-format-labeled">
+</section>
+<section id="label-format-labeled">
 <h2>1.4 Label format（LABELED）<a class="headerlink" href="#label-format-labeled" title="Permalink to this headline">¶</a></h2>
 <p>The label format is used to express the situation where the vertices or
 edges are labeled. The label has only one column, which is of type int.
@@ -408,8 +409,8 @@ When the data format has labels, it is necessary to display and specify
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="putting-together">
+</section>
+<section id="putting-together">
 <h2>1.5 Putting together<a class="headerlink" href="#putting-together" title="Permalink to this headline">¶</a></h2>
 <p>ID is required for the vertex and edge data source, while weight, label,
 and attribute are optional information. When there are one or more of
@@ -487,9 +488,9 @@ follow</p>
 </table>
 <p>We can choose zero or some optional information but must <strong>guarantee the
 orders</strong> as specified in the above tables.</p>
-</div>
-</div>
-<div class="section" id="data-source-type">
+</section>
+</section>
+<section id="data-source-type">
 <h1>2 Data source type<a class="headerlink" href="#data-source-type" title="Permalink to this headline">¶</a></h1>
 <p>The system abstracts the data access layer to allow easy connection to
 multiple types of data sources. Currently, it supports LocalFileSystem.
@@ -558,7 +559,7 @@ corresponding to the information name in the first column, separated by
 <p>By using local files as data sources, you can directly use file paths in
 scripts. See the next chapter “<a class="reference external" href="graph_object_cn.md">graph object</a>”
 for details.</p>
-<div class="section" id="alibaba-cloud-maxcompute-data-table">
+<section id="alibaba-cloud-maxcompute-data-table">
 <h2>2.2 Alibaba Cloud MaxCompute data table<a class="headerlink" href="#alibaba-cloud-maxcompute-data-table" title="Permalink to this headline">¶</a></h2>
 <p>The data format of MaxCompute data table is described as follow, where
 column name is not required.</p>
@@ -610,9 +611,9 @@ can be one or more.</p>
 <span class="n">node_source</span><span class="p">,</span> <span class="n">edge_source</span> <span class="o">=</span> <span class="n">FLAGS</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="user-api">
+</section>
+</section>
+<section id="user-api">
 <h1>3 User API<a class="headerlink" href="#user-api" title="Permalink to this headline">¶</a></h1>
 <p>## 3.1 Decoder type <code class="docutils literal notranslate"><span class="pre">Decoder</span></code> type is used to described the
 aforementioned data format as follows.</p>
@@ -786,7 +787,7 @@ code.</p>
 <p>After constructing the Decoder for each data source, we add the data
 source to the graph and specify the corresponding Decoder. Please refer
 to <a class="reference external" href="graph_object_en.md">graph_object</a> for details.</p>
-</div>
+</section>
 
 
            </div>
@@ -864,6 +865,16 @@ to <a class="reference external" href="graph_object_en.md">graph_object</a> for 
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

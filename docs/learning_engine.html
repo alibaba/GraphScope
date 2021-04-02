@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>GraphScope Learning Engine &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
@@ -112,7 +113,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -180,7 +181,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="graphscope-learning-engine">
+  <section id="graphscope-learning-engine">
 <h1>GraphScope Learning Engine<a class="headerlink" href="#graphscope-learning-engine" title="Permalink to this headline">¶</a></h1>
 <p>The learning engine in GraphScope (GLE) drives from Graph-Learn,
 a distributed framework designed for development and training
@@ -191,7 +192,7 @@ and has been widely applied in many scenarios within Alibaba,
 such as search recommendation, network security, and knowledge graphs.</p>
 <p>Next, we will walk through a quick-start turtorial on how to build
 a user-defined GNN model using <strong>GLE</strong>.</p>
-<div class="section" id="graph-learning-model">
+<section id="graph-learning-model">
 <h2>Graph Learning Model<a class="headerlink" href="#graph-learning-model" title="Permalink to this headline">¶</a></h2>
 <p>There are two ways to train a graph learning model. One is to
 compute based on the whole graph directly. The GCN and GAT are originally
@@ -210,7 +211,7 @@ and support efficient graph sampling amd query.
 It can work with popular tensor engines including TensorFlow and PyTorch.
 In the following, our model implemnetations are based on TensorFlow.</p>
 <img alt="_images/learning_model.png" class="align-center" src="_images/learning_model.png" />
-<div class="section" id="data-model">
+<section id="data-model">
 <h3>Data model<a class="headerlink" href="#data-model" title="Permalink to this headline">¶</a></h3>
 <p>To build and train a model, <strong>GLE</strong> usually samples subgraphs as the training data,
 and perform batch training with it. We start with introducing the basic data model.</p>
@@ -225,8 +226,8 @@ the different deep learning engine. <strong>GLE</strong> uses <code class="docut
 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> to <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>.
 And the <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> serves as the training data.</p>
 <img alt="_images/egograph.png" class="align-center" src="_images/egograph.png" />
-</div>
-<div class="section" id="encoder">
+</section>
+<section id="encoder">
 <h3>Encoder<a class="headerlink" href="#encoder" title="Permalink to this headline">¶</a></h3>
 <p>A graph learning model can be viewed as using an encoder to
 encode the <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> of a node, edge or subgraph into a vector.</p>
@@ -243,9 +244,9 @@ implemented by many different graph convolutional layers.</p>
 different graph learning models.
 We introduce in detail how to develope
 a GNN model in the next section.</p>
-</div>
-</div>
-<div class="section" id="developing-your-own-model">
+</section>
+</section>
+<section id="developing-your-own-model">
 <h2>Developing Your Own Model<a class="headerlink" href="#developing-your-own-model" title="Permalink to this headline">¶</a></h2>
 <p>In this document, we will introduce how to use the basic APIs provided
 by <strong>GLE</strong> to cooperate with deep learning engines, such as TensorFlow,
@@ -292,7 +293,7 @@ loss functions, optimizers and training processes.</p>
 </li>
 </ul>
 <p>Next, we introduce how to implement a GCN model using the above four steps.</p>
-<div class="section" id="sampling">
+<section id="sampling">
 <h3>Sampling<a class="headerlink" href="#sampling" title="Permalink to this headline">¶</a></h3>
 <p>We use the Cora dataset as the node classification example. We provide a
 simple data conversion script <code class="docutils literal notranslate"><span class="pre">cora.py</span></code> to convert the original Cora
@@ -359,8 +360,8 @@ samples two-hop neighbors. Users can choose different neighbor sampling
 methods. For the original GCN, it requires all neighbors of each node
 are so we use ‘full’ for sampling. We aggregate the sampling results in
 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> which is the return value.</p>
-</div>
-<div class="section" id="graph-data-flow">
+</section>
+<section id="graph-data-flow">
 <h3>Graph Data Flow<a class="headerlink" href="#graph-data-flow" title="Permalink to this headline">¶</a></h3>
 <p>In <code class="docutils literal notranslate"><span class="pre">build</span></code> function, we convert <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> to <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> using
 <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code>. <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> contains an data flow iterator and several
@@ -378,8 +379,8 @@ are so we use ‘full’ for sampling. We aggregate the sampling results in
 </div>
 <p>We can get the <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> corresponding to the previous <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code>
 from <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code>.</p>
-</div>
-<div class="section" id="model">
+</section>
+<section id="model">
 <h3>Model<a class="headerlink" href="#model" title="Permalink to this headline">¶</a></h3>
 <p>Next, we first use the feature encoder to encode the original features.
 In this example, we use <code class="docutils literal notranslate"><span class="pre">IdentityEncoder</span></code> that returns itself, because
@@ -409,8 +410,8 @@ model, please refer to the implementation of GraphSAGE.</p>
     <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="n">encoder</span><span class="p">,</span> <span class="s2">&quot;edge&quot;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s2">&quot;dst&quot;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="loss-function-and-training-process">
+</section>
+<section id="loss-function-and-training-process">
 <h3>Loss Function and Training Process<a class="headerlink" href="#loss-function-and-training-process" title="Permalink to this headline">¶</a></h3>
 <p>For the Cora node classification model, we can select the corresponding
 classification loss function in TensorFlow. Then, we combine the encoder
@@ -460,9 +461,9 @@ Please refer to <a class="reference external" href="https://github.com/alibaba/g
 including GCN, GAT, GraphSage, DeepWalk, LINE, TransE,
 Bipartite GraphSage, sample-based GCN, GAT, etc., which can be used
 as a starting point for building a similar model.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
@@ -549,6 +550,16 @@ as a starting point for building a similar model.</p>
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

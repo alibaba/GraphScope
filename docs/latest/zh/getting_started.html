@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>快速上手 &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">目录</span></p>
+        <p><span class="caption-text">目录</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">快速上手</a><ul>
@@ -107,7 +108,7 @@
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
 </ul>
-<p class="caption"><span class="caption-text">API 参考</span></p>
+<p><span class="caption-text">API 参考</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
@@ -177,12 +178,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="id1">
+  <section id="id1">
 <h1>快速上手<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <p><cite>graphscope</cite> 是一站式图计算系统 GraphScope 的 Python 客户端，
 可以处理图的交互式查询、图分析和图学习任务。它具有易于使用、高性能和良好的可扩展性等特点。</p>
 <p>本章节将通过一个例子介绍 <cite>graphscope</cite> 如何帮助数据科学家来高效的分析大图。</p>
-<div class="section" id="id2">
+<section id="id2">
 <h2>示例: 论文引用网络中的节点分类任务<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag)">ogbn-mag</a> 是
 由微软学术关系图（Microsoft Academic Graph）的子集组成的异构图网络。
@@ -204,8 +205,8 @@
 <li><p><em>步骤 5</em>. 执行基于图数据的机器学习任务；</p></li>
 <li><p><em>步骤 6</em>. 关闭会话。</p></li>
 </ul>
-</div>
-<div class="section" id="id3">
+</section>
+<section id="id3">
 <h2>创建会话<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <p>使用 GraphScope 的第一步，我们需要在 Python 中创建一个会话（session）。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
@@ -235,8 +236,8 @@
 <p>会话（<a class="reference internal" href="../reference/session.html#session"><span class="std std-ref">Session</span></a>）的建立过程中，首选会在背后尝试拉起一个 <cite>coordinator</cite> 作为后端引擎的入口。
 该 <cite>coordinator</cite> 负责管理该次会话的所有资源（k8s pods），以及交互式查询、图分析、图学习引擎的生命周期。
 在 <cite>coordinator</cite> 后续拉起的其他每个 pod 中，都有一个 vineyard 实例作为内存管理层，分布式的管理图数据。</p>
-</div>
-<div class="section" id="id4">
+</section>
+<section id="id4">
 <h2>载图<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope 以属性图（property graph）建模图数据。属性图中，点和边都有一个标签（label），不同的标签有不同的属性（property）。
 以 <cite>ogbn-mag</cite> 为例，下图展示了属性图的模型。</p>
@@ -284,8 +285,8 @@
 </div>
 <p>请注意，这里的 <cite>g</cite> 已经是一个分布式存储在 vineyard 中的图。图数据分布在这个会话背后拉起的 k8s pods中。
 更多细节请查看 <a class="reference internal" href="loading_graph.html#loading-graphs"><span class="std std-ref">载图</span></a></p>
-</div>
-<div class="section" id="id6">
+</section>
+<section id="id6">
 <h2>交互式查询<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
 <p>交互式查询允许用户以“探索性”方式来探索、查看和显示图数据，
 以方便的定位和洞察特定的深入信息。GraphScope 采用称为 <a class="reference external" href="http://tinkerpop.apache.org/">Gremlin</a>  的高级语言进行图遍历，
@@ -303,8 +304,8 @@
 <span class="s2">                .where(__.in(&#39;writes&#39;).has(&#39;id&#39;, 4307)).count()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="id7">
+</section>
+<section id="id7">
 <h2>图分析<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
 <p>图分析是在真实场景中被广泛使用的一类图计算。事实证明，
 许多算法（例如社区检测，路径和连接性，集中性）在各种业务中都非常有效。
@@ -328,8 +329,8 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 </pre></div>
 </div>
 <p>此外，用户还可以在 GraphScope 中编写自己的算法。当前，GraphScope 支持用户以 Pregel 模型和 PIE 模型自定义图算法。</p>
-</div>
-<div class="section" id="gnns">
+</section>
+<section id="gnns">
 <h2>图神经网络 (GNNs)<a class="headerlink" href="#gnns" title="Permalink to this headline">¶</a></h2>
 <p>图神经网络（GNN）结合了图结构和机器学习的优势，
 可以将图中的结构信息和属性信息压缩为每个节点上的低维嵌入向量。
@@ -408,15 +409,15 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 <span class="n">train</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">lg</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="id8">
+</section>
+<section id="id8">
 <h2>关闭会话<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
 <p>最后，当我们完成所有的计算过程后，关闭当前的会话。该步骤会告知背后的 <cite>Coordinator</cite> 和引擎，释放当前所有的资源</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -503,6 +504,16 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
             
               
                 <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/zh/index.html">v0.3.0</a></dd>
               
             
 

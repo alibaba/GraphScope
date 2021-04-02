@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Graph generators &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -98,7 +99,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../python_index.html">Python API Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../session.html">Session</a></li>
@@ -195,9 +196,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="graph-generators">
+  <section id="graph-generators">
 <span id="generators"></span><h1>Graph generators<a class="headerlink" href="#graph-generators" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-graphscope.experimental.nx.generators.classic">
+<section id="module-graphscope.experimental.nx.generators.classic">
 <span id="classic"></span><h2>Classic<a class="headerlink" href="#module-graphscope.experimental.nx.generators.classic" title="Permalink to this headline">¶</a></h2>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -215,7 +216,7 @@
 <td><p>Returns the Binomial Tree of order n.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.complete_graph.html#graphscope.experimental.nx.generators.classic.complete_graph" title="graphscope.experimental.nx.generators.classic.complete_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complete_graph</span></code></a>(n[, create_using])</p></td>
-<td><p></p></td>
+<td><p>Return the complete graph <cite>K_n</cite> with n nodes.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.complete_multipartite_graph.html#graphscope.experimental.nx.generators.classic.complete_multipartite_graph" title="graphscope.experimental.nx.generators.classic.complete_multipartite_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complete_multipartite_graph</span></code></a>(*subset_sizes)</p></td>
 <td><p>Returns the complete multipartite graph with the specified subset sizes.</p></td>
@@ -227,13 +228,13 @@
 <td><p>Generates the circulant graph $Ci_n(x_1, x_2, …, x_m)$ with $n$ vertices.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.cycle_graph.html#graphscope.experimental.nx.generators.classic.cycle_graph" title="graphscope.experimental.nx.generators.classic.cycle_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cycle_graph</span></code></a>(n[, create_using])</p></td>
-<td><p></p></td>
+<td><p>Returns the cycle graph $C_n$ of cyclically connected nodes.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.dorogovtsev_goltsev_mendes_graph.html#graphscope.experimental.nx.generators.classic.dorogovtsev_goltsev_mendes_graph" title="graphscope.experimental.nx.generators.classic.dorogovtsev_goltsev_mendes_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dorogovtsev_goltsev_mendes_graph</span></code></a>(n[, …])</p></td>
 <td><p>Returns the hierarchically constructed Dorogovtsev-Goltsev-Mendes graph.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.empty_graph.html#graphscope.experimental.nx.generators.classic.empty_graph" title="graphscope.experimental.nx.generators.classic.empty_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">empty_graph</span></code></a>([n, create_using, default])</p></td>
-<td><p></p></td>
+<td><p>Returns the empty graph with n nodes and zero edges.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.full_rary_tree.html#graphscope.experimental.nx.generators.classic.full_rary_tree" title="graphscope.experimental.nx.generators.classic.full_rary_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">full_rary_tree</span></code></a>(r, n[, create_using])</p></td>
 <td><p>Creates a full r-ary tree of n vertices.</p></td>
@@ -242,16 +243,16 @@
 <td><p>Returns the Ladder graph of length n.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.lollipop_graph.html#graphscope.experimental.nx.generators.classic.lollipop_graph" title="graphscope.experimental.nx.generators.classic.lollipop_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lollipop_graph</span></code></a>(m, n[, create_using])</p></td>
-<td><p></p></td>
+<td><p>Returns the Lollipop Graph; <cite>K_m</cite> connected to <cite>P_n</cite>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.null_graph.html#graphscope.experimental.nx.generators.classic.null_graph" title="graphscope.experimental.nx.generators.classic.null_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">null_graph</span></code></a>([create_using])</p></td>
 <td><p>Returns the Null graph with no nodes or edges.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.path_graph.html#graphscope.experimental.nx.generators.classic.path_graph" title="graphscope.experimental.nx.generators.classic.path_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">path_graph</span></code></a>(n[, create_using])</p></td>
-<td><p></p></td>
+<td><p>Returns the Path graph <cite>P_n</cite> of linearly connected nodes.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.star_graph.html#graphscope.experimental.nx.generators.classic.star_graph" title="graphscope.experimental.nx.generators.classic.star_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">star_graph</span></code></a>(n[, create_using])</p></td>
-<td><p></p></td>
+<td><p>Return the star graph</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.trivial_graph.html#graphscope.experimental.nx.generators.classic.trivial_graph" title="graphscope.experimental.nx.generators.classic.trivial_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trivial_graph</span></code></a>([create_using])</p></td>
 <td><p>Return the Trivial graph with one node (with label 0) and no edges.</p></td>
@@ -260,12 +261,12 @@
 <td><p>Return the Turan Graph</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.experimental.nx.generators.classic.wheel_graph.html#graphscope.experimental.nx.generators.classic.wheel_graph" title="graphscope.experimental.nx.generators.classic.wheel_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">wheel_graph</span></code></a>(n[, create_using])</p></td>
-<td><p></p></td>
+<td><p>Return the wheel graph</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="module-graphscope.experimental.nx.generators.social">
+</section>
+<section id="module-graphscope.experimental.nx.generators.social">
 <span id="social-networks"></span><h2>Social Networks<a class="headerlink" href="#module-graphscope.experimental.nx.generators.social" title="Permalink to this headline">¶</a></h2>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -287,8 +288,8 @@
 </tr>
 </tbody>
 </table>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -375,6 +376,16 @@
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

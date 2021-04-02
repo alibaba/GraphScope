@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Integrating Other Data Sources &mdash; GraphScope  documentation</title>
@@ -83,7 +84,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -96,7 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -164,7 +165,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="integrating-other-data-sources">
+  <section id="integrating-other-data-sources">
 <h1>Integrating Other Data Sources<a class="headerlink" href="#integrating-other-data-sources" title="Permalink to this headline">¶</a></h1>
 <p>Data source plays an important role in <strong>GL</strong>, through which <strong>GL</strong>
 loads the raw data to build graph and sync states among distributed
@@ -176,14 +177,14 @@ servers access the file system by mounting <strong>NFS</strong> to local.</p>
 <p>If it is difficult to configure your environment with KubeFlow and NFS,
 you <code class="docutils literal notranslate"><span class="pre">NEED</span></code> to implement a kind of file system to satisfy the
 requirements of GL.</p>
-</div>
-<div class="section" id="file-system-interface">
+</section>
+<section id="file-system-interface">
 <h1>File System Interface<a class="headerlink" href="#file-system-interface" title="Permalink to this headline">¶</a></h1>
 <p>The <a class="reference external" href="../graphlearn/platform/file_system.h">interface</a> of file system
 defines the basic operation for file and directory, such as <strong>Exist</strong>,
 <strong>Create</strong> and <strong>Delete</strong>. Besides, we abstract <strong>three</strong> kinds of files
 that a file system should implement.</p>
-<div class="section" id="bytestreamaccessfile">
+<section id="bytestreamaccessfile">
 <h2>ByteStreamAccessFile<a class="headerlink" href="#bytestreamaccessfile" title="Permalink to this headline">¶</a></h2>
 <p>A <strong>ByteStreamAccessFile</strong> enables to read a file in byte stream. That
 is, you can create such a file reader, seek to an <code class="docutils literal notranslate"><span class="pre">offset</span></code>, and then
@@ -193,8 +194,8 @@ read the next <code class="docutils literal notranslate"><span class="pre">n</sp
 </div>
 <p>The <strong>GetFileSize()</strong> interface in file system should return the size in
 bytes for a <strong>ByteStreamAccessFile</strong>.</p>
-</div>
-<div class="section" id="structuredaccessfile">
+</section>
+<section id="structuredaccessfile">
 <h2>StructuredAccessFile<a class="headerlink" href="#structuredaccessfile" title="Permalink to this headline">¶</a></h2>
 <p>Different from <strong>ByteStreamAccessFile</strong>, <strong>StructuredAccessFile</strong> will
 consume the file in records instead of in bytes. That is, you can create
@@ -211,17 +212,17 @@ will load it and build graph index. Refer <a class="reference external" href="so
 more supported raw data formats.</p>
 <p>The <strong>GetRecordCount()</strong> interface in file system should return the size
 in records for a <strong>StructuredAccessFile</strong>.</p>
-</div>
-<div class="section" id="writablefile">
+</section>
+<section id="writablefile">
 <h2>WritableFile<a class="headerlink" href="#writablefile" title="Permalink to this headline">¶</a></h2>
 <p>A <strong>WritableFile</strong> enables to append pieces of data into a file, and
 does not care about what the format is.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="n">Status</span> <span class="nf">Append</span><span class="p">(</span><span class="k">const</span> <span class="n">LiteString</span><span class="o">&amp;</span> <span class="n">data</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="register-with-scheme">
+</section>
+</section>
+<section id="register-with-scheme">
 <h1>Register with Scheme<a class="headerlink" href="#register-with-scheme" title="Permalink to this headline">¶</a></h1>
 <p>At last, register the new file system to the <strong>Environment</strong>. Each file
 system should has a unique scheme, such as <code class="docutils literal notranslate"><span class="pre">hdfs://</span></code>.</p>
@@ -231,7 +232,7 @@ system should has a unique scheme, such as <code class="docutils literal notrans
 <p>After registration, you can use such a file path when building
 <a class="reference external" href="graph.md">Graph</a>.</p>
 <p><a class="reference external" href="../README.md">Home</a></p>
-</div>
+</section>
 
 
            </div>
@@ -309,6 +310,16 @@ system should has a unique scheme, such as <code class="docutils literal notrans
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/index.html">v0.3.0</a></dd>
               
             
 

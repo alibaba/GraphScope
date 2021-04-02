@@ -53,8 +53,8 @@ Install Chart
 Check Service Availability
 
 .. code:: bash
-    
-    # Helm 3 or 2 
+
+    # Helm 3 or 2
     $ helm test [RELEASE_NAME]
 
 Find `more details <https://github.com/alibaba/GraphScope/blob/main/charts/graphscope/README.md>`_ on how to connect a pre-launched service in python client.
@@ -77,3 +77,23 @@ You can use the script as follows or use `./script/launch_cluster.py --help` to 
 
     pip3 install click PyYAML alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
     ./scripts/launch_cluster.py --type aliyun --id your_access_key_id --secret your_access_key_secret --region your_region_id --output kube_config_path
+
+
+Deployment on local
+----------------------
+we provide scripts to install dependencies and build GraphScope on local.
+
+* install independencies
+.. code:: shell
+
+    ./script/install_denpendencies.sh
+    export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+    export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
+    export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
+    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+
+* build GraphScope on local
+.. code:: shell
+
+    ./script/build.sh
+

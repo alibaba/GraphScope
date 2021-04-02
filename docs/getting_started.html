@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Getting Started &mdash; GraphScope  documentation</title>
@@ -85,7 +86,7 @@
         
       
       
-        <p class="caption"><span class="caption-text">Contents</span></p>
+        <p><span class="caption-text">Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
@@ -107,7 +108,7 @@
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -175,7 +176,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="getting-started">
+  <section id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
 <p><cite>graphscope</cite> is the Python client for GraphScope,
 a one-stop graph computation system to process interactive queries,
@@ -184,7 +185,7 @@ the scalability to evaluate graph computations over extremely large graphs.</p>
 <p>This guide takes a walk-through for the <cite>graphscope</cite>.
 We use a concrete example to illustrate how GraphScope
 can be used by data scientists to effectively analyze large graphs.</p>
-<div class="section" id="example-node-clustering-on-citation-network">
+<section id="example-node-clustering-on-citation-network">
 <h2>Example: Node clustering on Citation Network<a class="headerlink" href="#example-node-clustering-on-citation-network" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag">ogbn-mag</a> is a
 heterogeneous network composed of a subset of the Microsoft
@@ -208,8 +209,8 @@ Step 3. Query graph data.
 Step 4. Run graph algorithms.
 Step 5. Run graph-based machine learing tasks.
 Step 6. Close the session.</p>
-</div>
-<div class="section" id="launching-session">
+</section>
+<section id="launching-session">
 <h2>Launching Session<a class="headerlink" href="#launching-session" title="Permalink to this headline">¶</a></h2>
 <p>To use GraphScope, we need to establish a <a class="reference internal" href="reference/session.html#session"><span class="std std-ref">Session</span></a> in a python interpreter.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
@@ -242,8 +243,8 @@ The coordinator manages a cluster of resources (k8s pods),
 and the interactive/analytical/learning engines ran on them.
 For each pod in the cluster,
 there is a vineyard instance at service for distributed data in memory.</p>
-</div>
-<div class="section" id="loading-graph">
+</section>
+<section id="loading-graph">
 <h2>Loading Graph<a class="headerlink" href="#loading-graph" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope models graph data as property graph,
 in which the edges/vertices are labeled and have many properties.
@@ -301,8 +302,8 @@ Paper vertices have properties like features, publish year, subject label, etc.<
 <p>Here, the <code class="docutils literal notranslate"><span class="pre">g</span></code> is loaded in parallel via vineyard and stored
 in vineyard instances in the cluster managed by the session.
 See more details in <a class="reference internal" href="loading_graph.html#loading-graphs"><span class="std std-ref">Loading Graphs</span></a></p>
-</div>
-<div class="section" id="interactive-query">
+</section>
+<section id="interactive-query">
 <h2>Interactive Query<a class="headerlink" href="#interactive-query" title="Permalink to this headline">¶</a></h2>
 <p>Understanding diverse graph data is an essential prerequisite to effective analysis,
 and therefore it is very common for users to directly explore,
@@ -325,8 +326,8 @@ extracting publications in specific time out of the entire graph.</p>
 <span class="s2">                .where(__.in(&#39;writes&#39;).has(&#39;id&#39;, 4307)).count()&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="graph-analytics">
+</section>
+<section id="graph-analytics">
 <h2>Graph Analytics<a class="headerlink" href="#graph-analytics" title="Permalink to this headline">¶</a></h2>
 <p>Graph analytics is widely used in real world. Many algorithms,
 like community detection, paths and connectivity, centrality are proven to be
@@ -354,8 +355,8 @@ to generate the structural features of each paper node.</p>
 <p>In addition, users can write their own algorithms in GraphScope.
 Currently, GraphScope support users to write their own algorithms in
 PIE model and Pregel model.</p>
-</div>
-<div class="section" id="graph-neural-networks-gnns">
+</section>
+<section id="graph-neural-networks-gnns">
 <h2>Graph Neural Networks (GNNs)<a class="headerlink" href="#graph-neural-networks-gnns" title="Permalink to this headline">¶</a></h2>
 <p>Graph neural networks (GNNs) combines superiority of
 both graph analytics and machine learning.
@@ -437,8 +438,8 @@ a graph with features following the last step.</p>
 <span class="n">train</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">lg</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="closing-session">
+</section>
+<section id="closing-session">
 <h2>Closing Session<a class="headerlink" href="#closing-session" title="Permalink to this headline">¶</a></h2>
 <p>At last, we close the session after processing all graph tasks.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -447,8 +448,8 @@ a graph with features following the last step.</p>
 <p>This operation will notify the backend engines and vineyard
 to safely unload graphs and their applications.
 Then, the coordinator will dealloc all the applied resources in the k8s cluster.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -535,6 +536,16 @@ Then, the coordinator will dealloc all the applied resources in the k8s cluster.
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.3.0/index.html">v0.3.0</a></dd>
               
             
 
