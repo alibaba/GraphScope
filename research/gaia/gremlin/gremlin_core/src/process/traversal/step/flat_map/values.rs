@@ -16,14 +16,14 @@
 use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::{FlatMapGen, Step};
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::Details;
-use crate::{DynIter, DynResult, Element};
+use crate::structure::{Details, Tag};
+use crate::{str_to_dyn_error, DynIter, DynResult, Element};
+use bit_set::BitSet;
 use pegasus::api::function::FlatMapFunction;
-use std::collections::HashSet;
 
 pub struct ValuesStep {
     props: Vec<String>,
-    as_labels: Vec<String>,
+    as_labels: Vec<Tag>,
 }
 
 impl ValuesStep {
@@ -34,7 +34,7 @@ impl ValuesStep {
 
 struct ValuesFunc {
     props: Vec<String>,
-    labels: HashSet<String>,
+    labels: BitSet,
 }
 
 impl Step for ValuesStep {
@@ -42,11 +42,11 @@ impl Step for ValuesStep {
         StepSymbol::Values
     }
 
-    fn add_tag(&mut self, label: String) {
+    fn add_tag(&mut self, label: Tag) {
         self.as_labels.push(label);
     }
 
-    fn tags(&self) -> &[String] {
+    fn tags(&self) -> &[Tag] {
         self.as_labels.as_slice()
     }
 }
@@ -60,8 +60,11 @@ impl FlatMapFunction<Traverser, Traverser> for ValuesFunc {
             for prop_name in self.props.iter() {
                 let prop_value = elem.details().get_property(prop_name);
                 if let Some(prop_value) = prop_value {
-                    let traverser = input.split_with_value(
-                        prop_value.try_to_owned().expect("Can't get owned property value"),
+                    let mut traverser = input.clone();
+                    traverser.split_with_value(
+                        prop_value
+                            .try_to_owned()
+                            .ok_or(str_to_dyn_error("Can't get owned property value"))?,
                         &self.labels,
                     );
                     result.push(Ok(traverser));
@@ -75,8 +78,11 @@ impl FlatMapFunction<Traverser, Traverser> for ValuesFunc {
 }
 
 impl FlatMapGen for ValuesStep {
-    fn gen(&self) -> Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>> {
+    fn gen(
+        &self,
+    ) -> DynResult<Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>>
+    {
         let labels = self.get_tags();
-        Box::new(ValuesFunc { props: self.props.clone(), labels })
+        Ok(Box::new(ValuesFunc { props: self.props.clone(), labels }))
     }
 }

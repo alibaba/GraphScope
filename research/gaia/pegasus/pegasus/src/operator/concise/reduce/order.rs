@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ use pegasus_common::collections::{Collection, CollectionFactory};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::fmt::Debug;
+use std::io;
 use std::ptr::NonNull;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
@@ -40,7 +41,7 @@ impl<D: Data + Ord> Order<D> for Stream<D> {
                 OrderDirect::Asc => input.sort(),
                 OrderDirect::Desc => input.sort_by(|a, b| b.cmp(a)),
             }
-            input.into_iter().map(|item| Ok(item))
+            Ok(input.into_iter().map(|item| Ok(item)))
         })
     }
 
@@ -69,7 +70,7 @@ impl<D: Data> OrderBy<D> for Stream<D> {
         let barrier = self.barrier::<Vec<D>>(range)?;
         barrier.flat_map_with_fn(Pipeline, move |mut input| {
             input.sort_by(|a, b| cmp.compare(a, b));
-            input.into_iter().map(|item| Ok(item))
+            Ok(input.into_iter().map(|item| Ok(item)))
         })
     }
 
@@ -86,7 +87,7 @@ impl<D: Data> OrderBy<D> for Stream<D> {
         let barrier = self.barrier_with(Range::Local, factory)?;
         let stream = barrier.flat_map_with_fn(Pipeline, move |input| {
             let input = input.take().take();
-            input.into_iter().map(|item| Ok(item))
+            Ok(input.into_iter().map(|item| Ok(item)))
         });
 
         match range {
@@ -95,7 +96,7 @@ impl<D: Data> OrderBy<D> for Stream<D> {
                 let factory = CustomOrdQueueFactory::new(param.clone());
                 stream?.barrier_with(range, factory)?.flat_map_with_fn(Pipeline, move |input| {
                     let input = input.take().take();
-                    input.into_iter().map(|item| Ok(item))
+                    Ok(input.into_iter().map(|item| Ok(item)))
                 })
             }
         }
@@ -111,14 +112,14 @@ fn get_top<D: Ord + Data>(
             let factory = SmallHeapFactory { limit, _ph: std::marker::PhantomData };
             stream.barrier_with(range, factory)?.flat_map_with_fn(Pipeline, move |input| {
                 let input = input.take().take();
-                input.into_iter().map(|item| Ok(item))
+                Ok(input.into_iter().map(|item| Ok(item)))
             })
         }
         OrderDirect::Desc => {
             let factory = LargeHeapFactory { limit, _ph: std::marker::PhantomData };
             stream.barrier_with(range, factory)?.flat_map_with_fn(Pipeline, move |input| {
                 let input = input.take().take();
-                input.into_iter().map(|item| Ok(item))
+                Ok(input.into_iter().map(|item| Ok(item)))
             })
         }
     }
@@ -184,7 +185,7 @@ impl<D: Ord + Debug> Debug for SmallHeap<D> {
 }
 
 impl<D: Ord + Send> Collection<D> for SmallHeap<D> {
-    fn add(&mut self, item: D) -> Option<D> {
+    fn add(&mut self, item: D) -> Result<(), io::Error> {
         if self.heap.len() >= self.limit {
             let mut head = self.heap.peek_mut().expect("unreachable: len > 0");
             // if others <= head > item,
@@ -194,7 +195,7 @@ impl<D: Ord + Send> Collection<D> for SmallHeap<D> {
         } else {
             self.heap.push(item);
         }
-        None
+        Ok(())
     }
 
     fn clear(&mut self) {
@@ -235,7 +236,7 @@ impl<D: Ord + Debug> Debug for LargeHeap<D> {
 }
 
 impl<D: Ord + Send> Collection<D> for LargeHeap<D> {
-    fn add(&mut self, item: D) -> Option<D> {
+    fn add(&mut self, item: D) -> Result<(), io::Error> {
         if self.heap.len() >= self.limit {
             let item = Reverse(item);
             let mut head = self.heap.peek_mut().expect("unreachable: len > 0");
@@ -246,7 +247,7 @@ impl<D: Ord + Send> Collection<D> for LargeHeap<D> {
         } else {
             self.heap.push(Reverse(item));
         }
-        None
+        Ok(())
     }
 
     fn clear(&mut self) {
@@ -405,7 +406,7 @@ impl<D, C: CompareFunction<D>> IntoIterator for CustomOrdQueue<D, C> {
 }
 
 impl<D: Send, C: CompareFunction<D>> Collection<D> for CustomOrdQueue<D, C> {
-    fn add(&mut self, item: D) -> Option<D> {
+    fn add(&mut self, item: D) -> Result<(), io::Error> {
         if self.heap.len() >= self.param.limit {
             let mut head = self.heap.peek_mut().expect("unreachable: len > 0");
             // if others <= head > item,
@@ -416,7 +417,7 @@ impl<D: Send, C: CompareFunction<D>> Collection<D> for CustomOrdQueue<D, C> {
             let cmp = self.param.cmp;
             self.heap.push(Item { inner: item, cmp });
         }
-        None
+        Ok(())
     }
 
     fn clear(&mut self) {

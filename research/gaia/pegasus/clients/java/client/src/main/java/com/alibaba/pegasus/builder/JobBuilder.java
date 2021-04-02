@@ -16,65 +16,38 @@
 package com.alibaba.pegasus.builder;
 
 import com.alibaba.pegasus.intf.NestedFunc;
-import com.alibaba.pegasus.service.proto.PegasusClient.JobConfig;
-import com.alibaba.pegasus.service.proto.PegasusClient.JobRequest;
-import com.alibaba.pegasus.service.proto.PegasusClient.AccumKind;
+import com.alibaba.pegasus.service.protocol.PegasusClient.AccumKind;
+import com.alibaba.pegasus.service.protocol.PegasusClient.JobConfig;
+import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
+import com.alibaba.pegasus.service.protocol.PegasusClient.Sink;
 import com.google.protobuf.ByteString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
-public class JobBuilder {
-    private static final Logger logger = Logger.getLogger(JobBuilder.class.getName());
+public class JobBuilder extends AbstractBuilder {
+    private static final Logger logger = LoggerFactory.getLogger(JobBuilder.class);
 
-    private JobConfig conf;
-    private ByteString source;
-    private Plan plan;
+    public JobBuilder(JobConfig conf, ByteString source, Plan plan, Sink sink) {
+        super(conf, source, plan, sink);
+    }
 
     public JobBuilder(JobConfig conf, ByteString source, Plan plan) {
-        this.conf = conf;
-        this.source = source;
-        this.plan = plan;
+        super(conf, source, plan);
     }
 
     public JobBuilder(JobConfig conf, ByteString source) {
-        this.conf = conf;
-        this.source = source;
-        this.plan = new Plan();
+        super(conf, source);
     }
 
     public JobBuilder(JobConfig conf) {
-        this.conf = conf;
-        this.plan = new Plan();
+        super(conf);
     }
 
     public JobBuilder() {
-        this.plan = new Plan();
-    }
-
-    public JobConfig getConf() {
-        return conf;
-    }
-
-    public void setConf(JobConfig conf) {
-        this.conf = conf;
-    }
-
-    public ByteString getSource() {
-        return source;
-    }
-
-    public void setSource(ByteString source) {
-        this.source = source;
-    }
-
-    public Plan getPlan() {
-        return plan;
-    }
-
-    public void setPlan(Plan plan) {
-        this.plan = plan;
+        super();
     }
 
     public JobBuilder addSource(ByteString source) {
@@ -122,13 +95,8 @@ public class JobBuilder {
         return this;
     }
 
-    public JobBuilder count(boolean isGlobal) {
-        this.plan.count(isGlobal);
-        return this;
-    }
-
-    public JobBuilder dedup(boolean isGlobal) {
-        this.plan.dedup(isGlobal);
+    public JobBuilder dedup(boolean isGlobal, ByteString set) {
+        this.plan.dedup(isGlobal, set);
         return this;
     }
 
@@ -189,22 +157,32 @@ public class JobBuilder {
         return this;
     }
 
-    public JobBuilder groupBy(boolean isGlobal, ByteString getKey, AccumKind accumKind, ByteString accumFunc) {
-        this.plan.groupBy(isGlobal, getKey, accumKind, accumFunc);
-        return this;
+    // reduce api
+    public ReduceBuilder count(boolean isGlobal) {
+        this.plan.count(isGlobal);
+        return new ReduceBuilder(this.conf, this.source, this.plan, this.sink);
     }
 
-    public JobBuilder sink(ByteString output) {
-        this.plan.sink(output);
-        return this;
+    // reduce api
+    public ReduceBuilder fold(boolean isGlobal, AccumKind accumKind) {
+        this.plan.fold(isGlobal, accumKind);
+        return new ReduceBuilder(this.conf, this.source, this.plan, this.sink);
     }
 
-    public JobRequest build() {
-        return JobRequest.newBuilder()
-                .setConf(this.conf)
-                .setSource(this.source)
-                .addAllPlan(this.plan.getPlan())
-                .build();
+    // reduce api
+    public ReduceBuilder foldCustom(boolean isGlobal, AccumKind accumKind, ByteString accumFunc) {
+        this.plan.foldCustom(isGlobal, accumKind, accumFunc);
+        return new ReduceBuilder(this.conf, this.source, this.plan, this.sink);
+    }
+
+    // reduce api
+    public ReduceBuilder groupBy(boolean isGlobal, ByteString map) {
+        this.plan.groupBy(isGlobal, map);
+        return new ReduceBuilder(this.conf, this.source, this.plan, this.sink);
+    }
+
+    public void sink(ByteString output) {
+        this.sink = this.plan.sink(output);
     }
 
     public static void main(String[] args) {
@@ -214,7 +192,16 @@ public class JobBuilder {
         // for nested task
         JobBuilder plan = new JobBuilder();
         // build JobReq
-        JobRequest jobReq = jobBuilder.map(opBody).flatMap(opBody).repeat(3, plan.flatMap(opBody).flatMap(opBody)).build();
-        System.out.printf("send job req: %s", jobReq.toString());
+        JobRequest jobReq = jobBuilder
+                .map(opBody)
+                .flatMap(opBody)
+                .repeat(3, plan
+                        .flatMap(opBody)
+                        .flatMap(opBody))
+                .count(true)
+                .unfold(opBody)
+                .count(true)
+                .build();
+        logger.info("send job req: {}", jobReq.toString());
     }
 }

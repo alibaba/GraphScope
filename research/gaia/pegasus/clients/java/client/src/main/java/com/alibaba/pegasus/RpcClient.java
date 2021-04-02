@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,83 +15,100 @@
  */
 package com.alibaba.pegasus;
 
-import com.alibaba.pegasus.builder.Plan;
-import com.alibaba.pegasus.intf.ResultProcessor;
-import com.alibaba.pegasus.service.proto.JobServiceGrpc;
-import com.alibaba.pegasus.service.proto.JobServiceGrpc.JobServiceStub;
-import com.alibaba.pegasus.service.proto.PegasusClient.JobResponse;
-import com.alibaba.pegasus.service.proto.PegasusClient.JobRequest;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import com.alibaba.pegasus.common.StreamIterator;
+import com.alibaba.pegasus.intf.CloseableIterator;
+import com.alibaba.pegasus.service.protocol.JobServiceGrpc;
+import com.alibaba.pegasus.service.protocol.JobServiceGrpc.JobServiceStub;
+import com.alibaba.pegasus.service.protocol.PegasusClient.JobResponse;
+import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
-import java.util.concurrent.CountDownLatch;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RpcClient {
-    private static final Logger logger = Logger.getLogger(Plan.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(RpcClient.class);
 
-    private final JobServiceStub asyncStub;
+    private List<RpcChannel> channels;
 
-    private final ManagedChannel channel;
-
-    public RpcClient(String host, int port) {
-        this(ManagedChannelBuilder.forAddress(host, port).usePlaintext());
+    public RpcClient(List<RpcChannel> channels) {
+        this.channels = channels;
     }
 
-    public RpcClient(ManagedChannelBuilder<?> channelBuilder) {
-        channel = channelBuilder.build();
-        this.asyncStub = JobServiceGrpc.newStub(channel);
-    }
-
-    public void submit(JobRequest jobRequest, ResultProcessor resultProcessor) throws InterruptedException {
-        CountDownLatch finishLatch = new CountDownLatch(1);
-        asyncStub.submit(jobRequest, new JobResponseObserver(resultProcessor, finishLatch));
-        if (!finishLatch.await(1, TimeUnit.MINUTES)) {
-            String errorMessage = "job cannot finish in 1 minutes";
-            logger.log(Level.WARNING, errorMessage);
-            throw new RuntimeException(errorMessage);
+    public CloseableIterator<JobResponse> submit(JobRequest jobRequest) throws InterruptedException {
+        StreamIterator<JobResponse> responseIterator = new StreamIterator<>();
+        AtomicInteger counter = new AtomicInteger(this.channels.size());
+        AtomicBoolean finished = new AtomicBoolean(false);
+        for (RpcChannel rpcChannel : channels) {
+            JobServiceStub asyncStub = JobServiceGrpc.newStub(rpcChannel.getChannel());
+            // TODO: fix timeout according to config
+            asyncStub.withDeadlineAfter(600000, TimeUnit.MILLISECONDS).submit(jobRequest, new JobResponseObserver(responseIterator, finished, counter));
         }
+        return responseIterator;
     }
 
     public void shutdown() throws InterruptedException {
-        channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+        for (RpcChannel rpcChannel : channels) {
+            rpcChannel.shutdown();
+        }
     }
 
     private static class JobResponseObserver implements StreamObserver<JobResponse> {
-        private final ResultProcessor resultProcessor;
-        private CountDownLatch finishLatch;
+        private final StreamIterator<JobResponse> iterator;
+        private final AtomicBoolean finished;
+        private final AtomicInteger counter;
 
-        public JobResponseObserver(ResultProcessor resultProcessor, CountDownLatch finishLatch) {
-            this.resultProcessor = resultProcessor;
-            this.finishLatch = finishLatch;
+        public JobResponseObserver(StreamIterator<JobResponse> iterator, AtomicBoolean finished, AtomicInteger counter) {
+            this.iterator = iterator;
+            this.finished = finished;
+            this.counter = counter;
         }
 
         @Override
         public void onNext(JobResponse jobResponse) {
-            if (jobResponse.hasErr()) {
-                logger.info("job failed: " + jobResponse.getErr().getErrMsg());
+            if (finished.get()) {
                 return;
             }
-            resultProcessor.process(jobResponse);
+            try {
+                if (jobResponse.hasErr()) {
+                    String msg = jobResponse.getErr().getErrMsg();
+                    logger.error("job failed: {}", msg);
+                    onError(new InterruptedException(msg));
+                    return;
+                }
+                this.iterator.putData(jobResponse);
+            } catch (InterruptedException e) {
+                onError(e);
+            }
         }
 
         @Override
         public void onError(Throwable throwable) {
+            if (finished.getAndSet(true)) {
+                return;
+            }
             Status status = Status.fromThrowable(throwable);
-            resultProcessor.error(status);
-            logger.log(Level.WARNING, "process job response error: {0}", status);
-            finishLatch.countDown();
+            logger.error("get job response error: {}", status);
+            this.iterator.fail(throwable);
         }
 
         @Override
         public void onCompleted() {
-            resultProcessor.finish();
-            logger.info("finish process job response");
-            finishLatch.countDown();
+            logger.info("finish get job response from one server");
+            if (counter.decrementAndGet() == 0) {
+                logger.info("finish get job response from all servers");
+                try {
+                   this.iterator.finish();
+                } catch (InterruptedException e) {
+                    onError(e);
+                }
+            }
         }
     }
 }

@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,28 +14,31 @@
 //! limitations under the License.
 
 use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::{MapFuncGen, Step};
+use crate::process::traversal::step::{MapFuncGen, RemoveLabel, Step};
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::{QueryParams, Vertex, VertexOrEdge};
+use crate::structure::{QueryParams, Tag, Vertex, VertexOrEdge};
+use crate::{str_to_dyn_error, DynResult};
+use bit_set::BitSet;
 use pegasus::api::function::{FnResult, MapFunction};
-use std::collections::HashSet;
 
 pub struct IdentityStep {
     pub params: QueryParams<Vertex>,
-    as_labels: Vec<String>,
+    as_labels: Vec<Tag>,
+    remove_labels: Vec<Tag>,
 }
 
 impl IdentityStep {
     pub fn new(props: Option<Vec<String>>) -> Self {
         let mut params = QueryParams::new();
         params.props = props;
-        IdentityStep { params, as_labels: vec![] }
+        IdentityStep { params, as_labels: vec![], remove_labels: vec![] }
     }
 }
 
 struct IdentityFunc {
-    pub params: QueryParams<Vertex>,
-    labels: HashSet<String>,
+    params: QueryParams<Vertex>,
+    labels: BitSet,
+    remove_labels: BitSet,
 }
 
 impl Step for IdentityStep {
@@ -43,18 +46,33 @@ impl Step for IdentityStep {
         StepSymbol::Identity
     }
 
-    fn add_tag(&mut self, label: String) {
+    fn add_tag(&mut self, label: Tag) {
         self.as_labels.push(label);
     }
 
-    fn tags(&self) -> &[String] {
+    fn tags(&self) -> &[Tag] {
         self.as_labels.as_slice()
     }
 }
 
-// TODO(bingqing): throw error
+impl RemoveLabel for IdentityStep {
+    fn remove_tag(&mut self, label: Tag) {
+        self.remove_labels.push(label);
+    }
+
+    fn remove_tags(&self) -> &[Tag] {
+        self.remove_labels.as_slice()
+    }
+}
+
+// runtime identity step is used in the following scenarios:
+// 1. g.V().out().identity(props), where identity gives the props needs to be saved (will shuffle to out vertex firstly)
+// TODO: 2. g.V().outE().as("a"), where identity may gives the tag "a". We do this only because compiler may give plan like this.
+// 3. g.V().union(identity(), both()), which is the real gremlin identity step
+// 4. g.V().count().as("a"), where identity gives the tag "a", since count() is an op in engine
+// 5. Give hint of tags to remove. Since we may not able to remove tags in some OpKind, e.g., Filter, Sort, Group, etc, we add identity (map step) to remove tags.
 impl MapFunction<Traverser, Traverser> for IdentityFunc {
-    fn exec(&self, input: Traverser) -> FnResult<Traverser> {
+    fn exec(&self, mut input: Traverser) -> FnResult<Traverser> {
         if let Some(elem) = input.get_element() {
             if self.params.props.is_some() {
                 // the case of preserving some properties in vertex in previous
@@ -63,38 +81,52 @@ impl MapFunction<Traverser, Traverser> for IdentityFunc {
                         // the case of preserving properties on demand for vertex
                         let id = v.id;
                         let graph = crate::get_graph().unwrap();
-                        let mut r = graph.get_vertex(&[id], &self.params).expect("failure");
+                        let mut r = graph.get_vertex(&[id], &self.params)?;
                         if let Some(v) = r.next() {
-                            Ok(input.modify_head(v, &self.labels))
+                            input.modify_head(v, &self.labels);
+                            input.remove_labels(&self.remove_labels);
+                            Ok(input)
                         } else {
-                            panic!("vertex with id {} not found", id);
+                            Err(str_to_dyn_error(&format!("vertex with id {} not found", id)))
                         }
                     }
-                    VertexOrEdge::E(_) => {
-                        // the case that we assume all properties are already preserved for edge, so we do nothing
+                    // TODO: there is no need to add identity after edge, check with Compiler
+                    VertexOrEdge::E(_e) => {
+                        // the case that we assume all properties are already preserved for edge, so we do not query the edges
+                        if !self.labels.is_empty() {
+                            input.add_labels(&self.labels);
+                        }
+                        input.remove_labels(&self.remove_labels);
                         Ok(input)
                     }
                 }
             } else {
-                // the case of identity step or as step
-                if let Some(head_element) = input.get_element() {
-                    Ok(input.split(head_element.clone(), &self.labels))
-                } else if let Some(head_object) = input.get_object() {
-                    Ok(input.split_with_value(head_object.clone(), &self.labels))
-                } else {
-                    panic!("invalid head in identity;")
+                // the case of identity step
+                // TODO: check with compiler when do this
+                if !self.labels.is_empty() {
+                    input.add_labels(&self.labels);
                 }
+                input.remove_labels(&self.remove_labels);
+                Ok(input)
             }
+        } else if let Some(_) = input.get_object() {
+            // the case of as step, e.g., g.V().count().as("a")
+            if !self.labels.is_empty() {
+                input.add_labels(&self.labels);
+            }
+            input.remove_labels(&self.remove_labels);
+            Ok(input)
         } else {
-            panic!("invalid input for identity;")
+            Err(str_to_dyn_error("invalid head in identity"))
         }
     }
 }
 
 impl MapFuncGen for IdentityStep {
-    fn gen(&self) -> Box<dyn MapFunction<Traverser, Traverser>> {
+    fn gen(&self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>> {
         let labels = self.get_tags();
         let params = self.params.clone();
-        Box::new(IdentityFunc { params, labels })
+        let remove_labels = self.get_remove_tags();
+        Ok(Box::new(IdentityFunc { params, labels, remove_labels }))
     }
 }

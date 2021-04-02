@@ -46,24 +46,3 @@ The schema contains the following metadata for the graph storage:
 
 The schema file is formatted using Json. We have provided a sampled schema file for LDBC data in `data/schema.json`.
 
-## Parsing tools
-Suppose the LDBC raw data has been preprocessed, and stored in 
-either local disk as `fs:///path/tp/ldbc/data`, or
-HDFS as `hdfs://<ip_addr:port>/path/tp/ldbc/data`. In addition, we are parsing the data in 
-a cluster of k machines, configured in a file named `hosts`, in which each line has the form of `<ip_addr:port>`.
-
-One simply calls the following to parse the graph data: 
-```
-./parse.sh -r <root_dir> -d <ldbc_dir> -p <ldbc_partitions> -g <graph_dir> -w <graph_partitions>
--s <graph_schema> -t <hosts>
-```
-where:
-* `root_dir` is the working directory of the parsing tools
-* `ldbc_dir` records the LDBC raw data's directory (local fs or HDFS).
-* `ldbc_partitions` is the number of partitions of LDBC raw data (after preprocessed).
-* `graph_dir` is the main direcotry in which the parsed data will be maintained.
-* `graph_partitions` is the number of partitions of the parsed data per **each machine**.
-* `graph_schema` is the json-formated schema file of the graph data.
-* `hosts` records the hosts in the cluster.
-
-

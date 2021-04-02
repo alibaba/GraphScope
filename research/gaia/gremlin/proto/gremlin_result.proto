@@ -63,7 +63,7 @@ message GraphElementArray {
 // TODO: no need to carry Property key each time
 // e.g., a: [name:[marko],age:[29]]
 message TagProperty {
-  string tag = 1;
+  int32 tag = 1;
   repeated Property props = 2;
 }
 
@@ -78,10 +78,45 @@ message TagPropertiesArray {
   repeated TagProperties item = 1;
 }
 
+message ValueArray {
+  repeated common.Value item =1;
+}
+
+message PairElement {
+  // we only consider simple PairElement for now,
+  // e.g., group().by().by(), where key is GraphElement, value is GraphElementArray
+  //       group().by(values("id")).by(("id")), where key is Value, value is ValueArray
+  oneof inner {
+    GraphElement graph_element = 1;
+    common.Value value = 2;
+    GraphElementArray graph_element_list = 3;
+    // As we have not support group().by().by(("id")) yet, we will not set ValueArray for now.
+    ValueArray value_list = 4;
+  }
+}
+
+message MapPair {
+  PairElement first = 1;
+  PairElement second = 2;
+}
+
+message MapArray {
+  repeated MapPair item = 1;
+}
+
 message Result {
   oneof inner {
+    // result of path()
     PathArray paths = 1;
+    // result of g.V() etc.
     GraphElementArray elements = 2;
+    // result of select(tag).by(key)
     TagPropertiesArray tag_properties = 3;
+    // result of group()
+    MapArray map_result = 4;
+    // result of fold(), e.g., count()
+    common.Value value = 5;
+    // result of list of values, e.g., values("id")
+    ValueArray value_list = 6;
   }
 }

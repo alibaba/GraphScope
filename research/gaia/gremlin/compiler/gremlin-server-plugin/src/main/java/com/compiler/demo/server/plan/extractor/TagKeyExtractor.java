@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertyMapStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.TraversalMapStep;
+import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
 import org.apache.tinkerpop.gremlin.structure.Column;
 import org.apache.tinkerpop.gremlin.structure.T;
 
@@ -69,6 +71,32 @@ public interface TagKeyExtractor {
             }
         } else if (value != null && value instanceof PreBySubTraversal) {
             builder.setComputed(Gremlin.SubValue.newBuilder());
+        } else if (value.getSteps().size() == 1 && value.getStartStep() instanceof TraversalMapStep) {
+            TraversalMapStep startStep = (TraversalMapStep) value.getStartStep();
+            Traversal.Admin mapTraversal = (Traversal.Admin) startStep.getLocalChildren().get(0);
+            if (!(mapTraversal instanceof ColumnTraversal)) {
+                throw new UnsupportedOperationException();
+            } else {
+                return modulateBy(mapTraversal);
+            }
+        } else if (value.getSteps().size() == 2 && (value.getStartStep() instanceof TraversalMapStep && value.getEndStep() instanceof PropertiesStep)) {
+            TraversalMapStep startStep = (TraversalMapStep) value.getStartStep();
+            Traversal.Admin mapTraversal = (Traversal.Admin) startStep.getLocalChildren().get(0);
+            if (!(mapTraversal instanceof ColumnTraversal)) {
+                throw new UnsupportedOperationException();
+            } else {
+                Gremlin.ByKey selectMap = modulateBy(mapTraversal);
+                PropertiesStep valuePropertiesStep = (PropertiesStep) value.getEndStep();
+                Traversal.Admin tmp = new DefaultTraversal();
+                tmp.addStep(new PropertiesStep(tmp, valuePropertiesStep.getReturnType(), valuePropertiesStep.getPropertyKeys()));
+                // select(keys).values("xxx")
+                Gremlin.ByKey selectMapWithValue = modulateBy(tmp);
+                if (selectMap.getItemCase() == Gremlin.ByKey.ItemCase.MAP_KEYS) {
+                    return Gremlin.ByKey.newBuilder().setMapKeys(Gremlin.MapKey.newBuilder().setKey(selectMapWithValue.getKey())).build();
+                } else {
+                    return Gremlin.ByKey.newBuilder().setMapValues(Gremlin.MapValue.newBuilder().setKey(selectMapWithValue.getKey())).build();
+                }
+            }
         } else {
             throw new UnsupportedOperationException("cannot support other value traversal " + value);
         }
@@ -87,7 +115,9 @@ public interface TagKeyExtractor {
     default boolean isSimpleValue(Traversal.Admin value) {
         return value == null || value instanceof IdentityTraversal || value instanceof ElementValueTraversal
                 || value instanceof TokenTraversal || value instanceof ColumnTraversal || value instanceof PreBySubTraversal
-                || value.getSteps().size() == 1 && (value.getStartStep() instanceof PropertyMapStep || value.getStartStep() instanceof PropertiesStep);
+                || value.getSteps().size() == 1 && (value.getStartStep() instanceof PropertyMapStep || value.getStartStep() instanceof PropertiesStep)
+                || value.getSteps().size() == 2 && (value.getStartStep() instanceof TraversalMapStep && value.getEndStep() instanceof PropertiesStep)
+                || value.getSteps().size() == 1 && value.getStartStep() instanceof TraversalMapStep;
     }
 
     Gremlin.TagKey extractFrom(Object... args);

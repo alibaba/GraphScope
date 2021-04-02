@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ mod by_id;
 mod by_label;
 mod by_property;
 
-use crate::object::DynType;
+use crate::common::DynType;
 use by_id::*;
 use by_label::*;
 use by_property::*;
@@ -69,7 +69,9 @@ pub fn clear_tlv_right_value() {
 }
 
 #[inline]
-pub fn compare_to_tlv<T: DynType + Clone, P: BiPredicate<T, T>>(cmp: &P, value: &T) -> Option<bool> {
+pub fn compare_to_tlv<T: DynType + Clone, P: BiPredicate<T, T>>(
+    cmp: &P, value: &T,
+) -> Option<bool> {
     RIGHT_VALUE.with(|tlv| {
         let right = tlv.borrow();
         if let Some(v) = right.as_ref() {

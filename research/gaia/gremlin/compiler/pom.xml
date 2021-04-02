@@ -11,6 +11,7 @@
     <modules>
         <module>gremlin-server-plugin</module>
         <module>compiler-core</module>
+        <module>benchmark-tool</module>
         <module>../../pegasus/clients/java/client</module>
     </modules>
 
@@ -49,6 +50,11 @@
             <dependency>
                 <groupId>org.apache.tinkerpop</groupId>
                 <artifactId>gremlin-server</artifactId>
+                <version>3.4.9</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tinkerpop</groupId>
+                <artifactId>gremlin-driver</artifactId>
                 <version>3.4.9</version>
             </dependency>
             <dependency>

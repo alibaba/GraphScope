@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -728,8 +728,8 @@ impl<G, I, N, E> MutableGraphDB<G, I, N, E>
 where
     G: IndexType + Serialize + DeserializeOwned + Send + Sync,
     I: IndexType + Serialize + DeserializeOwned + Send + Sync,
-    N: PropertyTableTrait + Sync,
-    E: PropertyTableTrait + Sync,
+    N: PropertyTableTrait + Send + Sync,
+    E: PropertyTableTrait + Send + Sync,
 {
     /// Export this object to bin files
     pub fn export(&self) -> GDBResult<()> {
@@ -738,10 +738,11 @@ where
             self.root_dir.join(DIR_BINARY_DATA).join(format!("partition_{}", self.partition));
 
         create_dir_all(&partition_dir)?;
-        self.vertex_prop_table.export(&partition_dir, FILE_NODE_PPT_DATA)?;
-        self.edge_prop_table.export(&partition_dir, FILE_EDGE_PPT_DATA)?;
-        export(&self.index_data, &partition_dir.join(FILE_INDEX_DATA))?;
+
         export(&self.graph, &partition_dir.join(FILE_GRAPH_STRUCT))?;
+        self.vertex_prop_table.export(&partition_dir.join(FILE_NODE_PPT_DATA))?;
+        self.edge_prop_table.export(&partition_dir.join(FILE_EDGE_PPT_DATA))?;
+        export(&self.index_data, &partition_dir.join(FILE_INDEX_DATA))?;
 
         Ok(())
     }
@@ -837,6 +838,7 @@ mod test {
     use crate::parser::DataType;
     use crate::schema::ID_FIELD;
     use crate::serde_json::Value as JsonValue;
+    use std::path::Path;
 
     // person ids
     static PIDS: [DefaultId; 9] = [
@@ -947,8 +949,8 @@ mod test {
 
     #[test]
     fn test_graph_query() {
-        let data_dir = "data/more_data/graph_data";
-        let root_dir = "data/more_data";
+        let data_dir = "data/large_data";
+        let root_dir = "data/large_data";
         let schema_file = "data/schema.json";
         let mut loader =
             GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, schema_file, 20, 0, 1);
@@ -1101,11 +1103,12 @@ mod test {
 
     #[test]
     fn test_serde() {
-        let data_dir = "data/more_data/graph_data";
-        let root_dir = "data/more_data";
-        let schema_file = "data/schema.json";
+        let temp = tempdir::TempDir::new("test_serde").expect("Open temp folder error");
+        let data_dir = Path::new("data/large_data");
+        let root_dir = temp.path();
+        let schema_file = Path::new("data/schema.json");
         let mut loader =
-            GraphLoader::<DefaultId, InternalId>::new(data_dir, root_dir, schema_file, 20, 0, 1);
+            GraphLoader::<DefaultId, InternalId>::new(&data_dir, &root_dir, &schema_file, 20, 0, 1);
         // load whole graph
         loader.load().expect("Load graph error");
         let graph = loader.into_mutable_graph();
@@ -1113,7 +1116,7 @@ mod test {
 
         let imported_graph = GraphDBConfig::default()
             .root_dir(root_dir)
-            .schema_file(schema_file)
+            .schema_file(&schema_file)
             .open::<DefaultId, InternalId, _, _>()
             .expect("Import graph error");
 

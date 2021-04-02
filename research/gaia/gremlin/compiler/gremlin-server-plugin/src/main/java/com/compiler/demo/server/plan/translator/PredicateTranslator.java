@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,28 +40,28 @@ public class PredicateTranslator extends AttributeTranslator<PredicateContainer,
         return (PredicateContainer pContainer) -> {
             Gremlin.FilterChain.Builder result = FilterChainHelper.createFilterChain();
             while (pContainer.hasNext()) {
-                FilterChainHelper.and(result, recursive(pContainer.next()));
+                FilterChainHelper.and(result, recursive(pContainer.next(), pContainer));
             }
             // printPredicate(result.build());
             return result.build();
         };
     }
 
-    protected Gremlin.FilterChain recursive(P predicate) {
+    protected Gremlin.FilterChain recursive(P predicate, PredicateContainer container) {
         if (predicate instanceof ConnectiveP) {
             Gremlin.FilterChain.Builder result = FilterChainHelper.createFilterChain();
             ((ConnectiveP) predicate).getPredicates().forEach(p -> {
                 if (predicate instanceof AndP) {
-                    FilterChainHelper.and(result, recursive((P) p));
+                    FilterChainHelper.and(result, recursive((P) p, container));
                 } else if (predicate instanceof OrP) {
-                    FilterChainHelper.or(result, recursive((P) p));
+                    FilterChainHelper.or(result, recursive((P) p, container));
                 } else {
                     logger.error("Predicate Type {} is invalid", p.getClass());
                 }
             });
             return result.build();
         } else {
-            Gremlin.FilterExp simple = this.input.generateSimpleP(predicate);
+            Gremlin.FilterExp simple = container.generateSimpleP(predicate);
             return FilterHelper.INSTANCE.asChain(simple);
         }
     }

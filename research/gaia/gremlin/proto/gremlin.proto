@@ -54,31 +54,55 @@ message FilterChain {
   repeated FilterNode node = 1;
 }
 
+message StepTag {
+    oneof item {
+        int32 tag = 1;
+    }
+}
+
 message GremlinStep {
   // Every gremlin step can potentially carry tags
-  repeated string tags = 1;
+  repeated StepTag tags = 1;
+  // remove objects pointed by remove_tags at the end
+  repeated StepTag remove_tags = 2;
   oneof step {
-    GraphStep graph_step = 2;
-    VertexStep vertex_step = 3;
-    HasStep has_step = 4;
-    WhereStep where_step = 5;
-    PathFilterStep path_filter_step = 6;
-    RangeGlobalStep range_global_step = 7;
-    PathStep path_step = 8;
-    SelectStep select_step = 9;
-    IdentityStep identity_step = 10;
-    OrderByStep order_by_step = 11;
-    GroupByStep group_by_step = 12;
-    SelectOneStepWithoutBy select_one_without_by = 13;
-    PathLocalCountStep  path_local_count_step = 14;
-    ValuesStep values_step = 15;
-    EdgeVertexStep edge_vertex_step = 16;
+    GraphStep graph_step = 3;
+    VertexStep vertex_step = 4;
+    HasStep has_step = 5;
+    WhereStep where_step = 6;
+    PathFilterStep path_filter_step = 7;
+    RangeGlobalStep range_global_step = 8;
+    PathStep path_step = 9;
+    SelectStep select_step = 10;
+    IdentityStep identity_step = 11;
+    OrderByStep order_by_step = 12;
+    GroupByStep group_by_step = 13;
+    SelectOneStepWithoutBy select_one_without_by = 14;
+    PathLocalCountStep  path_local_count_step = 15;
+    ValuesStep values_step = 16;
+    EdgeVertexStep edge_vertex_step = 17;
+    DedupStep dedup_step = 18;
+    UnfoldStep unfold_step = 19;
+    EdgeBothVStep edge_both_v_step = 20;
+    TransformTraverserStep transform_traverser_step = 21;
   };
 }
 
 enum EntityType {
   VERTEX = 0;
   EDGE = 1;
+}
+
+enum TraverserRequirement {
+    BULK = 0;
+    LABELED_PATH = 1;
+    NESTED_LOOP = 2;
+    OBJECT = 3;
+    ONE_BULK = 4;
+    PATH = 5;
+    SACK = 6;
+    SIDE_EFFECTS = 7;
+    SINGLE_LOOP = 8;
 }
 
 message GraphStep {
@@ -90,6 +114,13 @@ message GraphStep {
   EntityType return_type = 3;
   // To filter vertices based on some predicates, e.g. has("name", eq("John"))
   FilterChain predicates = 4;
+  // to initialize a traverser type
+  repeated TraverserRequirement traverser_requirements = 5;
+}
+
+// decide a new traverser type with the requirements
+message TransformTraverserStep {
+  repeated TraverserRequirement traverser_requirements = 1;
 }
 
 enum Direction {
@@ -115,9 +146,9 @@ message HasStep {
 }
 
 message WhereStep {
-  string start_tag = 1;
+  StepTag start_tag = 1;
   common.Key start_token = 2;
-  repeated string tags = 3;
+  repeated StepTag tags = 3;
   FilterChain predicates = 4;
 }
 
@@ -150,17 +181,21 @@ message IdentityStep {
 message WhereJoiner {}
 // for group and order by
 message ByJoiner {}
+message GroupValueJoiner {}
 
 message SubTaskJoiner {
     oneof inner {
         WhereJoiner where_joiner = 1;
         ByJoiner by_joiner = 2;
+        GroupValueJoiner group_value_joiner = 3;
     }
 }
 
 
-message MapKey {}
-message MapValue {}
+// to support order().by(select(keys).values("id"))
+message MapKey {common.Key key = 1;}
+// to support order().by(select(values).values("id"))
+message MapValue {common.Key key = 1;}
 message SubValue {}
 
 // we try to unify the by key for select, group, and order
@@ -181,13 +216,13 @@ message ByKey {
 
 // we support tag.by_key (e.g., xxx.as("a").select("a").by("name")) and head.by_key (e.g., select("name"))
 message TagKey {
-  string tag = 1;
+  StepTag tag = 1;
   ByKey by_key = 2;
 }
 
 // hack way to implement select("a") temporarily
 message SelectOneStepWithoutBy {
-  string tag = 1;
+  StepTag tag = 1;
 }
 
 message SelectStep {
@@ -217,7 +252,22 @@ message OrderByStep {
 }
 
 message GroupByStep {
+  enum AccumKind {
+    CNT       = 0;
+    SUM       = 1;
+    MAX       = 2;
+    MIN       = 3;
+    TO_LIST   = 4;
+    TO_SET    = 5;
+  }
   TagKey key = 1;
+  AccumKind accum = 2;
+  // we only allow order().by(select(keys)) or order().by(select(values)) in group by
+  repeated OrderByComparePair opt_order = 3;
+}
+
+// We may allow specific group unfold, as an optimization
+message GroupByUnfold {
 }
 
 message PathLocalCountStep{}
@@ -226,6 +276,28 @@ message ValuesStep {
   repeated string properties = 1;
 }
 
+// map
 message EdgeVertexStep {
-    Direction direction = 1;
+    enum EndpointOpt {
+      OUT = 0;
+      IN = 1;
+      OTHER = 2;
+    }
+    EndpointOpt endpoint_opt = 1;
+}
+
+// flatmap
+message EdgeBothVStep {
+}
+
+message DedupStep {
+  enum DedupSetType {
+    HashSet = 0;
+  }
+  DedupSetType dedup_type = 1;
+}
+
+// It is actually a ListFlatMapStep,
+// which is only used in group().by().by(out().out()) -> group().by().by(select(values).unfold().out().out())
+message UnfoldStep {
 }

@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,12 +36,16 @@ public class StaticGraphStore implements GraphStoreService {
 
     private Map<String, Object> graphSchema;
     private GlobalIdMaker idMaker;
-    public static final StaticGraphStore INSTANCE = new StaticGraphStore("conf/empty-graph.properties");
+    public static final StaticGraphStore INSTANCE = new StaticGraphStore("conf/graph.properties");
 
     private StaticGraphStore(String graphConfig) {
         try {
             Properties properties = new Properties();
             properties.load(new FileInputStream(graphConfig));
+            String schemaFromSys = System.getProperty("gremlin.graph.schema");
+            if (schemaFromSys != null) {
+                properties.put("gremlin.graph.schema", schemaFromSys);
+            }
             File configF = new File((String) properties.get("gremlin.graph.schema"));
             String schemaJson = FileUtils.readFileToString(configF, StandardCharsets.UTF_8);
             this.graphSchema = JsonUtils.fromJson(schemaJson, new TypeReference<Map<String, Object>>() {

@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,9 @@ use crate::structure::property::DynDetails;
 use crate::Object;
 pub use edge::Edge;
 use graph_store::common::LabelId;
+use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::fmt::Debug;
+use std::io;
 use std::ops::{Deref, DerefMut};
 pub use vertex::Vertex;
 
@@ -27,6 +29,39 @@ pub type ID = u128;
 pub enum Label {
     Str(String),
     Id(LabelId),
+}
+
+impl Encode for Label {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        match self {
+            Label::Id(id) => {
+                writer.write_u8(0)?;
+                writer.write_u8(*id)?;
+            }
+            Label::Str(str) => {
+                writer.write_u8(1)?;
+                str.write_to(writer)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for Label {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let e = reader.read_u8()?;
+        match e {
+            0 => {
+                let label_id = reader.read_u8()?;
+                Ok(Label::Id(label_id))
+            }
+            1 => {
+                let str = <String>::read_from(reader)?;
+                Ok(Label::Str(str))
+            }
+            _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
+        }
+    }
 }
 
 #[enum_dispatch]
@@ -53,6 +88,39 @@ impl Debug for VertexOrEdge {
         match self {
             VertexOrEdge::V(v) => write!(f, "v[{}]", v.id),
             VertexOrEdge::E(e) => write!(f, "e[{}]", e.id),
+        }
+    }
+}
+
+impl Encode for VertexOrEdge {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        match self {
+            VertexOrEdge::V(v) => {
+                writer.write_u8(0)?;
+                v.write_to(writer)?;
+            }
+            VertexOrEdge::E(e) => {
+                writer.write_u8(1)?;
+                e.write_to(writer)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for VertexOrEdge {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let e = reader.read_u8()?;
+        match e {
+            0 => {
+                let v = <Vertex>::read_from(reader)?;
+                Ok(VertexOrEdge::V(v))
+            }
+            1 => {
+                let e = <Edge>::read_from(reader)?;
+                Ok(VertexOrEdge::E(e))
+            }
+            _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
         }
     }
 }
@@ -167,5 +235,21 @@ impl PartialEq for GraphElement {
                 VertexOrEdge::E(o) => e.id == o.id,
             },
         }
+    }
+}
+
+impl Encode for GraphElement {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        self.element.write_to(writer)?;
+        self.attached.write_to(writer)?;
+        Ok(())
+    }
+}
+
+impl Decode for GraphElement {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let element = <VertexOrEdge>::read_from(reader)?;
+        let attached = <Option<Object>>::read_from(reader)?;
+        Ok(GraphElement { element, attached })
     }
 }

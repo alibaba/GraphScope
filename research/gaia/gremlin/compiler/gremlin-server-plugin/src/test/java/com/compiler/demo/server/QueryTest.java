@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,9 +15,17 @@
  */
 package com.compiler.demo.server;
 
-import com.alibaba.pegasus.builder.JobBuilder;
+import com.alibaba.pegasus.builder.AbstractBuilder;
+import com.compiler.demo.server.idmaker.IdMaker;
+import com.compiler.demo.server.idmaker.IncrementalQueryIdMaker;
+import com.compiler.demo.server.idmaker.TagIdMaker;
 import com.compiler.demo.server.plan.PlanUtils;
 import com.compiler.demo.server.plan.translator.TraversalTranslator;
+import com.compiler.demo.server.plan.translator.builder.PlanConfig;
+import com.compiler.demo.server.plan.translator.builder.TraversalBuilder;
+import com.compiler.demo.server.processor.MaxGraphOpProcessor;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Scope;
@@ -29,28 +37,45 @@ import org.apache.tinkerpop.gremlin.structure.util.empty.EmptyGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
 public class QueryTest {
     private static Logger logger = LoggerFactory.getLogger(QueryTest.class);
     private static final GraphTraversalSource g = EmptyGraph.instance().traversal();
 
-    public static void main(String[] args) {
-        JobBuilder job = (new TraversalTranslator(getTestTraversal().asAdmin())).translate();
+    public static void main(String[] args) throws Exception {
+        // read default engine conf
+        GlobalEngineConf.setDefaultSysConf(JsonUtils.fromJson(
+                FileUtils.readFileToString(new File("conf/system.args.json"), StandardCharsets.UTF_8), new TypeReference<Map<String, Object>>() {
+                })
+        );
+        IdMaker queryIdMaker = new IncrementalQueryIdMaker();
+        Traversal testTraversal = getTestTraversal();
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId))).translate();
         PlanUtils.print(job);
     }
 
     public static Traversal getTestTraversal() {
-        Traversal traversal = CR_11();
+        Traversal traversal = CR_1_1();
         MaxGraphOpProcessor.applyStrategy(traversal);
         return traversal;
     }
 
     public static Traversal CR_1_1() {
         return g.V().hasLabel("PERSON").has("id", 30786325583618L)
+                .out()
                 .both("PERSON_KNOWS_PERSON")
                 .union(__.identity(),
                         __.both("PERSON_KNOWS_PERSON").union(__.identity(), __.both("PERSON_KNOWS_PERSON")))
                 .has("id", P.neq(30786325583618L)).has("firstName", P.eq("Chau")).as("a")
-                .path().count(Scope.local).as("b")
+                .path().count(Scope.local)
+                .as("b")
                 .select("a")
                 .order().by(__.select("b"), Order.desc).by("lastName").by("id")
                 .limit(20)
@@ -92,6 +117,7 @@ public class QueryTest {
                         .has("creationDate", P.inside(20110601000000000L, 20111013000000000L))
                         .out("COMMENT_HASCREATOR_PERSON")
                         .has("name", "United_Kingdom").count())
+                .unfold()
                 .order().by(__.select(Column.values), Order.desc).by(__.select(Column.keys).values("id"))
                 .limit(20);
     }
@@ -108,12 +134,13 @@ public class QueryTest {
         return g.V().hasLabel("PERSON").has("id", 21990232560302L)
                 .both("PERSON_KNOWS_PERSON")
                 .union(__.identity(), __.both("PERSON_KNOWS_PERSON"))
-                .as("p")
+//                .as("p")
                 .inE("PERSON_KNOWS_PERSON").has("joinDate", P.gt(20120901000000000L))
                 .outV()
                 .group()
                 .by()
-                .by(__.out("PERSON_KNOWS_PERSON").hasLabel("POST").out("PERSON_KNOWS_PERSON").where(P.eq("p")).count())
+                .by(__.out("PERSON_KNOWS_PERSON").hasLabel("POST").out("PERSON_KNOWS_PERSON"))
+//                .unfold();
                 .order()
                 .by(__.select(Column.values), Order.desc)
                 .by(__.select(Column.keys).values("id"), Order.asc)
@@ -129,6 +156,7 @@ public class QueryTest {
                 .out("PERSON_KNOWS_PERSON")
                 .has("name", P.neq("PERSON_KNOWS_PERSON"))
                 .groupCount()
+                .unfold()
                 .order()
                 .by(__.select(Column.values), Order.desc)
                 .by(__.select(Column.keys).values("name"), Order.asc)
@@ -141,6 +169,7 @@ public class QueryTest {
                 .inE("PERSON_KNOWS_PERSON").as("like")
                 .values("creationDate")
                 .as("likedate")
+                .order().by(Order.asc).limit(10)
                 .select("like")
                 .outV().as("liker")
                 .order()
@@ -195,6 +224,22 @@ public class QueryTest {
                 .by(__.valueMap("id", "firstName", "lastName"))
                 .by()
                 .by();
+    }
+
+    public static Traversal CR_12() {
+        return g.V().hasLabel("PERSON").has("id", 17592186052613L)
+                .both("PERSON_KNOWS_PERSON").as("friend").in("PERSON_KNOWS_PERSON").hasLabel("PERSON")
+                .filter(__.out("PERSON_KNOWS_PERSON")
+                        .hasLabel("PERSON")
+                        .out("PERSON")
+                        .out("PERSON")
+                        .has("name", P.within("BasketballPlayer")))
+                .select("friend")
+                .groupCount()
+                .unfold()
+                .order()
+                .by(Column.values, Order.asc)
+                .limit(20);
     }
 }              
                

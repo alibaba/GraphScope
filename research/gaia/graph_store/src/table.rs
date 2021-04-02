@@ -1,27 +1,24 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use rocksdb::DB as Tree;
-use rocksdb::{Options, WriteBatch};
 use serde::de::Error as DeError;
 use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
-use std::fs::create_dir_all;
 use std::path::Path;
 
 use crate::error::{GDBError, GDBResult};
@@ -207,10 +204,10 @@ pub trait PropertyTableTrait {
     fn new<P: AsRef<Path>>(_path: P) -> Self;
 
     /// Export `Self`'s binary file to the given file
-    fn export<P: AsRef<Path>>(&self, path: P, fname: &str) -> GDBResult<()>;
+    fn export<P: AsRef<Path>>(&self, path: P) -> GDBResult<()>;
 
     /// Import the binary file in the given path as `Self`
-    fn import<P: AsRef<Path>>(path: P, fname: &str) -> GDBResult<Self>
+    fn import<P: AsRef<Path>>(path: P) -> GDBResult<Self>
     where
         Self: std::marker::Sized;
 }
@@ -285,13 +282,13 @@ impl PropertyTableTrait for PropertyTable {
         PropertyTable::new_dense()
     }
 
-    fn export<P: AsRef<Path>>(&self, path: P, fname: &str) -> GDBResult<()> {
-        crate::io::export(&self, &path.as_ref().join(fname))?;
+    fn export<P: AsRef<Path>>(&self, path: P) -> GDBResult<()> {
+        crate::io::export(&self, path)?;
         Ok(())
     }
 
-    fn import<P: AsRef<Path>>(path: P, fname: &str) -> GDBResult<Self> {
-        let mut table = crate::io::import::<Self, _>(&path.as_ref().join(fname))?;
+    fn import<P: AsRef<Path>>(path: P) -> GDBResult<Self> {
+        let mut table = crate::io::import::<Self, _>(path)?;
         match &mut table.properties {
             Table::Dense(inner) => inner.shrink_to_fit(),
             Table::Sparse(inner) => inner.shrink_to_fit(),
@@ -339,156 +336,16 @@ impl PropertyTableTrait for SingleValueTable {
         Self { property: HashMap::new() }
     }
 
-    fn export<P: AsRef<Path>>(&self, path: P, fname: &str) -> GDBResult<()> {
-        crate::io::export(&self, &path.as_ref().join(fname))?;
+    fn export<P: AsRef<Path>>(&self, path: P) -> GDBResult<()> {
+        crate::io::export(&self, path)?;
         Ok(())
     }
 
-    fn import<P: AsRef<Path>>(path: P, fname: &str) -> GDBResult<Self> {
-        let mut table = crate::io::import::<Self, _>(&path.as_ref().join(fname))?;
+    fn import<P: AsRef<Path>>(path: P) -> GDBResult<Self> {
+        let mut table = crate::io::import::<Self, _>(path)?;
         table.property.shrink_to_fit();
 
         Ok(table)
-    }
-}
-
-/// A property table based on `RocksDB`
-pub struct RocksTable {
-    property: Tree,
-    read_only: bool,
-}
-
-impl RocksTable {
-    pub fn new_table<P: AsRef<Path>>(path: P) -> GDBResult<Self> {
-        if !path.as_ref().exists() {
-            let _ = create_dir_all(path.as_ref());
-        }
-        Tree::destroy(&Options::default(), &path)?;
-
-        let mut opts = Options::default();
-        opts.create_if_missing(true);
-
-        let tree = Tree::open(&opts, path)?;
-        Ok(RocksTable { property: tree, read_only: false })
-    }
-
-    pub fn open<P: AsRef<Path>>(path: P, read_only: bool) -> GDBResult<Self> {
-        if !(path.as_ref().exists()) {
-            Err(GDBError::DBNotFoundError)
-        } else {
-            let opts = Options::default();
-            //            opts.set_allow_os_buffer(false);
-            //            let mut block = BlockBasedOptions::default();
-            //            block.disable_cache();
-            //            opts.set_block_based_table_factory(&block);
-
-            let tree = Tree::open(&opts, path)?;
-
-            Ok(RocksTable { property: tree, read_only })
-        }
-    }
-
-    pub fn flush(&self) -> GDBResult<()> {
-        if self.read_only {
-            panic!("Trying to modify a read-only db.");
-        }
-
-        self.property.flush()?;
-        Ok(())
-    }
-}
-
-impl RocksTable {
-    pub fn with_data<Iter, P: AsRef<Path>>(path: P, property: Iter) -> GDBResult<Self>
-    where
-        Iter: Iterator<Item = (usize, Row)>,
-    {
-        let mut prop = Self::new_table(path)?;
-        let _ = prop.extend_batches(property)?;
-
-        Ok(prop)
-    }
-
-    pub fn extend_batches<Iter: IntoIterator<Item = (usize, Row)>>(
-        &mut self, props: Iter,
-    ) -> GDBResult<usize> {
-        let mut props_vec = Vec::new();
-        for (index, row) in props {
-            props_vec.push((index, row.try_into()?));
-        }
-        self.extend_raw(props_vec.into_iter())
-    }
-
-    pub fn extend_raw<Iter: IntoIterator<Item = (usize, Vec<u8>)>>(
-        &mut self, props: Iter,
-    ) -> GDBResult<usize> {
-        let mut count = 0;
-        if self.read_only {
-            return Err(GDBError::ModifyReadOnlyError);
-        }
-
-        let mut batch = WriteBatch::default();
-        for (id, prop) in props {
-            let id_bytes = bincode::serialize(&id)?;
-            batch.put(id_bytes, prop);
-            count += 1;
-        }
-
-        self.property.write(batch)?;
-        self.property.flush()?;
-        Ok(count)
-    }
-
-    pub fn get_raw_data(&self, index: usize) -> GDBResult<Option<Vec<u8>>> {
-        let index_bytes = bincode::serialize(&index)?;
-        Ok(self.property.get(&index_bytes)?)
-    }
-}
-
-impl PropertyTableTrait for RocksTable {
-    fn len(&self) -> usize {
-        // TODO(longbin) May want to return the actual number of records
-        0
-    }
-
-    fn get_row(&self, index: usize) -> GDBResult<RowRef> {
-        if let Some(raw_data) = self.get_raw_data(index)? {
-            Ok(RowRef::Owned(Row::try_from(raw_data)?))
-        } else {
-            Ok(RowRef::None)
-        }
-    }
-
-    // Careful, calling insertion to RocksDB will be very slow, use `insert_batchs` instead
-    fn insert(&mut self, index: usize, row: Row) -> GDBResult<Option<Row>> {
-        let old_val = self.get_row(index);
-
-        let id_bytes = bincode::serialize(&index)?;
-        let raw_data: Vec<u8> = row.try_into()?;
-        self.property.put(id_bytes, raw_data)?;
-
-        old_val.map(|x| match x {
-            RowRef::Owned(row) => Some(row),
-            _ => None,
-        })
-    }
-
-    fn insert_batches<Iter: Iterator<Item = (usize, Row)>>(
-        &mut self, iter: Iter,
-    ) -> GDBResult<usize> {
-        self.extend_batches(iter)
-    }
-
-    fn new<P: AsRef<Path>>(path: P) -> Self {
-        Self::new_table(path).unwrap()
-    }
-
-    fn export<P: AsRef<Path>>(&self, _path: P, _fname: &str) -> GDBResult<()> {
-        self.flush()
-    }
-
-    fn import<P: AsRef<Path>>(path: P, fname: &str) -> GDBResult<Self> {
-        Self::open(path.as_ref().join(&fname), true)
     }
 }
 
@@ -532,35 +389,5 @@ mod test {
         // Try to insert a duplicated item, abort and return the old value
         assert_eq!(table.insert(2, Row::default()).unwrap(), Some(Row::from("abc".to_string())));
         assert_eq!(table.get_row(2).unwrap(), RowRef::Ref(&Row::default()));
-    }
-
-    use tempdir::TempDir;
-
-    #[test]
-    fn test_rocks_property_table() {
-        let dir = TempDir::new("test_rocksdb").unwrap();
-        let mut table = RocksTable::new(dir.path());
-        assert_eq!(table.get_row(0).unwrap(), RowRef::None);
-
-        assert!(table.insert(0, Row::default()).unwrap().is_none());
-        assert_eq!(table.get_row(0).unwrap(), RowRef::Owned(Row::default()));
-
-        assert!(table.insert(2, Row::from("abc".to_string())).unwrap().is_none());
-
-        assert_eq!(table.get_row(2).unwrap(), RowRef::Owned(Row::from("abc".to_string())));
-
-        // Try to insert a duplicated item, abort and return the old value
-        assert_eq!(table.insert(2, Row::default()).unwrap(), Some(Row::from("abc".to_string())));
-
-        // The row is updated
-        assert_eq!(table.get_row(2).unwrap(), RowRef::Owned(Row::default()));
-
-        // Test insert in batch
-        let items = vec![(3_usize, Row::default()), (4, Row::default()), (5, Row::default())];
-        assert_eq!(table.insert_batches(items.into_iter()).unwrap(), 3);
-
-        for index in 3_usize..6 {
-            assert_eq!(table.get_row(index).unwrap(), RowRef::Owned(Row::default()))
-        }
     }
 }

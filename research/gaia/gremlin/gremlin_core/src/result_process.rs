@@ -1,27 +1,29 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::common::object::Primitives;
 use crate::generated::common as common_pb;
 use crate::generated::protobuf as result_pb;
-use crate::object::Primitives;
 use crate::process::traversal::path::{PathItem, ResultPath};
+use crate::process::traversal::step::result_downcast::{
+    try_downcast_count, try_downcast_list, try_downcast_pair,
+};
 use crate::process::traversal::step::ResultProperty;
-use crate::process::traversal::traverser::{ShadeSync, Traverser};
+use crate::process::traversal::traverser::Traverser;
 use crate::structure::{Edge, GraphElement, Label, Vertex, VertexOrEdge};
 use crate::Object;
-use pegasus_server::factory::HashKey;
 
 fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
     result_pb::Vertex {
@@ -74,6 +76,7 @@ fn path_to_pb(path: &ResultPath) -> result_pb::Path {
                 path_pb.push(element_to_pb(graph_element));
             }
             PathItem::Detached(_) => unimplemented!(),
+            PathItem::Empty => {}
         }
     }
     result_pb::Path { path: path_pb }
@@ -88,7 +91,7 @@ fn property_to_pb(result_property: &ResultProperty) -> result_pb::TagProperties 
             let property = result_pb::Property { key: key.to_string(), value: Some(pb_value) };
             props_pb.push(property);
         }
-        let tag_property = result_pb::TagProperty { tag: tag.to_string(), props: props_pb };
+        let tag_property = result_pb::TagProperty { tag: tag.clone() as i32, props: props_pb };
         tag_props_pb.push(tag_property);
     }
     result_pb::TagProperties { item: tag_props_pb }
@@ -109,46 +112,96 @@ fn object_to_pb_value(value: &Object) -> common_pb::Value {
         }
         Object::String(s) => common_pb::value::Item::Str(s.clone()),
         Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
-        Object::UnknownOwned(_) => unimplemented!(),
+        Object::UnknownOwned(_u) => {
+            if let Some(count_val) = try_downcast_count(value) {
+                common_pb::value::Item::I64(count_val as i64)
+            } else {
+                // TODO: more dyn type downcast
+                unimplemented!()
+            }
+        }
         Object::UnknownRef(_) => unimplemented!(),
     };
     common_pb::Value { item: Some(item) }
+}
+
+pub fn pair_element_to_pb(t: &Traverser) -> result_pb::PairElement {
+    if let Some(g) = t.get_element() {
+        let graph_element_pb = element_to_pb(g);
+        result_pb::PairElement {
+            inner: Some(result_pb::pair_element::Inner::GraphElement(graph_element_pb)),
+        }
+    } else if let Some(o) = t.get_object() {
+        if let Some(traverser_list) = try_downcast_list(o) {
+            // case 1. traverser_list is a list of graph element, e.g., value of group().by().by()
+            // case 2. traverser_list is a list of value, e.g., value of group().by().by(values("id"))
+            let mut is_element_list = true;
+            let mut graph_element_array = vec![];
+            for traverser in traverser_list {
+                if let Some(graph_element) = traverser.get_element() {
+                    graph_element_array.push(element_to_pb(graph_element));
+                } else {
+                    is_element_list = false;
+                    break;
+                }
+            }
+            if is_element_list {
+                result_pb::PairElement {
+                    inner: Some(result_pb::pair_element::Inner::GraphElementList(
+                        result_pb::GraphElementArray { item: graph_element_array },
+                    )),
+                }
+            } else {
+                unimplemented!()
+            }
+        } else {
+            let object_pb = object_to_pb_value(o);
+            result_pb::PairElement { inner: Some(result_pb::pair_element::Inner::Value(object_pb)) }
+        }
+    } else {
+        unreachable!()
+    }
 }
 
 pub fn result_to_pb(data: Vec<Traverser>) -> result_pb::Result {
     let mut paths_encode = vec![];
     let mut elements_encode = vec![];
     let mut properties_encode = vec![];
+    let mut pairs_encode = vec![];
+    let mut values_encode = vec![];
     for t in data {
         if let Some(e) = t.get_element() {
-            println!("element: {:?}", e);
+            info!("element: {:?}", e);
             elements_encode.push(element_to_pb(e));
         } else if let Some(o) = t.get_object() {
             match o {
-                Object::Primitive(p) => println!("object result {:?}", p),
-                Object::String(s) => println!("object result {:?}", s),
-                Object::Blob(b) => println!("object result {:?}", b),
+                Object::Primitive(_) | Object::String(_) | Object::Blob(_) => {
+                    info!("object result {:?}", o);
+                    values_encode.push(object_to_pb_value(o));
+                }
                 Object::UnknownOwned(x) => {
                     if let Some(p) = x.try_downcast_ref::<ResultPath>() {
-                        println!("path: {:?}", p);
+                        info!("path: {:?}", p);
                         paths_encode.push(path_to_pb(p));
                     } else if let Some(result_prop) = x.try_downcast_ref::<ResultProperty>() {
-                        println!("property: {:?}", result_prop);
+                        info!("property: {:?}", result_prop);
                         properties_encode.push(property_to_pb(result_prop));
-                    } else if let Some(result_prop) =
-                        x.try_downcast_ref::<ShadeSync<(HashKey<Traverser>, u64)>>()
-                    {
-                        println!("group count result {:?}", result_prop);
-                    } else if let Some(result_prop) = x.try_downcast_ref::<ShadeSync<u64>>() {
-                        println!("count result {:?}", result_prop);
+                    } else if let Some(result_pair) = try_downcast_pair(o) {
+                        info!("group result {:?}", result_pair);
+                        let (k, v) = result_pair;
+                        let key_pb = pair_element_to_pb(&k);
+                        let value_pb = pair_element_to_pb(&v);
+                        let map_pair_pb =
+                            result_pb::MapPair { first: Some(key_pb), second: Some(value_pb) };
+                        pairs_encode.push(map_pair_pb);
                     } else {
-                        println!("object result {:?}", x);
+                        info!("other object result {:?}", x);
                     }
                 }
                 _ => unreachable!(),
             }
         } else {
-            println!("object result is none!");
+            info!("object result is none!");
         };
     }
     if !elements_encode.is_empty() {
@@ -157,8 +210,16 @@ pub fn result_to_pb(data: Vec<Traverser>) -> result_pb::Result {
     } else if !paths_encode.is_empty() {
         let paths = result_pb::PathArray { item: paths_encode };
         result_pb::Result { inner: Some(result_pb::result::Inner::Paths(paths)) }
-    } else {
+    } else if !properties_encode.is_empty() {
         let properties = result_pb::TagPropertiesArray { item: properties_encode };
         result_pb::Result { inner: Some(result_pb::result::Inner::TagProperties(properties)) }
+    } else if !pairs_encode.is_empty() {
+        let map = result_pb::MapArray { item: pairs_encode };
+        result_pb::Result { inner: Some(result_pb::result::Inner::MapResult(map)) }
+    } else if !values_encode.is_empty() {
+        let values = result_pb::ValueArray { item: values_encode };
+        result_pb::Result { inner: Some(result_pb::result::Inner::ValueList(values)) }
+    } else {
+        result_pb::Result { inner: None }
     }
 }
