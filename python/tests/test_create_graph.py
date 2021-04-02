@@ -205,15 +205,15 @@ def test_complete_form_loader_deprecated(
     assert graph.loaded()
 
 
-def test_properties_is_none_loader(graphscope_session, student_group_e, student_v):
+def test_default_prop_is_none_loader(graphscope_session, student_group_e, student_v):
     graph = graphscope_session.g(generate_eid=False)
-    graph = graph.add_vertices(student_v, "student", None, "student_id")
-    graph = graph.add_edges(student_group_e, "group", None)
+    graph = graph.add_vertices(student_v, "student")
+    graph = graph.add_edges(student_group_e, "group")
     assert len(graph.schema.get_vertex_properties("student")) == 4
     assert len(graph.schema.get_edge_properties("group")) == 2
 
 
-def test_properties_is_empty_loader(graphscope_session, student_group_e, student_v):
+def test_prop_is_empty_loader(graphscope_session, student_group_e, student_v):
     graph = graphscope_session.g(generate_eid=False)
     graph = graph.add_vertices(student_v, "student", [], "student_id")
     graph = graph.add_edges(student_group_e, "group", [])

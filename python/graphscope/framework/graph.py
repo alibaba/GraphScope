@@ -745,7 +745,7 @@ class Graph(object):
             graph._base_graph = self._base_graph or self
         return graph
 
-    def add_vertices(self, vertices, label="_", properties=[], vid_field=0):
+    def add_vertices(self, vertices, label="_", properties=None, vid_field=0):
         is_from_existed_graph = len(self._unsealed_vertices) != len(
             self._v_labels
         ) or len(self._unsealed_edges) != len(self._e_labels)
@@ -780,7 +780,7 @@ class Graph(object):
         self,
         edges,
         label="_",
-        properties=[],
+        properties=None,
         src_label=None,
         dst_label=None,
         src_field=0,
