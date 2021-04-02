@@ -50,8 +50,8 @@ function check_os_compatibility() {
     exit 1
   fi
 
-  if [[ "${platform}" == *"Ubuntu"* && "$(echo ${os_version} | sed 's/\([0-9]\)\([0-9]\).*/\1\2/')" -lt "18" ]]; then
-    echo "This script requires Ubuntu 18 or greater."
+  if [[ "${platform}" == *"Ubuntu"* && "$(echo ${os_version} | sed 's/\([0-9]\)\([0-9]\).*/\1\2/')" -lt "20" ]]; then
+    echo "This script requires Ubuntu 20 or greater."
     exit 1
   fi
 
@@ -83,22 +83,25 @@ function install_dependencies() {
       openjdk-8-jdk perl protobuf-compiler-grpc python3-pip uuid-dev wget zip zlib1g-dev
 
     # install apache-arrow
-    wget https://apache.bintray.com/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb
-    sudo apt install -y -V ./apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb
+    wget https://apache.bintray.com/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb -P /tmp
+    sudo apt install -y -V /tmp/apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb
     sudo apt update
     sudo apt install -y libarrow-dev=1.0.1-1 libarrow-python-dev=1.0.1-1
 
     # install zookeeper
-    wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz
-    tar xf zookeeper-3.4.14.tar.gz -C /tmp/
+    wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz -P /tmp
+    tar xf /tmp/zookeeper-3.4.14.tar.gz -C /tmp/
     cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
-    sudo ln -s /tmp/zookeeper-3.4.14 /usr/local/zookeeper || true
+    sudo cp -r /tmp/zookeeper-3.4.14 /usr/local/zookeeper || true
 
     # rust
-    wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
-    sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+    wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
+    sudo tar -C /usr/local -xzf /tmp/go1.15.5.linux-amd64.tar.gz
     curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
-    # source ~/.cargo/env
+
+    # clean
+    rm -fr /tmp/apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb
+    rm -fr /tmp/zookeeper-3.4.14.tar.gz /tmp/zookeeper-3.4.14 /tmp/go1.15.5.linux-amd64.tar.gz
 
     # install python packages for vineyard codegen
     pip3 install -U pip --user
