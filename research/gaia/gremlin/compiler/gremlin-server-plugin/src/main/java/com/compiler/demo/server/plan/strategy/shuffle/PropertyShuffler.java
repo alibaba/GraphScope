@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,10 +15,13 @@
  */
 package com.compiler.demo.server.plan.strategy.shuffle;
 
+import com.compiler.demo.server.plan.strategy.OrderGlobalLimitStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeOtherVertexStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeVertexStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
+import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.slf4j.Logger;
@@ -37,15 +40,19 @@ public abstract class PropertyShuffler {
     protected abstract boolean match();
 
     public boolean needShuffle() {
-        Step previousOut = getPreviousOut();
+        Step previousOut = getPreviousShuffleStep(true);
         if (!match() || previousOut == null) return false;
         Step p = this.step;
         // out().as("a")
         if (p == previousOut) return true;
         p = p.getPreviousStep();
-        while (p != previousOut) {
+        while (!(p instanceof EmptyStep) && p != previousOut) {
             if (ShuffleStrategy.needShuffle(p)) return false;
-            p = p.getPreviousStep();
+            if (p.getTraversal().getStartStep() == p) {
+                p = p.getTraversal().getParent().asStep();
+            } else {
+                p = p.getPreviousStep();
+            }
         }
         return true;
     }
@@ -57,17 +64,40 @@ public abstract class PropertyShuffler {
      */
     public abstract int transform();
 
-    protected Step getPreviousOut() {
+    /**
+     * @param inclusive
+     * @return
+     */
+    public Step getPreviousShuffleStep(boolean inclusive) {
         Step startStep = step.getTraversal().getStartStep();
         Step p = step;
+        if (!inclusive) {
+            p = p.getPreviousStep();
+        }
+        int nestedLevel = 1;
         while (true) {
             if (p instanceof VertexStep && ((VertexStep) p).returnsVertex()
                     || p instanceof EdgeOtherVertexStep
-                    || p instanceof EdgeVertexStep && !isLocalVertex((EdgeVertexStep) p)) return p;
-            if (p == startStep) break;
-            p = p.getPreviousStep();
+                    || p instanceof EdgeVertexStep && !isLocalVertex((EdgeVertexStep) p)
+                    || isGlobalStep(p)) return p;
+            if (p == startStep) {
+                // root or come to the start of upper level
+                TraversalParent parent = p.getTraversal().getParent();
+                if (parent instanceof EmptyStep || nestedLevel == 0) break;
+                --nestedLevel;
+                p = parent.asStep();
+                startStep = p.getTraversal().getStartStep();
+            } else {
+                p = p.getPreviousStep();
+            }
         }
         return null;
+    }
+
+    public static boolean isGlobalStep(Step step) {
+        return step instanceof RangeGlobalStep || step instanceof OrderGlobalStep || step instanceof OrderGlobalLimitStep
+                || step instanceof GroupCountStep || step instanceof GroupStep || step instanceof CountGlobalStep
+                || step instanceof DedupGlobalStep;
     }
 
     // outE().limit(1).outV()

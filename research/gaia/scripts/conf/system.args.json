@@ -1,0 +1,6 @@
+{
+  "workers": 2,
+  "hosts": [
+    "localhost:1234"
+  ]
+}

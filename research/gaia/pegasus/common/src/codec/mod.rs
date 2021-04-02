@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,8 @@
 
 pub use crate::io::{ReadExt, WriteExt};
 pub use bytes::Buf;
+use serde_json::map::Map;
+use serde_json::Value;
 use std::io;
 use std::mem;
 
@@ -202,7 +204,7 @@ impl Decode for String {
 
 impl<T: Encode> Encode for Vec<T> {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u32(self.len() as u32)?;
+        writer.write_u64(self.len() as u64)?;
         for datum in self.iter() {
             datum.write_to(writer)?;
         }
@@ -212,12 +214,61 @@ impl<T: Encode> Encode for Vec<T> {
 
 impl<T: Decode> Decode for Vec<T> {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let len = reader.read_u32()? as usize;
+        let len = reader.read_u64()? as usize;
         let mut vec = Vec::with_capacity(len);
         for _i in 0..len {
             vec.push(T::read_from(reader)?);
         }
         Ok(vec)
+    }
+}
+
+impl<K: Encode + Eq + Hash, V: Encode> Encode for HashMap<K, V> {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        writer.write_u64(self.len() as u64)?;
+        for (k, v) in self {
+            k.write_to(writer)?;
+            v.write_to(writer)?;
+        }
+        Ok(())
+    }
+}
+
+impl<K: Decode + Eq + Hash, V: Decode> Decode for HashMap<K, V> {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let len = reader.read_u64()? as usize;
+        let mut map = HashMap::with_capacity(len as usize);
+        for _i in 0..len {
+            let k = K::read_from(reader)?;
+            let v = V::read_from(reader)?;
+            map.insert(k, v);
+        }
+        Ok(map)
+    }
+}
+
+// TODO(yyy): should be deprecated
+impl Encode for Value {
+    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> io::Result<()> {
+        unimplemented!()
+    }
+}
+
+impl Decode for Value {
+    fn read_from<R: ReadExt>(_reader: &mut R) -> io::Result<Self> {
+        unimplemented!()
+    }
+}
+
+impl<K, V> Encode for Map<K, V> {
+    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> io::Result<()> {
+        unimplemented!()
+    }
+}
+
+impl<K, V> Decode for Map<K, V> {
+    fn read_from<R: ReadExt>(_reader: &mut R) -> io::Result<Self> {
+        unimplemented!()
     }
 }
 
@@ -286,6 +337,8 @@ impl<T: Decode> Decode for Option<T> {
 mod shade;
 mod third_party;
 pub use shade::{shade_codec, ShadeCodec};
+use std::collections::HashMap;
+use std::hash::Hash;
 #[cfg(feature = "serde")]
 pub use third_party::serde_bin as serde;
 

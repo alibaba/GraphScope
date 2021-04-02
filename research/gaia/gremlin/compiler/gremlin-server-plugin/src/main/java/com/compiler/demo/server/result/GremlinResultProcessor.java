@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,8 +17,8 @@ package com.compiler.demo.server.result;
 
 import com.alibaba.graphscope.common.proto.GremlinResult;
 import com.alibaba.pegasus.intf.ResultProcessor;
-import com.alibaba.pegasus.service.proto.PegasusClient;
-import com.compiler.demo.server.MaxGraphOpProcessor;
+import com.alibaba.pegasus.service.protocol.PegasusClient;
+import com.compiler.demo.server.processor.MaxGraphOpProcessor;
 import io.grpc.Status;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.server.Context;
@@ -44,9 +44,13 @@ public class GremlinResultProcessor implements ResultProcessor {
         synchronized (this) {
             try {
                 if (!locked) {
-                    logger.info("start to process response {}", GremlinResult.Result.parseFrom(response.getData()));
+                    logger.debug("start to process response");
                     if (response.getResultCase() == PegasusClient.JobResponse.ResultCase.DATA) {
-                        resultCollectors.addAll(ResultParser.parseFrom(response));
+                        GremlinResult.Result resultData = GremlinResult.Result.parseFrom(response.getData());
+                        logger.debug("data is {}", resultData);
+                        resultCollectors.addAll(ResultParser.parseFrom(resultData));
+                    } else if (response.getResultCase() == PegasusClient.JobResponse.ResultCase.ERR) {
+                        logger.error("error is {}", response.getErr());
                     }
                 }
             } catch (Exception e) {
@@ -61,7 +65,7 @@ public class GremlinResultProcessor implements ResultProcessor {
     public void finish() {
         synchronized (this) {
             if (!locked) {
-                logger.info("start to process finish");
+                logger.debug("start finish");
                 MaxGraphOpProcessor.writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
                 locked = true;
             }
@@ -72,7 +76,7 @@ public class GremlinResultProcessor implements ResultProcessor {
     public void error(Status status) {
         synchronized (this) {
             if (!locked) {
-                logger.info("start to process error");
+                logger.debug("start error");
                 MaxGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(status.toString()), ResponseStatusCode.SERVER_ERROR);
                 locked = true;
             }

@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,10 +17,12 @@ package com.compiler.demo.server.plan.extractor;
 
 import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
+import com.compiler.demo.server.idmaker.IdMaker;
 import com.compiler.demo.server.plan.PlanUtils;
+import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectOneStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.structure.Column;
 import org.apache.tinkerpop.gremlin.structure.T;
 
@@ -32,7 +34,19 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
         public Gremlin.TagKey extractFrom(Object... args) {
             String tag = (String) args[0];
             Traversal.Admin modulateNext = (Traversal.Admin) args[1];
-            Gremlin.TagKey.Builder tagBuilder = Gremlin.TagKey.newBuilder().setTag(tag);
+            boolean ignoreTag = true;
+            if (args.length > 2) {
+                ignoreTag = (boolean) args[2];
+            }
+            Gremlin.TagKey.Builder tagBuilder = Gremlin.TagKey.newBuilder();
+            if (ignoreTag) {
+                // set random non-zero value
+                tagBuilder.setTag(Gremlin.StepTag.newBuilder().setTag(1));
+            } else {
+                IdMaker tagIdMaker = PlanUtils.getTagIdMaker((Configuration) args[3]);
+                tagBuilder.setTag(Gremlin.StepTag.newBuilder().setTag((int) tagIdMaker.getId(tag)));
+            }
+
             Gremlin.ByKey key = modulateBy(modulateNext);
             if (key.getItemCase() != Gremlin.ByKey.ItemCase.ITEM_NOT_SET) {
                 tagBuilder.setByKey(key);
@@ -52,10 +66,20 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
         @Override
         public Gremlin.TagKey extractFrom(Object... args) {
             Traversal.Admin orderBy = (Traversal.Admin) args[0];
+            // default value
+            boolean ignoreTag = true;
+            if (args.length > 1) {
+                ignoreTag = (boolean) args[1];
+            }
             if (orderBy != null && orderBy.getSteps().size() == 1 && orderBy.getStartStep() instanceof SelectOneStep) {
                 Map.Entry<String, Traversal.Admin> firstTagTraversal = PlanUtils.getFirstEntry(
                         PlanUtils.getSelectTraversalMap(orderBy.getStartStep()));
-                Gremlin.TagKey selectResult = Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue());
+                Gremlin.TagKey selectResult;
+                if (ignoreTag) {
+                    selectResult = Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue());
+                } else {
+                    selectResult = Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue(), false, args[2]);
+                }
                 if (selectResult.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.NAME) {
                     throw new UnsupportedOperationException("value map not support in order by step " + selectResult.getByKey().getName());
                 }
@@ -81,14 +105,23 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
                     || super.isSimpleValue(value);
         }
     },
-    GroupBy {
+    GroupKeyBy {
         @Override
         public Gremlin.TagKey extractFrom(Object... args) {
             Traversal.Admin keyTraversal = (Traversal.Admin) args[0];
+            // default value
+            boolean ignoreTag = true;
+            if (args.length > 1) {
+                ignoreTag = (boolean) args[1];
+            }
             if (keyTraversal != null && keyTraversal.getSteps().size() == 1 && (keyTraversal.getStartStep() instanceof SelectOneStep)) {
                 Map.Entry<String, Traversal.Admin> firstTagTraversal = PlanUtils.getFirstEntry(
                         PlanUtils.getSelectTraversalMap(keyTraversal.getStartStep()));
-                return Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue());
+                if (ignoreTag) {
+                    return Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue());
+                } else {
+                    return Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue(), false, args[2]);
+                }
             } else if (super.isSimpleValue(keyTraversal)) {
                 Gremlin.TagKey.Builder tagKeyBuilder = Gremlin.TagKey.newBuilder();
                 Gremlin.ByKey byKey = modulateBy(keyTraversal);
@@ -105,6 +138,20 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
         public boolean isSimpleValue(Traversal.Admin value) {
             return value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof SelectOneStep
                     || super.isSimpleValue(value);
+        }
+    },
+    GroupValueBy {
+        @Override
+        public Gremlin.TagKey extractFrom(Object... args) {
+            throw new UnsupportedOperationException("group value traversal not implemented");
+        }
+
+        @Override
+        public boolean isSimpleValue(Traversal.Admin value) {
+            return value == null || value.getSteps().isEmpty()
+                    || value.getSteps().size() == 1 && value.getStartStep() instanceof FoldStep
+                    || value.getSteps().size() == 2 && PlanUtils.isIdentityTraversalMap(value.getStartStep()) && value.getEndStep() instanceof FoldStep
+                    || value.getSteps().size() == 1 && value.getStartStep() instanceof CountGlobalStep;
         }
     },
     WherePredicate {

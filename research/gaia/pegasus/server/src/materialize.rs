@@ -1,186 +1,169 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::desc::{
-    AccumKind, ChannelDesc, DedupDesc, GroupByDesc, LimitDesc, OpKind, OperatorDesc, RepeatDesc,
-    SortByDesc, SubtaskDesc, UnionDesc,
-};
 use crate::factory::JobCompiler;
+use crate::generated::protocol as pb;
+use crate::generated::protocol::AccumKind;
 use crate::AnyData;
-use pegasus::api::accum::{CountAccum, MaxAccum, MinAccum};
+use pegasus::api::accum::ToListAccum;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Binary, Count, Dedup, Exchange, Filter, Group, Iteration, Limit, LoopCondition, Map, OrderBy,
-    ResultSet, SubTask, SubtaskResult, RANGES,
+    Binary, Count, Dedup, Exchange, Filter, Fold, Group, Iteration, KeyBy, Limit, LoopCondition,
+    Map, OrderBy, ResultSet, SubTask, SubtaskResult, RANGES,
 };
+use pegasus::codec::{shade_codec, ShadeCodec};
 use pegasus::communication::{Aggregate, Broadcast, Channel, Pipeline};
 use pegasus::stream::Stream;
-use pegasus::BuildJobError;
+use pegasus::{never_clone, BuildJobError, NeverClone};
+use pegasus_common::collections::MapFactory;
 use std::sync::Arc;
 
 pub fn exec<D: AnyData>(
-    stream: &Stream<D>, plan: &[OperatorDesc], factory: &Arc<dyn JobCompiler<D>>,
+    stream: &Stream<D>, plan: &[pb::OperatorDef], factory: &Arc<dyn JobCompiler<D>>,
 ) -> Result<Stream<D>, BuildJobError> {
     if plan.is_empty() {
         Err("should be unreachable, plan length = 0;")?
     }
     let mut owned_stream = install(stream, &plan[0], factory)?;
     for op in &plan[1..] {
-        match &op.op_kind {
-            &OpKind::Sink => break,
-            _ => {
-                owned_stream = install(&owned_stream, op, factory)?;
-            }
-        }
+        owned_stream = install(&owned_stream, op, factory)?;
     }
     Ok(owned_stream)
 }
 
 fn install<D: AnyData>(
-    stream: &Stream<D>, op: &OperatorDesc, factory: &Arc<dyn JobCompiler<D>>,
+    stream: &Stream<D>, op: &pb::OperatorDef, factory: &Arc<dyn JobCompiler<D>>,
 ) -> Result<Stream<D>, BuildJobError> {
+    let ch = gen_channel(op.ch.as_ref(), factory)?;
     match &op.op_kind {
-        &OpKind::Map => {
-            let channel = gen_channel(&op.ch_kind, factory)?;
-            let func = factory.map(op.resource.get())?;
-            Ok(stream.map(channel, func)?)
-        }
-        &OpKind::Flatmap => {
-            let channel = gen_channel(&op.ch_kind, factory)?;
-            let func = factory.flat_map(op.resource.get())?;
-            Ok(stream.flat_map(channel, func)?)
-        }
-        &OpKind::Filter => {
-            let func = factory.filter(op.resource.get())?;
-            Ok(stream.filter_with_fn(move |v| func.exec(v))?)
-        }
-        &OpKind::Exchange => match &op.ch_kind {
-            ChannelDesc::Exchange(res) => {
-                let route = factory.shuffle(res.get())?;
-                Ok(stream.exchange(route)?)
-            }
-            _ => Err("invalid channel before exchange")?,
+        Some(pb::operator_def::OpKind::Shuffle(_)) => match &op.ch {
+            Some(ch) => match &ch.ch_kind {
+                Some(pb::channel_def::ChKind::ToAnother(route)) => {
+                    let route = factory.shuffle(&route.resource)?;
+                    stream.exchange(route)
+                }
+                _ => Err("invalid channel before exchange")?,
+            },
+            None => Err("invalid channel before exchange")?,
         },
-        &OpKind::Limit => {
-            let r = op.get_resource::<LimitDesc>().expect("parse limit resource failure;");
-            Ok(stream.limit(r.range, r.size)?)
+        Some(pb::operator_def::OpKind::Map(map)) => {
+            let func = factory.map(&map.resource)?;
+            stream.map(ch, func)
         }
-        &OpKind::Count => {
-            let global = op.get_resource::<u8>().expect("parse count resource failure;");
-            let range = RANGES[*global as usize];
-            Ok(stream.count(range)?.map(Pipeline, map!(|p| Ok(D::with(p))))?)
+        Some(pb::operator_def::OpKind::FlatMap(flatmap)) => {
+            let func = factory.flat_map(&flatmap.resource)?;
+            stream.flat_map(ch, func)
         }
-        &OpKind::Sort => {
-            let res = op.get_resource::<SortByDesc>().expect("parse sort resource failure;");
-            let func = factory.compare(res.cmp.get())?;
-            if let Some(limit) = res.limit {
-                Ok(stream.top_by(limit as u32, res.range, func)?)
+        Some(pb::operator_def::OpKind::Filter(filter)) => {
+            let func = factory.filter(&filter.resource)?;
+            stream.filter(func)
+        }
+        Some(pb::operator_def::OpKind::Limit(limit)) => {
+            let range = RANGES[limit.range as usize];
+            stream.limit(range, limit.limit)
+        }
+        Some(pb::operator_def::OpKind::Order(order)) => {
+            let range = RANGES[order.range as usize];
+            let func = factory.compare(&order.compare)?;
+            if order.limit > 0 {
+                stream.top_by(order.limit as u32, range, func)
             } else {
-                Ok(stream.sort_by(res.range, func)?)
+                stream.sort_by(range, func)
             }
         }
-        &OpKind::Group => {
-            let res = op.get_resource::<GroupByDesc>().expect("downcast group by desc failure;");
-            let key_func = factory.key(res.key_func.get())?;
-            match &res.accum {
-                AccumKind::Count => Ok(stream
-                    .group_by_with_accum(res.range, key_func, CountAccum::new())?
-                    .map(Pipeline, map!(|p| Ok(D::with(p))))?),
-                AccumKind::Sum => unimplemented!(),
-                AccumKind::Max(cmp) => {
-                    let cmp = factory.compare(cmp.get())?;
-                    Ok(stream
-                        .group_by_with_accum(res.range, key_func, MaxAccum::new(cmp))?
-                        .map(Pipeline, map!(|p| Ok(D::with(p))))?)
+        Some(pb::operator_def::OpKind::Fold(fold)) => {
+            let range = RANGES[fold.range as usize];
+            let accum_kind: pb::AccumKind = unsafe { std::mem::transmute(fold.accum) };
+            let unfold_res = if let Some(flat_map) = &fold.unfold {
+                &flat_map.resource
+            } else {
+                Err("unfold func lost")?
+            };
+            match accum_kind {
+                AccumKind::Cnt => {
+                    let funcs = factory.fold(&vec![], unfold_res, &vec![])?;
+                    let unfold_func = funcs.fold_unfold()?;
+                    stream
+                        .count(range)?
+                        .flat_map_with_fn(Pipeline, move |c| unfold_func.exec(Box::new(c)))
                 }
-                AccumKind::Min(cmp) => {
-                    let cmp = factory.compare(cmp.get())?;
-                    Ok(stream
-                        .group_by_with_accum(res.range, key_func, MinAccum::new(cmp))?
-                        .map(Pipeline, map!(|p| Ok(D::with(p))))?)
+                AccumKind::ToList => {
+                    let funcs = factory.fold(&vec![], unfold_res, &vec![])?;
+                    let unfold_func = funcs.fold_unfold()?;
+                    stream
+                        .fold_with_accum(range, ToListAccum::new())?
+                        .flat_map_with_fn(Pipeline, move |l| unfold_func.exec(Box::new(l)))
                 }
-                AccumKind::ToList => Ok(stream
-                    .group_by(res.range, key_func)?
-                    .map(Pipeline, map!(|p| Ok(D::with(p))))?),
-                AccumKind::ToSet => {
-                    unimplemented!()
-                    // stream = stream
-                    //     .group_by_with_accum(res.range, key_func, HashSetAccum::new())?
-                    //     .map(Pipeline, |p| D::with(p))?;
-                }
-                AccumKind::Custom(acc) => {
-                    let accum = factory.accumulate(acc.get())?;
-                    Ok(stream
-                        .group_by_with_accum(res.range, key_func, accum)?
-                        .map(Pipeline, map!(|p| Ok(D::with(p))))?)
-                }
+                _ => unimplemented!(),
             }
         }
-        &OpKind::Repeat => {
-            let r = op
-                .resource
-                .as_any_ref()
-                .downcast_ref::<RepeatDesc>()
-                .expect("should be unreachable, downcast RepeatDesc failure; ");
-            if let Some(ref res) = r.until {
-                let condition = factory.filter(res.get())?;
-                let mut until = LoopCondition::<D>::max_iters(r.times);
-                until.until(condition);
-                Ok(stream.iterate_until(until, |start| {
-                    crate::materialize::exec(&start, &r.body, factory)
-                })?)
+        Some(pb::operator_def::OpKind::Group(group)) => {
+            let range = RANGES[group.range as usize];
+            let unfold_func = if let Some(flat_map) = &group.unfold {
+                &flat_map.resource
             } else {
-                Ok(stream
-                    .iterate(r.times, |start| crate::materialize::exec(&start, &r.body, factory))?)
-            }
+                Err("unfold func lost")?
+            };
+            let funcs = factory.group(&group.map, unfold_func, &vec![])?;
+            let key_func = funcs.key()?;
+            let map_factory = funcs.map_factory()?;
+            let shade_map = ShadeMapFactory { inner: map_factory, _ph: std::marker::PhantomData };
+            let unfold_func = funcs.unfold()?;
+            stream
+                .key_by(key_func)?
+                .group_with_map(range, shade_map)?
+                .flat_map_with_fn(Pipeline, move |shade| unfold_func.exec(shade.take().take()))
         }
-        &OpKind::Subtask => {
-            let s = op
-                .resource
-                .as_any_ref()
-                .downcast_ref::<SubtaskDesc>()
-                .expect("should be unreachable, downcast SubtaskDesc failure;");
-            let forked = stream.fork_subtask(|start| exec(&start, &s.subtask, factory))?;
-            if let Some(ref joiner) = s.joiner {
-                let func = factory.left_join(joiner.get())?;
-                Ok(stream.join_subtask(forked, move |p, s| func.exec(p, s))?)
+        Some(pb::operator_def::OpKind::Iterate(iter)) => {
+            let mut cond = LoopCondition::max_iters(iter.max_iters);
+            if let Some(ref until) = iter.until {
+                let until = factory.filter(&until.resource)?;
+                cond.until(until);
+            }
+            let body = iter.body.as_ref().ok_or("iteration body not found")?;
+            stream
+                .iterate_until(cond, |start| crate::materialize::exec(&start, &body.plan, factory))
+        }
+        Some(pb::operator_def::OpKind::Subtask(subtask)) => {
+            let body = subtask.task.as_ref().ok_or("subtask body not found")?;
+            let forked = stream
+                .fork_subtask(|start| crate::materialize::exec(&start, &body.plan, factory))?;
+            if let Some(ref joiner) = subtask.join {
+                let func = factory.left_join(&joiner.resource)?;
+                stream.join_subtask(forked, move |p, s| func.exec(p, s))
             } else {
-                Ok(forked.flat_map(
+                forked.flat_map(
                     Pipeline,
                     flat_map!(|r: SubtaskResult<D>| {
                         let data = match r.take() {
                             ResultSet::Data(d) => d,
                             _ => vec![],
                         };
-                        data.into_iter().map(|i| Ok(i))
+                        Ok(data.into_iter().map(|i| Ok(i)))
                     }),
-                )?)
+                )
             }
         }
-        &OpKind::Union => {
-            let union_desc = op
-                .resource
-                .as_any_ref()
-                .downcast_ref::<UnionDesc>()
-                .expect("should be unreachable, downcast UnionDesc failure;");
-            if union_desc.tasks.len() < 2 {
-                return Err(BuildJobError::Unsupported("union tasks length = 0;".to_owned()));
+        Some(pb::operator_def::OpKind::Union(union)) => {
+            if union.branches.len() < 2 {
+                Err("invalid branch sizes in union")?;
             }
-            let mut s = exec(stream, &union_desc.tasks[0], factory)?;
-            for task in &union_desc.tasks[1..] {
-                let subtask = exec(stream, task, factory)?;
+
+            let mut s = crate::materialize::exec(stream, &union.branches[0].plan, factory)?;
+            for task in &union.branches[1..] {
+                let subtask = exec(stream, &task.plan, factory)?;
                 s = s.binary("union", &subtask, Pipeline, Pipeline, |_| {
                     |input, output| {
                         input.left_for_each(|dataset| {
@@ -196,32 +179,56 @@ fn install<D: AnyData>(
             }
             Ok(s)
         }
-        &OpKind::Dedup => {
-            let dedup_desc = op
-                .resource
-                .as_any_ref()
-                .downcast_ref::<DedupDesc>()
-                .expect("should be unreachable, downcast DedupDesc failure;");
-            if let Some(ref res) = dedup_desc.set {
-                let set_factory = factory.set(res.get())?;
-                Ok(stream.dedup_with(dedup_desc.range, set_factory)?)
-            } else {
-                Err("custom set lost")?
-            }
+        Some(pb::operator_def::OpKind::Dedup(dedup)) => {
+            let range = RANGES[dedup.range as usize];
+            let set_factory = factory.set_factory(&dedup.set)?;
+            stream.dedup_with(range, set_factory)
         }
+
         _ => unimplemented!(),
     }
 }
 
 #[inline]
 fn gen_channel<D: AnyData>(
-    ch: &ChannelDesc, factory: &Arc<dyn JobCompiler<D>>,
+    ch: Option<&pb::ChannelDef>, factory: &Arc<dyn JobCompiler<D>>,
 ) -> Result<Channel<D>, BuildJobError> {
-    match ch {
-        ChannelDesc::Pipeline => Ok(Pipeline.into()),
-        ChannelDesc::Exchange(res) => Ok(factory.shuffle(res.get())?.into()),
-        ChannelDesc::Broadcast(None) => Ok(Broadcast.into()),
-        ChannelDesc::Broadcast(Some(res)) => Ok(factory.broadcast(res.get())?.into()),
-        ChannelDesc::Aggregate(target) => Ok(Aggregate(*target as u64).into()),
+    Ok(match ch {
+        Some(ch) => match &ch.ch_kind {
+            Some(pb::channel_def::ChKind::ToLocal(_)) => Pipeline.into(),
+            Some(pb::channel_def::ChKind::ToAnother(route)) => {
+                factory.shuffle(&route.resource)?.into()
+            }
+            Some(pb::channel_def::ChKind::ToOne(aggre)) => Aggregate(aggre.target as u64).into(),
+            Some(pb::channel_def::ChKind::ToOthers(broadcast)) => {
+                if broadcast.resource.is_empty() {
+                    Broadcast.into()
+                } else {
+                    let route = factory.broadcast(&broadcast.resource)?;
+                    route.into()
+                }
+            }
+            None => Pipeline.into(),
+        },
+        _ => Pipeline.into(),
+    })
+}
+
+pub struct ShadeMapFactory<D: Send + Eq, F: MapFactory<D, D>> {
+    inner: F,
+    _ph: std::marker::PhantomData<D>,
+}
+
+impl<D: Send + Eq, F: MapFactory<D, D>> ShadeMapFactory<D, F> {
+    pub fn new(inner: F) -> Self {
+        ShadeMapFactory { inner, _ph: std::marker::PhantomData }
+    }
+}
+
+impl<D: Send + Eq, F: MapFactory<D, D>> MapFactory<D, D> for ShadeMapFactory<D, F> {
+    type Target = NeverClone<ShadeCodec<F::Target>>;
+
+    fn create(&self) -> Self::Target {
+        never_clone(shade_codec(self.inner.create()))
     }
 }

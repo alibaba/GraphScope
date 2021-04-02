@@ -1,0 +1,10 @@
+g.V().hasLabel('PERSON').has('id', 17592186044810) \
+    .in('COMMENT_HASCREATOR_PERSON', 'POST_HASCREATOR_PERSON') \
+    .in('COMMENT_REPLYOF_COMMENT', 'COMMENT_REPLYOF_POST') \
+    .hasLabel('COMMENT').as('comment') \
+    .order().by('creationDate', desc).by('id', asc) \
+    .limit(20) \
+    .out('COMMENT_HASCREATOR_PERSON').as('commenter') \
+    .select('commenter','comment') \
+    .by(valueMap('id', 'firstName', 'lastName')) \
+    .by(valueMap('creationDate', 'id', 'content'))

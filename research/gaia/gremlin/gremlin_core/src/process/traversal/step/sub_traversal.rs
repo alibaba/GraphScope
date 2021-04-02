@@ -1,18 +1,19 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::process::traversal::step::util::result_downcast::try_downcast_group_key;
 use crate::process::traversal::traverser::Traverser;
 use pegasus::api::function::LeftJoinFunction;
 use std::sync::Arc;
@@ -50,10 +51,27 @@ pub struct BySubJoin;
 impl LeftJoinFunction<Traverser> for BySubJoin {
     fn exec(&self, parent: &Traverser, sub: Traverser) -> Option<Traverser> {
         let mut parent = parent.clone();
-        parent
-            .get_element_mut()
-            .expect("parent should be element")
-            .attach(sub.get_object().expect("object").clone());
-        Some(parent)
+        if let Some(mutp) = parent.get_element_mut() {
+            if let Some(obj) = sub.get_object() {
+                mutp.attach(obj.clone());
+            }
+            Some(parent)
+        } else {
+            None
+        }
+    }
+}
+
+// for e.g., group().by().by(out().out().count()), where we return traverser of ShadeSync{(traverser, traverser)}
+pub struct GroupBySubJoin;
+
+// TODO: throw error
+impl LeftJoinFunction<Traverser> for GroupBySubJoin {
+    fn exec(&self, parent: &Traverser, sub: Traverser) -> Option<Traverser> {
+        if let Some(parent_obj) = parent.get_object() {
+            try_downcast_group_key(parent_obj).and_then(|first| Some(Traverser::with((first, sub))))
+        } else {
+            None
+        }
     }
 }

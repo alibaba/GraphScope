@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,8 +35,9 @@ fn test_subtask_fork() {
             }?;
             let p = src.exchange_with_fn(|item: &u32| *item as u64)?;
             let subtask = p.fork_subtask(|stream| {
-                stream
-                    .flat_map_with_fn(Pipeline, |item| vec![item + 1; 8].into_iter().map(|x| Ok(x)))
+                stream.flat_map_with_fn(Pipeline, |item| {
+                    Ok(vec![item + 1; 8].into_iter().map(|x| Ok(x)))
+                })
             })?;
             subtask.sink_by(|_meta| {
                 move |_, r| match r {
@@ -94,8 +95,9 @@ fn test_subtask_fork_join() {
             }?;
             let p = src.exchange_with_fn(|item: &u32| *item as u64)?;
             let subtask = p.fork_subtask(|stream| {
-                stream
-                    .flat_map_with_fn(Pipeline, |item| vec![item + 1; 8].into_iter().map(|x| Ok(x)))
+                stream.flat_map_with_fn(Pipeline, |item| {
+                    Ok(vec![item + 1; 8].into_iter().map(|x| Ok(x)))
+                })
             })?;
             let join = p.join_subtask(subtask, move |p, s| Some(s - *p))?;
             join.sink_by(|_| {
@@ -144,7 +146,7 @@ fn test_subtask_fork_count_join() {
                 stream
                     .flat_map_with_fn(Pipeline, |item| {
                         let size = (item + 1) as usize;
-                        vec![item; size].into_iter().map(|x| Ok(x))
+                        Ok(vec![item; size].into_iter().map(|x| Ok(x)))
                     })?
                     .count(Range::Local)
             })?;
@@ -173,7 +175,6 @@ fn test_subtask_fork_count_join() {
 }
 
 #[test]
-#[ignore] // TODO: FIX
 fn test_subtask_in_iteration() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
@@ -193,7 +194,9 @@ fn test_subtask_in_iteration() {
             src.iterate(3, |start| {
                 let parent = start.exchange_with_fn(|item: &u32| *item as u64)?;
                 let sub = parent.fork_subtask(|sub| {
-                    sub.flat_map_with_fn(Pipeline, |item| vec![item; 2].into_iter().map(|x| Ok(x)))
+                    sub.flat_map_with_fn(Pipeline, |item| {
+                        Ok(vec![item; 2].into_iter().map(|x| Ok(x)))
+                    })
                 })?;
 
                 parent.join_subtask(sub, |p, s| Some(*p + s))

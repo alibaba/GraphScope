@@ -1,92 +1,103 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::desc::Resource;
 use crate::AnyData;
 use pegasus::api::accum::{AccumFactory, Accumulator};
 use pegasus::api::function::*;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus::BuildJobError;
-use pegasus_common::collections::{Collection, CollectionFactory, DrainSet, DrainSetFactory};
+use pegasus_common::collections::{Collection, CollectionFactory, Map, MapFactory, Set};
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::ops::Deref;
 
 pub type CompileResult<T> = Result<T, BuildJobError>;
 
+pub type DynMap<T> = Box<dyn Map<T, T, Target = Box<dyn Iterator<Item = (T, T)> + Send>>>;
+
+pub type DynMapFactory<T> = Box<dyn MapFactory<T, T, Target = DynMap<T>>>;
+
+pub type DynGroupUnfold<T> = Box<dyn FlatMapFunction<DynMap<T>, T, Target = DynIter<T>>>;
+
+pub type DynGroupSink<T> = Box<dyn EncodeFunction<DynMap<T>>>;
+
+pub trait GroupFunction<D>: Send + 'static {
+    fn key(&self) -> CompileResult<Box<dyn KeyFunction<D, Key = D>>>;
+
+    fn map_factory(&self) -> CompileResult<DynMapFactory<D>>;
+
+    fn unfold(&self) -> CompileResult<DynGroupUnfold<D>>;
+
+    fn sink(&self) -> CompileResult<DynGroupSink<D>>;
+}
+
+pub trait FoldFunction<D>: Send + 'static {
+    fn accumulate(
+        &self,
+    ) -> CompileResult<Box<dyn AccumFactory<D, Target = Box<dyn Accumulator<D>>>>>;
+
+    fn fold_unfold(
+        &self,
+    ) -> CompileResult<Box<dyn FlatMapFunction<Box<dyn Accumulator<D>>, D, Target = DynIter<D>>>>;
+
+    fn fold_sink(&self) -> CompileResult<Box<dyn EncodeFunction<Box<dyn Accumulator<D>>>>>;
+}
+
 /// Compile binary resource into executable user defined function;
 pub trait JobCompiler<D: AnyData>: Send + Sync + 'static {
-    fn shuffle(&self, res: &dyn Resource) -> CompileResult<Box<dyn RouteFunction<D>>>;
+    fn shuffle(&self, res: &[u8]) -> CompileResult<Box<dyn RouteFunction<D>>>;
 
-    fn broadcast(&self, res: &dyn Resource) -> CompileResult<Box<dyn MultiRouteFunction<D>>>;
+    fn broadcast(&self, res: &[u8]) -> CompileResult<Box<dyn MultiRouteFunction<D>>>;
 
-    fn source(
-        &self, worker_index: u32, src: &dyn Resource,
-    ) -> CompileResult<Box<dyn Iterator<Item = D> + Send>>;
+    fn source(&self, src: &[u8]) -> CompileResult<Box<dyn Iterator<Item = D> + Send>>;
 
-    fn map(&self, res: &dyn Resource) -> CompileResult<Box<dyn MapFunction<D, D>>>;
+    fn map(&self, res: &[u8]) -> CompileResult<Box<dyn MapFunction<D, D>>>;
 
     fn flat_map(
-        &self, res: &dyn Resource,
+        &self, res: &[u8],
     ) -> CompileResult<Box<dyn FlatMapFunction<D, D, Target = DynIter<D>>>>;
 
-    fn filter(&self, res: &dyn Resource) -> CompileResult<Box<dyn FilterFunction<D>>>;
+    fn filter(&self, res: &[u8]) -> CompileResult<Box<dyn FilterFunction<D>>>;
 
-    fn left_join(&self, res: &dyn Resource) -> CompileResult<Box<dyn LeftJoinFunction<D>>>;
+    fn left_join(&self, res: &[u8]) -> CompileResult<Box<dyn LeftJoinFunction<D>>>;
 
-    fn compare(&self, res: &dyn Resource) -> CompileResult<Box<dyn CompareFunction<D>>>;
+    fn compare(&self, res: &[u8]) -> CompileResult<Box<dyn CompareFunction<D>>>;
 
-    fn key(
-        &self, res: &dyn Resource,
-    ) -> CompileResult<Box<dyn KeyFunction<D, Target = HashKey<D>>>>;
+    fn group(
+        &self, map_factory: &[u8], unfold: &[u8], sink: &[u8],
+    ) -> CompileResult<Box<dyn GroupFunction<D>>>;
 
-    fn accumulate(
-        &self, res: &dyn Resource,
-    ) -> CompileResult<Box<dyn AccumFactory<D, D, Target = Box<dyn Accumulator<D, D>>>>>;
+    fn fold(
+        &self, accum: &[u8], unfold: &[u8], sink: &[u8],
+    ) -> CompileResult<Box<dyn FoldFunction<D>>>;
 
-    fn collect(
-        &self, res: &dyn Resource,
+    fn collection_factory(
+        &self, res: &[u8],
     ) -> CompileResult<Box<dyn CollectionFactory<D, Target = Box<dyn Collection<D>>>>>;
 
-    fn set(
-        &self, res: &dyn Resource,
-    ) -> CompileResult<
-        Box<
-            dyn DrainSetFactory<
-                D,
-                Target = Box<dyn DrainSet<D, Target = Box<dyn Iterator<Item = D> + Send>>>,
-            >,
-        >,
-    >;
+    fn set_factory(
+        &self, res: &[u8],
+    ) -> CompileResult<Box<dyn CollectionFactory<D, Target = Box<dyn Set<D>>>>>;
 
-    fn sink(&self, res: &dyn Resource) -> CompileResult<Box<dyn EncodeFunction<D>>>;
+    fn sink(&self, res: &[u8]) -> CompileResult<Box<dyn EncodeFunction<D>>>;
     // others undefined;
 }
 
 pub struct HashKey<T> {
     hash: u64,
     value: T,
-}
-
-impl<T> HashKey<T> {
-    pub fn new(hash: u64, value: T) -> Self {
-        HashKey { hash, value }
-    }
-    pub fn take(self) -> T {
-        self.value
-    }
 }
 
 impl<T> Hash for HashKey<T> {

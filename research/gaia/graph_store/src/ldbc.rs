@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -138,7 +138,8 @@ pub struct LDBCVertexParser<G = DefaultId> {
 /// In `LDBCVertexParser`, a vertex's global id is identified by:
 ///     `label_id << LABEL_SHIFT_BITS | ldbc_id`,
 /// where label_id and ldbc_id are in the vertex's ldbc raw data
-pub const LABEL_SHIFT_BITS: usize = 56;
+pub const LABEL_SHIFT_BITS: usize =
+    8 * (std::mem::size_of::<DefaultId>() - std::mem::size_of::<LabelId>());
 
 impl<G: IndexType> LDBCVertexParser<G> {
     pub fn to_global_id(ldbc_id: usize, label_id: LabelId) -> G {
@@ -739,8 +740,8 @@ mod test {
     #[test]
     fn test_load_graph() {
         // with hierarchical vertex labels
-        let data_dir = "data/simple_data/graph_data";
-        let root_dir = "data/simple_data";
+        let data_dir = "data/small_data";
+        let root_dir = "data/small_data";
         let schema_file = "data/schema.json";
         let mut loader =
             GraphLoader::<DefaultId, InternalId>::new(data_dir, root_dir, schema_file, 20, 0, 1);
@@ -953,8 +954,8 @@ mod test {
     #[test]
     fn test_partition_load() {
         // with hierarchical vertex labels
-        let data_dir = "data/simple_data/graph_data";
-        let root_dir = "data/simple_data";
+        let data_dir = "data/small_data";
+        let root_dir = "data/small_data";
         let schema_file = "data/schema.json";
         let mut loader1 =
             GraphLoader::<DefaultId, InternalId>::new(data_dir, root_dir, schema_file, 20, 0, 2);

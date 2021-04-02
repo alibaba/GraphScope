@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
 import com.compiler.demo.server.plan.extractor.TagKeyExtractorFactory;
 import com.compiler.demo.server.plan.PlanUtils;
+import com.compiler.demo.server.plan.strategy.OrderGlobalLimitStep;
 import com.compiler.demo.server.plan.strategy.PropertyIdentityStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -74,6 +75,7 @@ public class SelectTagProperty extends PropertyShuffler {
             } else {
                 // nearest select(tag).order().by(property)
                 // nearest select(tag).group().by(property)
+                // todo: nearest select(tag).group().by(...).by(property)
                 Step endStep = p.getTraversal().getEndStep();
                 if (p == endStep) {
                     return false;
@@ -92,9 +94,9 @@ public class SelectTagProperty extends PropertyShuffler {
                 } while (next != endStep);
             }
             return false;
-        } else if (p instanceof OrderGlobalStep) {
+        } else if (p instanceof OrderGlobalStep || p instanceof OrderGlobalLimitStep) {
             // order().by(select(tag).by("name")))
-            for (Object e : ((OrderGlobalStep) p).getComparators()) {
+            for (Object e : ((ComparatorHolder) p).getComparators()) {
                 Traversal.Admin admin = (Traversal.Admin) ((Pair) e).getValue0();
                 if (admin != null && admin.getSteps().size() == 1 && admin.getStartStep() instanceof SelectOneStep) {
                     Map.Entry<String, Traversal.Admin> selectOne = PlanUtils.getFirstEntry(

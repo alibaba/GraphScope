@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,42 +15,39 @@
  */
 package com.alibaba.pegasus;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.logging.Logger;
+import java.util.List;
 
 import com.alibaba.pegasus.builder.JobBuilder;
-import com.alibaba.pegasus.intf.ResultProcessor;
-import com.alibaba.pegasus.service.proto.PegasusClient.JobConfig;
-import com.alibaba.pegasus.service.proto.PegasusClient.JobRequest;
-import com.alibaba.pegasus.service.proto.PegasusClient.JobResponse;
+import com.alibaba.pegasus.intf.CloseableIterator;
+import com.alibaba.pegasus.service.protocol.PegasusClient.JobConfig;
+import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
+import com.alibaba.pegasus.service.protocol.PegasusClient.JobResponse;
 import com.google.protobuf.ByteString;
 import io.grpc.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ClientExample {
-    private static final Logger logger = Logger.getLogger(ClientExample.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ClientExample.class);
 
-    private static class TestProcessor implements ResultProcessor {
+    private static void process(JobResponse response) {
+        ByteString data = response.getData();
+        ArrayList<Long> res = toLongArray(data.toByteArray(), data.size());
+        logger.info("got one response: job id {}, array size {}, job data {}",
+                response.getJobId(),
+                res.size(),
+                res.toString());
+    }
 
-        @Override
-        public void process(JobResponse response) {
-            ByteString data = response.getData();
-            ArrayList<Long> res = toLongArray(data.toByteArray(), data.size());
-            System.out.printf("got one response: job id[%d], array size[%d], job data[%s]",
-                    response.getJobId(),
-                    res.size(),
-                    res.toString());
-        }
+    private static void finish() {
+        logger.info("finish process");
+    }
 
-        @Override
-        public void finish() {
-            System.out.println("finish process");
-        }
-
-        @Override
-        public void error(Status status) {
-            System.out.println("error");
-        }
+    private static void error(Status status) {
+        logger.error("on error {}", status.toString());
     }
 
     private static ArrayList<Long> toLongArray(byte[] bytes, int size) {
@@ -107,11 +104,22 @@ public class ClientExample {
 
     public static void main(String[] args) throws Exception {
 
-        RpcClient rpcClient = new RpcClient("localhost", 1234);
-        TestProcessor testProcessor = new TestProcessor();
+        RpcChannel rpcChannel0 = new RpcChannel("localhost", 1234);
+        RpcChannel rpcChannel1 = new RpcChannel("localhost", 1235);
+        List<RpcChannel> channels = new ArrayList<>();
+        channels.add(rpcChannel0);
+        channels.add(rpcChannel1);
+        RpcClient rpcClient = new RpcClient(channels);
 
         logger.info("Will try to send request");
-        JobConfig confPb = JobConfig.newBuilder().setJobId(1).setJobName("ping_pong_example").setWorkers(2).build();
+        JobConfig confPb = JobConfig
+                .newBuilder()
+                .setJobId(2)
+                .setJobName("ping_pong_example")
+                .setWorkers(2)
+                .addServers(0)
+                .addServers(1)
+                .build();
         // for job build
         JobBuilder jobBuilder = new JobBuilder(confPb);
         // for nested task
@@ -127,7 +135,26 @@ public class ClientExample {
                 .sink(getSink());
 
         JobRequest req = jobBuilder.build();
-        rpcClient.submit(req, testProcessor);
+        CloseableIterator<JobResponse> iterator = rpcClient.submit(req);
+        // process response
+        try {
+            while (iterator.hasNext()) {
+                JobResponse response = iterator.next();
+                process(response);
+            }
+        } catch (Exception e) {
+            if (iterator != null) {
+                try {
+                    iterator.close();
+                } catch (IOException ioe) {
+                    // Ignore
+                }
+            }
+            error(Status.fromThrowable(e));
+            throw e;
+        }
+        finish();
+
         rpcClient.shutdown();
     }
 }

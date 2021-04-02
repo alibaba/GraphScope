@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,9 @@ package com.compiler.demo.server.plan.strategy.shuffle;
 
 import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
+import com.compiler.demo.server.plan.PlanUtils;
 import com.compiler.demo.server.plan.extractor.TagKeyExtractorFactory;
+import com.compiler.demo.server.plan.strategy.OrderGlobalLimitStep;
 import com.compiler.demo.server.plan.strategy.PropertyIdentityStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -35,8 +37,8 @@ public class OrderByProperty extends PropertyShuffler {
 
     public OrderByProperty(Step step) {
         super(step);
-        if (step instanceof OrderGlobalStep) {
-            holder = (OrderGlobalStep) step;
+        if (step instanceof OrderGlobalStep || step instanceof OrderGlobalLimitStep) {
+            holder = (ComparatorHolder) step;
         } else {
             throw new UnsupportedOperationException("cannot support other step in order by property " + step.getClass());
         }
@@ -45,7 +47,7 @@ public class OrderByProperty extends PropertyShuffler {
     // pattern: out().<without select>.order().by(name)
     @Override
     protected boolean match() {
-        Step previousOut = getPreviousOut();
+        Step previousOut = getPreviousShuffleStep(false);
         // guarantee no select between out and order().by()
         if (previousOut != null) {
             Step p = this.step;
@@ -66,7 +68,7 @@ public class OrderByProperty extends PropertyShuffler {
             if (byTraversal != null && TagKeyExtractorFactory.OrderBY.isSimpleValue(byTraversal)) {
                 Gremlin.TagKey orderByKey = TagKeyExtractorFactory.OrderBY.extractFrom(byTraversal);
                 // current head with by(property)
-                if (orderByKey.getTag().isEmpty() && orderByKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.KEY
+                if (PlanUtils.isNotSet(orderByKey.getTag()) && orderByKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.KEY
                         && orderByKey.getByKey().getKey().getItemCase() == Common.Key.ItemCase.NAME) {
                     return true;
                 }

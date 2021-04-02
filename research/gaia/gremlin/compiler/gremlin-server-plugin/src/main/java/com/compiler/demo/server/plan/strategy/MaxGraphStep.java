@@ -1,4 +1,4 @@
-/**
+/*
  * This file is referred and derived from project apache/tinkerpop
  *
  *   https://github.com/apache/tinkerpop/blob/master/gremlin-core/src/main/java/org/apache/tinkerpop/gremlin/process/traversal/step/map/GraphStep.java
@@ -31,6 +31,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.step.HasContainerHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
+import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 import org.apache.tinkerpop.gremlin.process.traversal.util.AndP;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.T;
@@ -44,6 +45,8 @@ public final class MaxGraphStep<S, E extends Element> extends GraphStep<S, E> im
     private static final Logger logger = LoggerFactory.getLogger(MaxGraphStep.class);
     private final List<HasContainer> hasContainers = new ArrayList<>();
     private final List<String> graphLabels = new ArrayList<>();
+    // default
+    private TraverserRequirement traverserRequirement = TraverserRequirement.PATH;
 
     public MaxGraphStep(final GraphStep<S, E> originalGraphStep) {
         super(originalGraphStep.getTraversal(), originalGraphStep.getReturnClass(), originalGraphStep.isStartStep(), originalGraphStep.getIds());
@@ -58,6 +61,14 @@ public final class MaxGraphStep<S, E extends Element> extends GraphStep<S, E> im
             return (null == this.ids || 0 == this.ids.length) ?
                     StringFactory.stepString(this, this.returnClass.getSimpleName().toLowerCase(), this.hasContainers) :
                     StringFactory.stepString(this, this.returnClass.getSimpleName().toLowerCase(), Arrays.toString(this.ids), this.hasContainers);
+    }
+
+    public TraverserRequirement getTraverserRequirement() {
+        return traverserRequirement;
+    }
+
+    public void setTraverserRequirement(TraverserRequirement traverserRequirement) {
+        this.traverserRequirement = traverserRequirement;
     }
 
     @Override

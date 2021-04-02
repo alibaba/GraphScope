@@ -1,0 +1,12 @@
+g.V().hasLabel('PERSON').has('id', 21990232560302) \
+    .both('PERSON_KNOWS_PERSON') \
+    .union(identity(), both('PERSON_KNOWS_PERSON')).dedup().as('p') \
+    .inE('FORUM_HASMEMBER_PERSON').has('joinDate', gt(20120901000000000)) \
+    .outV() \
+    .group() \
+    .by() \
+    .by(out('FORUM_CONTAINEROF_POST').out('POST_HASCREATOR_PERSON').where(eq('p')).count()).limit(20) \
+    .unfold().order() \
+    .by(select(values), desc) \
+    .by(select(keys).values('id'), asc) \
+    .limit(20)

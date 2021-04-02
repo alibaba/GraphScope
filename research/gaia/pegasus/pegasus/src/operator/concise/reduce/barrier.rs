@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,7 @@ use crate::api::notify::Notification;
 use crate::api::state::StateMap;
 use crate::api::{Range, Unary, UnaryNotify};
 use crate::communication::{Aggregate, Input, Output, Pipeline};
-use crate::errors::{IOError, JobExecError};
+use crate::errors::JobExecError;
 use crate::stream::Stream;
 use crate::{BuildJobError, Data};
 use pegasus_common::collections::{Collection, CollectionFactory, DefaultCollectionFactory};
@@ -47,23 +47,14 @@ where
         input.subscribe_notify();
         let factory = &self.factory;
         let container = self.container.entry(&input.tag).or_insert_with(|| factory.create());
-        let mut full = false;
 
         input.for_each_batch(|data| {
             for datum in data.drain(..) {
-                full = container.add(datum).is_some();
-                if full {
-                    info_worker!("barrier is full, size={}", container.len());
-                    let kind = std::io::ErrorKind::Interrupted;
-                    Err(throw_io_error!(kind))?;
-                }
+                container.add(datum)?;
             }
             Ok(())
         })?;
 
-        if full {
-            input.cancel_scope();
-        }
         Ok(())
     }
 

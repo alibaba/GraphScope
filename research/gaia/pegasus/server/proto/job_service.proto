@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,28 +14,10 @@
  * limitations under the License.
  */
 syntax = "proto3";
-package protobuf;
-option java_package = "com.alibaba.pegasus.service.proto";
+package protocol;
+option java_package = "com.alibaba.pegasus.service.protocol";
 option java_outer_classname = "PegasusClient";
 
-enum OpKind {
-    SOURCE          = 0;
-    EXCHANGE        = 1;
-    AGGREGATE       = 2;
-    BROADCAST       = 3;
-    MAP             = 4;
-    FLATMAP         = 5;
-    FILTER          = 6;
-    REPEAT          = 7;
-    SUBTASK         = 8;
-    SINK            = 9;
-    LIMIT           = 10;
-    SORT            = 11;
-    GROUP           = 12;
-    COUNT           = 13;
-    UNION           = 14;
-    DEDUP           = 15;
-}
 
 message Pipeline {}
 
@@ -48,6 +30,7 @@ message Broadcast {
 }
 
 message Aggregate {
+
   uint32 target = 1;
 }
 
@@ -60,40 +43,55 @@ message ChannelDef {
   }
 }
 
-message OperatorDef {
-  OpKind  op_kind                     = 1;
-  ChannelDef ch                       = 2;
-  bytes resource                      = 3;
-  repeated NestedTask nested_task     = 4;
+message Source {
+  bytes resource = 1;
 }
 
-message NestedTask {
-  oneof param {
-    RepeatCond repeat_cond   = 1;
-    Joiner joiner            = 2;
+message Shuffle { }
+
+message Map {
+  bytes resource = 1;
+}
+
+message FlatMap {
+  bytes resource = 1;
+}
+
+message Filter {
+  bytes resource = 1;
+}
+
+message Sink {
+  oneof sinker {
+    bytes resource = 1;
+    Fold fold      = 2;
+    GroupBy group  = 3;
   }
-  repeated OperatorDef plan  = 3;
 }
 
-message RepeatCond {
-  uint32 times                  = 1;
-  bytes until                   = 2;
+message LeftJoin {
+  bytes resource = 1;
 }
 
-message Joiner {
-  bytes joiner                  = 1;
+enum Range {
+  LOCAL = 0;
+  GLOBAL = 1;
 }
 
 message Limit {
-  bool  global  = 1;
-  uint32 size   = 2;
+  Range range = 1;
+  uint32 limit = 2;
 }
 
-message SortBy {
-  bool global = 1;
-  // negative limit means no limit;
+message Dedup {
+  Range range = 1;
+  bytes set = 2;
+}
+
+message OrderBy {
+  Range range = 1;
   int64 limit = 2;
-  bytes cmp   = 3;
+  bytes compare = 3;
 }
 
 enum AccumKind {
@@ -106,11 +104,54 @@ enum AccumKind {
   CUSTOM    = 6;
 }
 
-message GroupBy {
-  bool global     = 1;
+message Fold {
+  Range range     = 1;
   AccumKind accum = 2;
-  bytes get_key   = 3;
-  bytes resource  = 4;
+  bytes resource  = 3;
+  FlatMap unfold  = 4;
+}
+
+message GroupBy {
+  Range range     = 1;
+  bytes map       = 2;
+  FlatMap unfold  = 3;
+}
+
+message Union {
+  repeated TaskPlan branches = 1;
+}
+
+message Iteration {
+  uint32 max_iters = 1;
+  Filter until    = 2;
+  TaskPlan body   = 3;
+}
+
+message Subtask {
+  LeftJoin join = 1;
+  TaskPlan task = 2;
+}
+
+message OperatorDef {
+  ChannelDef ch                       = 1;
+  oneof op_kind {
+    Shuffle shuffle = 2;
+    Map map = 3;
+    FlatMap flat_map = 4;
+    Filter filter = 5;
+    Limit limit = 6;
+    OrderBy order = 7;
+    Fold fold = 8;
+    GroupBy group = 9;
+    Union union = 10;
+    Iteration iterate = 11;
+    Subtask subtask = 12;
+    Dedup dedup = 13;
+  }
+}
+
+message TaskPlan {
+  repeated OperatorDef plan = 1;
 }
 
 message JobConfig {
@@ -122,8 +163,9 @@ message JobConfig {
 
 message JobRequest {
   JobConfig conf                = 1;
-  bytes source                  = 2;
-  repeated OperatorDef plan     = 3;
+  Source source                  = 2;
+  TaskPlan plan     = 3;
+  Sink sink = 4;
 }
 
 message JobError {

@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -75,10 +75,14 @@ pub const PARTITION_PREFIX: &'static str = "partition_";
 ///
 /// # Example
 /// ```
+/// extern crate tempdir;
 /// use graph_store::prelude::*;
 ///
+/// let temp_dir = tempdir::TempDir::new("doc-test-config")
+///                     .expect("Open temp folder error");
+/// let root_dir = temp_dir.path();
 /// let mut  mut_graph: MutableGraphDB<DefaultId, InternalId> = GraphDBConfig::default()
-///     .root_dir("data/test_data")
+///     .root_dir(root_dir)
 ///     .partition(0)
 ///     .new();
 ///
@@ -91,7 +95,7 @@ pub const PARTITION_PREFIX: &'static str = "partition_";
 /// mut_graph.export().expect("Export graph data error");
 ///
 /// let graph: LargeGraphDB<DefaultId, InternalId> = GraphDBConfig::default()
-///     .root_dir("data/test_data")
+///     .root_dir(root_dir)
 ///     .schema_file("data/schema.json")
 ///     .partition(0)
 ///     .open()
@@ -168,8 +172,8 @@ impl GraphDBConfig {
     where
         G: IndexType + Serialize + DeserializeOwned + Send + Sync,
         I: IndexType + Serialize + DeserializeOwned + Send + Sync,
-        N: PropertyTableTrait + Sync,
-        E: PropertyTableTrait + Sync,
+        N: PropertyTableTrait + Send + Sync + 'static,
+        E: PropertyTableTrait + Send + Sync + 'static,
     {
         info!("Partition {:?} reading binary file...", self.partition);
         let timer = Instant::now();
@@ -216,11 +220,22 @@ impl GraphDBConfig {
             }
         }
 
-        let graph =
-            import::<DiGraph<Label, LabelId, I>, _>(&partition_dir.join(FILE_GRAPH_STRUCT))?;
-        let vertex_prop_table = N::import(&partition_dir, FILE_NODE_PPT_DATA)?;
-        let edge_prop_table = E::import(&partition_dir, FILE_EDGE_PPT_DATA)?;
-        let index_data = import::<IndexData<G, I>, _>(&partition_dir.join(FILE_INDEX_DATA))?;
+        let file_graph_struct = partition_dir.join(FILE_GRAPH_STRUCT);
+        let file_node_ppt_data = partition_dir.join(FILE_NODE_PPT_DATA);
+        let file_edge_ppt_data = partition_dir.join(FILE_EDGE_PPT_DATA);
+        let file_index_data = partition_dir.join(FILE_INDEX_DATA);
+
+        let graph_handle =
+            std::thread::spawn(move || import::<DiGraph<Label, LabelId, I>, _>(&file_graph_struct));
+        let v_prop_handle = std::thread::spawn(move || N::import(&file_node_ppt_data));
+        let e_prop_handle = std::thread::spawn(move || E::import(&file_edge_ppt_data));
+        let index_handle =
+            std::thread::spawn(move || import::<IndexData<G, I>, _>(&file_index_data));
+
+        let graph = graph_handle.join()??;
+        let vertex_prop_table = v_prop_handle.join()??;
+        let edge_prop_table = e_prop_handle.join()??;
+        let index_data = index_handle.join()??;
 
         let graph_db = LargeGraphDB {
             partition: which_part,

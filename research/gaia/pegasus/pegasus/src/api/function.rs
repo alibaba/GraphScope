@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,9 +14,7 @@
 //! limitations under the License.
 
 use crate::Data;
-use std::borrow::Cow;
 use std::cmp::Ordering;
-use std::hash::Hash;
 use std::sync::Arc;
 
 ///
@@ -36,18 +34,100 @@ pub trait MultiRouteFunction<D>: Send + 'static {
     fn route(&self, data: &D) -> FnResult<&[u64]>;
 }
 
-pub trait Key: Data + Eq + Hash {}
-
-impl<T: Data + Eq + Hash + Sized> Key for T {}
-
-/// The user defined function used to extract a hashable key from origin data;
-pub trait KeyFunction<D>: Send + 'static {
-    type Target: Key;
-
-    fn get_key(&self, item: &D) -> Cow<Self::Target>;
+pub trait Partition {
+    fn get_partition(&self) -> FnResult<u64>;
 }
 
-pub type Pair<K, V> = (K, V);
+macro_rules! impl_partition {
+    ($ty: ty) => {
+        impl Partition for $ty {
+            fn get_partition(&self) -> FnResult<u64> {
+                Ok(*self as u64)
+            }
+        }
+    };
+}
+
+impl_partition!(u32);
+impl_partition!(u64);
+
+/// The user defined function used to extract a key from origin data
+pub trait Keyed {
+    type Key;
+    type Value;
+
+    fn get_key(&self) -> FnResult<&Self::Key>;
+
+    fn take_key(&mut self) -> FnResult<Self::Key>;
+
+    fn take_value(&mut self) -> FnResult<Self::Value>;
+}
+
+macro_rules! impl_keyed {
+    ($ty: ty) => {
+        impl Keyed for $ty {
+            type Key = $ty;
+            type Value = $ty;
+
+            fn get_key(&self) -> FnResult<&Self::Key> {
+                Ok(self)
+            }
+
+            fn take_key(&mut self) -> FnResult<Self::Key> {
+                Ok(*self)
+            }
+
+            fn take_value(&mut self) -> FnResult<Self::Value> {
+                Ok(*self)
+            }
+        }
+    };
+}
+
+impl_keyed!(u32);
+
+impl<K, V> Keyed for Pair<K, V> {
+    type Key = K;
+    type Value = V;
+
+    fn get_key(&self) -> FnResult<&Self::Key> {
+        if let Some(k) = &self.0 {
+            Ok(k)
+        } else {
+            let err: Box<dyn std::error::Error + Send + Sync> =
+                "get_key failed: key of pair lost".into();
+            Err(err)
+        }
+    }
+
+    fn take_key(&mut self) -> FnResult<Self::Key> {
+        if let Some(k) = self.0.take() {
+            Ok(k)
+        } else {
+            let err: Box<dyn std::error::Error + Send + Sync> =
+                "take_key failed: key of pair is lost".into();
+            Err(err)
+        }
+    }
+
+    fn take_value(&mut self) -> FnResult<Self::Value> {
+        if let Some(k) = self.1.take() {
+            Ok(k)
+        } else {
+            let err: Box<dyn std::error::Error + Send + Sync> =
+                "take_value failed: value of pair is lost".into();
+            Err(err)
+        }
+    }
+}
+
+pub trait KeyFunction<D>: Send + 'static {
+    type Key;
+
+    fn select_key(&self, item: &D) -> FnResult<Self::Key>;
+}
+
+pub type Pair<K, V> = (Option<K>, Option<V>);
 
 pub trait SumFunction<D>: Send + 'static {
     fn add(&self, seed: &mut D, next: D);
@@ -96,10 +176,10 @@ impl<D: Data, T: MultiRouteFunction<D> + ?Sized> MultiRouteFunction<D> for Box<T
 }
 
 impl<D, K: KeyFunction<D> + ?Sized> KeyFunction<D> for Box<K> {
-    type Target = K::Target;
+    type Key = K::Key;
 
-    fn get_key(&self, item: &D) -> Cow<Self::Target> {
-        (**self).get_key(item)
+    fn select_key(&self, item: &D) -> FnResult<Self::Key> {
+        (**self).select_key(item)
     }
 }
 
@@ -267,7 +347,7 @@ where
     I: Send + 'static,
     O: Send + 'static,
     R: Iterator<Item = Result<O, DynError>> + Send + 'static,
-    F: Fn(I) -> R + Send + 'static,
+    F: Fn(I) -> FnResult<R> + Send + 'static,
 {
     pub fn new(func: F) -> Self {
         FlatMapClosure { func, _ph: std::marker::PhantomData }
@@ -279,12 +359,12 @@ where
     I: Send + 'static,
     O: Send + 'static,
     R: Iterator<Item = Result<O, DynError>> + Send + 'static,
-    F: Fn(I) -> R + Send + 'static,
+    F: Fn(I) -> FnResult<R> + Send + 'static,
 {
     type Target = R;
 
-    fn exec(&self, input: I) -> Result<Self::Target, DynError> {
-        Ok((self.func)(input))
+    fn exec(&self, input: I) -> FnResult<Self::Target> {
+        (self.func)(input)
     }
 }
 
