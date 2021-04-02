@@ -17,6 +17,7 @@
 #
 
 import json
+import sys
 
 import ipywidgets as widgets
 from spectate import mvc
@@ -91,7 +92,46 @@ class GraphModel(widgets.DOMWidget):
     _nodes_id_dict = {}
     _edges_id_dict = {}
 
-    def addGraphFromData(self, data):
+    _default_data = {
+        "nodes": [
+            {
+                "id": "1",
+                "label": "person",
+                "nodeType": "person",
+            },
+            {
+                "id": "2",
+                "label": "person",
+                "nodeType": "person",
+            },
+            {
+                "id": "3",
+                "label": "person",
+                "nodeType": "person",
+            },
+        ],
+        "edges": [
+            {
+                "label": "knows",
+                "source": "1",
+                "target": "2",
+            },
+            {
+                "label": "knows",
+                "source": "2",
+                "target": "3",
+            },
+            {
+                "label": "knows",
+                "source": "3",
+                "target": "1",
+            },
+        ],
+    }
+
+    def addGraphFromData(self, data=None):
+        if data is None:
+            data = self._default_data
         nodeList = []
         edgeList = []
 
@@ -237,7 +277,7 @@ class GraphModel(widgets.DOMWidget):
 
         Returns: None
         """
-        if not isinstance(vertices, list):
+        if not isinstance(vertices, (list, tuple, range)):
             vertices = [vertices]
         hop = int(hop)
 
@@ -275,3 +315,84 @@ class GraphModel(widgets.DOMWidget):
                 self.value = json.dumps(self.value_dict)
             else:
                 raise NotImplementedError
+
+
+def draw_graphscope_graph(graph, vertices, hop=1):
+    """Visualize the graph data in the result cell when the draw functions are invoked
+
+    Args:
+        vertices (list): selected vertices.
+        hop (int): draw induced subgraph with hop extension. Defaults to 1.
+
+    Returns:
+        A GraphModel.
+    """
+    graph._ensure_loaded()
+    interactive_query = graph._session.gremlin(graph)
+
+    gm = GraphModel()
+
+    # for debugging
+    # gm.addGraphFromData()
+
+    gm.queryGraphData(vertices, hop, interactive_query)
+    # listen on the 1~2 hops operation of node
+    gm.on_msg(graph.queryNeighbor)
+
+    return gm
+
+
+def repr_graphscope_graph(graph, *args, **kwargs):
+    from ipywidgets.widgets.widget import Widget
+
+    if "_ipython_display_" in Widget.__dict__:
+        return draw_graphscope_graph(graph, vertices=range(1, 100))._ipython_display_(
+            *args, **kwargs
+        )
+    else:
+        return draw_graphscope_graph(graph, vertices=range(1, 100))._repr_mimebundle_(
+            *args, **kwargs
+        )
+
+
+def in_notebook():
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == "ZMQInteractiveShell":
+            return True  # Jupyter notebook or qtconsole
+        elif shell == "TerminalInteractiveShell":
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False  # Probably standard Python interpreter
+
+
+def __graphin_for_graphscope(graphscope):
+    if in_notebook():
+        graph_type = getattr(graphscope, "Graph")
+        setattr(graph_type, "draw", draw_graphscope_graph)
+        from ipywidgets.widgets.widget import Widget
+
+        if "_ipython_display_" in Widget.__dict__:
+            setattr(graph_type, "_ipython_display_", repr_graphscope_graph)
+        else:
+            setattr(graph_type, "_repr_mimebundle_", repr_graphscope_graph)
+
+
+def __register_graphin_for_graphscope():
+    # if graphscope already loaded
+    if "graphscope" in sys.modules:
+        __graphin_for_graphscope(sys.modules["graphscope"])  # noqa: F821
+
+    # added to graphscope extension lists
+    if "__graphscope_extensions__" not in globals():
+        globals()["__graphscope_extensions__"] = []
+    globals()["__graphscope_extensions__"].append(
+        __graphin_for_graphscope  # noqa: F821
+    )
+
+
+__register_graphin_for_graphscope()
+del __graphin_for_graphscope
+del __register_graphin_for_graphscope

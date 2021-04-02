@@ -53,3 +53,25 @@ Here are the main components that GraphScope includes:
 
   - Graph Learning Engine (GLE): an end-to-end graph learning framework
 """
+
+
+def __inject_graphscope_extensions():
+    """The graphscope extensions follows the following signature:
+
+    def ext(graphscope):
+        ...
+
+    It may inject classes, functions, methods and attributes to the graphscope module.
+    """
+    import sys
+
+    if "__graphscope_extensions__" in globals():
+        for ext in globals()["__graphscope_extensions__"]:
+            try:
+                ext(sys.modules[__name__])
+            except Exception as e:  # noqa
+                pass
+
+
+__inject_graphscope_extensions()
+del __inject_graphscope_extensions

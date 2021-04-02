@@ -8,7 +8,7 @@ include .coverage.rc
 include tsconfig.json
 include package.json
 include webpack.config.js
-include ipygraphin/labextension/*.tgz
+include graphscope-jupyter/labextension/*.tgz
 
 # Documentation
 graft docs
@@ -25,7 +25,7 @@ graft tests
 prune tests/build
 
 # Javascript files
-graft ipygraphin/nbextension
+graft graphscope-jupyter/nbextension
 graft src
 graft css
 prune **/node_modules

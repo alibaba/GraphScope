@@ -42,7 +42,7 @@ module.exports = [
     entry: './src/extension.ts',
     output: {
       filename: 'index.js',
-      path: path.resolve(__dirname, 'ipygraphin', 'nbextension', 'static'),
+      path: path.resolve(__dirname, 'graphscope_jupyter', 'nbextension', 'static'),
       libraryTarget: 'umd'
     },
     module: {
@@ -54,7 +54,7 @@ module.exports = [
   },
 
   /**
-   * Embeddable jupyter-ipygraphin bundle
+   * Embeddable graphscope-jupyter bundle
    *
    * This bundle is almost identical to the notebook extension bundle. The only
    * difference is in the configuration of the webpack public path for the
@@ -69,8 +69,8 @@ module.exports = [
       filename: 'index.js',
       path: path.resolve(__dirname, 'dist'),
       libraryTarget: 'umd',
-      library: 'jupyter-ipygraphin',
-      publicPath: 'https://unpkg.com/jupyter-ipygraphin@' + version + '/dist/'
+      library: 'graphscope-jupyter',
+      publicPath: 'https://unpkg.com/graphscope-jupyter@' + version + '/dist/'
     },
     devtool: 'source-map',
     module: {
@@ -90,7 +90,7 @@ module.exports = [
     output: {
       filename: 'embed-bundle.js',
       path: path.resolve(__dirname, 'docs', 'source', '_static'),
-      library: 'jupyter-ipygraphin',
+      library: 'graphscope-jupyter',
       libraryTarget: 'umd'
     },
     module: {

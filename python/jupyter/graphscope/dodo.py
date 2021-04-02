@@ -22,7 +22,7 @@
 
 import re
 
-from ipygraphin._version import __version__ as version
+from graphscope_jupyter._version import __version__ as version
 
 
 def task_mybinder():
@@ -44,5 +44,5 @@ def task_mybinder():
     return {
         "actions": [action],
         "targets": ["environment.yml", "postBuild"],
-        "file_dep": ["ipygraphin/_version.py"],
+        "file_dep": ["graphscope_jupyter/_version.py"],
     }

@@ -1,0 +1,5 @@
+{
+  "load_extensions": {
+    "graphscope-jupyter/extension": true
+  }
+}
