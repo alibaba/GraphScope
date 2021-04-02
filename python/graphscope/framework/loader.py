@@ -17,6 +17,7 @@
 #
 
 import logging
+import pathlib
 from typing import Dict
 from typing import Sequence
 from typing import Tuple
@@ -170,6 +171,8 @@ class Loader(object):
         """
         if isinstance(source, str):
             self.process_location(source)
+        elif isinstance(source, pathlib.Path):
+            self.process_location(str(source))
         elif isinstance(source, pd.DataFrame):
             self.process_pandas(source)
         elif vineyard is not None and isinstance(

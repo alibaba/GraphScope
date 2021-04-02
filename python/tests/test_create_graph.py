@@ -205,20 +205,28 @@ def test_complete_form_loader_deprecated(
     assert graph.loaded()
 
 
-def test_properties_omitted_loader(graphscope_session, student_group_e, student_v):
+def test_properties_is_none_loader(graphscope_session, student_group_e, student_v):
+    graph = graphscope_session.g(generate_eid=False)
+    graph = graph.add_vertices(student_v, "student", None, "student_id")
+    graph = graph.add_edges(student_group_e, "group", None)
+    assert len(graph.schema.get_vertex_properties("student")) == 4
+    assert len(graph.schema.get_edge_properties("group")) == 2
+
+
+def test_properties_is_empty_loader(graphscope_session, student_group_e, student_v):
     graph = graphscope_session.g(generate_eid=False)
     graph = graph.add_vertices(student_v, "student", [], "student_id")
     graph = graph.add_edges(student_group_e, "group", [])
-    assert len(graph.schema.get_vertex_properties("student")) == 4
-    assert len(graph.schema.get_edge_properties("group")) == 2
+    assert len(graph.schema.get_vertex_properties("student")) == 1
+    assert len(graph.schema.get_edge_properties("group")) == 1
 
 
 def test_properties_omitted_loader_with_generate_eid(
     graphscope_session, student_group_e, student_v
 ):
     graph = graphscope_session.g(generate_eid=True)
-    graph = graph.add_vertices(student_v, "student", [], "student_id")
-    graph = graph.add_edges(student_group_e, "group", [])
+    graph = graph.add_vertices(student_v, "student", None, "student_id")
+    graph = graph.add_edges(student_group_e, "group", None)
     assert len(graph.schema.get_vertex_properties("student")) == 4
     assert len(graph.schema.get_edge_properties("group")) == 3
 
