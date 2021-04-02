@@ -92,13 +92,13 @@ function install_dependencies() {
     wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz
     tar xf zookeeper-3.4.14.tar.gz -C /tmp/
     cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
-    sudo ln -s /tmp/zookeeper-3.4.14 /usr/local/zookeeper
+    sudo ln -s /tmp/zookeeper-3.4.14 /usr/local/zookeeper || true
 
     # rust
     wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
-    curl -sf -L https://static.rust-lang.org/rustup.sh | sudo sh -s -- -y --profile minimal --default-toolchain 1.48.0
-    source ~/.cargo/env
+    curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+    # source ~/.cargo/env
 
     # install python packages for vineyard codegen
     pip3 install -U pip --user

@@ -6,7 +6,7 @@ set -e
 set -x
 set -o pipefail
 
-graphscope_home="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
+graphscope_src="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
 
 function install_libgrape-lite() {
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
@@ -37,7 +37,7 @@ function install_vineyard() {
 function build_graphscope_gae() {
   # build GraphScope GAE
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
-  cd ${graphscope_home}
+  cd ${graphscope_src}
   mkdir analytical_engine/build && pushd analytical_engine/build
   cmake ..
   make -j`nproc`
@@ -51,8 +51,8 @@ function build_graphscope_gie() {
   export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
   export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
   export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
+  cd ${graphscope_src}
   # build frontend coordinator graph-manager
-  cd ${graphscope_home}
   pushd interactive_engine
   mvn clean package -DskipTests -Pjava-release --quiet
   popd
@@ -83,7 +83,7 @@ function install_client_and_coordinator() {
   # install GraphScope client
   export WITH_LEARNING_ENGINE=ON
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
-  cd ${graphscope_home}
+  cd ${graphscope_src}
   pushd python
   pip3 install -U setuptools
   pip3 install -r requirements.txt -r requirements-dev.txt
@@ -99,11 +99,9 @@ function install_client_and_coordinator() {
   popd
 }
 
-install_dependencies
-
 install_libgrape-lite
 
-install_vienyard
+install_vineyard
 
 build_graphscope_gae
 
