@@ -180,5 +180,5 @@ jobs:
         python3 -m pytest -s -v /tmp/test_run_locally.py
 
     - name: Setup tmate session debug
-      if: always()
+      if: false
       uses: mxschmitt/action-tmate@v2
