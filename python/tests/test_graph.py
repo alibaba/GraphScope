@@ -596,21 +596,21 @@ def test_add_column(ldbc_graph, arrow_modern_graph):
     with pytest.raises(AnalyticalEngineInternalError):
         print(g4.schema)
 
-    sub_graph_5 = sub_graph_3.add_vertices(
-        Loader(os.path.join(prefix, "ldbc_sample/person_0_0.csv"), delimiter="|"),
-        "person",
-        [
-            "firstName",
-            "lastName",
-            "gender",
-            "birthday",
-            "creationDate",
-            "locationIP",
-            "browserUsed",
-        ],
-        "id",
-    )
+    # sub_graph_5 = sub_graph_3.add_vertices(
+    #    Loader(os.path.join(prefix, "ldbc_sample/person_0_0.csv"), delimiter="|"),
+    #    "person",
+    #    [
+    #        "firstName",
+    #        "lastName",
+    #        "gender",
+    #        "birthday",
+    #        "creationDate",
+    #        "locationIP",
+    #        "browserUsed",
+    #    ],
+    #    "id",
+    # )
     # FIXME: raise error in add_column
-    g6 = sub_graph_5.add_column(ret, selector={"cc": "r"})
-    with pytest.raises(AnalyticalEngineInternalError):
-        print(g6.schema)
+    # g6 = sub_graph_5.add_column(ret, selector={"cc": "r"})
+    # with pytest.raises(AnalyticalEngineInternalError):
+    #     print(g6.schema)
