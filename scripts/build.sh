@@ -53,9 +53,6 @@ function build_graphscope_gie() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') build and install graphscope interactive engine"
   # build GraphScope GIE
   source ~/.cargo/env
-  export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
-  export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
-  export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
   cd ${graphscope_src}
   # build frontend coordinator graph-manager
   pushd interactive_engine

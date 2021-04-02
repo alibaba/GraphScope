@@ -78,6 +78,7 @@ You can use the script as follows or use `./script/launch_cluster.py --help` to 
     pip3 install click PyYAML alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
     ./scripts/launch_cluster.py --type aliyun --id your_access_key_id --secret your_access_key_secret --region your_region_id --output kube_config_path
 
+
 Deployment on local
 ----------------------
 we provide scripts to install dependencies and build GraphScope on local.
