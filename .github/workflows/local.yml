@@ -67,10 +67,6 @@ jobs:
         pip3 install -U pip --user
         pip3 install libclang parsec setuptools wheel twine --user
 
-    - name: Setup tmate session
-      if: false
-      uses: mxschmitt/action-tmate@v2
-
     - name: Install libgrape-lite
       run: |
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
@@ -84,7 +80,7 @@ jobs:
     - name: Install libvineyard
       run: |
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
-        git clone -b v0.1.14 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
+        git clone -b main --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
         cd libvineyard
         git submodule update --init
         mkdir build && pushd build
