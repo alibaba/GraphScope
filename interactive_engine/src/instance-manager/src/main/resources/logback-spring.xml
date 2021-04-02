@@ -2,8 +2,8 @@
 <configuration>
     <!-- https://github.com/spring-projects/spring-boot/blob/v1.5.13.RELEASE/spring-boot/src/main/resources/org/springframework/boot/logging/logback/defaults.xml -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml" />
-    <property name="LOG_FILE" value="logs/application.log" />
-    <property name="AVAIL_LOG_FILE" value="logs/monitor.log" />
+    <property name="LOG_FILE" value="/tmp/graphscope/logs/graphmanager/application.log" />
+    <property name="AVAIL_LOG_FILE" value="/tmp/graphscope/logs/graphmanager/monitor.log" />
     <appender name="APPLICATION"
         class="ch.qos.logback.core.rolling.RollingFileAppender">
         <encoder>

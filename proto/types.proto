@@ -17,17 +17,16 @@ syntax = "proto3";
 
 package gs.rpc;
 
-enum SessionType {
+enum ClusterType {
   HOSTS = 0;
   K8S  = 1;
-  REMOTE = 2;
 
-  INVALID_SESSION = 100;
+  UNDEFINED = 100;
 };
 
 // Basic data types
 enum DataType {
-  NULL = 0;
+  NULLVALUE = 0;
   INT8 = 1;
   INT16 = 2;
   INT32 = 3;

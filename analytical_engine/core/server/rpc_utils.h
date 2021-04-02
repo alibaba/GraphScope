@@ -123,7 +123,7 @@ inline bl::result<DagDef> ReadDagFromFile(const std::string& location) {
   auto stat = google::protobuf::util::JsonStringToMessage(dag_str, &dag_def);
   if (!stat.ok()) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kIOError,
-                    "Failed to parse: " + stat.message().ToString());
+                    "Failed to parse: " + stat.error_message().ToString());
   }
   return dag_def;
 }

@@ -18,6 +18,7 @@
 
 
 import copy
+import datetime
 import glob
 import hashlib
 import json
@@ -80,6 +81,11 @@ def is_port_in_use(host, port):
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex((host, port)) == 0
+
+
+def get_timestamp():
+    now = datetime.datetime.now()
+    return datetime.datetime.timestamp(now)
 
 
 def get_lib_path(app_dir, app_name):

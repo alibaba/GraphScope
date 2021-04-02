@@ -313,8 +313,8 @@ jobs:
 
         export GS_TEST_DIR='/root/gstest'
         cd python
-        python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
-                          --cov-report=term --exitfirst -s -v tests
+        python3 -m pytest --ignore tests/test_run_locally.py --cov=graphscope --cov-config=.coveragerc \
+                          --cov-report=xml --cov-report=term --exitfirst -s -v tests
 
         pkill -TERM etcd || true
 

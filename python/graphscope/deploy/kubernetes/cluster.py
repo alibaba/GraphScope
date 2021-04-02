@@ -46,13 +46,14 @@ from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import try_to_read_namespace_from_context
 from graphscope.deploy.kubernetes.utils import wait_for_deployment_complete
+from graphscope.deploy.launcher import Launcher
 from graphscope.framework.errors import K8sError
 from graphscope.framework.utils import random_string
 
 logger = logging.getLogger("graphscope")
 
 
-class KubernetesCluster(object):
+class KubernetesClusterLauncher(Launcher):
     """Class for setting up GraphScope instance on kubernetes cluster.
 
     Args:
@@ -302,6 +303,9 @@ class KubernetesCluster(object):
             str: Kubernetes namespace.
         """
         return self._namespace
+
+    def type(self):
+        return "k8s"
 
     def _get_free_namespace(self):
         while True:
@@ -603,7 +607,7 @@ class KubernetesCluster(object):
             time.sleep(1)
             self._waiting_for_services_ready()
             logger.info("Coordinator pod start successful, connecting to service...")
-            return self._get_coordinator_endpoint()
+            self._coordinator_endpoint = self._get_coordinator_endpoint()
         except Exception as e:
             time.sleep(1)
             self._dump_coordinator_failed_status()

@@ -22,7 +22,7 @@ GraphScope makes it easy to connect to a loaded graph within Python as shown bel
 
     # create a new session, load LDBC graph (as an example),
     # and get the Gremlin entry point
-    sess = graphscope.session(enable_k8s=True, num_workers=2)
+    sess = graphscope.session(num_workers=2)
     graph = load_ldbc(sess, prefix='/path/to/ldbc_sample')
     interactive = sess.gremlin(graph)
 

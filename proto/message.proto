@@ -52,7 +52,7 @@ message ConnectSessionResponse {
   // The client must arrange to call CloseSession with this returned
   // session handle to close the session.
   string session_id = 2;
-  SessionType session_type = 3;
+  ClusterType cluster_type = 3;
   string engine_config = 4;
   repeated string pod_name_list = 5;
   int32 num_workers = 6;

@@ -220,7 +220,7 @@ class GRPCClient(object):
         self._session_id = response.session_id
         return (
             response.session_id,
-            response.session_type,
+            response.cluster_type,
             json.loads(response.engine_config),
             response.pod_name_list,
             response.num_workers,

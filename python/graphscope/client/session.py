@@ -27,9 +27,6 @@ import json
 import logging
 import os
 import random
-import signal
-import socket
-import subprocess
 import sys
 import threading
 import time
@@ -47,7 +44,8 @@ from graphscope.client.utils import CaptureKeyboardInterrupt
 from graphscope.client.utils import GSLogger
 from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
-from graphscope.deploy.kubernetes.cluster import KubernetesCluster
+from graphscope.deploy.hosts.cluster import HostsClusterLauncher
+from graphscope.deploy.kubernetes.cluster import KubernetesClusterLauncher
 from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import GRPCError
@@ -63,17 +61,6 @@ from graphscope.interactive.query import InteractiveQueryStatus
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
-
-try:
-    import gscoordinator
-
-    COORDINATOR_HOME = os.path.abspath(os.path.join(gscoordinator.__file__, "..", ".."))
-except ModuleNotFoundError:
-    # If gscoordinator is not installed, try to locate it by relative path,
-    # which is strong related with the directory structure of GraphScope
-    COORDINATOR_HOME = os.path.abspath(
-        os.path.join(__file__, "..", "..", "..", "..", "coordinator")
-    )
 
 DEFAULT_CONFIG_FILE = os.environ.get(
     "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/session.json")
@@ -148,6 +135,7 @@ class Session(object):
     def __init__(
         self,
         config=None,
+        cluster_type=gs_config.cluster_type,
         addr=gs_config.addr,
         num_workers=gs_config.num_workers,
         preemptive=gs_config.preemptive,
@@ -196,6 +184,9 @@ class Session(object):
 
             addr (str, optional): The endpoint of a pre-launched GraphScope instance with '<ip>:<port>' format.
                 A new session id will be generated for each session connection.
+
+            cluster_type (str, optional): Deploy GraphScope instance on hosts or k8s cluster. Defaults to k8s.
+                Available options: "k8s" and "hosts". Note that only support deployed on localhost with hosts mode.
 
             num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.
 
@@ -361,6 +352,7 @@ class Session(object):
         self._config_params = {}
         self._accessable_params = (
             "addr",
+            "cluster_type",
             "num_workers",
             "preemptive",
             "k8s_namespace",
@@ -412,15 +404,11 @@ class Session(object):
         # update other optional params
         self._config_params.update(kw)
 
-        # Reserved keyword for local testing.
-        run_on_local = kw.pop("run_on_local", False)
-        if not run_on_local:
-            self._config_params["enable_k8s"] = True
-        else:
-            self._run_on_local()
+        # initial setting of cluster_type
+        self._cluster_type = self._parse_cluster_type()
 
         # mars cannot work with run-on-local mode
-        if run_on_local and self._config_params["with_mars"]:
+        if self._cluster_type == types_pb2.HOSTS and self._config_params["with_mars"]:
             raise NotImplementedError(
                 "Mars cluster cannot be launched along with local GraphScope deployment"
             )
@@ -461,14 +449,10 @@ class Session(object):
 
         self._closed = False
 
-        # set _session_type in self._connect()
-        self._session_type = types_pb2.INVALID_SESSION
+        # coordinator service endpoint
+        self._coordinator_endpoint = None
 
-        # need clean up when session exit
-        self._proc = None
-        self._endpoint = None
-
-        self._k8s_cluster = None
+        self._launcher = None
         self._heartbeat_sending_thread = None
 
         self._grpc_client = None
@@ -492,7 +476,7 @@ class Session(object):
         atexit.register(self.close)
         # create and connect session
         with CaptureKeyboardInterrupt(self.close):
-            self._proc, self._endpoint = self._connect()
+            self._connect()
 
         self._disconnected = False
 
@@ -524,6 +508,19 @@ class Session(object):
             if not slient:
                 raise exp
 
+    def _parse_cluster_type(self):
+        if self._config_params["addr"] is not None:
+            # get the cluster type after connecting
+            return types_pb2.UNDEFINED
+        else:
+            if self._config_params["cluster_type"] == "hosts":
+                self._run_on_local()
+                return types_pb2.HOSTS
+            elif self._config_params["cluster_type"] == "k8s":
+                return types_pb2.K8S
+            else:
+                raise ValueError("Expect hosts or k8s of cluster_type parameter")
+
     @property
     def engine_config(self):
         """Show the engine configration associated with session in json format."""
@@ -540,9 +537,7 @@ class Session(object):
         else:
             info["status"] = "active"
 
-        if self._session_type == types_pb2.REMOTE:
-            info["type"] = "remote"
-        elif self._session_type == types_pb2.K8S:
+        if self._cluster_type == types_pb2.K8S:
             info["type"] = "k8s"
             info["engine_hosts"] = ",".join(self._pod_name_list)
             info["namespace"] = self._config_params["k8s_namespace"]
@@ -550,9 +545,10 @@ class Session(object):
             info["type"] = "hosts"
             info["engine_hosts"] = ",".join(self._config_params["hosts"])
 
+        info["cluster_type"] = str(self._cluster_type)
         info["session_id"] = self.session_id
         info["num_workers"] = self._config_params["num_workers"]
-        info["coordinator_endpoint"] = self._endpoint
+        info["coordinator_endpoint"] = self._coordinator_endpoint
         info["engine_config"] = self._engine_config
         return info
 
@@ -576,7 +572,7 @@ class Session(object):
         if self._closed:
             return
         self._closed = True
-        self._endpoint = None
+        self._coordinator_endpoint = None
 
         self._deregister_default()
 
@@ -612,16 +608,10 @@ class Session(object):
             _session_dict.pop(self._session_id, None)
 
         # clean up
-        if self._proc is not None:
-            # coordinator's GRPCServer.wait_for_termination works for SIGINT (Ctrl-C)
-            self._proc.send_signal(signal.SIGINT)
-            self._proc.wait()
-            self._proc = None
-
-        if self._config_params["addr"] is None and self._config_params["enable_k8s"]:
-            if self._k8s_cluster:
-                self._k8s_cluster.stop()
-                self._pod_name_list = []
+        if self._config_params["addr"] is None:
+            if self._launcher:
+                self._launcher.stop()
+            self._pod_name_list = []
 
     def _close_interactive_instance(self, instance):
         """Close a interactive instance."""
@@ -746,8 +736,8 @@ class Session(object):
     def _connect(self):
         if self._config_params["addr"] is not None:
             # try connect to exist coordinator
-            proc, endpoint = None, self._config_params["addr"]
-        elif self._config_params["enable_k8s"]:
+            self._coordinator_endpoint = self._config_params["addr"]
+        elif self._cluster_type == types_pb2.K8S:
             if (
                 self._config_params["k8s_etcd_image"] is None
                 or self._config_params["k8s_gs_image"] is None
@@ -756,8 +746,7 @@ class Session(object):
             api_client = kube_config.new_client_from_config(
                 **self._config_params["k8s_client_config"]
             )
-            proc = None
-            self._k8s_cluster = KubernetesCluster(
+            self._launcher = KubernetesClusterLauncher(
                 api_client=api_client,
                 namespace=self._config_params["k8s_namespace"],
                 service_type=self._config_params["k8s_service_type"],
@@ -798,21 +787,30 @@ class Session(object):
                     "dangling_timeout_seconds"
                 ],
             )
-            endpoint = self._k8s_cluster.start()
-            if self._config_params["k8s_namespace"] is None:
-                self._config_params["k8s_namespace"] = self._k8s_cluster.get_namespace()
         elif (
-            isinstance(self._config_params["hosts"], list)
+            self._cluster_type == types_pb2.HOSTS
+            and isinstance(self._config_params["hosts"], list)
             and len(self._config_params["hosts"]) != 0
             and self._config_params["num_workers"] > 0
         ):
             # lanuch coordinator with hosts
-            proc, endpoint = _launch_coordinator_on_local(self._config_params)
+            self._launcher = HostsClusterLauncher(
+                hosts=self._config_params["hosts"],
+                port=self._config_params["port"],
+                num_workers=self._config_params["num_workers"],
+                vineyard_socket=self._config_params["vineyard_socket"],
+                timeout_seconds=self._config_params["timeout_seconds"],
+            )
         else:
             raise RuntimeError("Session initialize failed.")
 
+        # launching graphscope service
+        if self._launcher is not None:
+            self._launcher.start()
+            self._coordinator_endpoint = self._launcher.coordinator_endpoint
+
         # waiting service ready
-        self._grpc_client = GRPCClient(endpoint)
+        self._grpc_client = GRPCClient(self._coordinator_endpoint)
         self._grpc_client.waiting_service_ready(
             timeout_seconds=self._config_params["timeout_seconds"],
         )
@@ -821,7 +819,7 @@ class Session(object):
         try:
             (
                 self._session_id,
-                self._session_type,
+                self._cluster_type,
                 self._engine_config,
                 self._pod_name_list,
                 self._config_params["num_workers"],
@@ -833,18 +831,12 @@ class Session(object):
                 ],
             )
             # fetch logs
-            if self._config_params["enable_k8s"]:
+            if self._config_params["addr"] or self._cluster_type == types_pb2.K8S:
                 self._grpc_client.fetch_logs()
             _session_dict[self._session_id] = self
         except Exception:
-            if proc is not None and proc.poll() is None:
-                try:
-                    proc.terminate()
-                except:  # noqa: E722
-                    pass
+            self.close()
             raise
-
-        return proc, endpoint
 
     def get_config(self):
         """Get configuration of the session."""
@@ -864,7 +856,6 @@ class Session(object):
         self._config_params["hosts"] = ["localhost"]
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""
-        self._config_params["enable_k8s"] = False
 
     def _get_gl_handle(self, graph):
         """Dump a handler for GraphLearn for interaction.
@@ -936,26 +927,26 @@ class Session(object):
 
         def group_property_types(props):
             weighted, labeled, i, f, s, attr_types = "false", "false", 0, 0, 0, {}
-            for field_name, field_type in props.items():
-                if field_type in [types_pb2.STRING]:
+            for prop in props:
+                if prop.type in [types_pb2.STRING]:
                     s += 1
-                    attr_types[field_name] = "s"
-                elif field_type in (types_pb2.FLOAT, types_pb2.DOUBLE):
+                    attr_types[prop.name] = "s"
+                elif prop.type in (types_pb2.FLOAT, types_pb2.DOUBLE):
                     f += 1
-                    attr_types[field_name] = "f"
+                    attr_types[prop.name] = "f"
                 else:
                     i += 1
-                    attr_types[field_name] = "i"
-                if field_name == "weight":
+                    attr_types[prop.name] = "i"
+                if prop.name == "weight":
                     weighted = "true"
-                elif field_name == "label":
+                elif prop.name == "label":
                     labeled = "true"
             return weighted, labeled, i, f, s, attr_types
 
         node_schema, node_attribute_types = [], dict()
-        for index, label in enumerate(graph.schema.vertex_labels):
+        for label in graph.schema.vertex_labels:
             weighted, labeled, i, f, s, attr_types = group_property_types(
-                graph.schema.vertex_properties[index]
+                graph.schema.get_vertex_properties(label)
             )
             node_schema.append(
                 "{}:{}:{}:{}:{}:{}".format(label, weighted, labeled, i, f, s)
@@ -963,11 +954,11 @@ class Session(object):
             node_attribute_types[label] = attr_types
 
         edge_schema, edge_attribute_types = [], dict()
-        for index, label in enumerate(graph.schema.edge_labels):
+        for label in graph.schema.edge_labels:
             weighted, labeled, i, f, s, attr_types = group_property_types(
-                graph.schema.edge_properties[index]
+                graph.schema.get_edge_properties(label)
             )
-            for rel in graph.schema.edge_relationships[index]:
+            for rel in graph.schema.get_relationships(label):
                 edge_schema.append(
                     "{}:{}:{}:{}:{}:{}:{}:{}".format(
                         rel[0], label, rel[1], weighted, labeled, i, f, s
@@ -1127,83 +1118,6 @@ class Session(object):
 
 
 session = Session
-
-
-def _is_port_in_use(port):
-    """Check whether port of localhost is used
-
-    Returns: bool
-      True if port already in used.
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(("localhost", port)) == 0
-
-
-def _launch_coordinator_on_local(config_params):
-    """Launch coordinator locally using specific configuration.
-
-    Args:
-        config_params (dict): Specific configurations,
-          in which we will look at several specific keys:
-            port: Port used to launch coordinator, use random port if None.
-            num_workers: Workers number.
-            hosts: Hosts name of workers.
-            timeout_seconds: Wait until reached timeout.
-            vineyard_socket: Vineyard socket path. Use default path if None.
-    Returns:
-        process: instance of Popen object.
-        endpoint (str): The endpoint to connect to coordinator.
-    """
-    port = config_params["port"]
-    if port is None:
-        # use random port
-        port = random.randint(60801, 63801)
-        while _is_port_in_use(port):
-            port = random.randint(60801, 63801)
-    else:
-        # check port conflict
-        if _is_port_in_use(port):
-            raise ConnectionError("Port already used.")
-
-    cmd = [
-        sys.executable,
-        "-m",
-        "gscoordinator",
-        "--num_workers",
-        "{}".format(str(config_params["num_workers"])),
-        "--hosts",
-        "{}".format(",".join(config_params["hosts"])),
-        "--log_level",
-        "{}".format(gs_config.log_level),
-        "--timeout_seconds",
-        "{}".format(config_params["timeout_seconds"]),
-        "--port",
-        "{}".format(str(port)),
-    ]
-
-    if config_params["vineyard_socket"]:
-        cmd.extend(["--vineyard_socket", "{}".format(config_params["vineyard_socket"])])
-
-    logger.info("Client is initializing coordinator.")
-
-    env = os.environ.copy()
-    env["PYTHONUNBUFFERED"] = "TRUE"
-    # Param `start_new_session=True` is for putting child process to a new process group
-    # so it won't get the signals from parent.
-    process = subprocess.Popen(
-        cmd,
-        start_new_session=True,
-        cwd=COORDINATOR_HOME,
-        universal_newlines=True,
-        encoding="utf-8",
-        stdin=subprocess.DEVNULL,
-        stdout=sys.stdout if gs_config.show_log else subprocess.DEVNULL,
-        stderr=sys.stderr if gs_config.show_log else subprocess.DEVNULL,
-        bufsize=1,
-        env=env,
-    )
-
-    return process, "localhost:%s" % port
 
 
 def set_option(**kwargs):

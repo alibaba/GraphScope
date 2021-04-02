@@ -82,7 +82,7 @@ class InteractiveQuery(object):
 
     @property
     def graph_url(self):
-        """The gremlin graph url can be used with any standard gremlin console, e.g., thinkerpop."""
+        """The gremlin graph url can be used with any standard gremlin console, e.g., tinkerpop."""
         return self._graph_url
 
     @property

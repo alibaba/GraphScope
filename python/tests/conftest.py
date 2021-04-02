@@ -36,7 +36,7 @@ from graphscope.framework.loader import Loader
 def graphscope_session():
     graphscope.set_option(show_log=True)
     graphscope.set_option(initializing_interactive_engine=False)
-    sess = graphscope.session(run_on_local=True)
+    sess = graphscope.session(cluster_type="hosts")
     yield sess
     sess.close()
 
@@ -68,6 +68,26 @@ def modern_software():
 @pytest.fixture(scope="module")
 def twitter_v_0():
     return "{}/twitter_v_0".format(new_property_dir)
+
+
+@pytest.fixture(scope="module")
+def modern_graph():
+    return "{}/modern_graph".format(test_repo_dir)
+
+
+@pytest.fixture(scope="module")
+def ldbc_sample():
+    return "{}/ldbc_sample".format(test_repo_dir)
+
+
+@pytest.fixture(scope="module")
+def p2p_property():
+    return "{}/property".format(test_repo_dir)
+
+
+@pytest.fixture(scope="module")
+def ogbn_mag_small():
+    return "{}/ogbn_mag_small".format(test_repo_dir)
 
 
 @pytest.fixture(scope="module")

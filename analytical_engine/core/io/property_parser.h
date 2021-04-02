@@ -178,7 +178,7 @@ inline detail::Edge::SubLabel ParseSubLabel(const AttrMap& attrs) {
               sub_label.row_num, sub_label.column_num,
               attrs.at(rpc::LOADER).func().attr());
   // The param PROPERTIES is only required when protocol is numpy or pandas.
-  if (attrs.contains(rpc::PROPERTIES)) {
+  if (attrs.find(rpc::PROPERTIES) != attrs.end()) {
     ParseProperties(sub_label.properties, attrs.at(rpc::PROPERTIES));
   }
 
@@ -190,7 +190,7 @@ inline std::shared_ptr<detail::Vertex> ParseVertex(const AttrMap& attrs) {
   vertex->label = attrs.at(rpc::LABEL).s();
   vertex->vid = attrs.at(rpc::VID).s();
 
-  if (attrs.contains(rpc::PROPERTIES)) {
+  if (attrs.find(rpc::PROPERTIES) != attrs.end()) {
     ParseProperties(vertex->properties, attrs.at(rpc::PROPERTIES));
   }
   ParseLoader(vertex->protocol, vertex->values, vertex->data, vertex->row_num,

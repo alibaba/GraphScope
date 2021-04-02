@@ -34,7 +34,7 @@ def graphscope_session():
     graphscope.set_option(show_log=True)
     graphscope.set_option(initializing_interactive_engine=False)
 
-    sess = graphscope.session(run_on_local=True, num_workers=1)
+    sess = graphscope.session(cluster_type="hosts", num_workers=1)
     sess.as_default()
     yield sess
     sess.close()
@@ -334,14 +334,14 @@ class TestGraphProjectTest(object):
         # default, e_prop='', v_prop=''
         sg1 = self.g.project_to_simple()
         assert (
-            sg1.schema.vdata_type == types_pb2.NULL
-            and sg1.schema.edata_type == types_pb2.NULL
+            sg1.schema.vdata_type == types_pb2.NULLVALUE
+            and sg1.schema.edata_type == types_pb2.NULLVALUE
         )
 
         # to_simple with e_prop
         sg2 = self.g.project_to_simple(e_prop="edata_float")
         assert (
-            sg2.schema.vdata_type == types_pb2.NULL
+            sg2.schema.vdata_type == types_pb2.NULLVALUE
             and sg2.schema.edata_type == types_pb2.DOUBLE
         )
 
@@ -349,7 +349,7 @@ class TestGraphProjectTest(object):
         sg3 = self.g.project_to_simple(v_prop="vdata_str")
         assert (
             sg3.schema.vdata_type == types_pb2.STRING
-            and sg3.schema.edata_type == types_pb2.NULL
+            and sg3.schema.edata_type == types_pb2.NULLVALUE
         )
 
         # to_simple with e_prop and v_prop
@@ -363,8 +363,8 @@ class TestGraphProjectTest(object):
         empty_g = self.NXGraph()
         sg5 = empty_g.project_to_simple()
         assert (
-            sg5.schema.vdata_type == types_pb2.NULL
-            and sg5.schema.edata_type == types_pb2.NULL
+            sg5.schema.vdata_type == types_pb2.NULLVALUE
+            and sg5.schema.edata_type == types_pb2.NULLVALUE
         )
         with pytest.raises(
             InvalidArgumentError, match="graph not contains the vertex property foo"

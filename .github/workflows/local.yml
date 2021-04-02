@@ -1,0 +1,184 @@
+name: GraphScope CI on Local 
+
+on:
+  # Trigger the workflow on push or pull request, but only for the main branch
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'gnn_engine/**'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'scripts/**'
+      - 'tutorials/**'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'gnn_engine/**'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'scripts/**'
+      - 'tutorials/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v2
+
+    - name: Install Dependencies for Linux
+      run: |
+        sudo apt update -y
+        sudo apt install -y ca-certificates ccache cmake curl etcd libbrotli-dev \
+          libbz2-dev libcurl4-openssl-dev libdouble-conversion-dev libevent-dev libgflags-dev \
+          libboost-all-dev libgoogle-glog-dev libgrpc-dev libgrpc++-dev libgtest-dev libgsasl7-dev \
+          libtinfo5 libkrb5-dev liblz4-dev libprotobuf-dev librdkafka-dev libre2-dev libsnappy-dev \
+          libssl-dev libunwind-dev libutf8proc-dev libxml2-dev libz-dev libzstd-dev lsb-release maven \
+          openjdk-8-jdk perl protobuf-compiler-grpc python3-pip uuid-dev wget zip zlib1g-dev
+
+        # install apache-arrow
+        wget https://apache.bintray.com/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb
+        sudo apt install -y -V ./apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb
+        sudo apt update
+        sudo apt install -y libarrow-dev=1.0.1-1 libarrow-python-dev=1.0.1-1
+
+        # install zookeeper
+        wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz
+        tar xf zookeeper-3.4.14.tar.gz -C /tmp/
+        cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
+        sudo ln -s /tmp/zookeeper-3.4.14 /usr/local/zookeeper
+
+        # rust
+        wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+        curl -sf -L https://static.rust-lang.org/rustup.sh | sudo sh -s -- -y --profile minimal --default-toolchain 1.48.0
+        source ~/.cargo/env
+
+        # install python packages for vineyard codegen
+        pip3 install -U pip --user
+        pip3 install libclang parsec setuptools wheel twine --user
+
+    - name: Install libgrape-lite
+      run: |
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+        git clone -b master --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git
+        cd libgrape-lite
+        mkdir build && cd build
+        cmake ..
+        make -j`nproc`
+        sudo make install
+
+    - name: Install libvineyard
+      run: |
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+        git clone -b v0.1.14 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
+        cd libvineyard
+        git submodule update --init
+        mkdir build && pushd build
+        cmake .. -DBUILD_VINEYARD_PYPI_PACKAGES=ON -DBUILD_SHARED_LIBS=ON -DBUILD_VINEYARD_IO_OSS=ON
+        make -j`nproc`
+        make vineyard_client_python -j`nproc`
+        sudo make install
+        popd
+        python3 setup.py bdist_wheel
+        pip3 install ./dist/*.whl
+
+    - name: Build GraphScope GLE
+      run: |
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+        pushd learning_engine/graph-learn
+        git submodule update --init third_party/pybind11
+        mkdir cmake-build && pushd cmake-build
+        cmake .. -DWITH_VINEYARD=ON -DTESTING=OFF
+        make -j`nproc`
+        sudo make install
+        popd
+
+    - name: Install GraphScope Python Client
+      run: |
+        export WITH_LEARNING_ENGINE=ON
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+        pushd python
+        pip3 install -U setuptools
+        pip3 install -r requirements.txt -r requirements-dev.txt
+        python3 setup.py bdist_wheel
+        pip3 install ./dist/*.whl
+        popd
+
+    - name: Install GraphScope Coordinator
+      run: |
+        pushd coordinator
+        pip3 install -r requirements.txt -r requirements-dev.txt
+        python3 setup.py bdist_wheel
+        pip3 install ./dist/*.whl
+        popd
+
+    - name: Build GraphScope GAE
+      run: |
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+        mkdir analytical_engine/build && pushd analytical_engine/build
+        cmake ..
+        make -j`nproc`
+        sudo make install
+        popd
+
+    - name: Build GraphScope GIE
+      run: |
+        export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+        export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
+        export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
+
+        # build frontend coordinator graph-manager
+        pushd interactive_engine
+        mvn clean package -DskipTests -Pjava-release --quiet
+        popd
+
+        # build executor
+        pushd interactive_engine/src/executor
+        cargo build --all --release
+        popd
+
+        # copy dependencies into GRAPHSCOPE_PREFIX
+        mkdir -p ${GRAPHSCOPE_PREFIX}/pid ${GRAPHSCOPE_PREFIX}/logs
+        # copy mvn package
+        cp ./interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz ${GRAPHSCOPE_PREFIX}/0.0.1-instance-manager-SNAPSHOT.tar.gz
+        cp ./interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz ${GRAPHSCOPE_PREFIX}/0.0.1-SNAPSHOT.tar.gz
+        tar -xf ${GRAPHSCOPE_PREFIX}/0.0.1-SNAPSHOT.tar.gz -C ${GRAPHSCOPE_PREFIX}/
+        tar -xf ${GRAPHSCOPE_PREFIX}/0.0.1-instance-manager-SNAPSHOT.tar.gz -C ${GRAPHSCOPE_PREFIX}/
+        # coordinator
+        mkdir -p ${GRAPHSCOPE_PREFIX}/coordinator
+        cp -r ./interactive_engine/src/coordinator/target ${GRAPHSCOPE_PREFIX}/coordinator/
+        # frontend
+        mkdir -p ${GRAPHSCOPE_PREFIX}/frontend/frontendservice
+        cp -r ./interactive_engine/src/frontend/frontendservice/target ${GRAPHSCOPE_PREFIX}/frontend/frontendservice/
+        # executor
+        mkdir -p ${GRAPHSCOPE_PREFIX}/conf
+        cp ./interactive_engine/src/executor/target/release/executor ${GRAPHSCOPE_PREFIX}/bin/executor
+        cp ./interactive_engine/src/executor/store/log4rs.yml ${GRAPHSCOPE_PREFIX}/conf/log4rs.yml
+
+    - name: Run Local Test
+      run: |
+        export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+        export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
+        export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+
+        pip3 install pytest tensorflow --user
+
+        export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR} 
+        cp ${GITHUB_WORKSPACE}/python/tests/test_run_locally.py /tmp/test_run_locally.py
+        python3 -m pytest -s -v /tmp/test_run_locally.py
+
+    - name: Setup tmate session debug
+      if: false
+      uses: mxschmitt/action-tmate@v2

@@ -216,7 +216,7 @@ class CoordinatorServiceServicer(
             message_pb2.ConnectSessionResponse,
             code=error_codes_pb2.OK,
             session_id=self._session_id,
-            session_type=self._launcher.type(),
+            cluster_type=self._launcher.type(),
             num_workers=self._launcher.num_workers,
             engine_config=json.dumps(self._analytical_engine_config),
             pod_name_list=self._pods_list,
@@ -470,26 +470,44 @@ class CoordinatorServiceServicer(
         object_id = request.object_id
         gremlin_server_cpu = request.gremlin_server_cpu
         gremlin_server_mem = request.gremlin_server_mem
-        manager_host = MAXGRAPH_MANAGER_HOST % (
-            self._gie_graph_manager_service_name,
-            self._k8s_namespace,
-        )
+
         with open(request.schema_path) as file:
             schema_json = file.read()
-        post_url = "%s/instance/create" % manager_host
+
         params = {
             "graphName": "%s" % object_id,
-            "schemaJson": schema_json,
-            "podNameList": ",".join(self._pods_list),
-            "containerName": ENGINE_CONTAINER,
-            "preemptive": str(self._launcher.preemptive),
-            "gremlinServerCpu": str(gremlin_server_cpu),
-            "gremlinServerMem": gremlin_server_mem,
         }
-        engine_params = [
-            "{}:{}".format(key, value) for key, value in request.engine_params.items()
-        ]
-        params["engineParams"] = "'{}'".format(";".join(engine_params))
+
+        if self._launcher_type == types_pb2.K8S:
+            manager_host = MAXGRAPH_MANAGER_HOST % (
+                self._gie_graph_manager_service_name,
+                self._k8s_namespace,
+            )
+            params.update(
+                {
+                    "schemaJson": schema_json,
+                    "podNameList": ",".join(self._pods_list),
+                    "containerName": ENGINE_CONTAINER,
+                    "preemptive": str(self._launcher.preemptive),
+                    "gremlinServerCpu": str(gremlin_server_cpu),
+                    "gremlinServerMem": gremlin_server_mem,
+                }
+            )
+            post_url = "%s/instance/create" % manager_host
+            engine_params = [
+                "{}:{}".format(key, value)
+                for key, value in request.engine_params.items()
+            ]
+            params["engineParams"] = "'{}'".format(";".join(engine_params))
+        else:
+            manager_host = self._launcher.graph_manager_endpoint
+            params.update(
+                {
+                    "vineyardIpcSocket": self._launcher.vineyard_socket,
+                    "schemaPath": request.schema_path,
+                }
+            )
+            post_url = "http://%s/instance/create_local" % manager_host
 
         post_data = urllib.parse.urlencode(params).encode("utf-8")
         create_res = urllib.request.urlopen(url=post_url, data=post_data)
@@ -528,18 +546,25 @@ class CoordinatorServiceServicer(
 
     def CloseInteractiveInstance(self, request, context):
         object_id = request.object_id
-        pod_name_list = ",".join(self._pods_list)
-        manager_host = MAXGRAPH_MANAGER_HOST % (
-            self._gie_graph_manager_service_name,
-            self._k8s_namespace,
-        )
-        close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
-            manager_host,
-            object_id,
-            pod_name_list,
-            ENGINE_CONTAINER,
-            str(self._launcher.waiting_for_delete()),
-        )
+        if self._launcher_type == types_pb2.K8S:
+            manager_host = MAXGRAPH_MANAGER_HOST % (
+                self._gie_graph_manager_service_name,
+                self._k8s_namespace,
+            )
+            pod_name_list = ",".join(self._pods_list)
+            close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
+                manager_host,
+                object_id,
+                pod_name_list,
+                ENGINE_CONTAINER,
+                str(self._launcher.waiting_for_delete()),
+            )
+        else:
+            manager_host = self._launcher.graph_manager_endpoint
+            close_url = "http://%s/instance/close_local?graphName=%ld" % (
+                manager_host,
+                object_id,
+            )
         logger.info("Coordinator close interactive instance with url[%s]" % close_url)
         try:
             close_res = urllib.request.urlopen(close_url).read()
@@ -749,12 +774,10 @@ def parse_sys_args():
         help="Socket path to connect to vineyard, random socket will be created if param missing.",
     )
     parser.add_argument(
-        "--enable_k8s",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=False,
-        help="Deploy graphscope components on kubernetes.",
+        "--cluster_type",
+        type=str,
+        default="k8s",
+        help="Deploy graphscope components on local or kubernetes cluster.",
     )
     parser.add_argument(
         "--k8s_namespace",
@@ -971,7 +994,7 @@ def launch_graphscope():
     args = parse_sys_args()
     logger.info("Launching with args %s", args)
 
-    if args.enable_k8s:
+    if args.cluster_type == "k8s":
         launcher = KubernetesClusterLauncher(
             namespace=args.k8s_namespace,
             service_type=args.k8s_service_type,
@@ -1010,14 +1033,17 @@ def launch_graphscope():
             waiting_for_delete=args.waiting_for_delete,
             delete_namespace=args.k8s_delete_namespace,
         )
-    else:
+    elif args.cluster_type == "hosts":
         launcher = LocalLauncher(
             num_workers=args.num_workers,
             hosts=args.hosts,
             vineyard_socket=args.vineyard_socket,
+            shared_mem=args.k8s_vineyard_shared_mem,
             log_level=args.log_level,
             timeout_seconds=args.timeout_seconds,
         )
+    else:
+        raise RuntimeError("Expect hosts or k8s of cluster_type parameter")
 
     coordinator_service_servicer = CoordinatorServiceServicer(
         launcher=launcher,
@@ -1038,7 +1064,7 @@ def launch_graphscope():
     # handle SIGTERM signal
     def terminate(signum, frame):
         global coordinator_service_servicer
-        del coordinator_service_servicer
+        coordinator_service_servicer._cleanup()
 
     signal.signal(signal.SIGTERM, terminate)
 
@@ -1046,7 +1072,7 @@ def launch_graphscope():
         # Grpc has handled SIGINT
         server.wait_for_termination()
     except KeyboardInterrupt:
-        del coordinator_service_servicer
+        coordinator_service_servicer._cleanup()
 
 
 if __name__ == "__main__":
