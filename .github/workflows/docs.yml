@@ -90,6 +90,8 @@ jobs:
         git config user.email github-actions@github.com
         git config user.name github-actions
 
+        tag=$(git describe --exact-match --tags HEAD 2>/dev/null || true)
+
         git fetch origin gh-pages --no-recurse-submodules
         git checkout gh-pages
 
@@ -101,8 +103,6 @@ jobs:
             rm -rf latest
             cp -R _build/latest/html ./latest
         else
-            tag=$(git describe --exact-match --tags HEAD)
-
             rm -rf latest
             cp -R _build/${tag}/html ./latest
 
