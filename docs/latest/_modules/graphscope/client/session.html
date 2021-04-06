@@ -285,7 +285,7 @@
 <span class="sd">        ...         k8s_gs_image=&quot;registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest&quot;,</span>
 <span class="sd">        ...         k8s_vineyard_cpu=0.1,</span>
 <span class="sd">        ...         k8s_vineyard_mem=&quot;256Mi&quot;,</span>
-<span class="sd">        ...         k8s_vineyard_shared_mem=&quot;4Gi&quot;,</span>
+<span class="sd">        ...         vineyard_shared_mem=&quot;4Gi&quot;,</span>
 <span class="sd">        ...         k8s_engine_cpu=0.1,</span>
 <span class="sd">        ...         k8s_engine_mem=&quot;256Mi&quot;)</span>
 
@@ -324,7 +324,7 @@
         <span class="n">k8s_vineyard_daemonset</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_vineyard_daemonset</span><span class="p">,</span>
         <span class="n">k8s_vineyard_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_vineyard_cpu</span><span class="p">,</span>
         <span class="n">k8s_vineyard_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_vineyard_mem</span><span class="p">,</span>
-        <span class="n">k8s_vineyard_shared_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_vineyard_shared_mem</span><span class="p">,</span>
+        <span class="n">vineyard_shared_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">vineyard_shared_mem</span><span class="p">,</span>
         <span class="n">k8s_engine_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_engine_cpu</span><span class="p">,</span>
         <span class="n">k8s_engine_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_engine_mem</span><span class="p">,</span>
         <span class="n">k8s_mars_worker_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mars_worker_cpu</span><span class="p">,</span>
@@ -388,7 +388,7 @@
 
 <span class="sd">            k8s_vineyard_mem (str, optional): Minimum number of memory request for vineyard container. Defaults to &#39;512Mi&#39;.</span>
 
-<span class="sd">            k8s_vineyard_shared_mem (str, optional): Init size of vineyard shared memory. Defaults to &#39;4Gi&#39;.</span>
+<span class="sd">            vineyard_shared_mem (str, optional): Init size of vineyard shared memory. Defaults to &#39;4Gi&#39;.</span>
 
 <span class="sd">            k8s_engine_cpu (float, optional): Minimum number of CPU cores request for engine container. Defaults to 0.5.</span>
 
@@ -509,6 +509,9 @@
 <span class="sd">                - show_log: Deprecated.</span>
 <span class="sd">                    Move this param as a global configuration.Set via `graphscope.set_option(show_log=True)`</span>
 
+<span class="sd">                - k8s_vineyard_shared_mem: Deprecated.</span>
+<span class="sd">                    Please use vineyard_shared_mem instead.</span>
+
 <span class="sd">        Raises:</span>
 <span class="sd">            TypeError: If the given argument combination is invalid and cannot be used to create</span>
 <span class="sd">                a GraphScope session.</span>
@@ -540,7 +543,7 @@
             <span class="s2">&quot;k8s_vineyard_daemonset&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_vineyard_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_vineyard_mem&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;k8s_vineyard_shared_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;vineyard_shared_mem&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_engine_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_engine_mem&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_mars_worker_cpu&quot;</span><span class="p">,</span>
@@ -591,6 +594,13 @@
                 <span class="s2">&quot;The `log_level` parameter has been deprecated and has no effect, &quot;</span>
                 <span class="s2">&quot;please use `graphscope.set_option(log_level=</span><span class="si">%r</span><span class="s2">)` instead.&quot;</span>
                 <span class="o">%</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;show_log&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;k8s_vineyard_shared_mem&quot;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The `k8s_vineyard_shared_mem` has benn deprecated and has no effect, &quot;</span>
+                <span class="s2">&quot;please use `vineyard_shared_mem` instead.&quot;</span>
+                <span class="o">%</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;k8s_vineyard_shared_mem&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
                 <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -708,7 +718,7 @@
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;namespace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;hosts&quot;</span>
-            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">])</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span>
 
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;cluster_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span><span class="p">)</span>
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;session_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span>
@@ -928,7 +938,7 @@
                 <span class="n">vineyard_daemonset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_daemonset&quot;</span><span class="p">],</span>
                 <span class="n">vineyard_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_cpu&quot;</span><span class="p">],</span>
                 <span class="n">vineyard_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_mem&quot;</span><span class="p">],</span>
-                <span class="n">vineyard_shared_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_shared_mem&quot;</span><span class="p">],</span>
+                <span class="n">vineyard_shared_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_shared_mem&quot;</span><span class="p">],</span>
                 <span class="n">etcd_num_pods</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_num_pods&quot;</span><span class="p">],</span>
                 <span class="n">etcd_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_cpu&quot;</span><span class="p">],</span>
                 <span class="n">etcd_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_mem&quot;</span><span class="p">],</span>
@@ -965,6 +975,7 @@
                 <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">],</span>
                 <span class="n">vineyard_socket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">],</span>
                 <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;timeout_seconds&quot;</span><span class="p">],</span>
+                <span class="n">vineyard_shared_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_shared_mem&quot;</span><span class="p">],</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Session initialize failed.&quot;</span><span class="p">)</span>
@@ -1292,6 +1303,7 @@
 <span class="sd">        - num_workers</span>
 <span class="sd">        - log_level</span>
 <span class="sd">        - show_log</span>
+<span class="sd">        - vineyard_shared_mem</span>
 <span class="sd">        - k8s_namespace</span>
 <span class="sd">        - k8s_service_type</span>
 <span class="sd">        - k8s_gs_image</span>
@@ -1305,7 +1317,6 @@
 <span class="sd">        - k8s_vineyard_daemonset</span>
 <span class="sd">        - k8s_vineyard_cpu</span>
 <span class="sd">        - k8s_vineyard_mem</span>
-<span class="sd">        - k8s_vineyard_shared_mem</span>
 <span class="sd">        - k8s_engine_cpu</span>
 <span class="sd">        - k8s_engine_mem</span>
 <span class="sd">        - k8s_mars_worker_cpu</span>
@@ -1345,6 +1356,7 @@
 <span class="sd">        - num_workers</span>
 <span class="sd">        - log_level</span>
 <span class="sd">        - show_log</span>
+<span class="sd">        - vineyard_shared_mem</span>
 <span class="sd">        - k8s_namespace</span>
 <span class="sd">        - k8s_service_type</span>
 <span class="sd">        - k8s_gs_image</span>
@@ -1358,7 +1370,6 @@
 <span class="sd">        - k8s_vineyard_daemonset</span>
 <span class="sd">        - k8s_vineyard_cpu</span>
 <span class="sd">        - k8s_vineyard_mem</span>
-<span class="sd">        - k8s_vineyard_shared_mem</span>
 <span class="sd">        - k8s_engine_cpu</span>
 <span class="sd">        - k8s_engine_mem</span>
 <span class="sd">        - k8s_mars_worker_cpu</span>

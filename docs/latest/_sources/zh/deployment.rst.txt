@@ -32,8 +32,8 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 
 .. code:: bash
 
-    $ helm repo add graphscope https://dl.bintray.com/graphscope/charts/
-    $ helm update
+    $ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
+    $ helm repo update
 
 安装
 

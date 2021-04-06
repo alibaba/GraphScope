@@ -357,7 +357,7 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The graph is not loaded&quot;</span><span class="p">)</span>
         <span class="c1"># Empty graph</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending_op</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Empty graph.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pending_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_op</span><span class="p">({},</span> <span class="p">{},</span> <span class="kc">False</span><span class="p">)</span>
         <span class="c1"># Try to load</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending_op</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Create a graph from scratch.</span>
@@ -497,6 +497,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_pending_op</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">return</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending_op</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pending_op</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span>
         <span class="c1"># close interactive instances first</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="p">(</span>
@@ -597,6 +602,9 @@
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">)</span>
         <span class="n">graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="c1"># We trigger the load manually here to let the error raises in</span>
+        <span class="c1"># this specific method (if any)</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">graph</span></div>
 
 <div class="viewcode-block" id="Graph.to_numpy"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.to_numpy">[docs]</a>    <span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -826,26 +834,7 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">(</span><span class="n">graph_id</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">_construct_graph</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">v_labels</span><span class="p">,</span> <span class="n">e_labels</span><span class="p">,</span> <span class="n">e_relations</span><span class="p">,</span> <span class="n">mutation_func</span><span class="o">=</span><span class="kc">None</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Construct graph.</span>
-<span class="sd">           1. Construct a graph from scratch.</span>
-<span class="sd">              If the vertices and edges is empty, return a empty graph.</span>
-<span class="sd">           2. Construct a graph from existed builded graph.</span>
-<span class="sd">              If the vertices and edges is empty, return a copied graph.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            vertices ([type]): [description]</span>
-<span class="sd">            edges ([type]): [description]</span>
-<span class="sd">            v_labels ([type]): [description]</span>
-<span class="sd">            e_labels ([type]): [description]</span>
-<span class="sd">            e_relations ([type]): [description]</span>
-<span class="sd">            mutation_func ([type], optional): [description]. Defaults to None.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            [type]: [description]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_construct_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">is_from_existed_graph</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">graph_utils</span><span class="o">.</span><span class="n">assemble_op_config</span><span class="p">(</span>
             <span class="n">vertices</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span>
             <span class="n">edges</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span>
@@ -853,10 +842,36 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_from_existed_graph</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">add_labels_to_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">config</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">op</span>
 
+    <span class="k">def</span> <span class="nf">_construct_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">v_labels</span><span class="p">,</span> <span class="n">e_labels</span><span class="p">,</span> <span class="n">e_relations</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Construct graph.</span>
+<span class="sd">           1. Construct a graph from scratch.</span>
+<span class="sd">              If the vertices and edges is empty, return a empty graph.</span>
+<span class="sd">           2. Construct a graph from existed builded graph.</span>
+<span class="sd">              If the vertices and edges is empty, return a copied graph.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            vertices (dict[str, VertexLabel]): VertexLabels</span>
+<span class="sd">            edges (dict[str, EdgeLabel]): EdgeLabels</span>
+<span class="sd">            v_labels (list[str]): Names of vertex labels</span>
+<span class="sd">            e_labels (list[str]): Names of edge labels</span>
+<span class="sd">            e_relations (list[list[str]]): Relationships of edges</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Graph: Constructed new graph. not yet evaluated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">is_from_existed_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="c1"># edge case.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">vertices</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">edges</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">mutation_func</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_from_existed_graph</span><span class="p">:</span>
                 <span class="c1"># Rely on `self._key`</span>
                 <span class="k">return</span> <span class="n">Graph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -867,12 +882,8 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span><span class="p">,</span>
                 <span class="p">)</span>
-        <span class="k">if</span> <span class="n">mutation_func</span><span class="p">:</span>
-            <span class="n">op</span> <span class="o">=</span> <span class="n">mutation_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">config</span>
-            <span class="p">)</span>
+
+        <span class="n">op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_op</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">is_from_existed_graph</span><span class="p">)</span>
 
         <span class="n">graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span>
@@ -883,16 +894,12 @@
         <span class="n">graph</span><span class="o">.</span><span class="n">_e_labels</span> <span class="o">=</span> <span class="n">e_labels</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_e_relationships</span> <span class="o">=</span> <span class="n">e_relations</span>
         <span class="c1"># propage info about whether is a loaded graph.</span>
-        <span class="c1"># graph._key = self._key</span>
-        <span class="k">if</span> <span class="n">mutation_func</span><span class="p">:</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
+        <span class="k">if</span> <span class="n">is_from_existed_graph</span><span class="p">:</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_graph</span> <span class="ow">or</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">graph</span>
 
     <span class="k">def</span> <span class="nf">add_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vid_field</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="n">is_from_existed_graph</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_vertices</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span>
-        <span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_edges</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_e_labels</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Label </span><span class="si">{label}</span><span class="s2"> already existed in graph.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_e_labels</span><span class="p">:</span>
@@ -908,19 +915,12 @@
         <span class="n">v_labels</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">)</span>
         <span class="n">v_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
 
-        <span class="c1"># Load after validity check and before create add_vertices op.</span>
-        <span class="c1"># TODO(zsy): Add ability to add vertices and edges to existed graph simultaneously.</span>
-        <span class="k">if</span> <span class="n">is_from_existed_graph</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_edges</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
-
-        <span class="n">func</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">add_vertices</span> <span class="k">if</span> <span class="n">is_from_existed_graph</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_graph</span><span class="p">(</span>
             <span class="n">unsealed_vertices</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_edges</span><span class="p">,</span>
             <span class="n">v_labels</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_e_labels</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_e_relationships</span><span class="p">,</span>
-            <span class="n">func</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="Graph.add_edges"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.add_edges">[docs]</a>    <span class="k">def</span> <span class="nf">add_edges</span><span class="p">(</span>
@@ -951,56 +951,51 @@
 <span class="sd">            src_label and dst_label must be specified and existed in current graph.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            edges ([type]): [description]</span>
-<span class="sd">            label (str, optional): [description]. Defaults to &quot;_&quot;.</span>
-<span class="sd">            properties ([type], optional): [description]. Defaults to None.</span>
-<span class="sd">            src_label ([type], optional): [description]. Defaults to None.</span>
-<span class="sd">            dst_label ([type], optional): [description]. Defaults to None.</span>
-<span class="sd">            src_field (int, optional): [description]. Defaults to 0.</span>
-<span class="sd">            dst_field (int, optional): [description]. Defaults to 1.</span>
+<span class="sd">            edges (Union[str, Loader]): Edge data source.</span>
+<span class="sd">            label (str, optional): Edge label name. Defaults to &quot;_&quot;.</span>
+<span class="sd">            properties (list[str], optional): List of column names loaded as properties. Defaults to None.</span>
+<span class="sd">            src_label (str, optional): Source vertex label. Defaults to None.</span>
+<span class="sd">            dst_label (str, optional): Destination vertex label. Defaults to None.</span>
+<span class="sd">            src_field (int, optional): Column index or name used as src field. Defaults to 0.</span>
+<span class="sd">            dst_field (int, optional): Column index or name used as dst field. Defaults to 1.</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            RuntimeError: [description]</span>
+<span class="sd">            ValueError: If the given value is invalid or conflict with current graph.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Graph: [description]</span>
+<span class="sd">            Graph: A new graph with edge added, not yet evaluated.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">is_from_existed_graph</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_vertices</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span>
-        <span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_edges</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_e_labels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">src_label</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dst_label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">check_argument</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;Ambiguous vertex label, please specify the src_label and dst_label.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">src_label</span> <span class="o">=</span> <span class="n">dst_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">src_label</span> <span class="o">=</span> <span class="n">dst_label</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span>
 
-        <span class="k">if</span> <span class="n">is_from_existed_graph</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_e_labels</span> <span class="ow">and</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_edges</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot add new relation to existed graph.&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">src_label</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">dst_label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;src label and dst label cannot be None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">src_label</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">dst_label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;src and dst label must be both specified or either unspecified.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">src_label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span> <span class="ow">or</span> <span class="n">dst_label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;src label or dst_label not existed in graph.&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">src_label</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dst_label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">check_argument</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;ambiguous vertex label&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="n">src_label</span> <span class="o">=</span> <span class="n">dst_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">src_label</span> <span class="o">=</span> <span class="n">dst_label</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span>
-            <span class="k">elif</span> <span class="n">src_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dst_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="p">(</span>
-                        <span class="n">src_label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span>
-                        <span class="ow">or</span> <span class="n">dst_label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span>
-                    <span class="p">):</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;src label or dst_label not existed in graph.&quot;</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># Infer all v_labels from edge tables.</span>
-                    <span class="k">pass</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;src and dst label must be both specified or either unspecified.&quot;</span>
-                <span class="p">)</span>
+            <span class="c1"># We can infer all vertices label in the graph constructing stage.</span>
+            <span class="k">pass</span>
 
         <span class="n">check_argument</span><span class="p">(</span>
             <span class="n">src_field</span> <span class="o">!=</span> <span class="n">dst_field</span><span class="p">,</span> <span class="s2">&quot;src and dst field cannot refer to the same field&quot;</span>
         <span class="p">)</span>
+
+        <span class="n">is_from_existed_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">is_from_existed_graph</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_e_labels</span> <span class="ow">and</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_edges</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot add new relation to existed graph.&quot;</span><span class="p">)</span>
 
         <span class="n">unsealed_edges</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_edges</span><span class="p">)</span>
         <span class="n">e_labels</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_e_labels</span><span class="p">)</span>
@@ -1020,19 +1015,8 @@
         <span class="p">)</span>
         <span class="n">unsealed_edges</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">cur_label</span>
 
-        <span class="c1"># Load after validity check and before create add_vertices op.</span>
-        <span class="c1"># TODO(zsy): Add ability to add vertices and edges to existed graph simultaneously.</span>
-        <span class="k">if</span> <span class="n">is_from_existed_graph</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_vertices</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
-
-        <span class="n">func</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">add_edges</span> <span class="k">if</span> <span class="n">is_from_existed_graph</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_graph</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_vertices</span><span class="p">,</span>
-            <span class="n">unsealed_edges</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">,</span>
-            <span class="n">e_labels</span><span class="p">,</span>
-            <span class="n">relations</span><span class="p">,</span>
-            <span class="n">func</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_vertices</span><span class="p">,</span> <span class="n">unsealed_edges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">,</span> <span class="n">e_labels</span><span class="p">,</span> <span class="n">relations</span>
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">project</span><span class="p">(</span>

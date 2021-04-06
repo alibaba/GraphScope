@@ -37,8 +37,8 @@ Get Repo Info
 
 .. code:: bash
 
-    $ helm repo add graphscope https://dl.bintray.com/graphscope/charts/
-    $ helm update
+    $ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
+    $ helm repo update
 
 Install Chart
 

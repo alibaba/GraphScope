@@ -263,64 +263,42 @@
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">add_vertices</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create an `ADD_VERTICES` op, add op to default dag.</span>
+<span class="k">def</span> <span class="nf">add_labels_to_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add new labels to existed graph.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`Graph`): a :class:`Graph` instance.</span>
-<span class="sd">        **kwargs: additional properties respect to different `graph_type`.</span>
+<span class="sd">        graph (:class:`Graph`): A graph instance.</span>
+<span class="sd">            May not be fully loaded. i.e. it&#39;s in a building</span>
+<span class="sd">            procedure.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        NotImplementedError: When encountered not supported graph type.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        An op to add vertices to a graph in c++ side with necessary configurations.</span>
+<span class="sd">        The operation.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        Since we don&#39;t want to trigger the loading, we must not use</span>
+<span class="sd">        any api that can trigger the loading process implicitly.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">graph_type_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span><span class="p">),</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">_key</span><span class="p">),</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">graph_type_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">_graph_type</span><span class="p">),</span>
     <span class="p">}</span>
 
-    <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
         <span class="n">attrs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;attrs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">attrs</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">attr_value_pb2</span><span class="o">.</span><span class="n">AttrValue</span><span class="p">):</span>
                     <span class="n">config</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Not support add vertices on graph type </span><span class="si">{graph.graph_type}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="n">f</span><span class="s2">&quot;Add vertices or edges is not supported yet on graph type </span><span class="si">{graph._graph_type}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">ADD_VERTICES</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
-
-
-<span class="k">def</span> <span class="nf">add_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create an `ADD_EDGES` op, add op to default dag.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`Graph`): a :class:`Graph` instance.</span>
-<span class="sd">        **kwargs: additional properties respect to different `graph_type`.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        An op to add edges to a graph in c++ side with necessary configurations.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">graph_type_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span><span class="p">),</span>
-    <span class="p">}</span>
-
-    <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
-        <span class="n">attrs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;attrs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">attrs</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">attr_value_pb2</span><span class="o">.</span><span class="n">AttrValue</span><span class="p">):</span>
-                    <span class="n">config</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Not support add edges on graph type </span><span class="si">{graph.graph_type}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">ADD_EDGES</span><span class="p">,</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">ADD_LABELS</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
