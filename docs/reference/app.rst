@@ -28,6 +28,7 @@ BuiltIn apps
 .. autofunction:: graphscope.katz_centrality
 .. autofunction:: graphscope.lpa
 .. autofunction:: graphscope.triangles
+.. autofunction:: graphscope.louvain
 
 App object
 ----------
