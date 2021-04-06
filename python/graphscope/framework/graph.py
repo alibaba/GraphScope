@@ -738,7 +738,7 @@ class Graph(object):
             loader=vertices,
             properties=properties,
             vid_field=vid_field,
-            sess=self._session,
+            session_id=self._session.session_id,
         )
         v_labels = deepcopy(self._v_labels)
         v_labels.append(label)
@@ -849,7 +849,7 @@ class Graph(object):
         else:
             e_labels.append(label)
             relations.append([(src_label, dst_label)])
-            cur_label = EdgeLabel(label, self._session)
+            cur_label = EdgeLabel(label, self._session.session_id)
         cur_label.add_sub_label(
             EdgeSubLabel(edges, properties, src_label, dst_label, src_field, dst_field)
         )
