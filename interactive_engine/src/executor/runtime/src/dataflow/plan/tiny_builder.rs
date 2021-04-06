@@ -242,8 +242,12 @@ impl<B: PegasusPlanBuilder> DataflowBuilder for TinyDataflowBuilder<B> {
         self.index.insert((id, 1), right.port());
     }
 
-    fn add_loop<F>(&mut self, loop_operator: LoopOperator, script: &str, context: &RuntimeContext<F>)
-        where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    fn add_loop<V, VI, E, EI, F>(&mut self, loop_operator: LoopOperator, script: &str, context: &RuntimeContext<V, VI, E, EI, F>)
+        where V: Vertex + 'static,
+              VI: Iterator<Item=V> + Send + 'static,
+              E: Edge + 'static,
+              EI: Iterator<Item=E> + Send + 'static,
+              F: Fn(&i64) -> u64 + 'static + Send + Sync {
         let id = loop_operator.get_id();
         let input_id = loop_operator.get_input_id();
         let input_stream_index = loop_operator.get_stream_index();
@@ -290,8 +294,12 @@ impl<B: PegasusPlanBuilder> DataflowBuilder for TinyDataflowBuilder<B> {
         self.index.insert((id, 0), stream.port());
     }
 
-    fn add_program<F>(&mut self, program: Box<ProgramOperator>, context: &RuntimeContext<F>) -> Result<(), String>
-        where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    fn add_program<V, VI, E, EI, F>(&mut self, program: Box<ProgramOperator>, context: &RuntimeContext<V, VI, E, EI, F>) -> Result<(), String>
+        where V: Vertex + 'static,
+              VI: Iterator<Item=V> + Send + 'static,
+              E: Edge + 'static,
+              EI: Iterator<Item=E> + Send + 'static,
+              F: Fn(&i64) -> u64 + 'static + Send + Sync {
         let err_msg = format!("Program is not supported in pegasus_runtime.");
         error!("{}", err_msg);
         Err(format!("Program is not supported in pegasus_runtime."))

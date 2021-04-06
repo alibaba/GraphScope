@@ -158,11 +158,19 @@ pub trait DataflowBuilder {
     fn add_branch(&mut self, branch: Box<BranchOperator>);
 
     // add loop operator
-    fn add_loop<F>(&mut self, loop_operator: LoopOperator, script: &str, context: &RuntimeContext<F>)
-        where F: Fn(&i64) -> u64 + 'static + Send + Sync;
+    fn add_loop<V, VI, E, EI, F>(&mut self, loop_operator: LoopOperator, script: &str, context: &RuntimeContext<V, VI, E, EI, F>)
+        where V: Vertex + 'static,
+              VI: Iterator<Item=V> + Send + 'static,
+              E: Edge + 'static,
+              EI: Iterator<Item=E> + Send + 'static,
+              F: Fn(&i64) -> u64 + 'static + Send + Sync;
 
-    fn add_program<F>(&mut self, program: Box<ProgramOperator>, context: &RuntimeContext<F>) -> Result<(), String>
-        where F: Fn(&i64) -> u64 + 'static + Send + Sync;
+    fn add_program<V, VI, E, EI, F>(&mut self, program: Box<ProgramOperator>, context: &RuntimeContext<V, VI, E, EI, F>) -> Result<(), String>
+        where V: Vertex + 'static,
+              VI: Iterator<Item=V> + Send + 'static,
+              E: Edge + 'static,
+              EI: Iterator<Item=E> + Send + 'static,
+              F: Fn(&i64) -> u64 + 'static + Send + Sync;
 }
 
 pub struct LoopOperator {
@@ -242,11 +250,15 @@ impl LoopOperator {
         self.loop_last_emit
     }
 
-    pub fn build_loop<F>(&self,
+    pub fn build_loop<V, VI, E, EI, F>(&self,
                            loop_builder: &mut impl DataflowBuilder,
                            script: &str,
-                           context: &RuntimeContext<F>)
-        where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+                           context: &RuntimeContext<V, VI, E, EI, F>)
+        where V: Vertex + 'static,
+              VI: Iterator<Item=V> + Send + 'static,
+              E: Edge + 'static,
+              EI: Iterator<Item=E> + Send + 'static,
+              F: Fn(&i64) -> u64 + 'static + Send + Sync {
         let _result = self.plan.build(loop_builder, context.get_query_id(), script, context);
     }
 }

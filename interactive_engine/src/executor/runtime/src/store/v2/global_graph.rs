@@ -19,8 +19,6 @@ use std::sync::Arc;
 use maxgraph_store::api::{GlobalGraphQuery, SnapshotId, PartitionVertexIds, LabelId, Condition, PropId, VertexId, PartitionId, PartitionLabeledVertexIds};
 use maxgraph_store::db::graph::vertex::VertexImpl;
 use maxgraph_store::db::graph::edge::EdgeImpl;
-use store::v2::global_vertex_iterator::GlobalVertexIteratorImpl;
-use store::v2::global_edge_iterator::GlobalEdgeIteratorImpl;
 use store::v2::edge_iterator::EdgeIterator;
 use store::{LocalStoreVertex, LocalStoreEdge};
 use maxgraph_store::api::graph_schema::Schema;
@@ -29,19 +27,23 @@ use std::vec::IntoIter;
 use maxgraph_store::api::prelude::Property;
 use std::iter::FromIterator;
 use itertools::Itertools;
+use maxgraph_store::api::graph_partition::GraphPartitionManager;
+use maxgraph_store::config::StoreConfig;
+use maxgraph_store::db::graph::store::GraphStore;
 
-pub struct GlobalGraph<V, E>
-    where V: 'static + Vertex,
-          E: 'static + Edge {
-    graph_partitions: HashMap<PartitionId, Arc<dyn GraphStorage<V=V, E=E>>>,
+pub struct GlobalGraph {
+    graph_partitions: HashMap<PartitionId, Arc<GraphStore>>,
 }
 
-unsafe impl<V, E> Send for GlobalGraph<V, E> where V: 'static + Vertex, E: 'static + Edge {}
-unsafe impl<V, E> Sync for GlobalGraph<V, E> where V: 'static + Vertex, E: 'static + Edge {}
+unsafe impl Send for GlobalGraph {}
+unsafe impl Sync for GlobalGraph {}
 
-impl<V, E> GlobalGraph<V, E>
-    where V: 'static + Vertex,
-          E: 'static + Edge {
+impl GlobalGraph {
+
+    pub fn new(store_config: &StoreConfig, partition_ids: &Vec<PartitionId>) -> Self {
+        // TODO
+        unimplemented!()
+    }
 
     fn convert_label_id(label_id: Option<LabelId>) -> Option<i32> {
         match label_id {
@@ -57,7 +59,7 @@ impl<V, E> GlobalGraph<V, E>
         }
     }
 
-    fn parse_vertex<VV: Vertex>(vertex_wrapper: VV, output_prop_ids: Option<&Vec<PropId>>)
+    fn parse_vertex<V: Vertex>(vertex_wrapper: V, output_prop_ids: Option<&Vec<PropId>>)
         -> LocalStoreVertex {
         let mut vertex = LocalStoreVertex::new(vertex_wrapper.get_id(), vertex_wrapper.get_label() as u32);
         let mut property_iter = vertex_wrapper.get_properties_iter();
@@ -151,7 +153,7 @@ impl<V, E> GlobalGraph<V, E>
     }
 
     fn get_edges_iter<'a>(&'a self, si: SnapshotId, partition_id: PartitionId, src_id: VertexId, label: Option<LabelId>,
-                          condition: Option<&Condition>, direction: EdgeDirection) -> GraphResult<Option<Box<dyn EdgeResultIter<E=E> + 'a>>> {
+                          condition: Option<&Condition>, direction: EdgeDirection) -> GraphResult<Option<Box<dyn EdgeResultIter<E=EdgeImpl> + 'a>>> {
         Ok(match self.graph_partitions.get(&partition_id) {
             None => {
                 None
@@ -172,7 +174,8 @@ impl<V, E> GlobalGraph<V, E>
         })
     }
 
-    fn get_vertex(&self, si: SnapshotId, partition_id: PartitionId, id: VertexId, label_id: Option<LabelId>) -> GraphResult<Option<VertexWrapper<V>>> {
+    fn get_vertex(&self, si: SnapshotId, partition_id: PartitionId, id: VertexId, label_id: Option<LabelId>)
+        -> GraphResult<Option<VertexWrapper<VertexImpl>>> {
         Ok(match self.graph_partitions.get(&partition_id) {
             None => {
                 None
@@ -184,7 +187,8 @@ impl<V, E> GlobalGraph<V, E>
     }
 
     fn get_edge_iter_vec<'a>(&'a self, si: SnapshotId, src_ids: Vec<PartitionVertexIds>, edge_labels: &Vec<LabelId>,
-                             condition: Option<&Condition>, direction: EdgeDirection) -> GraphResult<Vec<(i64, Vec<Box<dyn EdgeResultIter<E=E> + 'a>>)>> {
+                             condition: Option<&Condition>, direction: EdgeDirection)
+        -> GraphResult<Vec<(i64, Vec<Box<dyn EdgeResultIter<E=EdgeImpl> + 'a>>)>> {
         let mut res = vec![];
         for (partition_id, vertex_ids) in src_ids {
             for vertex_id in vertex_ids {
@@ -207,7 +211,7 @@ impl<V, E> GlobalGraph<V, E>
     }
 
     fn scan_vertex_iter<'a>(&'a self, si: SnapshotId, partition_id: PartitionId, label: Option<LabelId>, condition: Option<&Condition>)
-                            -> GraphResult<Option<Box<dyn VertexResultIter<V=V> + 'a>>> {
+                            -> GraphResult<Option<Box<dyn VertexResultIter<V=VertexImpl> + 'a>>> {
         Ok(match self.graph_partitions.get(&partition_id) {
             None => {
                 None
@@ -219,7 +223,7 @@ impl<V, E> GlobalGraph<V, E>
     }
 
     fn scan_vertex_iter_vec<'a>(&'a self, si: SnapshotId, labels: &Vec<LabelId>, partitions: &Vec<PartitionId>, condition: Option<&Condition>)
-                                -> GraphResult<Vec<Box<dyn VertexResultIter<V=V> + 'a>>> {
+                                -> GraphResult<Vec<Box<dyn VertexResultIter<V=VertexImpl> + 'a>>> {
         let mut res = vec![];
         let partition_ids = if partitions.is_empty() {
             self.graph_partitions.keys().map(|x| *x).collect_vec()
@@ -243,7 +247,7 @@ impl<V, E> GlobalGraph<V, E>
     }
 
     fn scan_edge_iter<'a>(&'a self, si: SnapshotId, partition_id: PartitionId, label: Option<LabelId>, condition: Option<&Condition>)
-                            -> GraphResult<Option<Box<dyn EdgeResultIter<E=E> + 'a>>> {
+                            -> GraphResult<Option<Box<dyn EdgeResultIter<E=EdgeImpl> + 'a>>> {
         Ok(match self.graph_partitions.get(&partition_id) {
             None => {
                 None
@@ -255,7 +259,7 @@ impl<V, E> GlobalGraph<V, E>
     }
 
     fn scan_edge_iter_vec<'a>(&'a self, si: SnapshotId, labels: &Vec<LabelId>, partitions: &Vec<PartitionId>, condition: Option<&Condition>)
-                                -> GraphResult<Vec<Box<dyn EdgeResultIter<E=E> + 'a>>> {
+                                -> GraphResult<Vec<Box<dyn EdgeResultIter<E=EdgeImpl> + 'a>>> {
         let mut res = vec![];
         let partition_ids = if partitions.is_empty() {
             self.graph_partitions.keys().map(|x| *x).collect_vec()
@@ -287,9 +291,7 @@ impl<V, E> GlobalGraph<V, E>
     }
 }
 
-impl<V, E> GlobalGraphQuery for GlobalGraph<V, E>
-    where V: 'static + Vertex,
-          E: 'static + Edge {
+impl GlobalGraphQuery for GlobalGraph {
     type V = LocalStoreVertex;
     type E = LocalStoreEdge;
     type VI = IntoIter<LocalStoreVertex>;
@@ -460,4 +462,33 @@ impl<V, E> GlobalGraphQuery for GlobalGraph<V, E>
     fn get_schema(&self, si: i64) -> Option<Arc<dyn Schema>> {
         unimplemented!()
     }
+}
+
+impl GraphPartitionManager for GlobalGraph {
+    fn get_partition_id(&self, vid: i64) -> i32 {
+        let partition_count = self.graph_partitions.len();
+        floor_mod(vid, partition_count as i64) as i32
+    }
+
+    fn get_process_partition_list(&self) -> Vec<u32> {
+        self.graph_partitions.keys().into_iter().map(|x|*x).collect::<Vec<u32>>()
+    }
+
+    fn get_vertex_id_by_primary_key(&self, label_id: u32, key: &String) -> Option<(u32, i64)> {
+        // TODO check
+        None
+    }
+}
+
+fn floor_div(x: i64, y: i64) -> i64 {
+    let mut r = x / y;
+// if the signs are different and modulo not zero, round down
+    if (x ^ y) < 0 && (r * y != x) {
+        r = r - 1;
+    }
+    r
+}
+
+fn floor_mod(x: i64, y: i64) -> i64 {
+    x - floor_div(x, y) * y
 }

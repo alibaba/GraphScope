@@ -20,10 +20,14 @@ use dataflow::manager::context::RuntimeContext;
 use dataflow::operator::binarystep::join::*;
 use dataflow::operator::shuffle::{StreamShuffleType, StreamShuffleKeyType};
 
-pub fn build_union_operator<F>(
+pub fn build_union_operator<V, VI, E, EI, F>(
     operator: &query_flow::BinaryOperator,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<BinaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<BinaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let left_forward = StreamShuffleType::<F>::forward();
     let right_forward = StreamShuffleType::forward();
     return Some(Box::new(UnionOperator::new(operator.get_base(),
@@ -35,10 +39,14 @@ pub fn build_union_operator<F>(
                                             right_forward)));
 }
 
-pub fn build_direct_filter_operator<F>(
+pub fn build_direct_filter_operator<V, VI, E, EI, F>(
     operator: &query_flow::BinaryOperator,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<BinaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<BinaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let left_exchange = StreamShuffleKeyType::exchange(
         context.unwrap().get_route().clone(),
         0);
@@ -54,10 +62,14 @@ pub fn build_direct_filter_operator<F>(
                                                    right_exchange)));
 }
 
-pub fn build_direct_filter_negate_operator<F>(
+pub fn build_direct_filter_negate_operator<V, VI, E, EI, F>(
     operator: &query_flow::BinaryOperator,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<BinaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<BinaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let left_exchange = StreamShuffleKeyType::exchange(
         context.unwrap().get_route().clone(),
         0);
@@ -73,10 +85,14 @@ pub fn build_direct_filter_negate_operator<F>(
                                                          right_exchange)));
 }
 
-pub fn build_join_store_filter_operator<F>(
+pub fn build_join_store_filter_operator<V, VI, E, EI, F>(
     operator: &query_flow::BinaryOperator,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<BinaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<BinaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
 
     let left_forward = StreamShuffleType::<F>::forward();
     let right_broadcast = StreamShuffleType::broadcast();
@@ -89,10 +105,14 @@ pub fn build_join_store_filter_operator<F>(
                                                       right_broadcast)));
 }
 
-pub fn build_right_zero_join<F>(
+pub fn build_right_zero_join<V, VI, E, EI, F>(
     operator: &query_flow::BinaryOperator,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<BinaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<BinaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
 
     let left_exchange = StreamShuffleKeyType::exchange(context.unwrap().get_route().clone(), 0);
     let right_forward  = StreamShuffleType::forward();
@@ -105,10 +125,14 @@ pub fn build_right_zero_join<F>(
                                                     right_forward)));
 }
 
-pub fn build_join_label_operator<F>(
+pub fn build_join_label_operator<V, VI, E, EI, F>(
     operator: &query_flow::BinaryOperator,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<BinaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<BinaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let left_exchange = StreamShuffleKeyType::exchange(context.unwrap().get_route().clone(), 0);
     let right_forward: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(JoinLabelOperator::new(operator.get_base(),
@@ -121,10 +145,14 @@ pub fn build_join_label_operator<F>(
                                                 false)));
 }
 
-pub fn build_join_count_label_operator<F>(
+pub fn build_join_count_label_operator<V, VI, E, EI, F>(
     operator: &query_flow::BinaryOperator,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<BinaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<BinaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let left_exchange = StreamShuffleKeyType::exchange(context.unwrap().get_route().clone(), 0);
     let right_forward: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(JoinLabelOperator::new(operator.get_base(),
@@ -137,10 +165,14 @@ pub fn build_join_count_label_operator<F>(
                                                 true)));
 }
 
-pub fn build_join_right_value_key_operator<F>(
+pub fn build_join_right_value_key_operator<V, VI, E, EI, F>(
     operator: &query_flow::BinaryOperator,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<BinaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<BinaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let left_exchange = StreamShuffleKeyType::exchange(context.unwrap().get_route().clone(), 0);
     let right_forward: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(JoinRightValueKeyOperator::new(operator.get_base(),
@@ -152,10 +184,14 @@ pub fn build_join_right_value_key_operator<F>(
                                                         right_forward)));
 }
 
-pub fn build_dfs_finish_join_operator<F>(
+pub fn build_dfs_finish_join_operator<V, VI, E, EI, F>(
     operator: &query_flow::BinaryOperator,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<BinaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<BinaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let left_forward: StreamShuffleType<F> = StreamShuffleType::forward();
     let right_broadcast: StreamShuffleType<F> = StreamShuffleType::broadcast();
     return Some(Box::new(DfsFinishJoinOperator::new(operator.get_base(),
