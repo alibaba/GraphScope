@@ -58,6 +58,7 @@ class VertexLabel(object):
         loader: Any,
         properties: Sequence = None,
         vid_field: Union[str, int] = 0,
+        session_id=None,
     ):
         self.label = label
         if isinstance(loader, Loader):
@@ -68,7 +69,7 @@ class VertexLabel(object):
         self.raw_properties = properties
         self.properties = []
         self.vid_field = vid_field
-
+        self._session_id = session_id
         self._finished = False
 
     def finish(self, id_type: str = "int64_t"):
@@ -84,7 +85,7 @@ class VertexLabel(object):
         self.loader.select_columns(
             self.properties, include_all=bool(self.raw_properties is None)
         )
-        self.loader.finish()
+        self.loader.finish(self._session_id)
         self._finished = True
 
     def __str__(self) -> str:
@@ -153,7 +154,7 @@ class EdgeSubLabel(object):
                 "Source vid and destination vid must have same formats, both use name or both use index"
             )
 
-    def finish(self, id_type: str = "int64_t"):
+    def finish(self, id_type: str = "int64_t", session_id=None):
         if self._finished:
             return
         self.add_property(str(self.src_field), id_type)
@@ -165,7 +166,7 @@ class EdgeSubLabel(object):
         self.loader.select_columns(
             self.properties, include_all=bool(self.raw_properties is None)
         )
-        self.loader.finish()
+        self.loader.finish(session_id)
         self._finished = True
 
     def __str__(self) -> str:
@@ -221,9 +222,12 @@ class EdgeLabel(object):
          src_label3 -> edge_label -> dst_label3
     """
 
-    def __init__(self, label: str):
+    def __init__(self, label: str, session_id=None):
         self.label = label
         self.sub_labels = {}
+
+        self._session_id = session_id
+
         self._finished = False
 
     def __str__(self):
@@ -251,7 +255,7 @@ class EdgeLabel(object):
         if self._finished:
             return
         for sub_label in self.sub_labels.values():
-            sub_label.finish(id_type)
+            sub_label.finish(id_type, self._session_id)
         self._finished = True
 
 
