@@ -337,6 +337,7 @@ class CoordinatorServiceServicer(
         if response.status.code == error_codes_pb2.OK:
             if op.op in (
                 types_pb2.CREATE_GRAPH,
+                types_pb2.PROJECT_GRAPH,
                 types_pb2.ADD_VERTICES,
                 types_pb2.ADD_EDGES,
                 types_pb2.ADD_COLUMN,

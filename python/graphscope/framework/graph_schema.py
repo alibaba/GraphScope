@@ -245,6 +245,9 @@ class GraphSchema:
         return [entry.relations for entry in self._valid_edge_entries()]
 
     def get_relationships(self, label):
+        label_id = self._e_label_index[label]
+        if not self._valid_edges[label_id]:
+            raise ValueError(f"{label} not exists.")
         return self._edge_entries[self._e_label_index[label]].relations
 
     @property
