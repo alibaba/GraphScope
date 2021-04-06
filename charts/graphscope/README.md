@@ -8,7 +8,7 @@ GraphScope charts
 ## Get Repo Info
 
 ```shell
-$ helm repo add graphscope https://dl.bintray.com/graphscope/charts/
+$ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
 $ helm repo update
 ```
 See [*helm repo*](https://helm.sh/docs/helm/helm_repo/) for command documentation.
