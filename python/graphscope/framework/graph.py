@@ -734,7 +734,11 @@ class Graph(object):
             raise ValueError("Cannot manually add vertices after inferred vertices.")
         unsealed_vertices = deepcopy(self._unsealed_vertices)
         unsealed_vertices[label] = VertexLabel(
-            label=label, loader=vertices, properties=properties, vid_field=vid_field
+            label=label,
+            loader=vertices,
+            properties=properties,
+            vid_field=vid_field,
+            sess=self._session,
         )
         v_labels = deepcopy(self._v_labels)
         v_labels.append(label)
@@ -845,7 +849,7 @@ class Graph(object):
         else:
             e_labels.append(label)
             relations.append([(src_label, dst_label)])
-            cur_label = EdgeLabel(label)
+            cur_label = EdgeLabel(label, self._session)
         cur_label.add_sub_label(
             EdgeSubLabel(edges, properties, src_label, dst_label, src_field, dst_field)
         )

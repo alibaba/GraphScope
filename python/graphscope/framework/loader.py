@@ -278,17 +278,19 @@ class Loader(object):
         self.source = source
         self.preprocessor = func
 
-    def finish(self):
-        from graphscope.client.session import get_default_session
-
+    def finish(self, sess=None):
         if self.finished:
             return
         if self.preprocessor is not None:
+            if sess is None:
+                from graphscope.client.session import get_default_session
+
+                sess = get_default_session()
             self.protocol, self.source = self.preprocessor(
                 self.source,
                 self.storage_options,
                 self.options.to_dict(),
-                get_default_session(),
+                sess,
             )
             logger.debug(
                 f"processed protocol = {self.protocol}, source = {self.source}"
