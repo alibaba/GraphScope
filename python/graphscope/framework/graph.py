@@ -432,6 +432,8 @@ class Graph(object):
         op = dag_utils.add_column(self, results, selector)
         graph = Graph(self._session, op)
         graph._base_graph = self
+        # We trigger the load manually here to let the error raises in
+        # this specific method (if any)
         graph._ensure_loaded()
         return graph
 
