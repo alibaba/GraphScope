@@ -26,6 +26,7 @@ JAVA_OPT="-server -verbose:gc -Xloggc:./gc.log -XX:+PrintGCDetails -XX:+PrintGCD
 
 REPLACE_SCHEMA_PATH=`echo ${schema_path//\//\\\/}`
 
+cp $WORKSPACE/config/frontend.local.vineyard.properties.tpl $WORKSPACE/config/frontend.local.vineyard.properties
 inner_config=$WORKSPACE/config/frontend.local.vineyard.properties
 sed -i "s/VINEYARD_SCHEMA_PATH/${REPLACE_SCHEMA_PATH}/g" $inner_config
 
