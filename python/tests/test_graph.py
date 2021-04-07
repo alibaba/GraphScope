@@ -472,7 +472,6 @@ def test_project_subgraph(arrow_modern_graph):
     sub_graph = graph.project(vertices={"person": None}, edges={})
     assert sub_graph.schema.vertex_labels == ["person"]
     assert sub_graph.schema.edge_labels == []
-    # FIXME: wcc can run on the sub_graph
     with pytest.raises(
         InvalidArgumentError,
         match="Check failed: Cannot project to simple, edge label number is not one.",
@@ -536,11 +535,11 @@ def test_error_on_project(arrow_property_graph, ldbc_graph):
     )
 
     # project with not existed vertex
-    with pytest.raises(ValueError, match="Vertex comment not exist in graph"):
+    with pytest.raises(ValueError, match="comment not exists"):
         sub_graph.project(vertices={"comment": None}, edges={"knows": None})
 
     # project with not existed edge
-    with pytest.raises(ValueError, match="Edge isSubclassOf not exist in graph"):
+    with pytest.raises(ValueError, match="isSubclassOf not exists"):
         sub_graph.project(vertices={"tagclass": None}, edges={"isSubclassOf": None})
 
     # more than one property on vertex can not project to simple
@@ -586,14 +585,12 @@ def test_add_column(ldbc_graph, arrow_modern_graph):
     assert g3.schema.get_vertex_properties("person")[8].id == 8
     assert g3.schema.get_vertex_properties("person")[8].name == "cc"
     # the ret can not add to sub_graph_3
-    # FIXME: should raise error in add_column.
-    g4 = sub_graph_3.add_column(ret, selector={"cc": "r"})
     with pytest.raises(AnalyticalEngineInternalError):
+        g4 = sub_graph_3.add_column(ret, selector={"cc": "r"})
         print(g4.schema)
     # the ret can not add to sub_graph_4
-    # FIXME: should raise error in add_column.
-    g5 = sub_graph_4.add_column(ret, selector={"cc": "r"})
     with pytest.raises(AnalyticalEngineInternalError):
+        g5 = sub_graph_4.add_column(ret, selector={"cc": "r"})
         print(g4.schema)
 
     # sub_graph_5 = sub_graph_3.add_vertices(
