@@ -22,8 +22,8 @@ curl -XPOST $url -d 'modern_graph = session.load_from(
     "software": (Loader("/testingdata/modern_graph/software.csv", delimiter="|", header_row=True), ["name", "lang"], "id"),
     },
     edges={
-    "knows": [Loader("/testingdata/modern_graph/knows.csv", delimiter="|"), [], (0, "person"), (1, "person")],
-    "created": [Loader("/testingdata/modern_graph/created.csv", delimiter="|"), [], (0, "person"), (1, "software")],
+    "knows": [Loader("/testingdata/modern_graph/knows.csv", delimiter="|"), None, (0, "person"), (1, "person")],
+    "created": [Loader("/testingdata/modern_graph/created.csv", delimiter="|"), None, (0, "person"), (1, "software")],
     },
     generate_eid=False)
 ' >/dev/null

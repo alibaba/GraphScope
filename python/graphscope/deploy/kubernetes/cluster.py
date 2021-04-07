@@ -46,13 +46,14 @@ from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import try_to_read_namespace_from_context
 from graphscope.deploy.kubernetes.utils import wait_for_deployment_complete
+from graphscope.deploy.launcher import Launcher
 from graphscope.framework.errors import K8sError
 from graphscope.framework.utils import random_string
 
 logger = logging.getLogger("graphscope")
 
 
-class KubernetesCluster(object):
+class KubernetesClusterLauncher(Launcher):
     """Class for setting up GraphScope instance on kubernetes cluster.
 
     Args:
@@ -67,6 +68,9 @@ class KubernetesCluster(object):
 
         num_workers: int
             Number of workers to launch graphscope engine.
+
+        preemptive: bool, optional
+            Support resource preemption or resource guarantee.
 
         gs_image: str
             GraphScope engine image.
@@ -86,6 +90,9 @@ class KubernetesCluster(object):
         image_pull_secrets: list of str, optional
             A list of secret name used to pulling image. Defaults to None.
 
+        etcd_num_pods: int
+            The number of etcd pods.
+
         etcd_cpu: float
             Minimum number of CPU cores request for etcd pod.
 
@@ -104,6 +111,9 @@ class KubernetesCluster(object):
         gie_graph_manager_mem: str
             Minimum number of memory request for graph manager container.
 
+        vineyard_daemonset: str
+            The name of Helm deployment for vineyard DaemonSet.
+
         vineyard_cpu: float
             Minimum number of CPU cores request for vineyard container.
 
@@ -119,6 +129,21 @@ class KubernetesCluster(object):
         engine_mem: str
             Minimum number of memory request for engine container.
 
+        mars_worker_cpu: float:
+            Minimum number of CPU cores request for mars worker container.
+
+        mars_worker_mem: str:
+            Minimum number of memory request for mars worker container.
+
+        mars_scheduler_cpu: float:
+            Minimum number of CPU cores request for mars scheduler container.
+
+        mars_scheduler_mem: str:
+            Minimum number of memory request for mars scheduler container.
+
+        with_mars: bool
+            Launch graphscope with mars.
+
         coordinator_cpu: float
             Minimum number of CPU cores request for coordinator pod.
 
@@ -131,6 +156,9 @@ class KubernetesCluster(object):
 
         timeout_seconds: int
             Timeout when setting up graphscope instance on kubernetes cluster.
+
+        dangling_timeout_seconds: int
+            Kill GraphScope instance after seconds of client disconnect.
 
         waiting_for_delete: bool
             Waiting for service delete or not.
@@ -158,12 +186,14 @@ class KubernetesCluster(object):
         namespace=None,
         service_type=None,
         num_workers=None,
+        preemptive=None,
         gs_image=None,
         etcd_image=None,
         gie_graph_manager_image=None,
         zookeeper_image=None,
         image_pull_policy=None,
         image_pull_secrets=None,
+        vineyard_daemonset=None,
         vineyard_cpu=None,
         vineyard_mem=None,
         vineyard_shared_mem=None,
@@ -171,14 +201,21 @@ class KubernetesCluster(object):
         engine_mem=None,
         coordinator_cpu=None,
         coordinator_mem=None,
+        etcd_num_pods=None,
         etcd_cpu=None,
         etcd_mem=None,
         zookeeper_cpu=None,
         zookeeper_mem=None,
+        mars_worker_cpu=None,
+        mars_worker_mem=None,
+        mars_scheduler_cpu=None,
+        mars_scheduler_mem=None,
+        with_mars=None,
         gie_graph_manager_cpu=None,
         gie_graph_manager_mem=None,
         volumes=None,
         timeout_seconds=None,
+        dangling_timeout_seconds=None,
         waiting_for_delete=None,
         **kwargs
     ):
@@ -191,6 +228,7 @@ class KubernetesCluster(object):
         self._service_type = service_type
         self._gs_image = gs_image
         self._num_workers = num_workers
+        self._preemptive = preemptive
         self._etcd_image = etcd_image
         self._gie_graph_manager_image = gie_graph_manager_image
         self._zookeeper_image = zookeeper_image
@@ -202,6 +240,7 @@ class KubernetesCluster(object):
         elif not isinstance(self._image_pull_secrets, list):
             self._image_pull_secrets = [self._image_pull_secrets]
 
+        self._etcd_num_pods = etcd_num_pods
         self._etcd_cpu = etcd_cpu
         self._etcd_mem = etcd_mem
         self._zookeeper_cpu = zookeeper_cpu
@@ -209,11 +248,19 @@ class KubernetesCluster(object):
         self._gie_graph_manager_cpu = gie_graph_manager_cpu
         self._gie_graph_manager_mem = gie_graph_manager_mem
 
+        self._vineyard_daemonset = vineyard_daemonset
         self._vineyard_cpu = vineyard_cpu
         self._vineyard_mem = vineyard_mem
         self._vineyard_shared_mem = vineyard_shared_mem
         self._engine_cpu = engine_cpu
         self._engine_mem = engine_mem
+
+        self._mars_worker_cpu = mars_worker_cpu
+        self._mars_worker_mem = mars_worker_mem
+        self._mars_scheduler_cpu = mars_scheduler_cpu
+        self._mars_scheduler_mem = mars_scheduler_mem
+        self._with_mars = with_mars
+
         self._waiting_for_delete = waiting_for_delete
 
         self._instance_id = random_string(6)
@@ -238,6 +285,7 @@ class KubernetesCluster(object):
 
         self._closed = False
         self._timeout_seconds = timeout_seconds
+        self._dangling_timeout_seconds = dangling_timeout_seconds
 
         # pods watcher
         self._coordinator_pods_watcher = []
@@ -255,6 +303,9 @@ class KubernetesCluster(object):
             str: Kubernetes namespace.
         """
         return self._namespace
+
+    def type(self):
+        return "k8s"
 
     def _get_free_namespace(self):
         while True:
@@ -427,6 +478,7 @@ class KubernetesCluster(object):
             name=self._coordinator_container_name,
             port=self._random_coordinator_service_port,
             num_workers=self._num_workers,
+            preemptive=self._preemptive,
             instance_id=self._instance_id,
             log_level=gs_config.log_level,
             namespace=self._namespace,
@@ -441,19 +493,27 @@ class KubernetesCluster(object):
             coordinator_cpu=self._coordinator_cpu,
             coordinator_mem=self._coordinator_mem,
             coordinator_service_name=self._coordinator_service_name,
+            etcd_num_pods=self._etcd_num_pods,
             etcd_cpu=self._etcd_cpu,
             etcd_mem=self._etcd_mem,
             zookeeper_cpu=self._zookeeper_cpu,
             zookeeper_mem=self._zookeeper_mem,
             gie_graph_manager_cpu=self._gie_graph_manager_cpu,
             gie_graph_manager_mem=self._gie_graph_manager_mem,
+            vineyard_daemonset=self._vineyard_daemonset,
             vineyard_cpu=self._vineyard_cpu,
             vineyard_mem=self._vineyard_mem,
             vineyard_shared_mem=self._vineyard_shared_mem,
             engine_cpu=self._engine_cpu,
             engine_mem=self._engine_mem,
+            mars_worker_cpu=self._mars_worker_cpu,
+            mars_worker_mem=self._mars_worker_mem,
+            mars_scheduler_cpu=self._mars_scheduler_cpu,
+            mars_scheduler_mem=self._mars_scheduler_mem,
+            with_mars=self._with_mars,
             volumes=self._volumes,
             timeout_seconds=self._timeout_seconds,
+            dangling_timeout_seconds=self._dangling_timeout_seconds,
             waiting_for_delete=self._waiting_for_delete,
             delete_namespace=self._delete_namespace,
         )
@@ -547,7 +607,7 @@ class KubernetesCluster(object):
             time.sleep(1)
             self._waiting_for_services_ready()
             logger.info("Coordinator pod start successful, connecting to service...")
-            return self._get_coordinator_endpoint()
+            self._coordinator_endpoint = self._get_coordinator_endpoint()
         except Exception as e:
             time.sleep(1)
             self._dump_coordinator_failed_status()
@@ -603,8 +663,7 @@ class KubernetesCluster(object):
                                     and time.time() - start_time > self._timeout_seconds
                                 ):
                                     logger.info(
-                                        "Deleting namespace %s timeout"
-                                        % self._namespace
+                                        "Deleting namespace %s timeout", self._namespace
                                     )
                                     break
             self._closed = True

@@ -96,6 +96,12 @@ def list_str_to_attr(list_of_str):
     return attr
 
 
+def list_i_to_attr(list_i):
+    attr = attr_value_pb2.AttrValue()
+    attr.list.i[:] = list_i
+    return attr
+
+
 def graph_type_to_cpp_class(graph_type):
     if graph_type == types_pb2.IMMUTABLE_EDGECUT:
         return "grape::ImmutableEdgecutFragment"
@@ -244,7 +250,7 @@ def unify_type(t):
         elif t in ("str", "string", "std::string"):
             return types_pb2.STRING
         elif t in ("empty", "grape::emptytype"):
-            return types_pb2.NULL
+            return types_pb2.NULLVALUE
     elif isinstance(t, type):
         if t is int:
             return types_pb2.LONG
@@ -272,7 +278,7 @@ def data_type_to_cpp(t):
         return "double"
     elif t == types_pb2.STRING:
         return "std::string"
-    elif t is None or t == types_pb2.NULL:
+    elif t is None or t == types_pb2.NULLVALUE:
         return "grape::EmptyType"
     elif t == types_pb2.INVALID:
         return ""
@@ -324,30 +330,30 @@ def _transform_vertex_property_data_r(selector):
 
 
 def _transform_labeled_vertex_data_v(schema, label, prop):
-    label_id = schema.vertex_label_index(label)
+    label_id = schema.get_vertex_label_id(label)
     if prop == "id":
         return "label{}.{}".format(label_id, prop)
     else:
-        prop_id = schema.vertex_property_index(label_id, prop)
+        prop_id = schema.get_vertex_property_id(label, prop)
         return "label{}.property{}".format(label_id, prop_id)
 
 
 def _transform_labeled_vertex_data_e(schema, label, prop):
-    label_id = schema.edge_label_index(label)
+    label_id = schema.get_edge_label_id(label)
     if prop in ("src", "dst"):
         return "label{}.{}".format(label_id, prop)
     else:
-        prop_id = schema.vertex_property_index(label_id, prop)
+        prop_id = schema.get_vertex_property_id(label, prop)
         return "label{}.property{}".format(label_id, prop_id)
 
 
 def _transform_labeled_vertex_data_r(schema, label):
-    label_id = schema.vertex_label_index(label)
+    label_id = schema.get_vertex_label_id(label)
     return "label{}".format(label_id)
 
 
 def _transform_labeled_vertex_property_data_r(schema, label, prop):
-    label_id = schema.vertex_label_index(label)
+    label_id = schema.get_vertex_label_id(label)
     return "label{}.{}".format(label_id, prop)
 
 

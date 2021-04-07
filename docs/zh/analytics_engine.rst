@@ -25,7 +25,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
     result = lpa(g)
 
     # 其他一些算法可能只支持在简单图上进行计算，因此我们需要先通过顶点和边的类型来生成一个简单图。
-    simple_g = g.project_to_simple(v_label="users", e_label="follows")
+    simple_g = g.project(vertices={"users": []}, edges={"follows": []})
     result_pr = pagerank(simple_g)
 
 内置算法的完整列表如下所示。具体某个算法是否支持属性图也在其文档进行了描述。
@@ -78,7 +78,8 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 .. code:: python
 
-    simple_g = sub_graph.project_to_simple(vlabel="paper", elabel="cites")
+    simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
+
     ret = graphscope.kcore(simple_g, k=5)
 
     # 将结果作为新列添加到citation图中
@@ -280,7 +281,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
     import graphscope
 
     sess = graphscope.session()
-    g = sess.load_from("...")
+    g = sess.g()
 
     # 加载自己的算法
     my_app = SSSP_Pregel()
@@ -301,7 +302,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
     import graphscope
 
     sess = graphscope.session()
-    g = sess.load_from("...")
+    g = sess.g()
 
     # 从gar包中加载自己的算法
     my_app = load_app('SSSP_Pregel', 'file:///var/graphscope/udf/my_sssp_pregel.gar')

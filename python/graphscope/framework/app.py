@@ -38,6 +38,16 @@ from graphscope.proto import types_pb2
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
 
+@decorator
+def project_to_simple(func, *args, **kwargs):
+    graph = args[0]
+    if not hasattr(graph, "graph_type"):
+        raise InvalidArgumentError("Missing graph_type attribute in graph object.")
+    if graph.graph_type == types_pb2.ARROW_PROPERTY:
+        graph = graph._project_to_simple()
+    return func(graph, *args[1:], **kwargs)
+
+
 def not_compatible_for(*graph_types):
     """Decorator to mark builtin algorithms as not compatible with graph.
 
@@ -53,7 +63,7 @@ def not_compatible_for(*graph_types):
         KeyError: If parameter is not correctly.
 
     Notes:
-        Multiple types or use multile @not_compatible_for() lines
+        Multiple types or use multiple @not_compatible_for() lines
         are joined logically with "or".
 
     Examples:
@@ -259,6 +269,8 @@ class App(object):
         Raise:
             TypeError: The type of app_assets incorrect.
         """
+        if not graph.loaded():
+            raise RuntimeError("The graph is not loaded.")
         app_assets.is_compatible(graph)
 
         self._key = None

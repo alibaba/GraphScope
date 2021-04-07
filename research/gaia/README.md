@@ -1,10 +1,10 @@
 # Overview
 GAIA (GrAph Interactive Analytics) is a full-fledged system for large-scale interactive graph analytics in the distributed context. 
-GAIA is based on the Tinkerpop's Gremlin query language (https://tinkerpop.apache.org/). Given a Gremlin query, Gaia
+GAIA is based on Tinkerpop's Gremlin query language (https://tinkerpop.apache.org/). Given a Gremlin query, GAIA
 will compile it into a dataflow with the help of the powerful Scope abstraction, and then schedule the computation in
 a distributed runtime.
 
-GAIA has been deployed at [Alibaba Corporation](https://www.alibaba.com/) to support a wide range of businesses from
+GAIA has been deployed at [Alibaba Group](https://www.alibabagroup.com/) to support a wide range of businesses from
 e-commerce to cybersecurity. This repository contains three main components of its architecture: 
 * GAIA compiler: As a main technical contribution of GAIA, we propose a powerful abstraction 
   called *Scope* in order to hide the complex control flow (e.g. conditional and loop) and fine-grained dependency in
@@ -31,73 +31,253 @@ GAIA builds, runs, and has been tested on GNU/Linux (more specifically Centos 7)
 Even though GAIA may build on systems similar to Linux, we have not tested correctness or performance,
 so please beware.
 
-At the minimum, Galois depends on the following software:
+At the minimum, GAIA depends on the following software:
 * [Rust](https://www.rust-lang.org/) (>= 1.49): GAIA currently works on Rust 1.49, but we suppose that it also works
   for any later version.
 * Java (jdk 8): Due to a known issue of gRPC that uses an older version of java annotation apis, the project is 
   subject to jdk 8 for now.
-* Protobuf (3.0): The rust codegen is powered by [prost](https://github.com/danburkert/prost).
 * gRPC: gRPC is used for communication between Rust (engine) and Java (Gremlin server/client). The Rust
 implementation is powered by [tonic](https://github.com/hyperium/tonic)
+* Protobuf (3.0): The rust codegen is powered by [prost](https://github.com/danburkert/prost).
+* HDFS: Hadoop file system may be used to maintain the LDBC raw data. For supported Hadoop version, please refer to
+  LDBC [datagen](https://github.com/ldbc/ldbc_snb_datagen).
+* Python3: Further install the [toml](https://pypi.org/project/toml/) library for parsing a `toml`-format file. 
+* Maven (>= 3.6): [Maven](https://maven.apache.org/download.cgi) is required to build the Gremlin compiler. 
 * Other Rust and Java dependencies, check
-    * `./gremlin/compiler/pom.xml`
-    * `./gremlin/gremlin_core/Cargo.toml`
-    * `./graph_store/Cargo.toml`
-    * `./pegasus/Cargo.toml`
-
-## Building codes
-TODO
-
-## Generate Graph Data
-Please refer to `./graph_store/README.rd` for details.
-
-# Deployment
-## Deploy GAIA services
-TODO 
-### Single-machine Deployment
-### Distributed Deployment
-## Start Gremlin Server
-After successfully building the codes, you can find `gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar` in 
-`./gremlin/compiler/gremlin-server-plugin/target`, copy it to wherever you want to start the server
+    * `gremlin/compiler/pom.xml`
+    * `gremlin/gremlin_core/Cargo.toml`
+    * `graph_store/Cargo.toml`
+    * `pegasus/Cargo.toml`
+ 
+## Build the codes
+Download the codes, get into the 'scripts' folder, and then build the codes as:
+```shell
+cd scripts
+chmod +x ./build.sh
+./build.sh
 ```
-cp ./gremlin/compiler/gremlin-server-plugin/target/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar /path/to/your/dir
-cp -r ./gremlin/compiler/conf /path/to/your/dir
-cd /path/to/your/dir
+The building process may run for a while. Thereafter, you shall find all the required
+tools in 'scripts/bin' including:
+```shell
+ls -l bin
+build_store
+download_raw
+gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar
+start_rpc_server
 ```
 
-There are some configurations to make in `./conf`:
-* Gremlin server address and port: TODO 
+In case that you are running in a cluster of several hosts, make sure that you `scp`
+the scripts folder to a **common** place in all hosts, saying `/path/to/workdir`. **From now on, we assume that you are
+in such a folder**.
+
+## Generate and partition the LDBC data
+Here we assume that LDBC data is used, which is generated according to [here](https://github.com/ldbc/ldbc_snb_datagen)
+and placed in a specified directory on HDFS, for example:
+`hdfs://<master:port>/ldbc/social_network_<sf>`. 
+There generate a bunch of vertex-typed data and edge-typed data like:
+* Vertex-typed data: \<vertex-type\>_0_0.csv; 
+* edge-typed: \<start-vertex-type\>\_\<edge-type\>\_\<end_vertex_type\>_0_0.csv
+
+We require you to partition the raw data using MapReduce or Spark. We have provided a tool based on Spark for
+partitioning the LDBC data. Note that the tool is built on `Spark-2.12-3.0.0-preview2` with `Scala-2.12`.
+Make sure you have deployed Spark and HDFS in your cluster, prior to doing the partitioning as:
+```shell
+spark-submit \
+  --class sample.LDBCPartition \
+  --master <spark_master> \
+  bin/DataPart.jar \
+  <hdfs_ldbc_raw_data_dir> \
+  <hdfs_ldbc_partitioned_data_dir> \
+  <spark_master> \
+  <number_of_ldbc_data_partitions>
+```
+
+After partitioning, a data of certain type, for example `person_0_0.csv`, should be placed in a folder named
+`person`, in which there are the partitioned fragments: part-00000, part-00001, etc. 
+
+# Deploying GAIA
+The deployment of GAIA includes building the graph storage and start the RPC server to accept queries
+from Gremlin server. We first show how to deploy in single host, and then move forward to cluster deployment.
+
+## Singleton Deployment
+### Build Graph Storage
+`Panic!` about the following messy procedures of building graph storage? No worries. We have provided
+two built-in toy graphs for you to play with: a sampled LDBC graph data in `gremlin_core/resource/data` and
+a modern graph as used in most [Tinkepop demo](https://tinkerpop.apache.org/docs/current/reference/) cases. 
+You can skip building graph storage, and jump to "Start RPC Server".
+
+To build the storage in one single host, let's first download the LDBC data from HDFS to somewhere locally: 
+`<local_ldbc_data>`. Suppose you want to maintain the storage in the folder of `<graph_store>`.
+
+Then run:
+```shell
+mkdir -p <graph_store>/graph_schema
+cp conf/ldbc.schema.json <graph_store>/graph_schema/schema.json
+bin/build_store <local_ldbc_data> <graph_store> <number_of_ldbc_data_partitions>
+```
+After building the storage, you shall find the following folder in your `<graph_store>` directory:
+```
+graph_data_bin
+----partition_0
+--------graph_struct
+--------index_data
+--------edge_property
+--------node_property
+graph_schema
+----schema.json
+```
+
+### Start RPC Server 
+Starting RPC server locally is simple:
+```shell
+RUST_LOG=Info DATA_PATH=<graph_store> bin/start_rpc_server
+```
+
+This will by default start RPC server at `0.0.0.0:1234`. Type `--help` to see available options if want to customize.
+As we've mentioned earlier, we have built two toy graphs for your convenience:
+* To use the sampled LDBC data, specify `DATA_PATH=/path/to/codebase/gremlin/gremlin_core/resource/data/ldbc_graph`.
+* To use the modern graph of Tinkerpop, simply remove `DATA_PATH=<graph_store>` in the above command. 
+
+
+## Distributed Deployment
+In distributed deployment, we require you to `scp` the whole `scripts` folder to the **same** directory in all hosts
+of your cluster. If it is already in a network-shared file system (NFS), you are free from this step. Let's still use
+`<graph_store>` as the folder to maintain the graph storage, but make sure that you have the permission to modify
+the `<graph_store>` in all hosts. In addition to `<graph_store>`, you will need a `<tmp_dir>` to store the LDBC
+raw data as well as some necessary temporary files. Make sure you have write permission as well,
+and its volume is large enough to contain (a part of) the LDBC raw data.
+
+A sample host file `conf/hosts.toml` is provided for your reference to configure the hosts (ip address and engine port)
+in your cluster. **Important!!! Please keep in mind that the port in the host file is used for GAIA engine to communicate, 
+which must be different from the RPC port that will be configured while starting the RPC server**. 
+
+### Build Graph Storage
+We have prepared the script `run_gaia.py` to facilitate building graph storage in a cluster, whose configuration 
+is given in `conf/hosts.toml`. You simply run
+```shell
+python3 run_gaia.py 
+    -o build_store
+    -g <graph_store>
+    -d <hdfs_partitioned_ldbc_data>
+    -p <number_partitions_of_ldbc_data>
+    -t <tmp_dir>
+    -s /path/to/scripts/conf/ldbc.schema.json  # It'd better be absolute path
+    -D
+    -A /path/to/hadoop_home
+    -H /path/to/scripts/conf/hosts.toml  # It'd better be absolute path
+```
+
+Note that you do not need to manually download the LDBC data. The script will download the required data in all hosts
+in parallel. You simply specify the partitioned LDBC data in HDFS as `<hdfs_partitioned_ldbc_data>`. The process runs
+for a while, after that you shall see in the `<graph_store>` folder in all hosts the same directory structure as in
+the singleton deployment. 
+
+A log folder of `logs/build_store/<graph_name>_w1_m<number_hosts>` can be
+found, in which a log file `<which_host>.log` records the standard output and error information ever captured
+in the corresponding host. Here, `<graph_name>` is simply extracted from `<graph_store>` as the suffix
+of the directory.
+
+### Start RPC Server
+Before starting RPC server, you 
+With the scripts `run_gaia.py`, starting RPC server in a cluster is straightforward, simply run:
+```shell
+python3 run_gaia.py 
+    -o start_rpc
+    -g <graph_store>
+    -H /path/to/scripts/conf/hosts.toml  # It'd better be absolute path
+```
+By default, an RPC port of **1234** is used. An option of `-P <port>` of run_gaia.py is provided to
+manually set the RPC port if necessary. Note you may want to start multiple hosts in one machine. In this
+case, the port will conflict. For now, we simply increment the configured RPC port for the following
+hosts. For example, if the configured port is 1234, then the second host will use the port 1235, and so on.
+
+
+In case of any error, a log folder of `logs/start_rpc/<graph_name>_m<number_hosts>` can be
+found, in which a file `<which_host>.log` records the standard output and error ever captured
+in the corresponding host.
+
+### Cleaning up
+In the distributed context, it is often the case that a process is not terminated cleanly. Such
+residual process can cause an error message like: `Address already in use`.
+
+To avoid this case, we provide an option in `run_gaia.py` to clean up residual processes:
+```shell
+python3 run_gaia.py 
+    -o clean_up
+    -H /path/to/scripts/conf/hosts.toml  # It'd better be absolute path
+```
+
+# Gremlin Server and Run Queries
+There are some configurations to make in `conf`:
 * The graph storage schema: For your reference, we've provided the schema file
-`./conf/modern.schema.json` for [Tinkerpop's modern graph](https://tinkerpop.apache.org/docs/current/tutorials/getting-started/), 
-and `./conf/ldbc.schema.json` for [LDBC generated data](https://github.com/ldbc/ldbc_snb_datagen). 
-TODO: How to customize the schema
+  `conf/modern.schema.json` for [Tinkerpop's modern graph](https://tinkerpop.apache.org/docs/current/tutorials/getting-started/),
+  and `conf/ldbc.schema.json` for [LDBC generated data](https://github.com/ldbc/ldbc_snb_datagen).
+* Gremlin server uses `conf/ldbc.schema.json` as the default graph schema, reconfig `gremlin.graph.schema` 
+  in `conf/graph.properties` for your convenience.
+* Gremlin server address and port: You are free from this configuration if the service is deployed in single host.
+  Otherwise, please configure the "hosts" field in `conf/system.args.json` corresponding to the hosts that are running
+  the RPC services (while starting the RPC server):
+
+  ```json
+  {
+    "workers": 2,
+    "hosts": [
+      "host1:<rpc_port1>",
+      "host2:<rpc_port2>",
+      "...",
+      "hostx:<rpc_portx>"
+    ]
+  }
+  ```
+  
+  Note that if the RPC port has **not** been set while starting RPC server, the default port **1234** shall be specified. 
+  
+* Gremlin server limits the maximum length of the aggregated content for a message (request or response) within 65536(B)
+  re-config `maxContentLength` in `conf/gremlin-server.yaml` if needed.
 
 Then start up the Gremlin server using
-```
-java -cp .:gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar com.compiler.demo.server.GremlinServiceMain
+```shell
+java -cp bin/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar com.compiler.demo.server.GremlinServiceMain
 ```
 
 ## Run Query
 - Download TinkerPop's official [gremlin-console](https://archive.apache.org/dist/tinkerpop/3.4.9/apache-tinkerpop-gremlin-console-3.4.9-bin.zip)
-- cd `path/to/gremlin/console`, modify `conf/remote.yaml`
-  ```
+  in your client machine
+- cd `/path/to/gremlin/console`, modify `conf/remote.yaml`
+  ```yaml
   hosts: [localhost]  # TODO: The hosts and port should align to the above server configuration?
   port: 8182
   serializer: { className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0, config: { serializeResultToString: true }}
   ```
 - Console startup
-  ```
-  ./bin/gremlin.sh
+  ```shell
+  bin/gremlin.sh
   :remote connect tinkerpop.server conf/remote.yaml
   :remote console
   ```
-- Submit query in console. Have fun!!
+- parameterized query
+  ```gremlin
+   # if not set, use conf/system.args.json
+   graph.variables().set("workers",4)
+   # check variable value
+   graph.variables().get("workers")
+  ```
+- Submit query in console. For example:
+  ```gremlin
+  g.V().hasLabel('PERSON').has('firstName', 'John' ).out('PERSON_KNOWS_PERSON').limit(1)
+  ```
+Note that the available labels/properties are confined to what is defined in the schema file, e.g.
+`/path/to/workdir/conf/modern.schema.json` for modern graph, or `/path/to/workdir/conf/ldbc.schema.json` for ldbc data.
+The compiler shall complain if the other labels are used.
 
 # Contact
-TODO
+* Zhengping Qian: zhengping.qzp@alibaba-inc.com
+* ChenQiang Min: chenqiang.mcq@alibaba-inc.com
+* Longbin Lai: longbin.lailb@alibaba-inc.com
 
 # Acknowledge
-TODO
+We thank Benli Li, Pin Gao, and Donghai Yu for answering [Plato](https://github.com/Tencent/plato) related questions.
+We are grateful to Alibaba Big Data team members for their support. 
 
 # Publications
 1. GAIA: A System for Interactive Analysis on Distributed Graphs Using a High-Level Language, Zhengping Qian,

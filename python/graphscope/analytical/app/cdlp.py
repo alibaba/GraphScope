@@ -19,10 +19,12 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.app import project_to_simple
 
 __all__ = ["cdlp"]
 
 
+@project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def cdlp(graph, max_round=10):
     """Evaluate Community Detection with Label Propagation.
@@ -39,9 +41,9 @@ def cdlp(graph, max_round=10):
     .. code:: python
 
         import graphscope as gs
-        s = gs.session()
-        g = s.load_from('The parameters for loading a graph...')
-        pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
+        sess = gs.session()
+        g = sess.g()
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.cdlp(g, max_round=10)
         s.close()
 

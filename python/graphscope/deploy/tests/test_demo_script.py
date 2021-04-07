@@ -37,21 +37,6 @@ graphscope.set_option(show_log=True)
 logger = logging.getLogger("graphscope")
 
 
-@pytest.fixture
-def data_dir():
-    return "/testingdata/ldbc_sample"
-
-
-@pytest.fixture
-def modern_graph_data_dir():
-    return "/testingdata/modern_graph"
-
-
-@pytest.fixture
-def p2p_property_dir():
-    return "/testingdata/property"
-
-
 def get_k8s_volumes():
     k8s_volumes = {
         "data": {
@@ -70,33 +55,77 @@ def get_gs_image_on_ci_env():
         return gs_config.k8s_gs_image, gs_config.k8s_gie_graph_manager_image
 
 
-def test_demo(data_dir):
+@pytest.fixture
+def gs_session():
     gs_image, gie_manager_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
         k8s_gs_image=gs_image,
         k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
+        k8s_coordinator_cpu=2,
+        k8s_coordinator_mem="4Gi",
+        k8s_vineyard_cpu=2,
         k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
+        k8s_engine_cpu=2,
+        k8s_engine_mem="4Gi",
         k8s_etcd_cpu=2,
-        k8s_vineyard_shared_mem="2Gi",
+        k8s_etcd_mem="256Mi",
+        k8s_vineyard_shared_mem="4Gi",
         k8s_volumes=get_k8s_volumes(),
     )
-    graph = load_ldbc(sess, data_dir)
+    yield sess
+    sess.close()
+
+
+@pytest.fixture
+def gs_session_distributed():
+    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+    sess = graphscope.session(
+        num_workers=2,
+        k8s_gs_image=gs_image,
+        k8s_gie_graph_manager_image=gie_manager_image,
+        k8s_coordinator_cpu=2,
+        k8s_coordinator_mem="4Gi",
+        k8s_vineyard_cpu=2,
+        k8s_vineyard_mem="512Mi",
+        k8s_engine_cpu=2,
+        k8s_engine_mem="4Gi",
+        k8s_etcd_cpu=4,
+        k8s_etcd_mem="256Mi",
+        k8s_vineyard_shared_mem="4Gi",
+        k8s_volumes=get_k8s_volumes(),
+    )
+    yield sess
+    sess.close()
+
+
+@pytest.fixture
+def data_dir():
+    return "/testingdata/ldbc_sample"
+
+
+@pytest.fixture
+def modern_graph_data_dir():
+    return "/testingdata/modern_graph"
+
+
+@pytest.fixture
+def p2p_property_dir():
+    return "/testingdata/property"
+
+
+def test_demo(gs_session, data_dir):
+    graph = load_ldbc(gs_session, data_dir)
 
     # Interactive engine
-    interactive = sess.gremlin(graph)
+    interactive = gs_session.gremlin(graph)
     sub_graph = interactive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
 
     # Analytical engine
     # project the projected graph to simple graph.
-    simple_g = sub_graph.project_to_simple(v_label="person", e_label="knows")
+    simple_g = sub_graph.project(vertices={"person": []}, edges={"knows": []})
 
     pr_result = graphscope.pagerank(simple_g, delta=0.8)
     tc_result = graphscope.triangles(simple_g)
@@ -107,29 +136,13 @@ def test_demo(data_dir):
     sub_graph.add_column(tc_result, {"TC": "r"})
 
     # GNN engine
-    sess.close()
 
 
-def test_demo_distribute(data_dir, modern_graph_data_dir):
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
-    sess = graphscope.session(
-        num_workers=1,
-        k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_etcd_cpu=2,
-        k8s_vineyard_shared_mem="2Gi",
-        k8s_volumes=get_k8s_volumes(),
-    )
-    graph = load_ldbc(sess, data_dir)
+def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir):
+    graph = load_ldbc(gs_session_distributed, data_dir)
 
     # Interactive engine
-    interactive = sess.gremlin(graph)
+    interactive = gs_session_distributed.gremlin(graph)
     sub_graph = interactive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
@@ -145,7 +158,7 @@ def test_demo_distribute(data_dir, modern_graph_data_dir):
         .all()
         .result()[0]
     )
-    interactive2 = sess.gremlin(sub_graph)
+    interactive2 = gs_session_distributed.gremlin(sub_graph)
     sub_person_count = interactive2.execute("g.V().count()").all().result()[0]
     sub_knows_count = interactive2.execute("g.E().count()").all().result()[0]
     assert person_count == sub_person_count
@@ -153,7 +166,7 @@ def test_demo_distribute(data_dir, modern_graph_data_dir):
 
     # Analytical engine
     # project the projected graph to simple graph.
-    simple_g = sub_graph.project_to_simple(v_label="person", e_label="knows")
+    simple_g = sub_graph.project(vertices={"person": []}, edges={"knows": []})
 
     pr_result = graphscope.pagerank(simple_g, delta=0.8)
     tc_result = graphscope.triangles(simple_g)
@@ -164,10 +177,10 @@ def test_demo_distribute(data_dir, modern_graph_data_dir):
     sub_graph.add_column(tc_result, {"TC": "r"})
 
     # test subgraph on modern graph
-    mgraph = load_modern_graph(sess, modern_graph_data_dir)
+    mgraph = load_modern_graph(gs_session_distributed, modern_graph_data_dir)
 
     # Interactive engine
-    minteractive = sess.gremlin(mgraph)
+    minteractive = gs_session_distributed.gremlin(mgraph)
     msub_graph = minteractive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
@@ -178,12 +191,11 @@ def test_demo_distribute(data_dir, modern_graph_data_dir):
         .all()
         .result()[0]
     )
-    msub_interactive = sess.gremlin(msub_graph)
+    msub_interactive = gs_session_distributed.gremlin(msub_graph)
     sub_person_count = msub_interactive.execute("g.V().count()").all().result()[0]
     assert person_count == sub_person_count
 
     # GNN engine
-    sess.close()
 
 
 def test_multiple_session(data_dir):
@@ -196,19 +208,10 @@ def test_multiple_session(data_dir):
         num_workers=1,
         k8s_gs_image=gs_image,
         k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_vineyard_shared_mem="2Gi",
-        k8s_etcd_cpu=2,
         k8s_volumes=get_k8s_volumes(),
     )
     info = sess.info
     assert info["status"] == "active"
-    assert info["type"] == "k8s"
     assert len(info["engine_hosts"].split(",")) == 1
 
     sess2 = graphscope.session(
@@ -216,44 +219,20 @@ def test_multiple_session(data_dir):
         num_workers=2,
         k8s_gs_image=gs_image,
         k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_vineyard_shared_mem="2Gi",
-        k8s_etcd_cpu=2,
         k8s_volumes=get_k8s_volumes(),
     )
 
     info = sess2.info
     assert info["status"] == "active"
-    assert info["type"] == "k8s"
     assert len(info["engine_hosts"].split(",")) == 2
 
     sess2.close()
     sess.close()
 
 
-def test_query_modern_graph(modern_graph_data_dir):
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
-    sess = graphscope.session(
-        num_workers=1,
-        k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_vineyard_shared_mem="2Gi",
-        k8s_etcd_cpu=2,
-        k8s_volumes=get_k8s_volumes(),
-    )
-    graph = load_modern_graph(sess, modern_graph_data_dir)
-    interactive = sess.gremlin(graph)
+def test_query_modern_graph(gs_session, modern_graph_data_dir):
+    graph = load_modern_graph(gs_session, modern_graph_data_dir)
+    interactive = gs_session.gremlin(graph)
     queries = [
         "g.V().has('name','marko').count()",
         "g.V().has('person','name','marko').count()",
@@ -267,27 +246,13 @@ def test_query_modern_graph(modern_graph_data_dir):
         assert result == 1
 
 
-def test_traversal_modern_graph(modern_graph_data_dir):
+def test_traversal_modern_graph(gs_session, modern_graph_data_dir):
     from gremlin_python.process.traversal import Order
     from gremlin_python.process.traversal import P
 
     gs_image, gie_manager_image = get_gs_image_on_ci_env()
-    sess = graphscope.session(
-        num_workers=1,
-        k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_vineyard_shared_mem="2Gi",
-        k8s_etcd_cpu=2,
-        k8s_volumes=get_k8s_volumes(),
-    )
-    graph = load_modern_graph(sess, modern_graph_data_dir)
-    interactive = sess.gremlin(graph)
+    graph = load_modern_graph(gs_session, modern_graph_data_dir)
+    interactive = gs_session.gremlin(graph)
     g = interactive.traversal_source()
     assert g.V().has("name", "marko").count().toList()[0] == 1
     assert g.V().has("person", "name", "marko").count().toList()[0] == 1
@@ -318,43 +283,48 @@ def test_traversal_modern_graph(modern_graph_data_dir):
     )
 
 
-def test_serialize_roundtrip(p2p_property_dir):
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
-    sess = graphscope.session(
-        num_workers=2,
-        k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
-        k8s_coordinator_cpu=0.5,
-        k8s_coordinator_mem="2500Mi",
-        k8s_vineyard_cpu=0.1,
-        k8s_vineyard_mem="512Mi",
-        k8s_engine_cpu=0.1,
-        k8s_engine_mem="1500Mi",
-        k8s_vineyard_shared_mem="2Gi",
-        k8s_etcd_cpu=2,
-        k8s_volumes=get_k8s_volumes(),
+def test_add_vertices_edges(gs_session_distributed, modern_graph_data_dir):
+    graph = load_modern_graph(gs_session_distributed, modern_graph_data_dir)
+    graph = graph.add_vertices(
+        Loader(os.path.join(modern_graph_data_dir, "person.csv"), delimiter="|"),
+        "person2",
+        ["name", ("age", "int")],
+        "id",
     )
-    graph = sess.load_from(
-        edges={
-            "knows": (
-                Loader(
-                    "{}/p2p-31_property_e_0".format(p2p_property_dir), header_row=True
-                ),
-                ["src_label_id", "dst_label_id", "dist"],
-                ("src_id", "person"),
-                ("dst_id", "person"),
-            ),
-        },
-        vertices={
-            "person": Loader(
-                "{}/p2p-31_property_v_0".format(p2p_property_dir), header_row=True
-            ),
-        },
-        generate_eid=False,
+    assert "person2" in graph.schema.vertex_labels
+
+    graph = graph.add_edges(
+        Loader(
+            os.path.join(modern_graph_data_dir, "knows.csv"),
+            delimiter="|",
+        ),
+        "knows2",
+        ["weight"],
+        src_label="person2",
+        dst_label="person2",
     )
-    graph.serialize("/tmp/serialize")
-    new_graph = Graph.deserialize("/tmp/serialize", sess)
-    pg = new_graph.project_to_simple(0, 0, 0, 2)
+
+    assert "knows2" in graph.schema.edge_labels
+
+    interactive = gs_session_distributed.gremlin(graph)
+    g = interactive.traversal_source()
+    assert g.V().count().toList()[0] == 10
+    assert g.E().count().toList()[0] == 8
+
+
+def test_serialize_roundtrip(gs_session_distributed, p2p_property_dir):
+    graph = gs_session_distributed.g(generate_eid=False)
+    graph = graph.add_vertices(f"{p2p_property_dir}/p2p-31_property_v_0", "person")
+    graph = graph.add_edges(
+        f"{p2p_property_dir}/p2p-31_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
+    )
+
+    graph.save_to("/tmp/serialize")
+    new_graph = Graph.load_from("/tmp/serialize", gs_session_distributed)
+    pg = new_graph.project(vertices={"person": []}, edges={"knows": ["dist"]})
     ctx = graphscope.sssp(pg, src=6)
     ret = (
         ctx.to_dataframe({"node": "v.id", "r": "r"}, vertex_range={"end": 6})

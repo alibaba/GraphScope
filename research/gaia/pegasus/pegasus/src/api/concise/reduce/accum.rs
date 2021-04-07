@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,23 +14,23 @@
 //! limitations under the License.
 
 use crate::api::function::{CompareFunction, SumFunction};
+use crate::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::collections::{Collection, CollectionFactory};
+use pegasus_common::downcast::{Any, AsAny};
 use pegasus_common::rc::RcPointer;
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::io;
+use std::io::Error;
 
-pub trait Accumulator<I, O>: Send + Debug {
-    fn accum(&mut self, next: I);
-
-    fn merge(&mut self, other: O);
-
-    fn finalize(&mut self) -> O;
+pub trait Accumulator<I>: Send + Debug + AsAny {
+    fn accum(&mut self, next: I) -> Result<(), io::Error>;
 }
 
-pub trait AccumFactory<I, O>: Send {
-    type Target: Accumulator<I, O>;
+pub trait AccumFactory<I>: Send {
+    type Target: Accumulator<I>;
 
     fn create(&self) -> Self::Target;
 
@@ -39,21 +39,13 @@ pub trait AccumFactory<I, O>: Send {
     }
 }
 
-impl<I, O, A: Accumulator<I, O> + ?Sized> Accumulator<I, O> for Box<A> {
-    fn accum(&mut self, next: I) {
-        (**self).accum(next);
-    }
-
-    fn merge(&mut self, other: O) {
-        (**self).merge(other)
-    }
-
-    fn finalize(&mut self) -> O {
-        (**self).finalize()
+impl<I, A: Accumulator<I> + ?Sized> Accumulator<I> for Box<A> {
+    fn accum(&mut self, next: I) -> Result<(), io::Error> {
+        (**self).accum(next)
     }
 }
 
-impl<I, O, A: AccumFactory<I, O> + ?Sized> AccumFactory<I, O> for Box<A> {
+impl<I, A: AccumFactory<I> + ?Sized> AccumFactory<I> for Box<A> {
     type Target = A::Target;
 
     fn create(&self) -> Self::Target {
@@ -65,7 +57,7 @@ impl<I, O, A: AccumFactory<I, O> + ?Sized> AccumFactory<I, O> for Box<A> {
     }
 }
 
-impl<I, O, A: AccumFactory<I, O>> AccumFactory<I, O> for RcPointer<A> {
+impl<I, A: AccumFactory<I>> AccumFactory<I> for RcPointer<A> {
     type Target = A::Target;
 
     fn create(&self) -> Self::Target {
@@ -77,8 +69,9 @@ impl<I, O, A: AccumFactory<I, O>> AccumFactory<I, O> for RcPointer<A> {
     }
 }
 
+#[derive(Clone, Eq, PartialEq)]
 pub struct Count<D> {
-    value: u64,
+    pub value: u64,
     _ph: std::marker::PhantomData<D>,
 }
 
@@ -88,24 +81,40 @@ impl<D> Debug for Count<D> {
     }
 }
 
-impl<D: Send> Accumulator<D, u64> for Count<D> {
-    fn accum(&mut self, _next: D) {
+impl<D: Send + 'static> Accumulator<D> for Count<D> {
+    fn accum(&mut self, _next: D) -> Result<(), io::Error> {
         self.value += 1;
-    }
-
-    fn merge(&mut self, other: u64) {
-        self.value += other;
-    }
-
-    fn finalize(&mut self) -> u64 {
-        let value = self.value;
-        self.value = 0;
-        value
+        Ok(())
     }
 }
 
+impl<D: 'static> AsAny for Count<D> {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn as_any_ref(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl<D> Encode for Count<D> {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        self.value.write_to(writer)?;
+        Ok(())
+    }
+}
+
+impl<D> Decode for Count<D> {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let value = u64::read_from(reader)?;
+        Ok(Count { value, _ph: std::marker::PhantomData })
+    }
+}
+
+#[derive(Clone, Eq, PartialEq)]
 pub struct ToList<D> {
-    inner: Vec<D>,
+    pub inner: Vec<D>,
 }
 
 impl<D: Debug> Debug for ToList<D> {
@@ -113,17 +122,34 @@ impl<D: Debug> Debug for ToList<D> {
         write!(f, "{:?}", self.inner)
     }
 }
-impl<D: Debug + Send> Accumulator<D, Vec<D>> for ToList<D> {
-    fn accum(&mut self, next: D) {
+impl<D: Debug + Send + 'static> Accumulator<D> for ToList<D> {
+    fn accum(&mut self, next: D) -> Result<(), io::Error> {
         self.inner.push(next);
+        Ok(())
+    }
+}
+
+impl<D: 'static> AsAny for ToList<D> {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        unimplemented!()
     }
 
-    fn merge(&mut self, other: Vec<D>) {
-        self.inner.extend(other)
+    fn as_any_ref(&self) -> &dyn Any {
+        unimplemented!()
     }
+}
 
-    fn finalize(&mut self) -> Vec<D> {
-        std::mem::replace(&mut self.inner, vec![])
+impl<D: Encode> Encode for ToList<D> {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        self.inner.write_to(writer)?;
+        Ok(())
+    }
+}
+
+impl<D: Decode> Decode for ToList<D> {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let inner = <Vec<D>>::read_from(reader)?;
+        Ok(ToList { inner })
     }
 }
 
@@ -142,7 +168,7 @@ impl<D> ToListAccum<D> {
     }
 }
 
-impl<D: Debug + Send> AccumFactory<D, Vec<D>> for ToListAccum<D> {
+impl<D: Debug + Send + 'static> AccumFactory<D> for ToListAccum<D> {
     type Target = ToList<D>;
 
     fn create(&self) -> Self::Target {
@@ -154,27 +180,66 @@ impl<D: Debug + Send> AccumFactory<D, Vec<D>> for ToListAccum<D> {
     }
 }
 
-#[derive(Debug)]
-pub struct ToSet<D: Eq + Hash + Debug> {
-    inner: HashSet<D>,
+pub struct ToVecAccum<D> {
+    capacity: usize,
+    _ph: std::marker::PhantomData<D>,
 }
 
-impl<D: Eq + Hash + Debug + Send> Accumulator<D, Vec<D>> for ToSet<D> {
-    fn accum(&mut self, next: D) {
-        self.inner.insert(next);
+impl<D> ToVecAccum<D> {
+    pub fn new() -> Self {
+        ToVecAccum { capacity: 0, _ph: std::marker::PhantomData }
     }
 
-    fn merge(&mut self, other: Vec<D>) {
-        for item in other {
-            self.inner.insert(item);
+    pub fn with_capacity(capacity: usize) -> Self {
+        ToVecAccum { capacity, _ph: std::marker::PhantomData }
+    }
+}
+
+impl<D: Debug + Send + AsAny + 'static> AccumFactory<D> for ToVecAccum<D> {
+    type Target = Vec<D>;
+
+    fn create(&self) -> Self::Target {
+        if self.capacity > 0 {
+            Vec::with_capacity(self.capacity)
+        } else {
+            vec![]
         }
     }
+}
 
-    fn finalize(&mut self) -> Vec<D> {
-        let mut result = Vec::with_capacity(self.inner.len());
-        let set = std::mem::replace(&mut self.inner, HashSet::new());
-        result.extend(set.into_iter());
-        result
+impl<D: Debug + Send + AsAny> Accumulator<D> for Vec<D> {
+    fn accum(&mut self, next: D) -> Result<(), io::Error> {
+        self.push(next);
+        Ok(())
+    }
+}
+
+impl<D> Accumulator<D> for u64 {
+    fn accum(&mut self, _: D) -> Result<(), Error> {
+        *self = *self + 1u64;
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct ToSet<D: Eq + Hash + Debug> {
+    pub inner: HashSet<D>,
+}
+
+impl<D: Eq + Hash + Debug + Send + 'static> Accumulator<D> for ToSet<D> {
+    fn accum(&mut self, next: D) -> Result<(), io::Error> {
+        self.inner.insert(next);
+        Ok(())
+    }
+}
+
+impl<D: Eq + Hash + Debug + 'static> AsAny for ToSet<D> {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        unimplemented!()
+    }
+
+    fn as_any_ref(&self) -> &dyn Any {
+        unimplemented!()
     }
 }
 
@@ -188,7 +253,7 @@ impl<D> CountAccum<D> {
     }
 }
 
-impl<D: Send> AccumFactory<D, u64> for CountAccum<D> {
+impl<D: Send + 'static> AccumFactory<D> for CountAccum<D> {
     type Target = Count<D>;
 
     fn create(&self) -> Self::Target {
@@ -215,7 +280,7 @@ impl<D: Eq + Hash> HashSetAccum<D> {
     }
 }
 
-impl<D: Eq + Hash + Debug + Send> AccumFactory<D, Vec<D>> for HashSetAccum<D> {
+impl<D: Eq + Hash + Debug + Send + 'static> AccumFactory<D> for HashSetAccum<D> {
     type Target = ToSet<D>;
 
     fn create(&self) -> Self::Target {
@@ -228,7 +293,7 @@ impl<D: Eq + Hash + Debug + Send> AccumFactory<D, Vec<D>> for HashSetAccum<D> {
 }
 
 pub struct Maximum<D, P: CompareFunction<D>> {
-    max: Option<D>,
+    pub max: Option<D>,
     cmp: RcPointer<P>,
 }
 
@@ -240,8 +305,8 @@ impl<D: Debug, P: CompareFunction<D>> Debug for Maximum<D, P> {
 
 unsafe impl<D: Send, P: CompareFunction<D>> Send for Maximum<D, P> {}
 
-impl<D: Debug + Send, P: CompareFunction<D>> Accumulator<D, Option<D>> for Maximum<D, P> {
-    fn accum(&mut self, next: D) {
+impl<D: Debug + Send + 'static, P: CompareFunction<D>> Accumulator<D> for Maximum<D, P> {
+    fn accum(&mut self, next: D) -> Result<(), io::Error> {
         if let Some(pre) = self.max.take() {
             match self.cmp.compare(&pre, &next) {
                 Ordering::Less => {
@@ -253,21 +318,22 @@ impl<D: Debug + Send, P: CompareFunction<D>> Accumulator<D, Option<D>> for Maxim
         } else {
             self.max = Some(next);
         }
+        Ok(())
+    }
+}
+
+impl<D: 'static, P: CompareFunction<D>> AsAny for Maximum<D, P> {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        unimplemented!()
     }
 
-    fn merge(&mut self, other: Option<D>) {
-        if let Some(item) = other {
-            self.accum(item)
-        }
-    }
-
-    fn finalize(&mut self) -> Option<D> {
-        self.max.take()
+    fn as_any_ref(&self) -> &dyn Any {
+        unimplemented!()
     }
 }
 
 pub struct Minimum<D, P: CompareFunction<D>> {
-    min: Option<D>,
+    pub min: Option<D>,
     cmp: RcPointer<P>,
 }
 
@@ -279,8 +345,8 @@ impl<D: Debug, P: CompareFunction<D>> Debug for Minimum<D, P> {
 
 unsafe impl<D: Send, P: CompareFunction<D>> Send for Minimum<D, P> {}
 
-impl<D: Debug + Send, P: CompareFunction<D>> Accumulator<D, Option<D>> for Minimum<D, P> {
-    fn accum(&mut self, next: D) {
+impl<D: Debug + Send + 'static, P: CompareFunction<D>> Accumulator<D> for Minimum<D, P> {
+    fn accum(&mut self, next: D) -> Result<(), io::Error> {
         if let Some(pre) = self.min.take() {
             match self.cmp.compare(&pre, &next) {
                 Ordering::Less => {
@@ -292,16 +358,17 @@ impl<D: Debug + Send, P: CompareFunction<D>> Accumulator<D, Option<D>> for Minim
         } else {
             self.min = Some(next);
         }
+        Ok(())
+    }
+}
+
+impl<D: 'static, P: CompareFunction<D>> AsAny for Minimum<D, P> {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        unimplemented!()
     }
 
-    fn merge(&mut self, other: Option<D>) {
-        if let Some(item) = other {
-            self.accum(item)
-        }
-    }
-
-    fn finalize(&mut self) -> Option<D> {
-        self.min.take()
+    fn as_any_ref(&self) -> &dyn Any {
+        unimplemented!()
     }
 }
 
@@ -317,7 +384,7 @@ impl<D, P: CompareFunction<D>> MaxAccum<D, P> {
     }
 }
 
-impl<D: Debug + Send, P: CompareFunction<D>> AccumFactory<D, Option<D>> for MaxAccum<D, P> {
+impl<D: Debug + Send + 'static, P: CompareFunction<D>> AccumFactory<D> for MaxAccum<D, P> {
     type Target = Maximum<D, P>;
 
     fn create(&self) -> Self::Target {
@@ -342,7 +409,7 @@ impl<D, P: CompareFunction<D>> MinAccum<D, P> {
     }
 }
 
-impl<D: Debug + Send, P: CompareFunction<D>> AccumFactory<D, Option<D>> for MinAccum<D, P> {
+impl<D: Debug + Send + 'static, P: CompareFunction<D>> AccumFactory<D> for MinAccum<D, P> {
     type Target = Minimum<D, P>;
 
     fn create(&self) -> Self::Target {
@@ -356,7 +423,7 @@ impl<D: Debug + Send, P: CompareFunction<D>> AccumFactory<D, Option<D>> for MinA
 }
 
 pub struct DataSum<D, A: SumFunction<D>> {
-    seed: Option<D>,
+    pub seed: Option<D>,
     add_func: RcPointer<A>,
 }
 
@@ -366,23 +433,24 @@ impl<D: Debug, A: SumFunction<D>> Debug for DataSum<D, A> {
     }
 }
 
-impl<D: Send + Debug, A: SumFunction<D>> Accumulator<D, Option<D>> for DataSum<D, A> {
-    fn accum(&mut self, next: D) {
+impl<D: Send + Debug + 'static, A: SumFunction<D>> Accumulator<D> for DataSum<D, A> {
+    fn accum(&mut self, next: D) -> Result<(), io::Error> {
         if let Some(ref mut seed) = self.seed {
             self.add_func.add(seed, next)
         } else {
             self.seed = Some(next);
         }
+        Ok(())
+    }
+}
+
+impl<D: 'static, A: SumFunction<D>> AsAny for DataSum<D, A> {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        unimplemented!()
     }
 
-    fn merge(&mut self, other: Option<D>) {
-        if let Some(other) = other {
-            self.accum(other)
-        }
-    }
-
-    fn finalize(&mut self) -> Option<D> {
-        self.seed.take()
+    fn as_any_ref(&self) -> &dyn Any {
+        unimplemented!()
     }
 }
 
@@ -391,7 +459,7 @@ pub struct DataSumAccum<D, A: SumFunction<D>> {
     _ph: std::marker::PhantomData<D>,
 }
 
-impl<D: Send + Debug, A: SumFunction<D>> AccumFactory<D, Option<D>> for DataSumAccum<D, A> {
+impl<D: Send + Debug + 'static, A: SumFunction<D>> AccumFactory<D> for DataSumAccum<D, A> {
     type Target = DataSum<D, A>;
 
     fn create(&self) -> Self::Target {
@@ -404,7 +472,7 @@ impl<D: Send + Debug, A: SumFunction<D>> AccumFactory<D, Option<D>> for DataSumA
 }
 
 pub struct ToCollection<D: Send, C: Collection<D>> {
-    collect: C,
+    pub collect: C,
     _ph: std::marker::PhantomData<D>,
 }
 
@@ -414,23 +482,23 @@ impl<D: Send + Debug, C: Collection<D> + Debug> Debug for ToCollection<D, C> {
     }
 }
 
-impl<D, C> Accumulator<D, C> for ToCollection<D, C>
+impl<D: 'static, C: 'static> Accumulator<D> for ToCollection<D, C>
 where
     D: Send + Debug,
     C: Collection<D> + Debug + Default + IntoIterator<Item = D>,
 {
-    fn accum(&mut self, next: D) {
-        self.collect.add(next);
+    fn accum(&mut self, next: D) -> Result<(), io::Error> {
+        self.collect.add(next)
+    }
+}
+
+impl<D: Send + 'static, C: Collection<D> + 'static> AsAny for ToCollection<D, C> {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        unimplemented!()
     }
 
-    fn merge(&mut self, other: C) {
-        for item in other.into_iter() {
-            self.collect.add(item);
-        }
-    }
-
-    fn finalize(&mut self) -> C {
-        std::mem::replace(&mut self.collect, C::default())
+    fn as_any_ref(&self) -> &dyn Any {
+        unimplemented!()
     }
 }
 
@@ -439,11 +507,11 @@ pub struct ToCollectionAccum<D, C> {
     _ph: std::marker::PhantomData<D>,
 }
 
-impl<D, C> AccumFactory<D, C::Target> for ToCollectionAccum<D, C>
+impl<D, C> AccumFactory<D> for ToCollectionAccum<D, C>
 where
-    D: Send + Debug,
+    D: Send + Debug + 'static,
     C: CollectionFactory<D>,
-    C::Target: Debug + Default + IntoIterator<Item = D>,
+    C::Target: Debug + Default + IntoIterator<Item = D> + 'static,
 {
     type Target = ToCollection<D, C::Target>;
 

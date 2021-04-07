@@ -348,6 +348,8 @@ class ArrowProjectedFragment
   using nbr_unit_t = vineyard::property_graph_utils::NbrUnit<vid_t, eid_t>;
   using adj_list_t =
       arrow_projected_fragment_impl::AdjList<vid_t, eid_t, EDATA_T>;
+  using const_adj_list_t =
+      arrow_projected_fragment_impl::AdjList<vid_t, eid_t, EDATA_T>;
   using vertex_map_t = ArrowProjectedVertexMap<internal_oid_t, vid_t>;
   using label_id_t = vineyard::property_graph_types::LABEL_ID_TYPE;
   using prop_id_t = vineyard::property_graph_types::PROP_ID_TYPE;

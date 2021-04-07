@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,35 +14,63 @@
 //! limitations under the License.
 
 #[macro_use]
-extern crate pegasus_common;
-#[macro_use]
 extern crate pegasus;
 #[macro_use]
 extern crate log;
+
+pub use config::{CommonConfig, HostsConfig};
+use pegasus::api::function::Partition;
+use pegasus::Data;
+
 #[cfg(not(feature = "gcip"))]
 mod generated {
-    pub mod protobuf {
-        tonic::include_proto!("protobuf");
+    pub mod protocol {
+        tonic::include_proto!("protocol");
     }
 }
 
 #[cfg(feature = "gcip")]
 mod generated {
-    #[path = "protobuf.rs"]
-    pub mod protobuf;
+    #[path = "protocol.rs"]
+    pub mod protocol;
 }
 
-pub trait AnyData: Data + Eq {
-    fn with<T: Data + Eq>(raw: T) -> Self;
-}
+pub trait AnyData: Data + Eq + Partition {}
 
-pub mod client;
-pub mod desc;
+// pub mod client;
+pub mod config;
 pub mod factory;
 mod materialize;
 pub mod rpc;
 pub mod service;
 
-pub use client::builder::BinaryResource;
-pub use generated::protobuf::job_response::Result as JobResult;
-use pegasus::Data;
+pub use generated::protocol::job_response::Result as JobResult;
+pub use generated::protocol::{JobRequest, JobResponse};
+
+#[allow(dead_code)]
+pub fn report_memory(job_id: u64) -> Option<std::thread::JoinHandle<()>> {
+    let g = std::thread::Builder::new()
+        .name(format!("memory-reporter {}", job_id))
+        .spawn(move || {
+            let mut max_usage = 0;
+            let mut count_zero_times = 50;
+            loop {
+                if let Some(usage) = pegasus_memory::alloc::check_task_memory(job_id as usize) {
+                    if usage > max_usage {
+                        max_usage = usage;
+                    }
+                } else if max_usage > 0 {
+                    break;
+                } else if max_usage == 0 {
+                    count_zero_times -= 1;
+                    if count_zero_times <= 0 {
+                        break;
+                    }
+                }
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+            info!("Job {} memory usage: {:.4} MB;", job_id, max_usage as f64 / 1_000_000.0);
+        })
+        .unwrap();
+    Some(g)
+}

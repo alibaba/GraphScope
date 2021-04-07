@@ -15,7 +15,7 @@
  */
 package com.alibaba.pegasus.intf;
 
-import com.alibaba.pegasus.service.proto.PegasusClient.JobResponse;
+import com.alibaba.pegasus.service.protocol.PegasusClient.JobResponse;
 import io.grpc.Status;
 
 public interface ResultProcessor {

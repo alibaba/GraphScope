@@ -45,4 +45,6 @@ message GraphDef {
 
   // Coordinator will write schema to a path.
   string schema_path = 6;
+
+  bool generate_eid = 7;
 };

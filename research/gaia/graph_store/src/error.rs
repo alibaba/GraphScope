@@ -1,18 +1,19 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::any::Any;
 use std::io::Error;
 use std::num::{ParseFloatError, ParseIntError};
 
@@ -21,11 +22,11 @@ pub type GDBResult<T> = Result<T, GDBError>;
 #[derive(Debug)]
 pub enum GDBError {
     ModifyReadOnlyError,
-    RocksError(rocksdb::Error),
     BincodeError(std::boxed::Box<bincode::ErrorKind>),
     JsonError(serde_json::Error),
     CborError(serde_cbor::error::Error),
     IOError(std::io::Error),
+    DynError(Box<dyn Any + Send>),
     DBNotFoundError,
     LruZeroCapacity,
     JsonObjectFieldError,
@@ -73,12 +74,6 @@ impl From<serde_cbor::error::Error> for GDBError {
     }
 }
 
-impl From<rocksdb::Error> for GDBError {
-    fn from(error: rocksdb::Error) -> Self {
-        GDBError::RocksError(error)
-    }
-}
-
 impl From<Box<bincode::ErrorKind>> for GDBError {
     fn from(error: Box<bincode::ErrorKind>) -> Self {
         GDBError::BincodeError(error)
@@ -88,5 +83,11 @@ impl From<Box<bincode::ErrorKind>> for GDBError {
 impl From<()> for GDBError {
     fn from(_error: ()) -> Self {
         GDBError::UnknownError
+    }
+}
+
+impl From<Box<dyn Any + Send>> for GDBError {
+    fn from(error: Box<dyn Any + Send>) -> Self {
+        GDBError::DynError(error)
     }
 }

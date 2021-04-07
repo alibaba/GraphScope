@@ -24,4 +24,13 @@ java -cp .:gremlin-server-plugin/target/gremlin-server-plugin-1.0-SNAPSHOT-jar-w
     :remote connect tinkerpop.server conf/remote.yaml
     :remote console
     ```
+  - parameterized query
+    ```
+    # if not set, use conf/system.args.json
+    graph.variables().set("workers",4)
+    # check variable value
+    graph.variables().get("workers")
+    
+    ```
   - submit query in console
+  

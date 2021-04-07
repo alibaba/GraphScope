@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,18 +15,22 @@
 
 use crate::structure::{Element, GraphElement, Tag};
 use crate::Object;
+use bit_set::BitSet;
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::downcast::*;
 use pegasus_common::io::{ReadExt, WriteExt};
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fmt::Debug;
+use std::io;
 use std::ops::Deref;
+use vec_map::VecMap;
 
 #[derive(Clone)]
 pub enum PathItem {
     OnGraph(GraphElement),
     Detached(Object),
+    Empty,
 }
 
 impl Debug for PathItem {
@@ -34,6 +38,44 @@ impl Debug for PathItem {
         match self {
             PathItem::OnGraph(e) => write!(f, "{:?}", e),
             PathItem::Detached(e) => write!(f, "{:?}", e),
+            PathItem::Empty => write!(f, ""),
+        }
+    }
+}
+
+impl Encode for PathItem {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        match self {
+            PathItem::OnGraph(e) => {
+                writer.write_u8(0)?;
+                e.write_to(writer)?;
+            }
+            PathItem::Detached(obj) => {
+                writer.write_u8(1)?;
+                obj.write_to(writer)?;
+            }
+            PathItem::Empty => {
+                writer.write_u8(2)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for PathItem {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let e = reader.read_u8()?;
+        match e {
+            0 => {
+                let ele = <GraphElement>::read_from(reader)?;
+                Ok(PathItem::OnGraph(ele))
+            }
+            1 => {
+                let obj = <Object>::read_from(reader)?;
+                Ok(PathItem::Detached(obj))
+            }
+            2 => Ok(PathItem::Empty),
+            _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
         }
     }
 }
@@ -44,6 +86,7 @@ impl PathItem {
         match self {
             PathItem::OnGraph(e) => Some(e),
             PathItem::Detached(_) => None,
+            PathItem::Empty => None,
         }
     }
 
@@ -52,6 +95,7 @@ impl PathItem {
         match self {
             PathItem::OnGraph(e) => Some(e),
             PathItem::Detached(_) => None,
+            PathItem::Empty => None,
         }
     }
 
@@ -60,21 +104,57 @@ impl PathItem {
         match self {
             PathItem::OnGraph(_) => None,
             PathItem::Detached(e) => Some(e),
+            PathItem::Empty => None,
         }
     }
+
+    #[inline]
+    pub fn as_mut_detached(&mut self) -> Option<&mut Object> {
+        match self {
+            PathItem::OnGraph(_) => None,
+            PathItem::Detached(e) => Some(e),
+            PathItem::Empty => None,
+        }
+    }
+}
+
+impl From<GraphElement> for PathItem {
+    fn from(e: GraphElement) -> Self {
+        PathItem::OnGraph(e)
+    }
+}
+
+impl From<Object> for PathItem {
+    fn from(o: Object) -> Self {
+        PathItem::Detached(o)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum PathHead {
+    Item(PathItem),
+    Index(usize),
 }
 
 #[derive(Clone)]
 pub struct Path {
     history: Vec<PathItem>,
-    head: usize,
-    tags: RefCell<HashMap<Tag, Vec<usize>>>,
+    head: PathHead,
+    tags: RefCell<VecMap<usize>>,
 }
 
 impl Path {
-    pub fn new<T: Into<GraphElement>>(first: T) -> Self {
+    pub fn new<T: Into<GraphElement>>(first: T, is_label_path: bool) -> Self {
         let first = PathItem::OnGraph(first.into());
-        Path { history: vec![first], head: 0, tags: RefCell::new(HashMap::new()) }
+        if is_label_path {
+            Path { history: vec![], head: PathHead::Item(first), tags: RefCell::new(VecMap::new()) }
+        } else {
+            Path {
+                history: vec![first],
+                head: PathHead::Index(0),
+                tags: RefCell::new(VecMap::new()),
+            }
+        }
     }
 
     pub fn size(&self) -> usize {
@@ -82,52 +162,74 @@ impl Path {
     }
 
     pub fn head(&self) -> &PathItem {
-        assert!(self.head < self.history.len());
-        &self.history[self.head]
+        match &self.head {
+            PathHead::Item(item) => item,
+            PathHead::Index(index) => {
+                assert!(*index < self.history.len());
+                &self.history[*index]
+            }
+        }
     }
 
     pub fn head_mut(&mut self) -> &mut PathItem {
-        assert!(self.head < self.history.len());
-        &mut self.history[self.head]
-    }
-
-    pub fn extend_with<T: Into<GraphElement>>(&mut self, element: T, labels: &HashSet<String>) {
-        self.history.push(PathItem::OnGraph(element.into()));
-        self.head = self.history.len() - 1;
-        let head = self.head;
-        let mut label = self.tags.borrow_mut();
-        for s in labels.iter() {
-            label.entry(s.clone()).or_insert_with(Vec::new).push(head);
+        match &mut self.head {
+            PathHead::Item(item) => item,
+            PathHead::Index(index) => {
+                assert!(*index < self.history.len());
+                &mut self.history[*index]
+            }
         }
     }
 
-    pub fn extend(&self, labels: &HashSet<String>) {
-        let head = self.head;
-        let mut label = self.tags.borrow_mut();
-        for s in labels.iter() {
-            label.entry(s.clone()).or_insert_with(Vec::new).push(head);
+    pub fn extend(&mut self, labels: &BitSet) {
+        if !labels.is_empty() {
+            let head_idx = match &mut self.head {
+                PathHead::Item(item) => {
+                    self.history.push(item.clone());
+                    let index = self.history.len() - 1;
+                    self.head = PathHead::Index(index);
+                    index
+                }
+                PathHead::Index(index) => *index,
+            };
+            let mut label = self.tags.borrow_mut();
+            for s in labels.iter() {
+                label.insert(s, head_idx);
+            }
         }
     }
 
-    pub fn add_detached<T: Into<Object>>(&mut self, value: T, labels: &HashSet<String>) {
-        self.history.push(PathItem::Detached(value.into()));
-        self.head = self.history.len() - 1;
-        let head = self.head;
-        let mut labeled = self.tags.borrow_mut();
-        for s in labels.iter() {
-            labeled.entry(s.clone()).or_insert_with(Vec::new).push(head);
-        }
-    }
-
-    pub fn modify_head_with<T: Into<GraphElement>>(
-        &mut self, element: T, labels: &HashSet<String>,
+    pub fn extend_with<T: Into<PathItem>>(
+        &mut self, item: T, labels: &BitSet, is_label_path: bool,
     ) {
-        assert!(self.head < self.history.len());
-        let head = self.head;
-        self.history[head] = PathItem::OnGraph(element.into());
+        let path_item = item.into();
+        if is_label_path && labels.is_empty() {
+            self.head = PathHead::Item(path_item);
+        } else {
+            self.history.push(path_item);
+            self.head = PathHead::Index(self.history.len() - 1);
+            self.extend(labels);
+        }
+    }
+
+    // We should 1. remove original head tag, 2. modify head; 3. add new head tag
+    // Now we skip step 1 since compiler will attach the same tag for either original head or new head.
+    pub fn modify_head_with<T: Into<GraphElement>>(&mut self, element: T, labels: &BitSet) {
+        let head = self.head_mut();
+        *head = PathItem::OnGraph(element.into());
+        self.extend(labels);
+    }
+
+    pub fn remove_tag(&mut self, labels: &BitSet, _is_label_path: bool) {
         let mut label = self.tags.borrow_mut();
-        for s in labels.iter() {
-            label.entry(s.clone()).or_insert_with(Vec::new).push(head);
+        for s in labels {
+            if let Some(path_idx) = label.get(s) {
+                if *path_idx == self.history.len() - 1 {
+                    self.head = PathHead::Item(self.history[*path_idx].clone());
+                }
+                self.history[*path_idx] = PathItem::Empty;
+            }
+            label.remove(s);
         }
     }
 
@@ -139,15 +241,15 @@ impl Path {
         }
     }
 
-    pub fn has_tag(&self, label: &str) -> bool {
-        self.tags.borrow().contains_key(label)
+    pub fn has_tag(&self, label: &Tag) -> bool {
+        self.tags.borrow().contains_key(*label as usize)
     }
 
     pub fn objects(&self) -> &[PathItem] {
         self.history.as_slice()
     }
 
-    pub fn tags(&self) -> &[String] {
+    pub fn tags(&self) -> &[Tag] {
         unimplemented!("Path#labels")
     }
 
@@ -163,22 +265,10 @@ impl Path {
         true
     }
 
-    pub fn select_first(&self, label: &Tag) -> Option<&PathItem> {
+    pub fn select(&self, label: &Tag) -> Option<&PathItem> {
         let tags = self.tags.borrow();
-        if let Some(idx) = tags.get(label) {
-            if let Some(&first) = idx.first() {
-                return self.history.get(first);
-            }
-        }
-        None
-    }
-
-    pub fn select_last(&self, label: &Tag) -> Option<&PathItem> {
-        let tags = self.tags.borrow();
-        if let Some(idx) = tags.get(label) {
-            if let Some(&last) = idx.last() {
-                return self.history.get(last);
-            }
+        if let Some(idx) = tags.get(*label as usize) {
+            return self.history.get(*idx);
         }
         None
     }
@@ -198,7 +288,55 @@ impl Path {
 
 impl Debug for Path {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "path[{:?}]", self.history)
+        write!(f, "head {:?}, path[{:?}]", self.head, self.history)
+    }
+}
+
+impl Encode for Path {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        self.history.write_to(writer)?;
+        match &self.head {
+            PathHead::Item(item) => {
+                writer.write_u8(0)?;
+                item.write_to(writer)?;
+            }
+            PathHead::Index(index) => {
+                writer.write_u8(1)?;
+                writer.write_u64(*index as u64)?;
+            }
+        }
+        let tags = self.tags.borrow();
+        // TODO(longbin) `Tag` is typed `u8`, but tags length may exceed this length.
+        // This may happen, but is quite impossible.
+        // In addition, if we change Tag's type, this would trigger a compile error.
+        writer.write_u8(tags.len() as Tag)?;
+        for (k, v) in tags.iter() {
+            writer.write_u8(k as Tag)?;
+            writer.write_u64(*v as u64)?;
+        }
+        Ok(())
+    }
+}
+
+impl Decode for Path {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let history = <Vec<PathItem>>::read_from(reader)?;
+        let head_opt = <u8>::read_from(reader)?;
+        let head = if head_opt == 0 {
+            let item = PathItem::read_from(reader)?;
+            PathHead::Item(item)
+        } else {
+            let index = <u64>::read_from(reader)? as usize;
+            PathHead::Index(index)
+        };
+        let tags_len = <Tag>::read_from(reader)?;
+        let mut tags = VecMap::with_capacity(tags_len as usize);
+        for _i in 0..tags_len {
+            let k = <Tag>::read_from(reader)? as usize;
+            let v = <u64>::read_from(reader)? as usize;
+            tags.insert(k, v);
+        }
+        Ok(Path { history, head, tags: RefCell::new(tags) })
     }
 }
 
@@ -223,6 +361,7 @@ impl Deref for ResultPath {
 
 impl_as_any!(ResultPath);
 
+// TODO(yyy)
 impl Encode for ResultPath {
     fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
         unimplemented!()

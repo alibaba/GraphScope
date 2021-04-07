@@ -20,14 +20,14 @@ from graphscope.analytical.app import *
 from graphscope.analytical.udf import declare
 from graphscope.analytical.udf.types import Vertex
 from graphscope.client.session import Session
+from graphscope.client.session import g
 from graphscope.client.session import get_default_session
 from graphscope.client.session import get_option
 from graphscope.client.session import session
 from graphscope.client.session import set_option
 from graphscope.framework.errors import *
 from graphscope.framework.graph import Graph
-from graphscope.framework.graph_utils import g
-from graphscope.framework.graph_utils import load_from
+from graphscope.framework.graph_builder import load_from
 from graphscope.version import __version__
 
 __doc__ = """
@@ -53,3 +53,25 @@ Here are the main components that GraphScope includes:
 
   - Graph Learning Engine (GLE): an end-to-end graph learning framework
 """
+
+
+def __inject_graphscope_extensions():
+    """The graphscope extensions follows the following signature:
+
+    def ext(graphscope):
+        ...
+
+    It may inject classes, functions, methods and attributes to the graphscope module.
+    """
+    import sys
+
+    if "__graphscope_extensions__" in globals():
+        for ext in globals()["__graphscope_extensions__"]:
+            try:
+                ext(sys.modules[__name__])
+            except Exception as e:  # noqa
+                pass
+
+
+__inject_graphscope_extensions()
+del __inject_graphscope_extensions

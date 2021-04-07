@@ -32,6 +32,7 @@ from graphscope import hits
 from graphscope import k_core
 from graphscope import k_shell
 from graphscope import katz_centrality
+from graphscope import louvain
 from graphscope import lpa
 from graphscope import pagerank
 from graphscope import property_sssp
@@ -53,19 +54,10 @@ def test_create_app():
     a3 = AppAssets(algo="sssp_has_path")
 
 
-def test_compatible_with_arrow_graph(arrow_property_graph, arrow_project_graph):
-    # bfs
-    with pytest.raises(
-        InvalidArgumentError,
-        match="Not compatible for arrow_property dynamic_property type",
-    ):
-        bfs(arrow_property_graph, src=4)
-
-
 @pytest.mark.skipif(
     os.environ.get("EXPERIMENTAL_ON") != "ON", reason="dynamic graph is in experimental"
 )
-def test_compatible_with_dynamic_graph(dynamic_property_graph, dynamic_project_graph):
+def test_compatible_with_dynamic_graph(dynamic_property_graph):
     # bfs
     with pytest.raises(
         InvalidArgumentError,
@@ -78,7 +70,8 @@ def test_errors_on_create_app(arrow_property_graph, arrow_project_graph):
     # builtin-property app is incompatible with projected graph
     with pytest.raises(graphscope.CompilationError):
         a = AppAssets(algo="property_sssp")
-        a(arrow_project_graph, 4)
+        pg = arrow_project_graph._project_to_simple()
+        a(pg, 4)
 
     # builtin app is incompatible with property graph
     with pytest.raises(graphscope.CompilationError):
@@ -180,6 +173,11 @@ def test_run_app_on_directed_graph(
     assert np.all(
         sorted(ctx5.to_numpy("r", vertex_range={"begin": 1, "end": 4})) == [5, 5, 6]
     )
+
+    with pytest.raises(
+        InvalidArgumentError, match="Louvain not support directed graph."
+    ):
+        louvain(p2p_project_directed_graph)
 
 
 def test_app_on_undirected_graph(
@@ -339,6 +337,9 @@ def test_app_on_undirected_graph(
         == [[1, 0], [2, 0], [3, 0]]
     )
     assert np.all(ctx10.to_numpy("r", vertex_range={"begin": 1, "end": 4}) == [0, 0, 0])
+
+    # louvain
+    ctx10 = louvain(p2p_project_undirected_graph, min_progress=50, progress_tries=2)
 
 
 def test_run_app_on_string_oid_graph(p2p_project_directed_graph_string):

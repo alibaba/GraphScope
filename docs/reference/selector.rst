@@ -93,8 +93,8 @@ Note that selectors of :class:`VertexPropertyContext` only differed in `r` with 
         - `r.column_name`: Get the property named `column_name` in results. e.g. `r.hub` in :func:`graphscope.hits`.
 
 
-LabelVertexPropertyContext
-++++++++++++++++++++++++++
+LabeledVertexPropertyContext
+++++++++++++++++++++++++++++
 
 :class:`LabeledVertexPropertyContext` is used by algorithms that compatible graphs is a property graph.
 i.e. There are several labels in the graph, and each label has several properties.

@@ -19,10 +19,12 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.app import project_to_simple
 
 __all__ = ["degree_centrality"]
 
 
+@project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def degree_centrality(graph, centrality_type="both"):
     """The degree centrality values are normalized by dividing
@@ -42,9 +44,9 @@ def degree_centrality(graph, centrality_type="both"):
     .. code:: python
 
         import graphscope as gs
-        s = gs.session()
-        g = s.load_from('The parameters for loading a graph...')
-        pg = g.project_to_simple(v_label="vlabel", e_label="elabel")
+        sess = gs.session()
+        g = sess.g()
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.degree_centrality(pg, centrality_type="both")
         s.close()
 

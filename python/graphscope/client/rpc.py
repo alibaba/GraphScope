@@ -93,7 +93,7 @@ class GRPCClient(object):
         self._session_id = None
         self._logs_fetching_thread = None
 
-    def waiting_service_ready(self, timeout_seconds=60, enable_k8s=True):
+    def waiting_service_ready(self, timeout_seconds=60):
         begin_time = time.time()
         request = message_pb2.HeartBeatRequest()
         # Do not drop this line, which is for handling KeyboardInterrupt.
@@ -106,9 +106,6 @@ class GRPCClient(object):
                 response = None
             finally:
                 if response is not None:
-                    # connnect to coordinator, fetch log
-                    if enable_k8s:
-                        self.fetch_logs()
                     if response.status.code == error_codes_pb2.OK:
                         logger.info("GraphScope coordinator service connected.")
                         break
@@ -120,8 +117,11 @@ class GRPCClient(object):
                         msg = response.status.error_msg
                     raise ConnectionError("Connect coordinator timeout, {}".format(msg))
 
-    def connect(self):
-        return self._connect_session_impl()
+    def connect(self, cleanup_instance=True, dangling_timeout_seconds=60):
+        return self._connect_session_impl(
+            cleanup_instance=cleanup_instance,
+            dangling_timeout_seconds=dangling_timeout_seconds,
+        )
 
     @property
     def session_id(self):
@@ -199,8 +199,20 @@ class GRPCClient(object):
             self._logs_fetching_thread.join(timeout=5)
 
     @catch_grpc_error
-    def _connect_session_impl(self):
-        request = message_pb2.ConnectSessionRequest()
+    def _connect_session_impl(self, cleanup_instance=True, dangling_timeout_seconds=60):
+        """
+        Args:
+            cleanup_instance (bool, optional): If True, also delete graphscope
+                instance (such as pod) in closing process.
+            dangling_timeout_seconds (int, optional): After seconds of client
+                disconnect, coordinator will kill this graphscope instance.
+                Disable dangling check by setting -1.
+
+        """
+        request = message_pb2.ConnectSessionRequest(
+            cleanup_instance=cleanup_instance,
+            dangling_timeout_seconds=dangling_timeout_seconds,
+        )
 
         response = self._stub.ConnectSession(request)
         response = check_grpc_response(response)
@@ -208,8 +220,11 @@ class GRPCClient(object):
         self._session_id = response.session_id
         return (
             response.session_id,
+            response.cluster_type,
             json.loads(response.engine_config),
             response.pod_name_list,
+            response.num_workers,
+            response.namespace,
         )
 
     @suppress_grpc_error

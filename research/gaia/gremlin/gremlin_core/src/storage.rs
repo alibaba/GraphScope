@@ -1,19 +1,19 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::object::BorrowObject;
+use crate::common::object::BorrowObject;
 use crate::structure::{
     DefaultDetails, Details, Direction, DynDetails, Edge, Label, QueryParams, Statement, Vertex,
 };
@@ -25,6 +25,7 @@ use graph_store::prelude::{
     LabelId, LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
 };
 use pegasus::api::function::DynIter;
+use pegasus_common::downcast::*;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::path::Path;
@@ -33,6 +34,7 @@ use std::sync::Arc;
 
 lazy_static! {
     pub static ref DATA_PATH: String = configure_with_default!(String, "DATA_PATH", "".to_string());
+    pub static ref PARTITION_ID: usize = configure_with_default!(usize, "PARTITION_ID", 0);
     pub static ref GRAPH: LargeGraphDB<DefaultId, InternalId> = _init_graph();
     static ref GRAPH_PROXY: Arc<DemoGraph> = initialize();
 }
@@ -54,6 +56,7 @@ fn _init_graph() -> LargeGraphDB<DefaultId, InternalId> {
         info!("Read the graph data from {:?} for demo.", *DATA_PATH);
         GraphDBConfig::default()
             .root_dir(&(*DATA_PATH))
+            .partition(*PARTITION_ID)
             .schema_file(&(DATA_PATH.as_ref() as &Path).join(DIR_GRAPH_SCHEMA).join(FILE_SCHEMA))
             .open()
             .expect("Open graph error")
@@ -352,6 +355,8 @@ struct LazyVertexDetails {
     store: &'static LargeGraphDB<DefaultId, InternalId>,
 }
 
+impl_as_any!(LazyVertexDetails);
+
 impl LazyVertexDetails {
     pub fn new(id: DefaultId, store: &'static LargeGraphDB<DefaultId, InternalId>) -> Self {
         LazyVertexDetails { id, inner: AtomicPtr::default(), store }
@@ -423,6 +428,8 @@ impl Drop for LazyVertexDetails {
 struct LazyEdgeDetails {
     store: &'static LargeGraphDB<DefaultId, InternalId>,
 }
+
+impl_as_any!(LazyEdgeDetails);
 
 impl Details for LazyEdgeDetails {
     fn get_property(&self, _key: &str) -> Option<BorrowObject> {

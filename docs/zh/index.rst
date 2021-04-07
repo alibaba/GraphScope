@@ -35,6 +35,7 @@ GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。
    deployment
    tutorials
    loading_graph
+   graph_transformation
    interactive_engine
    analytics_engine
    learning_engine

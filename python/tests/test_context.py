@@ -56,7 +56,9 @@ def test_simple_context_to_vineyard_tensor(simple_context, p2p_project_directed_
     assert out is not None
 
     has_path = AppAssets(algo="sssp_has_path")
-    ctx = has_path(p2p_project_directed_graph, source=6, target=3728)
+    ctx = has_path(
+        p2p_project_directed_graph._project_to_simple(), source=6, target=3728
+    )
     assert ctx.to_vineyard_tensor(axis=0) is not None
 
 
@@ -128,19 +130,19 @@ def test_add_column(arrow_property_graph, property_context):
     g2 = arrow_property_graph.add_column(
         property_context, {"result_0": "r:v0.dist_0", "result_1": "r:v1.dist_1"}
     )
-    assert "result_0" in g2.schema.vertex_properties[0]
-    assert "result_1" in g2.schema.vertex_properties[1]
+    assert "result_0" in [p.name for p in g2.schema.get_vertex_properties("v0")]
+    assert "result_1" in [p.name for p in g2.schema.get_vertex_properties("v1")]
 
 
 def test_add_column_after_computation(arrow_property_graph):
-    sg = arrow_property_graph.project_to_simple(0, 0, 0, 0)
+    sg = arrow_property_graph.project(vertices={"v0": ["id"]}, edges={"e0": ["weight"]})
     ret = sssp(sg, 20)
     g2 = arrow_property_graph.add_column(
         ret, {"id_col": "v.id", "data_col": "v.data", "result_col": "r"}
     )
-    assert "id_col" in g2.schema.vertex_properties[0]
-    assert "data_col" in g2.schema.vertex_properties[0]
-    assert "result_col" in g2.schema.vertex_properties[0]
+    assert "id_col" in [p.name for p in g2.schema.get_vertex_properties("v0")]
+    assert "data_col" in [p.name for p in g2.schema.get_vertex_properties("v0")]
+    assert "result_col" in [p.name for p in g2.schema.get_vertex_properties("v0")]
 
 
 def test_lpa(arrow_property_graph_lpa):
@@ -154,9 +156,9 @@ def test_lpa(arrow_property_graph_lpa):
 
 
 def test_error_on_selector(property_context):
-    with pytest.raises(ValueError, match="'non_exist_label' is not in list"):
+    with pytest.raises(KeyError, match="non_exist_label"):
         out = property_context.to_numpy("v:non_exist_label.id")
-    with pytest.raises(ValueError, match="'non_exist_prop' is not in list"):
+    with pytest.raises(KeyError, match="non_exist_prop"):
         out = property_context.to_numpy("v:v0.non_exist_prop")
     with pytest.raises(RuntimeError, match="selector cannot be None"):
         out = property_context.to_numpy(selector=None)

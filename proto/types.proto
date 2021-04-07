@@ -17,16 +17,16 @@ syntax = "proto3";
 
 package gs.rpc;
 
-enum SessionType {
+enum ClusterType {
   HOSTS = 0;
   K8S  = 1;
 
-  INVALID_SESSION = 100;
+  UNDEFINED = 100;
 };
 
 // Basic data types
 enum DataType {
-  NULL = 0;
+  NULLVALUE = 0;
   INT8 = 1;
   INT16 = 2;
   INT32 = 3;
@@ -80,14 +80,18 @@ enum OperationType {
   REPARTITION = 8;  // return graph
   TRANSFORM_GRAPH = 9;  // return graph or nx_graph
   REPORT_GRAPH = 10;  // return scalar
-  PROJECT_GRAPH = 11;
-  COPY_GRAPH = 12;
+  PROJECT_GRAPH = 11;  // return graph, general form project
+  PROJECT_TO_SIMPLE = 12;  // return graph, specifically project to a simple graph
+  COPY_GRAPH = 13;
+  ADD_VERTICES = 14;  // return graph, add new label of vertices to a property graph
+  ADD_EDGES = 15;  // return graph, add new label of edges to a property graph
+
   // data
   CONTEXT_TO_NUMPY = 50;
   CONTEXT_TO_DATAFRAME = 51;
   TO_VINEYARD_TENSOR=53;
   TO_VINEYARD_DATAFRAME=54;
-  ADD_COLUMN=55;
+  ADD_COLUMN=55;  // return graph, add a property to a kind of vertex.
 
   GRAPH_TO_NUMPY = 56;
   GRAPH_TO_DATAFRAME = 57;
@@ -144,11 +148,8 @@ enum ParamKey {
   NFRAG = 25;
   PARAM = 26;
 
-  GENERATE_EID = 27;
-
   APP_SIGNATURE = 40;
   GRAPH_SIGNATURE = 41;
-
   IS_FROM_VINEYARD_ID = 42;
   VINEYARD_ID = 43;
   VINEYARD_NAME = 44;
@@ -189,17 +190,18 @@ enum ParamKey {
   ROW_NUM = 312;
   COLUMN_NUM = 313;
   SUB_LABEL = 315;
+  GENERATE_EID = 316;
 
   GRAPH_LIBRARY_PATH = 400;
 }
 
 enum ModifyType {
-  ADD_NODES = 0;
-  ADD_EDGES = 1;
-  DEL_NODES = 2;
-  DEL_EDGES = 3;
-  UPDATE_NODES = 4;
-  UPDATE_EDGES = 5;
+  NX_ADD_NODES = 0;
+  NX_ADD_EDGES = 1;
+  NX_DEL_NODES = 2;
+  NX_DEL_EDGES = 3;
+  NX_UPDATE_NODES = 4;
+  NX_UPDATE_EDGES = 5;
 }
 
 enum ReportType {

@@ -27,9 +27,6 @@ import json
 import logging
 import os
 import random
-import signal
-import socket
-import subprocess
 import sys
 import threading
 import time
@@ -47,7 +44,8 @@ from graphscope.client.utils import CaptureKeyboardInterrupt
 from graphscope.client.utils import GSLogger
 from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
-from graphscope.deploy.kubernetes.cluster import KubernetesCluster
+from graphscope.deploy.hosts.cluster import HostsClusterLauncher
+from graphscope.deploy.kubernetes.cluster import KubernetesClusterLauncher
 from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import GRPCError
@@ -56,23 +54,13 @@ from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import K8sError
 from graphscope.framework.errors import LearningEngineInternalError
 from graphscope.framework.errors import check_argument
+from graphscope.framework.graph import Graph
 from graphscope.framework.operation import Operation
 from graphscope.interactive.query import InteractiveQuery
 from graphscope.interactive.query import InteractiveQueryStatus
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
-
-try:
-    import gscoordinator
-
-    COORDINATOR_HOME = os.path.abspath(os.path.join(gscoordinator.__file__, "..", ".."))
-except ModuleNotFoundError:
-    # If gscoordinator is not installed, try to locate it by relative path,
-    # which is strong related with the directory structure of GraphScope
-    COORDINATOR_HOME = os.path.abspath(
-        os.path.join(__file__, "..", "..", "..", "..", "coordinator")
-    )
 
 DEFAULT_CONFIG_FILE = os.environ.get(
     "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/session.json")
@@ -104,15 +92,17 @@ class Session(object):
         >>> import graphscope as gs
 
         >>> # use session object explicitly
-        >>> s = gs.session()
-        >>> g = s.load_from('xxx')
+        >>> sess = gs.session()
+        >>> g = sess.g()
+        >>> pg = g.project(vertices={'v': []}, edges={'e': ['dist']})
         >>> r = s.sssp(g, 4)
         >>> s.close()
 
         >>> # or use a session as default
         >>> s = gs.session().as_default()
-        >>> g = gs.load_from('xxx')
-        >>> r = gs.sssp(g, 4)
+        >>> g = g()
+        >>> pg = g.project(vertices={'v': []}, edges={'e': ['dist']})
+        >>> r = gs.sssp(pg, 4)
         >>> s.close()
 
     We support setup a service cluster and create a RPC session in following ways:
@@ -145,7 +135,10 @@ class Session(object):
     def __init__(
         self,
         config=None,
+        cluster_type=gs_config.cluster_type,
+        addr=gs_config.addr,
         num_workers=gs_config.num_workers,
+        preemptive=gs_config.preemptive,
         k8s_namespace=gs_config.k8s_namespace,
         k8s_service_type=gs_config.k8s_service_type,
         k8s_gs_image=gs_config.k8s_gs_image,
@@ -156,20 +149,28 @@ class Session(object):
         k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
         k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
         k8s_coordinator_mem=gs_config.k8s_coordinator_mem,
+        k8s_etcd_num_pods=gs_config.k8s_etcd_num_pods,
         k8s_etcd_cpu=gs_config.k8s_etcd_cpu,
         k8s_etcd_mem=gs_config.k8s_etcd_mem,
         k8s_zookeeper_cpu=gs_config.k8s_zookeeper_cpu,
         k8s_zookeeper_mem=gs_config.k8s_zookeeper_mem,
         k8s_gie_graph_manager_cpu=gs_config.k8s_gie_graph_manager_cpu,
         k8s_gie_graph_manager_mem=gs_config.k8s_gie_graph_manager_mem,
+        k8s_vineyard_daemonset=gs_config.k8s_vineyard_daemonset,
         k8s_vineyard_cpu=gs_config.k8s_vineyard_cpu,
         k8s_vineyard_mem=gs_config.k8s_vineyard_mem,
         k8s_vineyard_shared_mem=gs_config.k8s_vineyard_shared_mem,
         k8s_engine_cpu=gs_config.k8s_engine_cpu,
         k8s_engine_mem=gs_config.k8s_engine_mem,
+        k8s_mars_worker_cpu=gs_config.mars_worker_cpu,
+        k8s_mars_worker_mem=gs_config.mars_worker_mem,
+        k8s_mars_scheduler_cpu=gs_config.mars_scheduler_cpu,
+        k8s_mars_scheduler_mem=gs_config.mars_scheduler_mem,
         k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
+        dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
+        with_mars=gs_config.with_mars,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -181,7 +182,18 @@ class Session(object):
                 :code:`DEFAULT_CONFIG_FILE` will be used, which get value of GS_CONFIG_PATH
                 in environment. Note that it will overwrite explicit parameters. Defaults to None.
 
+            addr (str, optional): The endpoint of a pre-launched GraphScope instance with '<ip>:<port>' format.
+                A new session id will be generated for each session connection.
+
+            cluster_type (str, optional): Deploy GraphScope instance on hosts or k8s cluster. Defaults to k8s.
+                Available options: "k8s" and "hosts". Note that only support deployed on localhost with hosts mode.
+
             num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.
+
+            preemptive (bool, optional): If True, GraphScope instance will treat resource params (e.g. k8s_coordinator_cpu)
+                as limits and provide the minimum available value as requests, but this will make pod has a `Burstable` QOS,
+                which can be preempted by other pods with high QOS. Otherwise, it will set both requests and limits with the
+                same value.
 
             k8s_namespace (str, optional): Contains the namespace to create all resource inside.
                 If param missing, it will try to read namespace from kubernetes context, or
@@ -203,6 +215,10 @@ class Session(object):
 
             k8s_zookeeper_image (str, optional): The image of zookeeper, which used by GIE graph manager.
 
+            k8s_vineyard_daemonset (str, optional): The name of vineyard Helm deployment to use. GraphScope will try to
+                discovery the daemonset from kubernetes cluster, then use it if exists, and fallback to launching
+                a bundled vineyard container otherwise.
+
             k8s_vineyard_cpu (float, optional): Minimum number of CPU cores request for vineyard container. Defaults to 0.5.
 
             k8s_vineyard_mem (str, optional): Minimum number of memory request for vineyard container. Defaults to '512Mi'.
@@ -216,6 +232,8 @@ class Session(object):
             k8s_coordinator_cpu (float, optional): Minimum number of CPU cores request for coordinator pod. Defaults to 1.0.
 
             k8s_coordinator_mem (str, optional): Minimum number of memory request for coordinator pod. Defaults to '4Gi'.
+
+            k8s_etcd_num_pods (int, optional): The number of etcd pods. Defaults to 3.
 
             k8s_etcd_cpu (float, optional): Minimum number of CPU cores request for etcd pod. Defaults to 0.5.
 
@@ -232,6 +250,21 @@ class Session(object):
 
             k8s_gie_graph_manager_mem (str, optional):
                 Minimum number of memory request for graphmanager container. Defaults to '4Gi'.
+
+            k8s_mars_worker_cpu (float, optional):
+                Minimum number of CPU cores request for mars worker container. Defaults to 0.5.
+
+            k8s_mars_worker_mem (str, optional):
+                Minimum number of memory request for mars worker container. Defaults to '4Gi'.
+
+            k8s_mars_scheduler_cpu (float, optional):
+                Minimum number of CPU cores request for mars scheduler container. Defaults to 0.5.
+
+            k8s_mars_scheduler_mem (str, optional):
+                Minimum number of memory request for mars scheduler container. Defaults to '2Gi'.
+
+            with_mars (bool, optional):
+                Launch graphscope with mars. Defaults to False.
 
             k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the
                 containers in a pod. Defaults to {}.
@@ -286,8 +319,11 @@ class Session(object):
 
             timeout_seconds (int, optional): For waiting service ready (or waiting for delete if
                 k8s_waiting_for_delete is True).
-                Also, after seconds of client disconnect, coordinator will clean up this graphscope instance.
-                Defaults to 600.
+
+            dangling_timeout_seconds (int, optional): After seconds of client disconnect,
+                coordinator will kill this graphscope instance. Defaults to 600.
+                Expect this value to be greater than 5 (heartbeat interval).
+                Disable dangling check by setting -1.
 
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
 
@@ -315,7 +351,10 @@ class Session(object):
         num_workers = int(num_workers)
         self._config_params = {}
         self._accessable_params = (
+            "addr",
+            "cluster_type",
             "num_workers",
+            "preemptive",
             "k8s_namespace",
             "k8s_service_type",
             "k8s_gs_image",
@@ -326,20 +365,28 @@ class Session(object):
             "k8s_zookeeper_image",
             "k8s_coordinator_cpu",
             "k8s_coordinator_mem",
+            "k8s_etcd_num_pods",
             "k8s_etcd_cpu",
             "k8s_etcd_mem",
             "k8s_zookeeper_cpu",
             "k8s_zookeeper_mem",
             "k8s_gie_graph_manager_cpu",
             "k8s_gie_graph_manager_mem",
+            "k8s_vineyard_daemonset",
             "k8s_vineyard_cpu",
             "k8s_vineyard_mem",
             "k8s_vineyard_shared_mem",
             "k8s_engine_cpu",
             "k8s_engine_mem",
+            "k8s_mars_worker_cpu",
+            "k8s_mars_worker_mem",
+            "k8s_mars_scheduler_cpu",
+            "k8s_mars_scheduler_mem",
+            "with_mars",
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
+            "dangling_timeout_seconds",
         )
         saved_locals = locals()
         for param in self._accessable_params:
@@ -357,14 +404,14 @@ class Session(object):
         # update other optional params
         self._config_params.update(kw)
 
-        self._config_params["addr"] = kw.pop("addr", None)
+        # initial setting of cluster_type
+        self._cluster_type = self._parse_cluster_type()
 
-        # Reserved keyword for local testing.
-        run_on_local = kw.pop("run_on_local", False)
-        if not run_on_local:
-            self._config_params["enable_k8s"] = True
-        else:
-            self._run_on_local()
+        # mars cannot work with run-on-local mode
+        if self._cluster_type == types_pb2.HOSTS and self._config_params["with_mars"]:
+            raise NotImplementedError(
+                "Mars cluster cannot be launched along with local GraphScope deployment"
+            )
 
         # deprecated params handle
         if "show_log" in kw:
@@ -389,20 +436,23 @@ class Session(object):
         if kw:
             raise ValueError("Not recognized value: ", list(kw.keys()))
 
-        logger.info(
-            "Initializing graphscope session with parameters: %s", self._config_params
-        )
+        if self._config_params["addr"]:
+            logger.info(
+                "Connecting graphscope session with address: %s",
+                self._config_params["addr"],
+            )
+        else:
+            logger.info(
+                "Initializing graphscope session with parameters: %s",
+                self._config_params,
+            )
 
         self._closed = False
 
-        # set _session_type in self._connect()
-        self._session_type = types_pb2.INVALID_SESSION
+        # coordinator service endpoint
+        self._coordinator_endpoint = None
 
-        # need clean up when session exit
-        self._proc = None
-        self._endpoint = None
-
-        self._k8s_cluster = None
+        self._launcher = None
         self._heartbeat_sending_thread = None
 
         self._grpc_client = None
@@ -426,7 +476,7 @@ class Session(object):
         atexit.register(self.close)
         # create and connect session
         with CaptureKeyboardInterrupt(self.close):
-            self._proc, self._endpoint = self._connect()
+            self._connect()
 
         self._disconnected = False
 
@@ -458,6 +508,24 @@ class Session(object):
             if not slient:
                 raise exp
 
+    def _parse_cluster_type(self):
+        if self._config_params["addr"] is not None:
+            # get the cluster type after connecting
+            return types_pb2.UNDEFINED
+        else:
+            if self._config_params["cluster_type"] == "hosts":
+                self._run_on_local()
+                return types_pb2.HOSTS
+            elif self._config_params["cluster_type"] == "k8s":
+                return types_pb2.K8S
+            else:
+                raise ValueError("Expect hosts or k8s of cluster_type parameter")
+
+    @property
+    def engine_config(self):
+        """Show the engine configration associated with session in json format."""
+        return self._engine_config
+
     @property
     def info(self):
         """Show all resources info associated with session in json format."""
@@ -469,19 +537,18 @@ class Session(object):
         else:
             info["status"] = "active"
 
-        if self._session_type == types_pb2.K8S:
+        if self._cluster_type == types_pb2.K8S:
             info["type"] = "k8s"
             info["engine_hosts"] = ",".join(self._pod_name_list)
             info["namespace"] = self._config_params["k8s_namespace"]
         else:
             info["type"] = "hosts"
-            if self._config_params["addr"] is not None:
-                info["engine_hosts"] = self._engine_config["engine_hosts"]
-            else:
-                info["engine_hosts"] = ",".join(self._config_params["hosts"])
+            info["engine_hosts"] = ",".join(self._config_params["hosts"])
 
+        info["cluster_type"] = str(self._cluster_type)
+        info["session_id"] = self.session_id
         info["num_workers"] = self._config_params["num_workers"]
-        info["coordinator_endpoint"] = self._endpoint
+        info["coordinator_endpoint"] = self._coordinator_endpoint
         info["engine_config"] = self._engine_config
         return info
 
@@ -505,7 +572,7 @@ class Session(object):
         if self._closed:
             return
         self._closed = True
-        self._endpoint = None
+        self._coordinator_endpoint = None
 
         self._deregister_default()
 
@@ -541,16 +608,10 @@ class Session(object):
             _session_dict.pop(self._session_id, None)
 
         # clean up
-        if self._proc is not None:
-            # coordinator's GRPCServer.wait_for_termination works for SIGINT (Ctrl-C)
-            self._proc.send_signal(signal.SIGINT)
-            self._proc.wait()
-            self._proc = None
-
-        if self._config_params["enable_k8s"]:
-            if self._k8s_cluster:
-                self._k8s_cluster.stop()
-                self._pod_name_list = []
+        if self._config_params["addr"] is None:
+            if self._launcher:
+                self._launcher.stop()
+            self._pod_name_list = []
 
     def _close_interactive_instance(self, instance):
         """Close a interactive instance."""
@@ -669,15 +730,14 @@ class Session(object):
             return response.result
         else:
             raise InvalidArgumentError(
-                "Not recognized output type: %s", op.output_types
+                "Not recognized output type: %s" % op.output_types
             )
 
     def _connect(self):
         if self._config_params["addr"] is not None:
             # try connect to exist coordinator
-            self._session_type = types_pb2.HOSTS
-            proc, endpoint = None, self._config_params["addr"]
-        elif self._config_params["enable_k8s"]:
+            self._coordinator_endpoint = self._config_params["addr"]
+        elif self._cluster_type == types_pb2.K8S:
             if (
                 self._config_params["k8s_etcd_image"] is None
                 or self._config_params["k8s_gs_image"] is None
@@ -686,14 +746,13 @@ class Session(object):
             api_client = kube_config.new_client_from_config(
                 **self._config_params["k8s_client_config"]
             )
-            proc = None
-            self._session_type = types_pb2.K8S
-            self._k8s_cluster = KubernetesCluster(
+            self._launcher = KubernetesClusterLauncher(
                 api_client=api_client,
                 namespace=self._config_params["k8s_namespace"],
                 service_type=self._config_params["k8s_service_type"],
                 num_workers=self._config_params["num_workers"],
                 gs_image=self._config_params["k8s_gs_image"],
+                preemptive=self._config_params["preemptive"],
                 etcd_image=self._config_params["k8s_etcd_image"],
                 gie_graph_manager_image=self._config_params[
                     "k8s_gie_graph_manager_image"
@@ -701,9 +760,11 @@ class Session(object):
                 zookeeper_image=self._config_params["k8s_zookeeper_image"],
                 image_pull_policy=self._config_params["k8s_image_pull_policy"],
                 image_pull_secrets=self._config_params["k8s_image_pull_secrets"],
+                vineyard_daemonset=self._config_params["k8s_vineyard_daemonset"],
                 vineyard_cpu=self._config_params["k8s_vineyard_cpu"],
                 vineyard_mem=self._config_params["k8s_vineyard_mem"],
                 vineyard_shared_mem=self._config_params["k8s_vineyard_shared_mem"],
+                etcd_num_pods=self._config_params["k8s_etcd_num_pods"],
                 etcd_cpu=self._config_params["k8s_etcd_cpu"],
                 etcd_mem=self._config_params["k8s_etcd_mem"],
                 zookeeper_cpu=self._config_params["k8s_zookeeper_cpu"],
@@ -712,54 +773,77 @@ class Session(object):
                 gie_graph_manager_mem=self._config_params["k8s_gie_graph_manager_mem"],
                 engine_cpu=self._config_params["k8s_engine_cpu"],
                 engine_mem=self._config_params["k8s_engine_mem"],
+                mars_worker_cpu=self._config_params["k8s_mars_worker_cpu"],
+                mars_worker_mem=self._config_params["k8s_mars_worker_mem"],
+                mars_scheduler_cpu=self._config_params["k8s_mars_scheduler_cpu"],
+                mars_scheduler_mem=self._config_params["k8s_mars_scheduler_mem"],
+                with_mars=self._config_params["with_mars"],
                 coordinator_cpu=float(self._config_params["k8s_coordinator_cpu"]),
                 coordinator_mem=self._config_params["k8s_coordinator_mem"],
                 volumes=self._config_params["k8s_volumes"],
                 waiting_for_delete=self._config_params["k8s_waiting_for_delete"],
                 timeout_seconds=self._config_params["timeout_seconds"],
+                dangling_timeout_seconds=self._config_params[
+                    "dangling_timeout_seconds"
+                ],
             )
-            endpoint = self._k8s_cluster.start()
-            if self._config_params["k8s_namespace"] is None:
-                self._config_params["k8s_namespace"] = self._k8s_cluster.get_namespace()
         elif (
-            isinstance(self._config_params["hosts"], list)
+            self._cluster_type == types_pb2.HOSTS
+            and isinstance(self._config_params["hosts"], list)
             and len(self._config_params["hosts"]) != 0
             and self._config_params["num_workers"] > 0
         ):
             # lanuch coordinator with hosts
-            proc, endpoint = _launch_coordinator_on_local(self._config_params)
-            self._session_type = types_pb2.HOSTS
+            self._launcher = HostsClusterLauncher(
+                hosts=self._config_params["hosts"],
+                port=self._config_params["port"],
+                num_workers=self._config_params["num_workers"],
+                vineyard_socket=self._config_params["vineyard_socket"],
+                timeout_seconds=self._config_params["timeout_seconds"],
+            )
         else:
             raise RuntimeError("Session initialize failed.")
 
+        # launching graphscope service
+        if self._launcher is not None:
+            self._launcher.start()
+            self._coordinator_endpoint = self._launcher.coordinator_endpoint
+
         # waiting service ready
-        self._grpc_client = GRPCClient(endpoint)
+        self._grpc_client = GRPCClient(self._coordinator_endpoint)
         self._grpc_client.waiting_service_ready(
             timeout_seconds=self._config_params["timeout_seconds"],
-            enable_k8s=self._config_params["enable_k8s"],
         )
 
-        # connect to rpc server
+        # connect and fetch logs from rpc server
         try:
             (
                 self._session_id,
+                self._cluster_type,
                 self._engine_config,
                 self._pod_name_list,
-            ) = self._grpc_client.connect()
+                self._config_params["num_workers"],
+                self._config_params["k8s_namespace"],
+            ) = self._grpc_client.connect(
+                cleanup_instance=not bool(self._config_params["addr"]),
+                dangling_timeout_seconds=self._config_params[
+                    "dangling_timeout_seconds"
+                ],
+            )
+            # fetch logs
+            if self._config_params["addr"] or self._cluster_type == types_pb2.K8S:
+                self._grpc_client.fetch_logs()
             _session_dict[self._session_id] = self
         except Exception:
-            if proc is not None and proc.poll() is None:
-                try:
-                    proc.terminate()
-                except:  # noqa: E722
-                    pass
+            self.close()
             raise
-
-        return proc, endpoint
 
     def get_config(self):
         """Get configuration of the session."""
         return self._config_params
+
+    def g(self, incoming_data=None, oid_type="int64", directed=True, generate_eid=True):
+        return Graph(self, incoming_data, oid_type, directed, generate_eid)
 
     def load_from(self, *args, **kwargs):
         """Load a graph within the session.
@@ -772,7 +856,6 @@ class Session(object):
         self._config_params["hosts"] = ["localhost"]
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""
-        self._config_params["enable_k8s"] = False
 
     def _get_gl_handle(self, graph):
         """Dump a handler for GraphLearn for interaction.
@@ -844,26 +927,26 @@ class Session(object):
 
         def group_property_types(props):
             weighted, labeled, i, f, s, attr_types = "false", "false", 0, 0, 0, {}
-            for field_name, field_type in props.items():
-                if field_type in [types_pb2.STRING]:
+            for prop in props:
+                if prop.type in [types_pb2.STRING]:
                     s += 1
-                    attr_types[field_name] = "s"
-                elif field_type in (types_pb2.FLOAT, types_pb2.DOUBLE):
+                    attr_types[prop.name] = "s"
+                elif prop.type in (types_pb2.FLOAT, types_pb2.DOUBLE):
                     f += 1
-                    attr_types[field_name] = "f"
+                    attr_types[prop.name] = "f"
                 else:
                     i += 1
-                    attr_types[field_name] = "i"
-                if field_name == "weight":
+                    attr_types[prop.name] = "i"
+                if prop.name == "weight":
                     weighted = "true"
-                elif field_name == "label":
+                elif prop.name == "label":
                     labeled = "true"
             return weighted, labeled, i, f, s, attr_types
 
         node_schema, node_attribute_types = [], dict()
-        for index, label in enumerate(graph.schema.vertex_labels):
+        for label in graph.schema.vertex_labels:
             weighted, labeled, i, f, s, attr_types = group_property_types(
-                graph.schema.vertex_properties[index]
+                graph.schema.get_vertex_properties(label)
             )
             node_schema.append(
                 "{}:{}:{}:{}:{}:{}".format(label, weighted, labeled, i, f, s)
@@ -871,11 +954,11 @@ class Session(object):
             node_attribute_types[label] = attr_types
 
         edge_schema, edge_attribute_types = [], dict()
-        for index, label in enumerate(graph.schema.edge_labels):
+        for label in graph.schema.edge_labels:
             weighted, labeled, i, f, s, attr_types = group_property_types(
-                graph.schema.edge_properties[index]
+                graph.schema.get_edge_properties(label)
             )
-            for rel in graph.schema.edge_relationships[index]:
+            for rel in graph.schema.get_relationships(label):
                 edge_schema.append(
                     "{}:{}:{}:{}:{}:{}:{}:{}".format(
                         rel[0], label, rel[1], weighted, labeled, i, f, s
@@ -982,7 +1065,7 @@ class Session(object):
                 front_ip=response.frontend_host, front_port=response.frontend_port
             )
             interactive_query.status = InteractiveQueryStatus.Running
-            graph.attach_interactive_instance(interactive_query)
+            graph._attach_interactive_instance(interactive_query)
 
         return interactive_query
 
@@ -1030,85 +1113,11 @@ class Session(object):
 
         learning_graph = LearningGraph(handle, config, graph.vineyard_id, self)
         self._learning_instance_dict[graph.vineyard_id] = learning_graph
-        graph.attach_learning_instance(learning_graph)
+        graph._attach_learning_instance(learning_graph)
         return learning_graph
 
 
 session = Session
-
-
-def _is_port_in_use(port):
-    """Check whether port of localhost is used
-
-    Returns: bool
-      True if port already in used.
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(("localhost", port)) == 0
-
-
-def _launch_coordinator_on_local(config_params):
-    """Launch coordinator locally using specific configuration.
-
-    Args:
-        config_params (dict): Specific configurations,
-          in which we will look at several specific keys:
-            port: Port used to launch coordinator, use random port if None.
-            num_workers: Workers number.
-            hosts: Hosts name of workers.
-            timeout_seconds: Wait until reached timeout.
-            vineyard_socket: Vineyard socket path. Use default path if None.
-    Returns:
-        process: instance of Popen object.
-        endpoint (str): The endpoint to connect to coordinator.
-    """
-    port = config_params["port"]
-    if port is None:
-        # use random port
-        port = random.randint(60801, 63801)
-        while _is_port_in_use(port):
-            port = random.randint(60801, 63801)
-    else:
-        # check port conflict
-        if _is_port_in_use(port):
-            raise ConnectionError("Port already used.")
-
-    cmd = [
-        sys.executable,
-        "-m",
-        "gscoordinator",
-        "--num_workers",
-        "{}".format(str(config_params["num_workers"])),
-        "--hosts",
-        "{}".format(",".join(config_params["hosts"])),
-        "--log_level",
-        "{}".format(gs_config.log_level),
-        "--timeout_seconds",
-        "{}".format(config_params["timeout_seconds"]),
-        "--port",
-        "{}".format(str(port)),
-    ]
-
-    if config_params["vineyard_socket"]:
-        cmd.extend(["--vineyard_socket", "{}".format(config_params["vineyard_socket"])])
-
-    logger.info("Client is initializing coordinator.")
-
-    env = os.environ.copy()
-    env["PYTHONUNBUFFERED"] = "TRUE"
-    process = subprocess.Popen(
-        cmd,
-        cwd=COORDINATOR_HOME,
-        universal_newlines=True,
-        encoding="utf-8",
-        stdin=subprocess.DEVNULL,
-        stdout=sys.stdout if gs_config.show_log else subprocess.DEVNULL,
-        stderr=sys.stderr if gs_config.show_log else subprocess.DEVNULL,
-        bufsize=1,
-        env=env,
-    )
-
-    return process, "localhost:%s" % port
 
 
 def set_option(**kwargs):
@@ -1128,11 +1137,17 @@ def set_option(**kwargs):
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu
         - k8s_coordinator_mem
+        - k8s_vineyard_daemonset
         - k8s_vineyard_cpu
         - k8s_vineyard_mem
         - k8s_vineyard_shared_mem
         - k8s_engine_cpu
         - k8s_engine_mem
+        - k8s_mars_worker_cpu
+        - k8s_mars_worker_mem
+        - k8s_mars_scheduler_cpu
+        - k8s_mars_scheduler_mem
+        - with_mars
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
@@ -1175,11 +1190,17 @@ def get_option(key):
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu
         - k8s_coordinator_mem
+        - k8s_vineyard_daemonset
         - k8s_vineyard_cpu
         - k8s_vineyard_mem
         - k8s_vineyard_shared_mem
         - k8s_engine_cpu
         - k8s_engine_mem
+        - k8s_mars_worker_cpu
+        - k8s_mars_worker_mem
+        - k8s_mars_scheduler_cpu
+        - k8s_mars_scheduler_mem
+        - with_mars
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
@@ -1269,3 +1290,7 @@ class _DefaultSessionStack(object):
 
 
 _default_session_stack = _DefaultSessionStack()  # pylint: disable=protected-access
+
+
+def g(incoming_data=None, oid_type="int64", directed=True, generate_eid=True):
+    return get_default_session().g(incoming_data, oid_type, directed, generate_eid)

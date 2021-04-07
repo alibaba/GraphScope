@@ -258,6 +258,32 @@ class ContainerEnvBuilder(object):
         return result
 
 
+class ContainerFieldRefEnvBuilder(object):
+    """Builder for k8s container environments."""
+
+    def __init__(self, name, field):
+        self._name = name
+        self._field = field
+
+    def build(self):
+        result = dict(name=self._name)
+        result["valueFrom"] = {
+            "fieldRef": {
+                "fieldPath": self._field,
+            }
+        }
+        return result
+
+
+BASE_MACHINE_ENVS = {
+    "MY_NODE_NAME": "spec.nodeName",
+    "MY_POD_NAME": "metadata.name",
+    "MY_POD_NAMESPACE": "metadata.namespace",
+    "MY_POD_IP": "status.podIP",
+    "MY_HOST_NAME": "status.podIP",
+}
+
+
 class PortBuilder(object):
     """Builder for k8s container port definition."""
 
@@ -412,21 +438,31 @@ class DeploymentBuilder(object):
         self._containers = []
         self._volumes = []
         self._envs = dict()
-
         self._image_pull_secrets = []
+
+        self.add_field_envs(BASE_MACHINE_ENVS)
 
     def set_image_pull_policy(self, policy):
         self._image_pull_policy = policy
 
     def add_env(self, name, value=None):
-        self._envs[name] = ContainerEnvBuilder(name, value)
+        if value:
+            self._envs[name] = ContainerEnvBuilder(name, value)
 
-    def add_container(self, ctn):
-        self._containers.append(ctn)
+    def add_field_env(self, name, field=None):
+        if field:
+            self._envs[name] = ContainerFieldRefEnvBuilder(name, field)
 
     def add_simple_envs(self, envs):
         for k, v in envs.items() or ():
             self.add_env(k, v)
+
+    def add_field_envs(self, envs):
+        for k, v in envs.items() or ():
+            self.add_field_env(k, v)
+
+    def add_container(self, ctn):
+        self._containers.append(ctn)
 
     def add_volume(self, vol):
         self._volumes.append(vol)
@@ -480,18 +516,29 @@ class ReplicaSetBuilder(object):
         self._envs = dict()
         self._image_pull_secrets = []
 
+        self.add_field_envs(BASE_MACHINE_ENVS)
+
     def set_image_pull_policy(self, policy):
         self._image_pull_policy = policy
 
     def add_env(self, name, value=None):
-        self._envs[name] = ContainerEnvBuilder(name, value)
+        if value:
+            self._envs[name] = ContainerEnvBuilder(name, value)
 
-    def add_container(self, ctn):
-        self._containers.append(ctn)
+    def add_field_env(self, name, field=None):
+        if field:
+            self._envs[name] = ContainerFieldRefEnvBuilder(name, field)
 
     def add_simple_envs(self, envs):
         for k, v in envs.items() or ():
             self.add_env(k, v)
+
+    def add_field_envs(self, envs):
+        for k, v in envs.items() or ():
+            self.add_field_env(k, v)
+
+    def add_container(self, ctn):
+        self._containers.append(ctn)
 
     def add_volume(self, vol):
         self._volumes.append(vol)
@@ -534,6 +581,17 @@ class ReplicaSetBuilder(object):
 class GSEngineBuilder(ReplicaSetBuilder):
     """Builder for graphscope analytical engine."""
 
+    _vineyard_requests_cpu = 0.5
+    _vineyard_requests_mem = "512Mi"
+
+    _engine_requests_cpu = 0.5
+    _engine_requests_mem = "4Gi"
+
+    _mars_worker_requests_cpu = 0.5
+    _mars_worker_requests_mem = "4Gi"
+    _mars_scheduler_requests_cpu = 0.5
+    _mars_scheduler_requests_mem = "2Gi"
+
     def __init__(self, name, labels, num_workers, image_pull_policy):
         self._name = name
         self._labels = labels
@@ -545,13 +603,22 @@ class GSEngineBuilder(ReplicaSetBuilder):
         )
 
     def add_vineyard_container(
-        self, name, image, cpu, mem, shared_mem, etcd_endpoint, port, **kwargs
+        self,
+        name,
+        image,
+        cpu,
+        mem,
+        shared_mem,
+        preemptive,
+        etcd_endpoints,
+        port,
+        **kwargs
     ):
         vineyard_command = " ".join(
             [
                 "vineyardd",
                 "--size=%s" % str(shared_mem),
-                "--etcd_endpoint=http://%s" % etcd_endpoint,
+                '--etcd_endpoint="%s"' % (";".join(etcd_endpoints),),
                 "--socket=%s" % self._ipc_socket_file,
                 "--etcd_prefix=vineyard",
             ]
@@ -559,7 +626,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
         commands = []
         commands.append(
             "while ! curl --output /dev/null --silent --head --connect-timeout 1 %s"
-            % etcd_endpoint
+            % etcd_endpoints[0]
         )
         commands.append("do sleep 1 && echo -n .")
         commands.append("done")
@@ -567,7 +634,11 @@ class GSEngineBuilder(ReplicaSetBuilder):
         cmd = ["bash", "-c", "%s" % ("; ".join(commands),)]
 
         resources_dict = {
-            "requests": ResourceBuilder(cpu, mem).build(),
+            "requests": ResourceBuilder(
+                self._vineyard_requests_cpu, self._vineyard_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
             "limits": ResourceBuilder(cpu, mem).build(),
         }
 
@@ -612,11 +683,15 @@ class GSEngineBuilder(ReplicaSetBuilder):
             )
         )
 
-    def add_engine_container(self, name, image, cpu, mem, **kwargs):
+    def add_engine_container(self, name, image, cpu, mem, preemptive, **kwargs):
         cmd = ["tail", "-f", "/dev/null"]
 
         resources_dict = {
-            "requests": ResourceBuilder(cpu, mem).build(),
+            "requests": ResourceBuilder(
+                self._engine_requests_cpu, self._engine_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
             "limits": ResourceBuilder(cpu, mem).build(),
         }
 
@@ -638,8 +713,9 @@ class GSEngineBuilder(ReplicaSetBuilder):
         )
 
         readiness_cmd = [
-            "ls",
-            "%s" % self._ipc_socket_file,
+            "/bin/bash",
+            "-c",
+            "ls %s 2>/dev/null" % self._ipc_socket_file,
         ]
         readiness_probe = ExecProbeBuilder(readiness_cmd)
 
@@ -669,55 +745,33 @@ class GSEngineBuilder(ReplicaSetBuilder):
             )
         )
 
-
-class GSEtcdBuilder(DeploymentBuilder):
-    """Builder for graphscope etcd."""
-
-    def __init__(self, name, labels, image_pull_policy, replicas=1):
-        self._name = name
-        self._labels = labels
-        self._replicas = replicas
-        self._image_pull_policy = image_pull_policy
-        super().__init__(
-            self._name, self._labels, self._replicas, self._image_pull_policy
-        )
-
-    def add_etcd_container(
-        self,
-        name,
-        service_name,
-        image,
-        cpu,
-        mem,
-        listen_peer_service_port,
-        listen_client_service_port,
-        max_txn_ops=1024000,
+    def add_mars_worker_container(
+        self, name, image, cpu, mem, preemptive, port, scheduler_endpoint
     ):
         cmd = [
-            "etcd",
-            "--name",
-            service_name,
-            "--max-txn-ops=%s" % max_txn_ops,
-            "--initial-advertise-peer-urls",
-            "http://%s:%s" % (service_name, str(listen_peer_service_port)),
-            "--advertise-client-urls=http://%s:%s"
-            % (service_name, str(listen_client_service_port)),
-            "--data-dir=/var/lib/etcd",
-            "--listen-client-urls=http://0.0.0.0:%s" % str(listen_client_service_port),
-            "--listen-peer-urls=http://0.0.0.0:%s" % str(listen_peer_service_port),
-            "--initial-cluster",
-            "%s=http://%s:%s"
-            % (
-                service_name,
-                service_name,
-                str(listen_peer_service_port),
-            ),
-            "--initial-cluster-state",
-            "new",
+            "while ! ls $VINEYARD_IPC_SOCKET 2>/dev/null; do sleep 1 && echo -n .; done",
+            ";",
+            "python3",
+            "-m",
+            "mars.worker.__main__",
+            "-a",
+            "$MY_POD_IP",
+            "-p",
+            str(port),
+            "-s",
+            scheduler_endpoint,
+            "--log-level=debug",
+            "--ignore-avail-mem",
+            "--spill-dir=/tmp/mars",
         ]
+        cmd = ["bash", "-c", " ".join(cmd)]
 
         resources_dict = {
-            "requests": ResourceBuilder(cpu, mem).build(),
+            "requests": ResourceBuilder(
+                self._mars_worker_requests_cpu, self._mars_worker_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
             "limits": ResourceBuilder(cpu, mem).build(),
         }
 
@@ -725,6 +779,8 @@ class GSEtcdBuilder(DeploymentBuilder):
         for vol in self._volumes:
             for vol_mount in vol.build_mount():
                 volumeMounts.append(vol_mount)
+
+        probe = TcpProbeBuilder(port=port, timeout=15, period=10, failure_thresh=8)
 
         super().add_container(
             _remove_nones(
@@ -736,32 +792,289 @@ class GSEtcdBuilder(DeploymentBuilder):
                     "imagePullPolicy": self._image_pull_policy,
                     "resources": dict((k, v) for k, v in resources_dict.items() if v)
                     or None,
-                    "ports": [
-                        PortBuilder(listen_peer_service_port).build(),
-                        PortBuilder(listen_client_service_port).build(),
-                    ],
+                    "ports": [PortBuilder(port).build()],
                     "volumeMounts": volumeMounts or None,
-                    "livenessProbe": self.build_liveness_probe(
-                        listen_client_service_port
-                    ).build(),
-                    "readinessProbe": None,
-                    "lifecycle": None,
+                    "livenessProbe": None,
+                    "readinessProbe": probe.build(),
                 }
             )
         )
 
-    def build_liveness_probe(self, listen_client_service_port):
+    def add_mars_scheduler_container(self, name, image, cpu, mem, preemptive, port):
+        cmd = [
+            "while ! ls $VINEYARD_IPC_SOCKET 2>/dev/null; do sleep 1 && echo -n .; done",
+            ";",
+            "python3",
+            "-m",
+            "mars.scheduler.__main__",
+            "-a",
+            "$MY_POD_IP",
+            "-p",
+            str(port),
+            "--log-level=debug",
+        ]
+        cmd = ["bash", "-c", " ".join(cmd)]
+
+        resources_dict = {
+            "requests": ResourceBuilder(
+                self._mars_scheduler_requests_cpu, self._mars_scheduler_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
+            "limits": ResourceBuilder(cpu, mem).build(),
+        }
+
+        volumeMounts = []
+        for vol in self._volumes:
+            for vol_mount in vol.build_mount():
+                volumeMounts.append(vol_mount)
+
+        probe = TcpProbeBuilder(port=port, timeout=15, period=10, failure_thresh=8)
+
+        super().add_container(
+            _remove_nones(
+                {
+                    "command": cmd,
+                    "env": [env.build() for env in self._envs.values()] or None,
+                    "image": image,
+                    "name": name,
+                    "imagePullPolicy": self._image_pull_policy,
+                    "resources": dict((k, v) for k, v in resources_dict.items() if v)
+                    or None,
+                    "ports": [PortBuilder(port).build()],
+                    "volumeMounts": volumeMounts or None,
+                    "livenessProbe": None,
+                    "readinessProbe": probe.build(),
+                }
+            )
+        )
+
+
+class PodBuilder(object):
+    """Base builder for k8s pod."""
+
+    def __init__(
+        self, name, labels, hostname=None, subdomain=None, restart_policy="Never"
+    ):
+        self._name = name
+        self._labels = labels
+        self._hostname = hostname
+        self._subdomain = subdomain
+        self._restart_policy = restart_policy
+
+        self._containers = []
+        self._image_pull_secrets = []
+        self._volumes = []
+
+    def add_volume(self, vol):
+        if isinstance(vol, list):
+            self._volumes.extend(vol)
+        else:
+            self._volumes.append(vol)
+
+    def add_container(self, ctn):
+        self._containers.append(ctn)
+
+    def add_image_pull_secret(self, name):
+        self._image_pull_secrets.append(LocalObjectRefBuilder(name))
+
+    def build_pod_spec(self):
+        return _remove_nones(
+            {
+                "hostname": self._hostname,
+                "subdomain": self._subdomain,
+                "containers": [ctn for ctn in self._containers],
+                "volumes": [vol.build() for vol in self._volumes] or None,
+                "imagePullSecrets": [ips.build() for ips in self._image_pull_secrets]
+                or None,
+                "restartPolicy": self._restart_policy,
+            }
+        )
+
+    def build(self):
+        return {
+            "kind": "Pod",
+            "metadata": {"name": self._name, "labels": self._labels},
+            "spec": self.build_pod_spec(),
+        }
+
+
+class GSEtcdBuilder(object):
+    """Builder for graphscope etcd."""
+
+    _requests_cpu = 0.5
+    _requests_mem = "128Mi"
+
+    def __init__(
+        self,
+        name_prefix,
+        container_name,
+        service_name,
+        image,
+        cpu,
+        mem,
+        preemptive,
+        listen_peer_service_port,
+        listen_client_service_port,
+        labels,
+        image_pull_policy,
+        num_pods=3,
+        restart_policy="Always",
+        image_pull_secrets=None,
+        max_txn_ops=1024000,
+    ):
+        self._name_prefix = name_prefix
+        self._container_name = container_name
+        self._service_name = service_name
+        self._image = image
+        self._cpu = cpu
+        self._mem = mem
+        self._preemptive = preemptive
+        self._listen_peer_service_port = listen_peer_service_port
+        self._listen_client_service_port = listen_client_service_port
+        self._labels = labels
+        self._image_pull_policy = image_pull_policy
+        self._num_pods = num_pods
+        self._restart_policy = restart_policy
+        self._image_pull_secrets = image_pull_secrets
+        self._max_txn_ops = 1024000
+
+        self._envs = dict()
+        self._volumes = []
+
+    def add_volume(self, vol):
+        if isinstance(vol, list):
+            self._volumes.extend(vol)
+        else:
+            self._volumes.append(vol)
+
+    def add_env(self, name, value=None):
+        self._envs[name] = ContainerEnvBuilder(name, value)
+
+    def add_simple_envs(self, envs):
+        for k, v in envs.items() or ():
+            self.add_env(k, v)
+
+    def build(self):
+        """
+        Returns: a list of :class:`PodBuilder`.
+        """
+        pods_name = []
+        initial_cluster = ""
+        for i in range(self._num_pods):
+            name = "%s-%s" % (self._name_prefix, str(i))
+            pods_name.append(name)
+            initial_cluster += "%s=http://%s:%s," % (
+                name,
+                name,
+                self._listen_peer_service_port,
+            )
+        # drop last comma
+        initial_cluster = initial_cluster[0:-1]
+
+        pods_builders, svc_builders = [], []
+        for _, name in enumerate(pods_name):
+            pod_labels = {"etcd_name": name}
+            pod_builder = PodBuilder(
+                name=name,
+                labels={**self._labels, **pod_labels},
+                hostname=name,
+                subdomain=self._service_name,
+                restart_policy=self._restart_policy,
+            )
+
+            # volumes
+            pod_builder.add_volume(self._volumes)
+
+            cmd = [
+                "etcd",
+                "--name",
+                name,
+                "--max-txn-ops=%s" % self._max_txn_ops,
+                "--initial-advertise-peer-urls",
+                "http://%s:%s" % (name, self._listen_peer_service_port),
+                "--advertise-client-urls",
+                "http://%s:%s" % (name, self._listen_client_service_port),
+                "--data-dir=/var/lib/etcd",
+                "--listen-client-urls=http://0.0.0.0:%s"
+                % self._listen_client_service_port,
+                "--listen-peer-urls=http://0.0.0.0:%s" % self._listen_peer_service_port,
+                "--initial-cluster",
+                initial_cluster,
+                "--initial-cluster-state",
+                "new",
+            ]
+
+            resources_dict = {
+                "requests": ResourceBuilder(
+                    self._requests_cpu, self._requests_mem
+                ).build()
+                if self._preemptive
+                else ResourceBuilder(self._cpu, self._mem).build(),
+                "limits": ResourceBuilder(self._cpu, self._mem).build(),
+            }
+
+            volumeMounts = []
+            for vol in self._volumes:
+                for vol_mount in vol.build_mount():
+                    volumeMounts.append(vol_mount)
+
+            pod_builder.add_container(
+                _remove_nones(
+                    {
+                        "command": cmd,
+                        "env": [env.build() for env in self._envs.values()] or None,
+                        "image": self._image,
+                        "name": self._container_name,
+                        "imagePullPolicy": self._image_pull_policy,
+                        "resources": dict(
+                            (k, v) for k, v in resources_dict.items() if v
+                        )
+                        or None,
+                        "ports": [
+                            PortBuilder(self._listen_peer_service_port).build(),
+                            PortBuilder(self._listen_client_service_port).build(),
+                        ],
+                        "volumeMounts": volumeMounts or None,
+                        "livenessProbe": self.build_liveness_probe().build(),
+                        "readinessProbe": None,
+                        "lifecycle": None,
+                    }
+                )
+            )
+            pods_builders.append(pod_builder)
+
+            service_builder = ServiceBuilder(
+                name,
+                service_type="ClusterIP",
+                port=[
+                    self._listen_peer_service_port,
+                    self._listen_client_service_port,
+                ],
+                selector=pod_labels,
+            )
+            svc_builders.append(service_builder)
+
+        return pods_builders, svc_builders
+
+    def build_liveness_probe(self):
         liveness_cmd = [
             "/bin/sh",
             "-ec",
             "ETCDCTL_API=3 etcdctl --endpoints=http://[127.0.0.1]:%s get foo"
-            % str(listen_client_service_port),
+            % str(self._listen_client_service_port),
         ]
         return ExecProbeBuilder(liveness_cmd, timeout=15, failure_thresh=8)
 
 
 class GSGraphManagerBuilder(DeploymentBuilder):
     """Builder for graphscope interactive graph manager."""
+
+    _manager_requests_cpu = 1.0
+    _manager_requests_mem = "4Gi"
+
+    _zookeeper_requests_cpu = 0.5
+    _zookeeper_requests_mem = "256Mi"
 
     def __init__(self, name, labels, image_pull_policy, replicas=1):
         self._name = name
@@ -772,7 +1085,7 @@ class GSGraphManagerBuilder(DeploymentBuilder):
             self._name, self._labels, self._replicas, self._image_pull_policy
         )
 
-    def add_manager_container(self, name, image, cpu, mem, port=8080):
+    def add_manager_container(self, name, image, cpu, mem, preemptive, port=8080):
         cmd = [
             "/bin/bash",
             "-c",
@@ -780,7 +1093,11 @@ class GSGraphManagerBuilder(DeploymentBuilder):
         ]
 
         resources_dict = {
-            "requests": ResourceBuilder(cpu, mem).build(),
+            "requests": ResourceBuilder(
+                self._manager_requests_cpu, self._manager_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
             "limits": ResourceBuilder(cpu, mem).build(),
         }
 
@@ -821,9 +1138,13 @@ class GSGraphManagerBuilder(DeploymentBuilder):
             )
         )
 
-    def add_zookeeper_container(self, name, image, cpu, mem, port=2181):
+    def add_zookeeper_container(self, name, image, cpu, mem, preemptive, port=2181):
         resources_dict = {
-            "requests": ResourceBuilder(cpu, mem).build(),
+            "requests": ResourceBuilder(
+                self._zookeeper_requests_cpu, self._zookeeper_requests_mem
+            ).build()
+            if preemptive
+            else ResourceBuilder(cpu, mem).build(),
             "limits": ResourceBuilder(cpu, mem).build(),
         }
 
@@ -856,6 +1177,9 @@ class GSGraphManagerBuilder(DeploymentBuilder):
 class GSCoordinatorBuilder(DeploymentBuilder):
     """Builder for graphscope coordinator."""
 
+    _requests_cpu = 1.0
+    _requests_mem = "4Gi"
+
     def __init__(self, name, labels, image_pull_policy, replicas=1):
         self._name = name
         self._labels = labels
@@ -870,6 +1194,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         name,
         port,
         num_workers,
+        preemptive,
         instance_id,
         log_level,
         namespace,
@@ -884,24 +1209,33 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         coordinator_cpu,
         coordinator_mem,
         coordinator_service_name,
+        etcd_num_pods,
         etcd_cpu,
         etcd_mem,
         zookeeper_cpu,
         zookeeper_mem,
         gie_graph_manager_cpu,
         gie_graph_manager_mem,
+        vineyard_daemonset,
         vineyard_cpu,
         vineyard_mem,
         vineyard_shared_mem,
         engine_cpu,
         engine_mem,
+        mars_worker_cpu,
+        mars_worker_mem,
+        mars_scheduler_cpu,
+        mars_scheduler_mem,
+        with_mars,
         volumes,
         timeout_seconds,
+        dangling_timeout_seconds,
         waiting_for_delete,
         delete_namespace,
     ):
         self._port = port
         self._num_workers = num_workers
+        self._preemptive = preemptive
         self._instance_id = instance_id
         self._log_level = log_level
         self._namespace = namespace
@@ -916,28 +1250,36 @@ class GSCoordinatorBuilder(DeploymentBuilder):
         self._coordinator_cpu = coordinator_cpu
         self._coordinator_mem = coordinator_mem
         self._coordinator_service_name = coordinator_service_name
+        self._etcd_num_pods = etcd_num_pods
         self._etcd_cpu = etcd_cpu
         self._etcd_mem = etcd_mem
         self._zookeeper_cpu = zookeeper_cpu
         self._zookeeper_mem = zookeeper_mem
         self._gie_graph_manager_cpu = gie_graph_manager_cpu
         self._gie_graph_manager_mem = gie_graph_manager_mem
+        self._vineyard_daemonset = vineyard_daemonset
         self._vineyard_cpu = vineyard_cpu
         self._vineyard_mem = vineyard_mem
         self._vineyard_shared_mem = vineyard_shared_mem
         self._engine_cpu = engine_cpu
         self._engine_mem = engine_mem
+        self._mars_worker_cpu = mars_worker_cpu
+        self._mars_worker_mem = mars_worker_mem
+        self._mars_scheduler_cpu = mars_scheduler_cpu
+        self._mars_scheduler_mem = mars_scheduler_mem
+        self._with_mars = with_mars
         self._volumes_str = json.dumps(volumes)
         self._timeout_seconds = timeout_seconds
+        self._dangling_timeout_seconds = dangling_timeout_seconds
         self._waiting_for_delete = waiting_for_delete
         self._delete_namespace = delete_namespace
 
         cmd = self.build_container_command()
 
         resources_dict = {
-            "requests": ResourceBuilder(
-                self._coordinator_cpu, self._coordinator_mem
-            ).build(),
+            "requests": ResourceBuilder(self._requests_cpu, self._requests_mem).build()
+            if self._preemptive
+            else ResourceBuilder(self._coordinator_cpu, self._coordinator_mem).build(),
             "limits": ResourceBuilder(
                 self._coordinator_cpu, self._coordinator_mem
             ).build(),
@@ -984,12 +1326,14 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             "python3",
             "-m",
             "gscoordinator",
-            "--enable_k8s",
-            "true",
+            "--cluster_type",
+            "k8s",
             "--port",
             str(self._port),
             "--num_workers",
             str(self._num_workers),
+            "--preemptive",
+            str(self._preemptive),
             "--instance_id",
             self._instance_id,
             "--log_level",
@@ -1014,6 +1358,8 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             self._coordinator_name,
             "--k8s_coordinator_service_name",
             self._coordinator_service_name,
+            "--k8s_etcd_num_pods",
+            str(self._etcd_num_pods),
             "--k8s_etcd_cpu",
             str(self._etcd_cpu),
             "--k8s_etcd_mem",
@@ -1026,6 +1372,8 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             str(self._gie_graph_manager_cpu),
             "--k8s_gie_graph_manager_mem",
             self._gie_graph_manager_mem,
+            "--k8s_vineyard_daemonset",
+            str(self._vineyard_daemonset),
             "--k8s_vineyard_cpu",
             str(self._vineyard_cpu),
             "--k8s_vineyard_mem",
@@ -1036,10 +1384,22 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             str(self._engine_cpu),
             "--k8s_engine_mem",
             self._engine_mem,
+            "--k8s_mars_worker_cpu",
+            str(self._mars_worker_cpu),
+            "--k8s_mars_worker_mem",
+            self._mars_worker_mem,
+            "--k8s_mars_scheduler_cpu",
+            str(self._mars_scheduler_cpu),
+            "--k8s_mars_scheduler_mem",
+            self._mars_scheduler_mem,
+            "--k8s_with_mars",
+            str(self._with_mars),
             "--k8s_volumes",
             self._volumes_str,
             "--timeout_seconds",
             str(self._timeout_seconds),
+            "--dangling_timeout_seconds",
+            str(self._dangling_timeout_seconds),
             "--waiting_for_delete",
             str(self._waiting_for_delete),
             "--k8s_delete_namespace",

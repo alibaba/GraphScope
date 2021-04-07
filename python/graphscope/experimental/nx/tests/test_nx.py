@@ -22,10 +22,9 @@ import pytest
 
 import graphscope
 import graphscope.experimental.nx as nx
+from graphscope.client.session import g
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
-from graphscope.framework.graph_utils import g
-from graphscope.framework.graph_utils import load_from
 from graphscope.framework.loader import Loader
 from graphscope.proto import types_pb2
 
@@ -35,160 +34,73 @@ def graphscope_session():
     graphscope.set_option(show_log=True)
     graphscope.set_option(initializing_interactive_engine=False)
 
-    sess = graphscope.session(run_on_local=True, num_workers=1)
+    sess = graphscope.session(cluster_type="hosts", num_workers=1)
     sess.as_default()
     yield sess
     sess.close()
 
 
 def ldbc_sample_single_label(prefix, directed):
-    vertices = {
-        "comment": (
-            Loader(
-                os.path.join(prefix, "comment_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            ["creationDate", "locationIP", "browserUsed", "content", "length"],
-            "id",
-        ),
-    }
-    edges = {
-        "replyOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "comment_replyOf_comment_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Comment.id", "comment"),
-                ("Comment.id.1", "comment"),
-            ),
-        ],
-    }
-    return load_from(edges, vertices, directed=directed)
+    graph = graphscope.g(directed=directed)
+    graph = graph.add_vertices(
+        Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "comment_replyOf_comment_0_0.csv"), delimiter="|"),
+        "replyOf",
+    )
+    return graph
 
 
 def ldbc_sample_multi_labels(prefix, directed):
-    vertices = {
-        "comment": (
-            Loader(
-                os.path.join(prefix, "comment_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            ["creationDate", "locationIP", "browserUsed", "content", "length"],
-            "id",
-        ),
-        "person": (
-            Loader(
-                os.path.join(prefix, "person_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            [
-                "firstName",
-                "lastName",
-                "gender",
-                "birthday",
-                "creationDate",
-                "locationIP",
-                "browserUsed",
-            ],
-            "id",
-        ),
-        "post": (
-            Loader(
-                os.path.join(prefix, "post_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            [
-                "imageFile",
-                "creationDate",
-                "locationIP",
-                "browserUsed",
-                "language",
-                "content",
-                "length",
-            ],
-            "id",
-        ),
-    }
-    edges = {
-        "replyOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "comment_replyOf_post_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Comment.id", "comment"),
-                ("Post.id", "post"),
-            ),
-        ],
-        "knows": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_knows_person_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["creationDate"],
-                ("Person.id", "person"),
-                ("Person.id.1", "person"),
-            )
-        ],
-    }
-    return load_from(edges, vertices, directed=directed)
+    graph = graphscope.g(directed=directed)
+    graph = (
+        graph.add_vertices(
+            Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
+        )
+        .add_vertices(
+            Loader(os.path.join(prefix, "person_0_0.csv"), delimiter="|"), "person"
+        )
+        .add_vertices(
+            Loader(os.path.join(prefix, "post_0_0.csv"), delimiter="|"),
+            "post",
+        )
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "comment_replyOf_comment_0_0.csv"), delimiter="|"),
+        "replyOf",
+        src_label="comment",
+        dst_label="comment",
+    ).add_edges(
+        Loader(os.path.join(prefix, "person_knows_person_0_0.csv"), delimiter="|"),
+        "knows",
+        ["creationDate"],
+        src_label="person",
+        dst_label="person",
+    )
+    return graph
 
 
 def ldbc_sample_with_duplicated_oid(prefix, directed):
-    vertices = {
-        "place": (
-            Loader(
-                os.path.join(prefix, "place_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            ["name", "url", "type"],
-            "id",
-        ),
-        "person": (
-            Loader(
-                os.path.join(prefix, "person_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            [
-                "firstName",
-                "lastName",
-                "gender",
-                "birthday",
-                "creationDate",
-                "locationIP",
-                "browserUsed",
-            ],
-            "id",
-        ),
-    }
-    edges = {
-        "isPartOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "place_isPartOf_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Place.id", "place"),
-                ("Place.id.1", "place"),
-            )
-        ],
-        "knows": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_knows_person_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["creationDate"],
-                ("Person.id", "person"),
-                ("Person.id.1", "person"),
-            )
-        ],
-    }
-    return load_from(edges, vertices, directed=directed)
+    graph = graphscope.g(directed=directed)
+    graph = graph.add_vertices(
+        Loader(os.path.join(prefix, "place_0_0.csv"), delimiter="|"), "place"
+    ).add_vertices(
+        Loader(os.path.join(prefix, "person_0_0.csv"), delimiter="|"), "person"
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "place_isPartOf_place_0_0.csv"), delimiter="|"),
+        "isPartOf",
+        src_label="place",
+        dst_label="place",
+    ).add_edges(
+        Loader(os.path.join(prefix, "person_knows_person_0_0.csv"), delimiter="|"),
+        "knows",
+        ["creationDate"],
+        src_label="person",
+        dst_label="person",
+    )
+    return graph
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -217,16 +129,23 @@ class TestGraphTransformation(object):
         assert self._schema_equal(gs_g.schema, nx_g.schema)
 
     def _schema_equal(self, gs_schema, nx_schema):
-        v_props = dict()
-        for properties in gs_schema.vertex_properties:
-            v_props.update(properties)
-        e_props = dict()
-        for properties in gs_schema.edge_properties:
-            e_props.update(properties)
-        return (
-            v_props == nx_schema.vertex_properties[0]
-            and e_props == nx_schema.edge_properties[0]
-        )
+        v_props = {}
+        for entry in gs_schema._valid_vertex_entries():
+            for prop in entry.properties:
+                v_props[prop.name] = prop.type
+        e_props = {}
+        for entry in gs_schema._valid_edge_entries():
+            for prop in entry.properties:
+                e_props[prop.name] = prop.type
+        gs_v_props = {
+            prop.name: prop.type
+            for prop in list(nx_schema._valid_vertex_entries())[0].properties
+        }
+        gs_e_props = {
+            prop.name: prop.type
+            for prop in list(nx_schema._valid_edge_entries())[0].properties
+        }
+        return v_props == gs_v_props and e_props == gs_e_props
 
     # nx to gs
     def test_empty_nx_to_gs(self):
@@ -415,14 +334,14 @@ class TestGraphProjectTest(object):
         # default, e_prop='', v_prop=''
         sg1 = self.g.project_to_simple()
         assert (
-            sg1.schema.vdata_type == types_pb2.NULL
-            and sg1.schema.edata_type == types_pb2.NULL
+            sg1.schema.vdata_type == types_pb2.NULLVALUE
+            and sg1.schema.edata_type == types_pb2.NULLVALUE
         )
 
         # to_simple with e_prop
         sg2 = self.g.project_to_simple(e_prop="edata_float")
         assert (
-            sg2.schema.vdata_type == types_pb2.NULL
+            sg2.schema.vdata_type == types_pb2.NULLVALUE
             and sg2.schema.edata_type == types_pb2.DOUBLE
         )
 
@@ -430,7 +349,7 @@ class TestGraphProjectTest(object):
         sg3 = self.g.project_to_simple(v_prop="vdata_str")
         assert (
             sg3.schema.vdata_type == types_pb2.STRING
-            and sg3.schema.edata_type == types_pb2.NULL
+            and sg3.schema.edata_type == types_pb2.NULLVALUE
         )
 
         # to_simple with e_prop and v_prop
@@ -444,8 +363,8 @@ class TestGraphProjectTest(object):
         empty_g = self.NXGraph()
         sg5 = empty_g.project_to_simple()
         assert (
-            sg5.schema.vdata_type == types_pb2.NULL
-            and sg5.schema.edata_type == types_pb2.NULL
+            sg5.schema.vdata_type == types_pb2.NULLVALUE
+            and sg5.schema.edata_type == types_pb2.NULLVALUE
         )
         with pytest.raises(
             InvalidArgumentError, match="graph not contains the vertex property foo"

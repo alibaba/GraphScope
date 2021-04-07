@@ -82,7 +82,7 @@ class PregelVertex {
 
   void set_vertex(vertex_t vertex) { vertex_ = vertex; }
 
- private:
+ protected:
   const fragment_t* fragment_;
   PregelComputeContext<fragment_t, VD_T, MD_T>* compute_context_;
 

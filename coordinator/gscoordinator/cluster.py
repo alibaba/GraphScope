@@ -127,6 +127,7 @@ class KubernetesClusterLauncher(Launcher):
     _gs_etcd_builder_cls = GSEtcdBuilder
     _gs_engine_builder_cls = GSEngineBuilder
     _gs_graph_manager_builder_cls = GSGraphManagerBuilder
+    _gs_mars_scheduler_builder_cls = GSEngineBuilder
 
     _etcd_name_prefix = "gs-etcd-"
     _etcd_service_name_prefix = "gs-etcd-service-"
@@ -143,6 +144,11 @@ class KubernetesClusterLauncher(Launcher):
     _gie_manager_container_name = "manager"
     _gie_zookeeper_container_name = "zookeeper"
 
+    _mars_scheduler_container_name = "marsscheduler"  # fixed
+    _mars_worker_container_name = "marsworker"  # fixed
+    _mars_scheduler_name_prefix = "marsscheduler-"
+    _mars_service_name_prefix = "mars-"
+
     _interactive_engine_manager_port = 8080  # fixed
     _zookeeper_port = 2181  # fixed
     _random_analytical_engine_rpc_port = random.randint(56001, 57000)
@@ -150,6 +156,8 @@ class KubernetesClusterLauncher(Launcher):
     _random_etcd_listen_client_service_port = random.randint(58001, 59000)
 
     _vineyard_service_port = 9600  # fixed
+    _mars_scheduler_port = 7103  # fixed
+    _mars_worker_port = 7104  # fixed
 
     def __init__(
         self,
@@ -161,6 +169,7 @@ class KubernetesClusterLauncher(Launcher):
         gie_graph_manager_image=None,
         coordinator_name=None,
         coordinator_service_name=None,
+        etcd_num_pods=None,
         etcd_cpu=None,
         etcd_mem=None,
         zookeeper_cpu=None,
@@ -169,13 +178,20 @@ class KubernetesClusterLauncher(Launcher):
         gie_graph_manager_mem=None,
         engine_cpu=None,
         engine_mem=None,
+        vineyard_daemonset=None,
         vineyard_cpu=None,
         vineyard_mem=None,
         vineyard_shared_mem=None,
+        mars_worker_cpu=None,
+        mars_worker_mem=None,
+        mars_scheduler_cpu=None,
+        mars_scheduler_mem=None,
+        with_mars=False,
         image_pull_policy=None,
         image_pull_secrets=None,
         volumes=None,
         num_workers=None,
+        preemptive=None,
         instance_id=None,
         log_level=None,
         timeout_seconds=None,
@@ -197,20 +213,16 @@ class KubernetesClusterLauncher(Launcher):
         self._engine_name = self._engine_name_prefix + self._instance_id
         self._etcd_name = self._etcd_name_prefix + self._instance_id
         self._etcd_service_name = self._etcd_service_name_prefix + self._instance_id
+        self._mars_scheduler_name = self._mars_scheduler_name_prefix + self._instance_id
 
         self._gie_graph_manager_name = (
             self._gie_graph_manager_name_prefix + self._instance_id
-        )
-        self._gie_graph_manager_service_name = (
-            self._gie_graph_manager_service_name_prefix + self._instance_id
-        )
-        self._vineyard_service_name = (
-            self._vineyard_service_name_prefix + self._instance_id
         )
 
         self._namespace = namespace
         self._service_type = service_type
         self._num_workers = num_workers
+        self._preemptive = preemptive
 
         self._coordinator_name = coordinator_name
         self._coordinator_service_name = coordinator_service_name
@@ -223,12 +235,14 @@ class KubernetesClusterLauncher(Launcher):
         self._engine_mem = engine_mem
 
         # vineyard container info
+        self._vineyard_daemonset = vineyard_daemonset
         self._vineyard_cpu = vineyard_cpu
         self._vineyard_mem = vineyard_mem
         self._vineyard_shared_mem = vineyard_shared_mem
 
         # etcd pod info
         self._etcd_image = etcd_image
+        self._etcd_num_pods = max(1, etcd_num_pods)
         self._etcd_cpu = etcd_cpu
         self._etcd_mem = etcd_mem
 
@@ -241,6 +255,13 @@ class KubernetesClusterLauncher(Launcher):
         self._gie_graph_manager_image = gie_graph_manager_image
         self._gie_graph_manager_cpu = gie_graph_manager_cpu
         self._gie_graph_manager_mem = gie_graph_manager_mem
+
+        # mars
+        self._mars_worker_cpu = mars_worker_cpu
+        self._mars_worker_mem = mars_worker_mem
+        self._mars_scheduler_cpu = mars_scheduler_cpu
+        self._mars_scheduler_mem = mars_scheduler_mem
+        self._with_mars = with_mars
 
         self._image_pull_policy = image_pull_policy
 
@@ -260,6 +281,7 @@ class KubernetesClusterLauncher(Launcher):
 
         self._analytical_engine_endpoint = None
         self._vineyard_service_endpoint = None
+        self._mars_service_endpoint = None
 
         self._closed = False
         self._glog_level = parse_as_glog_level(log_level)
@@ -274,6 +296,18 @@ class KubernetesClusterLauncher(Launcher):
         self._graphlearn_services = dict()
         self._learning_instance_processes = {}
 
+        # component service name
+        self._gie_graph_manager_service_name = (
+            self._gie_graph_manager_service_name_prefix + self._instance_id
+        )
+        if self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            self._vineyard_service_name = self._vineyard_daemonset + "-rpc"
+        else:
+            self._vineyard_service_name = (
+                self._vineyard_service_name_prefix + self._instance_id
+            )
+        self._mars_service_name = self._mars_service_name_prefix + self._instance_id
+
     def __del__(self):
         self.stop()
 
@@ -285,6 +319,9 @@ class KubernetesClusterLauncher(Launcher):
 
     def get_vineyard_rpc_endpoint(self):
         return self._vineyard_service_endpoint
+
+    def get_mars_scheduler_endpoint(self):
+        return self._mars_service_endpoint
 
     def get_pods_list(self):
         return self._pod_name_list
@@ -298,6 +335,95 @@ class KubernetesClusterLauncher(Launcher):
     def get_gie_graph_manager_service_name(self):
         return self._gie_graph_manager_service_name
 
+    @property
+    def preemptive(self):
+        return self._preemptive
+
+    def _create_mars_scheduler(self):
+        logger.info("Launching mars scheduler pod for GraphScope ...")
+        labels = {"name": self._mars_scheduler_name}
+        # create engine replicaset
+        scheduler_builder = self._gs_mars_scheduler_builder_cls(
+            name=self._mars_scheduler_name,
+            labels=labels,
+            num_workers=1,
+            image_pull_policy=self._image_pull_policy,
+        )
+        # volume1 is for vineyard ipc socket
+        if self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            vineyard_socket_volume_type = "hostPath"
+            vineyard_socket_volume_fields = {
+                "type": "Directory",
+                "path": "/var/run/vineyard-%s-%s"
+                % (self._namespace, self._vineyard_daemonset),
+            }
+        else:
+            vineyard_socket_volume_type = "emptyDir"
+            vineyard_socket_volume_fields = {}
+        scheduler_builder.add_volume(
+            VolumeBuilder(
+                name="vineyard-ipc-volume",
+                type=vineyard_socket_volume_type,
+                field=vineyard_socket_volume_fields,
+                mounts_list=[
+                    {"mountPath": "/tmp/vineyard_workspace"},
+                ],
+            )
+        )
+        # volume2 is for shared memory
+        scheduler_builder.add_volume(
+            VolumeBuilder(
+                name="host-shm",
+                type="emptyDir",
+                field={"medium": "Memory"},
+                mounts_list=[{"mountPath": "/dev/shm"}],
+            )
+        )
+        # add env
+        scheduler_builder.add_simple_envs(
+            {
+                "GLOG_v": str(self._glog_level),
+                "VINEYARD_IPC_SOCKET": "/tmp/vineyard_workspace/vineyard.sock",
+                "WITH_VINEYARD": "ON",
+            }
+        )
+
+        # add vineyard container
+        if not self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            port = self._random_etcd_listen_client_service_port
+            etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
+            for i in range(self._etcd_num_pods):
+                etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
+            scheduler_builder.add_vineyard_container(
+                name=self._vineyard_container_name,
+                image=self._gs_image,
+                cpu=self._vineyard_cpu,
+                mem=self._vineyard_mem,
+                shared_mem=self._vineyard_shared_mem,
+                preemptive=self._preemptive,
+                etcd_endpoints=etcd_endpoints,
+                port=self._vineyard_service_port,
+            )
+
+        # add mars scheduler container
+        if self._with_mars:
+            scheduler_builder.add_mars_scheduler_container(
+                name=self._mars_scheduler_container_name,
+                image=self._gs_image,
+                cpu=self._mars_scheduler_cpu,
+                mem=self._mars_scheduler_mem,
+                preemptive=self._preemptive,
+                port=self._mars_scheduler_port,
+            )
+        for name in self._image_pull_secrets:
+            scheduler_builder.add_image_pull_secret(name)
+
+        self._resource_object.append(
+            self._app_api.create_namespaced_replica_set(
+                self._namespace, scheduler_builder.build()
+            )
+        )
+
     def _create_engine_replicaset(self):
         logger.info("Launching GraphScope engines pod ...")
         labels = {"name": self._engine_name}
@@ -310,11 +436,21 @@ class KubernetesClusterLauncher(Launcher):
         )
         # volume1 is for vineyard ipc socket
         # MaxGraph: /home/maxgraph/data/vineyard
+        if self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            vineyard_socket_volume_type = "hostPath"
+            vineyard_socket_volume_fields = {
+                "type": "Directory",
+                "path": "/var/run/vineyard-%s-%s"
+                % (self._namespace, self._vineyard_daemonset),
+            }
+        else:
+            vineyard_socket_volume_type = "emptyDir"
+            vineyard_socket_volume_fields = {}
         engine_builder.add_volume(
             VolumeBuilder(
                 name="vineyard-ipc-volume",
-                type="emptyDir",
-                field={},
+                type=vineyard_socket_volume_type,
+                field=vineyard_socket_volume_fields,
                 mounts_list=[
                     {"mountPath": "/tmp/vineyard_workspace"},
                     {"mountPath": "/home/maxgraph/data/vineyard"},
@@ -337,24 +473,52 @@ class KubernetesClusterLauncher(Launcher):
                 engine_builder.add_volume(volume_builder)
 
         # add env
-        engine_builder.add_simple_envs({"GLOG_v": str(self._glog_level)})
-        # add vineyard container
-        engine_builder.add_vineyard_container(
-            self._vineyard_container_name,
-            self._gs_image,
-            self._vineyard_cpu,
-            self._vineyard_mem,
-            self._vineyard_shared_mem,
-            self._etcd_endpoint,
-            self._vineyard_service_port,
+        engine_builder.add_simple_envs(
+            {
+                "GLOG_v": str(self._glog_level),
+                "VINEYARD_IPC_SOCKET": "/tmp/vineyard_workspace/vineyard.sock",
+                "WITH_VINEYARD": "ON",
+            }
         )
+
         # add engine container
         engine_builder.add_engine_container(
-            self._engine_container_name,
-            self._gs_image,
-            self._engine_cpu,
-            self._engine_mem,
+            name=self._engine_container_name,
+            image=self._gs_image,
+            cpu=self._engine_cpu,
+            mem=self._engine_mem,
+            preemptive=self._preemptive,
         )
+
+        # add vineyard container
+        if not self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            port = self._random_etcd_listen_client_service_port
+            etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
+            for i in range(self._etcd_num_pods):
+                etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
+            engine_builder.add_vineyard_container(
+                name=self._vineyard_container_name,
+                image=self._gs_image,
+                cpu=self._vineyard_cpu,
+                mem=self._vineyard_mem,
+                shared_mem=self._vineyard_shared_mem,
+                preemptive=self._preemptive,
+                etcd_endpoints=etcd_endpoints,
+                port=self._vineyard_service_port,
+            )
+
+        # add mars worker container
+        if self._with_mars:
+            engine_builder.add_mars_worker_container(
+                name=self._mars_worker_container_name,
+                image=self._gs_image,
+                cpu=self._mars_worker_cpu,
+                mem=self._mars_worker_mem,
+                preemptive=self._preemptive,
+                port=self._mars_worker_port,
+                scheduler_endpoint="%s:%s"
+                % (self._mars_service_name, self._mars_scheduler_port),
+            )
         for name in self._image_pull_secrets:
             engine_builder.add_image_pull_secret(name)
 
@@ -382,29 +546,45 @@ class KubernetesClusterLauncher(Launcher):
 
         time.sleep(1)
 
-        # create etcd deployment
+        # create etcd cluster
         etcd_builder = self._gs_etcd_builder_cls(
-            name=self._etcd_name,
-            labels=labels,
-            replicas=1,
-            image_pull_policy=self._image_pull_policy,
-        )
-
-        for name in self._image_pull_secrets:
-            etcd_builder.add_image_pull_secret(name)
-
-        etcd_builder.add_etcd_container(
-            name=self._etcd_container_name,
+            name_prefix=self._etcd_name,
+            container_name=self._etcd_container_name,
             service_name=self._etcd_service_name,
             image=self._etcd_image,
             cpu=self._etcd_cpu,
             mem=self._etcd_mem,
+            preemptive=self._preemptive,
+            labels=labels,
+            image_pull_policy=self._image_pull_policy,
+            num_pods=self._etcd_num_pods,
+            restart_policy="Always",
+            image_pull_secrets=self._image_pull_secrets,
             listen_peer_service_port=self._random_etcd_listen_peer_service_port,
             listen_client_service_port=self._random_etcd_listen_client_service_port,
         )
+
+        pods, services = etcd_builder.build()
+        for svc in services:
+            self._resource_object.append(
+                self._core_api.create_namespaced_service(self._namespace, svc.build())
+            )
+        for pod in pods:
+            self._resource_object.append(
+                self._core_api.create_namespaced_pod(self._namespace, pod.build())
+            )
+
+    def _create_mars_service(self):
+        labels = {"name": self._mars_scheduler_name}
+        service_builder = ServiceBuilder(
+            self._mars_service_name,
+            service_type=self._service_type,
+            port=self._mars_scheduler_port,
+            selector=labels,
+        )
         self._resource_object.append(
-            self._app_api.create_namespaced_deployment(
-                self._namespace, etcd_builder.build()
+            self._core_api.create_namespaced_service(
+                self._namespace, service_builder.build()
             )
         )
 
@@ -428,6 +608,16 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._namespace,
             name=self._vineyard_service_name,
+            type=self._service_type,
+        )
+        return endpoints[0]
+
+    def _get_mars_scheduler_service_endpoint(self):
+        # Always len(endpoints) >= 1
+        endpoints = get_service_endpoints(
+            api_client=self._api_client,
+            namespace=self._namespace,
+            name=self._mars_service_name,
             type=self._service_type,
         )
         return endpoints[0]
@@ -516,6 +706,7 @@ class KubernetesClusterLauncher(Launcher):
             image=self._gie_graph_manager_image,
             cpu=self._gie_graph_manager_cpu,
             mem=self._gie_graph_manager_mem,
+            preemptive=self._preemptive,
             port=self._interactive_engine_manager_port,
         )
 
@@ -525,6 +716,7 @@ class KubernetesClusterLauncher(Launcher):
             image=self._zookeeper_image,
             cpu=self._zookeeper_cpu,
             mem=self._zookeeper_mem,
+            preemptive=self._preemptive,
             port=self._zookeeper_port,
         )
 
@@ -594,8 +786,14 @@ class KubernetesClusterLauncher(Launcher):
         self._etcd_endpoint = self._get_etcd_service_endpoint()
         logger.info("Etcd is ready, endpoint is {}".format(self._etcd_endpoint))
 
+        if self._with_mars:
+            # scheduler used by mars
+            self._create_mars_scheduler()
+            self._create_mars_service()
+
         self._create_engine_replicaset()
-        self._create_vineyard_service()
+        if not self._exists_vineyard_daemonset(self._vineyard_daemonset):
+            self._create_vineyard_service()
 
     def _waiting_for_services_ready(self):
         start_time = time.time()
@@ -672,6 +870,10 @@ class KubernetesClusterLauncher(Launcher):
 
         # get vineyard service endpoint
         self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
+        logger.debug("vineyard rpc runs on %s", self._vineyard_service_endpoint)
+        if self._with_mars:
+            self._mars_service_endpoint = self._get_mars_scheduler_service_endpoint()
+            logger.debug("mars scheduler runs on %s", self._mars_service_endpoint)
         logger.info("GraphScope engines pod is ready.")
 
     def _dump_resource_object(self):
@@ -785,6 +987,17 @@ class KubernetesClusterLauncher(Launcher):
                             )
                         )
 
+    def _exists_vineyard_daemonset(self, release):
+        # check if vineyard daemonset exists.
+        if not release:
+            return False
+        try:
+            self._app_api.read_namespaced_daemon_set(release, self._namespace)
+        except K8SApiException:
+            return False
+        else:
+            return True
+
     def start(self):
         try:
             self._create_services()
@@ -796,6 +1009,10 @@ class KubernetesClusterLauncher(Launcher):
             logger.info(
                 "Vineyard service endpoint: {}".format(self._vineyard_service_endpoint)
             )
+            if self._with_mars:
+                logger.info(
+                    "Mars service endpoint: {}".format(self._mars_service_endpoint)
+                )
             self._launch_analytical_engine_locally()
         except Exception as e:
             time.sleep(1)

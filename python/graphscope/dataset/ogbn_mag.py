@@ -18,7 +18,7 @@
 
 import os
 
-from graphscope.framework.loader import Loader
+from graphscope.framework.graph import Graph
 
 
 def load_ogbn_mag(sess, prefix):
@@ -36,36 +36,36 @@ def load_ogbn_mag(sess, prefix):
     Returns:
         :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
     """
-    vertices = {
-        "paper": os.path.join(prefix, "paper.csv"),
-        "author": os.path.join(prefix, "author.csv"),
-        "institution": os.path.join(prefix, "institution.csv"),
-        "field_of_study": os.path.join(prefix, "field_of_study.csv"),
-    }
-    edges = {
-        "affiliated": (
+    graph = sess.g()
+    graph = (
+        graph.add_vertices(os.path.join(prefix, "paper.csv"), "paper")
+        .add_vertices(os.path.join(prefix, "author.csv"), "author")
+        .add_vertices(os.path.join(prefix, "institution.csv"), "institution")
+        .add_vertices(os.path.join(prefix, "field_of_study.csv"), "field_of_study")
+        .add_edges(
             os.path.join(prefix, "author_affiliated_with_institution.csv"),
-            [],
-            ("src_id", "author"),
-            ("dst_id", "institution"),
-        ),
-        "cites": (
-            os.path.join(prefix, "paper_cites_paper.csv"),
-            [],
-            ("src_id", "paper"),
-            ("dst_id", "paper"),
-        ),
-        "hasTopic": (
+            "affiliated",
+            src_label="author",
+            dst_label="institution",
+        )
+        .add_edges(
             os.path.join(prefix, "paper_has_topic_field_of_study.csv"),
-            [],
-            ("src_id", "paper"),
-            ("dst_id", "field_of_study"),
-        ),
-        "writes": (
+            "hasTopic",
+            src_label="paper",
+            dst_label="field_of_study",
+        )
+        .add_edges(
+            os.path.join(prefix, "paper_cites_paper.csv"),
+            "cites",
+            src_label="paper",
+            dst_label="paper",
+        )
+        .add_edges(
             os.path.join(prefix, "author_writes_paper.csv"),
-            [],
-            ("src_id", "author"),
-            ("dst_id", "paper"),
-        ),
-    }
-    return sess.load_from(edges, vertices)
+            "writes",
+            src_label="author",
+            dst_label="paper",
+        )
+    )
+
+    return graph

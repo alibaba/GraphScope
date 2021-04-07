@@ -952,11 +952,6 @@ def test_create_cython_app(
         a3 = load_app("SSSP_Pregel", empty_gar)
         a3(p2p_property_graph, src=6)
 
-    # cython app only support arrow property graph
-    with pytest.raises(InvalidArgumentError, match="App is uncompatible with graph"):
-        a4 = load_app("SSSP_Pregel", random_gar)
-        a4(arrow_project_graph, src=6)
-
 
 @pytest.mark.skipif(
     os.environ.get("EXPERIMENTAL_ON") != "ON", reason="dynamic graph is in experimental"

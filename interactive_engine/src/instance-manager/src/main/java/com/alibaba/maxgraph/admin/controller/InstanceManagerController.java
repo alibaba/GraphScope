@@ -88,11 +88,61 @@ public class InstanceManagerController {
         }
     }
 
+    @RequestMapping(value = "create_local", method = RequestMethod.POST)
+    public CreateInstanceEntity createLocalInstance(@RequestParam("graphName") String graphName,
+                                                    @RequestParam("schemaPath") String schemaPath,
+                                                    @RequestParam("vineyardIpcSocket") String vineyardIpcSocket) throws Exception{
+        CreateInstanceEntity createInstanceEntity = new CreateInstanceEntity();
+        int errorCode;
+        String errorMessage = "";
+        int frontendPort = 0;
+
+        try {
+            List<String> createCommandList = new ArrayList<>();
+
+            createCommandList.add(instanceProperties.getCreateScript());
+            createCommandList.add(graphName);
+            createCommandList.add(schemaPath);
+            createCommandList.add("1"); // server id
+            createCommandList.add(vineyardIpcSocket);
+            String command = StringUtils.join(createCommandList, " ");
+            logger.info("start to create instance with command " + command);
+            Process process = Runtime.getRuntime().exec(command);
+
+            List<String> errorValueList = IOUtils.readLines(process.getErrorStream(), "UTF-8");
+            List<String> infoValueList = IOUtils.readLines(process.getInputStream(), "UTF-8");
+            infoValueList.addAll(errorValueList);
+            // errorMessage = StringUtils.join(infoValueList, "\n");
+            errorCode = process.waitFor();
+            if (errorCode == 0) {
+              // frontend endpoint with localhost:8182
+              String ip = "localhost";
+              frontendPort = Integer.parseInt("8182");
+              createInstanceEntity.setFrontHost(ip);
+              createInstanceEntity.setFrontPort(frontendPort);
+              logger.info("Found Frontend with ip: "+ ip + " and port:" + frontendPort);
+              if (!this.checkInstanceReady(ip, frontendPort)) {
+                errorCode = -1;
+                errorMessage = "Check instance ready timeout";
+              }
+            }
+        } catch (Exception e) {
+            errorCode = -1;
+            errorMessage = ExceptionUtils.getMessage(e);
+        }
+
+        createInstanceEntity.setErrorCode(errorCode);
+        createInstanceEntity.setErrorMessage(errorMessage);
+
+        return createInstanceEntity;
+    }
+
     @RequestMapping(value = "create", method = RequestMethod.POST)
     public CreateInstanceEntity createInstance(@RequestParam("graphName") String graphName,
                                                @RequestParam("schemaJson") String schemaJson,
                                                @RequestParam("podNameList") String podNameList,
                                                @RequestParam("containerName") String containerName,
+                                               @RequestParam("preemptive") String preemptive,
                                                @RequestParam("gremlinServerCpu") String gremlinServerCpu,
                                                @RequestParam("gremlinServerMem") String gremlinServerMem,
                                                @RequestParam("engineParams") String engineParams) throws Exception {
@@ -126,6 +176,7 @@ public class InstanceManagerController {
             createCommandList.add(schemaPath);
             createCommandList.add(podNameList);
             createCommandList.add(containerName);
+            createCommandList.add(preemptive);
             createCommandList.add(gremlinServerCpu);
             createCommandList.add(gremlinServerMem);
             createCommandList.add(engineParams);
@@ -167,10 +218,13 @@ public class InstanceManagerController {
     }
 
     private boolean checkInstanceReady(String ip, int port) {
-        if (ip.equals("localhost") || ip.equals("127.0.0.1")) {
-            // now, used in mac os with docker-desktop kubernetes cluster,
-            // which external ip is 'localhost' when service type is 'LoadBalancer'.
-            return true;
+        if (System.getenv("MY_POD_NAME") != null) {
+          // in kubernetes env
+          if (ip.equals("localhost") || ip.equals("127.0.0.1")) {
+              // now, used in mac os with docker-desktop kubernetes cluster,
+              // which external ip is 'localhost' when service type is 'LoadBalancer'.
+              return true;
+          }
         }
         MessageSerializer serializer = Serializers.GRYO_V1D0.simpleInstance();
         Map<String, Object> config = new HashMap<String, Object>() {
@@ -298,6 +352,32 @@ public class InstanceManagerController {
             errorCode = -1;
             errorMessage = ExceptionUtils.getMessage(e);
         }
+        return new CloseInstanceEntity(errorCode, errorMessage);
+    }
+
+		@RequestMapping("close_local")
+    public CloseInstanceEntity closeInstance(@RequestParam("graphName") String graphName) {
+        int errorCode;
+        String errorMessage;
+
+        try{
+            List<String> closeCommandList = new ArrayList<>();
+            closeCommandList.add(instanceProperties.getCloseScript());
+            closeCommandList.add(graphName);
+            String command = StringUtils.join(closeCommandList, " ");
+            logger.info("start to close instance with command " + command);
+            Process process = Runtime.getRuntime().exec(command);
+            List<String> errorValueList = IOUtils.readLines(process.getErrorStream(), "UTF-8");
+            List<String> infoValueList = IOUtils.readLines(process.getInputStream(), "UTF-8");
+            infoValueList.addAll(errorValueList);
+            errorMessage = StringUtils.join(infoValueList, "\n");
+            errorCode = process.waitFor();
+            FrontendMemoryStorage.getFrontendStorage().removeFrontendEndpoint(graphName);
+        } catch (Exception e) {
+            errorCode = -1;
+            errorMessage = ExceptionUtils.getMessage(e);
+        }
+
         return new CloseInstanceEntity(errorCode, errorMessage);
     }
 

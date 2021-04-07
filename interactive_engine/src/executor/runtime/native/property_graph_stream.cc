@@ -85,7 +85,7 @@ static std::shared_ptr<arrow::Schema> ToArrowSchema(
   kv->Append("label_name", entry.label);
   kv->Append("label_index", std::to_string(entry.id));
   std::vector<std::shared_ptr<arrow::Field>> fields;
-  for (auto const& prop : entry.props) {
+  for (auto const& prop : entry.props_) {
     LOG(INFO) << "prop.id = " << prop.id << ", " << prop.name << " -> " << prop.type;
     fields.emplace_back(PropertyToField(prop));
   }
@@ -312,14 +312,14 @@ void PropertyGraphOutStream::initialTables() {
     }
     vertex_primary_key_column_[entry.id] = -1;
 
-    for (size_t idx = 0; idx < entry.props.size(); ++idx) {
+    for (size_t idx = 0; idx < entry.props_.size(); ++idx) {
 #ifndef NDEBUG
       LOG(INFO) << "vertex prop id mapping: entry.label = " << entry.label
                 << ", entry.id = " << entry.id
-                << ", mapping prop " << entry.props[idx].id
+                << ", mapping prop " << entry.props_[idx].id
                 << " to " << (1 + idx);
 #endif
-      vertex_property_id_mapping_[entry.id].emplace(entry.props[idx].id,
+      vertex_property_id_mapping_[entry.id].emplace(entry.props_[idx].id,
                                                     1 + idx);
       if (!entry.primary_keys.empty()) {
         if (entry.primary_keys[0] == entry.label) {
@@ -364,14 +364,14 @@ void PropertyGraphOutStream::initialTables() {
     CHECK_ARROW_ERROR_AND_ASSIGN(schema,
         schema->AddField(1, arrow::field("dst_id", vertex_id_type)));
 #endif
-    for (size_t idx = 0; idx < entry.props.size(); ++idx) {
+    for (size_t idx = 0; idx < entry.props_.size(); ++idx) {
 #ifndef NDEBUG
       LOG(INFO) << "edge prop id mapping: entry.label = " << entry.label
                 << ", entry.id = " << entry.id
-                << ", mapping prop " << entry.props[idx].id
+                << ", mapping prop " << entry.props_[idx].id
                 << " to " << (2 + idx);
 #endif
-      edge_property_id_mapping_[entry.id].emplace(entry.props[idx].id,
+      edge_property_id_mapping_[entry.id].emplace(entry.props_[idx].id,
                                                   2 + idx);
       for (auto const &rel: entry.relations) {
         auto src_label = graph_schema_->GetLabelId(rel.first);

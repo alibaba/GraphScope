@@ -33,7 +33,7 @@
 /**
  * project_frame.cc serves as a frame to be compiled with
  * ArrowProjectedFragment/DynamicProjectedFragment. The frame will be compiled
- * when the client issues a PROJECT_GRAPH request. Then, a library will be
+ * when the client issues a PROJECT_TO_SIMPLE request. Then, a library will be
  * produced based on the frame. The reason we need the frame is the template
  * parameters are unknown before the project request has arrived at the
  * analytical engine. A dynamic library is necessary to prevent hardcode data
@@ -42,10 +42,11 @@
 namespace gs {
 
 template <typename FRAG_T>
-class ProjectFrame {};
+class ProjectSimpleFrame {};
 
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
-class ProjectFrame<gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>> {
+class ProjectSimpleFrame<
+    gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>> {
   using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
   using projected_fragment_t =
       gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
@@ -123,7 +124,7 @@ class ProjectFrame<gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>> {
 
 #ifdef EXPERIMENTAL_ON
 template <typename VDATA_T, typename EDATA_T>
-class ProjectFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
+class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
   using fragment_t = gs::DynamicFragment;
   using projected_fragment_t = gs::DynamicProjectedFragment<VDATA_T, EDATA_T>;
 
@@ -171,7 +172,7 @@ void Project(
     std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
     const std::string& projected_graph_name, const gs::rpc::GSParams& params,
     gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
-  wrapper_out = gs::ProjectFrame<_PROJECTED_GRAPH_TYPE>::Project(
+  wrapper_out = gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::Project(
       wrapper_in, projected_graph_name, params);
 }
 

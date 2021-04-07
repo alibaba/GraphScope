@@ -25,6 +25,7 @@ import vineyard
 
 import graphscope
 from graphscope.framework.errors import AnalyticalEngineInternalError
+from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
 
@@ -135,7 +136,9 @@ def empty_file(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/empty_file" % data_dir)
 
 
-def test_dict_in_dict_form_loader(graphscope_session, student_group_e, student_v):
+def test_dict_in_dict_form_loader_deprecated(
+    graphscope_session, student_group_e, student_v
+):
     g = graphscope_session.load_from(
         edges={
             "group": {
@@ -159,8 +162,26 @@ def test_dict_in_dict_form_loader(graphscope_session, student_group_e, student_v
 def test_complete_form_loader(graphscope_session, student_group_e, student_v):
     # a complete form for loading from ev files.
     # types are inferred from Loader.
+    graph = graphscope_session.g()
+    graph = graph.add_vertices(
+        student_v, "student", ["name", "lesson_nums", "avg_score"], "student_id"
+    )
+    graph = graph.add_edges(
+        student_group_e,
+        "group",
+        ["group_id", "member_size"],
+        src_label="student",
+        dst_label="student",
+        src_field="leader_student_id",
+        dst_field="member_student_id",
+    )
+    assert graph.loaded()
 
-    g = graphscope_session.load_from(
+
+def test_complete_form_loader_deprecated(
+    graphscope_session, student_group_e, student_v
+):
+    graph = graphscope_session.load_from(
         edges={
             "group": (
                 student_group_e,
@@ -181,427 +202,225 @@ def test_complete_form_loader(graphscope_session, student_group_e, student_v):
             )
         },
     )
+    assert graph.loaded()
 
 
-def test_properties_omitted_loader(graphscope_session, student_group_e, student_v):
-    g = graphscope_session.load_from(
-        edges={
-            "group": (
-                student_group_e,
-                [],
-                ("leader_student_id", "student"),
-                ("member_student_id", "student"),
-            )
-        },
-        vertices={
-            "student": (
-                student_v,
-                [],
-                "student_id",
-            )
-        },
-        generate_eid=False,
-    )
-    assert len(g.schema.vertex_properties[0]) == 4
-    assert len(g.schema.edge_properties[0]) == 2
+def test_default_prop_is_none_loader(graphscope_session, student_group_e, student_v):
+    graph = graphscope_session.g(generate_eid=False)
+    graph = graph.add_vertices(student_v, "student")
+    graph = graph.add_edges(student_group_e, "group")
+    assert len(graph.schema.get_vertex_properties("student")) == 4
+    assert len(graph.schema.get_edge_properties("group")) == 2
+
+
+def test_prop_is_empty_loader(graphscope_session, student_group_e, student_v):
+    graph = graphscope_session.g(generate_eid=False)
+    graph = graph.add_vertices(student_v, "student", [], "student_id")
+    graph = graph.add_edges(student_group_e, "group", [])
+    assert len(graph.schema.get_vertex_properties("student")) == 1
+    assert len(graph.schema.get_edge_properties("group")) == 0
 
 
 def test_properties_omitted_loader_with_generate_eid(
     graphscope_session, student_group_e, student_v
 ):
-    g2 = graphscope_session.load_from(
-        edges={
-            "group": (
-                student_group_e,
-                [],
-                ("leader_student_id", "student"),
-                ("member_student_id", "student"),
-            )
-        },
-        vertices={
-            "student": (
-                student_v,
-                [],
-                "student_id",
-            )
-        },
-        generate_eid=True,
-    )
-    assert len(g2.schema.vertex_properties[0]) == 4
-    assert len(g2.schema.edge_properties[0]) == 3
+    graph = graphscope_session.g(generate_eid=True)
+    graph = graph.add_vertices(student_v, "student", None, "student_id")
+    graph = graph.add_edges(student_group_e, "group", None)
+    assert len(graph.schema.get_vertex_properties("student")) == 4
+    assert len(graph.schema.get_edge_properties("group")) == 3
 
 
 def test_loader_with_specified_data_type(
     graphscope_session, student_group_e, student_v
 ):
-    # a complete form for loading from ev files.
-    # types are inferred from Loader.
-
-    # vid is the column name, used as vertex_id, this one can be omit,
-    # when omit, will use the first column as the vertex_id;
-    g = graphscope_session.load_from(
-        edges={
-            "group": (
-                student_group_e,
-                ["group_id", ("member_size", "int")],
-                (
-                    "leader_student_id",
-                    "student",
-                ),  # use src column as the source, the vlabel should be 'v';
-                ("member_student_id", "student"),
-                "both_out_in",
-            )
-        },
-        vertices={
-            "student": (
-                student_v,
-                ["name", ("lesson_nums", "int"), ("avg_score", "float")],
-                "student_id",
-            )
-        },
-        oid_type="string",
-        generate_eid=False,
+    graph = graphscope_session.g(oid_type="string", generate_eid=False)
+    graph = graph.add_vertices(
+        student_v,
+        "student",
+        ["name", ("lesson_nums", "int"), ("avg_score", "float")],
+        "student_id",
     )
-    assert g.schema.vertex_properties == [
-        {"name": 21, "lesson_nums": 11, "avg_score": 18, "student_id": 21}
+    graph = graph.add_edges(
+        student_group_e, "group", ["group_id", ("member_size", "int")]
+    )
+    assert [p.type for p in graph.schema.get_vertex_properties("student")] == [
+        21,
+        11,
+        18,
+        21,
     ]
-    assert g.schema.edge_properties == [{"group_id": 21, "member_size": 11}]
-
-
-def test_dict_multi_src_dst_edge_loader(
-    graphscope_session, student_group_e, teacher_group_e, student_v, teacher_v
-):
-    g = graphscope_session.load_from(
-        edges={
-            "group": [
-                {
-                    "loader": teacher_group_e,
-                    "properties": ["group_id", "member_size"],
-                    "source": ("leader_teacher_id", "teacher"),
-                    "destination": ("member_teacher_id", "teacher"),
-                },
-                {
-                    "loader": student_group_e,
-                    "properties": ["group_id", "member_size"],
-                    "source": ("leader_student_id", "student"),
-                    "destination": ("member_student_id", "student"),
-                },
-            ]
-        },
-        vertices={
-            "student": {
-                "loader": student_v,
-                "properties": ["name", "lesson_nums", "avg_score"],
-                "vid": "student_id",
-            },
-            "teacher": {
-                "loader": teacher_v,
-                "properties": ["student_num", "score", "email", "tel"],
-                "vid": "teacher_id",
-            },
-        },
-    )
+    assert [p.type for p in graph.schema.get_edge_properties("group")] == [21, 11]
 
 
 def test_multi_src_dst_edge_loader(
     graphscope_session, student_group_e, teacher_group_e, student_v, teacher_v
 ):
-    g = graphscope_session.load_from(
-        edges={
-            "group": [
-                (
-                    teacher_group_e,
-                    ["group_id", "member_size"],
-                    ("leader_teacher_id", "teacher"),
-                    ("member_teacher_id", "teacher"),
-                ),
-                (
-                    student_group_e,
-                    ["group_id", "member_size"],
-                    ("leader_student_id", "student"),
-                    ("member_student_id", "student"),
-                ),
-            ]
-        },
-        vertices={
-            "student": (
-                student_v,
-                ["name", "lesson_nums", "avg_score"],
-                "student_id",
-            ),
-            "teacher": (
-                teacher_v,
-                ["student_num", "score", "email", "tel"],
-                "teacher_id",
-            ),
-        },
+    graph = graphscope_session.g()
+    graph = graph.add_vertices(
+        student_v, "student", ["name", "lesson_nums", "avg_score"], "student_id"
     )
+    graph = graph.add_vertices(
+        teacher_v, "teacher", ["student_num", "score", "email", "tel"], "teacher_id"
+    )
+    graph = graph.add_edges(
+        student_group_e,
+        "group",
+        ["group_id", "member_size"],
+        src_label="student",
+        dst_label="student",
+        src_field="leader_student_id",
+        dst_field="member_student_id",
+    )
+    graph = graph.add_edges(
+        teacher_group_e,
+        "group",
+        ["group_id", "member_size"],
+        src_label="teacher",
+        dst_label="teacher",
+        src_field="leader_teacher_id",
+        dst_field="member_teacher_id",
+    )
+    assert graph.loaded()
 
 
 def test_vid_omitted_form_loader(graphscope_session, student_group_e, student_v):
     # vid can be omit, the first column will be used as vid;
-    g = graphscope_session.load_from(
-        edges={
-            "group": (
-                student_group_e,
-                ["group_id", "member_size"],
-                ("leader_student_id", "student"),
-                ("member_student_id", "student"),
-                "both_out_in",
-            )
-        },
-        vertices={
-            "student": (
-                student_v,
-                ["name", "lesson_nums", "avg_score"],
-            )
-        },
+    graph = graphscope_session.g()
+    graph = graph.add_vertices(
+        student_v, "student", ["name", "lesson_nums", "avg_score"]
     )
+    graph = graph.add_edges(
+        student_group_e,
+        "group",
+        ["group_id", "member_size"],
+        src_label="student",
+        dst_label="student",
+        src_field="leader_student_id",
+        dst_field="member_student_id",
+    )
+    assert graph.loaded()
 
 
 def test_v_property_omitted_form_loader(graphscope_session, student_group_e, student_v):
     # properties for v can be omit, all columns will be load,
     # the first one used as vid by # default. default vlabel would be '_';
-    g = graphscope_session.load_from(
-        edges={
-            "e": (
-                student_group_e,
-                ["group_id", "member_size"],
-                "leader_student_id",
-                "member_student_id",
-                "both_out_in",
-            )
-        },
-        vertices={"student": student_v},
+    graph = graphscope_session.g()
+    graph = graph.add_vertices(student_v, "student")
+    graph = graph.add_edges(
+        student_group_e,
+        "group",
+        ["group_id", "member_size"],
+        src_field="leader_student_id",
+        dst_field="member_student_id",
     )
+    assert graph.loaded()
 
 
 def test_vertices_omitted_form_loader(graphscope_session, student_group_e):
     # vertices can be omit.
-    g = graphscope_session.load_from(
-        edges={
-            "e": (
-                student_group_e,
-                ["group_id", "member_size"],
-                "leader_student_id",
-                "member_student_id",
-                "both_out_in",
-            )
-        }
-    )
-
-
-def test_label_omitted_form_loader(graphscope_session, student_group_e, student_v):
-    # labels can be omitted, if there is only one label for edges/vertices,
-    # a default label `_` is assigned.
-    g = graphscope_session.load_from(
-        edges=(
-            student_group_e,
-            ["group_id", "member_size"],
-            "leader_student_id",
-            "member_student_id",
-            "both_out_in",
-        ),
-        vertices=student_v,
-    )
-
-
-def test_src_dst_omitted_form_loader(graphscope_session, student_group_e, student_v):
-    # or totally omit the src/dst. the 1st, and 2nd columns will be used by default.
-    g = graphscope_session.load_from(
-        edges=(
-            student_group_e,
-            ["group_id", "member_size"],
-        ),
-        vertices=student_v,
-    )
+    graph = graphscope_session.g()
+    graph = graph.add_edges(student_group_e)
+    assert graph.loaded()
 
 
 def test_all_omitted_form_loader(graphscope_session, student_group_e):
-    g = graphscope_session.load_from(edges=(student_group_e, []))
+    graph = graphscope_session.g()
+    graph = graph.add_edges(student_group_e, "group")
+    assert graph.loaded()
 
 
 def test_multiple_e_all_omitted_form_loader(
     graphscope_session, student_group_e, friend_e
 ):
-    g6 = graphscope_session.load_from(
-        edges={
-            "e1": student_group_e,
-            "e2": friend_e,
-        }
-    )
+    graph = graphscope_session.g()
+    graph = graph.add_edges(student_group_e, "group")
+    graph = graph.add_edges(friend_e, "friend")
+    assert graph.loaded()
 
 
 def test_load_from_numpy(graphscope_session, student_group_e_array, student_v_array):
-    g = graphscope_session.load_from(
-        edges=student_group_e_array, vertices=student_v_array
-    )
+    graph = graphscope_session.g()
+    graph = graph.add_vertices(student_v_array)
+    graph = graph.add_edges(student_group_e_array)
+    assert graph.loaded()
 
 
 def test_load_from_pandas(graphscope_session, student_group_e_df, student_v_df):
-    g = graphscope_session.load_from(edges=student_group_e_df, vertices=student_v_df)
+    graph = graphscope_session.g()
+    graph = graph.add_vertices(student_v_df)
+    graph = graph.add_edges(student_group_e_df)
+    assert graph.loaded()
 
 
 # test errors
-def test_error_on_location(graphscope_session):
-    with pytest.raises(AnalyticalEngineInternalError, match="IOError"):
-        non_existing_file = "file:///abc"
-        g = graphscope_session.load_from(edges=Loader(non_existing_file))
-
-
-def test_errors_on_file_format(
+def test_errors_on_files(
     graphscope_session, one_column_file, double_type_id_file, empty_file
 ):
+    with pytest.raises(AnalyticalEngineInternalError, match="Object not exists"):
+        Graph(
+            graphscope_session, vineyard.ObjectName("non_exist_vy_name")
+        )._ensure_loaded()
+    return
+    graph = graphscope_session.g()
+    with pytest.raises(AnalyticalEngineInternalError, match="IOError"):
+        non_existing_file = "file:///abc"
+        graph.add_edges(Loader(non_existing_file))._ensure_loaded()
     with pytest.raises(AnalyticalEngineInternalError, match="Index out of range: 1"):
-        g1 = graphscope_session.load_from(edges=one_column_file)
+        graph.add_edges(one_column_file)._ensure_loaded()
     with pytest.raises(
         AnalyticalEngineInternalError, match="CSV conversion error to int64"
     ):
-        g2 = graphscope_session.load_from(edges=double_type_id_file)
+        graph.add_edges(double_type_id_file)._ensure_loaded()
     with pytest.raises(AnalyticalEngineInternalError, match="End Of File"):
-        g3 = graphscope_session.load_from(edges=empty_file)
-    with pytest.raises(AnalyticalEngineInternalError, match="Object not exists"):
-        g4 = graphscope_session.load_from(vineyard.ObjectName("non_exist_vy_name"))
-
-
-def test_error_on_non_existing_load_strategy(
-    graphscope_session, student_group_e, student_v
-):
-    # non-existing load strategy
-    with pytest.raises(AssertionError, match="invalid load strategy: wrong_strategy"):
-        g = graphscope_session.load_from(
-            edges=(
-                student_group_e,
-                ["group_id", "member_size"],
-                "leader_student_id",
-                "member_student_id",
-                "wrong_strategy",
-            ),
-            vertices=student_v,
-        )
+        graph.add_edges(empty_file)._ensure_loaded()
 
 
 def test_error_on_non_default_and_non_existing_v_label(
     graphscope_session, student_group_e, student_v
 ):
-    with pytest.raises(AssertionError, match="label not found in vertex labels"):
-        g = graphscope_session.load_from(
-            edges={
-                "group": (
-                    student_group_e,
-                    ["group_id", "member_size"],
-                    ("leader_student_id", "v"),
-                    ("member_student_id", "v"),
-                    "both_out_in",
-                )
-            },
-            vertices={
-                "student": (
-                    student_v,
-                    ["name", "lesson_nums", "avg_score"],
-                    "student_id",
-                )
-            },
-        )
-
-
-def test_error_on_too_much_src_dst(graphscope_session, student_group_e, student_v):
-    with pytest.raises(AssertionError, match="Too many arguments for a edge label"):
-        g = graphscope_session.load_from(
-            edges={
-                "group": (
-                    student_group_e,
-                    ["group_id", "member_size"],
-                    ("leader_student_id", "student"),
-                    ("member_student_id", "student"),
-                    ("extra_vid", "student"),
-                    "both_out_in",
-                )
-            },
-            vertices={"student": student_v},
-        )
-
-
-def test_error_on_src_dst_refer_to_same_col(
-    graphscope_session, student_group_e, student_v
-):
-    with pytest.raises(AssertionError, match="cannot refer to the same col"):
-        g = graphscope_session.load_from(
-            edges={
-                "group": (
-                    student_group_e,
-                    ["group_id", "member_size"],
-                    ("leader_student_id", "student"),
-                    ("leader_student_id", "student"),
-                    "both_out_in",
-                )
-            },
-            vertices={"student": student_v},
-        )
-
-
-def test_error_on_missing_edges(graphscope_session, student_v):
+    graph = graphscope_session.g()
+    graph = graph.add_vertices(student_v, "student")
+    with pytest.raises(ValueError, match="src label or dst_label not existed in graph"):
+        graph = graph.add_edges(student_group_e, "group", src_label="v", dst_label="v")
     with pytest.raises(
-        TypeError, match="missing 1 required positional argument: 'edges'"
+        ValueError, match="must be both specified or either unspecified"
     ):
-        g = graphscope_session.load_from(vertices={"v": student_v})
+        graph = graph.add_edges(student_group_e, src_label="v")
+
+
+def test_error_on_src_dst_refer_to_same_col(graphscope_session, student_group_e):
+    graph = graphscope_session.g()
+    with pytest.raises(AssertionError, match="cannot refer to the same field"):
+        graph = graph.add_edges(
+            student_group_e,
+            "group",
+            src_field="leader_student_id",
+            dst_field="leader_student_id",
+        )
+    with pytest.raises(AssertionError, match="cannot refer to the same field"):
+        graph = graph.add_edges(student_group_e, "group", src_field=0, dst_field=0)
 
 
 def test_error_on_ambigious_default_label(
     graphscope_session, student_group_e, student_v, teacher_v
 ):
+    graph = graphscope_session.g()
+    graph = graph.add_vertices(student_v, "student")
+    graph = graph.add_vertices(teacher_v, "teacher")
+
     with pytest.raises(AssertionError, match="ambiguous vertex label"):
-        g = graphscope_session.load_from(
-            edges={
-                "group": (
-                    student_group_e,
-                    ["group_id", "member_size"],
-                    "leader_student_id",
-                    "member_student_id",
-                    "both_out_in",
-                )
-            },
-            vertices={
-                "student": student_v,
-                "teacher": teacher_v,
-            },
-        )
+        graph = graph.add_edges(student_group_e, "group")
 
 
 def test_error_on_duplicate_labels(graphscope_session, student_group_e, student_v):
-    g = graphscope_session.load_from(
-        edges={
-            "group": (
-                student_group_e,
-                ["group_id", "member_size"],
-                ("leader_student_id", "student"),
-                ("member_student_id", "student"),
-                "both_out_in",
-            )
-        },
-        vertices={
-            "student": student_v,
-            "student": student_v,
-        },
-    )
-
-
-def test_errors_on_unknown_parameters(graphscope_session, student_group_e, student_v):
-    with pytest.raises(AssertionError, match="Too many arguments for a edge label"):
-        g = graphscope_session.load_from(
-            edges={
-                "group": (
-                    student_group_e,
-                    "unknown",
-                    ["group_id", "member_size"],
-                    ("leader_student_id", "student"),
-                    ("member_student_id", "student"),
-                    ("extra_vid", "student"),
-                    "both_out_in",
-                )
-            },
-            vertices={"student": student_v},
-        )
+    graph = graphscope_session.g()
+    graph = graph.add_vertices(student_v, "student")
+    with pytest.raises(ValueError, match="Label student already existed in graph"):
+        graph = graph.add_vertices(student_v, "student")
+    graph = graph.add_edges(student_group_e, "group")
+    with pytest.raises(ValueError, match="already existed in graph"):
+        graph = graph.add_edges(student_group_e, "group")
 
 
 def test_load_complex_graph(
@@ -613,43 +432,42 @@ def test_load_complex_graph(
     teacher_v,
     lesson_v,
 ):
-    g = graphscope_session.load_from(
-        edges={
-            "score": (
-                score_e,
-                ["score", "score_id"],
-                ("student_id", "student"),
-                ("subject", "lesson"),
-                "both_out_in",
-            ),
-            "student_teacher": (
-                student_teacher_e,
-                ["teaching_score"],
-                ("student_id", "student"),
-                ("teacher_id", "teacher"),
-            ),
-            "teacher_lesson": (
-                teacher_lesson_e,
-                ["times"],
-                ("teacher_id", "teacher"),
-                ("lesson", "lesson"),
-                "only_out",
-            ),
-        },
-        vertices={
-            "student": (
-                student_v,
-                ["name", "lesson_nums", "avg_score"],
-                "student_id",
-            ),
-            "teacher": (
-                teacher_v,
-                ["student_num", "score", "email", "tel"],
-            ),
-            "lesson": lesson_v,
-        },
-        oid_type="string",
+    graph = graphscope_session.g(oid_type="string")
+    graph = graph.add_vertices(
+        student_v, "student", ["name", "lesson_nums", "avg_score"], "student_id"
     )
+    graph = graph.add_vertices(
+        teacher_v, "teacher", ["student_num", "score", "email", "tel"]
+    )
+    graph = graph.add_vertices(lesson_v, "lesson")
+    graph = graph.add_edges(
+        score_e,
+        "score",
+        ["score", "score_id"],
+        src_label="student",
+        dst_label="lesson",
+        src_field="student_id",
+        dst_field="subject",
+    )
+    graph = graph.add_edges(
+        student_teacher_e,
+        "student_teacher",
+        ["teaching_score"],
+        src_label="student",
+        dst_label="teacher",
+        src_field="student_id",
+        dst_field="teacher_id",
+    )
+    graph = graph.add_edges(
+        teacher_lesson_e,
+        "teacher_lesson",
+        ["times"],
+        src_label="teacher",
+        dst_label="lesson",
+        src_field="teacher_id",
+        dst_field="lesson",
+    )
+    assert graph.schema is not None
 
 
 def test_load_complex_graph_by_index(
@@ -661,43 +479,42 @@ def test_load_complex_graph_by_index(
     teacher_v,
     lesson_v,
 ):
-    g = graphscope_session.load_from(
-        edges={
-            "score": (
-                score_e,
-                ["score", "score_id"],
-                (0, "student"),
-                (1, "lesson"),
-                "both_out_in",
-            ),
-            "student_teacher": (
-                student_teacher_e,
-                ["teaching_score"],
-                (0, "student"),
-                (1, "teacher"),
-            ),
-            "teacher_lesson": (
-                teacher_lesson_e,
-                ["times"],
-                (0, "teacher"),
-                (1, "lesson"),
-                "only_out",
-            ),
-        },
-        vertices={
-            "student": (
-                student_v,
-                ["name", "lesson_nums", "avg_score"],
-                0,
-            ),
-            "teacher": (
-                teacher_v,
-                ["student_num", "score", "email", "tel"],
-            ),
-            "lesson": lesson_v,
-        },
-        oid_type="string",
+    graph = graphscope_session.g(oid_type="string")
+    graph = graph.add_vertices(
+        student_v, "student", ["name", "lesson_nums", "avg_score"], 0
     )
+    graph = graph.add_vertices(
+        teacher_v, "teacher", ["student_num", "score", "email", "tel"]
+    )
+    graph = graph.add_vertices(lesson_v, "lesson")
+    graph = graph.add_edges(
+        score_e,
+        "score",
+        ["score", "score_id"],
+        src_label="student",
+        dst_label="lesson",
+        src_field=0,
+        dst_field=1,
+    )
+    graph = graph.add_edges(
+        student_teacher_e,
+        "student_teacher",
+        ["teaching_score"],
+        src_label="student",
+        dst_label="teacher",
+        src_field=0,
+        dst_field=1,
+    )
+    graph = graph.add_edges(
+        teacher_lesson_e,
+        "teacher_lesson",
+        ["times"],
+        src_label="teacher",
+        dst_label="lesson",
+        src_field=0,
+        dst_field=1,
+    )
+    assert graph.schema is not None
 
 
 @pytest.mark.skip(reason="vineyard, mars variants not ready")
@@ -709,32 +526,30 @@ def test_Load_complex_graph_variants(
     teacher_v_oss,
     lesson_v_mars,
 ):
-    g = graphscope_session.load_from(
-        edges={
-            "score": (
-                score_e,
-                ["score", "score_id"],
-                ("student_id", "student"),
-                ("subject", "lesson"),
-                "both_out_in",
-            ),
-            "group": (
-                student_group_e_df,
-                ["member_size"],
-                ("leader_student_id", "student"),
-                ("member_student_id", "student"),
-            ),
-        },
-        vertices={
-            "student": (
-                student_v_array,
-                ["name", "lesson_nums", "avg_score"],
-                "student_id",
-            ),
-            "teacher": (
-                teacher_v_oss,
-                ["student_num", "score", "email", "tel"],
-            ),
-            "lesson": lesson_v_mars,
-        },
+    graph = graphscope_session.g()
+    graph = graph.add_vertices(
+        student_v_array, "student", ["name", "lesson_nums", "avg_score"], "student_id"
     )
+    graph = graph.add_vertices(
+        teacher_v_oss, "teacher", ["student_num", "score", "email", "tel"]
+    )
+    graph = graph.add_vertices(lesson_v_mars, "lesson")
+    graph = graph.add_edges(
+        score_e,
+        "score",
+        ["score", "score_id"],
+        src_label="student",
+        dst_label="lesson",
+        src_field="studnet_id",
+        dst_field="subject",
+    )
+    graph = graph.add_edges(
+        student_group_e_df,
+        "group",
+        ["member_size"],
+        src_label="student",
+        dst_label="student",
+        src_field="leader_studnet_id",
+        dst_field="member_student_id",
+    )
+    assert graph.schema is not None

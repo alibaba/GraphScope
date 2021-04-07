@@ -19,10 +19,12 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.app import project_to_simple
 
 __all__ = ["eigenvector_centrality"]
 
 
+@project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
     """Compute the eigenvector centrality for the `graph`.
@@ -42,9 +44,9 @@ def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
     .. code:: python
 
         import graphscope as gs
-        s = gs.session()
-        g = s.load_from('The parameters for loading a graph...')
-        pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
+        sess = gs.session()
+        g = sess.g()
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.eigenvector_centrality(pg)
         s.close()
 

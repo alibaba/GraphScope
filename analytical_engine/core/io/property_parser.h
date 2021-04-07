@@ -178,7 +178,7 @@ inline detail::Edge::SubLabel ParseSubLabel(const AttrMap& attrs) {
               sub_label.row_num, sub_label.column_num,
               attrs.at(rpc::LOADER).func().attr());
   // The param PROPERTIES is only required when protocol is numpy or pandas.
-  if (attrs.contains(rpc::PROPERTIES)) {
+  if (attrs.find(rpc::PROPERTIES) != attrs.end()) {
     ParseProperties(sub_label.properties, attrs.at(rpc::PROPERTIES));
   }
 
@@ -190,7 +190,7 @@ inline std::shared_ptr<detail::Vertex> ParseVertex(const AttrMap& attrs) {
   vertex->label = attrs.at(rpc::LABEL).s();
   vertex->vid = attrs.at(rpc::VID).s();
 
-  if (attrs.contains(rpc::PROPERTIES)) {
+  if (attrs.find(rpc::PROPERTIES) != attrs.end()) {
     ParseProperties(vertex->properties, attrs.at(rpc::PROPERTIES));
   }
   ParseLoader(vertex->protocol, vertex->values, vertex->data, vertex->row_num,
@@ -231,6 +231,33 @@ inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
     }
   }
   return graph;
+}
+
+inline bl::result<std::vector<std::map<int, std::vector<int>>>>
+ParseProjectPropertyGraph(const gs::rpc::GSParams& params) {
+  BOOST_LEAF_AUTO(list, params.Get<rpc::AttrValue_ListValue>(
+                            rpc::ARROW_PROPERTY_DEFINITION));
+  auto& items = list.func();
+  std::map<int, std::vector<int>> vertices, edges;
+  CHECK_EQ(items.size(), 2);
+  {
+    auto item = items[0];
+    for (auto& pair : item.attr()) {
+      auto props = pair.second.list().i();
+      vertices[pair.first] = {props.begin(), props.end()};
+    }
+  }
+  {
+    auto item = items[1];
+    for (auto& pair : item.attr()) {
+      auto props = pair.second.list().i();
+      edges[pair.first] = {props.begin(), props.end()};
+    }
+  }
+  std::vector<std::map<int, std::vector<int>>> res;
+  res.push_back(vertices);
+  res.push_back(edges);
+  return res;
 }
 
 }  // namespace gs

@@ -19,6 +19,7 @@
 from itertools import chain
 from typing import Any
 from typing import Dict
+from typing import Iterable
 from typing import Mapping
 from typing import Sequence
 from typing import Tuple
@@ -28,18 +29,12 @@ import numpy as np
 import pandas as pd
 import vineyard
 
-from graphscope.client.session import get_default_session
-from graphscope.framework import dag_utils
 from graphscope.framework import utils
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
-from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import types_pb2
-
-__all__ = ["load_from"]
-
 
 VineyardObjectTypes = (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
 
@@ -62,7 +57,8 @@ class VertexLabel(object):
         label: str,
         loader: Any,
         properties: Sequence = None,
-        vid: Union[str, int] = 0,
+        vid_field: Union[str, int] = 0,
+        session_id=None,
     ):
         self.label = label
         if isinstance(loader, Loader):
@@ -72,26 +68,31 @@ class VertexLabel(object):
 
         self.raw_properties = properties
         self.properties = []
-        self.vid = vid
+        self.vid_field = vid_field
+        self._session_id = session_id
+        self._finished = False
 
     def finish(self, id_type: str = "int64_t"):
         # Normalize properties
         # Add vid to property list
-        self.add_property(str(self.vid), id_type)
+        if self._finished:
+            return
+        self.add_property(str(self.vid_field), id_type)
         if self.raw_properties:
             self.add_properties(self.raw_properties)
         elif self.loader.deduced_properties:
             self.add_properties(self.loader.deduced_properties)
         self.loader.select_columns(
-            self.properties, include_all=bool(not self.raw_properties)
+            self.properties, include_all=bool(self.raw_properties is None)
         )
-        self.loader.finish()
+        self.loader.finish(self._session_id)
+        self._finished = True
 
     def __str__(self) -> str:
         s = "\ntype: VertexLabel"
         s += "\nlabel: " + self.label
         s += "\nproperties: " + str(self.properties)
-        s += "\nvid: " + str(self.vid)
+        s += "\nvid: " + str(self.vid_field)
         s += "\nloader: " + repr(self.loader)
         return s
 
@@ -119,8 +120,10 @@ class EdgeSubLabel(object):
         self,
         loader,
         properties=None,
-        source=None,
-        destination=None,
+        src_label: str = "_",
+        dst_label: str = "_",
+        src_field: Union[str, int] = 0,
+        dst_field: Union[str, int] = 1,
         load_strategy="both_out_in",
     ):
         if isinstance(loader, Loader):
@@ -130,100 +133,52 @@ class EdgeSubLabel(object):
 
         self.raw_properties = properties
         self.properties = []
-        self.source_vid = 0
-        self.source_label = ""
-        self.destination_vid = 1
-        self.destination_label = ""
-        self.load_strategy = ""
+        self.src_label = src_label
+        self.dst_label = dst_label
+        self.src_field = src_field
+        self.dst_field = dst_field
 
-        if source is not None:
-            self.set_source(source)
-        if destination is not None:
-            self.set_destination(destination)
+        self._finished = False
 
-        if (
-            isinstance(self.source_vid, int) and isinstance(self.destination_vid, str)
-        ) or (
-            isinstance(self.source_vid, str) and isinstance(self.destination_vid, int)
+        check_argument(
+            load_strategy in ("only_out", "only_in", "both_out_in"),
+            "invalid load strategy: " + load_strategy,
+        )
+        self.load_strategy = load_strategy
+
+        if (isinstance(self.src_field, int) and isinstance(self.dst_field, str)) or (
+            isinstance(self.src_field, str) and isinstance(self.dst_field, int)
         ):
+            print("src field", self.src_field, "dst_field", self.dst_field)
             raise SyntaxError(
                 "Source vid and destination vid must have same formats, both use name or both use index"
             )
 
-        self.set_load_strategy(load_strategy)
-
-    def finish(self, id_type: str):
-        self.add_property(str(self.source_vid), id_type)
-        self.add_property(str(self.destination_vid), id_type)
+    def finish(self, id_type: str = "int64_t", session_id=None):
+        if self._finished:
+            return
+        self.add_property(str(self.src_field), id_type)
+        self.add_property(str(self.dst_field), id_type)
         if self.raw_properties:
             self.add_properties(self.raw_properties)
         elif self.loader.deduced_properties:
             self.add_properties(self.loader.deduced_properties)
         self.loader.select_columns(
-            self.properties, include_all=bool(not self.raw_properties)
+            self.properties, include_all=bool(self.raw_properties is None)
         )
-        self.loader.finish()
+        self.loader.finish(session_id)
+        self._finished = True
 
     def __str__(self) -> str:
         s = "\ntype: EdgeSubLabel"
-        s += "\nsource_label: " + self.source_label
-        s += "\ndestination_label: " + self.destination_label
+        s += "\nsource_label: " + self.src_label
+        s += "\ndestination_label: " + self.dst_label
         s += "\nproperties: " + str(self.properties)
         s += "\nloader: " + repr(self.loader)
         return s
 
     def __repr__(self) -> str:
         return self.__str__()
-
-    @staticmethod
-    def resolve_src_dst_value(value: Union[int, str, Tuple[Union[int, str], str]]):
-        """Resolve the edge's source and destination.
-
-        Args:
-            value (Union[int, str, Tuple[Union[int, str], str]]):
-            1. a int, represent vid id. a str, represent vid name
-            2. a ([int/str], str). former represents vid, latter represents label
-
-        Raises:
-            SyntaxError: If the format is incorrect.
-        """
-        if isinstance(value, (int, str)):
-            check_argument(
-                isinstance(value, int)
-                or (isinstance(value, str) and not value.isdecimal()),
-                "Column name cannot be decimal",
-            )
-            return value, ""
-        elif isinstance(value, Sequence):
-            check_argument(len(value) == 2)
-            check_argument(
-                isinstance(value[0], int)
-                or (isinstance(value[0], str) and not value[0].isdecimal()),
-                "Column name cannot be decimal",
-            )
-            check_argument(isinstance(value[1], str), "Label must be str")
-            return value[0], value[1]
-        else:
-            raise InvalidArgumentError(
-                "Source / destination format incorrect. Expect vid or [vid, source_label]"
-            )
-
-    def set_source(self, source: Union[int, str, Tuple[Union[int, str], str]]):
-        self.source_vid, self.source_label = self.resolve_src_dst_value(source)
-
-    def set_destination(
-        self, destination: Union[int, str, Tuple[Union[int, str], str]]
-    ):
-        self.destination_vid, self.destination_label = self.resolve_src_dst_value(
-            destination
-        )
-
-    def set_load_strategy(self, strategy: str):
-        check_argument(
-            strategy in ("only_out", "only_in", "both_out_in"),
-            "invalid load strategy: " + strategy,
-        )
-        self.load_strategy = strategy
 
     def add_property(self, prop: str, dtype=None) -> None:
         """prop is a str, representing name. It can optionally have a type."""
@@ -238,20 +193,14 @@ class EdgeSubLabel(object):
 
     def get_attr(self):
         attr_list = attr_value_pb2.NameAttrList()
-        attr_list.name = "{}_{}".format(self.source_label, self.destination_label)
-        attr_list.attr[types_pb2.SRC_LABEL].CopyFrom(utils.s_to_attr(self.source_label))
-        attr_list.attr[types_pb2.DST_LABEL].CopyFrom(
-            utils.s_to_attr(self.destination_label)
-        )
+        attr_list.name = "{}_{}".format(self.src_label, self.dst_label)
+        attr_list.attr[types_pb2.SRC_LABEL].CopyFrom(utils.s_to_attr(self.src_label))
+        attr_list.attr[types_pb2.DST_LABEL].CopyFrom(utils.s_to_attr(self.dst_label))
         attr_list.attr[types_pb2.LOAD_STRATEGY].CopyFrom(
             utils.s_to_attr(self.load_strategy)
         )
-        attr_list.attr[types_pb2.SRC_VID].CopyFrom(
-            utils.s_to_attr(str(self.source_vid))
-        )
-        attr_list.attr[types_pb2.DST_VID].CopyFrom(
-            utils.s_to_attr(str(self.destination_vid))
-        )
+        attr_list.attr[types_pb2.SRC_VID].CopyFrom(utils.s_to_attr(str(self.src_field)))
+        attr_list.attr[types_pb2.DST_VID].CopyFrom(utils.s_to_attr(str(self.dst_field)))
 
         attr_list.attr[types_pb2.LOADER].CopyFrom(self.loader.get_attr())
 
@@ -273,10 +222,11 @@ class EdgeLabel(object):
          src_label3 -> edge_label -> dst_label3
     """
 
-    def __init__(self, label: str):
+    def __init__(self, label: str, session_id=None):
         self.label = label
+        self.sub_labels = {}
 
-        self.sub_labels = []
+        self._session_id = session_id
 
         self._finished = False
 
@@ -284,7 +234,7 @@ class EdgeLabel(object):
         s = "\ntype: EdgeLabel"
         s += "\nlabel: " + self.label
         s += "\nsub_labels: "
-        for sub_label in self.sub_labels:
+        for sub_label in self.sub_labels.values():
             s += "\n"
             s += str(sub_label)
         return s
@@ -293,11 +243,20 @@ class EdgeLabel(object):
         return self.__str__()
 
     def add_sub_label(self, sub_label):
-        self.sub_labels.append(sub_label)
+        src = sub_label.src_label
+        dst = sub_label.dst_label
+        if (src, dst) in self.sub_labels:
+            raise ValueError(
+                f"The relationship {src} -> {self.label} <- {dst} already existed in graph."
+            )
+        self.sub_labels[(src, dst)] = sub_label
 
     def finish(self, id_type: str = "int64_t"):
-        for sub_label in self.sub_labels:
-            sub_label.finish(id_type)
+        if self._finished:
+            return
+        for sub_label in self.sub_labels.values():
+            sub_label.finish(id_type, self._session_id)
+        self._finished = True
 
 
 def process_vertex(vertex: VertexLabel) -> attr_value_pb2.NameAttrList:
@@ -306,7 +265,7 @@ def process_vertex(vertex: VertexLabel) -> attr_value_pb2.NameAttrList:
 
     attr_list.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(vertex.label))
 
-    attr_list.attr[types_pb2.VID].CopyFrom(utils.s_to_attr(str(vertex.vid)))
+    attr_list.attr[types_pb2.VID].CopyFrom(utils.s_to_attr(str(vertex.vid_field)))
 
     props = []
     for prop in vertex.properties[1:]:
@@ -326,80 +285,83 @@ def process_edge(edge: EdgeLabel) -> attr_value_pb2.NameAttrList:
 
     attr_list.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(edge.label))
 
-    sub_label_attr = [sub_label.get_attr() for sub_label in edge.sub_labels]
+    sub_label_attr = [sub_label.get_attr() for sub_label in edge.sub_labels.values()]
     attr_list.attr[types_pb2.SUB_LABEL].list.func.extend(sub_label_attr)
     return attr_list
 
 
-def _sanity_check(edges: Sequence[EdgeLabel], vertices: Sequence[VertexLabel]):
-    vertex_labels = []
-    for v in vertices:
-        vertex_labels.append(v.label)
-    if not vertex_labels:
-        vertex_labels.append("_")
-
-    for edge in edges:
-        # Check source label and destination label
-        check_argument(len(edge.sub_labels) != 0, "Edge label is malformed.")
-        for sub_label in edge.sub_labels:
-            if sub_label.source_label or sub_label.destination_label:
-                if not (sub_label.source_label and sub_label.destination_label):
-                    raise RuntimeError(
-                        "source label and destination label must be both specified or either unspecified"
-                    )
-
-            # Handle default label. If edge doesn't specify label, then use default.
-            if not sub_label.source_label and not sub_label.destination_label:
-                check_argument(len(vertex_labels) == 1, "ambiguous vertex label")
-                if len(vertex_labels) == 1:
-                    sub_label.source_label = (
-                        sub_label.destination_label
-                    ) = vertex_labels[0]
-            if vertices is not None and len(vertices) > 0:
-                check_argument(
-                    sub_label.source_label in vertex_labels,
-                    "source label not found in vertex labels",
-                )
-                check_argument(
-                    sub_label.destination_label in vertex_labels,
-                    "destination label not found in vertex labels",
-                )
-            check_argument(
-                sub_label.source_vid != sub_label.destination_vid,
-                "source col and destination col cannot refer to the same col",
-            )
-
-    return edges, vertices
-
-
-def _get_config(
-    edges: Sequence[EdgeLabel],
-    vertices: Sequence[VertexLabel],
-    directed: bool,
+def assemble_op_config(
+    vertices: Iterable[VertexLabel],
+    edges: Iterable[EdgeLabel],
     oid_type: str,
+    directed: bool,
     generate_eid: bool,
 ) -> Dict:
-    config = {}
     attr = attr_value_pb2.AttrValue()
 
-    for label in chain(edges, vertices):
+    for label in chain(vertices, edges):
         label.finish(oid_type)
 
-    for edge in edges:
-        attr.list.func.extend([process_edge(edge)])
-
     attr.list.func.extend([process_vertex(vertex) for vertex in vertices])
+    attr.list.func.extend([process_edge(edge) for edge in edges])
 
-    directed_attr = utils.b_to_attr(directed)
-    generate_eid_attr = utils.b_to_attr(generate_eid)
+    config = {}
     config[types_pb2.ARROW_PROPERTY_DEFINITION] = attr
-    config[types_pb2.DIRECTED] = directed_attr
+    config[types_pb2.DIRECTED] = utils.b_to_attr(directed)
     config[types_pb2.OID_TYPE] = utils.s_to_attr(oid_type)
-    config[types_pb2.GENERATE_EID] = generate_eid_attr
+    config[types_pb2.GENERATE_EID] = utils.b_to_attr(generate_eid)
     # vid_type is fixed
     config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
     config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(False)
     return config
+
+
+def _convert_array_to_deprecated_form(items):
+    compat_items = []
+    for i in range(len(items)):
+        if i < 2:
+            compat_items.append(items[i])
+        elif i == 2:
+            if isinstance(items[i], (int, str)) and isinstance(
+                items[i + 1], (int, str)
+            ):
+                compat_items.append("_")
+                compat_items.append("_")
+                compat_items.append(items[i])
+                compat_items.append(items[i + 1])
+            else:
+                assert len(items[i]) == 2 and len(items[i + 1]) == 2
+                compat_items.append(items[i][1])
+                compat_items.append(items[i + 1][1])
+                compat_items.append(items[i][0])
+                compat_items.append(items[i + 1][0])
+        elif i == 3:
+            pass
+        else:
+            compat_items.append(items[i])
+    return compat_items
+
+
+def _convert_dict_to_compat_form(items):
+    if "source" in items:
+        if isinstance(items["source"], (int, str)):
+            items["src_label"] = "_"
+            items["src_field"] = items["source"]
+        else:
+            assert len(items["source"]) == 2
+            items["src_label"] = items["source"][1]
+            items["src_field"] = items["source"][0]
+        items.pop("source")
+    if "destination" in items:
+        if isinstance(items["destination"], (int, str)):
+            items["dst_label"] = "_"
+            items["dst_field"] = items["destination"]
+        else:
+            assert len(items["destination"]) == 2
+            items["dst_label"] = items["destination"][1]
+            items["dst_field"] = items["destination"][0]
+        items.pop("destination")
+    return items
 
 
 def normalize_parameter_edges(
@@ -417,16 +379,16 @@ def normalize_parameter_edges(
 
     def process_sub_label(items):
         if isinstance(items, (Loader, str, pd.DataFrame, *VineyardObjectTypes)):
-            return EdgeSubLabel(items, properties=None, source=None, destination=None)
+            return EdgeSubLabel(items, None, "_", "_", 0, 1)
         elif isinstance(items, Sequence):
             if all([isinstance(item, np.ndarray) for item in items]):
-                return EdgeSubLabel(
-                    loader=items, properties=None, source=None, destination=None
-                )
+                return EdgeSubLabel(items, None, "_", "_", 0, 1)
             else:
                 check_argument(len(items) < 6, "Too many arguments for a edge label")
-                return EdgeSubLabel(*items)
+                compat_items = _convert_array_to_deprecated_form(items)
+                return EdgeSubLabel(*compat_items)
         elif isinstance(items, Mapping):
+            items = _convert_dict_to_compat_form(items)
             return EdgeSubLabel(**items)
         else:
             raise SyntaxError("Wrong format of e sub label: " + str(items))
@@ -486,6 +448,9 @@ def normalize_parameter_vertices(
                 check_argument(len(items) < 4, "Too many arguments for a vertex label")
                 return VertexLabel(label, *items)
         elif isinstance(items, Mapping):
+            if "vid" in items:
+                items["vid_field"] = items["vid"]
+                items.pop("vid")
             return VertexLabel(label, **items)
         else:
             raise RuntimeError("Wrong format of v label: " + str(items))
@@ -499,135 +464,3 @@ def normalize_parameter_vertices(
     else:
         v_labels.append(process_label("_", vertices))
     return v_labels
-
-
-def load_from(
-    edges: Union[
-        Mapping[str, Union[LoaderVariants, Sequence, Mapping]], LoaderVariants, Sequence
-    ],
-    vertices: Union[
-        Mapping[str, Union[LoaderVariants, Sequence, Mapping]],
-        LoaderVariants,
-        Sequence,
-        None,
-    ] = None,
-    directed=True,
-    oid_type="int64_t",
-    generate_eid=True,
-) -> Graph:
-    """Load a Arrow property graph using a list of vertex/edge specifications.
-
-    - Use Dict of tuples to setup a graph.
-        We can use a dict to set vertex and edge configurations,
-        which can be used to build graphs.
-
-        Examples:
-
-        .. code:: ipython
-
-            g = graphscope_session.load_from(
-                edges={
-                    "group": [
-                        (
-                            "file:///home/admin/group.e",
-                            ["group_id", "member_size"],
-                            ("leader_student_id", "student"),
-                            ("member_student_id", "student"),
-                        ),
-                        (
-                            "file:///home/admin/group_for_teacher_student.e",
-                            ["group_id", "group_name", "establish_date"],
-                            ("teacher_in_charge_id", "teacher"),
-                            ("member_student_id", "student"),
-                        ),
-                    ]
-                },
-                vertices={
-                    "student": (
-                        "file:///home/admin/student.v",
-                        ["name", "lesson_nums", "avg_score"],
-                        "student_id",
-                    ),
-                    "teacher": (
-                        "file:///home/admin/teacher.v",
-                        ["name", "salary", "age"],
-                        "teacher_id",
-                    ),
-                },
-            )
-
-        'e' is the label of edges, and 'v' is the label for vertices, edges are stored in the 'both_in_out' format
-        edges with label 'e' linking from 'v' to 'v'.
-
-    - Use Dict of dict to setup a graph.
-        We can also give each element inside the tuple a meaningful name,
-        makes it more understandable.
-
-        Examples:
-
-        .. code:: ipython
-
-            g = graphscope_session.load_from(
-                edges={
-                    "group": [
-                        {
-                            "loader": "file:///home/admin/group.e",
-                            "properties": ["group_id", "member_size"],
-                            "source": ("leader_student_id", "student"),
-                            "destination": ("member_student_id", "student"),
-                        },
-                        {
-                            "loader": "file:///home/admin/group_for_teacher_student.e",
-                            "properties": ["group_id", "group_name", "establish_date"],
-                            "source": ("teacher_in_charge_id", "teacher"),
-                            "destination": ("member_student_id", "student"),
-                        },
-                    ]
-                },
-                vertices={
-                    "student": {
-                        "loader": "file:///home/admin/student.v",
-                        "properties": ["name", "lesson_nums", "avg_score"],
-                        "vid": "student_id",
-                    },
-                    "teacher": {
-                        "loader": "file:///home/admin/teacher.v",
-                        "properties": ["name", "salary", "age"],
-                        "vid": "teacher_id",
-                    },
-                },
-            )
-
-    Args:
-        edges: Edge configuration of the graph
-        vertices (optional): Vertices configurations of the graph. Defaults to None.
-            If None, we assume all edge's src_label and dst_label are deduced and unambiguous.
-        directed (bool, optional): Indicate whether the graph
-            should be treated as directed or undirected.
-        oid_type (str, optional): ID type of graph. Can be "int64_t" or "string". Defaults to "int64_t".
-        generate_eid (bool, optional): Whether to generate a unique edge id for each edge. Generated eid will be placed
-            in third column. This feature is for cooperating with interactive engine.
-            If you only need to work with analytical engine, set it to False. Defaults to False.
-    """
-
-    # Don't import the :code:`nx` in top-level statments to improve the
-    # performance of :code:`import graphscope`.
-    from graphscope.experimental import nx
-
-    sess = get_default_session()
-    if sess is None:
-        raise ValueError("No default session found.")
-    if isinstance(edges, (Graph, nx.Graph, *VineyardObjectTypes)):
-        return Graph(sess.session_id, edges)
-    oid_type = utils.normalize_data_type_str(oid_type)
-    e_labels = normalize_parameter_edges(edges)
-    v_labels = normalize_parameter_vertices(vertices)
-    e_labels, v_labels = _sanity_check(e_labels, v_labels)
-    config = _get_config(e_labels, v_labels, directed, oid_type, generate_eid)
-    op = dag_utils.create_graph(sess.session_id, types_pb2.ARROW_PROPERTY, attrs=config)
-    graph_def = sess.run(op)
-    graph = Graph(sess.session_id, graph_def)
-    return graph
-
-
-g = load_from

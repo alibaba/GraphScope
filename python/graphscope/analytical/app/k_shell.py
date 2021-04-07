@@ -19,10 +19,12 @@
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
+from graphscope.framework.app import project_to_simple
 
 __all__ = ["k_shell"]
 
 
+@project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def k_shell(graph, k: int):
     """The k-shell is the subgraph induced by nodes with core number k.
@@ -41,9 +43,9 @@ def k_shell(graph, k: int):
     .. code:: python
 
         import graphscope as gs
-        s = gs.session()
-        g = s.load_from('The parameters for loading a graph...')
-        pg = g.project_to_simple(v_label='vlabel', e_label='elabel')
+        sess = gs.session()
+        g = sess.g()
+        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
         r = gs.k_shell(pg)
         s.close()
 

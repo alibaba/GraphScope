@@ -1,4 +1,5 @@
 [run]
 omit =
     graphscope/experimental/*
+    jupyter/graphscope/node_modules/.*
     /usr/*

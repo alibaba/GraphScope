@@ -17,10 +17,10 @@
 
 host: 0.0.0.0
 port: 8182
-evaluationTimeout: 30000
+evaluationTimeout: 300000
 channelizer: org.apache.tinkerpop.gremlin.server.channel.WebSocketChannelizer
 graphs: {
-  graph: conf/empty-graph.properties
+  graph: conf/graph.properties
 }
 scriptEngines: {
   gremlin-groovy: {
@@ -31,9 +31,8 @@ serializers:
   - { className: org.apache.tinkerpop.gremlin.driver.ser.GraphSONMessageSerializerV1d0}
   - { className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0, config: { serializeResultToString: true }}
   - { className: org.apache.tinkerpop.gremlin.driver.ser.GraphBinaryMessageSerializerV1 }                                                                                                           # application/vnd.graphbinary-v1.0
-  - { className: org.apache.tinkerpop.gremlin.driver.ser.GraphBinaryMessageSerializerV1, config: { serializeResultToString: true }}                                                                 # application/vnd.graphbinary-v1.0-stringd
-processors:
-  - { className: com.compiler.demo.server.MaxGraphOpProcessor, config: {}}
+  - { className: org.apache.tinkerpop.gremlin.driver.ser.GraphBinaryMessageSerializerV1, config: { serializeResultToString: false }}                                                                 # application/vnd.graphbinary-v1.0-stringd
+
 metrics: {
   slf4jReporter: {enabled: true, interval: 180000}}
 strictTransactionManagement: false

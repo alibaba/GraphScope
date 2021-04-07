@@ -30,7 +30,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.11
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.14
       options:
         --shm-size 4096m
     strategy:
@@ -135,7 +135,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.11
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.14
     steps:
     - name: Install Dependencies
       run: |
@@ -175,7 +175,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.11
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.14
     steps:
     - name: Install Dependencies
       run: |
@@ -313,8 +313,8 @@ jobs:
 
         export GS_TEST_DIR='/root/gstest'
         cd python
-        python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
-                          --cov-report=term --exitfirst -s -v tests
+        python3 -m pytest --ignore tests/test_run_locally.py --cov=graphscope --cov-config=.coveragerc \
+                          --cov-report=xml --cov-report=term --exitfirst -s -v tests
 
         pkill -TERM etcd || true
 
@@ -390,6 +390,8 @@ jobs:
         python3 -m pip install pytest-cov --user
         pushd python && sudo -E python3 setup.py develop && popd
 
+        pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
+
     - name: Kubernetes test
       env:
         CHANGE_MINIKUBE_NONE_USER: true
@@ -402,6 +404,18 @@ jobs:
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./graphscope/deploy/tests/
+    - name: Helm test
+      run: |
+        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+        cd charts
+        helm install graphscope --set coordinator.image.tag=${{ github.sha }} \
+                                --set engines.gae.image.tag=${{ github.sha }} \
+                                --set engines.gie.graph_manager.image.tag=${{ github.sha }} \
+                                --set vineyard.image.tag=${{ github.sha }} \
+                                --set imagePullPolicy=IfNotPresent \
+                                ./graphscope
+        helm test graphscope --timeout 5m0s
+
     - name: Upload Coverage
       uses: codecov/codecov-action@v1
       with:
@@ -409,9 +423,12 @@ jobs:
         fail_ci_if_error: true
 
     - name: Clean
+      if: always()
       run: |
-        sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        helm uninstall graphscope || true
+        kubectl delete pod graphscope-test-rpc-service --wait=false || true
 
   gie-test:
     runs-on: self-hosted
@@ -479,9 +496,10 @@ jobs:
         ./function_test.sh 8112 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
     - name: Clean
+      if: always()
       run: |
-        sudo docker rmi registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
 
   release-image:
     runs-on: ubuntu-20.04
@@ -520,3 +538,11 @@ jobs:
                         registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest
+
+    - name: Clean
+      if: always()
+      run: |
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest \
+            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest \
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
+            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true

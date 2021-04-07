@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,14 +49,18 @@ pub trait SubTask<D: Data> {
 }
 
 impl<T: Data> Encode for SubtaskResult<T> {
-    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
-        unimplemented!()
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        self.seq.write_to(writer)?;
+        self.result.write_to(writer)?;
+        Ok(())
     }
 }
 
 impl<T: Data> Decode for SubtaskResult<T> {
-    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
-        unimplemented!()
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let seq = <u32>::read_from(reader)?;
+        let result = <ResultSet<T>>::read_from(reader)?;
+        Ok(SubtaskResult { seq, result })
     }
 }
 

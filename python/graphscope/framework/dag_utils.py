@@ -98,6 +98,70 @@ def create_graph(session_id, graph_type, **kwargs):
     return op
 
 
+def add_vertices(graph, **kwargs):
+    """Create an `ADD_VERTICES` op, add op to default dag.
+
+    Args:
+        graph (:class:`Graph`): a :class:`Graph` instance.
+        **kwargs: additional properties respect to different `graph_type`.
+
+    Returns:
+        An op to add vertices to a graph in c++ side with necessary configurations.
+    """
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
+    }
+
+    if graph.graph_type == types_pb2.ARROW_PROPERTY:
+        attrs = kwargs.pop("attrs", None)
+        if attrs:
+            for k, v in attrs.items():
+                if isinstance(v, attr_value_pb2.AttrValue):
+                    config[k] = v
+    else:
+        raise ValueError(f"Not support add vertices on graph type {graph.graph_type}")
+    op = Operation(
+        graph.session_id,
+        types_pb2.ADD_VERTICES,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
+def add_edges(graph, **kwargs):
+    """Create an `ADD_EDGES` op, add op to default dag.
+
+    Args:
+        graph (:class:`Graph`): a :class:`Graph` instance.
+        **kwargs: additional properties respect to different `graph_type`.
+
+    Returns:
+        An op to add edges to a graph in c++ side with necessary configurations.
+    """
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
+    }
+
+    if graph.graph_type == types_pb2.ARROW_PROPERTY:
+        attrs = kwargs.pop("attrs", None)
+        if attrs:
+            for k, v in attrs.items():
+                if isinstance(v, attr_value_pb2.AttrValue):
+                    config[k] = v
+    else:
+        raise ValueError(f"Not support add edges on graph type {graph.graph_type}")
+    op = Operation(
+        graph.session_id,
+        types_pb2.ADD_EDGES,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
 def dynamic_to_arrow(graph):
     """Create an op to transform a :class:`nx.Graph` object to :class:`Graph`.
 
@@ -133,7 +197,7 @@ def dynamic_to_arrow(graph):
     }
 
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.TRANSFORM_GRAPH,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -159,7 +223,7 @@ def arrow_to_dynamic(graph):
         types_pb2.VID_TYPE: utils.s_to_attr(graph.schema.vid_type),
     }
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.TRANSFORM_GRAPH,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -172,7 +236,7 @@ def modify_edges(graph, modify_type, edges):
 
     Args:
         graph (:class:`nx.Graph`): A nx graph.
-        modify_type (`type_pb2.(ADD_EDGES | DEL_EDGES | UPDATE_EDGES)`): The modify type
+        modify_type (`type_pb2.(NX_ADD_EDGES | NX_DEL_EDGES | NX_UPDATE_EDGES)`): The modify type
         edges (list): List of edges to be inserted into or delete from graph based on `modify_type`
 
     Returns:
@@ -184,7 +248,7 @@ def modify_edges(graph, modify_type, edges):
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
     config[types_pb2.EDGES] = utils.list_str_to_attr(edges)
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.MODIFY_EDGES,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -197,7 +261,7 @@ def modify_vertices(graph, modify_type, vertices):
 
     Args:
         graph (:class:`nx.Graph`): A nx graph.
-        modify_type (`type_pb2.(ADD_NODES | DEL_NODES | UPDATE_NODES)`): The modify type
+        modify_type (`type_pb2.(NX_ADD_NODES | NX_DEL_NODES | NX_UPDATE_NODES)`): The modify type
         vertices (list): node list.
 
     Returns:
@@ -209,7 +273,7 @@ def modify_vertices(graph, modify_type, vertices):
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
     config[types_pb2.NODES] = utils.list_str_to_attr(vertices)
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.MODIFY_VERTICES,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -242,7 +306,7 @@ def run_app(graph, app, *args, **kwargs):
     query_args.args.extend(params)
 
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.RUN_APP,
         config=config,
         output_types=types_pb2.RESULTS,
@@ -305,7 +369,7 @@ def report_graph(
 
     config[types_pb2.EDGE_KEY] = utils.s_to_attr(str(key) if key is not None else "")
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.REPORT_GRAPH,
         config=config,
         output_types=types_pb2.RESULTS,
@@ -313,7 +377,32 @@ def report_graph(
     return op
 
 
-def project_arrow_property_graph(
+def project_arrow_property_graph(graph, vertex_collections, edge_collections):
+    check_argument(graph.graph_type == types_pb2.ARROW_PROPERTY)
+    attr = attr_value_pb2.AttrValue()
+    v_attr = attr_value_pb2.NameAttrList()
+    e_attr = attr_value_pb2.NameAttrList()
+    for label, props in vertex_collections.items():
+        v_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
+    for label, props in edge_collections.items():
+        e_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
+    attr.list.func.extend([v_attr, e_attr])
+
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
+        types_pb2.ARROW_PROPERTY_DEFINITION: attr,
+    }
+    op = Operation(
+        graph.session_id,
+        types_pb2.PROJECT_GRAPH,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
+def project_arrow_property_graph_to_simple(
     graph,
     v_label_id,
     v_prop_id,
@@ -351,8 +440,8 @@ def project_arrow_property_graph(
         types_pb2.E_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(e_data_type)),
     }
     op = Operation(
-        graph._session_id,
-        types_pb2.PROJECT_GRAPH,
+        graph.session_id,
+        types_pb2.PROJECT_TO_SIMPLE,
         config=config,
         output_types=types_pb2.GRAPH,
     )
@@ -383,8 +472,8 @@ def project_dynamic_property_graph(graph, v_prop, e_prop, v_prop_type, e_prop_ty
     }
 
     op = Operation(
-        graph._session_id,
-        types_pb2.PROJECT_GRAPH,
+        graph.session_id,
+        types_pb2.PROJECT_TO_SIMPLE,
         config=config,
         output_types=types_pb2.GRAPH,
     )
@@ -412,7 +501,7 @@ def copy_graph(graph, copy_type="identical"):
     }
 
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.COPY_GRAPH,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -450,7 +539,7 @@ def unload_graph(graph):
     if hasattr(graph, "vineyard_id"):
         config[types_pb2.VINEYARD_ID] = utils.i_to_attr(graph.vineyard_id)
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.UNLOAD_GRAPH,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -587,7 +676,7 @@ def add_column(graph, results, selector):
         types_pb2.SELECTOR: utils.s_to_attr(selector),
     }
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.ADD_COLUMN,
         config=config,
         output_types=types_pb2.GRAPH,
@@ -614,7 +703,7 @@ def graph_to_numpy(graph, selector=None, vertex_range=None):
     if vertex_range is not None:
         config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.GRAPH_TO_NUMPY,
         config=config,
         output_types=types_pb2.TENSOR,
@@ -641,7 +730,7 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
     if vertex_range is not None:
         config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
     op = Operation(
-        graph._session_id,
+        graph.session_id,
         types_pb2.GRAPH_TO_DATAFRAME,
         config=config,
         output_types=types_pb2.DATAFRAME,

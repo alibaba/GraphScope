@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,8 @@
 use crate::structure::element::{Element, Label, ID};
 use crate::structure::property::DynDetails;
 use crate::structure::Details;
+use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
+use std::io;
 
 #[derive(Clone)]
 pub struct Vertex {
@@ -45,5 +47,23 @@ impl Element for Vertex {
 
     fn details(&self) -> &DynDetails {
         &self.details
+    }
+}
+
+impl Encode for Vertex {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        writer.write_u128(self.id)?;
+        self.label.write_to(writer)?;
+        self.details.write_to(writer)?;
+        Ok(())
+    }
+}
+
+impl Decode for Vertex {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let id = <u128>::read_from(reader)?;
+        let label = <Option<Label>>::read_from(reader)?;
+        let details = <DynDetails>::read_from(reader)?;
+        Ok(Vertex { id, label, details })
     }
 }

@@ -123,39 +123,28 @@ To load this graph to GraphScope, one may use the code below with the [data file
 
 
 ```python
-g = sess.load_from(
-    vertices={
-        "paper": "/testingdata/ogbn_mag_small/paper.csv",
-        "author": "/testingdata/ogbn_mag_small/author.csv",
-        "institution": "/testingdata/ogbn_mag_small/institution.csv",
-        "field_of_study": "/testingdata/ogbn_mag_small/field_of_study.csv",
-    },
-    edges={
-        "affiliated": (
-            "/testingdata/ogbn_mag_small/author_affiliated_with_institution.csv",
-            [],
-            ("src_id", "author"),
-            ("dst_id", "institution"),
-        ),
-        "cites": (
-            "/testingdata/ogbn_mag_small/paper_cites_paper.csv",
-            [],
-            ("src_id", "paper"),
-            ("dst_id", "paper"),
-        ),
-        "hasTopic": (
-            "/testingdata/ogbn_mag_small/paper_has_topic_field_of_study.csv",
-            [],
-            ("src_id", "paper"),
-            ("dst_id", "field_of_study"),
-        ),
-        "writes": (
-            "/testingdata/ogbn_mag_small/author_writes_paper.csv",
-            [],
-            ("src_id", "author"),
-            ("dst_id", "paper"),
-        ),
-    },
+g = sess.g()
+g = (
+    g.add_vertices("/testingdata/ogbn_mag_small/paper.csv", label="paper")
+    .add_vertices("/testingdata/ogbn_mag_small/author.csv", label="author")
+    .add_vertices("/testingdata/ogbn_mag_small/institution.csv", label="institution")
+    .add_vertices("/testingdata/ogbn_mag_small/field_of_study.csv", label="field_of_study")
+    .add_edges(
+        "/testingdata/ogbn_mag_small/author_affiliated_with_institution.csv",
+        label="affiliated", src_label="author", dst_label="institution",
+    )
+    .add_edges(
+        "/testingdata/ogbn_mag_small/paper_has_topic_field_of_study.csv",
+        label="hasTopic", src_label="paper", dst_label="field_of_study",
+    )
+    .add_edges(
+        "/testingdata/ogbn_mag_small/paper_cites_paper.csv",
+        label="cites", src_label="paper", dst_label="paper",
+    )
+    .add_edges(
+        "/testingdata/ogbn_mag_small/author_writes_paper.csv",
+        label="writes", src_label="author", dst_label="paper",
+    )
 )
 ```
 
@@ -198,7 +187,7 @@ Please note that many algorithms may only work on *homogeneous* graphs, and ther
 sub_graph = interactive.subgraph("g.V().has('year', inside(2014, 2020)).outE('cites')")
 
 # project the projected graph to simple graph.
-simple_g = sub_graph.project_to_simple(v_label="paper", e_label="cites")
+simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
 
 ret1 = graphscope.k_core(simple_g, k=5)
 ret2 = graphscope.triangles(simple_g)

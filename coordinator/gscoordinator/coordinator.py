@@ -103,7 +103,7 @@ class CoordinatorServiceServicer(
 
     """
 
-    def __init__(self, launcher, dangling_seconds, log_level="INFO"):
+    def __init__(self, launcher, dangling_timeout_seconds, log_level="INFO"):
         self._launcher = launcher
 
         self._request = None
@@ -112,9 +112,8 @@ class CoordinatorServiceServicer(
         self._config_logging(log_level)
 
         # only one connection is allowed at the same time
-        self._session_id = "session_" + "".join(
-            [random.choice(string.ascii_lowercase) for _ in range(8)]
-        )
+        # generate session id  when a client connection is established
+        self._session_id = None
 
         # launch engines
         if len(GS_DEBUG_ENDPOINT) > 0:
@@ -135,6 +134,7 @@ class CoordinatorServiceServicer(
             )
         else:
             self._pods_list = []  # locally launched
+            self._k8s_namespace = ""
 
         # analytical engine
         self._analytical_engine_stub = self._create_grpc_stub()
@@ -142,16 +142,22 @@ class CoordinatorServiceServicer(
         self._analytical_engine_endpoint = None
 
         self._builtin_workspace = os.path.join(WORKSPACE, "builtin")
-        self._udf_app_workspace = os.path.join(WORKSPACE, self._session_id)
+        # udf app workspace should be bound to a specific session when client connect.
+        self._udf_app_workspace = None
 
         # control log fetching
-        self._closed = False
+        self._streaming_logs = True
 
         # dangling check
-        self._dangling_seconds = dangling_seconds
-        if self._dangling_seconds >= 0:
+        self._dangling_timeout_seconds = dangling_timeout_seconds
+        if self._dangling_timeout_seconds >= 0:
             self._dangling_detecting_timer = threading.Timer(
-                interval=self._dangling_seconds, function=self._cleanup, args=(True,)
+                interval=self._dangling_timeout_seconds,
+                function=self._cleanup,
+                args=(
+                    True,
+                    True,
+                ),
             )
             self._dangling_detecting_timer.start()
 
@@ -159,6 +165,11 @@ class CoordinatorServiceServicer(
 
     def __del__(self):
         self._cleanup()
+
+    def _generate_session_id(self):
+        return "session_" + "".join(
+            [random.choice(string.ascii_lowercase) for _ in range(8)]
+        )
 
     def _config_logging(self, log_level):
         """Set log level basic on config.
@@ -193,22 +204,41 @@ class CoordinatorServiceServicer(
         self._request = request
         self._analytical_engine_config = self._get_engine_config()
 
+        # Generate session id
+        self._session_id = self._generate_session_id()
+        self._udf_app_workspace = os.path.join(WORKSPACE, self._session_id)
+
+        # Session connected, fetch logs via gRPC.
+        self._streaming_logs = True
+        sys.stdout.drop(False)
+
         return self._make_response(
             message_pb2.ConnectSessionResponse,
             code=error_codes_pb2.OK,
             session_id=self._session_id,
+            cluster_type=self._launcher.type(),
+            num_workers=self._launcher.num_workers,
             engine_config=json.dumps(self._analytical_engine_config),
             pod_name_list=self._pods_list,
+            namespace=self._k8s_namespace,
         )
 
     def HeartBeat(self, request, context):
-        if self._dangling_seconds >= 0:
+        if self._request and self._request.dangling_timeout_seconds >= 0:
             # Reset dangling detect timer
-            self._dangling_detecting_timer.cancel()
+            if self._dangling_detecting_timer:
+                self._dangling_detecting_timer.cancel()
+
             self._dangling_detecting_timer = threading.Timer(
-                interval=self._dangling_seconds, function=self._cleanup, args=(True,)
+                interval=self._request.dangling_timeout_seconds,
+                function=self._cleanup,
+                args=(
+                    self._request.cleanup_instance,
+                    True,
+                ),
             )
             self._dangling_detecting_timer.start()
+
         # analytical engine
         request = message_pb2.HeartBeatRequest()
         try:
@@ -260,7 +290,9 @@ class CoordinatorServiceServicer(
                 and op.attr[types_pb2.GRAPH_TYPE].graph_type == types_pb2.ARROW_PROPERTY
             )
             or op.op == types_pb2.TRANSFORM_GRAPH
-            or op.op == types_pb2.PROJECT_GRAPH
+            or op.op == types_pb2.PROJECT_TO_SIMPLE
+            or op.op == types_pb2.ADD_EDGES
+            or op.op == types_pb2.ADD_VERTICES
         ):
             try:
                 op = self._maybe_register_graph(op, request.session_id)
@@ -303,7 +335,13 @@ class CoordinatorServiceServicer(
             )
 
         if response.status.code == error_codes_pb2.OK:
-            if op.op == types_pb2.CREATE_GRAPH:
+            if op.op in (
+                types_pb2.CREATE_GRAPH,
+                types_pb2.PROJECT_GRAPH,
+                types_pb2.ADD_VERTICES,
+                types_pb2.ADD_EDGES,
+                types_pb2.ADD_COLUMN,
+            ):
                 schema_path = os.path.join("/tmp", response.graph_def.key + ".json")
                 self._object_manager.put(
                     response.graph_def.key,
@@ -394,15 +432,18 @@ class CoordinatorServiceServicer(
         return op
 
     def FetchLogs(self, request, context):
-        while not self._closed:
+        while self._streaming_logs:
             try:
                 message = sys.stdout.poll(timeout=3)
             except queue.Empty:
                 pass
             else:
-                yield self._make_response(
-                    message_pb2.FetchLogsResponse, error_codes_pb2.OK, message=message
-                )
+                if self._streaming_logs:
+                    yield self._make_response(
+                        message_pb2.FetchLogsResponse,
+                        error_codes_pb2.OK,
+                        message=message,
+                    )
 
     def CloseSession(self, request, context):
         """
@@ -415,37 +456,59 @@ class CoordinatorServiceServicer(
                 "Session handle does not match",
             )
 
-        if not self._closed:
-            self._cleanup()
-            self._request = None
-            self._closed = True
-            return self._make_response(
-                message_pb2.CloseSessionResponse, error_codes_pb2.OK
-            )
+        self._cleanup(
+            cleanup_instance=self._request.cleanup_instance, is_dangling=False
+        )
+        self._request = None
+
+        # Session closed, stop streaming logs
+        sys.stdout.drop(True)
+        self._streaming_logs = False
+
+        return self._make_response(message_pb2.CloseSessionResponse, error_codes_pb2.OK)
 
     def CreateInteractiveInstance(self, request, context):
         object_id = request.object_id
         gremlin_server_cpu = request.gremlin_server_cpu
         gremlin_server_mem = request.gremlin_server_mem
-        manager_host = MAXGRAPH_MANAGER_HOST % (
-            self._gie_graph_manager_service_name,
-            self._k8s_namespace,
-        )
+
         with open(request.schema_path) as file:
             schema_json = file.read()
-        post_url = "%s/instance/create" % manager_host
+
         params = {
             "graphName": "%s" % object_id,
-            "schemaJson": schema_json,
-            "podNameList": ",".join(self._pods_list),
-            "containerName": ENGINE_CONTAINER,
-            "gremlinServerCpu": str(gremlin_server_cpu),
-            "gremlinServerMem": gremlin_server_mem,
         }
-        engine_params = [
-            "{}:{}".format(key, value) for key, value in request.engine_params.items()
-        ]
-        params["engineParams"] = "'{}'".format(";".join(engine_params))
+
+        if self._launcher_type == types_pb2.K8S:
+            manager_host = MAXGRAPH_MANAGER_HOST % (
+                self._gie_graph_manager_service_name,
+                self._k8s_namespace,
+            )
+            params.update(
+                {
+                    "schemaJson": schema_json,
+                    "podNameList": ",".join(self._pods_list),
+                    "containerName": ENGINE_CONTAINER,
+                    "preemptive": str(self._launcher.preemptive),
+                    "gremlinServerCpu": str(gremlin_server_cpu),
+                    "gremlinServerMem": gremlin_server_mem,
+                }
+            )
+            post_url = "%s/instance/create" % manager_host
+            engine_params = [
+                "{}:{}".format(key, value)
+                for key, value in request.engine_params.items()
+            ]
+            params["engineParams"] = "'{}'".format(";".join(engine_params))
+        else:
+            manager_host = self._launcher.graph_manager_endpoint
+            params.update(
+                {
+                    "vineyardIpcSocket": self._launcher.vineyard_socket,
+                    "schemaPath": request.schema_path,
+                }
+            )
+            post_url = "http://%s/instance/create_local" % manager_host
 
         post_data = urllib.parse.urlencode(params).encode("utf-8")
         create_res = urllib.request.urlopen(url=post_url, data=post_data)
@@ -484,18 +547,25 @@ class CoordinatorServiceServicer(
 
     def CloseInteractiveInstance(self, request, context):
         object_id = request.object_id
-        pod_name_list = ",".join(self._pods_list)
-        manager_host = MAXGRAPH_MANAGER_HOST % (
-            self._gie_graph_manager_service_name,
-            self._k8s_namespace,
-        )
-        close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
-            manager_host,
-            object_id,
-            pod_name_list,
-            ENGINE_CONTAINER,
-            str(self._launcher.waiting_for_delete()),
-        )
+        if self._launcher_type == types_pb2.K8S:
+            manager_host = MAXGRAPH_MANAGER_HOST % (
+                self._gie_graph_manager_service_name,
+                self._k8s_namespace,
+            )
+            pod_name_list = ",".join(self._pods_list)
+            close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
+                manager_host,
+                object_id,
+                pod_name_list,
+                ENGINE_CONTAINER,
+                str(self._launcher.waiting_for_delete()),
+            )
+        else:
+            manager_host = self._launcher.graph_manager_endpoint
+            close_url = "http://%s/instance/close_local?graphName=%ld" % (
+                manager_host,
+                object_id,
+            )
         logger.info("Coordinator close interactive instance with url[%s]" % close_url)
         try:
             close_res = urllib.request.urlopen(close_url).read()
@@ -560,7 +630,7 @@ class CoordinatorServiceServicer(
             resp.status.op.CopyFrom(op)
         return resp
 
-    def _cleanup(self, is_dangling=False):
+    def _cleanup(self, cleanup_instance=True, is_dangling=False):
         # clean up session resources.
         for key in self._object_manager.keys():
             obj = self._object_manager.get(key)
@@ -595,17 +665,20 @@ class CoordinatorServiceServicer(
                 self._analytical_engine_stub.RunStep(request)
 
         self._object_manager.clear()
-        self._analytical_engine_stub = None
+
+        self._request = None
 
         # cancel dangling detect timer
         if self._dangling_detecting_timer:
             self._dangling_detecting_timer.cancel()
 
         # close engines
-        self._launcher.stop(is_dangling=is_dangling)
+        if cleanup_instance:
+            self._analytical_engine_stub = None
+            self._analytical_engine_endpoint = None
+            self._launcher.stop(is_dangling=is_dangling)
 
         self._session_id = None
-        self._analytical_engine_endpoint = None
 
     def _create_grpc_stub(self):
         options = [
@@ -614,7 +687,7 @@ class CoordinatorServiceServicer(
         ]
 
         channel = grpc.insecure_channel(
-            self._launcher.get_analytical_engine_endpoint(), options=options
+            self._launcher.analytical_engine_endpoint, options=options
         )
         return engine_service_pb2_grpc.EngineServiceStub(channel)
 
@@ -630,8 +703,10 @@ class CoordinatorServiceServicer(
         if self._launcher_type == types_pb2.K8S:
             config["vineyard_service_name"] = self._launcher.get_vineyard_service_name()
             config["vineyard_rpc_endpoint"] = self._launcher.get_vineyard_rpc_endpoint()
+            config["mars_endpoint"] = self._launcher.get_mars_scheduler_endpoint()
         else:
             config["engine_hosts"] = self._launcher.hosts
+            config["mars_endpoint"] = None
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
@@ -663,6 +738,14 @@ def parse_sys_args():
         help="The number of engine workers.",
     )
     parser.add_argument(
+        "--preemptive",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        default=True,
+        help="Support resource preemption or resource guarantee",
+    )
+    parser.add_argument(
         "--instance_id",
         type=str,
         help="Unique id for each GraphScope instance.",
@@ -692,12 +775,10 @@ def parse_sys_args():
         help="Socket path to connect to vineyard, random socket will be created if param missing.",
     )
     parser.add_argument(
-        "--enable_k8s",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=False,
-        help="Deploy graphscope components on kubernetes.",
+        "--cluster_type",
+        type=str,
+        default="k8s",
+        help="Deploy graphscope components on local or kubernetes cluster.",
     )
     parser.add_argument(
         "--k8s_namespace",
@@ -764,6 +845,12 @@ def parse_sys_args():
         help="A list of secret name, comma separated.",
     )
     parser.add_argument(
+        "--k8s_vineyard_daemonset",
+        type=str,
+        default="",
+        help="Try to use the existing vineyard DaemonSet with name 'k8s_vineyard_daemonset'.",
+    )
+    parser.add_argument(
         "--k8s_vineyard_cpu",
         type=float,
         default=1.0,
@@ -792,6 +879,12 @@ def parse_sys_args():
         type=str,
         default="256Mi",
         help="Memory of engine container, suffix with ['Mi', 'Gi', 'Ti'].",
+    )
+    parser.add_argument(
+        "--k8s_etcd_num_pods",
+        type=int,
+        default=3,
+        help="The number of etcd pods.",
     )
     parser.add_argument(
         "--k8s_etcd_cpu",
@@ -830,6 +923,38 @@ def parse_sys_args():
         help="Memory of graph manager container, suffix with ['Mi', 'Gi', 'Ti'].",
     )
     parser.add_argument(
+        "--k8s_with_mars",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        default=False,
+        help="Enable mars or not.",
+    )
+    parser.add_argument(
+        "--k8s_mars_worker_cpu",
+        type=float,
+        default=0.5,
+        help="Cpu cores of mars worker container, default: 0.5",
+    )
+    parser.add_argument(
+        "--k8s_mars_worker_mem",
+        type=str,
+        default="4Gi",
+        help="Memory of mars worker container, default: 4Gi",
+    )
+    parser.add_argument(
+        "--k8s_mars_scheduler_cpu",
+        type=float,
+        default=0.5,
+        help="Cpu cores of mars scheduler container, default: 0.5",
+    )
+    parser.add_argument(
+        "--k8s_mars_scheduler_mem",
+        type=str,
+        default="2Gi",
+        help="Memory of mars scheduler container, default: 2Gi",
+    )
+    parser.add_argument(
         "--k8s_volumes",
         type=str,
         default="{}",
@@ -838,8 +963,14 @@ def parse_sys_args():
     parser.add_argument(
         "--timeout_seconds",
         type=int,
-        default=60,
-        help="Launch failed after waiting timeout seconds Or cleanup graphscope instance after seconds of client disconnect.",
+        default=600,
+        help="Launch failed after waiting timeout seconds.",
+    )
+    parser.add_argument(
+        "--dangling_timeout_seconds",
+        type=int,
+        default=600,
+        help="Kill graphscope instance after seconds of client disconnect.",
     )
     parser.add_argument(
         "--waiting_for_delete",
@@ -864,7 +995,7 @@ def launch_graphscope():
     args = parse_sys_args()
     logger.info("Launching with args %s", args)
 
-    if args.enable_k8s:
+    if args.cluster_type == "k8s":
         launcher = KubernetesClusterLauncher(
             namespace=args.k8s_namespace,
             service_type=args.k8s_service_type,
@@ -874,6 +1005,7 @@ def launch_graphscope():
             gie_graph_manager_image=args.k8s_gie_graph_manager_image,
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,
+            etcd_num_pods=args.k8s_etcd_num_pods,
             etcd_cpu=args.k8s_etcd_cpu,
             etcd_mem=args.k8s_etcd_mem,
             zookeeper_cpu=args.k8s_zookeeper_cpu,
@@ -882,36 +1014,43 @@ def launch_graphscope():
             gie_graph_manager_mem=args.k8s_gie_graph_manager_mem,
             engine_cpu=args.k8s_engine_cpu,
             engine_mem=args.k8s_engine_mem,
+            vineyard_daemonset=args.k8s_vineyard_daemonset,
             vineyard_cpu=args.k8s_vineyard_cpu,
             vineyard_mem=args.k8s_vineyard_mem,
             vineyard_shared_mem=args.k8s_vineyard_shared_mem,
+            mars_worker_cpu=args.k8s_mars_worker_cpu,
+            mars_worker_mem=args.k8s_mars_worker_mem,
+            mars_scheduler_cpu=args.k8s_mars_scheduler_cpu,
+            mars_scheduler_mem=args.k8s_mars_scheduler_mem,
+            with_mars=args.k8s_with_mars,
             image_pull_policy=args.k8s_image_pull_policy,
             image_pull_secrets=args.k8s_image_pull_secrets,
             volumes=args.k8s_volumes,
             num_workers=args.num_workers,
+            preemptive=args.preemptive,
             instance_id=args.instance_id,
             log_level=args.log_level,
             timeout_seconds=args.timeout_seconds,
             waiting_for_delete=args.waiting_for_delete,
             delete_namespace=args.k8s_delete_namespace,
         )
-    else:
+    elif args.cluster_type == "hosts":
         launcher = LocalLauncher(
             num_workers=args.num_workers,
             hosts=args.hosts,
             vineyard_socket=args.vineyard_socket,
+            shared_mem=args.k8s_vineyard_shared_mem,
             log_level=args.log_level,
             timeout_seconds=args.timeout_seconds,
         )
+    else:
+        raise RuntimeError("Expect hosts or k8s of cluster_type parameter")
 
     coordinator_service_servicer = CoordinatorServiceServicer(
         launcher=launcher,
-        dangling_seconds=args.timeout_seconds,
+        dangling_timeout_seconds=args.dangling_timeout_seconds,
         log_level=args.log_level,
     )
-
-    # after GraphScope ready, fetch logs via gRPC.
-    sys.stdout.drop(False)
 
     # register gRPC server
     server = grpc.server(futures.ThreadPoolExecutor(os.cpu_count() or 1))
@@ -922,11 +1061,19 @@ def launch_graphscope():
     logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
 
     server.start()
+
+    # handle SIGTERM signal
+    def terminate(signum, frame):
+        global coordinator_service_servicer
+        coordinator_service_servicer._cleanup()
+
+    signal.signal(signal.SIGTERM, terminate)
+
     try:
-        # Grpc has handled SIGINT/SIGTERM
+        # Grpc has handled SIGINT
         server.wait_for_termination()
     except KeyboardInterrupt:
-        del coordinator_service_servicer
+        coordinator_service_servicer._cleanup()
 
 
 if __name__ == "__main__":

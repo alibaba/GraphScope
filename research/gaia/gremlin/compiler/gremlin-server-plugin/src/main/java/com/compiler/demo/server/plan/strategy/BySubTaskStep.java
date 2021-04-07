@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,8 @@ import java.util.NoSuchElementException;
 public class BySubTaskStep<S, E extends Element> extends AbstractStep<S, E> implements TraversalParent {
     public enum JoinerType {
         Select,
-        GroupBy,
+        GroupKeyBy,
+        GroupValueBy,
         OrderBy
     }
 
@@ -39,6 +40,7 @@ public class BySubTaskStep<S, E extends Element> extends AbstractStep<S, E> impl
         super(traversal);
         this.joiner = joiner;
         this.bySubTraversal = bySubTraversal;
+        this.bySubTraversal.setParent(this);
     }
 
     public JoinerType getJoiner() {

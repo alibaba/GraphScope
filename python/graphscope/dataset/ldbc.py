@@ -18,6 +18,7 @@
 
 import os
 
+from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
 
@@ -33,34 +34,29 @@ def load_ldbc(sess, prefix, directed=True):
     Returns:
         :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
     """
-    vertices = {
-        "comment": (
-            Loader(
-                os.path.join(prefix, "comment_0_0.csv"), header_row=True, delimiter="|"
-            ),
+    graph = sess.g(directed=directed)
+    graph = (
+        graph.add_vertices(
+            Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"),
+            "comment",
             ["creationDate", "locationIP", "browserUsed", "content", "length"],
             "id",
-        ),
-        "organisation": (
-            Loader(
-                os.path.join(prefix, "organisation_0_0.csv"),
-                header_row=True,
-                delimiter="|",
-            ),
+        )
+        .add_vertices(
+            Loader(os.path.join(prefix, "organisation_0_0.csv"), delimiter="|"),
+            "organisation",
             ["type", "name", "url"],
             "id",
-        ),
-        "tagclass": (
-            Loader(
-                os.path.join(prefix, "tagclass_0_0.csv"), header_row=True, delimiter="|"
-            ),
+        )
+        .add_vertices(
+            Loader(os.path.join(prefix, "tagclass_0_0.csv"), delimiter="|"),
+            "tagclass",
             ["name", "url"],
             "id",
-        ),
-        "person": (
-            Loader(
-                os.path.join(prefix, "person_0_0.csv"), header_row=True, delimiter="|"
-            ),
+        )
+        .add_vertices(
+            Loader(os.path.join(prefix, "person_0_0.csv"), delimiter="|"),
+            "person",
             [
                 "firstName",
                 "lastName",
@@ -71,25 +67,22 @@ def load_ldbc(sess, prefix, directed=True):
                 "browserUsed",
             ],
             "id",
-        ),
-        "forum": (
-            Loader(
-                os.path.join(prefix, "forum_0_0.csv"), header_row=True, delimiter="|"
-            ),
+        )
+        .add_vertices(
+            Loader(os.path.join(prefix, "forum_0_0.csv"), delimiter="|"),
+            "forum",
             ["title", "creationDate"],
             "id",
-        ),
-        "place": (
-            Loader(
-                os.path.join(prefix, "place_0_0.csv"), header_row=True, delimiter="|"
-            ),
+        )
+        .add_vertices(
+            Loader(os.path.join(prefix, "place_0_0.csv"), delimiter="|"),
+            "place",
             ["name", "url", "type"],
             "id",
-        ),
-        "post": (
-            Loader(
-                os.path.join(prefix, "post_0_0.csv"), header_row=True, delimiter="|"
-            ),
+        )
+        .add_vertices(
+            Loader(os.path.join(prefix, "post_0_0.csv"), delimiter="|"),
+            "post",
             [
                 "imageFile",
                 "creationDate",
@@ -100,273 +93,188 @@ def load_ldbc(sess, prefix, directed=True):
                 "length",
             ],
             "id",
-        ),
-        "tag": (
-            Loader(os.path.join(prefix, "tag_0_0.csv"), header_row=True, delimiter="|"),
+        )
+        .add_vertices(
+            Loader(os.path.join(prefix, "tag_0_0.csv"), delimiter="|"),
+            "tag",
             ["name", "url"],
             "id",
-        ),
-    }
-    edges = {
-        "replyOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "comment_replyOf_comment_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Comment.id", "comment"),
-                ("Comment.id.1", "comment"),
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "comment_replyOf_comment_0_0.csv"), delimiter="|"
             ),
-            (
-                Loader(
-                    os.path.join(prefix, "comment_replyOf_post_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Comment.id", "comment"),
-                ("Post.id", "post"),
+            "replyOf",
+            src_label="comment",
+            dst_label="comment",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "comment_replyOf_post_0_0.csv"), delimiter="|"),
+            "replyOf",
+            src_label="comment",
+            dst_label="post",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "place_isPartOf_place_0_0.csv"), delimiter="|"),
+            "isPartOf",
+            src_label="place",
+            dst_label="place",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "tagclass_isSubclassOf_tagclass_0_0.csv"),
+                delimiter="|",
             ),
-        ],
-        "isPartOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "place_isPartOf_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Place.id", "place"),
-                ("Place.id.1", "place"),
-            )
-        ],
-        "isSubclassOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "tagclass_isSubclassOf_tagclass_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("TagClass.id", "tagclass"),
-                ("TagClass.id.1", "tagclass"),
-            )
-        ],
-        "hasTag": [
-            (
-                Loader(
-                    os.path.join(prefix, "forum_hasTag_tag_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Forum.id", "forum"),
-                ("Tag.id", "tag"),
+            "isSubclassOf",
+            src_label="tagclass",
+            dst_label="tagclass",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "forum_hasTag_tag_0_0.csv"), delimiter="|"),
+            "hasTag",
+            src_label="forum",
+            dst_label="tag",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "comment_hasTag_tag_0_0.csv"), delimiter="|"),
+            "hasTag",
+            src_label="comment",
+            dst_label="tag",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "post_hasTag_tag_0_0.csv"), delimiter="|"),
+            "hasTag",
+            src_label="post",
+            dst_label="tag",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "person_knows_person_0_0.csv"), delimiter="|"),
+            "knows",
+            ["creationDate"],
+            src_label="person",
+            dst_label="person",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "forum_hasModerator_person_0_0.csv"), delimiter="|"
             ),
-            (
-                Loader(
-                    os.path.join(prefix, "comment_hasTag_tag_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Comment.id", "comment"),
-                ("Tag.id", "tag"),
+            "hasModerator",
+            src_label="forum",
+            dst_label="person",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "person_hasInterest_tag_0_0.csv"), delimiter="|"
             ),
-            (
-                Loader(
-                    os.path.join(prefix, "post_hasTag_tag_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Post.id", "post"),
-                ("Tag.id", "tag"),
+            "hasInterest",
+            src_label="person",
+            dst_label="tag",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "post_isLocatedIn_place_0_0.csv"), delimiter="|"
             ),
-        ],
-        "knows": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_knows_person_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["creationDate"],
-                ("Person.id", "person"),
-                ("Person.id.1", "person"),
-            )
-        ],
-        "hasModerator": [
-            (
-                Loader(
-                    os.path.join(prefix, "forum_hasModerator_person_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Forum.id", "forum"),
-                ("Person.id", "person"),
-            )
-        ],
-        "hasInterest": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_hasInterest_tag_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Person.id", "person"),
-                ("Tag.id", "tag"),
-            )
-        ],
-        "isLocatedIn": [
-            (
-                Loader(
-                    os.path.join(prefix, "post_isLocatedIn_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Post.id", "post"),
-                ("Place.id", "place"),
+            "isLocatedIn",
+            src_label="post",
+            dst_label="place",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "comment_isLocatedIn_place_0_0.csv"), delimiter="|"
             ),
-            (
-                Loader(
-                    os.path.join(prefix, "comment_isLocatedIn_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Comment.id", "comment"),
-                ("Place.id", "place"),
+            "isLocatedIn",
+            src_label="comment",
+            dst_label="place",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "organisation_isLocatedIn_place_0_0.csv"),
+                delimiter="|",
             ),
-            (
-                Loader(
-                    os.path.join(prefix, "organisation_isLocatedIn_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Organisation.id", "organisation"),
-                ("Place.id", "place"),
+            "isLocatedIn",
+            src_label="organisation",
+            dst_label="place",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "person_isLocatedIn_place_0_0.csv"), delimiter="|"
             ),
-            (
-                Loader(
-                    os.path.join(prefix, "person_isLocatedIn_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Person.id", "person"),
-                ("Place.id", "place"),
+            "isLocatedIn",
+            src_label="person",
+            dst_label="place",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "tag_hasType_tagclass_0_0.csv"), delimiter="|"),
+            "hasType",
+            src_label="tag",
+            dst_label="tagclass",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "post_hasCreator_person_0_0.csv"), delimiter="|"
             ),
-        ],
-        "hasType": [
-            (
-                Loader(
-                    os.path.join(prefix, "tag_hasType_tagclass_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Tag.id", "tag"),
-                ("TagClass.id", "tagclass"),
-            )
-        ],
-        "hasCreator": [
-            (
-                Loader(
-                    os.path.join(prefix, "post_hasCreator_person_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Post.id", "post"),
-                ("Person.id", "person"),
+            "hasCreator",
+            src_label="post",
+            dst_label="person",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "comment_hasCreator_person_0_0.csv"), delimiter="|"
             ),
-            (
-                Loader(
-                    os.path.join(prefix, "comment_hasCreator_person_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Comment.id", "comment"),
-                ("Person.id", "person"),
+            "hasCreator",
+            src_label="comment",
+            dst_label="person",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "forum_containerOf_post_0_0.csv"), delimiter="|"
             ),
-        ],
-        "containerOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "forum_containerOf_post_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Forum.id", "forum"),
-                ("Post.id", "post"),
-            )
-        ],
-        "hasMember": [
-            (
-                Loader(
-                    os.path.join(prefix, "forum_hasMember_person_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["joinDate"],
-                ("Forum.id", "forum"),
-                ("Person.id", "person"),
-            )
-        ],
-        "workAt": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_workAt_organisation_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["workFrom"],
-                ("Person.id", "person"),
-                ("Organisation.id", "organisation"),
-            )
-        ],
-        "likes": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_likes_comment_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["creationDate"],
-                ("Person.id", "person"),
-                ("Comment.id", "comment"),
+            "containerOf",
+            src_label="forum",
+            dst_label="post",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "forum_hasMember_person_0_0.csv"), delimiter="|"
             ),
-            (
-                Loader(
-                    os.path.join(prefix, "person_likes_post_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["creationDate"],
-                ("Person.id", "person"),
-                ("Post.id", "post"),
+            "hasMember",
+            ["joinDate"],
+            src_label="forum",
+            dst_label="person",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "person_workAt_organisation_0_0.csv"),
+                delimiter="|",
             ),
-        ],
-        "studyAt": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_studyAt_organisation_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["classYear"],
-                ("Person.id", "person"),
-                ("Organisation.id", "organisation"),
-            )
-        ],
-    }
-    return sess.load_from(edges, vertices, directed, generate_eid=True)
+            "workAt",
+            ["workFrom"],
+            src_label="person",
+            dst_label="organisation",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "person_likes_comment_0_0.csv"), delimiter="|"),
+            "likes",
+            ["creationDate"],
+            src_label="person",
+            dst_label="comment",
+        )
+        .add_edges(
+            Loader(os.path.join(prefix, "person_likes_post_0_0.csv"), delimiter="|"),
+            "likes",
+            ["creationDate"],
+            src_label="person",
+            dst_label="post",
+        )
+        .add_edges(
+            Loader(
+                os.path.join(prefix, "person_studyAt_organisation_0_0.csv"),
+                delimiter="|",
+            ),
+            "studyAt",
+            ["classYear"],
+            src_label="person",
+            dst_label="organisation",
+        )
+    )
+    return graph

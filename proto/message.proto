@@ -20,6 +20,7 @@ package gs.rpc;
 import "proto/error_codes.proto";
 import "proto/graph_def.proto";
 import "proto/op_def.proto";
+import "proto/types.proto";
 
 message ResponseStatus {
   enum NullDetail { NULL_DETAIL = 0; }
@@ -39,6 +40,8 @@ message ResponseStatus {
 ////////////////////////////////////////////////////////////////////////////////
 
 message ConnectSessionRequest {
+  bool cleanup_instance = 1;
+  int32 dangling_timeout_seconds = 2;
 }
 
 message ConnectSessionResponse {
@@ -49,8 +52,11 @@ message ConnectSessionResponse {
   // The client must arrange to call CloseSession with this returned
   // session handle to close the session.
   string session_id = 2;
-  string engine_config = 3;
-  repeated string pod_name_list = 4;
+  ClusterType cluster_type = 3;
+  string engine_config = 4;
+  repeated string pod_name_list = 5;
+  int32 num_workers = 6;
+  string namespace = 7;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

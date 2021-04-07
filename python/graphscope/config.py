@@ -23,6 +23,12 @@ from graphscope.version import __version__
 
 
 class GSConfig(object):
+    # the endpoint of a pre-launched GraphScope instance.
+    addr = None
+
+    # "k8s" or "hosts"
+    cluster_type = "k8s"
+
     k8s_namespace = None
 
     # image
@@ -44,6 +50,7 @@ class GSConfig(object):
     k8s_coordinator_mem = "4Gi"
 
     # etcd resource configuration
+    k8s_etcd_num_pods = 3
     k8s_etcd_cpu = 0.5
     k8s_etcd_mem = "128Mi"
 
@@ -60,6 +67,7 @@ class GSConfig(object):
     k8s_gie_gremlin_server_mem = "1Gi"
 
     # vineyard resource configuration
+    k8s_vineyard_daemonset = ""
     k8s_vineyard_cpu = 0.5
     k8s_vineyard_mem = "512Mi"
     k8s_vineyard_shared_mem = "4Gi"
@@ -68,9 +76,21 @@ class GSConfig(object):
     k8s_engine_cpu = 0.5
     k8s_engine_mem = "4Gi"
 
+    # mars resource configuration
+    mars_worker_cpu = 0.5
+    mars_worker_mem = "4Gi"
+    mars_scheduler_cpu = 0.5
+    mars_scheduler_mem = "2Gi"
+
+    # launch graphscope with mars
+    with_mars = False
+
     k8s_volumes = {}
 
     k8s_service_type = "NodePort"
+
+    # support resource preemption or resource guarantee
+    preemptive = True
 
     k8s_waiting_for_delete = False
     num_workers = 2
@@ -86,3 +106,7 @@ class GSConfig(object):
     initializing_interactive_engine = True
 
     timeout_seconds = 600
+
+    # kill GraphScope instance after seconds of client disconnect
+    # disable dangling check by setting -1.
+    dangling_timeout_seconds = 600

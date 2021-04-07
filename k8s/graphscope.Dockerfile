@@ -4,7 +4,7 @@
 # the result image includes all runtime stuffs of graphscope, with analytical engine,
 # learning engine and interactive engine installed.
 
-ARG BASE_VERSION=v0.1.11
+ARG BASE_VERSION=v0.1.14
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 ARG CI=true
@@ -111,6 +111,9 @@ COPY --from=builder /root/gs/interactive_engine/src/executor/target/$profile/exe
 COPY --from=builder /root/gs/interactive_engine/src/executor/store/log4rs.yml /home/maxgraph/log4rs.yml
 RUN mkdir -p /home/maxgraph/native
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/home/maxgraph/native
+
+# install mars
+RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
 
 # enable debugging
 ENV RUST_BACKTRACE=1

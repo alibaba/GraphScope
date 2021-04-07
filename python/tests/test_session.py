@@ -125,7 +125,7 @@ def load_graph(session):
 
 
 def test_default_session():
-    s = graphscope.session(run_on_local=True)
+    s = graphscope.session(cluster_type="hosts")
 
     info = s.info
     assert info["status"] == "active"
@@ -133,7 +133,7 @@ def test_default_session():
 
 
 def test_launch_cluster_on_local(local_config_file):
-    s = graphscope.session(run_on_local=True, config=local_config_file)
+    s = graphscope.session(cluster_type="hosts", config=local_config_file)
     info = s.info
     assert info["status"] == "active"
     s.close()
@@ -143,7 +143,7 @@ def test_launch_session_from_config(local_config_file):
     saved = os.environ.get("GS_CONFIG_PATH", "")
     try:
         os.environ["GS_CONFIG_PATH"] = local_config_file
-        s = graphscope.session(run_on_local=True)
+        s = graphscope.session(cluster_type="hosts")
 
         info = s.info
         assert info["status"] == "active"
@@ -154,7 +154,7 @@ def test_launch_session_from_config(local_config_file):
 
 def test_launch_session_from_dict():
     conf_dict = {"num_workers": 4}
-    s = graphscope.session(run_on_local=True, config=conf_dict)
+    s = graphscope.session(cluster_type="hosts", config=conf_dict)
 
     info = s.info
     assert info["status"] == "active"
@@ -162,7 +162,9 @@ def test_launch_session_from_dict():
 
 
 def test_config_dict_has_highest_priority(local_config_file):
-    s = graphscope.session(run_on_local=True, config=local_config_file, num_workers=2)
+    s = graphscope.session(
+        cluster_type="hosts", config=local_config_file, num_workers=2
+    )
 
     info = s.info
     assert info["status"] == "active"
@@ -171,41 +173,34 @@ def test_config_dict_has_highest_priority(local_config_file):
 
 def test_error_on_config_file_not_exist():
     with pytest.raises(FileNotFoundError, match="No such file or directory"):
-        graphscope.session(run_on_local=True, config="~/non_existing_filename.txt")
+        graphscope.session(cluster_type="hosts", config="~/non_existing_filename.txt")
 
 
 def test_error_on_invalid_config_file(invalid_config_file):
     # invalid config file (example json format incorrect)
     with pytest.raises(json.decoder.JSONDecodeError):
-        graphscope.session(run_on_local=True, config=invalid_config_file)
+        graphscope.session(cluster_type="hosts", config=invalid_config_file)
 
 
 def test_error_on_used_after_close():
     # use after session close
-    s1 = graphscope.session(run_on_local=True)
+    s1 = graphscope.session(cluster_type="hosts")
 
     s1.close()
-    with pytest.raises(RuntimeError, match="Attempted to use a closed Session."):
-        load_graph(s1)
+    with pytest.raises(ValueError, match="Session not exists."):
+        g = load_graph(s1)
+        g._ensure_loaded()
 
     with pytest.raises(RuntimeError, match="No default session found."):
         g = graphscope.load_from(
             edges={
-                "e0": (
-                    "twitter_property_e_0#header_row=true",
-                    ["dist"],
-                    ("src_id", "v0"),
-                    ("dst_id", "v1"),
-                ),
-            },
-            vertices={
-                "v0": "{}/twitter_property_v_0#header_row=true",
-                "v1": "{}/twitter_property_v_1#header_row=true",
-            },
+                "e0": "twitter_property_e_0#header_row=true",
+            }
         )
+        g._ensure_loaded()
 
     # close after close
-    s2 = graphscope.session(run_on_local=True)
+    s2 = graphscope.session(cluster_type="hosts")
 
     s2.close()
     assert s2.info["status"] == "closed"
@@ -215,7 +210,7 @@ def test_error_on_used_after_close():
 
 
 def test_correct_closing_on_hosts():
-    s1 = graphscope.session(run_on_local=True)
+    s1 = graphscope.session(cluster_type="hosts")
 
     s1.close()
     # check, launched coordinator and graphscope-engines on local are correctly closed.
@@ -224,29 +219,22 @@ def test_correct_closing_on_hosts():
 
 
 def test_border_cases():
-    s1 = graphscope.session(run_on_local=True)
-    s2 = graphscope.session(run_on_local=True)
-    s3 = graphscope.session(run_on_local=True)
+    s1 = graphscope.session(cluster_type="hosts")
+    s2 = graphscope.session(cluster_type="hosts")
+    s3 = graphscope.session(cluster_type="hosts")
 
     with pytest.raises(RuntimeError, match="No default session found."):
         g = graphscope.load_from(
             edges={
-                "e0": (
-                    "twitter_property_e_0#header_row=true",
-                    ["dist"],
-                    ("src_id", "v0"),
-                    ("dst_id", "v1"),
-                ),
-            },
-            vertices={
-                "v0": "{}/twitter_property_v_0#header_row=true",
-                "v1": "{}/twitter_property_v_1#header_row=true",
-            },
+                "e0": "twitter_property_e_0#header_row=true",
+            }
         )
+        g._ensure_loaded()
     s1.as_default()
     assert graphscope.get_default_session() == s1
 
-    g3 = load_graph(s3)  # g3 is op of s3
+    g3 = load_graph(s3)
+    g3._ensure_loaded()  # g3 is op of s3
 
     with pytest.raises(
         ValueError,
@@ -268,15 +256,7 @@ def test_border_cases():
     with pytest.raises(RuntimeError, match="No default session found."):
         g = graphscope.load_from(
             edges={
-                "e0": (
-                    "twitter_property_e_0#header_row=true",
-                    ["dist"],
-                    ("src_id", "v0"),
-                    ("dst_id", "v1"),
-                ),
-            },
-            vertices={
-                "v0": "{}/twitter_property_v_0#header_row=true",
-                "v1": "{}/twitter_property_v_1#header_row=true",
-            },
+                "e0": "twitter_property_e_0#header_row=true",
+            }
         )
+        g._ensure_loaded()

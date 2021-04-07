@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,15 +15,24 @@
  */
 package com.compiler.demo.server.plan.resource;
 
+import com.alibaba.graphscope.common.proto.Gremlin;
+import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.pegasus.builder.JobBuilder;
+import com.compiler.demo.server.plan.translator.builder.StepBuilder;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
 public abstract class JobBuilderResource implements StepResource {
-    protected abstract void buildJob(Step t, JobBuilder target);
+    protected abstract void buildJob(StepBuilder stepBuilder);
 
     @Override
-    public void attachResource(Step step, JobBuilder target) {
-        buildJob(step, target);
-        // todo: add AsStep if step tag exists
+    public void attachResource(StepBuilder stepBuilder) {
+        AbstractBuilder target = stepBuilder.getJobBuilder();
+        Step step = stepBuilder.getStep();
+        buildJob(stepBuilder);
+        if (!step.getLabels().isEmpty() && target instanceof JobBuilder) {
+            // do nothing just as(tag)
+            ((JobBuilder) target).map(GremlinStepResource.createResourceBuilder(step, stepBuilder.getConf())
+                    .setIdentityStep(Gremlin.IdentityStep.newBuilder().setIsAll(false)).build().toByteString());
+        }
     }
 }

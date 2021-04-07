@@ -13,71 +13,108 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::generated::protobuf as pb;
+use crate::generated::protocol as pb;
 use crate::service::{Output, Service};
-use crate::AnyData;
+use crate::{report_memory, AnyData};
 use prost::Message;
 use std::io::Write;
 use std::net::SocketAddr;
-use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
+use tokio::sync::mpsc::{self, UnboundedSender};
+use tokio::time::Instant;
+use tokio_stream::wrappers::UnboundedReceiverStream;
 use tonic::transport::Server;
 use tonic::{Request, Response, Status};
 
 #[derive(Clone)]
 pub struct RpcOutput {
     tx: UnboundedSender<Result<pb::JobResponse, Status>>,
+    timer: Option<Instant>,
+    job_id: u64,
 }
 
 impl RpcOutput {
-    pub fn new(tx: UnboundedSender<Result<pb::JobResponse, Status>>) -> Self {
-        RpcOutput { tx }
+    pub fn new(tx: UnboundedSender<Result<pb::JobResponse, Status>>, job_id: u64) -> Self {
+        RpcOutput { tx, timer: None, job_id }
+    }
+
+    pub fn with_timer(tx: UnboundedSender<Result<pb::JobResponse, Status>>, job_id: u64) -> Self {
+        RpcOutput { tx, timer: Some(Instant::now()), job_id }
     }
 }
 
 impl Output for RpcOutput {
     fn send(&self, res: pb::JobResponse) {
-        let id = res.job_id;
         if let Err(_) = self.tx.send(Ok(res)) {
-            error!("Job[{}]: send result into rpc output failure;", id);
+            error!("Job[{}]: send result into rpc output failure;", self.job_id);
         }
     }
 
-    fn close(&self) {}
+    fn close(&self) {
+        if let Some(start) = self.timer {
+            let now = Instant::now();
+            let latency = now.duration_since(start).as_micros();
+            info!("[Job-{}] Execution Time: {:?} ms", self.job_id, latency as f64 / 1000.0);
+        }
+    }
 }
 
 #[derive(Clone)]
 pub struct RpcService<D: AnyData> {
     inner: Service<D>,
+    report: bool,
 }
 
 #[derive(Clone)]
 pub struct DebugRpcService<D: AnyData> {
     inner: Service<D>,
+    report: bool,
 }
 
 #[tonic::async_trait]
 impl<D: AnyData> pb::job_service_server::JobService for RpcService<D> {
-    type SubmitStream = UnboundedReceiver<Result<pb::JobResponse, Status>>;
+    type SubmitStream = UnboundedReceiverStream<Result<pb::JobResponse, Status>>;
 
     async fn submit(
         &self, req: Request<pb::JobRequest>,
     ) -> Result<Response<Self::SubmitStream>, Status> {
         let job_req = req.into_inner();
+        let job_id = if let Some(job_conf) = job_req.conf.as_ref() {
+            job_conf.job_id
+        } else {
+            return Err(Status::invalid_argument("job conf not specified;"));
+        };
         let (tx, rx) = mpsc::unbounded_channel();
-        let output = RpcOutput::new(tx);
+        let output = if self.report {
+            // let _g = report_memory(job_id);
+            RpcOutput::with_timer(tx, job_id)
+        } else {
+            RpcOutput::new(tx, job_id)
+        };
         self.inner.accept(job_req, output);
+        let rx = UnboundedReceiverStream::new(rx);
         Ok(Response::new(rx))
     }
 }
 
 #[tonic::async_trait]
 impl<D: AnyData> pb::job_service_server::JobService for DebugRpcService<D> {
-    type SubmitStream = UnboundedReceiver<Result<pb::JobResponse, Status>>;
+    type SubmitStream = UnboundedReceiverStream<Result<pb::JobResponse, Status>>;
 
     async fn submit(
         &self, req: Request<pb::JobRequest>,
     ) -> Result<Response<Self::SubmitStream>, Status> {
         let job_req = req.into_inner();
+        let job_id = if let Some(job_conf) = job_req.conf.as_ref() {
+            job_conf.job_id
+        } else {
+            return Err(Status::invalid_argument("job conf not specified;"));
+        };
+        let mut temp_dir = std::env::temp_dir().join("gaia_queries");
+        if !temp_dir.exists() {
+            if std::fs::create_dir_all(&temp_dir).is_err() {
+                temp_dir = std::path::PathBuf::from("");
+            }
+        }
         if let Some(ref conf) = job_req.conf {
             let name = if conf.job_name.is_empty() {
                 "unknown_query".to_owned()
@@ -85,7 +122,8 @@ impl<D: AnyData> pb::job_service_server::JobService for DebugRpcService<D> {
                 conf.job_name.clone()
             };
 
-            match std::fs::File::create(&name) {
+            let query_file = temp_dir.join(name);
+            match std::fs::File::create(&query_file) {
                 Ok(f) => {
                     let size = job_req.encoded_len();
                     let mut buf = Vec::with_capacity(size);
@@ -106,8 +144,14 @@ impl<D: AnyData> pb::job_service_server::JobService for DebugRpcService<D> {
             return Err(Status::invalid_argument("job conf not specified;"));
         }
         let (tx, rx) = mpsc::unbounded_channel();
-        let output = RpcOutput::new(tx);
+        let output = if self.report {
+            // let _g = report_memory(job_id);
+            RpcOutput::with_timer(tx, job_id)
+        } else {
+            RpcOutput::new(tx, job_id)
+        };
         self.inner.accept(job_req, output);
+        let rx = UnboundedReceiverStream::new(rx);
         Ok(Response::new(rx))
     }
 }
@@ -118,18 +162,18 @@ pub struct RpcServer<S: pb::job_service_server::JobService> {
 }
 
 pub async fn start_rpc_server<D: AnyData>(
-    addr: SocketAddr, service: Service<D>,
+    addr: SocketAddr, service: Service<D>, report: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let rpc_service = RpcService { inner: service };
+    let rpc_service = RpcService { inner: service, report };
     let server = RpcServer::new(addr, rpc_service);
     server.run().await?;
     Ok(())
 }
 
 pub async fn start_debug_rpc_server<D: AnyData>(
-    addr: SocketAddr, service: Service<D>,
+    addr: SocketAddr, service: Service<D>, report: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let rpc_service = DebugRpcService { inner: service };
+    let rpc_service = DebugRpcService { inner: service, report };
     let server = RpcServer::new(addr, rpc_service);
     server.run().await?;
     Ok(())

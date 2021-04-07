@@ -1,21 +1,21 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::common::object::{CastError, Primitives};
 use crate::generated::common::*;
 use crate::generated::gremlin::*;
-use crate::object::{CastError, Primitives};
 use crate::structure::filter::*;
 use crate::structure::Label;
 use crate::{Element, Object};
@@ -25,7 +25,7 @@ use prost::{DecodeError, Message};
 use std::convert::TryInto;
 use std::fmt::Display;
 
-pub fn from_pb<E: Element>(
+pub fn pb_chain_to_filter<E: Element>(
     pb_chain: &FilterChain,
 ) -> Result<Option<Filter<E, ElementFilter>>, ParseError> {
     let size = pb_chain.node.len();
@@ -116,7 +116,7 @@ pub fn parse_node<E: Element>(
     } else {
         if let Some(chain_bytes) = get_chain(node) {
             let chain = Message::decode(chain_bytes.as_slice())?;
-            from_pb(&chain)
+            pb_chain_to_filter(&chain)
         } else {
             Err(ParseError::InvalidData)
         }
@@ -200,6 +200,7 @@ pub enum ParseError {
     ReadPB(DecodeError),
     TypeCast(CastError),
     InvalidData,
+    OtherErr(String),
 }
 
 impl Display for ParseError {
@@ -208,11 +209,18 @@ impl Display for ParseError {
             ParseError::ReadPB(e) => write!(f, "parse pb error: {}", e),
             ParseError::TypeCast(e) => write!(f, "type cast error {}", e),
             ParseError::InvalidData => write!(f, "invalid data error"),
+            ParseError::OtherErr(e) => write!(f, "parse error {}", e),
         }
     }
 }
 
 impl std::error::Error for ParseError {}
+
+impl From<&str> for ParseError {
+    fn from(e: &str) -> Self {
+        ParseError::OtherErr(e.into())
+    }
+}
 
 impl From<DecodeError> for ParseError {
     fn from(e: DecodeError) -> Self {

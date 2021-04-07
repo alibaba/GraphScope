@@ -66,6 +66,7 @@
 对于 macOS，创建会话需要使用 LoadBalancer 服务类型（默认是 NodePort）。
 
 .. code:: python
+
     sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
 
 
@@ -98,39 +99,36 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
 
 .. code:: python
 
-    g = sess.load_from(
-        vertices={
-            "paper": "paper.csv",
-            "author": "author.csv",
-            "institution": "institution.csv",
-            "field_of_study": "field_of_study.csv",
-        },
-        edges={
-            "affiliated": (
-                "author_affiliated_with_institution.csv",
-                [],
-                ("src_id", "author"),
-                ("dst_id", "institution"),
-            ),
-            "cites": (
-                "paper_cites_paper.csv",
-                [],
-                ("src_id", "paper"),
-                ("dst_id", "paper"),
-            ),
-            "hasTopic": (
-                "paper_has_topic_field_of_study.csv",
-                [],
-                ("src_id", "paper"),
-                ("dst_id", "field_of_study"),
-            ),
-            "writes": (
-                "author_writes_paper.csv",
-                [],
-                ("src_id", "author"),
-                ("dst_id", "paper"),
-            ),
-        }
+    g = sess.g()
+    g = (
+        g.add_vertices("paper.csv", label="paper")
+        .add_vertices("author.csv", label="author")
+        .add_vertices("institution.csv", label="institution")
+        .add_vertices("field_of_study.csv", label="field_of_study")
+        .add_edges(
+            "author_affiliated_with_institution.csv",
+            label="affiliated",
+            src_label="author",
+            dst_label="institution",
+        )
+        .add_edges(
+            "paper_has_topic_field_of_study.csv",
+            label="hasTopic",
+            src_label="paper",
+            dst_label="field_of_study",
+        )
+        .add_edges(
+            "paper_cites_paper.csv",
+            label="cites",
+            src_label="paper",
+            dst_label="paper",
+        )
+        .add_edges(
+            "author_writes_paper.csv",
+            label="writes",
+            src_label="author",
+            dst_label="paper",
+        )
     )
 
 
@@ -180,7 +178,7 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
     sub_graph = interactive.subgraph("g.V().has('year', inside(2014, 2020)).outE('cites')")
 
     # project the projected graph to simple graph.
-    simple_g = sub_graph.project_to_simple(vlabel="paper", elabel="cites")
+    simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
 
     ret1 = graphscope.kcore(simple_g, k=5)
     ret2 = graphscope.triangle(simple_g)

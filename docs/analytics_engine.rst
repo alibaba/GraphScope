@@ -31,7 +31,7 @@ Built-in algorithms can be easily invoked over loaded graphs. For example,
 
     # some other algorithms may only support evaluate on simple graph
     # hence we need to generate one by selecting a kind of vertices and edges.
-    simple_g = g.project_to_simple(v_label="users", e_label="follows")
+    simple_g = g.project(vertices={"users": []}, edges={"follows": []})
     result_pr = pagerank(simple_g)
 
 A full-list of builtin algorithms is shown as below. Whether an algorithm supports
@@ -91,7 +91,7 @@ the graph as a new property (column) of the vertices(edges).
 
 .. code:: python
 
-    simple_g = sub_graph.project_to_simple(vlabel="paper", elabel="cites")
+    simple_g = g.project(vertices={"paper": []}, edges={"sites": []})
     ret = graphscope.kcore(simple_g, k=5)
 
     # add the results as new columns to the citation graph
@@ -304,7 +304,7 @@ To run your own algorithms, you may trigger it in place where you defined it.
     import graphscope
 
     sess = graphscope.session()
-    g = sess.load_from("...")
+    g = sess.g()
 
     # load my algorithm
     my_app = SSSP_Pregel()
@@ -327,7 +327,7 @@ Later, you can load your own algorithm from the gar package.
     import graphscope
 
     sess = graphscope.session()
-    g = sess.load_from("...")
+    g = graphscope.Session(sess)
 
     # load my algorithm from a gar package
     my_app = load_app('SSSP_Pregel', 'file:///var/graphscope/udf/my_sssp_pregel.gar')
