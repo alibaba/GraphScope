@@ -60,6 +60,7 @@ use maxgraph_store::api::graph_partition::{GraphPartitionManager};
 use maxgraph_runtime::store::ffi::{GlobalVertex, GlobalVertexIter, FFIEdge, GlobalEdgeIter};
 use maxgraph_server::StoreContext;
 use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
+use maxgraph_runtime::store::v2::create_global_graph;
 
 fn main() {
     if let Some(_) = env::args().find(|arg| arg == "--show-build-info") {
@@ -94,7 +95,7 @@ fn main() {
             unimplemented!("Mac not support vineyard graph")
         }
     } else {
-        let graph = Arc::new(GlobalGraph::new(&store_config, &partitions));
+        let graph = Arc::new(create_global_graph(&store_config, &partitions));
         run_main(store_config, graph.clone(), graph.clone());
     }
 }

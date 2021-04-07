@@ -1,6 +1,6 @@
 #[macro_use]
 pub mod api;
-mod common;
+pub mod common;
 mod storage;
 pub mod graph;
 mod util;

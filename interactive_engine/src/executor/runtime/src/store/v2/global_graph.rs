@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 
-use maxgraph_store::db::api::{Vertex, Edge, GraphStorage, GraphResult, EdgeResultIter, PropIter, ValueRef, ValueType, EdgeDirection, VertexWrapper, VertexResultIter};
+use maxgraph_store::db::api::{Vertex, Edge, GraphStorage, GraphResult, EdgeResultIter, PropIter, ValueRef, ValueType, EdgeDirection, VertexWrapper, VertexResultIter, GraphConfigBuilder, GraphConfig};
 use std::sync::Arc;
 use maxgraph_store::api::{GlobalGraphQuery, SnapshotId, PartitionVertexIds, LabelId, Condition, PropId, VertexId, PartitionId, PartitionLabeledVertexIds};
 use maxgraph_store::db::graph::vertex::VertexImpl;
@@ -40,9 +40,17 @@ unsafe impl Sync for GlobalGraph {}
 
 impl GlobalGraph {
 
-    pub fn new(store_config: &StoreConfig, partition_ids: &Vec<PartitionId>) -> Self {
-        // TODO
-        unimplemented!()
+    pub fn new(disks: Vec<String>, graph_config: &GraphConfig, partition_ids: &Vec<PartitionId>) -> GraphResult<Self> {
+        let mut graph_partitions = HashMap::new();
+        for partition_id in partition_ids {
+            let disk_idx = *partition_id as usize % disks.len();
+            let disk = &disks[disk_idx];
+            let partition = GraphStore::open(graph_config, disk.as_str())?;
+            graph_partitions.insert(*partition_id, Arc::new(partition));
+        }
+        Ok(GlobalGraph {
+            graph_partitions,
+        })
     }
 
     fn convert_label_id(label_id: Option<LabelId>) -> Option<i32> {
