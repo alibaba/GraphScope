@@ -40,12 +40,12 @@ fn main() {
     println!("cargo:rustc-link-lib=vineyard_client");
     println!("cargo:rustc-link-lib=vineyard_basic");
     println!("cargo:rustc-link-lib=mpi");
-    println!("cargo:rustc-link-lib=mpi_cxx");
     println!("cargo:rustc-link-lib=gflags");
     println!("cargo:rustc-link-lib=arrow");
     println!("cargo:rustc-link-lib=glog");
 
     if cfg!(target_os = "linux") {
+        println!("cargo:rustc-link-lib=mpi_cxx");
         if Path::new("/usr/ali/alicpp/built/gcc-4.9.2").exists() {
             println!("cargo:cfg=tunnel");
         }
