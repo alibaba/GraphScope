@@ -535,11 +535,11 @@ def test_error_on_project(arrow_property_graph, ldbc_graph):
     )
 
     # project with not existed vertex
-    with pytest.raises(ValueError, match="Vertex comment not exist in graph"):
+    with pytest.raises(ValueError, match="comment not exists"):
         sub_graph.project(vertices={"comment": None}, edges={"knows": None})
 
     # project with not existed edge
-    with pytest.raises(ValueError, match="Edge isSubclassOf not exist in graph"):
+    with pytest.raises(ValueError, match="isSubclassOf not exists"):
         sub_graph.project(vertices={"tagclass": None}, edges={"isSubclassOf": None})
 
     # more than one property on vertex can not project to simple
