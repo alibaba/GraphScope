@@ -2,7 +2,7 @@ use maxgraph_store::db::api::{EdgeResultIter, Edge, GraphError, EdgeWrapper};
 use maxgraph_store::db::common::unsafe_util;
 
 pub struct EdgeIterator<'a, E> where E: Edge {
-    iter_vec: Vec<Box<dyn EdgeResultIter<E=E> + 'a>>,
+    iter_vec: &'a [Box<dyn EdgeResultIter<E=E> + 'a>],
     cur: usize,
     err: Option<GraphError>,
 }
@@ -10,7 +10,7 @@ pub struct EdgeIterator<'a, E> where E: Edge {
 impl<'a, E> Iterator for EdgeIterator<'a, E> where E: Edge {
     type Item = EdgeWrapper<'a, E>;
 
-    fn next(&mut self) -> Option<Self::Item> {
+    fn next(&mut self) -> Option<EdgeWrapper<'a, E>> {
         if self.err.is_some() {
             return None;
         }
@@ -30,7 +30,7 @@ impl<'a, E> Iterator for EdgeIterator<'a, E> where E: Edge {
 }
 
 impl<'a, E> EdgeIterator<'a, E> where E: Edge {
-    pub fn new(iter_vec: Vec<Box<dyn EdgeResultIter<E=E> + 'a>>) -> Self {
+    pub fn new(iter_vec: &'a [Box<dyn EdgeResultIter<E=E> + 'a>]) -> Self {
         EdgeIterator {
             iter_vec,
             cur: 0,

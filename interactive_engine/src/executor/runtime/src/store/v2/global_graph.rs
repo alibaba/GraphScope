@@ -312,7 +312,7 @@ impl GlobalGraphQuery for GlobalGraph {
             res.into_iter().map(|(vertex_id, edge_iter_vec)|
                 (
                     vertex_id,
-                    EdgeIterator::new(edge_iter_vec)
+                    EdgeIterator::new(&edge_iter_vec)
                         .map(|item| LocalStoreVertex::new(item.get_dst_id(), item.get_kind().dst_vertex_label_id as u32))
                         .take(Self::get_limit(limit))
                         .collect::<Vec<LocalStoreVertex>>().into_iter()
@@ -327,7 +327,7 @@ impl GlobalGraphQuery for GlobalGraph {
         Box::new(res.into_iter().map(|(vertex_id, edge_iter_vec)| {
             (
                 vertex_id,
-                EdgeIterator::new(edge_iter_vec)
+                EdgeIterator::new(&edge_iter_vec)
                     .map(|e| Self::parse_edge(e, output_prop_ids))
                     .take(Self::get_limit(limit))
                     .collect::<Vec<LocalStoreEdge>>()
@@ -343,7 +343,7 @@ impl GlobalGraphQuery for GlobalGraph {
             res.into_iter().map(|(vertex_id, edge_iter_vec)|
                 (
                     vertex_id,
-                    EdgeIterator::new(edge_iter_vec)
+                    EdgeIterator::new(&edge_iter_vec)
                         .map(|item| LocalStoreVertex::new(item.get_src_id(), item.get_kind().src_vertex_label_id as u32))
                         .take(Self::get_limit(limit))
                         .collect::<Vec<LocalStoreVertex>>().into_iter()
@@ -358,7 +358,7 @@ impl GlobalGraphQuery for GlobalGraph {
         Box::new(res.into_iter().map(|(vertex_id, edge_iter_vec)| {
             (
                 vertex_id,
-                EdgeIterator::new(edge_iter_vec)
+                EdgeIterator::new(&edge_iter_vec)
                     .map(|e| Self::parse_edge(e, output_prop_ids))
                     .take(Self::get_limit(limit))
                     .collect::<Vec<LocalStoreEdge>>()
@@ -372,7 +372,7 @@ impl GlobalGraphQuery for GlobalGraph {
         Box::new(res.into_iter().map(|(vertex_id, edge_iter_vec)| {
             (
                 vertex_id,
-                EdgeIterator::new(edge_iter_vec).count()
+                EdgeIterator::new(&edge_iter_vec).count()
             )
         }).collect::<Vec<(i64, usize)>>().into_iter())
     }
@@ -382,7 +382,7 @@ impl GlobalGraphQuery for GlobalGraph {
         Box::new(res.into_iter().map(|(vertex_id, edge_iter_vec)| {
             (
                 vertex_id,
-                EdgeIterator::new(edge_iter_vec).count()
+                EdgeIterator::new(&edge_iter_vec).count()
             )
         }).collect::<Vec<(i64, usize)>>().into_iter())
     }
