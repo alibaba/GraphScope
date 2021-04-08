@@ -291,8 +291,7 @@ class CoordinatorServiceServicer(
             )
             or op.op == types_pb2.TRANSFORM_GRAPH
             or op.op == types_pb2.PROJECT_TO_SIMPLE
-            or op.op == types_pb2.ADD_EDGES
-            or op.op == types_pb2.ADD_VERTICES
+            or op.op == types_pb2.ADD_LABELS
         ):
             try:
                 op = self._maybe_register_graph(op, request.session_id)
@@ -338,8 +337,7 @@ class CoordinatorServiceServicer(
             if op.op in (
                 types_pb2.CREATE_GRAPH,
                 types_pb2.PROJECT_GRAPH,
-                types_pb2.ADD_VERTICES,
-                types_pb2.ADD_EDGES,
+                types_pb2.ADD_LABELS,
                 types_pb2.ADD_COLUMN,
             ):
                 schema_path = os.path.join("/tmp", response.graph_def.key + ".json")
