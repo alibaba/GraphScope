@@ -191,6 +191,7 @@ del version_file_path
 setup(
     name="gscoordinator",
     description="",
+    include_package_data=True,
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="GRAPE Team, Damo Academy",
