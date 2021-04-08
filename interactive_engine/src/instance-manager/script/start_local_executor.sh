@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2020 Alibaba Group Holding Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,11 +20,13 @@ export VINEYARD_IPC_SOCKET=$3
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
 WORKSPACE=$SCRIPT_DIR/../
 
-export LOG_DIR=$WORKSPACE/logs/executor/executor_${object_id}
-mkdir -p $LOG_DIR
+export object_id
+source $SCRIPT_DIR/common.sh
+# export LOG_DIRS is must
+export LOG_DIRS=$LOG_DIR
 
-cp $WORKSPACE/config/executor.local.vineyard.properties.tpl $WORKSPACE/config/executor.local.vineyard.properties
-inner_config=$WORKSPACE/config/executor.local.vineyard.properties
+inner_config=$CONFIG_DIR/executor.local.vineyard.properties
+cp $WORKSPACE/config/executor.local.vineyard.properties.tpl $inner_config
 sed -i "s/VINEYARD_OBJECT_ID/$object_id/g" $inner_config
 
 server_id=1
@@ -32,4 +34,4 @@ server_id=1
 export flag="maxgraph"$object_id"executor"
 RUST_BACKTRACE=full $WORKSPACE/bin/executor --config $inner_config $flag $server_id 1>> $LOG_DIR/maxgraph-executor.out 2>> $LOG_DIR/maxgraph-executor.err &
 
-echo $! > $WORKSPACE/pid/executor_${object_id}.pid 
+echo $! > $PID_DIR/executor.pid

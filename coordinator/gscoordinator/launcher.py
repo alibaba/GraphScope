@@ -91,6 +91,7 @@ class LocalLauncher(Launcher):
         vineyard_socket,
         shared_mem,
         log_level,
+        instance_id,
         timeout_seconds,
     ):
         super().__init__()
@@ -99,6 +100,7 @@ class LocalLauncher(Launcher):
         self._vineyard_socket = vineyard_socket
         self._shared_mem = shared_mem
         self._glog_level = parse_as_glog_level(log_level)
+        self._instance_id = instance_id
         self._timeout_seconds = timeout_seconds
 
         if "GRAPHSCOPE_PREFIX" not in os.environ:
@@ -195,7 +197,7 @@ class LocalLauncher(Launcher):
     def _launch_graph_manager(self):
         port = self._get_free_port(self._hosts.split(",")[0])
         gm_sh = os.path.join(self._graphscope_prefix, "bin", "start.sh")
-        cmd = ["bash", gm_sh, "local", str(port)]
+        cmd = ["bash", gm_sh, "local", str(port), self._instance_id]
         print(" ".join(cmd))
 
         process = subprocess.Popen(

@@ -27,6 +27,7 @@ import sys
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.hosts.utils import is_port_in_use
 from graphscope.deploy.launcher import Launcher
+from graphscope.framework.utils import random_string
 
 try:
     import gscoordinator
@@ -72,6 +73,7 @@ class HostsClusterLauncher(Launcher):
         self._vineyard_socket = vineyard_socket
         self._timeout_seconds = timeout_seconds
 
+        self._instance_id = random_string(6)
         self._proc = None
         self._closed = True
 
@@ -104,6 +106,8 @@ class HostsClusterLauncher(Launcher):
             "{}".format(str(self._port)),
             "--cluster_type",
             self.type(),
+            "--instance_id",
+            self._instance_id,
         ]
 
         print(" ".join(cmd))

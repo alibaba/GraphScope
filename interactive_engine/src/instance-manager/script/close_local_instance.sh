@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2020 Alibaba Group Holding Limited.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +17,12 @@ object_id=$1
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
 WORKSPACE=$SCRIPT_DIR/../
+export object_id
+source $SCRIPT_DIR/common.sh
 
-coordinator_id=`cat $WORKSPACE/pid/coordinator_$object_id.pid`
-frontend_id=`cat $WORKSPACE/pid/frontend_$object_id.pid`
-executor_id=`cat $WORKSPACE/pid/executor_$object_id.pid`
+coordinator_id=`cat $PID_DIR/coordinator.pid`
+frontend_id=`cat $PID_DIR/frontend.pid`
+executor_id=`cat $PID_DIR/executor.pid`
 
 sudo kill $coordinator_id || true
 sudo kill $frontend_id || true
