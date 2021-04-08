@@ -34,19 +34,19 @@ push:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ push
 
 .PHONY: install
-install: client coordinator gae gie gle
+install: gle client coordinator gae gie
 
 .PHONY: client
 client:
 	cd $(WORKING_DIR)/python && \
 	pip3 install -r requirements.txt -r requirements-dev.txt && \
-	python3 setup.py install
+	python3 setup.py install --user
 
 .PHONY: coordinator
 coordinator:
 	cd $(WORKING_DIR)/coordinator && \
 	pip3 install -r requirements.txt -r requirements-dev.txt && \
-	python3 setup.py install
+	python3 setup.py install --user
 
 .PHONY: gae
 gae:
