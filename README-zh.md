@@ -133,27 +133,25 @@ GraphScope 以属性图（property graph）建模图数据。属性图中，点�
 
 ```python
 g = sess.g()
-g = (
-    g.add_vertices("/testingdata/ogbn_mag_small/paper.csv", label="paper")
-    .add_vertices("/testingdata/ogbn_mag_small/author.csv", label="author")
-    .add_vertices("/testingdata/ogbn_mag_small/institution.csv", label="institution")
-    .add_vertices("/testingdata/ogbn_mag_small/field_of_study.csv", label="field_of_study")
-    .add_edges(
-        "/testingdata/ogbn_mag_small/author_affiliated_with_institution.csv",
-        label="affiliated", src_label="author", dst_label="institution",
-    )
-    .add_edges(
-        "/testingdata/ogbn_mag_small/paper_has_topic_field_of_study.csv",
-        label="hasTopic", src_label="paper", dst_label="field_of_study",
-    )
-    .add_edges(
-        "/testingdata/ogbn_mag_small/paper_cites_paper.csv",
-        label="cites", src_label="paper", dst_label="paper",
-    )
-    .add_edges(
-        "/testingdata/ogbn_mag_small/author_writes_paper.csv",
-        label="writes", src_label="author", dst_label="paper",
-    )
+g = g.add_vertices("/testingdata/ogbn_mag_small/paper.csv", label="paper")
+g = g.add_vertices("/testingdata/ogbn_mag_small/author.csv", label="author")
+g = g.add_vertices("/testingdata/ogbn_mag_small/institution.csv", label="institution")
+g = g.add_vertices("/testingdata/ogbn_mag_small/field_of_study.csv", label="field_of_study")
+g = g.add_edges(
+    "/testingdata/ogbn_mag_small/author_affiliated_with_institution.csv",
+    label="affiliated", src_label="author", dst_label="institution",
+)
+g = g.add_edges(
+    "/testingdata/ogbn_mag_small/paper_has_topic_field_of_study.csv",
+    label="hasTopic", src_label="paper", dst_label="field_of_study",
+)
+g = g.add_edges(
+    "/testingdata/ogbn_mag_small/paper_cites_paper.csv",
+    label="cites", src_label="paper", dst_label="paper",
+)
+g = g.add_edges(
+    "/testingdata/ogbn_mag_small/author_writes_paper.csv",
+    label="writes", src_label="author", dst_label="paper",
 )
 ```
 
