@@ -102,6 +102,7 @@ jobs:
         export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
         export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin
         export GRAPHSCOPE_PREFIX=/usr/local
+        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 
         # install tensorflow for graphlearn
         pip3 install pytest tensorflow --user
@@ -112,5 +113,5 @@ jobs:
         python3 -m pytest -s -v /tmp/test_run_locally.py
 
     - name: Setup tmate session debug
-      if: always()
+      if: false
       uses: mxschmitt/action-tmate@v2
