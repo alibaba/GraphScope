@@ -1041,6 +1041,7 @@ def launch_graphscope():
             vineyard_socket=args.vineyard_socket,
             shared_mem=args.k8s_vineyard_shared_mem,
             log_level=args.log_level,
+            instance_id=args.instance_id,
             timeout_seconds=args.timeout_seconds,
         )
     else:

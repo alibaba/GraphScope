@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2020 Alibaba Group Holding Limited.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,10 @@ server_id=$3
 VINEYARD_IPC_SOCKET=$4
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
+
+export object_id
+source $SCRIPT_DIR/common.sh
+mkdir -p $LOG_DIR $CONFIG_DIR $PID_DIR
 
 bash ${SCRIPT_DIR}/start_local_coordinator.sh $object_id
 sleep 1

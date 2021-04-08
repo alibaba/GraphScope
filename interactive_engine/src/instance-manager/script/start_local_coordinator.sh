@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2020 Alibaba Group Holding Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,17 +17,17 @@ object_id=$1
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
 WORKSPACE=$SCRIPT_DIR/../
-
-LOG_DIR=$WORKSPACE/logs/coordinator/coordinator_$object_id
-mkdir -p $LOG_DIR
+export object_id
+source $SCRIPT_DIR/common.sh
 
 JAVA_OPT="-server -Xmx1024m -Xms1024m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./java.hprof -verbose:gc -Xloggc:./gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-coordinator.log -Dlogbasedir=/home/maxgraph/logs/coordinator -Dlog4j.configurationFile=file:${WORKSPACE}/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath ${WORKSPACE}/0.0.1-SNAPSHOT/conf/*:${WORKSPACE}/0.0.1-SNAPSHOT/lib/*:"
 
-inner_config=$WORKSPACE/config/coordinator.local.application.properties
 
-# cd $ROOT_DIR/src/coordinator/target/classes/
+inner_config=$CONFIG_DIR/coordinator.local.application.properties
+cp $WORKSPACE/config/coordinator.local.application.properties.tpl $inner_config
+
 cd $WORKSPACE/coordinator/target/classes/
 
 java ${JAVA_OPT} com.alibaba.maxgraph.coordinator.CoordinatorMain $inner_config $object_id 1>$LOG_DIR/maxgraph-coordinator.out 2>$LOG_DIR/maxgraph-coordinator.err &
 
-echo $! > $WORKSPACE/pid/coordinator_${object_id}.pid
+echo $! > $PID_DIR/coordinator.pid

@@ -69,7 +69,6 @@ jobs:
 
     - name: Install libgrape-lite
       run: |
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
         git clone -b master --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git
         cd libgrape-lite
         mkdir build && cd build
@@ -79,7 +78,6 @@ jobs:
 
     - name: Install libvineyard
       run: |
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
         git clone -b v0.1.14 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
         cd libvineyard
         git submodule update --init
@@ -92,86 +90,21 @@ jobs:
         python3 setup.py bdist_wheel
         pip3 install ./dist/*.whl
 
-    - name: Build GraphScope GLE
-      run: |
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
-        pushd learning_engine/graph-learn
-        git submodule update --init third_party/pybind11
-        mkdir cmake-build && pushd cmake-build
-        cmake .. -DWITH_VINEYARD=ON -DTESTING=OFF
-        make -j`nproc`
-        sudo make install
-        popd
-
-    - name: Install GraphScope Python Client
-      run: |
-        export WITH_LEARNING_ENGINE=ON
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
-        pushd python
-        pip3 install -U setuptools
-        pip3 install -r requirements.txt -r requirements-dev.txt
-        python3 setup.py bdist_wheel
-        pip3 install ./dist/*.whl
-        popd
-
-    - name: Install GraphScope Coordinator
-      run: |
-        pushd coordinator
-        pip3 install -r requirements.txt -r requirements-dev.txt
-        python3 setup.py bdist_wheel
-        pip3 install ./dist/*.whl
-        popd
-
-    - name: Build GraphScope GAE
-      run: |
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
-        mkdir analytical_engine/build && pushd analytical_engine/build
-        cmake ..
-        make -j`nproc`
-        sudo make install
-        popd
-
-    - name: Build GraphScope GIE
+    - name: Build GraphScope
       run: |
         export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
-        export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
-        export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
-
-        # build frontend coordinator graph-manager
-        pushd interactive_engine
-        mvn clean package -DskipTests -Pjava-release --quiet
-        popd
-
-        # build executor
-        pushd interactive_engine/src/executor
-        cargo build --all --release
-        popd
-
-        # copy dependencies into GRAPHSCOPE_PREFIX
-        mkdir -p ${GRAPHSCOPE_PREFIX}/pid ${GRAPHSCOPE_PREFIX}/logs
-        # copy mvn package
-        cp ./interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz ${GRAPHSCOPE_PREFIX}/0.0.1-instance-manager-SNAPSHOT.tar.gz
-        cp ./interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz ${GRAPHSCOPE_PREFIX}/0.0.1-SNAPSHOT.tar.gz
-        tar -xf ${GRAPHSCOPE_PREFIX}/0.0.1-SNAPSHOT.tar.gz -C ${GRAPHSCOPE_PREFIX}/
-        tar -xf ${GRAPHSCOPE_PREFIX}/0.0.1-instance-manager-SNAPSHOT.tar.gz -C ${GRAPHSCOPE_PREFIX}/
-        # coordinator
-        mkdir -p ${GRAPHSCOPE_PREFIX}/coordinator
-        cp -r ./interactive_engine/src/coordinator/target ${GRAPHSCOPE_PREFIX}/coordinator/
-        # frontend
-        mkdir -p ${GRAPHSCOPE_PREFIX}/frontend/frontendservice
-        cp -r ./interactive_engine/src/frontend/frontendservice/target ${GRAPHSCOPE_PREFIX}/frontend/frontendservice/
-        # executor
-        mkdir -p ${GRAPHSCOPE_PREFIX}/conf
-        cp ./interactive_engine/src/executor/target/release/executor ${GRAPHSCOPE_PREFIX}/bin/executor
-        cp ./interactive_engine/src/executor/store/log4rs.yml ${GRAPHSCOPE_PREFIX}/conf/log4rs.yml
+        export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin
+        # Default to /usr/local
+        make install WITH_LEARNING_ENGINE=ON
 
     - name: Run Local Test
       run: |
         export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
-        export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
-        export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
+        export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin
+        export GRAPHSCOPE_PREFIX=/usr/local
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 
+        # install tensorflow for graphlearn
         pip3 install pytest tensorflow --user
 
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest

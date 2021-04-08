@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2020 Alibaba Group Holding Limited.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,4 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "hello create instance"
+if [ ! -n "$GRAPHSCOPE_RUNTIME" ]; then
+  export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
+fi
+
+if [ -n "$object_id" ]; then
+  export LOG_DIR=$GRAPHSCOPE_RUNTIME/logs/$object_id
+  export CONFIG_DIR=$GRAPHSCOPE_RUNTIME/config/$object_id
+  export PID_DIR=$GRAPHSCOPE_RUNTIME/pid/$object_id
+fi

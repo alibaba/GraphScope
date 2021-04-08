@@ -543,7 +543,7 @@ class Session(object):
             info["namespace"] = self._config_params["k8s_namespace"]
         else:
             info["type"] = "hosts"
-            info["engine_hosts"] = ",".join(self._config_params["hosts"])
+            info["engine_hosts"] = self._engine_config["engine_hosts"]
 
         info["cluster_type"] = str(self._cluster_type)
         info["session_id"] = self.session_id
