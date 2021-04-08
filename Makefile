@@ -37,13 +37,13 @@ push:
 install: gle client coordinator gae gie
 
 .PHONY: client
-client:
+client: gle
 	cd $(WORKING_DIR)/python && \
 	pip3 install -r requirements.txt -r requirements-dev.txt && \
 	python3 setup.py install --user
 
 .PHONY: coordinator
-coordinator:
+coordinator: client
 	cd $(WORKING_DIR)/coordinator && \
 	pip3 install -r requirements.txt -r requirements-dev.txt && \
 	python3 setup.py install --user
