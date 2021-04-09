@@ -1,0 +1,50 @@
+package com.alibaba.maxgraph.v2.common.operation;
+
+import com.alibaba.maxgraph.proto.v2.OpTypePb;
+
+public enum OperationType {
+    MARKER(0),
+
+    OVERWRITE_VERTEX(1),
+    UPDATE_VERTEX(2),
+    DELETE_VERTEX(3),
+    OVERWRITE_EDGE(4),
+    UPDATE_EDGE(5),
+    DELETE_EDGE(6),
+
+    CREATE_VERTEX_TYPE(7),
+    CREATE_EDGE_TYPE(8),
+    ADD_EDGE_KIND(9),
+
+    DROP_VERTEX_TYPE(10),
+    DROP_EDGE_TYPE(11),
+    REMOVE_EDGE_KIND(12);
+
+    private final byte b;
+
+    OperationType(int b) {
+        this.b = (byte) b;
+    }
+
+    public byte getId() {
+        return b;
+    }
+
+    public static OperationType fromId(byte id) {
+        if (id < 0 || id >= TYPES.length) {
+            throw new IllegalArgumentException("Unknown OperationType: [" + id + "]");
+        }
+        return TYPES[id];
+    }
+
+    public static OperationType parseProto(OpTypePb pb) {
+        return fromId((byte) pb.getNumber());
+    }
+
+    public OpTypePb toProto() {
+        return OpTypePb.forNumber(b);
+    }
+
+    private static final OperationType[] TYPES = OperationType.values();
+
+}

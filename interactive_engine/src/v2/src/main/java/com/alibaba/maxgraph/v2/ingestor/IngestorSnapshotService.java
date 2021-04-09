@@ -1,0 +1,37 @@
+package com.alibaba.maxgraph.v2.ingestor;
+
+import com.alibaba.maxgraph.proto.v2.IngestorSnapshotGrpc;
+import com.alibaba.maxgraph.proto.v2.AdvanceIngestSnapshotIdRequest;
+import com.alibaba.maxgraph.proto.v2.AdvanceIngestSnapshotIdResponse;
+import com.alibaba.maxgraph.v2.common.CompletionCallback;
+import io.grpc.stub.StreamObserver;
+
+public class IngestorSnapshotService extends IngestorSnapshotGrpc.IngestorSnapshotImplBase {
+
+    private IngestService ingestService;
+
+    public IngestorSnapshotService(IngestService ingestService) {
+        this.ingestService = ingestService;
+    }
+
+    @Override
+    public void advanceIngestSnapshotId(AdvanceIngestSnapshotIdRequest request,
+                                       StreamObserver<AdvanceIngestSnapshotIdResponse> responseObserver) {
+        long snapshotId = request.getSnapshotId();
+        this.ingestService.advanceIngestSnapshotId(snapshotId, new CompletionCallback<Long>() {
+            @Override
+            public void onCompleted(Long previousSnapshotId) {
+                AdvanceIngestSnapshotIdResponse response = AdvanceIngestSnapshotIdResponse.newBuilder()
+                        .setPreviousSnapshotId(previousSnapshotId)
+                        .build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                responseObserver.onError(t);
+            }
+        });
+    }
+}

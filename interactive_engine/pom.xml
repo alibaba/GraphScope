@@ -20,13 +20,29 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <log4j2.version>[2.13.2,)</log4j2.version>
         <hadoop.version>2.8.4</hadoop.version>
-        <grpc.version>1.14.0</grpc.version>
+        <grpc.version>1.30.1</grpc.version>
         <protobuf.version>3.5.1</protobuf.version>
         <tinkerpop.version>3.4.2</tinkerpop.version>
         <slf4j.version>1.7.21</slf4j.version>
         <groovy.version>2.5.6</groovy.version>
-        <curator.version>2.12.0</curator.version>
-        <jackson.version>[2.9.10.5,)</jackson.version>
+<!--        <curator.version>2.12.0</curator.version>-->
+        <curator.version>5.1.0</curator.version>
+        <jackson.version>[2.11.1,)</jackson.version>
+        <maven.surefire.version>2.22.2</maven.surefire.version>
+        <os.maven.plugin.version>1.6.2</os.maven.plugin.version>
+        <protoc.version>3.12.2</protoc.version>
+        <protobuf.version>3.12.2</protobuf.version>
+        <logback.version>1.2.3</logback.version>
+        <zookeeper.version>3.6.1</zookeeper.version>
+        <kafka.version>2.5.0</kafka.version>
+        <kafka.junit.version>3.2.1</kafka.junit.version>
+        <jna.version>5.5.0</jna.version>
+        <junit.jupiter.version>5.6.2</junit.jupiter.version>
+        <mockito.version>3.4.4</mockito.version>
+        <rocksdb.version>5.15.10</rocksdb.version>
+        <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
+        <protobuf.maven.plugin.version>0.6.1</protobuf.maven.plugin.version>
+        <commons.codec.version>1.11</commons.codec.version>
     </properties>
 
     <dependencyManagement>
@@ -64,6 +80,21 @@
             <dependency>
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-all</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-netty-shaded</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-protobuf</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-stub</artifactId>
                 <version>${grpc.version}</version>
             </dependency>
             <dependency>
@@ -159,13 +190,6 @@
                 <artifactId>fastjson</artifactId>
                 <version>1.2.75</version>
             </dependency>
-
-            <!--<dependency>-->
-            <!--<groupId>org.slf4j</groupId>-->
-            <!--<artifactId>slf4j-log4j12</artifactId>-->
-            <!--<version>${slf4j.version}</version>-->
-            <!--</dependency>-->
-
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
@@ -228,24 +252,9 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-api</artifactId>
-                <version>${log4j2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-core</artifactId>
-                <version>${log4j2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-slf4j-impl</artifactId>
-                <version>${log4j2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-1.2-api</artifactId>
-                <version>${log4j2.version}</version>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>
@@ -259,9 +268,27 @@
                 <version>3.9.1</version>
             </dependency>
             <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.vintage</groupId>
+                <artifactId>junit-vintage-engine</artifactId>
+                <version>${junit.jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>org.mockito</groupId>-->
+<!--                <artifactId>mockito-all</artifactId>-->
+<!--                <version>1.9.5</version>-->
+<!--                <scope>test</scope>-->
+<!--            </dependency>-->
+            <dependency>
                 <groupId>org.mockito</groupId>
-                <artifactId>mockito-all</artifactId>
-                <version>1.9.5</version>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -403,6 +430,44 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>org.apache.curator</groupId>
+                <artifactId>curator-x-discovery</artifactId>
+                <version>${curator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.zookeeper</groupId>
+                <artifactId>zookeeper</artifactId>
+                <version>${zookeeper.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.salesforce.kafka.test</groupId>
+                <artifactId>kafka-junit-core</artifactId>
+                <version>${kafka.junit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.salesforce.kafka.test</groupId>
+                <artifactId>kafka-junit5</artifactId>
+                <version>${kafka.junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka_2.13</artifactId>
+                <version>${kafka.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.zookeeper</groupId>
+                        <artifactId>zookeeper</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
                 <groupId>com.esotericsoftware</groupId>
                 <artifactId>kryo-shaded</artifactId>
                 <version>4.0.0</version>
@@ -418,11 +483,6 @@
                     </exclusion>
                 </exclusions>
                 <optional>true</optional>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.kafka</groupId>
-                <artifactId>kafka-clients</artifactId>
-                <version>1.1.0</version>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
@@ -495,7 +555,17 @@
             <dependency>
                 <groupId>net.java.dev.jna</groupId>
                 <artifactId>jna</artifactId>
-                <version>5.3.1</version>
+                <version>${jna.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.rocksdb</groupId>
+                <artifactId>rocksdbjni</artifactId>
+                <version>${rocksdb.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>${commons.codec.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

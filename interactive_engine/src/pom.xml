@@ -23,6 +23,7 @@
         <module>frontend</module>
         <module>assembly</module>
         <module>instance-manager</module>
+        <module>v2</module>
     </modules>
 
     <profiles>

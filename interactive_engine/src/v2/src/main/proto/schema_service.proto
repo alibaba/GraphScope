@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "common.proto";
+
+option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_multiple_files = true;
+
+service Schema {
+    rpc submitBatchDdl(SubmitBatchDdlRequest) returns (SubmitBatchDdlResponse);
+}
+
+message SubmitBatchDdlRequest {
+    string requestId = 1;
+    string sessionId = 2;
+    DdlRequestBatchPb ddlRequests = 3;
+}
+
+message SubmitBatchDdlResponse {
+    bool success = 1;
+    int64 ddlSnapshotId = 2;
+    string msg = 3;
+}

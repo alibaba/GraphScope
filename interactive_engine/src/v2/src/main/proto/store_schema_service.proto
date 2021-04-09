@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+import "common.proto";
+
+option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_multiple_files = true;
+
+service StoreSchema {
+    rpc fetchSchema(FetchSchemaRequest) returns (FetchSchemaResponse);
+}
+
+message FetchSchemaRequest {
+}
+
+message FetchSchemaResponse {
+    GraphDefPb graphDef = 1;
+}

@@ -52,3 +52,7 @@ default.etcd/
 
 # outer build directory
 build/
+
+interactive_engine/src/common/rust/common/src/proto/*
+!interactive_engine/src/common/rust/common/src/proto/mod.rs
+**/generated/
