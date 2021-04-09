@@ -158,9 +158,9 @@ class ArrowFragmentLoader {
     BOOST_LEAF_AUTO(partial_v_tables, LoadVertexTables());
     BOOST_LEAF_AUTO(partial_e_tables, LoadEdgeTables());
 
-    auto basic_fragment_loader =
-        std::make_shared < vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
-            client_, comm_spec_, partitioner, directed_, true, generate_eid_);
+    auto basic_fragment_loader = std::make_shared<
+        vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
+        client_, comm_spec_, partitioner, directed_, true, generate_eid_);
     auto frag = std::static_pointer_cast<vineyard::ArrowFragment<oid_t, vid_t>>(
         client_.GetObject(frag_id));
     for (auto table : partial_v_tables) {
