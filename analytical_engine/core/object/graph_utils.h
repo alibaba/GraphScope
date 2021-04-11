@@ -37,13 +37,7 @@ typedef void LoadGraphT(
     const std::string& graph_name, const rpc::GSParams& params,
     bl::result<std::shared_ptr<IFragmentWrapper>>& fragment_wrapper);
 
-typedef void AddVerticesToGraphT(
-    vineyard::ObjectID frag_id, const grape::CommSpec& comm_spec,
-    vineyard::Client& client, const std::string& graph_name,
-    const rpc::GSParams& params,
-    bl::result<std::shared_ptr<IFragmentWrapper>>& fragment_wrapper);
-
-typedef void AddEdgesToGraphT(
+typedef void AddLabelsToGraphT(
     vineyard::ObjectID frag_id, const grape::CommSpec& comm_spec,
     vineyard::Client& client, const std::string& graph_name,
     const rpc::GSParams& params,
@@ -73,8 +67,7 @@ class PropertyGraphUtils : public GSObject {
         lib_path_(std::move(lib_path)),
         dl_handle_(nullptr),
         load_graph_(nullptr),
-        add_vertices_to_graph_(nullptr),
-        add_edges_to_graph_(nullptr),
+        add_labels_to_graph_(nullptr),
         to_arrow_fragment_(nullptr),
         to_dynamic_fragment_(nullptr) {}
 
@@ -85,14 +78,9 @@ class PropertyGraphUtils : public GSObject {
       load_graph_ = reinterpret_cast<LoadGraphT*>(p_fun);
     }
     {
-      BOOST_LEAF_AUTO(
-          p_fun, get_func_ptr(lib_path_, dl_handle_, "AddVerticesToGraph"));
-      add_vertices_to_graph_ = reinterpret_cast<AddVerticesToGraphT*>(p_fun);
-    }
-    {
       BOOST_LEAF_AUTO(p_fun,
-                      get_func_ptr(lib_path_, dl_handle_, "AddEdgesToGraph"));
-      add_edges_to_graph_ = reinterpret_cast<AddEdgesToGraphT*>(p_fun);
+                      get_func_ptr(lib_path_, dl_handle_, "AddLabelsToGraph"));
+      add_labels_to_graph_ = reinterpret_cast<AddLabelsToGraphT*>(p_fun);
     }
     {
       BOOST_LEAF_AUTO(p_fun,
@@ -116,25 +104,14 @@ class PropertyGraphUtils : public GSObject {
     return wrapper;
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> AddVerticesToGraph(
+  bl::result<std::shared_ptr<IFragmentWrapper>> AddLabelsToGraph(
       vineyard::ObjectID frag_id, const grape::CommSpec& comm_spec,
       vineyard::Client& client, const std::string& graph_name,
       const rpc::GSParams& params) {
     bl::result<std::shared_ptr<IFragmentWrapper>> wrapper;
 
-    add_vertices_to_graph_(frag_id, comm_spec, client, graph_name, params,
-                           wrapper);
-    return wrapper;
-  }
-
-  bl::result<std::shared_ptr<IFragmentWrapper>> AddEdgesToGraph(
-      vineyard::ObjectID frag_id, const grape::CommSpec& comm_spec,
-      vineyard::Client& client, const std::string& graph_name,
-      const rpc::GSParams& params) {
-    bl::result<std::shared_ptr<IFragmentWrapper>> wrapper;
-
-    add_edges_to_graph_(frag_id, comm_spec, client, graph_name, params,
-                        wrapper);
+    add_labels_to_graph_(frag_id, comm_spec, client, graph_name, params,
+                         wrapper);
     return wrapper;
   }
 
@@ -172,8 +149,7 @@ class PropertyGraphUtils : public GSObject {
   std::string lib_path_;
   void* dl_handle_;
   LoadGraphT* load_graph_;
-  AddVerticesToGraphT* add_vertices_to_graph_;
-  AddEdgesToGraphT* add_edges_to_graph_;
+  AddLabelsToGraphT* add_labels_to_graph_;
   ToArrowFragmentT* to_arrow_fragment_;
   ToDynamicFragmentT* to_dynamic_fragment_;
 };

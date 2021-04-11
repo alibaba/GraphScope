@@ -432,6 +432,16 @@ def test_multiple_add_vertices_edges(graphscope_session):
         src_label="person2",
         dst_label="person2",
     )
+    assert sorted(graph.schema.vertex_labels) == [
+        "person",
+        "person2",
+        "software",
+    ]
+    assert sorted(graph.schema.edge_labels) == [
+        "created",
+        "knows",
+        "knows2",
+    ]
     graph = graph.add_vertices(
         Loader(f"{prefix}/software.csv", delimiter="|"), "software2"
     )

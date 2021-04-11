@@ -118,9 +118,7 @@ class GrapeInstance : public Subscriber {
 
   bl::result<rpc::GraphDef> copyGraph(const rpc::GSParams& params);
 
-  bl::result<rpc::GraphDef> addVertices(const rpc::GSParams& params);
-
-  bl::result<rpc::GraphDef> addEdges(const rpc::GSParams& params);
+  bl::result<rpc::GraphDef> addLabelsToGraph(const rpc::GSParams& params);
 
   bl::result<std::shared_ptr<grape::InArchive>> graphToNumpy(
       const rpc::GSParams& params);

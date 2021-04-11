@@ -332,6 +332,11 @@ class Graph(object):
             self._pending_op = None
             return
 
+        if self._pending_op is not None:
+            self._key = None
+            self._session = None
+            self._pending_op = None
+            return
         # close interactive instances first
         try:
             if (
@@ -664,9 +669,7 @@ class Graph(object):
         )
         return cls(sess, vineyard.ObjectID(graph_id))
 
-    def _construct_graph(
-        self, vertices, edges, v_labels, e_labels, e_relations, mutation_func=None
-    ):
+    def _construct_graph(self, vertices, edges, v_labels, e_labels, e_relations):
         """Construct graph.
            1. Construct a graph from scratch.
               If the vertices and edges is empty, return a empty graph.
@@ -691,10 +694,10 @@ class Graph(object):
             self._directed,
             self._generate_eid,
         )
-
+        is_from_existed_graph = self._key is not None
         # edge case.
         if not vertices and not edges:
-            if mutation_func:
+            if is_from_existed_graph:
                 # Rely on `self._key`
                 return Graph(self._session, self)
             else:
@@ -705,8 +708,8 @@ class Graph(object):
                     self._directed,
                     self._generate_eid,
                 )
-        if mutation_func:
-            op = mutation_func(self, attrs=config)
+        if is_from_existed_graph:
+            op = dag_utils.add_labels_to_graph(self, attrs=config)
         else:
             op = dag_utils.create_graph(
                 self.session_id, types_pb2.ARROW_PROPERTY, attrs=config
@@ -721,16 +724,12 @@ class Graph(object):
         graph._e_labels = e_labels
         graph._e_relationships = e_relations
         # propage info about whether is a loaded graph.
-        # graph._key = self._key
-        if mutation_func:
+        graph._key = self._key
+        if is_from_existed_graph:
             graph._base_graph = self._base_graph or self
         return graph
 
     def add_vertices(self, vertices, label="_", properties=None, vid_field=0):
-        is_from_existed_graph = len(self._unsealed_vertices) != len(
-            self._v_labels
-        ) or len(self._unsealed_edges) != len(self._e_labels)
-
         if label in self._v_labels:
             raise ValueError(f"Label {label} already existed in graph.")
         if not self._v_labels and self._e_labels:
@@ -746,19 +745,12 @@ class Graph(object):
         v_labels = deepcopy(self._v_labels)
         v_labels.append(label)
 
-        # Load after validity check and before create add_vertices op.
-        # TODO(zsy): Add ability to add vertices and edges to existed graph simultaneously.
-        if is_from_existed_graph and self._unsealed_edges:
-            self._ensure_loaded()
-
-        func = dag_utils.add_vertices if is_from_existed_graph else None
         return self._construct_graph(
             unsealed_vertices,
             self._unsealed_edges,
             v_labels,
             self._e_labels,
             self._e_relationships,
-            func,
         )
 
     def add_edges(
@@ -803,9 +795,7 @@ class Graph(object):
         Returns:
             Graph: [description]
         """
-        is_from_existed_graph = len(self._unsealed_vertices) != len(
-            self._v_labels
-        ) or len(self._unsealed_edges) != len(self._e_labels)
+        is_from_existed_graph = self._key is not None
 
         if is_from_existed_graph:
             if label in self._e_labels and label not in self._unsealed_edges:
@@ -858,19 +848,8 @@ class Graph(object):
         )
         unsealed_edges[label] = cur_label
 
-        # Load after validity check and before create add_vertices op.
-        # TODO(zsy): Add ability to add vertices and edges to existed graph simultaneously.
-        if is_from_existed_graph and self._unsealed_vertices:
-            self._ensure_loaded()
-
-        func = dag_utils.add_edges if is_from_existed_graph else None
         return self._construct_graph(
-            self._unsealed_vertices,
-            unsealed_edges,
-            self._v_labels,
-            e_labels,
-            relations,
-            func,
+            self._unsealed_vertices, unsealed_edges, self._v_labels, e_labels, relations
         )
 
     def project(
