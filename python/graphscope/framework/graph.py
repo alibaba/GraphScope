@@ -801,7 +801,10 @@ class Graph(object):
             Graph: A new graph with edge added, not yet evaluated.
         """
         if src_label is None and dst_label is None:
-            check_argument(len(self._v_labels) <= 1, "Ambiguous vertex label, please specify the src_label and dst_label.")
+            check_argument(
+                len(self._v_labels) <= 1,
+                "Ambiguous vertex label, please specify the src_label and dst_label.",
+            )
             if len(self._v_labels) == 1:
                 src_label = dst_label = self._v_labels[0]
             else:
@@ -809,8 +812,8 @@ class Graph(object):
 
         if src_label is None or dst_label is None:
             raise ValueError(
-                    "src and dst label must be both specified or either unspecified."
-                )
+                "src and dst label must be both specified or either unspecified."
+            )
 
         if self._v_labels:
             if src_label not in self._v_labels or dst_label not in self._v_labels:
