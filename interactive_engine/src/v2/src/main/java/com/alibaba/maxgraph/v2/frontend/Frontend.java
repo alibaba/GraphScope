@@ -1,5 +1,7 @@
 package com.alibaba.maxgraph.v2.frontend;
 
+import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
+import com.alibaba.maxgraph.compiler.schema.JsonFileSchemaFetcher;
 import com.alibaba.maxgraph.v2.common.DefaultMetaService;
 import com.alibaba.maxgraph.v2.common.MetaService;
 import com.alibaba.maxgraph.v2.common.NodeBase;
@@ -28,9 +30,11 @@ import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryExecuteRpcClient;
 import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryManageRpcClient;
 import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
 import com.alibaba.maxgraph.v2.frontend.compiler.cost.statistics.CostDataStatistics;
+import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
 import com.alibaba.maxgraph.v2.frontend.context.GraphWriterContext;
 import com.alibaba.maxgraph.v2.frontend.server.MaxGraphServerImpl;
 
+import com.alibaba.maxgraph.v2.frontend.server.ReadOnlyMaxGraphServer;
 import io.grpc.NameResolver;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -46,8 +50,11 @@ public class Frontend extends NodeBase {
     private RpcServer rpcServer;
     private MaxGraphServer maxGraphServer;
 
+    private SchemaFetcher oldSchemaFetcher;
+
     public Frontend(Configs configs) {
         super(configs);
+        this.oldSchemaFetcher = new JsonFileSchemaFetcher(FrontendConfig.QUERY_VINEYARD_SCHEMA_PATH.get(configs));
         configs = reConfig(configs);
         this.curator = CuratorUtils.makeCurator(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
@@ -88,6 +95,9 @@ public class Frontend extends NodeBase {
                 RoleType.COORDINATOR, SchemaClient::new));
         GraphWriterContext graphWriterContext = new GraphWriterContext(realtimeWriter, schemaWriter, new DdlExecutors(), snapshotCache, true);
         CostDataStatistics.initialize(snapshotCache);
+
+        // TODO  replace null
+        this.maxGraphServer = new ReadOnlyMaxGraphServer(configs, null, oldSchemaFetcher, null);
         this.maxGraphServer = new MaxGraphServerImpl(configs,
                 snapshotCache,
                 partitionManager,

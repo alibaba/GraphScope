@@ -46,4 +46,19 @@ public class FrontendConfig {
 
     public static final Config<Integer> QUERY_RESPONSE_BUFFER_QUEUE_SIZE =
             Config.intConfig("query.response.buffer.queue.size", 64);
+
+    public static final Config<String> QUERY_VINEYARD_SCHEMA_PATH =
+            Config.stringConfig("query.vineyard.schema.path", "");
+
+    public static final Config<Boolean> GREMLIN_SERVER_VERTEX_CACHE_ENABLE =
+            Config.boolConfig("gremlin.server.vertex.cache.enable", true);
+
+    public static final Config<Boolean> TIMELY_FETCH_PROP_FLAG =
+            Config.boolConfig("timely.fetch.prop.flag", true);
+
+    public static final Config<Integer> TIMELY_RESULT_ITERATION_BATCH_SIZE =
+            Config.intConfig("timely.result.iteration.batch.size", 64);
+
+    public static final Config<Boolean> TIMELY_GLOBAL_PULL_GRAPH_FLAG =
+            Config.boolConfig("timely.global.pull.graph.flag", false);
 }

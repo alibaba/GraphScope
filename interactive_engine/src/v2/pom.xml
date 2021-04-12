@@ -14,6 +14,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.alibaba.maxgraph</groupId>
+            <artifactId>maxgraph-compiler</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>

@@ -57,6 +57,10 @@ public class Configs {
         return builder.build();
     }
 
+    public Properties getInnerProperties() {
+        return this.properties;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }
