@@ -174,9 +174,6 @@ def test_error_on_operation_on_graph(graphscope_session):
         pg = g.project(vertices={"v": []}, edges={"e": []})
         pg._project_to_simple()._ensure_loaded()
 
-    with pytest.raises(RuntimeError):
-        property_sssp(g, src=6)
-
 
 def test_error_on_app_query_non_compatible_graph(arrow_property_graph):
     pg = arrow_property_graph.project(vertices={"v0": []}, edges={"e0": []})
