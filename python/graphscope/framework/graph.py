@@ -192,7 +192,7 @@ class Graph(object):
             raise RuntimeError("The graph is not loaded")
         # Empty graph
         if self._key is None and self._pending_op is None:
-            raise RuntimeError("Empty graph.")
+            self._pending_op = self._construct_op({}, {}, False)
         # Try to load
         if self._pending_op is not None:
             # Create a graph from scratch.
@@ -669,6 +669,22 @@ class Graph(object):
         )
         return cls(sess, vineyard.ObjectID(graph_id))
 
+    def _construct_op(self, vertices, edges, is_from_existed_graph):
+        config = graph_utils.assemble_op_config(
+            vertices.values(),
+            edges.values(),
+            self._oid_type,
+            self._directed,
+            self._generate_eid,
+        )
+        if is_from_existed_graph:
+            op = dag_utils.add_labels_to_graph(self, attrs=config)
+        else:
+            op = dag_utils.create_graph(
+                self.session_id, types_pb2.ARROW_PROPERTY, attrs=config
+            )
+        return op
+
     def _construct_graph(self, vertices, edges, v_labels, e_labels, e_relations):
         """Construct graph.
            1. Construct a graph from scratch.
@@ -677,23 +693,16 @@ class Graph(object):
               If the vertices and edges is empty, return a copied graph.
 
         Args:
-            vertices ([type]): [description]
-            edges ([type]): [description]
-            v_labels ([type]): [description]
-            e_labels ([type]): [description]
-            e_relations ([type]): [description]
-            mutation_func ([type], optional): [description]. Defaults to None.
+            vertices (dict[str, VertexLabel]): VertexLabels
+            edges (dict[str, EdgeLabel]): EdgeLabels
+            v_labels (list[str]): Names of vertex labels
+            e_labels (list[str]): Names of edge labels
+            e_relations (list[list[str]]): Relationships of edges
 
         Returns:
-            [type]: [description]
+            Graph: Constructed new graph. not yet evaluated.
         """
-        config = graph_utils.assemble_op_config(
-            vertices.values(),
-            edges.values(),
-            self._oid_type,
-            self._directed,
-            self._generate_eid,
-        )
+
         is_from_existed_graph = self._key is not None
         # edge case.
         if not vertices and not edges:
@@ -708,12 +717,8 @@ class Graph(object):
                     self._directed,
                     self._generate_eid,
                 )
-        if is_from_existed_graph:
-            op = dag_utils.add_labels_to_graph(self, attrs=config)
-        else:
-            op = dag_utils.create_graph(
-                self.session_id, types_pb2.ARROW_PROPERTY, attrs=config
-            )
+
+        op = self._construct_op(vertices, edges, is_from_existed_graph)
 
         graph = Graph(
             self._session, op, self._oid_type, self._directed, self._generate_eid
@@ -781,54 +786,48 @@ class Graph(object):
             src_label and dst_label must be specified and existed in current graph.
 
         Args:
-            edges ([type]): [description]
-            label (str, optional): [description]. Defaults to "_".
-            properties ([type], optional): [description]. Defaults to None.
-            src_label ([type], optional): [description]. Defaults to None.
-            dst_label ([type], optional): [description]. Defaults to None.
-            src_field (int, optional): [description]. Defaults to 0.
-            dst_field (int, optional): [description]. Defaults to 1.
+            edges (Union[str, Loader]): Edge data source.
+            label (str, optional): Edge label name. Defaults to "_".
+            properties (list[str], optional): List of column names loaded as properties. Defaults to None.
+            src_label (str, optional): Source vertex label. Defaults to None.
+            dst_label (str, optional): Destination vertex label. Defaults to None.
+            src_field (int, optional): Column index or name used as src field. Defaults to 0.
+            dst_field (int, optional): Column index or name used as dst field. Defaults to 1.
 
         Raises:
-            RuntimeError: [description]
+            ValueError: If the given value is invalid or conflict with current graph.
 
         Returns:
-            Graph: [description]
+            Graph: A new graph with edge added, not yet evaluated.
         """
+        if src_label is None and dst_label is None:
+            check_argument(len(self._v_labels) <= 1, "Ambiguous vertex label, please specify the src_label and dst_label.")
+            if len(self._v_labels) == 1:
+                src_label = dst_label = self._v_labels[0]
+            else:
+                src_label = dst_label = "_"
+
+        if src_label is None or dst_label is None:
+            raise ValueError(
+                    "src and dst label must be both specified or either unspecified."
+                )
+
+        if self._v_labels:
+            if src_label not in self._v_labels or dst_label not in self._v_labels:
+                raise ValueError("src label or dst_label not existed in graph.")
+        else:
+            # We can infer all vertices label in the graph constructing stage.
+            pass
+
+        check_argument(
+            src_field != dst_field, "src and dst field cannot refer to the same field"
+        )
+
         is_from_existed_graph = self._key is not None
 
         if is_from_existed_graph:
             if label in self._e_labels and label not in self._unsealed_edges:
                 raise ValueError("Cannot add new relation to existed graph.")
-            if src_label is None or dst_label is None:
-                raise ValueError("src label and dst label cannot be None.")
-            if src_label not in self._v_labels or dst_label not in self._v_labels:
-                raise ValueError("src label or dst_label not existed in graph.")
-        else:
-            if src_label is None and dst_label is None:
-                check_argument(len(self._v_labels) <= 1, "ambiguous vertex label")
-                if len(self._v_labels) == 1:
-                    src_label = dst_label = self._v_labels[0]
-                else:
-                    src_label = dst_label = "_"
-            elif src_label is not None and dst_label is not None:
-                if self._v_labels:
-                    if (
-                        src_label not in self._v_labels
-                        or dst_label not in self._v_labels
-                    ):
-                        raise ValueError("src label or dst_label not existed in graph.")
-                else:
-                    # Infer all v_labels from edge tables.
-                    pass
-            else:
-                raise ValueError(
-                    "src and dst label must be both specified or either unspecified."
-                )
-
-        check_argument(
-            src_field != dst_field, "src and dst field cannot refer to the same field"
-        )
 
         unsealed_edges = deepcopy(self._unsealed_edges)
         e_labels = deepcopy(self._e_labels)

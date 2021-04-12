@@ -167,6 +167,10 @@ class GraphSchema:
             except Exception as e:
                 raise ValueError("Invalid property graph schema") from e
 
+    def init_empty_schema(self, oid_type):
+        self._oid_type = oid_type
+        self._vid_type = 'int64_t'
+
     def init_nx_schema(self, gs_schema=None):
         """Schema for `nx.Graph`
 
