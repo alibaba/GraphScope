@@ -59,7 +59,6 @@ use maxgraph_runtime::store::remote_store_service::RemoteStoreServiceManager;
 use maxgraph_store::api::graph_partition::{GraphPartitionManager};
 use maxgraph_runtime::store::ffi::{GlobalVertex, GlobalVertexIter, FFIEdge, GlobalEdgeIter};
 use maxgraph_server::StoreContext;
-use std::thread::sleep;
 
 fn main() {
     if let Some(_) = env::args().find(|arg| arg == "--show-build-info") {
