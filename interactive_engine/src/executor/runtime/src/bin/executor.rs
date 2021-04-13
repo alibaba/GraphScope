@@ -59,6 +59,7 @@ use maxgraph_runtime::store::remote_store_service::RemoteStoreServiceManager;
 use maxgraph_store::api::graph_partition::{GraphPartitionManager};
 use maxgraph_runtime::store::ffi::{GlobalVertex, GlobalVertexIter, FFIEdge, GlobalEdgeIter};
 use maxgraph_server::StoreContext;
+use std::thread::sleep;
 
 fn main() {
     if let Some(_) = env::args().find(|arg| arg == "--show-build-info") {
@@ -105,6 +106,8 @@ fn run_main(store_config: Arc<StoreConfig>,
     let ctrl_service;
     let async_maxgraph_service;
     let maxgraph_service;
+    let initial_timeout = 60;
+
     info!("Start pegasus ........");
     let remote_store_service_manager = Arc::new(RwLock::new(Some(RemoteStoreServiceManager::empty())));
     info!("is lambda enabled: {}", store_config.lambda_enabled);
@@ -115,17 +118,32 @@ fn run_main(store_config: Arc<StoreConfig>,
     let pegasus_runtime = pegasus_server_manager.get_server();
     let task_partition_manager = pegasus_server_manager.get_task_partition_manager();
 
+    server_manager = Box::new(pegasus_server_manager);
+    let _manager_guards = ServerManager::start_server(server_manager, store_config.clone(), Box::new(recover_prepare)).unwrap();
+
+    // waiting for initial task_partition_manager
+    let mut timeout_count = 0;
+    loop {
+        match task_partition_manager.read() {
+                Ok(_) => break,
+                Err(_) => thread::sleep(Duration::from_secs(1)),
+        }
+        timeout_count += 1;
+        if timeout_count == initial_timeout {
+                panic!("Waiting for initial task_partition_manager timeout.")
+        }
+    };
+
     ctrl_service = PegasusCtrlService::new_service(query_manager.clone(), pegasus_runtime.clone());
-    async_maxgraph_service = PegasusAsyncService::new_service(store_config.clone(), pegasus_runtime.clone(), query_manager.clone(), remote_store_service_manager, lambda_service_client, signal, vineyard_graph.clone(), partition_manager.clone(), task_partition_manager);
+    async_maxgraph_service = PegasusAsyncService::new_service(store_config.clone(), pegasus_runtime.clone(), query_manager.clone(), remote_store_service_manager, lambda_service_client, signal, vineyard_graph.clone(), partition_manager.clone(), task_partition_manager.clone());
+
     maxgraph_service = PegasusService::new_service(store_config.clone(), query_manager.clone());
 
-    server_manager = Box::new(pegasus_server_manager);
     let ctrl_and_async_server = start_ctrl_and_async_service(0, ctrl_service, async_maxgraph_service).expect("Start ctrl and async service error.");
     info!("async maxgraph service and control service bind to: {:?}", ctrl_and_async_server.bind_addrs());
     let ctrl_and_async_service_port = ctrl_and_async_server.bind_addrs()[0].1;
     let store_context = StoreContext::new(vineyard_graph, partition_manager);
-    start_rpc_service(runtime_info_clone, store_config.clone(), maxgraph_service, ctrl_and_async_service_port, hb_resp_sender, store_context);
-    let _manager_guards = ServerManager::start_server(server_manager, store_config, Box::new(recover_prepare)).unwrap();
+    start_rpc_service(runtime_info_clone, store_config, maxgraph_service, ctrl_and_async_service_port, hb_resp_sender, store_context);
     thread::sleep(Duration::from_secs(u64::max_value()));
     ::std::mem::drop(ctrl_and_async_server)
 }
