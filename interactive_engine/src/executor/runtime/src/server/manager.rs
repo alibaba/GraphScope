@@ -241,7 +241,6 @@ impl ServerManager for PegasusServerManager
     type Data = Vec<u8>;
     fn start_server(self: Box<Self>, store_config: Arc<StoreConfig>, recover: Box<Send + Sync + 'static + Fn(&[u8]) -> Result<Self::Data, String>>) -> Result<ManagerGuards<()>, String>
     {
-        info!("-----------------------------------");
         let manager_switch = self.server_manager_common.manager_switch.clone();
         let handle = thread::Builder::new().name("Pegasus Server Manager".to_owned()).spawn(move || {
             let recover = Arc::new(recover);
@@ -252,9 +251,7 @@ impl ServerManager for PegasusServerManager
             let mut network_manager = NetworkManager::initialize(listener);
             let mut network_center = PegasusNetworkCenter::new();
 
-            info!("===========================");
             while self.server_manager_common.manager_switch.load(Ordering::Relaxed) {
-                info!("!!!!!!!!!!!!!!!!!");
                 let hb_resp = self.server_manager_common.get_hb_response();
 
                 if hb_resp.is_none() || network_manager.is_serving() {
@@ -274,9 +271,6 @@ impl ServerManager for PegasusServerManager
                     info!("Begin start pegasus with process id {} in group {}.", worker_id, group_id);
                     self.initial_pegasus_runtime(worker_id as usize, store_config.clone());
                 }
-                info!("-------- wang ---------------");
-                info!("{:?}", address_list.is_empty());
-                info!("{:?}", task_partition_list.is_empty());
                 if !address_list.is_empty() && !task_partition_list.is_empty() {
                     let (ip_list, store_ip_list) = parse_store_ip_list(address_list);
                     info!("Receive task partition info {:?} from coordinator", task_partition_list);
@@ -287,7 +281,6 @@ impl ServerManager for PegasusServerManager
 
                     let remote_store_service_manager = RemoteStoreServiceManager::new(task_partition_manager.get_partition_process_list(), store_ip_list);
                     self.remote_store_service_manager.write().unwrap().replace(remote_store_service_manager);
-                    info!("kkkkkkkkkkkkkkkkkkkk");
                     self.initial_task_partition_manager(task_partition_manager);
                     self.signal.store(true, Ordering::Relaxed);
                 } else {
