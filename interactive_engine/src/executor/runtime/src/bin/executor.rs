@@ -106,7 +106,6 @@ fn run_main(store_config: Arc<StoreConfig>,
     let async_maxgraph_service;
     let maxgraph_service;
     let initial_timeout = 60;
-
     info!("Start pegasus ........");
     let remote_store_service_manager = Arc::new(RwLock::new(Some(RemoteStoreServiceManager::empty())));
     info!("is lambda enabled: {}", store_config.lambda_enabled);

@@ -159,7 +159,9 @@ impl AsyncMaxGraphServiceImpl {
 
         let mut workers = pegasus.create_workers(task_id, thread_count, process_count).unwrap();
 
+        info!("async_maxgraph_service access here");
         let task_partition_manager = {
+            info!("async_maxgraph_service access here2");
             let task_partition_manager = task_partition_manager.read().unwrap();
             task_partition_manager.clone().unwrap()
         };
