@@ -1378,7 +1378,7 @@ class GSCoordinatorBuilder(DeploymentBuilder):
             str(self._vineyard_cpu),
             "--k8s_vineyard_mem",
             self._vineyard_mem,
-            "--k8s_vineyard_shared_mem",
+            "--vineyard_shared_mem",
             self._vineyard_shared_mem,
             "--k8s_engine_cpu",
             str(self._engine_cpu),

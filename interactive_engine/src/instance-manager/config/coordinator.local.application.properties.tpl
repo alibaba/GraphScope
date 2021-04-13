@@ -2,7 +2,7 @@ graph.name=graphname
 server.id=0
 zookeeper.connection.timeout.ms=10000
 zookeeper.session.timeout.ms=10000
-zookeeper.connect=localhost:2181
+zookeeper.connect=localhost:ZOOKEEPER_PORT
 
 platform.kind:YARN
 

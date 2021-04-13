@@ -66,12 +66,14 @@ class HostsClusterLauncher(Launcher):
         num_workers=None,
         vineyard_socket=None,
         timeout_seconds=None,
+        vineyard_shared_mem=None,
     ):
         self._hosts = hosts
         self._port = port
         self._num_workers = num_workers
         self._vineyard_socket = vineyard_socket
         self._timeout_seconds = timeout_seconds
+        self._vineyard_shared_mem = vineyard_shared_mem
 
         self._instance_id = random_string(6)
         self._proc = None
@@ -110,7 +112,8 @@ class HostsClusterLauncher(Launcher):
             self._instance_id,
         ]
 
-        print(" ".join(cmd))
+        if self._vineyard_shared_mem is not None:
+            cmd.extend(["--vineyard_shared_mem", self._vineyard_shared_mem])
 
         if self._vineyard_socket is not None:
             cmd.extend(["--vineyard_socket", "{}".format(self._vineyard_socket)])

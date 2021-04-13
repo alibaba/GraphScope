@@ -120,7 +120,7 @@ class Session(object):
         ...         k8s_gs_image="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest",
         ...         k8s_vineyard_cpu=0.1,
         ...         k8s_vineyard_mem="256Mi",
-        ...         k8s_vineyard_shared_mem="4Gi",
+        ...         vineyard_shared_mem="4Gi",
         ...         k8s_engine_cpu=0.1,
         ...         k8s_engine_mem="256Mi")
 
@@ -159,7 +159,7 @@ class Session(object):
         k8s_vineyard_daemonset=gs_config.k8s_vineyard_daemonset,
         k8s_vineyard_cpu=gs_config.k8s_vineyard_cpu,
         k8s_vineyard_mem=gs_config.k8s_vineyard_mem,
-        k8s_vineyard_shared_mem=gs_config.k8s_vineyard_shared_mem,
+        vineyard_shared_mem=gs_config.vineyard_shared_mem,
         k8s_engine_cpu=gs_config.k8s_engine_cpu,
         k8s_engine_mem=gs_config.k8s_engine_mem,
         k8s_mars_worker_cpu=gs_config.mars_worker_cpu,
@@ -223,7 +223,7 @@ class Session(object):
 
             k8s_vineyard_mem (str, optional): Minimum number of memory request for vineyard container. Defaults to '512Mi'.
 
-            k8s_vineyard_shared_mem (str, optional): Init size of vineyard shared memory. Defaults to '4Gi'.
+            vineyard_shared_mem (str, optional): Init size of vineyard shared memory. Defaults to '4Gi'.
 
             k8s_engine_cpu (float, optional): Minimum number of CPU cores request for engine container. Defaults to 0.5.
 
@@ -375,7 +375,7 @@ class Session(object):
             "k8s_vineyard_daemonset",
             "k8s_vineyard_cpu",
             "k8s_vineyard_mem",
-            "k8s_vineyard_shared_mem",
+            "vineyard_shared_mem",
             "k8s_engine_cpu",
             "k8s_engine_mem",
             "k8s_mars_worker_cpu",
@@ -763,7 +763,7 @@ class Session(object):
                 vineyard_daemonset=self._config_params["k8s_vineyard_daemonset"],
                 vineyard_cpu=self._config_params["k8s_vineyard_cpu"],
                 vineyard_mem=self._config_params["k8s_vineyard_mem"],
-                vineyard_shared_mem=self._config_params["k8s_vineyard_shared_mem"],
+                vineyard_shared_mem=self._config_params["vineyard_shared_mem"],
                 etcd_num_pods=self._config_params["k8s_etcd_num_pods"],
                 etcd_cpu=self._config_params["k8s_etcd_cpu"],
                 etcd_mem=self._config_params["k8s_etcd_mem"],
@@ -800,6 +800,7 @@ class Session(object):
                 num_workers=self._config_params["num_workers"],
                 vineyard_socket=self._config_params["vineyard_socket"],
                 timeout_seconds=self._config_params["timeout_seconds"],
+                vineyard_shared_mem=self._config_params["vineyard_shared_mem"],
             )
         else:
             raise RuntimeError("Session initialize failed.")
@@ -1127,6 +1128,7 @@ def set_option(**kwargs):
         - num_workers
         - log_level
         - show_log
+        - vineyard_shared_mem
         - k8s_namespace
         - k8s_service_type
         - k8s_gs_image
@@ -1140,7 +1142,6 @@ def set_option(**kwargs):
         - k8s_vineyard_daemonset
         - k8s_vineyard_cpu
         - k8s_vineyard_mem
-        - k8s_vineyard_shared_mem
         - k8s_engine_cpu
         - k8s_engine_mem
         - k8s_mars_worker_cpu
@@ -1180,6 +1181,7 @@ def get_option(key):
         - num_workers
         - log_level
         - show_log
+        - vineyard_shared_mem
         - k8s_namespace
         - k8s_service_type
         - k8s_gs_image
@@ -1193,7 +1195,6 @@ def get_option(key):
         - k8s_vineyard_daemonset
         - k8s_vineyard_cpu
         - k8s_vineyard_mem
-        - k8s_vineyard_shared_mem
         - k8s_engine_cpu
         - k8s_engine_mem
         - k8s_mars_worker_cpu

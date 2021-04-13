@@ -14,6 +14,7 @@
 # limitations under the License.
 
 object_id=$1
+zookeeper_port=$2
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
 WORKSPACE=$SCRIPT_DIR/../
@@ -25,6 +26,7 @@ JAVA_OPT="-server -Xmx1024m -Xms1024m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDu
 
 inner_config=$CONFIG_DIR/coordinator.local.application.properties
 cp $WORKSPACE/config/coordinator.local.application.properties.tpl $inner_config
+sed -i "s/ZOOKEEPER_PORT/$zookeeper_port/g" $inner_config
 
 cd $WORKSPACE/coordinator/target/classes/
 

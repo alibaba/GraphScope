@@ -1,5 +1,5 @@
 [zookeeper]
-zk = localhost:2181
+zk = localhost:ZOOKEEPER_PORT
 zk.timeout.ms = 6000
 
 [hadoop]

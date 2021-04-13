@@ -73,7 +73,7 @@ def train(config, graph):
 def sess():
     graphscope.set_option(show_log=True)
     graphscope.set_option(initializing_interactive_engine=False)
-    s = graphscope.session(cluster_type="hosts", num_workers=1)
+    s = graphscope.session(cluster_type="hosts", num_workers=2)
     yield s
     s.close()
 
@@ -83,7 +83,7 @@ def ogbn_mag_small():
     return "{}/ogbn_mag_small".format(test_repo_dir)
 
 
-def test_demo(sess, ogbn_mag_small):
+def demo(sess, ogbn_mag_small):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
 
     # Interactive engine
@@ -144,3 +144,20 @@ def test_demo(sess, ogbn_mag_small):
     }
 
     train(config, lg)
+
+
+def test_multiple_session(ogbn_mag_small):
+    graphscope.set_option(show_log=True)
+    graphscope.set_option(initializing_interactive_engine=False)
+
+    sess1 = graphscope.session(cluster_type="hosts", num_workers=2)
+    assert sess1.info["status"] == "active"
+
+    sess2 = graphscope.session(cluster_type="hosts", num_workers=2)
+    assert sess2.info["status"] == "active"
+
+    demo(sess1, ogbn_mag_small)
+    demo(sess2, ogbn_mag_small)
+
+    sess1.close()
+    sess2.close()

@@ -15,6 +15,7 @@
 
 object_id=$1
 schema_path=$2
+zookeeper_port=$3
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
 WORKSPACE=$SCRIPT_DIR/../
@@ -27,10 +28,29 @@ REPLACE_SCHEMA_PATH=`echo ${schema_path//\//\\\/}`
 
 inner_config=$CONFIG_DIR/frontend.local.vineyard.properties
 cp $WORKSPACE/config/frontend.local.vineyard.properties.tpl $inner_config
-sed -i "s/VINEYARD_SCHEMA_PATH/${REPLACE_SCHEMA_PATH}/g" $inner_config
+sed -i "s/VINEYARD_SCHEMA_PATH/$REPLACE_SCHEMA_PATH/g" $inner_config
+sed -i "s/ZOOKEEPER_PORT/$zookeeper_port/g" $inner_config
 
 cd $WORKSPACE/frontend/frontendservice/target/classes/
 
 java ${JAVA_OPT} com.alibaba.maxgraph.frontendservice.FrontendServiceMain $inner_config $object_id 1>$LOG_DIR/maxgraph-frontend.out 2>$LOG_DIR/maxgraph-frontend.err &
+
+timeout_seconds=60
+wait_period_seconds=0
+
+while true
+do
+  gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.log | awk -F: '{print $6}'`
+  if [ -n "$gremlin_server_port" ]; then
+		echo "FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
+    break
+  fi
+  wait_period_seconds=$(($wait_period_seconds+5))
+  if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+    echo "Get external ip of ${GREMLIN_EXPOSE} failed."
+    break
+  fi
+  sleep 5
+done
 
 echo $! > $PID_DIR/frontend.pid
