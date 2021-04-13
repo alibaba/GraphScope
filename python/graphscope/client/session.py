@@ -344,6 +344,9 @@ class Session(object):
                 - show_log: Deprecated.
                     Move this param as a global configuration.Set via `graphscope.set_option(show_log=True)`
 
+                - k8s_vineyard_shared_mem: Deprecated.
+                    Please use vineyard_shared_mem instead.
+
         Raises:
             TypeError: If the given argument combination is invalid and cannot be used to create
                 a GraphScope session.
@@ -426,6 +429,13 @@ class Session(object):
                 "The `log_level` parameter has been deprecated and has no effect, "
                 "please use `graphscope.set_option(log_level=%r)` instead."
                 % kw.pop("show_log", None),
+                category=DeprecationWarning,
+            )
+        if "k8s_vineyard_shared_mem" in kw:
+            warnings.warn(
+                "The `k8s_vineyard_shared_mem` has benn deprecated and has no effect, "
+                "please use `vineyard_shared_mem` instead."
+                % kw.pop("k8s_vineyard_shared_mem", None),
                 category=DeprecationWarning,
             )
 

@@ -112,9 +112,13 @@ class LocalLauncher(Launcher):
             self._graphscope_prefix = os.environ["GRAPHSCOPE_PREFIX"]
 
         if "GRAPHSCOPE_RUNTIME" not in os.environ:
-            self._graphscope_runtime_workspace = os.path.join(self._default_graphscope_runtime_workspace, self._instance_id)
+            self._graphscope_runtime_workspace = os.path.join(
+                self._default_graphscope_runtime_workspace, self._instance_id
+            )
         else:
-            self._graphscope_runtime_workspace = os.path.join(os.environ["GRAPHSCOPE_RUNTIME"], self._instance_id)
+            self._graphscope_runtime_workspace = os.path.join(
+                os.environ["GRAPHSCOPE_RUNTIME"], self._instance_id
+            )
         os.makedirs(self._graphscope_runtime_workspace, exist_ok=True)
 
         # zookeeper
@@ -224,8 +228,15 @@ class LocalLauncher(Launcher):
     def _launch_graph_manager(self):
         port = self._get_free_port(self._hosts.split(",")[0])
         gm_sh = os.path.join(self._graphscope_prefix, "bin", "start.sh")
-        cmd = ["bash", gm_sh, "local", str(port), self._instance_id, str(self._zookeeper_port)]
-        print(" ".join(cmd))
+        cmd = [
+            "bash",
+            gm_sh,
+            "local",
+            str(port),
+            self._instance_id,
+            str(self._zookeeper_port),
+        ]
+        logger.info("Launch graph manager command: %s", " ".join(cmd))
 
         process = subprocess.Popen(
             cmd,

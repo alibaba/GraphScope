@@ -42,7 +42,7 @@ while true
 do
   gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.log | awk -F: '{print $6}'`
   if [ -n "$gremlin_server_port" ]; then
-		echo "FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
+    echo "FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
     break
   fi
   wait_period_seconds=$(($wait_period_seconds+5))
