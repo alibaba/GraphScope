@@ -15,7 +15,7 @@
     <dependencies>
         <dependency>
             <groupId>com.alibaba.maxgraph</groupId>
-            <artifactId>maxgraph-compiler</artifactId>
+            <artifactId>maxgraph-frontendservice</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

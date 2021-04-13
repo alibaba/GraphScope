@@ -1,7 +1,10 @@
 package com.alibaba.maxgraph.v2.frontend;
 
+import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
+import com.alibaba.maxgraph.compiler.dfs.DefaultGraphDfs;
 import com.alibaba.maxgraph.compiler.schema.JsonFileSchemaFetcher;
+import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.v2.common.DefaultMetaService;
 import com.alibaba.maxgraph.v2.common.MetaService;
 import com.alibaba.maxgraph.v2.common.NodeBase;
@@ -32,6 +35,7 @@ import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
 import com.alibaba.maxgraph.v2.frontend.compiler.cost.statistics.CostDataStatistics;
 import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
 import com.alibaba.maxgraph.v2.frontend.context.GraphWriterContext;
+import com.alibaba.maxgraph.v2.frontend.server.DiscoveryAddressFetcher;
 import com.alibaba.maxgraph.v2.frontend.server.MaxGraphServerImpl;
 
 import com.alibaba.maxgraph.v2.frontend.server.ReadOnlyMaxGraphServer;
@@ -85,27 +89,16 @@ public class Frontend extends NodeBase {
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
         this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
                 metricsCollectService);
-        RoleClients<QueryExecuteRpcClient> queryExecuteClients = new RoleClients<>(this.channelManager,
-                RoleType.EXECUTOR_QUERY, QueryExecuteRpcClient::new);
-        RoleClients<QueryManageRpcClient> queryManageClients = new RoleClients<>(this.channelManager,
-                RoleType.EXECUTOR_MANAGE, QueryManageRpcClient::new);
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         GraphPartitionManager partitionManager = new RemoteGraphPartitionManager(this.metaService);
         SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
                 RoleType.COORDINATOR, SchemaClient::new));
-        GraphWriterContext graphWriterContext = new GraphWriterContext(realtimeWriter, schemaWriter, new DdlExecutors(), snapshotCache, true);
-        CostDataStatistics.initialize(snapshotCache);
 
-        // TODO  replace null
-        this.maxGraphServer = new ReadOnlyMaxGraphServer(configs, null, oldSchemaFetcher, null);
-        this.maxGraphServer = new MaxGraphServerImpl(configs,
-                snapshotCache,
-                partitionManager,
-                queryExecuteClients,
-                queryStoreClients,
-                queryManageClients,
-                executorCount,
-                graphWriterContext);
+        ReadOnlyGraph readOnlyGraph = new ReadOnlyGraph(this.discovery, oldSchemaFetcher, partitionManager);
+        TinkerMaxGraph graph = new TinkerMaxGraph(new InstanceConfig(configs.getInnerProperties()), readOnlyGraph,
+                new DefaultGraphDfs());
+        this.maxGraphServer = new ReadOnlyMaxGraphServer(configs, graph, oldSchemaFetcher,
+                new DiscoveryAddressFetcher(this.discovery));
     }
 
     @Override

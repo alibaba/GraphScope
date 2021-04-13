@@ -38,7 +38,8 @@ public class ZkDiscovery implements NodeDiscovery {
     private CuratorFramework curator;
     private String discoveryBasePath;
     private ExecutorService singleThreadExecutor;
-    private AtomicReference<Map<RoleType, Map<Integer, MaxGraphNode>>> currentNodesRef;
+    private AtomicReference<Map<RoleType, Map<Integer, MaxGraphNode>>> currentNodesRef
+            = new AtomicReference<>(new HashMap<>());
 
     private Object lock = new Object();
 
