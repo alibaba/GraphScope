@@ -1,1 +1,1 @@
-g.V().groupCount().unfold().select(values)
+g.V().groupCount().unfold().select(values).order()

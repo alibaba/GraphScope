@@ -18,77 +18,72 @@ mod common;
 #[cfg(test)]
 mod test {
     use crate::common::test::*;
+    use gremlin_core::process::traversal::traverser::Requirement;
 
     // g.V().hasLabel("PERSON")
     #[test]
     fn has_step_test_01() {
+        initialize();
         let mut expected = to_global_ids(vec![1, 2, 4, 6]);
         expected.sort();
-        initialize();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("has_step_test_01")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().hasId(1)
     #[test]
     fn has_step_test_02() {
+        initialize();
         let mut expected = to_global_ids(vec![1]);
         expected.sort();
-        initialize();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("has_step_test_02")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().has("name", "marko")
     #[test]
     fn has_step_test_03() {
+        initialize();
         let mut expected = to_global_ids(vec![1]);
         expected.sort();
-        initialize();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("has_step_test_03")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().has("id", neq(1))
     #[test]
     fn has_step_test_04() {
+        initialize();
         let mut expected = to_global_ids(vec![2, 3, 4, 5, 6]);
         expected.sort();
-        initialize();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("has_step_test_04")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().has("age", lte(28).or(gte(32)))
     #[test]
     fn has_step_test_05() {
+        initialize();
         let mut expected = to_global_ids(vec![2, 4, 6]);
         expected.sort();
-        initialize();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("has_step_test_05")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().has("age", inside(28,32))
     #[test]
     fn has_step_test_06() {
+        initialize();
         let mut expected = to_global_ids(vec![1]);
         expected.sort();
-        initialize();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("has_step_test_06")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().has("name", without("marko","josh"))
@@ -96,24 +91,63 @@ mod test {
     #[test]
     #[ignore]
     fn has_step_test_07() {
+        initialize();
         let mut expected = to_global_ids(vec![2, 3, 5, 6]);
         expected.sort();
-        initialize();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("has_step_test_07")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().as("a").both("KNOWS").where(both("KNOWS").as("a"))
     #[test]
     fn where_step_test_01() {
+        initialize();
         let mut expected = to_global_ids(vec![1, 1, 2, 4]);
         expected.sort();
-        initialize();
-        let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
+        let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
+        test_job_factory.set_requirement(Requirement::LABELED_PATH);
         let pb_request = read_pb_request(gen_path("where_step_test_01")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
+    }
+
+    // g.V().count().unfold().is(6)
+    #[test]
+    fn is_step_test_01() {
+        initialize();
+        let expected = vec![6.into()];
+        let test_job_factory = TestJobFactory::with_expect_values(expected);
+        let pb_request = read_pb_request(gen_path("is_step_test_01")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
+    }
+
+    // g.V().count().unfold().is(neq(6))
+    #[test]
+    fn is_step_test_02() {
+        initialize();
+        let expected = vec![];
+        let test_job_factory = TestJobFactory::with_expect_values(expected);
+        let pb_request = read_pb_request(gen_path("is_step_test_02")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
+    }
+
+    // g.V().count().unfold().is(gt(5))
+    #[test]
+    fn is_step_test_03() {
+        initialize();
+        let expected = vec![6.into()];
+        let test_job_factory = TestJobFactory::with_expect_values(expected);
+        let pb_request = read_pb_request(gen_path("is_step_test_03")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
+    }
+
+    // g.V().count().unfold().is(lt(7))
+    #[test]
+    fn is_step_test_04() {
+        initialize();
+        let expected = vec![6.into()];
+        let test_job_factory = TestJobFactory::with_expect_values(expected);
+        let pb_request = read_pb_request(gen_path("is_step_test_04")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
     }
 }

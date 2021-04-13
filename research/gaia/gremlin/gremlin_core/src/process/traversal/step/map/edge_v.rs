@@ -15,7 +15,7 @@
 
 use crate::process::traversal::step::map::MapFuncGen;
 use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::{RemoveLabel, Step};
+use crate::process::traversal::step::{RemoveTag, Step};
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::{EndPointOpt, QueryParams, Tag, Vertex, VertexOrEdge};
 use crate::{str_to_dyn_error, DynResult};
@@ -25,8 +25,8 @@ use pegasus::api::function::{FnResult, MapFunction};
 pub struct EdgeVertexStep {
     symbol: StepSymbol,
     pub params: QueryParams<Vertex>,
-    as_labels: Vec<Tag>,
-    remove_labels: Vec<Tag>,
+    as_tags: Vec<Tag>,
+    remove_tags: Vec<Tag>,
 }
 
 impl EdgeVertexStep {
@@ -36,12 +36,7 @@ impl EdgeVertexStep {
             EndPointOpt::In => StepSymbol::InV,
             EndPointOpt::Other => StepSymbol::OtherV,
         };
-        EdgeVertexStep {
-            symbol,
-            params: QueryParams::new(),
-            as_labels: vec![],
-            remove_labels: vec![],
-        }
+        EdgeVertexStep { symbol, params: QueryParams::new(), as_tags: vec![], remove_tags: vec![] }
     }
 }
 
@@ -51,27 +46,27 @@ impl Step for EdgeVertexStep {
     }
 
     fn add_tag(&mut self, label: Tag) {
-        self.as_labels.push(label);
+        self.as_tags.push(label);
     }
 
-    fn tags(&self) -> &[Tag] {
-        &self.as_labels
+    fn tags_as_slice(&self) -> &[Tag] {
+        &self.as_tags
     }
 }
 
-impl RemoveLabel for EdgeVertexStep {
+impl RemoveTag for EdgeVertexStep {
     fn remove_tag(&mut self, label: Tag) {
-        self.remove_labels.push(label);
+        self.remove_tags.push(label);
     }
 
-    fn remove_tags(&self) -> &[Tag] {
-        self.remove_labels.as_slice()
+    fn get_remove_tags_as_slice(&self) -> &[Tag] {
+        self.remove_tags.as_slice()
     }
 }
 
 struct EdgeVertexFunc {
-    labels: BitSet,
-    remove_labels: BitSet,
+    tags: BitSet,
+    remove_tags: BitSet,
     params: QueryParams<Vertex>,
     get_src: bool,
 }
@@ -85,35 +80,33 @@ impl MapFunction<Traverser, Traverser> for EdgeVertexFunc {
                     let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
                     let mut r = graph.get_vertex(&[id], &self.params)?;
                     if let Some(v) = r.next() {
-                        input.split(v, &self.labels);
-                        input.remove_labels(&self.remove_labels);
-                        return Ok(input);
+                        input.split(v, &self.tags);
+                        input.remove_tags(&self.remove_tags);
+
+                        Ok(input)
                     } else {
-                        return Err(str_to_dyn_error(&format!(
-                            "vertex with id {} not found",
-                            e.src_id
-                        )));
+                        Err(str_to_dyn_error(&format!("Vertex with id {} not found", id)))
                     }
                 }
-                _ => (),
+                _ => Err(str_to_dyn_error("Should not call `EdgeVertexStep` on a vertex")),
             }
+        } else {
+            Err(str_to_dyn_error("invalid input for `EdgeVertexStep`"))
         }
-
-        Err(str_to_dyn_error("invalid input for EdgeVertexStep"))
     }
 }
 
 impl MapFuncGen for EdgeVertexStep {
     fn gen(&self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>> {
-        let labels = self.get_tags();
-        let remove_labels = self.get_remove_tags();
+        let tags = self.get_tags();
+        let remove_tags = self.get_remove_tags();
         let params = self.params.clone();
         match self.symbol {
             StepSymbol::OutV => {
-                Ok(Box::new(EdgeVertexFunc { labels, remove_labels, params, get_src: true }))
+                Ok(Box::new(EdgeVertexFunc { tags, remove_tags, params, get_src: true }))
             }
             StepSymbol::InV => {
-                Ok(Box::new(EdgeVertexFunc { labels, remove_labels, params, get_src: false }))
+                Ok(Box::new(EdgeVertexFunc { tags, remove_tags, params, get_src: false }))
             }
             StepSymbol::OtherV => Err(str_to_dyn_error("`otherV()` has not been supported")),
             _ => Err(str_to_dyn_error("Invalid symbol in `EdgeVertexStep`")),

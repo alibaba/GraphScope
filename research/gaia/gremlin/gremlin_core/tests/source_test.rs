@@ -22,36 +22,33 @@ mod test {
     // g.V()
     #[test]
     fn source_test_01() {
+        initialize();
         let mut expected = to_global_ids(vec![1, 2, 3, 4, 5, 6]);
         expected.sort();
-        initialize();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("source_test_01")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V(v1)
     #[test]
     fn source_test_02() {
+        initialize();
         let mut expected = to_global_ids(vec![1]);
         expected.sort();
-        initialize();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("source_test_02")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().hasLabel("PERSON").has("id",1)
     #[test]
     fn source_test_03() {
+        initialize();
         let mut expected = to_global_ids(vec![1]);
         expected.sort();
-        initialize();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("source_test_03")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 }

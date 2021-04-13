@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,28 +34,11 @@ pub const END_ID_FIELD: &'static str = "end_id";
 
 /// An edge's label is consisted of three elements:
 /// edge_label, src_vertex_label and dst_vertex_label.
-#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct EdgeLabelTuple {
     pub edge_label: LabelId,
     pub src_vertex_label: LabelId,
     pub dst_vertex_label: LabelId,
-}
-
-impl From<(LabelId, LabelId, LabelId)> for EdgeLabelTuple {
-    /// The tuple must record the order of edge_label, src_vertex_label and dst_vertex_label.
-    fn from(label_tuple: (LabelId, LabelId, LabelId)) -> Self {
-        Self {
-            edge_label: label_tuple.0,
-            src_vertex_label: label_tuple.1,
-            dst_vertex_label: label_tuple.2,
-        }
-    }
-}
-
-impl Into<(LabelId, LabelId, LabelId)> for EdgeLabelTuple {
-    fn into(self) -> (LabelId, LabelId, LabelId) {
-        (self.edge_label, self.src_vertex_label, self.dst_vertex_label)
-    }
 }
 
 pub trait Schema {
@@ -78,8 +61,8 @@ pub trait Schema {
     /// Get a certain vertex type's id if any
     fn get_vertex_label_id(&self, vertex_type: &str) -> Option<LabelId>;
 
-    /// Get a certain edge type's id, together with its start- and edge- vertices's type ids if any
-    fn get_edge_label_id(&self, edge_type: &str) -> Option<EdgeLabelTuple>;
+    /// Get a certain edge type's id
+    fn get_edge_label_id(&self, edge_type: &str) -> Option<LabelId>;
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -87,7 +70,7 @@ pub struct LDBCGraphSchema {
     /// Map from vertex types to labelid
     vertex_type_to_id: HashMap<String, LabelId>,
     /// Map from edge types to `EdgeLabelTuple`
-    edge_type_to_id: HashMap<String, EdgeLabelTuple>,
+    edge_type_to_id: HashMap<String, LabelId>,
     /// Map from vertex/edge (labelid) to its property name, data types and index in the row
     vertex_prop_meta: HashMap<LabelId, HashMap<String, (DataType, usize)>>,
     vertex_prop_vec: HashMap<LabelId, Vec<(String, DataType)>>,
@@ -130,6 +113,37 @@ impl LDBCGraphSchema {
                 *value.get_mut(name).unwrap() = (dt.clone(), index);
             }
             *self.edge_prop_vec.entry(*key).or_insert_with(Vec::new) = vec_trimmed;
+        }
+    }
+
+    /// Get a certain edge type's id, together with its start- and edge- vertices's type
+    /// while giving the `full_edge_type` that is "<src_vertex_label>_<edge_label>_<dst_vertex_label>"
+    pub fn get_edge_label_tuple(&self, full_edge_type: &str) -> Option<EdgeLabelTuple> {
+        let mut parts = full_edge_type.split("_");
+        let src_label_id = if let Some(src_label) = parts.next() {
+            self.get_vertex_label_id(src_label)
+        } else {
+            None
+        };
+        let edge_label_id = if let Some(edge_label) = parts.next() {
+            self.get_edge_label_id(edge_label)
+        } else {
+            None
+        };
+        let dst_label_id = if let Some(dst_label) = parts.next() {
+            self.get_vertex_label_id(dst_label)
+        } else {
+            None
+        };
+
+        if src_label_id.is_some() && edge_label_id.is_some() && dst_label_id.is_some() {
+            Some(EdgeLabelTuple {
+                edge_label: edge_label_id.unwrap(),
+                src_vertex_label: src_label_id.unwrap(),
+                dst_vertex_label: dst_label_id.unwrap(),
+            })
+        } else {
+            None
         }
     }
 }
@@ -182,7 +196,7 @@ impl PartialEq for LDBCGraphSchema {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct LDBCGraphSchemaJson {
     vertex_type_map: HashMap<String, LabelId>,
-    edge_type_map: HashMap<String, (LabelId, LabelId, LabelId)>,
+    edge_type_map: HashMap<String, LabelId>,
     vertex_prop: HashMap<String, Vec<(String, DataType)>>,
     edge_prop: HashMap<String, Vec<(String, DataType)>>,
 }
@@ -190,16 +204,13 @@ struct LDBCGraphSchemaJson {
 impl<'a> From<&'a LDBCGraphSchema> for LDBCGraphSchemaJson {
     fn from(schema: &'a LDBCGraphSchema) -> Self {
         let vertex_type_map = schema.vertex_type_to_id.clone();
-        let edge_type_map: HashMap<String, (LabelId, LabelId, LabelId)> = schema
-            .edge_type_to_id
-            .iter()
-            .map(|(name, tuple)| (name.clone(), (*tuple).into()))
-            .collect();
+        let edge_type_map: HashMap<String, LabelId> =
+            schema.edge_type_to_id.iter().map(|(name, id)| (name.clone(), *id)).collect();
 
         let vertex_type_map_rev: HashMap<LabelId, String> =
-            vertex_type_map.iter().map(|(name, id)| (id.clone(), name.clone())).collect();
+            vertex_type_map.iter().map(|(name, id)| (*id, name.clone())).collect();
         let edge_type_map_rev: HashMap<LabelId, String> =
-            edge_type_map.iter().map(|(name, id)| (id.0, name.clone())).collect();
+            edge_type_map.iter().map(|(name, id)| (*id, name.clone())).collect();
 
         let mut vertex_prop =
             HashMap::<String, Vec<(String, DataType)>>::with_capacity(schema.vertex_prop_vec.len());
@@ -221,11 +232,8 @@ impl<'a> From<&'a LDBCGraphSchema> for LDBCGraphSchemaJson {
 impl<'a> From<&'a LDBCGraphSchemaJson> for LDBCGraphSchema {
     fn from(schema_json: &'a LDBCGraphSchemaJson) -> Self {
         let vertex_type_to_id = schema_json.vertex_type_map.clone();
-        let edge_type_to_id: HashMap<String, EdgeLabelTuple> = schema_json
-            .edge_type_map
-            .iter()
-            .map(|(name, tuple)| (name.clone(), EdgeLabelTuple::from(*tuple)))
-            .collect();
+        let edge_type_to_id: HashMap<String, LabelId> =
+            schema_json.edge_type_map.iter().map(|(name, id)| (name.clone(), *id)).collect();
         let mut vertex_prop_meta: HashMap<LabelId, HashMap<String, (DataType, usize)>> =
             HashMap::with_capacity(schema_json.vertex_prop.len());
         let mut vertex_prop_vec: HashMap<LabelId, Vec<(String, DataType)>> =
@@ -247,7 +255,7 @@ impl<'a> From<&'a LDBCGraphSchemaJson> for LDBCGraphSchema {
         }
 
         for (key, value) in &schema_json.edge_prop {
-            let label_id = edge_type_to_id[key].edge_label;
+            let label_id = edge_type_to_id[key];
             let edge_map = edge_prop_meta.entry(label_id).or_insert_with(HashMap::new);
             let edge_vec = edge_prop_vec.entry(label_id).or_insert_with(Vec::new);
 
@@ -292,7 +300,7 @@ impl Schema for LDBCGraphSchema {
         self.vertex_type_to_id.get(vertex_type).cloned()
     }
 
-    fn get_edge_label_id(&self, edge_type: &str) -> Option<EdgeLabelTuple> {
+    fn get_edge_label_id(&self, edge_type: &str) -> Option<LabelId> {
         self.edge_type_to_id.get(edge_type).cloned()
     }
 }
@@ -357,7 +365,7 @@ mod test {
 
         assert!(is_map_eq(org_schema, &expected_org_schema));
 
-        let label_tuple = schema.get_edge_label_id("PERSON_KNOWS_PERSON").unwrap();
+        let label_tuple = schema.get_edge_label_tuple("PERSON_KNOWS_PERSON").unwrap();
         let knows_header = schema.get_edge_header(label_tuple.edge_label).unwrap();
         assert_eq!(
             knows_header,
@@ -401,7 +409,7 @@ mod test {
 
         assert!(is_map_eq(org_schema, &expected_org_schema));
 
-        let label_tuple = schema.get_edge_label_id("PERSON_KNOWS_PERSON").unwrap();
+        let label_tuple = schema.get_edge_label_tuple("PERSON_KNOWS_PERSON").unwrap();
         let knows_header = schema.get_edge_header(label_tuple.edge_label).unwrap();
         assert_eq!(knows_header, &[("creationDate".to_string(), DataType::Date),]);
         let knows_schema = schema.get_edge_schema(label_tuple.edge_label).unwrap();

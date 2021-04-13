@@ -8,9 +8,7 @@ use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
 use crate::result_process::pair_element_to_pb;
 use crate::structure::codec::ParseError;
-use crate::structure::Element;
-use crate::structure::Token;
-use crate::structure::{Details, Tag};
+use crate::structure::{Details, Element, Token};
 use crate::{str_to_dyn_error, DynResult, FromPb};
 use pegasus::api::accum::{AccumFactory, Accumulator, CountAccum, ToListAccum};
 use pegasus::api::function::{DynIter, EncodeFunction, FlatMapFunction, FnResult};
@@ -69,14 +67,6 @@ impl GroupByStep {
 impl Step for GroupByStep {
     fn get_symbol(&self) -> StepSymbol {
         StepSymbol::Group
-    }
-
-    fn add_tag(&mut self, _label: Tag) {
-        unimplemented!()
-    }
-
-    fn tags(&self) -> &[Tag] {
-        unimplemented!()
     }
 }
 
@@ -148,7 +138,7 @@ impl KeyFunction<Traverser> for KeyBy {
                             .try_to_owned()
                             .ok_or(str_to_dyn_error("Can't get owned property value"))?,
                     };
-                    Ok(Traverser::Unknown(obj))
+                    Ok(Traverser::Object(obj))
                 }
                 // TODO: by select("a").by(valueMap("name")) or by(valueMap("name"))
                 ByStepOption::OptProperties(_) => {
@@ -167,7 +157,7 @@ impl KeyFunction<Traverser> for KeyBy {
                         .get_attached()
                         .ok_or(str_to_dyn_error("should with attached object"))?
                         .clone();
-                    Ok(Traverser::Unknown(obj))
+                    Ok(Traverser::Object(obj))
                 }
             }
         } else {
@@ -177,13 +167,13 @@ impl KeyFunction<Traverser> for KeyBy {
                     .select_as_value(tag)
                     .ok_or(str_to_dyn_error("Select tag as value error!"))?
                     .clone();
-                Ok(Traverser::Unknown(obj))
+                Ok(Traverser::Object(obj))
             } else {
                 // group by self, no need to keep path
                 if let Some(element) = item.get_element() {
                     Ok(Traverser::new(element.clone()))
                 } else if let Some(object) = item.get_object() {
-                    Ok(Traverser::Unknown(object.clone()))
+                    Ok(Traverser::Object(object.clone()))
                 } else {
                     unreachable!()
                 }
@@ -283,7 +273,6 @@ impl EncodeFunction<DynMap<Traverser>> for GroupBySink {
                 let map_pair_pb =
                     result_pb::MapPair { first: Some(key_pb), second: Some(value_pb) };
                 pairs_encode.push(map_pair_pb);
-                println!("group result {:?} {:?}", k, v);
             }
         }
         let map = result_pb::MapArray { item: pairs_encode };

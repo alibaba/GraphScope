@@ -18,69 +18,84 @@ mod common;
 #[cfg(test)]
 mod test {
     use crate::common::test::*;
+    use gremlin_core::ID;
 
-    // g.V().group().by()
-    // TODO: expected_values
+    // g.V().group().by().unfold().order().by(select(keys).values("id"))
     #[test]
-    #[ignore]
     fn group_step_test_01() {
-        let expected = vec![];
         initialize();
-        let test_job_factory = TestJobFactory::with_expect_values(expected);
-        let service = start_test_service(test_job_factory);
+        let expected = vec![
+            (to_global_id(1) as ID, to_global_ids(vec![1])),
+            (to_global_id(2) as ID, to_global_ids(vec![2])),
+            (to_global_id(3) as ID, to_global_ids(vec![3])),
+            (to_global_id(4) as ID, to_global_ids(vec![4])),
+            (to_global_id(5) as ID, to_global_ids(vec![5])),
+            (to_global_id(6) as ID, to_global_ids(vec![6])),
+        ];
+        let test_job_factory = TestJobFactory::with_expect_map_result(expected);
         let pb_request = read_pb_request(gen_path("group_step_test_01")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
-    // g.V().groupCount()
-    // TODO: expected_values
+    // g.V().groupCount().unfold().order().by(select(keys).values("id"))
     #[test]
-    #[ignore]
     fn group_step_test_02() {
-        let expected = vec![];
         initialize();
-        let test_job_factory = TestJobFactory::with_expect_values(expected);
-        let service = start_test_service(test_job_factory);
+        let expected = vec![
+            (to_global_id(1) as ID, vec![1]),
+            (to_global_id(2) as ID, vec![1]),
+            (to_global_id(3) as ID, vec![1]),
+            (to_global_id(4) as ID, vec![1]),
+            (to_global_id(5) as ID, vec![1]),
+            (to_global_id(6) as ID, vec![1]),
+        ];
+        let test_job_factory = TestJobFactory::with_expect_map_result(expected);
         let pb_request = read_pb_request(gen_path("group_step_test_02")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
-    // g.V().group().by(id)
-    // TODO: expected_values
+    // g.V().group().by(id).unfold().order().by(keys)
     #[test]
-    #[ignore]
     fn group_step_test_03() {
-        let expected = vec![];
         initialize();
-        let test_job_factory = TestJobFactory::with_expect_values(expected);
-        let service = start_test_service(test_job_factory);
+        let expected = vec![
+            (to_global_id(1) as ID, to_global_ids(vec![1])),
+            (to_global_id(2) as ID, to_global_ids(vec![2])),
+            (to_global_id(4) as ID, to_global_ids(vec![4])),
+            (to_global_id(6) as ID, to_global_ids(vec![6])),
+            (to_global_id(3) as ID, to_global_ids(vec![3])),
+            (to_global_id(5) as ID, to_global_ids(vec![5])),
+        ];
+        let test_job_factory = TestJobFactory::with_expect_map_result(expected);
         let pb_request = read_pb_request(gen_path("group_step_test_03")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
-    // g.V().group().by(label)
-    // TODO: expected_values
+    // g.V().group().by(label).unfold().order().by(keys)
     #[test]
-    #[ignore]
     fn group_step_test_04() {
-        let expected = vec![];
         initialize();
-        let test_job_factory = TestJobFactory::with_expect_values(expected);
-        let service = start_test_service(test_job_factory);
+        let expected =
+            vec![(0 as ID, to_global_ids(vec![1, 2, 4, 6])), (1 as ID, to_global_ids(vec![3, 5]))];
+        let test_job_factory = TestJobFactory::with_expect_map_result(expected);
         let pb_request = read_pb_request(gen_path("group_step_test_04")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
-    // g.V().group().by("id")
-    // TODO: expected_values
+    // g.V().group().by("id").unfold().order().by(keys)
     #[test]
-    #[ignore]
     fn group_step_test_05() {
-        let expected = vec![];
         initialize();
-        let test_job_factory = TestJobFactory::with_expect_values(expected);
-        let service = start_test_service(test_job_factory);
+        let expected = vec![
+            (1 as ID, to_global_ids(vec![1])),
+            (2 as ID, to_global_ids(vec![2])),
+            (3 as ID, to_global_ids(vec![3])),
+            (4 as ID, to_global_ids(vec![4])),
+            (5 as ID, to_global_ids(vec![5])),
+            (6 as ID, to_global_ids(vec![6])),
+        ];
+        let test_job_factory = TestJobFactory::with_expect_map_result(expected);
         let pb_request = read_pb_request(gen_path("group_step_test_05")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 }

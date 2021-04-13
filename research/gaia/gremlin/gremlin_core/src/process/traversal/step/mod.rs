@@ -19,30 +19,37 @@ use crate::process::traversal::step::util::StepSymbol;
 pub trait Step: 'static {
     fn get_symbol(&self) -> StepSymbol;
 
-    fn add_tag(&mut self, label: Tag);
+    fn add_tag(&mut self, _label: Tag) {
+        unreachable!()
+    }
 
-    fn tags(&self) -> &[Tag];
+    fn tags_as_slice(&self) -> &[Tag] {
+        &[]
+    }
 
     fn get_tags(&self) -> BitSet {
         let mut labels = BitSet::with_capacity(INIT_TAG_NUM);
-        for l in self.tags() {
+        for l in self.tags_as_slice() {
             labels.insert(l.clone() as usize);
         }
         labels
     }
 }
 
-pub trait RemoveLabel: 'static {
+pub trait RemoveTag: Step {
+    /// To remove a given tag
     fn remove_tag(&mut self, label: Tag);
 
-    fn remove_tags(&self) -> &[Tag];
+    /// Get the slice of tags to be removed
+    fn get_remove_tags_as_slice(&self) -> &[Tag];
 
+    /// Turn the tags to remove into a `BitSet`
     fn get_remove_tags(&self) -> BitSet {
-        let mut labels = BitSet::with_capacity(INIT_TAG_NUM);
-        for l in self.remove_tags() {
-            labels.insert(l.clone() as usize);
+        let mut tags = BitSet::with_capacity(INIT_TAG_NUM);
+        for &tag in self.get_remove_tags_as_slice() {
+            tags.insert(tag as usize);
         }
-        labels
+        tags
     }
 }
 

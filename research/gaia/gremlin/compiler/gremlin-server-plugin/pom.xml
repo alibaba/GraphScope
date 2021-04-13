@@ -49,11 +49,6 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
@@ -67,6 +62,10 @@
             <groupId>com.alibaba.pegasus</groupId>
             <artifactId>pegasus-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -76,7 +75,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.compiler.demo.server.GremlinServiceMain</mainClass>
+                            <mainClass>com.alibaba.graphscope.gaia.GremlinServiceMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

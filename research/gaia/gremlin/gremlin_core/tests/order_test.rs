@@ -18,102 +18,85 @@ mod common;
 #[cfg(test)]
 mod test {
     use crate::common::test::*;
+    use gremlin_core::process::traversal::traverser::Requirement;
 
     // g.V().order().by(id)
     #[test]
     fn order_step_test_01() {
-        let expected = to_global_ids(vec![1, 2, 4, 6, 3, 5]);
         initialize();
+        let expected = to_global_ids(vec![1, 2, 4, 6, 3, 5]);
         let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
         test_job_factory.set_ordered(true);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("order_step_test_01")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().order().by(label)
     #[test]
     fn order_step_test_02() {
-        let expected = to_global_ids(vec![1, 2, 4, 6, 3, 5]);
         initialize();
+        let expected = to_global_ids(vec![1, 2, 4, 6, 3, 5]);
         let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
         test_job_factory.set_ordered(true);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("order_step_test_02")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().order().by("id")
     #[test]
     fn order_step_test_03() {
-        let expected = to_global_ids(vec![1, 2, 3, 4, 5, 6]);
         initialize();
+        let expected = to_global_ids(vec![1, 2, 3, 4, 5, 6]);
         let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
         test_job_factory.set_ordered(true);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("order_step_test_03")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().as("a").order().by(select("a").by(id))
     #[test]
     fn order_step_test_04() {
-        let expected = to_global_ids(vec![1, 2, 4, 6, 3, 5]);
         initialize();
+        let expected = to_global_ids(vec![1, 2, 4, 6, 3, 5]);
         let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
         test_job_factory.set_ordered(true);
-        let service = start_test_service(test_job_factory);
+        test_job_factory.set_requirement(Requirement::LABELED_PATH);
         let pb_request = read_pb_request(gen_path("order_step_test_04")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().as("a").order().by(select("a").by(label))
     #[test]
     fn order_step_test_05() {
-        let expected = to_global_ids(vec![1, 2, 4, 6, 3, 5]);
         initialize();
+        let expected = to_global_ids(vec![1, 2, 4, 6, 3, 5]);
         let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
         test_job_factory.set_ordered(true);
-        let service = start_test_service(test_job_factory);
+        test_job_factory.set_requirement(Requirement::LABELED_PATH);
         let pb_request = read_pb_request(gen_path("order_step_test_05")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().as("a").order().by(select("a").by("id"))
     #[test]
     fn order_step_test_06() {
+        initialize();
         let expected = to_global_ids(vec![1, 2, 3, 4, 5, 6]);
-        initialize();
         let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
         test_job_factory.set_ordered(true);
-        let service = start_test_service(test_job_factory);
+        test_job_factory.set_requirement(Requirement::LABELED_PATH);
         let pb_request = read_pb_request(gen_path("order_step_test_06")).expect("read pb failed");
-        submit_query(&service, pb_request);
-    }
-
-    // g.V().as("a").groupCount().order().by(values)
-    #[test]
-    #[ignore]
-    // TODO: expected value
-    fn order_step_test_07() {
-        let expected = vec![];
-        initialize();
-        let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
-        test_job_factory.set_ordered(true);
-        let service = start_test_service(test_job_factory);
-        let pb_request = read_pb_request(gen_path("order_step_test_07")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 
     // g.V().order().by(both().count()).by("id")
     #[test]
-    fn order_step_test_08() {
-        let expected = to_global_ids(vec![2, 5, 6, 1, 3, 4]);
+    fn order_step_test_07() {
         initialize();
+        let expected = to_global_ids(vec![2, 5, 6, 1, 3, 4]);
         let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
         test_job_factory.set_ordered(true);
-        let service = start_test_service(test_job_factory);
-        let pb_request = read_pb_request(gen_path("order_step_test_08")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        let pb_request = read_pb_request(gen_path("order_step_test_07")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
     }
 }

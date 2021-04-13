@@ -108,8 +108,8 @@ fn _init_modern_graph() -> LargeGraphDB<DefaultId, InternalId> {
             "SOFTWARE": 1
         },
         "edge_type_map": {
-            "KNOWS": [0, 0, 0],
-            "CREATED": [1, 0, 1]
+            "KNOWS": 0,
+            "CREATED": 1
         },
         "vertex_prop": {
             "PERSON": [
@@ -484,7 +484,7 @@ fn labels_to_ids(labels: &Vec<Label>, is_vertex: bool) -> Option<Vec<LabelId>> {
                         let label_id = if is_vertex {
                             (*GRAPH).get_schema().get_vertex_label_id(s)
                         } else {
-                            (*GRAPH).get_schema().get_edge_label_id(s).map(|tuple| tuple.edge_label)
+                            (*GRAPH).get_schema().get_edge_label_id(s).map(|id| id)
                         };
                         label_id.unwrap_or(INVALID_LABEL_ID)
                     }

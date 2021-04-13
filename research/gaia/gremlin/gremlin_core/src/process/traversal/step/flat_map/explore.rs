@@ -30,7 +30,7 @@ pub struct VertexStep {
     pub symbol: StepSymbol,
     pub params: QueryParams<Vertex>,
     direction: Direction,
-    as_labels: Vec<Tag>,
+    as_tags: Vec<Tag>,
 }
 
 impl VertexStep {
@@ -41,7 +41,7 @@ impl VertexStep {
             Direction::Both => StepSymbol::Both,
         };
 
-        VertexStep { symbol, params: QueryParams::new(), direction, as_labels: vec![] }
+        VertexStep { symbol, params: QueryParams::new(), direction, as_tags: vec![] }
     }
 }
 
@@ -51,11 +51,11 @@ impl Step for VertexStep {
     }
 
     fn add_tag(&mut self, label: Tag) {
-        self.as_labels.push(label);
+        self.as_tags.push(label);
     }
 
-    fn tags(&self) -> &[Tag] {
-        self.as_labels.as_slice()
+    fn tags_as_slice(&self) -> &[Tag] {
+        self.as_tags.as_slice()
     }
 }
 
@@ -64,7 +64,7 @@ pub struct EdgeStep {
     pub symbol: StepSymbol,
     pub params: QueryParams<Edge>,
     pub direction: Direction,
-    as_labels: Vec<Tag>,
+    as_tags: Vec<Tag>,
 }
 
 impl EdgeStep {
@@ -75,7 +75,7 @@ impl EdgeStep {
             Direction::Both => StepSymbol::BothE,
         };
 
-        EdgeStep { symbol, params: QueryParams::new(), direction, as_labels: vec![] }
+        EdgeStep { symbol, params: QueryParams::new(), direction, as_tags: vec![] }
     }
 }
 
@@ -85,16 +85,16 @@ impl Step for EdgeStep {
     }
 
     fn add_tag(&mut self, label: Tag) {
-        self.as_labels.push(label);
+        self.as_tags.push(label);
     }
 
-    fn tags(&self) -> &[Tag] {
-        self.as_labels.as_slice()
+    fn tags_as_slice(&self) -> &[Tag] {
+        self.as_tags.as_slice()
     }
 }
 
 pub struct FlatMapStatement<E: Into<GraphElement>> {
-    labels: Arc<BitSet>,
+    tags: Arc<BitSet>,
     stmt: Box<dyn Statement<ID, E>>,
 }
 
@@ -107,7 +107,7 @@ impl<E: Into<GraphElement> + 'static> FlatMapFunction<Traverser, Traverser>
         if let Some(e) = input.get_element() {
             let id = e.id();
             let iter = self.stmt.exec(id)?;
-            Ok(Box::new(TraverserSplitIter::new(input, &self.labels, iter)))
+            Ok(Box::new(TraverserSplitIter::new(input, &self.tags, iter)))
         } else {
             Err(str_to_dyn_error("invalid input for vertex/edge step"))
         }
@@ -123,7 +123,7 @@ impl FlatMapGen for VertexStep {
         let labels = Arc::new(self.get_tags());
         let stmt = graph.prepare_explore_vertex(self.direction, &self.params)?;
 
-        Ok(Box::new(FlatMapStatement { labels, stmt }))
+        Ok(Box::new(FlatMapStatement { tags: labels, stmt }))
     }
 }
 
@@ -133,9 +133,9 @@ impl FlatMapGen for EdgeStep {
     ) -> DynResult<Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>>
     {
         let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
-        let labels = Arc::new(self.get_tags());
+        let tags = Arc::new(self.get_tags());
         let stmt = graph.prepare_explore_edge(self.direction, &self.params)?;
 
-        Ok(Box::new(FlatMapStatement { labels, stmt }))
+        Ok(Box::new(FlatMapStatement { tags, stmt }))
     }
 }

@@ -19,7 +19,6 @@ use crate::process::traversal::step::fold::FoldFunctionGen;
 use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::Tag;
 use crate::{str_to_dyn_error, DynResult};
 use pegasus::api::accum::{AccumFactory, Accumulator};
 use pegasus::api::function::{DynIter, EncodeFunction, FlatMapFunction, FnResult};
@@ -35,14 +34,6 @@ struct FoldSink {}
 impl Step for CommonFoldStep {
     fn get_symbol(&self) -> StepSymbol {
         StepSymbol::Unfold
-    }
-
-    fn add_tag(&mut self, _label: Tag) {
-        unreachable!()
-    }
-
-    fn tags(&self) -> &[Tag] {
-        unreachable!()
     }
 }
 
@@ -75,7 +66,7 @@ impl FlatMapFunction<Box<dyn Accumulator<Traverser>>, Traverser> for FoldUnfold 
 
     fn exec(&self, input: Box<dyn Accumulator<Traverser>>) -> FnResult<Self::Target> {
         if let Some(count) = input.as_any_ref().downcast_ref::<u64>() {
-            let result = vec![Ok(Traverser::Unknown((*count).into()))];
+            let result = vec![Ok(Traverser::Object((*count).into()))];
             Ok(Box::new(result.into_iter()) as DynIter<Traverser>)
         } else {
             // TODO: for other fold-unfold cases

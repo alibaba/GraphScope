@@ -29,11 +29,11 @@ scriptEngines: {
                org.apache.tinkerpop.gremlin.jsr223.ImportGremlinPlugin: {classImports: [java.lang.Math], methodImports: [java.lang.Math#*]}}}}
 serializers:
   - { className: org.apache.tinkerpop.gremlin.driver.ser.GraphSONMessageSerializerV1d0}
-  - { className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0, config: { serializeResultToString: true }}
-  - { className: org.apache.tinkerpop.gremlin.driver.ser.GraphBinaryMessageSerializerV1 }                                                                                                           # application/vnd.graphbinary-v1.0
-  - { className: org.apache.tinkerpop.gremlin.driver.ser.GraphBinaryMessageSerializerV1, config: { serializeResultToString: true }}                                                                 # application/vnd.graphbinary-v1.0-stringd
-processors:
-  - { className: com.compiler.demo.server.MaxGraphOpProcessor, config: {}}
+  - { className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0} # application/vnd.gremlin-v1.0+gryo
+  - { className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0, config: { serializeResultToString: true }} # application/vnd.gremlin-v1.0+gryo-stringd
+  - { className: org.apache.tinkerpop.gremlin.driver.ser.GraphBinaryMessageSerializerV1 } # application/vnd.graphbinary-v1.0
+  - { className: org.apache.tinkerpop.gremlin.driver.ser.GraphBinaryMessageSerializerV1, config: { serializeResultToString: true }} # application/vnd.graphbinary-v1.0-stringd
+
 metrics: {
   slf4jReporter: {enabled: true, interval: 180000}}
 strictTransactionManagement: false

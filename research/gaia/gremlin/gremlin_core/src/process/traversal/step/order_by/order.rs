@@ -23,8 +23,7 @@ use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::codec::ParseError;
-use crate::structure::{Details, Tag};
-use crate::structure::{GraphElement, Token};
+use crate::structure::{Details, GraphElement, Token};
 use crate::{str_to_dyn_error, DynResult, Element, FromPb};
 use pegasus::api::function::CompareFunction;
 use std::cmp::Ordering;
@@ -66,14 +65,6 @@ struct OrderBy {
 impl Step for OrderStep {
     fn get_symbol(&self) -> StepSymbol {
         StepSymbol::Order
-    }
-
-    fn add_tag(&mut self, _label: Tag) {
-        unimplemented!()
-    }
-
-    fn tags(&self) -> &[Tag] {
-        unimplemented!()
     }
 }
 

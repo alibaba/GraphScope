@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -149,16 +149,19 @@ impl MessageDecoder for ReentrantSlabDecoder {
             let header_empty = &mut self.header_bin[self.header_cur..];
             let length = try_read(reader, header_empty)?;
             if length == header_empty.len() {
+                self.header_cur = 0;
                 let header = MessageHeader::from_bytes(&self.header_bin);
                 if header.length == 0 {
                     Ok(Some(Message::new_uncheck(header.clone(), vec![])))
                 } else {
+                    trace!("header length is: {}", header.length);
                     self.slab.resize(header.length as usize, 0);
                     self.in_progress = Some((0, header.clone()));
                     self.decode_next(reader)
                 }
             } else {
                 assert!(length < header_empty.len());
+                self.header_cur += length;
                 Ok(None)
             }
         }

@@ -15,7 +15,7 @@
 
 use crate::common::object::Object;
 use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::{MapFuncGen, RemoveLabel, Step};
+use crate::process::traversal::step::{MapFuncGen, RemoveTag, Step};
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::Tag;
 use crate::DynResult;
@@ -28,21 +28,13 @@ impl Step for GetPathStep {
     fn get_symbol(&self) -> StepSymbol {
         StepSymbol::Path
     }
-
-    fn add_tag(&mut self, _: Tag) {
-        unimplemented!();
-    }
-
-    fn tags(&self) -> &[Tag] {
-        &[]
-    }
 }
 
 impl MapFuncGen for GetPathStep {
     fn gen(&self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>> {
         let func = map!(|item: Traverser| {
             let path = item.take_path();
-            Ok(Traverser::Unknown(Object::UnknownOwned(Box::new(path))))
+            Ok(Traverser::Object(Object::UnknownOwned(Box::new(path))))
         });
 
         Ok(Box::new(func))
@@ -50,29 +42,29 @@ impl MapFuncGen for GetPathStep {
 }
 
 pub struct PathLocalCount {
-    as_labels: Vec<Tag>,
-    remove_labels: Vec<Tag>,
+    as_tags: Vec<Tag>,
+    remove_tags: Vec<Tag>,
 }
 
 impl PathLocalCount {
     pub fn empty() -> Self {
-        PathLocalCount { as_labels: vec![], remove_labels: vec![] }
+        PathLocalCount { as_tags: vec![], remove_tags: vec![] }
     }
 }
 
-impl RemoveLabel for PathLocalCount {
+impl RemoveTag for PathLocalCount {
     fn remove_tag(&mut self, label: Tag) {
-        self.remove_labels.push(label);
+        self.remove_tags.push(label);
     }
 
-    fn remove_tags(&self) -> &[Tag] {
-        self.remove_labels.as_slice()
+    fn get_remove_tags_as_slice(&self) -> &[Tag] {
+        self.remove_tags.as_slice()
     }
 }
 
 struct PathLocalCountFunc {
-    labels: BitSet,
-    remove_labels: BitSet,
+    tags: BitSet,
+    remove_tags: BitSet,
 }
 
 impl Step for PathLocalCount {
@@ -81,27 +73,27 @@ impl Step for PathLocalCount {
     }
 
     fn add_tag(&mut self, label: Tag) {
-        self.as_labels.push(label);
+        self.as_tags.push(label);
     }
 
-    fn tags(&self) -> &[Tag] {
-        self.as_labels.as_slice()
+    fn tags_as_slice(&self) -> &[Tag] {
+        self.as_tags.as_slice()
     }
 }
 
 impl MapFunction<Traverser, Traverser> for PathLocalCountFunc {
     fn exec(&self, mut input: Traverser) -> FnResult<Traverser> {
         let count = input.get_path_len() as i64;
-        input.split_with_value(count, &self.labels);
-        input.remove_labels(&self.remove_labels);
+        input.split_with_value(count, &self.tags);
+        input.remove_tags(&self.remove_tags);
         Ok(input)
     }
 }
 
 impl MapFuncGen for PathLocalCount {
     fn gen(&self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>> {
-        let labels = self.get_tags();
-        let remove_labels = self.get_remove_tags();
-        Ok(Box::new(PathLocalCountFunc { labels, remove_labels }))
+        let tags = self.get_tags();
+        let remove_tags = self.get_remove_tags();
+        Ok(Box::new(PathLocalCountFunc { tags, remove_tags }))
     }
 }

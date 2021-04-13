@@ -22,12 +22,11 @@ mod test {
     #[test]
     // g.V().union(identity(),identity()).dedup()
     fn dedup_step_test_01() {
+        initialize();
         let mut expected = to_global_ids(vec![1, 2, 3, 4, 5, 6]);
         expected.sort();
-        initialize();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let service = start_test_service(test_job_factory);
         let pb_request = read_pb_request(gen_path("dedup_step_test_01")).expect("read pb failed");
-        submit_query(&service, pb_request);
+        run_test(test_job_factory, pb_request);
     }
 }

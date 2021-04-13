@@ -16,22 +16,68 @@
 # Create the binary folder (if not exist)
 mkdir -p bin
 
-# Build graph storage
-cd ../graph_store
-echo "Build tools for graph storage..."
-cargo build --release --bin download_raw
-cargo build --release --bin build_store
-cp target/release/download_raw ../scripts/bin
-cp target/release/build_store ../scripts/bin
+scriptName="build.sh"
+options="all"
 
-echo "Build tools for starting RPC server..."
-# Build RPC server for Gremlin
-cd ../gremlin/gremlin_core
-cargo build --release --bin start_rpc_server
-cp target/release/start_rpc_server ../../scripts/bin
+# Print usage
+usage() {
+  echo "${scriptName} [OPTION]...
+ To build the utilities for GAIA.
+ ${bold}Options:${reset}
+  -o, --options    Options for building GAIA.
+                   Available options: build_store, start_rpc, gremlin_server, all
+  -h, --help       Display this help and exit.
+"
+}
 
-echo "Build Gremlin compiler ..."
-# Build Gremlin compiler
-cd ../compiler
-mvn clean package -DskipTests
-cp gremlin-server-plugin/target/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar ../../scripts/bin
+# Read the options and set stuff
+while [[ $1 = -?* ]]; do
+  case $1 in
+    -h|--help) usage >&2; exit ;;
+    -o|--options) shift; options=${1} ;;
+    *) usage >&2; exit ;;
+  esac
+  shift
+done
+
+echo "Build GAIA utilities for: ${options}"
+
+if [ "${options}" != "all"  ] && [ "${options}" != "build_store"  ]  \
+  && [ "${options}" != "start_rpc"  ] && [ "${options}" != "gremlin_server" ]
+then
+    echo "Invalid options: ${options}"
+    usage >&2;
+    exit;
+fi
+
+if [ "${options}" = "all"  ] || [ "${options}" = "build_store"  ]
+then
+  # Build graph storage
+  cd ../graph_store
+  echo "Build tools for graph storage..."
+  cargo build --release --bin download_raw
+  cargo build --release --bin build_store
+  cp target/release/download_raw ../scripts/bin
+  cp target/release/build_store ../scripts/bin
+  cd ../scripts
+fi
+
+if [ "${options}" = "all"  ] || [ "${options}" = "start_rpc"  ]
+then
+  echo "Build tools for starting RPC server..."
+  # Build RPC server for Gremlin
+  cd ../gremlin/gremlin_core
+  cargo build --release --bin start_rpc_server
+  cp target/release/start_rpc_server ../../scripts/bin
+  cd ../../scripts
+fi
+
+if [ "${options}" = "all"  ] || [ "${options}" = "gremlin_server"  ]
+then
+  echo "Build Gremlin compiler ..."
+  # Build Gremlin compiler
+  cd ../gremlin/compiler
+  mvn clean package -DskipTests
+  cp gremlin-server-plugin/target/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar ../../scripts/bin
+  cd ../../scripts
+fi
