@@ -4,8 +4,8 @@
     "SOFTWARE": 1
   },
   "edge_type_map": {
-    "KNOWS": [0, 0, 0],
-    "CREATED": [1, 0, 1]
+    "KNOWS": 0,
+    "CREATED": 1
   },
   "vertex_prop": {
     "PERSON": [

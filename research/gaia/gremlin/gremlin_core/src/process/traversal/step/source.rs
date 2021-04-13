@@ -85,7 +85,7 @@ impl Step for GraphVertexStep {
         self.as_labels.push(label);
     }
 
-    fn tags(&self) -> &[Tag] {
+    fn tags_as_slice(&self) -> &[Tag] {
         self.as_labels.as_slice()
     }
 }
@@ -124,11 +124,11 @@ impl GraphVertexStep {
         };
 
         if self.requirement.contains(Requirement::PATH)
-            || self.requirement.contains(Requirement::LABELEDPATH)
+            || self.requirement.contains(Requirement::LABELED_PATH)
         {
-            let labels = self.get_tags();
+            let tags = self.get_tags();
             let requirement = self.requirement.clone();
-            Box::new(source.map(move |v| Traverser::with_path(v, &labels, requirement)))
+            Box::new(source.map(move |v| Traverser::with_path(v, &tags, requirement)))
         } else {
             Box::new(source.map(|v| Traverser::new(v)))
         }

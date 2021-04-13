@@ -1,0 +1,1 @@
+ g.V().hasLabel("PERSON").order().by("id").by("name")

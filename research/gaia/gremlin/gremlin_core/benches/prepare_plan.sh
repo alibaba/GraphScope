@@ -16,12 +16,12 @@
 # prepare query plan
 cd ../compiler/
 mvn clean install -DskipTests
-nohup java -cp .:gremlin-server-plugin/target/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar:gremlin-server-plugin/target/classes com.compiler.demo.server.GremlinServiceMain &
+nohup java -cp .:gremlin-server-plugin/target/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar:gremlin-server-plugin/target/classes com.alibaba.graphscope.gaia.GremlinServiceMain &
 sleep 10
 echo "Generate binary plans for benchmark, and the temp binary plan path is $1"
 cd benchmark-tool/
 mkdir -p $1
-java -cp .:./target/benchmark-tool-1.0-SNAPSHOT-jar-with-dependencies.jar com.alibaba.graphscope.benchmark.GeneratePlanBinaryTool ../../gremlin_core/resource/benchmark/queries ".txt" $1 "" 0.0.0.0 8182
+java -cp .:./target/benchmark-tool-1.0-SNAPSHOT-jar-with-dependencies.jar com.alibaba.graphscope.gaia.GeneratePlanBinaryTool ../../gremlin_core/resource/benchmark/queries ".txt" $1 "" 0.0.0.0 8182
 # kill gremlin server
 ID=`ps -ef | grep "GremlinServiceMain" | grep -v "$0" | grep -v "grep" | awk '{print $2}'`
 for id in $ID

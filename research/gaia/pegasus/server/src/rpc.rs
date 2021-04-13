@@ -15,7 +15,7 @@
 
 use crate::generated::protocol as pb;
 use crate::service::{Output, Service};
-use crate::{report_memory, AnyData};
+use crate::AnyData;
 use prost::Message;
 use std::io::Write;
 use std::net::SocketAddr;

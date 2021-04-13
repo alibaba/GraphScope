@@ -24,7 +24,7 @@ fn main() {
     let mut guard = pegasus::run(conf, |worker| {
         worker.dataflow(|builder| {
             let src = builder.input_from_iter(1..100_000u64)?;
-            src.flat_map_with_fn(Pipeline, |i| (0..i).into_iter().map(|i| Ok(i)))?
+            src.flat_map_with_fn(Pipeline, |i| Ok((0..i).into_iter().map(|i| Ok(i))))?
                 .filter_with_fn(|_| Ok(false))?;
             Ok(())
         })

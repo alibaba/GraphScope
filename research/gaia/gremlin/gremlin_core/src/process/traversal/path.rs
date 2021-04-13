@@ -26,7 +26,7 @@ use std::io;
 use std::ops::Deref;
 use vec_map::VecMap;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum PathItem {
     OnGraph(GraphElement),
     Detached(Object),
@@ -161,13 +161,10 @@ impl Path {
         self.history.len()
     }
 
-    pub fn head(&self) -> &PathItem {
+    pub fn head(&self) -> Option<&PathItem> {
         match &self.head {
-            PathHead::Item(item) => item,
-            PathHead::Index(index) => {
-                assert!(*index < self.history.len());
-                &self.history[*index]
-            }
+            PathHead::Item(item) => Some(item),
+            PathHead::Index(index) => self.history.get(*index),
         }
     }
 
@@ -212,33 +209,40 @@ impl Path {
         }
     }
 
-    // We should 1. remove original head tag, 2. modify head; 3. add new head tag
-    // Now we skip step 1 since compiler will attach the same tag for either original head or new head.
+    /// We should 1. remove original head tag, 2. modify head; 3. add new head tag
+    /// Now we skip step 1 since compiler will attach the same tags for either original head or new head.
     pub fn modify_head_with<T: Into<GraphElement>>(&mut self, element: T, labels: &BitSet) {
         let head = self.head_mut();
         *head = PathItem::OnGraph(element.into());
         self.extend(labels);
     }
 
-    pub fn remove_tag(&mut self, labels: &BitSet, _is_label_path: bool) {
-        let mut label = self.tags.borrow_mut();
-        for s in labels {
-            if let Some(path_idx) = label.get(s) {
-                if *path_idx == self.history.len() - 1 {
-                    self.head = PathHead::Item(self.history[*path_idx].clone());
+    pub fn remove_tag(&mut self, labels_to_remove: &BitSet, _is_label_path: bool) {
+        let mut labels = self.tags.borrow_mut();
+        let history_len = self.history.len();
+        for s in labels_to_remove {
+            if let Some(&path_idx) = labels.get(s) {
+                if let Some(item_to_remove) = self.history.get_mut(path_idx) {
+                    // Mean it is the last item (head) to remove
+                    if path_idx == history_len - 1 {
+                        // The head must be stored for further traversal
+                        self.head = PathHead::Item(item_to_remove.clone());
+                    }
+                    // Do not actually remove the item, but set it as a placeholder of `PathItem::Empty`
+                    *item_to_remove = PathItem::Empty;
+                    labels.remove(s);
+                } else {
+                    error!(
+                        "Try to remove {} that is out of bound of the path history: {}",
+                        path_idx, history_len
+                    )
                 }
-                self.history[*path_idx] = PathItem::Empty;
             }
-            label.remove(s);
         }
     }
 
     pub fn get(&self, index: usize) -> Option<&PathItem> {
-        if index >= self.history.len() {
-            None
-        } else {
-            Some(&self.history[index])
-        }
+        self.history.get(index)
     }
 
     pub fn has_tag(&self, label: &Tag) -> bool {
@@ -249,8 +253,8 @@ impl Path {
         self.history.as_slice()
     }
 
-    pub fn tags(&self) -> &[Tag] {
-        unimplemented!("Path#labels")
+    pub fn tags(&self) -> Vec<Tag> {
+        self.tags.borrow().keys().map(|key| key as Tag).collect::<Vec<Tag>>()
     }
 
     pub fn is_simple(&self) -> bool {
@@ -273,16 +277,18 @@ impl Path {
         None
     }
 
-    pub fn sub_path(&self, _from_label: &str, _to_label: &str) -> Self {
-        unimplemented!()
-    }
-
+    /// Turn a `Path` into its path history for consuming
     pub fn finalize(self) -> ResultPath {
         ResultPath::new(self.history)
     }
 
     pub fn length(&self) -> usize {
         self.history.len()
+    }
+
+    /// Compare whether the head of the two paths are equal
+    pub fn is_head_eq(&self, other: &Path) -> bool {
+        self.head() == other.head()
     }
 }
 
@@ -306,7 +312,7 @@ impl Encode for Path {
             }
         }
         let tags = self.tags.borrow();
-        // TODO(longbin) `Tag` is typed `u8`, but tags length may exceed this length.
+        // TODO(longbin) Note that `Tag` is typed `u8`, but tags length may exceed this length.
         // This may happen, but is quite impossible.
         // In addition, if we change Tag's type, this would trigger a compile error.
         writer.write_u8(tags.len() as Tag)?;

@@ -42,6 +42,10 @@ impl GremlinJobCompiler {
     pub fn get_num_servers(&self) -> u32 {
         self.num_servers
     }
+
+    pub fn get_server_index(&self) -> u64 {
+        self.server_index
+    }
 }
 
 impl JobCompiler<Traverser> for GremlinJobCompiler {

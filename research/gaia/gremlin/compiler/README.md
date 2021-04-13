@@ -26,7 +26,7 @@ java -cp .:gremlin-server-plugin/target/gremlin-server-plugin-1.0-SNAPSHOT-jar-w
     ```
   - parameterized query
     ```
-    # if not set, use conf/system.args.json
+    # if not set, use conf/gaia.args.json
     graph.variables().set("workers",4)
     # check variable value
     graph.variables().get("workers")

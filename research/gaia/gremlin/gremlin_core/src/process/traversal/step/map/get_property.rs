@@ -67,14 +67,6 @@ impl Step for GetPropertyStep {
     fn get_symbol(&self) -> StepSymbol {
         StepSymbol::Select
     }
-
-    fn add_tag(&mut self, _: Tag) {
-        unimplemented!();
-    }
-
-    fn tags(&self) -> &[Tag] {
-        &[]
-    }
 }
 
 // TODO: modify output
@@ -173,7 +165,7 @@ impl MapFunction<Traverser, Traverser> for GetPropertyFunc {
                             input.get_object().ok_or(str_to_dyn_error("should with an object"))?
                         };
                         if let Some(count_value) = try_downcast_group_count_value(map_object) {
-                            return Ok(Traverser::Unknown(count_value.into()));
+                            return Ok(Traverser::Object(count_value.into()));
                         } else if let Some(traverser_value) = try_downcast_group_value(map_object) {
                             return Ok(traverser_value);
                         } else {
@@ -208,7 +200,7 @@ impl MapFunction<Traverser, Traverser> for GetPropertyFunc {
                 result.properties.insert(0, properties);
             }
         }
-        Ok(Traverser::Unknown(Object::UnknownOwned(Box::new(result))))
+        Ok(Traverser::Object(Object::UnknownOwned(Box::new(result))))
     }
 }
 

@@ -171,48 +171,48 @@ fn bench_ldbc_1(b: &mut Bencher) {
 
 #[bench]
 fn bench_ldbc_2(b: &mut Bencher) {
-    bench_queries(b, WhichQuery::CR2, Requirement::LABELEDPATH);
+    bench_queries(b, WhichQuery::CR2, Requirement::LABELED_PATH);
 }
 
 #[bench]
 #[ignore]
 fn bench_ldbc_3(b: &mut Bencher) {
-    bench_queries(b, WhichQuery::CR3, Requirement::LABELEDPATH);
+    bench_queries(b, WhichQuery::CR3, Requirement::LABELED_PATH);
 }
 
 #[bench]
 #[ignore]
 fn bench_ldbc_5(b: &mut Bencher) {
-    bench_queries(b, WhichQuery::CR5, Requirement::LABELEDPATH);
+    bench_queries(b, WhichQuery::CR5, Requirement::LABELED_PATH);
 }
 
 #[bench]
 #[ignore]
 fn bench_ldbc_6(b: &mut Bencher) {
-    bench_queries(b, WhichQuery::CR6, Requirement::LABELEDPATH);
+    bench_queries(b, WhichQuery::CR6, Requirement::LABELED_PATH);
 }
 
 #[bench]
 fn bench_ldbc_7(b: &mut Bencher) {
-    bench_queries(b, WhichQuery::CR7, Requirement::LABELEDPATH);
+    bench_queries(b, WhichQuery::CR7, Requirement::LABELED_PATH);
 }
 
 #[bench]
 fn bench_ldbc_8(b: &mut Bencher) {
-    bench_queries(b, WhichQuery::CR8, Requirement::LABELEDPATH);
+    bench_queries(b, WhichQuery::CR8, Requirement::LABELED_PATH);
 }
 
 #[bench]
 fn bench_ldbc_9(b: &mut Bencher) {
-    bench_queries(b, WhichQuery::CR9, Requirement::LABELEDPATH);
+    bench_queries(b, WhichQuery::CR9, Requirement::LABELED_PATH);
 }
 
 #[bench]
 fn bench_ldbc_11(b: &mut Bencher) {
-    bench_queries(b, WhichQuery::CR11, Requirement::LABELEDPATH);
+    bench_queries(b, WhichQuery::CR11, Requirement::LABELED_PATH);
 }
 
 #[bench]
 fn bench_ldbc_12(b: &mut Bencher) {
-    bench_queries(b, WhichQuery::CR12, Requirement::LABELEDPATH);
+    bench_queries(b, WhichQuery::CR12, Requirement::LABELED_PATH);
 }

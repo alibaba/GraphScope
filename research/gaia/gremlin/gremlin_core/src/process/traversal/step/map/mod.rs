@@ -17,7 +17,7 @@ use crate::generated::gremlin as pb;
 use crate::process::traversal::pop::Pop;
 use crate::process::traversal::step::by_key::TagKey;
 use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::{RemoveLabel, Step};
+use crate::process::traversal::step::{RemoveTag, Step};
 use crate::process::traversal::traverser::{Requirement, Traverser};
 use crate::structure::codec::ParseError;
 use crate::structure::{EndPointOpt, Tag};

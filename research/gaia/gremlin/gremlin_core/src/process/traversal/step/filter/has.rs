@@ -18,19 +18,19 @@ use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::{Tag, TraverserFilterChain};
-use crate::DynResult;
+use crate::{str_to_dyn_error, DynResult};
 use bit_set::BitSet;
 use pegasus::api::function::{FilterFunction, FnResult};
 use std::sync::Arc;
 
 pub struct HasStep {
     has: Arc<TraverserFilterChain>,
-    tags: Vec<Tag>,
+    as_tags: Vec<Tag>,
 }
 
 impl HasStep {
     pub fn new(has: TraverserFilterChain) -> Self {
-        HasStep { has: Arc::new(has), tags: vec![] }
+        HasStep { has: Arc::new(has), as_tags: vec![] }
     }
 }
 
@@ -40,32 +40,33 @@ impl Step for HasStep {
     }
 
     fn add_tag(&mut self, label: Tag) {
-        self.tags.push(label);
+        self.as_tags.push(label);
     }
 
-    fn tags(&self) -> &[Tag] {
-        &self.tags
+    fn tags_as_slice(&self) -> &[Tag] {
+        &self.as_tags
     }
 }
 
 struct HasTraverser {
     filter: Arc<TraverserFilterChain>,
-    labels: BitSet,
+    tags: BitSet,
 }
 
 impl HasTraverser {
     pub fn new(filter: &Arc<TraverserFilterChain>, labels: BitSet) -> Self {
-        HasTraverser { filter: filter.clone(), labels }
+        HasTraverser { filter: filter.clone(), tags: labels }
     }
 }
 
 impl FilterFunction<Traverser> for HasTraverser {
     fn exec(&self, input: &Traverser) -> FnResult<bool> {
         if let Some(true) = self.filter.test(input) {
-            if !self.labels.is_empty() {
-                info!("Now we don't support as() in filter step");
+            if !self.tags.is_empty() {
+                Err(str_to_dyn_error("Now we don't support as() in filter step"))
+            } else {
+                Ok(true)
             }
-            Ok(true)
         } else {
             // TODO: `None` means can't compare, should it be different with compare false;
             Ok(false)
@@ -76,7 +77,6 @@ impl FilterFunction<Traverser> for HasTraverser {
 impl FilterFuncGen for HasStep {
     fn gen(&self) -> DynResult<Box<dyn FilterFunction<Traverser>>> {
         let labels = self.get_tags();
-
         Ok(Box::new(HasTraverser::new(&self.has, labels)))
     }
 }

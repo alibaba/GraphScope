@@ -1,12 +1,12 @@
 g.V().hasLabel('PERSON').has('id', 30786325583618) \
-    .both('PERSON_KNOWS_PERSON').union(identity(), both('PERSON_KNOWS_PERSON')) \
+    .both('KNOWS').union(identity(), both('KNOWS')) \
     .dedup() \
     .has('id', neq(30786325583618)) \
-    .in('POST_HASCREATOR_PERSON').hasLabel('POST') \
+    .in('HASCREATOR').hasLabel('POST') \
     .filter( \
-        out('POST_HASTAG_TAG') \
+        out('HASTAG') \
         .has('name', eq('Angola'))) \
-    .out('POST_HASTAG_TAG') \
+    .out('HASTAG') \
     .has('name', neq('Angola')) \
     .groupCount() \
     .unfold().order() \

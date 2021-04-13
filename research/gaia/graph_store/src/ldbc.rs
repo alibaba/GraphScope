@@ -448,7 +448,7 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
             info!("Process edge type & file {} {:?}", edge_type, edge_file);
             let label_tuple = self
                 .graph_schema
-                .get_edge_label_id(&edge_type)
+                .get_edge_label_tuple(&edge_type)
                 .ok_or(GDBError::InvalidTypeError)?;
             let rdr = ReaderBuilder::new()
                 .delimiter(self.delim)
@@ -653,7 +653,7 @@ mod test {
         let company_id: LabelId = 11;
         let place_id: LabelId = 0;
         let country_id: LabelId = 8;
-        let org_in_place_id: LabelId = 9;
+        let org_in_place_id: LabelId = 2;
 
         let ldbc_schema_file = "data/schema.json";
         let schema = Arc::new(LDBCGraphSchema::from_json_file(ldbc_schema_file).unwrap());
@@ -807,14 +807,14 @@ mod test {
         assert_eq!(in_vertices, vec![(BEIJING_ID, [0, 9]), (SHANGHAI_ID, [0, 9]),],);
 
         let in_vertices: Vec<(DefaultId, Label)> = graphdb
-            .get_adj_vertices(CHINA_ID, Some(&vec![9]), Direction::Incoming)
+            .get_adj_vertices(CHINA_ID, Some(&vec![11]), Direction::Incoming)
             .map(|item| (item.get_id(), item.get_label()))
             .sorted()
             .collect();
         assert_eq!(in_vertices, vec![(PDD_ID, [5, 11]), (TSINGHUA_ID, [5, 12])],);
 
         let in_edges: Vec<DefaultId> = graphdb
-            .get_adj_edges(CHINA_ID, Some(&vec![9]), Direction::Incoming)
+            .get_adj_edges(CHINA_ID, Some(&vec![11]), Direction::Incoming)
             .map(|item| item.get_src_id())
             .sorted()
             .collect();
@@ -829,7 +829,7 @@ mod test {
         assert_eq!(out_vertices, vec![(CHINA_ID, [0, 8]), (SHANGHAI_ID, [0, 9]),],);
 
         let out_vertices: Vec<(DefaultId, Label)> = graphdb
-            .get_out_vertices(PDD_ID, Some(&vec![9]))
+            .get_out_vertices(PDD_ID, Some(&vec![11]))
             .map(|item| (item.get_id(), item.get_label()))
             .sorted()
             .collect();

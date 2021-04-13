@@ -1,7 +1,7 @@
 g.V().hasLabel('PERSON').has('id',30786325583618) \
-  .both('PERSON_KNOWS_PERSON') \
+  .both('KNOWS') \
   .union(identity(), \
-         both('PERSON_KNOWS_PERSON').union(identity(),both('PERSON_KNOWS_PERSON'))) \
+         both('KNOWS').union(identity(),both('KNOWS'))) \
   .dedup() \
   .has('id', neq(30786325583618)).has('firstName',eq('Chau')).as('a') \
   .path().count(local).as('b') \

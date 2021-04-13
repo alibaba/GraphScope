@@ -1,6 +1,6 @@
 use crate::process::traversal::path::PathItem;
 use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::{MapFuncGen, RemoveLabel, Step};
+use crate::process::traversal::step::{MapFuncGen, RemoveTag, Step};
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::Tag;
 use crate::{str_to_dyn_error, DynResult};
@@ -9,13 +9,13 @@ use pegasus::api::function::{FnResult, MapFunction};
 
 pub struct SelectOneStep {
     select_tag: Tag,
-    as_labels: Vec<Tag>,
-    remove_labels: Vec<Tag>,
+    as_tags: Vec<Tag>,
+    remove_tags: Vec<Tag>,
 }
 
 impl SelectOneStep {
     pub fn new(select_tag: Tag) -> Self {
-        SelectOneStep { select_tag, as_labels: vec![], remove_labels: vec![] }
+        SelectOneStep { select_tag, as_tags: vec![], remove_tags: vec![] }
     }
 }
 
@@ -25,28 +25,28 @@ impl Step for SelectOneStep {
     }
 
     fn add_tag(&mut self, label: Tag) {
-        self.as_labels.push(label);
+        self.as_tags.push(label);
     }
 
-    fn tags(&self) -> &[Tag] {
-        self.as_labels.as_slice()
+    fn tags_as_slice(&self) -> &[Tag] {
+        self.as_tags.as_slice()
     }
 }
 
-impl RemoveLabel for SelectOneStep {
+impl RemoveTag for SelectOneStep {
     fn remove_tag(&mut self, label: Tag) {
-        self.remove_labels.push(label);
+        self.remove_tags.push(label);
     }
 
-    fn remove_tags(&self) -> &[Tag] {
-        self.remove_labels.as_slice()
+    fn get_remove_tags_as_slice(&self) -> &[Tag] {
+        self.remove_tags.as_slice()
     }
 }
 
 struct SelectOneFunc {
     select_tag: Tag,
-    labels: BitSet,
-    remove_labels: BitSet,
+    tags: BitSet,
+    remove_tags: BitSet,
 }
 
 impl MapFunction<Traverser, Traverser> for SelectOneFunc {
@@ -55,14 +55,14 @@ impl MapFunction<Traverser, Traverser> for SelectOneFunc {
             match path_item {
                 PathItem::OnGraph(graph_element) => {
                     let graph_element = graph_element.clone();
-                    input.split(graph_element, &self.labels);
-                    input.remove_labels(&self.remove_labels);
+                    input.split(graph_element, &self.tags);
+                    input.remove_tags(&self.remove_tags);
                     Ok(input)
                 }
                 PathItem::Detached(obj) => {
                     let obj = obj.clone();
-                    input.split_with_value(obj, &self.labels);
-                    input.remove_labels(&self.remove_labels);
+                    input.split_with_value(obj, &self.tags);
+                    input.remove_tags(&self.remove_tags);
                     Ok(input)
                 }
                 PathItem::Empty => {
@@ -77,8 +77,8 @@ impl MapFunction<Traverser, Traverser> for SelectOneFunc {
 
 impl MapFuncGen for SelectOneStep {
     fn gen(&self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>> {
-        let labels = self.get_tags();
-        let remove_labels = self.get_remove_tags();
-        Ok(Box::new(SelectOneFunc { select_tag: self.select_tag.clone(), labels, remove_labels }))
+        let tags = self.get_tags();
+        let remove_tags = self.get_remove_tags();
+        Ok(Box::new(SelectOneFunc { select_tag: self.select_tag.clone(), tags, remove_tags }))
     }
 }

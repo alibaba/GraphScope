@@ -1,9 +1,9 @@
 g.V().hasLabel('PERSON').has('id',17592186044810) \
-  .both('PERSON_KNOWS_PERSON').as('friend').in('COMMENT_HASCREATOR_PERSON').hasLabel('COMMENT') \
-  .filter(out('COMMENT_REPLYOF_POST') \
+  .both('KNOWS').as('friend').in('HASCREATOR').hasLabel('COMMENT') \
+  .filter(out('REPLYOF') \
           .hasLabel('POST') \
-          .out('POST_HASTAG_TAG') \
-          .out('TAG_HASTYPE_TAGCLASS') \
+          .out('HASTAG') \
+          .out('HASTYPE') \
           .has('name',eq('BasketballPlayer'))) \
   .select('friend') \
   .groupCount() \

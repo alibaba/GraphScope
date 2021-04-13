@@ -14,12 +14,15 @@
 //! limitations under the License.
 
 use crate::generated::gremlin as pb;
+use crate::process::traversal::step::filter::is::IsStep;
 use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::codec::ParseError;
 use crate::structure::filter::codec::pb_chain_to_filter;
-use crate::structure::{with_tag, without_tag, Filter, IsSimple, Tag, Token, TraverserFilter};
+use crate::structure::{
+    with_tag, without_tag, Filter, IsSimple, Tag, Token, TraverserFilter, ValueFilter,
+};
 use crate::DynResult;
 use crate::FromPb;
 use bit_set::BitSet;
@@ -29,6 +32,7 @@ use pegasus_common::downcast::*;
 pub use where_predicate::WherePredicateStep;
 
 mod has;
+mod is;
 mod where_predicate;
 
 #[enum_dispatch]
@@ -40,6 +44,7 @@ pub trait FilterFuncGen {
 pub enum FilterStep {
     Has(HasStep),
     WhereP(WherePredicateStep),
+    Is(IsStep),
 }
 
 impl_as_any!(FilterStep);
@@ -103,6 +108,12 @@ impl FromPb<pb::GremlinStep> for FilterStep {
                         TraverserFilter::HasCycle(IsSimple::Cyclic)
                     };
                     Ok(FilterStep::Has(HasStep::new(Filter::with(filter))))
+                }
+                pb::gremlin_step::Step::IsStep(opt) => {
+                    let value_filter_pb = opt.single.ok_or("filter is not set in is step")?;
+                    let value_filter = ValueFilter::from_pb(value_filter_pb)?;
+                    let traverser_filter = TraverserFilter::IsValue(value_filter);
+                    Ok(FilterStep::Is(IsStep::new(Filter::with(traverser_filter))))
                 }
                 _ => Err(ParseError::InvalidData),
             }

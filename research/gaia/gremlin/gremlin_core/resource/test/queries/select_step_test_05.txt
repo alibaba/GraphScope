@@ -1,1 +1,1 @@
-g.V().groupCount().unfold().select(keys)
+g.V().groupCount().unfold().select(keys).order()
