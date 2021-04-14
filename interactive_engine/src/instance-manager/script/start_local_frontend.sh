@@ -22,7 +22,7 @@ WORKSPACE=$SCRIPT_DIR/../
 export object_id
 source $SCRIPT_DIR/common.sh
 
-JAVA_OPT="-server -verbose:gc -Xloggc:./gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-frontend.log -Dlogbasedir=/home/maxgraph/logs/frontend -Dlog4j.configurationFile=file:$WORKSPACE/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath $WORKSPACE/0.0.1-SNAPSHOT/conf/*:$WORKSPACE/0.0.1-SNAPSHOT/lib/*:"
+JAVA_OPT="-server -verbose:gc -Xloggc:${LOG_DIR}/maxgraph-frontend.gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-frontend.log -Dlogbasedir=${LOG_DIR}/frontend -Dlog4j.configurationFile=file:$WORKSPACE/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath $WORKSPACE/0.0.1-SNAPSHOT/conf/*:$WORKSPACE/0.0.1-SNAPSHOT/lib/*:"
 
 REPLACE_SCHEMA_PATH=`echo ${schema_path//\//\\\/}`
 
