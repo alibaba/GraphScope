@@ -106,7 +106,6 @@ fn run_main(store_config: Arc<StoreConfig>,
     let async_maxgraph_service;
     let maxgraph_service;
     let initial_timeout = 60;
-
     info!("Start pegasus ........");
     let remote_store_service_manager = Arc::new(RwLock::new(Some(RemoteStoreServiceManager::empty())));
     info!("is lambda enabled: {}", store_config.lambda_enabled);
@@ -120,16 +119,16 @@ fn run_main(store_config: Arc<StoreConfig>,
     server_manager = Box::new(pegasus_server_manager);
     let _manager_guards = ServerManager::start_server(server_manager, store_config.clone(), Box::new(recover_prepare)).unwrap();
 
-    // waiting for initial task_partition_manager
+    // waiting for initial task_partition_manager 
     let mut timeout_count = 0;
     loop {
         match task_partition_manager.read() {
-                Ok(_) => break,
-                Err(_) => thread::sleep(Duration::from_secs(1)),
+            Ok(_) => break,
+            Err(_) => thread::sleep(Duration::from_secs(1)),
         }
         timeout_count += 1;
         if timeout_count == initial_timeout {
-                panic!("Waiting for initial task_partition_manager timeout.")
+            panic!("waiting for initial task_partition_manager timeout.")
         }
     };
 

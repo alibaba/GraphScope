@@ -23,7 +23,6 @@ function _create_maxgraph_instance {
     echo $?
     # launch interactive engine per analytical pod
     parallel_run "$launch_engine_cmd" "$pod_hosts" $ENGINE_CONTAINER 1>/dev/null 2>&1
-    sleep 15s
     _expose_gremlin_server "8182"
 }
 function _create_pod {

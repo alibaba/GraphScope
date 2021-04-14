@@ -17,6 +17,7 @@ object_id=$1
 schema_path=$2
 server_id=$3
 VINEYARD_IPC_SOCKET=$4
+zookeeper_port=$5
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
 
@@ -24,8 +25,8 @@ export object_id
 source $SCRIPT_DIR/common.sh
 mkdir -p $LOG_DIR $CONFIG_DIR $PID_DIR
 
-bash ${SCRIPT_DIR}/start_local_coordinator.sh $object_id
+bash ${SCRIPT_DIR}/start_local_coordinator.sh $object_id $zookeeper_port
 sleep 1
-bash ${SCRIPT_DIR}/start_local_frontend.sh $object_id $schema_path
+bash ${SCRIPT_DIR}/start_local_frontend.sh $object_id $schema_path $zookeeper_port
 sleep 1
-bash ${SCRIPT_DIR}/start_local_executor.sh $object_id $server_id $VINEYARD_IPC_SOCKET
+bash ${SCRIPT_DIR}/start_local_executor.sh $object_id $server_id $VINEYARD_IPC_SOCKET $zookeeper_port

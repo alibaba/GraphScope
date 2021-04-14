@@ -82,7 +82,8 @@ class LocalLauncher(Launcher):
     """
 
     _vineyard_socket_prefix = "/tmp/vineyard.sock."
-    _zookeeper_port = 2181  # fixed
+
+    _default_graphscope_runtime_workspace = "/tmp/graphscope/runtime"
 
     def __init__(
         self,
@@ -110,7 +111,18 @@ class LocalLauncher(Launcher):
         else:
             self._graphscope_prefix = os.environ["GRAPHSCOPE_PREFIX"]
 
+        if "GRAPHSCOPE_RUNTIME" not in os.environ:
+            self._graphscope_runtime_workspace = os.path.join(
+                self._default_graphscope_runtime_workspace, self._instance_id
+            )
+        else:
+            self._graphscope_runtime_workspace = os.path.join(
+                os.environ["GRAPHSCOPE_RUNTIME"], self._instance_id
+            )
+        os.makedirs(self._graphscope_runtime_workspace, exist_ok=True)
+
         # zookeeper
+        self._zookeeper_port = None
         self._zk_process = None
         # graph manager
         self._graph_manager_endpoint = None
@@ -122,11 +134,14 @@ class LocalLauncher(Launcher):
         # learning instance processes
         self._learning_instance_processes = {}
 
+        self._closed = True
+
     def type(self):
         return types_pb2.HOSTS
 
     def start(self):
         try:
+            self._closed = False
             self._create_services()
         except Exception as e:
             logger.error("Error when launching GraphScope locally: %s", str(e))
@@ -135,10 +150,12 @@ class LocalLauncher(Launcher):
         return True
 
     def stop(self, is_dangling=False):
-        if self._graphscope_prefix is not None:
-            self._stop_interactive_engine_service()
-        self._stop_vineyard()
-        self._stop_analytical_engine()
+        if not self._closed:
+            if self._graphscope_prefix is not None:
+                self._stop_interactive_engine_service()
+            self._stop_vineyard()
+            self._stop_analytical_engine()
+            self._closed = True
 
     def poll(self):
         if self._analytical_engine_process:
@@ -157,6 +174,10 @@ class LocalLauncher(Launcher):
     def vineyard_socket(self):
         return self._vineyard_socket
 
+    @property
+    def zookeeper_port(self):
+        return self._zookeeper_port
+
     def _get_free_port(self, host):
         port = random.randint(60001, 65535)
         while is_port_in_use(host, port):
@@ -164,10 +185,20 @@ class LocalLauncher(Launcher):
         return port
 
     def _launch_zookeeper(self):
+        zoo_cfg = os.path.join(self._graphscope_runtime_workspace, "zoo.cfg")
+        zoo_data_dir = os.path.join(self._graphscope_runtime_workspace, "zookeeper")
+
+        self._zookeeper_port = self._get_free_port(self._hosts.split(",")[0])
+
+        # create zookeeper config file
+        with open(zoo_cfg, "w") as f:
+            f.write("dataDir={0}\n".format(zoo_data_dir))
+            f.write("clientPort={0}\n".format(self._zookeeper_port))
+
         zk_sh = shutil.which("zkServer.sh")
         if not zk_sh:
             raise RuntimeError("zkServer.sh command not found.")
-        cmd = [zk_sh, "start-foreground"]
+        cmd = [zk_sh, "start-foreground", zoo_cfg]
 
         process = subprocess.Popen(
             cmd,
@@ -197,8 +228,15 @@ class LocalLauncher(Launcher):
     def _launch_graph_manager(self):
         port = self._get_free_port(self._hosts.split(",")[0])
         gm_sh = os.path.join(self._graphscope_prefix, "bin", "start.sh")
-        cmd = ["bash", gm_sh, "local", str(port), self._instance_id]
-        print(" ".join(cmd))
+        cmd = [
+            "bash",
+            gm_sh,
+            "local",
+            str(port),
+            self._instance_id,
+            str(self._zookeeper_port),
+        ]
+        logger.info("Launch graph manager command: %s", " ".join(cmd))
 
         process = subprocess.Popen(
             cmd,
@@ -217,7 +255,6 @@ class LocalLauncher(Launcher):
         self._graph_manager_process = process
 
         start_time = time.time()
-        logger.info("Server is initializing graph manager")
         while not is_port_in_use(self._hosts.split(",")[0], port):
             time.sleep(1)
             if (
@@ -226,7 +263,6 @@ class LocalLauncher(Launcher):
             ):
                 raise RuntimeError("Launch GraphManager service failed.")
 
-        logger.info("Server is initializing graph manager")
         self._graph_manager_endpoint = "{0}:{1}".format(self._hosts.split(",")[0], port)
 
     def _create_interactive_engine_service(self):
@@ -369,7 +405,7 @@ class LocalLauncher(Launcher):
 
         # terminate the process
         for proc in self._learning_instance_processes[object_id]:
-            self._stop_subprocess(proc)
+            self._stop_subprocess(proc, kill=True)
         self._learning_instance_processes.clear()
 
     def _stop_vineyard(self):
@@ -382,7 +418,7 @@ class LocalLauncher(Launcher):
         self._graph_manager_endpoint = None
 
         gm_stop_sh = os.path.join(self._graphscope_prefix, "bin", "stop.sh")
-        cmd = ["bash", gm_stop_sh]
+        cmd = ["bash", gm_stop_sh, "local", self._instance_id]
 
         process = subprocess.Popen(  # noqa: F841
             cmd,
@@ -401,8 +437,11 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._analytical_engine_process)
         self._analytical_engine_endpoint = None
 
-    def _stop_subprocess(self, proc):
+    def _stop_subprocess(self, proc, kill=False):
         if proc:
-            proc.terminate()
+            if kill:
+                proc.kill()
+            else:
+                proc.terminate()
             proc.wait()
             proc = None

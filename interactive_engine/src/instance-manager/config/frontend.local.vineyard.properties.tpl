@@ -48,12 +48,12 @@ bulkload.submit.by.frontend=true
 data.producer.mode=DIRECT
 
 ## Gremlin Server 端口的Port
-timely.gremlin.server.port=8182
+timely.gremlin.server.port=0
 
 ## 这个值应该是FRONTEND的全局角色ID
 server.id=1
 ## ZK 地址
-zookeeper.connect=localhost:2181
+zookeeper.connect=localhost:ZOOKEEPER_PORT
 ## ZK 连接 TIMEOUT
 zookeeper.connection.timeout.ms=10000
 ## ZK SETTION TIMEOUT

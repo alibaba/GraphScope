@@ -16,6 +16,7 @@
 object_id=$1
 server_id=$2
 export VINEYARD_IPC_SOCKET=$3
+zookeeper_port=$4
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
 WORKSPACE=$SCRIPT_DIR/../
@@ -28,6 +29,7 @@ export LOG_DIRS=$LOG_DIR
 inner_config=$CONFIG_DIR/executor.local.vineyard.properties
 cp $WORKSPACE/config/executor.local.vineyard.properties.tpl $inner_config
 sed -i "s/VINEYARD_OBJECT_ID/$object_id/g" $inner_config
+sed -i "s/ZOOKEEPER_PORT/$zookeeper_port/g" $inner_config
 
 server_id=1
 
