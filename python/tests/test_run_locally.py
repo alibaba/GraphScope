@@ -94,7 +94,7 @@ def demo(sess, ogbn_mag_small):
     ).one()
 
     sub_graph = interactive.subgraph(
-        "g.V().has('year', inside(2014, 2020)).outE('cites')"
+        "g.timeout(1000000).V().has('year', inside(2014, 2020)).outE('cites')"
     )
 
     simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
@@ -203,10 +203,10 @@ def test_demo(ogbn_mag_small):
 
 
 def test_multiple_session(ogbn_mag_small):
-    sess1 = graphscope.session(cluster_type="hosts", num_workers=2)
+    sess1 = graphscope.session(cluster_type="hosts", num_workers=1)
     assert sess1.info["status"] == "active"
 
-    sess2 = graphscope.session(cluster_type="hosts", num_workers=2)
+    sess2 = graphscope.session(cluster_type="hosts", num_workers=1)
     assert sess2.info["status"] == "active"
 
     simple_flow(sess1, ogbn_mag_small)
