@@ -67,6 +67,11 @@ jobs:
         pip3 install -U pip --user
         pip3 install libclang parsec setuptools wheel twine --user
 
+        # avoid access node by DNS hostnames
+        r=`cat /etc/hosts | grep $(hostname)`
+        if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
+        cat /etc/hosts
+
     - name: Install libgrape-lite
       run: |
         git clone -b master --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git
@@ -113,5 +118,5 @@ jobs:
         python3 -m pytest -s -v /tmp/test_run_locally.py
 
     - name: Setup tmate session debug
-      if: always()
+      if: false
       uses: mxschmitt/action-tmate@v2
