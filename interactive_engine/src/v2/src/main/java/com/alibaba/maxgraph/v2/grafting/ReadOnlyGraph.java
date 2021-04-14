@@ -1,4 +1,4 @@
-package com.alibaba.maxgraph.v2.frontend;
+package com.alibaba.maxgraph.v2.grafting;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;

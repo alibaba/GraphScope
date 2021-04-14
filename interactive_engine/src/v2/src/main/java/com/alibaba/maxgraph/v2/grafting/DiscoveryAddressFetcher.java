@@ -1,4 +1,4 @@
-package com.alibaba.maxgraph.v2.frontend.server;
+package com.alibaba.maxgraph.v2.grafting;
 
 import com.alibaba.maxgraph.common.rpc.RpcAddress;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
