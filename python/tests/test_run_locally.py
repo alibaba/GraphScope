@@ -149,12 +149,6 @@ def demo(sess, ogbn_mag_small):
     train(config, lg)
 
 
-def test_demo(ogbn_mag_small):
-    sess = graphscope.session(cluster_type="hosts", num_workers=2)
-    demo(sess, ogbn_mag_small)
-    sess.close()
-
-
 def test_multiple_session(ogbn_mag_small):
     sess1 = graphscope.session(cluster_type="hosts", num_workers=2)
     assert sess1.info["status"] == "active"
@@ -162,7 +156,7 @@ def test_multiple_session(ogbn_mag_small):
     sess2 = graphscope.session(cluster_type="hosts", num_workers=2)
     assert sess2.info["status"] == "active"
 
-    demo(sess2, ogbn_mag_small)
+    demo(sess1, ogbn_mag_small)
 
     sess1.close()
     sess2.close()
