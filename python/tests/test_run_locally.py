@@ -43,6 +43,7 @@ graphscope.set_option(initializing_interactive_engine=False)
 
 test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 
+
 def train(config, graph):
     def model_fn():
         return GCN(
