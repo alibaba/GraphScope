@@ -409,7 +409,7 @@ def test_error_on_ambigious_default_label(
     graph = graph.add_vertices(student_v, "student")
     graph = graph.add_vertices(teacher_v, "teacher")
 
-    with pytest.raises(AssertionError, match="ambiguous vertex label"):
+    with pytest.raises(AssertionError, match="Ambiguous vertex label"):
         graph = graph.add_edges(student_group_e, "group")
 
 
