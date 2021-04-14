@@ -6,7 +6,7 @@ zookeeper.connect=localhost:ZOOKEEPER_PORT
 
 platform.kind:YARN
 
-coordinator.port=8183
+coordinator.port=0
 resource.frontend.count=1
 resource.ingestnode.count=1
 resource.executor.count=1

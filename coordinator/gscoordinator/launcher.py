@@ -255,7 +255,6 @@ class LocalLauncher(Launcher):
         self._graph_manager_process = process
 
         start_time = time.time()
-        logger.info("Server is initializing graph manager")
         while not is_port_in_use(self._hosts.split(",")[0], port):
             time.sleep(1)
             if (
@@ -264,7 +263,6 @@ class LocalLauncher(Launcher):
             ):
                 raise RuntimeError("Launch GraphManager service failed.")
 
-        logger.info("Server is initializing graph manager")
         self._graph_manager_endpoint = "{0}:{1}".format(self._hosts.split(",")[0], port)
 
     def _create_interactive_engine_service(self):
