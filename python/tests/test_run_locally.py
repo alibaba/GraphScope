@@ -37,8 +37,11 @@ from graphscope.learning.examples import GCN
 from graphscope.learning.graphlearn.python.model.tf.optimizer import get_tf_optimizer
 from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
 
-test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 
+graphscope.set_option(show_log=True)
+graphscope.set_option(initializing_interactive_engine=False)
+
+test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 
 def train(config, graph):
     def model_fn():
@@ -146,17 +149,19 @@ def demo(sess, ogbn_mag_small):
     train(config, lg)
 
 
-def test_multiple_session(ogbn_mag_small):
-    graphscope.set_option(show_log=True)
-    graphscope.set_option(initializing_interactive_engine=False)
+def test_demo(ogbn_mag_small):
+    sess = graphscope.session(cluster_type="hosts", num_workers=2)
+    demo(sess, ogbn_mag_small)
+    sess.close()
 
+
+def test_multiple_session(ogbn_mag_small):
     sess1 = graphscope.session(cluster_type="hosts", num_workers=2)
     assert sess1.info["status"] == "active"
 
     sess2 = graphscope.session(cluster_type="hosts", num_workers=2)
     assert sess2.info["status"] == "active"
 
-    demo(sess1, ogbn_mag_small)
     demo(sess2, ogbn_mag_small)
 
     sess1.close()
