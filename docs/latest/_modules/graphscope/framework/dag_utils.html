@@ -652,6 +652,129 @@
     <span class="k">return</span> <span class="n">op</span>
 
 
+<span class="k">def</span> <span class="nf">to_directed</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create to_directed operation for nx graph.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        graph (:class:`nx.Graph`): A nx graph.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Operation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_argument</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">TO_DIRECTED</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<span class="k">def</span> <span class="nf">to_undirected</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create to_undirected operation for nx graph.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        graph (:class:`nx.Graph`): A nx graph.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Operation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_argument</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">TO_UNDIRECTED</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<span class="k">def</span> <span class="nf">create_graph_view</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">view_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create view of nx graph.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        graph (:class:`nx.Graph`): A nx graph.</span>
+<span class="sd">        view_type (str): &#39;reversed&#39;: get a reverse view of graph.</span>
+<span class="sd">                         &#39;directed&#39;: get a directed view of graph</span>
+<span class="sd">                         &#39;undirected&#39;: get a undirected view of graph</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Operation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_argument</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span><span class="p">)</span>
+    <span class="n">check_argument</span><span class="p">(</span><span class="n">view_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;reversed&quot;</span><span class="p">,</span> <span class="s2">&quot;directed&quot;</span><span class="p">,</span> <span class="s2">&quot;undirected&quot;</span><span class="p">))</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">VIEW_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">view_type</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">VIEW_GRAPH</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<span class="k">def</span> <span class="nf">clear_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create clear edges operation for nx graph.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        graph (:class:`nx.Graph`): A nx graph.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An op to modify edges on the graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_argument</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">CLEAR_EDGES</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<span class="k">def</span> <span class="nf">create_subgraph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create subgraph operation for nx graph.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        graph (:class:`nx.Graph`): A nx graph.</span>
+<span class="sd">        nodes (list): the nodes to induce a subgraph.</span>
+<span class="sd">        edges (list): the edges to induce a edge-induced subgraph.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Operation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_argument</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NODES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">list_str_to_attr</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">list_str_to_attr</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">INDUCE_SUBGRAPH</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
 <div class="viewcode-block" id="unload_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.unload_app.html#graphscope.framework.dag_utils.unload_app">[docs]</a><span class="k">def</span> <span class="nf">unload_app</span><span class="p">(</span><span class="n">app</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Unload a loaded app.</span>
 

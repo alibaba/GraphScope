@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -31,7 +31,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Functions" href="functions.html" />
-    <link rel="prev" title="graphscope.experimental.nx.DiGraph.project_to_simple" href="generated/graphscope.experimental.nx.DiGraph.project_to_simple.html" /> 
+    <link rel="prev" title="graphscope.experimental.nx.DiGraph.reverse" href="generated/graphscope.experimental.nx.DiGraph.reverse.html" /> 
 
   
   <script src="../../_static/js/modernizr.min.js"></script>
@@ -194,30 +194,6 @@
             
   <section id="builtin-algorithms">
 <span id="builtin"></span><h1>Builtin algorithms<a class="headerlink" href="#builtin-algorithms" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt id="graphscope.experimental.nx.Graph.project_to_simple">
-<code class="sig-prename descclassname">graphscope.experimental.nx.Graph.</code><code class="sig-name descname">project_to_simple</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">v_prop</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">e_prop</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.Graph.project_to_simple" title="Permalink to this definition">¶</a></dt>
-<dd><p>Project nx graph to a simple graph to run builtin alogorithms.</p>
-<p>A simple graph is a accesser wrapper of property graph that only single edge
-attribute and single node attribute are available.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>v_prop</strong> (<em>the node attribute key to project</em><em>, </em><em>(</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – </p></li>
-<li><p><strong>e_prop</strong> (<em>the edge attribute key to project</em><em>, </em><em>(</em><em>optional</em><em>, </em><em>default None</em><em>)</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>simple_graph</strong> – A nx.Graph object that hold a simple graph projected by host property graph.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="graphs.html#graphscope.experimental.nx.Graph" title="graphscope.experimental.nx.Graph">nx.Graph</a> or <a class="reference internal" href="graphs.html#graphscope.experimental.nx.DiGraph" title="graphscope.experimental.nx.DiGraph">nx.DiGraph</a></p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>the method is implicit called in builtin apps.</p>
-</dd></dl>
-
 <dl class="py function">
 <dt id="graphscope.experimental.nx.builtin.pagerank">
 <code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">pagerank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">0.85</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-06</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.pagerank" title="Permalink to this definition">¶</a></dt>
@@ -973,7 +949,7 @@ Vladimir Batagelj and Matjaz Zaversnik,  2003.
 
 <dl class="py function">
 <dt id="graphscope.experimental.nx.builtin.clustering">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">clustering</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.clustering" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">clustering</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.clustering" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the clustering coefficient for nodes.</p>
 <p>For unweighted graphs, the clustering of a node <span class="math notranslate nohighlight">\(u\)</span>
 is the fraction of possible triangles through that node that exist,</p>
@@ -1111,7 +1087,7 @@ present in G.</p>
 
 <dl class="py function">
 <dt id="graphscope.experimental.nx.builtin.average_clustering">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">average_clustering</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">count_zeros</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.average_clustering" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">average_clustering</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">count_zeros</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.average_clustering" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the average clustering coefficient for the graph G.</p>
 <p>The clustering coefficient for the graph is the average,</p>
 <div class="math notranslate nohighlight">
@@ -1173,7 +1149,7 @@ nodes and leafs on clustering measures for small-world networks.
         <a href="functions.html" class="btn btn-neutral float-right" title="Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="generated/graphscope.experimental.nx.DiGraph.project_to_simple.html" class="btn btn-neutral" title="graphscope.experimental.nx.DiGraph.project_to_simple" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="generated/graphscope.experimental.nx.DiGraph.reverse.html" class="btn btn-neutral" title="graphscope.experimental.nx.DiGraph.reverse" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

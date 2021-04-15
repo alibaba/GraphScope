@@ -5,7 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="graphscope.experimental.nx.Graph.project_to_simple" href="graphscope.experimental.nx.Graph.project_to_simple.html" />
+    <link rel="next" title="graphscope.experimental.nx.DiGraph.__init__" href="graphscope.experimental.nx.DiGraph.__init__.html" />
     <link rel="prev" title="graphscope.experimental.nx.Graph.subgraph" href="graphscope.experimental.nx.Graph.subgraph.html" /> 
 
   
@@ -220,15 +220,6 @@ attributes.</p>
 <dd class="field-odd"><p><a class="reference internal" href="../../graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">Graph</a></p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>The graph, edge, and node attributes in the returned subgraph
-view are references to the corresponding attributes in the original
-graph. The view is read-only.</p>
-<p>To create a full graph version of the subgraph with its own copy
-of the edge or node attributes, use:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">edge_subgraph</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  
-</pre></div>
-</div>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edge_subgraph</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)])</span>
@@ -250,7 +241,7 @@ of the edge or node attributes, use:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="graphscope.experimental.nx.Graph.project_to_simple.html" class="btn btn-neutral float-right" title="graphscope.experimental.nx.Graph.project_to_simple" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="graphscope.experimental.nx.DiGraph.__init__.html" class="btn btn-neutral float-right" title="graphscope.experimental.nx.DiGraph.__init__" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="graphscope.experimental.nx.Graph.subgraph.html" class="btn btn-neutral" title="graphscope.experimental.nx.Graph.subgraph" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

@@ -186,8 +186,8 @@
 
 <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
 
+<span class="kn">from</span> <span class="nn">networkx</span> <span class="k">import</span> <span class="n">freeze</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.coreviews</span> <span class="k">import</span> <span class="n">AdjacencyView</span>
-<span class="kn">from</span> <span class="nn">networkx.classes.graphviews</span> <span class="k">import</span> <span class="n">reverse_view</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="k">import</span> <span class="n">DiDegreeView</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="k">import</span> <span class="n">InDegreeView</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="k">import</span> <span class="n">InEdgeView</span>
@@ -200,6 +200,7 @@
 <span class="kn">from</span> <span class="nn">graphscope.experimental.nx.convert</span> <span class="k">import</span> <span class="n">from_gs_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.experimental.nx.convert</span> <span class="k">import</span> <span class="n">to_nx_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.experimental.nx.utils.other</span> <span class="k">import</span> <span class="n">empty_graph_in_engine</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="k">import</span> <span class="n">dag_utils</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="k">import</span> <span class="n">copy_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.graph_schema</span> <span class="k">import</span> <span class="n">GraphSchema</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">types_pb2</span>
@@ -816,15 +817,24 @@
 <span class="sd">            the original graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">copy</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">reverse_view</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">copy_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;reverse&quot;</span><span class="p">)</span>
-        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;reversed&quot;</span><span class="p">)</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">copy_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;reverse&quot;</span><span class="p">)</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">g</span></div></div>
 </pre></div>
 

@@ -185,10 +185,11 @@
 <span class="c1">#</span>
 
 <span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">hashlib</span>
 <span class="kn">import</span> <span class="nn">json</span>
 
+<span class="kn">from</span> <span class="nn">networkx</span> <span class="k">import</span> <span class="n">freeze</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.coreviews</span> <span class="k">import</span> <span class="n">AdjacencyView</span>
+<span class="kn">from</span> <span class="nn">networkx.classes.function</span> <span class="k">import</span> <span class="n">create_empty_copy</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.graphviews</span> <span class="k">import</span> <span class="n">generic_graph_view</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="k">import</span> <span class="n">DegreeView</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="k">import</span> <span class="n">EdgeView</span>
@@ -485,8 +486,10 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;String key of the coresponding engine graph.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_graph&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">key</span>  <span class="c1"># this graph is a graph view, use host graph key</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_graph&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_client_view</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">key</span>
+            <span class="p">)</span>  <span class="c1"># this graph is a client side graph view, use host graph key</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
 
     <span class="nd">@property</span>
@@ -628,8 +631,6 @@
 <span class="sd">        &gt;&gt;&gt; G[0]</span>
 <span class="sd">        NbrsView({1: {}})</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">n</span><span class="p">]</span></div>
 
     <span class="nd">@property</span>
@@ -721,8 +722,6 @@
                 <span class="n">node</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="p">,</span> <span class="n">data</span><span class="p">]</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
                 <span class="n">node</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
-                <span class="k">continue</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_vertex_properties</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
                 <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_ADD_NODES</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
@@ -979,10 +978,11 @@
 <span class="sd">        &gt;&gt;&gt; 0 in G</span>
 <span class="sd">        True</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HAS_NODE</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
-        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span></div>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HAS_NODE</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="Graph.add_edge"><a class="viewcode-back" href="../../../../../reference/networkx/generated/graphscope.experimental.nx.Graph.add_edge.html#graphscope.experimental.nx.Graph.add_edge">[docs]</a>    <span class="k">def</span> <span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u_of_edge</span><span class="p">,</span> <span class="n">v_of_edge</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add an edge between u and v.</span>
@@ -1081,8 +1081,6 @@
                 <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
                     <span class="s2">&quot;Edge tuple </span><span class="si">%s</span><span class="s2"> must be a 2-tuple or 3-tuple.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,)</span>
                 <span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
-                <span class="k">continue</span>
             <span class="c1"># FIXME: support dynamic data type in same property</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_edge_properties</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="n">edge</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">]</span>
@@ -1412,7 +1410,8 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">u</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGE_NUM</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">())</span> <span class="o">//</span> <span class="mi">2</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
             <span class="k">return</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1701,6 +1700,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">init_nx_schema</span><span class="p">()</span></div>
 
+    <span class="k">def</span> <span class="nf">clear_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">clear_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
     <span class="k">def</span> <span class="nf">is_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns True if graph is directed, False otherwise.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">False</span>
@@ -1751,17 +1754,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">nbunch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># include all nodes via iterator</span>
             <span class="n">bunch</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="p">(</span>
-            <span class="nb">isinstance</span><span class="p">(</span><span class="n">nbunch</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span> <span class="ow">and</span> <span class="n">nbunch</span> <span class="ow">in</span> <span class="bp">self</span>
-        <span class="p">):</span>  <span class="c1"># if nbunch is a single node</span>
+        <span class="k">elif</span> <span class="n">nbunch</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>  <span class="c1"># if nbunch is a single node</span>
             <span class="n">bunch</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">([</span><span class="n">nbunch</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># if nbunch is a sequence of nodes</span>
 
             <span class="k">def</span> <span class="nf">bunch_iter</span><span class="p">(</span><span class="n">nlist</span><span class="p">,</span> <span class="n">adj</span><span class="p">):</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nlist</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
-                            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;invalid node&quot;</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">adj</span><span class="p">:</span>
                             <span class="k">yield</span> <span class="n">n</span>
                 <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -1769,11 +1768,11 @@
                     <span class="c1"># capture error for non-sequence/iterator nbunch.</span>
                     <span class="k">if</span> <span class="s2">&quot;iter&quot;</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
                         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;nbunch is not a node or a sequence of nodes.&quot;</span>
-                        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
                     <span class="c1"># capture error for invalid node.</span>
-                    <span class="k">elif</span> <span class="s2">&quot;invalid&quot;</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
+                    <span class="k">elif</span> <span class="s2">&quot;hashable&quot;</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
                         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Node </span><span class="si">{}</span><span class="s2"> in sequence nbunch is not a valid node.&quot;</span>
-                        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+                        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">raise</span>
 
@@ -1837,13 +1836,15 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">as_view</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">generic_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">copy_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;identical&quot;</span><span class="p">)</span>
-        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">generic_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">copy_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;identical&quot;</span><span class="p">)</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">g</span></div>
 
 <div class="viewcode-block" id="Graph.to_undirected"><a class="viewcode-back" href="../../../../../reference/networkx/generated/graphscope.experimental.nx.Graph.to_undirected.html#graphscope.experimental.nx.Graph.to_undirected">[docs]</a>    <span class="k">def</span> <span class="nf">to_undirected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">as_view</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -1884,13 +1885,25 @@
 <span class="sd">        [(0, 1)]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="n">graph_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_undirected_class</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">as_view</span><span class="p">:</span>
-                <span class="n">graph_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_undirected_class</span><span class="p">()</span>
-                <span class="k">return</span> <span class="n">generic_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_class</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># NB: fallback, maybe slow, here should be deecopy</span>
-                <span class="n">fallback_G</span> <span class="o">=</span> <span class="n">to_networkx_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">fallback_G</span><span class="o">.</span><span class="n">to_undirected</span><span class="p">(</span><span class="n">as_view</span><span class="o">=</span><span class="n">as_view</span><span class="p">)</span>
+                <span class="n">g</span> <span class="o">=</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+                <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;undirected&quot;</span><span class="p">)</span>
+                <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">g</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">g</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_undirected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">g</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">as_view</span><span class="o">=</span><span class="n">as_view</span><span class="p">)</span></div>
 
@@ -1933,16 +1946,28 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">as_view</span><span class="o">=</span><span class="n">as_view</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="n">graph_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_directed_class</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">as_view</span><span class="p">:</span>
-                <span class="n">graph_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_directed_class</span><span class="p">()</span>
-                <span class="k">return</span> <span class="n">generic_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_class</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># NB: fallback, maybe slow</span>
-                <span class="n">fallback_G</span> <span class="o">=</span> <span class="n">to_networkx_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">fallback_G</span><span class="o">.</span><span class="n">to_directed</span><span class="p">(</span><span class="n">as_view</span><span class="o">=</span><span class="n">as_view</span><span class="p">)</span></div>
+                <span class="n">g</span> <span class="o">=</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+                <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;directed&quot;</span><span class="p">)</span>
+                <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">g</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">g</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">g</span></div>
 
 <div class="viewcode-block" id="Graph.subgraph"><a class="viewcode-back" href="../../../../../reference/networkx/generated/graphscope.experimental.nx.Graph.subgraph.html#graphscope.experimental.nx.Graph.subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns a SubGraph view of the subgraph induced on `nodes`.</span>
+        <span class="sd">&quot;&quot;&quot;Returns a SubGraph of the subgraph induced on `nodes`.</span>
 
 <span class="sd">        The induced subgraph of the graph contains the nodes in `nodes`</span>
 <span class="sd">        and the edges between those nodes.</span>
@@ -1954,42 +1979,8 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        G : SubGraph View</span>
-<span class="sd">            A subgraph view of the graph. The graph structure cannot be</span>
-<span class="sd">            changed but node/edge attributes can and are shared with the</span>
-<span class="sd">            original graph.</span>
-
-<span class="sd">        Notes</span>
-<span class="sd">        -----</span>
-<span class="sd">        The graph, edge and node attributes are shared with the original graph.</span>
-<span class="sd">        Changes to the graph structure is ruled out by the view, but changes</span>
-<span class="sd">        to attributes are reflected in the original graph.</span>
-
-<span class="sd">        To create a subgraph with its own copy of the edge/node attributes use:</span>
-<span class="sd">        G.subgraph(nodes).copy()</span>
-
-<span class="sd">        For an inplace reduction of a graph to a subgraph you can remove nodes:</span>
-<span class="sd">        G.remove_nodes_from([n for n in G if n not in set(nodes)])</span>
-
-<span class="sd">        Subgraph views are sometimes NOT what you want. In most cases where</span>
-<span class="sd">        you want to do more than simply look at the induced edges, it makes</span>
-<span class="sd">        more sense to just create the subgraph as its own graph with code like:</span>
-
-<span class="sd">        ::</span>
-
-<span class="sd">            # Create a subgraph SG based on a (possibly multigraph) G</span>
-<span class="sd">            SG = G.__class__()</span>
-<span class="sd">            SG.add_nodes_from((n, G.nodes[n]) for n in largest_wcc)</span>
-<span class="sd">            if SG.is_multigraph:</span>
-<span class="sd">                SG.add_edges_from((n, nbr, key, d)</span>
-<span class="sd">                    for n, nbrs in G.adj.items() if n in largest_wcc</span>
-<span class="sd">                    for nbr, keydict in nbrs.items() if nbr in largest_wcc</span>
-<span class="sd">                    for key, d in keydict.items())</span>
-<span class="sd">            else:</span>
-<span class="sd">                SG.add_edges_from((n, nbr, d)</span>
-<span class="sd">                    for n, nbrs in G.adj.items() if n in largest_wcc</span>
-<span class="sd">                    for nbr, d in nbrs.items() if nbr in largest_wcc)</span>
-<span class="sd">            SG.graph.update(G.graph)</span>
+<span class="sd">        G : Graph</span>
+<span class="sd">            A subgraph of the graph.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1998,9 +1989,16 @@
 <span class="sd">        &gt;&gt;&gt; list(H.edges)</span>
 <span class="sd">        [(0, 1), (1, 2)]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># NB: fallback subgraph</span>
-        <span class="n">ng</span> <span class="o">=</span> <span class="n">to_networkx_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ng</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span></div>
+        <span class="n">induced_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">induced_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">n</span><span class="p">]))</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">induced_nodes</span><span class="p">)</span>
+        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">g</span></div>
 
 <div class="viewcode-block" id="Graph.edge_subgraph"><a class="viewcode-back" href="../../../../../reference/networkx/generated/graphscope.experimental.nx.Graph.edge_subgraph.html#graphscope.experimental.nx.Graph.edge_subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">edge_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the subgraph induced by the specified edges.</span>
@@ -2019,17 +2017,6 @@
 <span class="sd">            An edge-induced subgraph of this graph with the same edge</span>
 <span class="sd">            attributes.</span>
 
-<span class="sd">        Notes</span>
-<span class="sd">        -----</span>
-<span class="sd">        The graph, edge, and node attributes in the returned subgraph</span>
-<span class="sd">        view are references to the corresponding attributes in the original</span>
-<span class="sd">        graph. The view is read-only.</span>
-
-<span class="sd">        To create a full graph version of the subgraph with its own copy</span>
-<span class="sd">        of the edge or node attributes, use::</span>
-
-<span class="sd">            &gt;&gt;&gt; G.edge_subgraph(edges).copy()  # doctest: +SKIP</span>
-
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; G = nx.path_graph(5)</span>
@@ -2040,9 +2027,17 @@
 <span class="sd">        [(0, 1), (3, 4)]</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># NB: fallback edge subgraph</span>
-        <span class="n">ng</span> <span class="o">=</span> <span class="n">to_networkx_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ng</span><span class="o">.</span><span class="n">edge_subgraph</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span></div>
+        <span class="n">induced_edges</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">e</span>
+            <span class="n">induced_edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">]))</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="n">induced_edges</span><span class="p">)</span>
+        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">g</span></div>
 
     <span class="nd">@parse_ret_as_dict</span>
     <span class="k">def</span> <span class="nf">batch_get_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">):</span>
@@ -2209,7 +2204,7 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Graph.project_to_simple"><a class="viewcode-back" href="../../../../../reference/networkx/generated/graphscope.experimental.nx.Graph.project_to_simple.html#graphscope.experimental.nx.Graph.project_to_simple">[docs]</a>    <span class="k">def</span> <span class="nf">project_to_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">e_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_project_to_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">e_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Project nx graph to a simple graph to run builtin alogorithms.</span>
 
 <span class="sd">        A simple graph is a accesser wrapper of property graph that only single edge</span>
@@ -2229,8 +2224,12 @@
 <span class="sd">        -------</span>
 <span class="sd">            the method is implicit called in builtin apps.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_graph&quot;</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;graph view can&#39;t project to simple graph&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_graph&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_client_view</span><span class="p">:</span>
+            <span class="c1"># is a graph view, project the original graph(just for copy)</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span>
+            <span class="k">while</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;_graph&quot;</span><span class="p">):</span>
+                <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">_graph</span>
+            <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">_project_to_simple</span><span class="p">(</span><span class="n">v_prop</span><span class="o">=</span><span class="n">v_prop</span><span class="p">,</span> <span class="n">e_prop</span><span class="o">=</span><span class="n">e_prop</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">v_prop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">v_prop</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v_prop</span><span class="p">)</span>
@@ -2273,7 +2272,7 @@
         <span class="n">graph</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_schema_from_def</span><span class="p">(</span><span class="n">graph_def</span><span class="o">.</span><span class="n">schema_def</span><span class="p">)</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span>
-        <span class="k">return</span> <span class="n">graph</span></div></div>
+        <span class="k">return</span> <span class="n">graph</span></div>
 </pre></div>
 
            </div>
