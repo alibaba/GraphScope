@@ -101,6 +101,8 @@ class GrapeInstance : public Subscriber {
   bl::result<void> modifyEdges(const rpc::GSParams& params,
                                const std::vector<std::string>& edges);
 
+  bl::result<void> clearEdges(const rpc::GSParams& params);
+
   bl::result<std::shared_ptr<grape::InArchive>> contextToNumpy(
       const rpc::GSParams& params);
 
@@ -117,6 +119,10 @@ class GrapeInstance : public Subscriber {
   bl::result<rpc::GraphDef> convertGraph(const rpc::GSParams& params);
 
   bl::result<rpc::GraphDef> copyGraph(const rpc::GSParams& params);
+
+  bl::result<rpc::GraphDef> toDirected(const rpc::GSParams& params);
+
+  bl::result<rpc::GraphDef> toUnDirected(const rpc::GSParams& params);
 
   bl::result<rpc::GraphDef> addLabelsToGraph(const rpc::GSParams& params);
 

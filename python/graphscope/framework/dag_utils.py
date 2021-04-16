@@ -487,6 +487,76 @@ def copy_graph(graph, copy_type="identical"):
     return op
 
 
+def to_directed(graph):
+    """Create to_directed operation for nx graph.
+
+    Args:
+        graph (:class:`nx.Graph`): A nx graph.
+
+    Returns:
+        Operation
+    """
+    check_argument(
+        graph.graph_type == types_pb2.DYNAMIC_PROPERTY
+    )
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+    }
+
+    op = Operation(
+        graph.session_id,
+        types_pb2.TO_DIRECTED,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
+def to_undirected(graph):
+    """Create to_undirected operation for nx graph.
+
+    Args:
+        graph (:class:`nx.Graph`): A nx graph.
+
+    Returns:
+        Operation
+    """
+    check_argument(
+        graph.graph_type == types_pb2.DYNAMIC_PROPERTY
+    )
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+    }
+
+    op = Operation(
+        graph.session_id,
+        types_pb2.TO_UNDIRECTED,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+def clear_edges(graph):
+    """Create clear edges operation for nx graph.
+
+    Args:
+        graph (:class:`nx.Graph`): A nx graph.
+
+    Returns:
+        An op to modify edges on the graph.
+    """
+    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+    }
+    op = Operation(
+        graph.session_id,
+        types_pb2.CLEAR_EDGES,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
 def unload_app(app):
     """Unload a loaded app.
 

@@ -258,6 +258,10 @@ def unify_type(t):
             return types_pb2.DOUBLE
         elif t is str:
             return types_pb2.STRING
+        elif t is bool:
+            return types_pb2.BOOLEAN
+        elif t is list:
+            return types_pb2.LIST
     elif isinstance(t, int):  # types_pb2.DataType
         return t
     raise TypeError("Not supported type {}".format(t))
