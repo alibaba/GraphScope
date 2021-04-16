@@ -496,9 +496,7 @@ def to_directed(graph):
     Returns:
         Operation
     """
-    check_argument(
-        graph.graph_type == types_pb2.DYNAMIC_PROPERTY
-    )
+    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -521,9 +519,7 @@ def to_undirected(graph):
     Returns:
         Operation
     """
-    check_argument(
-        graph.graph_type == types_pb2.DYNAMIC_PROPERTY
-    )
+    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -535,6 +531,7 @@ def to_undirected(graph):
         output_types=types_pb2.GRAPH,
     )
     return op
+
 
 def clear_edges(graph):
     """Create clear edges operation for nx graph.
@@ -556,6 +553,7 @@ def clear_edges(graph):
         output_types=types_pb2.GRAPH,
     )
     return op
+
 
 def unload_app(app):
     """Unload a loaded app.
