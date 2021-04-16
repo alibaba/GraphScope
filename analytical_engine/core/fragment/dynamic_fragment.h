@@ -2298,6 +2298,7 @@ class DynamicFragment {
 
     inner_edge_space_.copy(other->inner_edge_space_);
   }
+
   void toDirectedEdges(std::shared_ptr<DynamicFragment>& origin) {
     ienum_ = origin->oenum_ / 2;
     oenum_ = origin->oenum_ / 2;
@@ -2316,6 +2317,8 @@ class DynamicFragment {
   }
 
   void toUnDirectedEdges(std::shared_ptr<DynamicFragment>& origin) {
+    oenum_ = origin->oenum_;
+    ienum_ = 0;
     inner_oe_pos_.resize(origin->inner_oe_pos_.size());
     memcpy(&inner_oe_pos_[0], &(origin->inner_oe_pos_[0]),
            origin->inner_oe_pos_.size() * sizeof(int32_t));
@@ -2326,7 +2329,9 @@ class DynamicFragment {
     for (auto v : inner_vertices) {
       for (auto& e : origin->GetIncomingAdjList(v)) {
         vid_t vlid = e.get_neighbor().GetValue();
-        addOutgoingEdge(v.GetValue(), vlid, e.get_data());
+        if (addOutgoingEdge(v.GetValue(), vlid, e.get_data())) {
+          ++oenum_;
+        }
       }
     }
   }
