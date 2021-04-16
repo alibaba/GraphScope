@@ -13,6 +13,13 @@ members = [
     "Pegasus",
 ]
 
+[build]
+rustflags = [
+    "-C", "linker-plugin-lto",
+    "-C", "linker=clang",
+    "-C", "link-arg=-fuse-ld=lld",
+]
+
 [profile.release]
 opt-level = 3
 debug = true
