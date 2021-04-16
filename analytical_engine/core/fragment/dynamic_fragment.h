@@ -792,7 +792,7 @@ class DynamicFragment {
   // generate directed graph from orignal undirected graph.
   void ToDirectedFrom(std::shared_ptr<DynamicFragment> origin) {
     // original graph must be undirected.
-    assert(!origin->directed);
+    assert(!origin->directed());
 
     directed_ = true;
     load_strategy_ = grape::LoadStrategy::kBothOutIn;
@@ -805,7 +805,7 @@ class DynamicFragment {
   // generate undirected graph from original directed graph.
   void ToUnDirectedFrom(std::shared_ptr<DynamicFragment> origin) {
     // original graph must be directed.
-    assert(origin->directed);
+    assert(origin->directed());
 
     directed_ = false;
     load_strategy_ = grape::LoadStrategy::kOnlyOut;
@@ -2275,7 +2275,7 @@ class DynamicFragment {
   void copyEdges(std::shared_ptr<DynamicFragment>& other,
                  const std::string& type) {
     if (type == "reverse") {
-      assert(orig->directed_);
+      assert(other->directed());
       ienum_ = other->oenum_;
       oenum_ = other->ienum_;
       inner_ie_pos_.resize(other->inner_oe_pos_.size());
