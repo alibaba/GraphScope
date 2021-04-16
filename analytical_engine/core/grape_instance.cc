@@ -858,35 +858,35 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     r->set_graph_def(graph_def);
     break;
   }
-#ifdef EXPERIMENTAL_ON
   case rpc::TO_DIRECTED: {
+#ifdef EXPERIMENTAL_ON
     BOOST_LEAF_AUTO(graph_def, toDirected(params));
     r->set_graph_def(graph_def);
-    break;
-  }
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GS is built with experimental off");
 #endif
-#ifdef EXPERIMENTAL_ON
+    break;
+  }
   case rpc::TO_UNDIRECTED: {
+#ifdef EXPERIMENTAL_ON
     BOOST_LEAF_AUTO(graph_def, toUnDirected(params));
     r->set_graph_def(graph_def);
-    break;
-  }
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GS is built with experimental off");
 #endif
-#ifdef EXPERIMENTAL_ON
+    break;
+  }
   case rpc::CLEAR_EDGES: {
+#ifdef EXPERIMENTAL_ON
     BOOST_LEAF_CHECK(clearEdges(params));
-    break;
-  }
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GS is built with experimental off");
 #endif
+    break;
+  }
   case rpc::ADD_LABELS: {
     BOOST_LEAF_AUTO(graph_def, addLabelsToGraph(params));
     r->set_graph_def(graph_def);
