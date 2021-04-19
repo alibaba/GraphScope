@@ -23,10 +23,12 @@ import copy
 import json
 
 from networkx.classes.coreviews import AdjacencyView
+from networkx.classes.function import create_empty_copy
 from networkx.classes.graphviews import generic_graph_view
 from networkx.classes.reportviews import DegreeView
 from networkx.classes.reportviews import EdgeView
 from networkx.classes.reportviews import NodeView
+from networkx import freeze
 
 from graphscope.client.session import default_session
 from graphscope.client.session import get_default_session
@@ -319,7 +321,7 @@ class Graph(object):
     @property
     def key(self):
         """String key of the coresponding engine graph."""
-        if hasattr(self, "_graph"):
+        if hasattr(self, "_graph") and self._view_type == "copy":
             return self._graph.key  # this graph is a graph view, use host graph key
         return self._key
 
@@ -1717,7 +1719,16 @@ class Graph(object):
         if self.is_directed():
             graph_class = self.to_undirected_class()
             if as_view:
-                return generic_graph_view(self, graph_class)
+                g = graph_class(create_empty_in_engine=False)
+                g.graph.update(self.graph)
+                op = dag_utils.get_graph_view(self, "undirected")
+                graph_def = op.eval()
+                g._key = graph_def.key
+                g._schema = copy.deepcopy(self._schema)
+                g._graph = self
+                g._view_type = "directed"
+                g = freeze(g)
+                return g
             g = graph_class(create_empty_in_engine=False)
             g.graph = copy.deepcopy(self.graph)
             op = dag_utils.to_undirected(self)
@@ -1769,7 +1780,16 @@ class Graph(object):
         else:
             graph_class = self.to_directed_class()
             if as_view:
-                return generic_graph_view(self, graph_class)
+                g = graph_class(create_empty_in_engine=False)
+                g.graph.update(self.graph)
+                op = dag_utils.get_graph_view(self, "directed")
+                graph_def = op.eval()
+                g._key = graph_def.key
+                g._schema = copy.deepcopy(self._schema)
+                g._graph = self
+                g._view_type = "directed"
+                g = freeze(g)
+                return g
             g = graph_class(create_empty_in_engine=False)
             g.graph = copy.deepcopy(self.graph)
             op = dag_utils.to_directed(self)

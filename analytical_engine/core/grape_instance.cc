@@ -683,7 +683,7 @@ bl::result<rpc::GraphDef> GrapeInstance::getGraphView(
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(view_type, params.Get<std::string>(rpc::VIEW_TYPE));
 
-  VLOG(1) << "Get graph view, dst graph name: " << graph_name
+  VLOG(1) << "Get graph view, dst graph name: " << view_id
           << ", view type: " << view_type;
 
   BOOST_LEAF_AUTO(wrapper,

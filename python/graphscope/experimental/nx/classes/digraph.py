@@ -22,12 +22,12 @@
 from copy import deepcopy
 
 from networkx.classes.coreviews import AdjacencyView
-from networkx.classes.graphviews import reverse_view
 from networkx.classes.reportviews import DiDegreeView
 from networkx.classes.reportviews import InDegreeView
 from networkx.classes.reportviews import InEdgeView
 from networkx.classes.reportviews import OutDegreeView
 from networkx.classes.reportviews import OutEdgeView
+from networkx import freeze
 
 from graphscope.client.session import get_default_session
 from graphscope.experimental.nx import NetworkXError
@@ -659,6 +659,8 @@ class DiGraph(Graph):
             g._key = graph_def.key
             g._schema = deepcopy(self._schema)
             g._graph = self
+            g._view_type = "reversed"
+            g = freeze(g)
         else:
             g = self.__class__(create_empty_in_engine=False)
             g.graph = self.graph
