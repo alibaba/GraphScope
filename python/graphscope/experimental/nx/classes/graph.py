@@ -1666,13 +1666,15 @@ class Graph(object):
 
         """
         if as_view:
-            return generic_graph_view(self)
-        g = self.__class__(create_empty_in_engine=False)
-        g.graph = copy.deepcopy(self.graph)
-        op = dag_utils.copy_graph(self, "identical")
-        graph_def = op.eval()
-        g._key = graph_def.key
-        g._schema = copy.deepcopy(self._schema)
+            g = generic_graph_view(self)
+            g._view_type = "copy"
+        else:
+            g = self.__class__(create_empty_in_engine=False)
+            g.graph = copy.deepcopy(self.graph)
+            op = dag_utils.copy_graph(self, "identical")
+            graph_def = op.eval()
+            g._key = graph_def.key
+            g._schema = copy.deepcopy(self._schema)
         return g
 
     def to_undirected(self, as_view=False):

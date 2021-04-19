@@ -35,6 +35,7 @@ from graphscope.experimental.nx.classes.graph import Graph
 from graphscope.experimental.nx.convert import from_gs_graph
 from graphscope.experimental.nx.convert import to_nx_graph
 from graphscope.experimental.nx.utils.other import empty_graph_in_engine
+from graphscope.framework import dag_utils
 from graphscope.framework.dag_utils import copy_graph
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.proto import types_pb2
@@ -651,13 +652,20 @@ class DiGraph(Graph):
             the original graph.
         """
         if not copy:
-            return reverse_view(self)
-        g = self.__class__(create_empty_in_engine=False)
-        g.graph = self.graph
-        g.name = self.name
-        g._op = self._op
-        op = copy_graph(self, "reverse")
-        graph_def = op.eval()
-        g._key = graph_def.key
-        g._schema = deepcopy(self._schema)
+            g = self.__class__(create_empty_in_engine=False)
+            g.graph.update(self.graph)
+            op = dag_utils.get_graph_view(self, "reversed")
+            graph_def = op.eval()
+            g._key = graph_def.key
+            g._schema = deepcopy(self._schema)
+            g._graph = self
+        else:
+            g = self.__class__(create_empty_in_engine=False)
+            g.graph = self.graph
+            g.name = self.name
+            g._op = self._op
+            op = copy_graph(self, "reverse")
+            graph_def = op.eval()
+            g._key = graph_def.key
+            g._schema = deepcopy(self._schema)
         return g

@@ -29,6 +29,7 @@
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/error.h"
+#include "core/fragment/dynamic_fragment_view.h"
 #include "core/fragment/dynamic_projected_fragment.h"
 #include "core/loader/arrow_fragment_loader.h"
 #include "core/object/gs_object.h"
@@ -416,6 +417,13 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
                     "Can not to undirected ArrowFragment");
   }
 
+  bl::result<std::shared_ptr<IFragmentWrapper>> GetGraphView(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& copy_type) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Can not view ArrowFragment");
+  }
+
  private:
   rpc::GraphDef graph_def_;
   std::shared_ptr<fragment_t> fragment_;
@@ -467,6 +475,13 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
                     "Can not to undirected DynamicProjectedFragment");
   }
 
+  bl::result<std::shared_ptr<IFragmentWrapper>> GetGraphView(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& copy_type) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Can not view ArrowProjectedFragment");
+  }
+
  private:
   rpc::GraphDef graph_def_;
   std::shared_ptr<fragment_t> fragment_;
@@ -481,6 +496,7 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
 template <>
 class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
   using fragment_t = DynamicFragment;
+  using fragment_view_t = DynamicFragmentView;
 
  public:
   FragmentWrapper(const std::string& id, rpc::GraphDef graph_def,
@@ -611,6 +627,19 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
 
+  bl::result<std::shared_ptr<IFragmentWrapper>> GetGraphView(
+      const grape::CommSpec& comm_spec, const std::string& view_graph_id,
+      const std::string& view_type) override {
+    auto input_frag = std::static_pointer_cast<fragment_t>(fragment_);
+    auto frag_view = fragment_view_t::Init(input_frag, view_type);
+
+    auto dst_graph_def = graph_def_;
+    dst_graph_def.set_key(view_graph_id);
+    auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
+        view_graph_id, dst_graph_def, frag_view);
+    return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
+  }
+
  private:
   rpc::GraphDef graph_def_;
   std::shared_ptr<fragment_t> fragment_;
@@ -660,6 +689,13 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
       const std::string& dst_graph_name) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "Can not to undirected DynamicProjectedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> GetGraphView(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& copy_type) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Can not view DynamicProjectedFragment");
   }
 
  private:

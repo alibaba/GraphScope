@@ -124,6 +124,8 @@ class GrapeInstance : public Subscriber {
 
   bl::result<rpc::GraphDef> toUnDirected(const rpc::GSParams& params);
 
+  bl::result<rpc::GraphDef> getGraphView(const rpc::GSParams& params);
+
   bl::result<rpc::GraphDef> addLabelsToGraph(const rpc::GSParams& params);
 
   bl::result<std::shared_ptr<grape::InArchive>> graphToNumpy(

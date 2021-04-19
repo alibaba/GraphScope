@@ -676,6 +676,29 @@ bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
   return {};
 }
 
+bl::result<rpc::GraphDef> GrapeInstance::getGraphView(
+    const rpc::GSParams& params) {
+#ifdef EXPERIMENTAL_ON
+  std::string view_id = "graph_view_" + generateId();
+  BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
+  BOOST_LEAF_AUTO(view_type, params.Get<std::string>(rpc::VIEW_TYPE));
+
+  VLOG(1) << "Get graph view, dst graph name: " << graph_name
+          << ", view type: " << view_type;
+
+  BOOST_LEAF_AUTO(wrapper,
+                  object_manager_.GetObject<IFragmentWrapper>(graph_name));
+  BOOST_LEAF_AUTO(view_wrapper,
+                  wrapper->GetGraphView(comm_spec_, view_id, view_type));
+  BOOST_LEAF_CHECK(object_manager_.PutObject(view_wrapper));
+
+  return view_wrapper->graph_def();
+#else
+  RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
+                  "GS is compiled without folly");
+#endif  // EXPERIMENTAL_ON
+}
+
 bl::result<rpc::GraphDef> GrapeInstance::addLabelsToGraph(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
@@ -881,6 +904,16 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   case rpc::CLEAR_EDGES: {
 #ifdef EXPERIMENTAL_ON
     BOOST_LEAF_CHECK(clearEdges(params));
+#else
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "GS is built with experimental off");
+#endif
+    break;
+  }
+  case rpc::VIEW_GRAPH: {
+#ifdef EXPERIMENTAL_ON
+    BOOST_LEAF_AUTO(graph_def, getGraphView(params));
+    r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GS is built with experimental off");
