@@ -252,12 +252,14 @@ def unify_type(t):
         elif t in ("empty", "grape::emptytype"):
             return types_pb2.NULLVALUE
     elif isinstance(t, type):
-        if t is int:
-            return types_pb2.LONG
-        elif t is float:
-            return types_pb2.DOUBLE
-        elif t is str:
-            return types_pb2.STRING
+        unify_types = {
+            int: types_pb2.LONG,
+            float: types_pb2.DOUBLE,
+            str: types_pb2.STRING,
+            bool: types_pb2.BOOLEAN,
+            list: types_pb2.LIST,
+        }
+        return unify_types[t]
     elif isinstance(t, int):  # types_pb2.DataType
         return t
     raise TypeError("Not supported type {}".format(t))

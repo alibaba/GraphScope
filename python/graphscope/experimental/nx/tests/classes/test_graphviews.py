@@ -64,9 +64,6 @@ class TestToDirected(test_gvs.TestToDirected):
         pass
 
     def test_already_directed(self):
-        pass
-
-    def test_already_directed(self):
         dd = nx.to_directed(self.dv)
         assert_edges_equal(dd.edges, self.dv.edges)
 
@@ -76,6 +73,7 @@ class TestToUndirected(test_gvs.TestToUndirected):
         self.DG = nx.path_graph(9, create_using=nx.DiGraph())
         self.uv = nx.to_undirected(self.DG)
 
+    @pytest.mark.skip(reason="not support pickle remote graph.")
     def test_pickle(self):
         pass
 
@@ -96,6 +94,7 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         for G in cls.graphs:
             G.edges, G.nodes, G.degree
 
+    @pytest.mark.skip(reason="not support pickle remote graph.")
     def test_pickle(self):
         pass
 
@@ -179,9 +178,11 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         assert list(USSG) == [4, 5]
         assert sorted(USSG.edges) == [(4, 5)]
 
+    @pytest.mark.skip(reason="not support multigraph.")
     def test_copy_multidisubgraph(self):
         pass
 
+    @pytest.mark.skip(reason="not support multigraph.")
     def test_copy_multisubgraph(self):
         pass
 
@@ -198,4 +199,8 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
 
     @pytest.mark.skip(reason="subgraph now is fallback with networkx, not view")
     def test_restricted_induced_subgraph_chains(self):
+        pass
+
+    @pytest.mark.skip(reason="subgraph now is view, but to_directted is deepcopy")
+    def test_subgraph_todirected(self):
         pass

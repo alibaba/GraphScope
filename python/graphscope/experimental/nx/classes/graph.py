@@ -1536,6 +1536,10 @@ class Graph(object):
         self._key = graph_def.key
         self.schema.init_nx_schema()
 
+    def clear_edges(self):
+        op = dag_utils.clear_edges(self)
+        op.eval()
+
     def is_directed(self):
         """Returns True if graph is directed, False otherwise."""
         return False
@@ -1674,7 +1678,7 @@ class Graph(object):
         if as_view:
             return generic_graph_view(self)
         g = self.__class__(create_empty_in_engine=False)
-        g.graph.update(self.graph)
+        g.graph = copy.deepcopy(self.graph)
         op = dag_utils.copy_graph(self, "identical")
         graph_def = op.eval()
         g._key = graph_def.key
@@ -1719,13 +1723,16 @@ class Graph(object):
         [(0, 1)]
         """
         if self.is_directed():
+            graph_class = self.to_undirected_class()
             if as_view:
-                graph_class = self.to_undirected_class()
                 return generic_graph_view(self, graph_class)
-            else:
-                # NB: fallback, maybe slow, here should be deecopy
-                fallback_G = to_networkx_graph(self)
-                return fallback_G.to_undirected(as_view=as_view)
+            g = graph_class(create_empty_in_engine=False)
+            g.graph = copy.deepcopy(self.graph)
+            op = dag_utils.to_undirected(self)
+            graph_def = op.eval()
+            g._key = graph_def.key
+            g._schema = copy.deepcopy(self._schema)
+            return g
         else:
             return self.copy(as_view=as_view)
 
@@ -1768,13 +1775,16 @@ class Graph(object):
         if self.is_directed():
             return self.copy(as_view=as_view)
         else:
+            graph_class = self.to_directed_class()
             if as_view:
-                graph_class = self.to_directed_class()
                 return generic_graph_view(self, graph_class)
-            else:
-                # NB: fallback, maybe slow
-                fallback_G = to_networkx_graph(self)
-                return fallback_G.to_directed(as_view=as_view)
+            g = graph_class(create_empty_in_engine=False)
+            g.graph = copy.deepcopy(self.graph)
+            op = dag_utils.to_directed(self)
+            graph_def = op.eval()
+            g._key = graph_def.key
+            g._schema = copy.deepcopy(self._schema)
+            return g
 
     def subgraph(self, nodes):
         """Returns a SubGraph view of the subgraph induced on `nodes`.
@@ -2065,7 +2075,11 @@ class Graph(object):
             the method is implicit called in builtin apps.
         """
         if hasattr(self, "_graph"):
-            raise TypeError("graph view can't project to simple graph")
+            # is a graph view, project the original graph(just for copy)
+            graph = self._graph
+            while hasattr(graph, "_graph"):
+                graph = graph._graph
+            return graph._project_to_simple(v_prop=v_prop, e_prop=e_prop)
 
         if v_prop is None:
             v_prop = str(v_prop)

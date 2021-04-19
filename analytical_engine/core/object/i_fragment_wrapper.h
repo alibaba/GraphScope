@@ -48,6 +48,12 @@ class IFragmentWrapper : public GSObject {
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) = 0;
 
+  virtual bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name) = 0;
+
+  virtual bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name) = 0;
+
  protected:
   explicit IFragmentWrapper(std::string id, ObjectType type)
       : GSObject(std::move(id), type) {}

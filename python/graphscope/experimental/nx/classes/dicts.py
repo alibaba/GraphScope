@@ -95,7 +95,7 @@ class NodeAttrDict(MutableMapping):
         return self.mapping
 
     def __repr__(self):
-        return self.mapping
+        return str(self.mapping)
 
 
 # NB: implement the dict structure to reuse the views of networkx. since we

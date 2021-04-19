@@ -377,12 +377,6 @@ class TestGraphProjectTest(object):
         nx.builtin.degree_centrality(g)
         nx.builtin.single_source_dijkstra_path_length(g, source=6, weight="weight")
 
-    def test_error_on_view_project_to_simple(self):
-        g = self.NXGraph()
-        g._graph = None  # a graph view always has '_graph_' attribute
-        with pytest.raises(TypeError, match="graph view can't project to simple graph"):
-            sg = g.project_to_simple()
-
     def test_error_on_not_exist_vertex_property(self):
         g = self.NXGraph()
         g.add_node(0, foo="node")
