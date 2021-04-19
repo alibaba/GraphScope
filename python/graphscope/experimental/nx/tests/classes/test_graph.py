@@ -21,7 +21,6 @@ from networkx.classes.tests.test_graph import TestEdgeSubgraph as _TestEdgeSubgr
 from networkx.classes.tests.test_graph import TestGraph as _TestGraph
 
 from graphscope.experimental import nx
-from graphscope.experimental.nx.tests.utils import assert_nodes_equal
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -120,6 +119,17 @@ class TestGraph(_TestGraph):
         self.add_attributes(G)
         H = G.subgraph([0, 1, 2, 5])
         self.graphs_equal(H, G)
+
+    def test_node_type(self):
+        G = self.Graph()
+        nodes = [(0, 1), 3, "n", 3.14, True, False]
+        edges = [((0, 1), 3, 1), ("n", 3.14, 3.14), (True, False, True)]
+        G.add_nodes_from(nodes)
+        G.add_weighted_edges_from(edges)
+        assert list(G.nodes) == [(0, 1), 3, "n", 3.14, True, False]
+        assert G[(0, 1)][3]["weight"] == 1
+        assert G["n"][3.14]["weight"] == 3.14
+        assert G[True][False]["weight"] == True
 
 
 class TestEdgeSubgraph(_TestEdgeSubgraph):

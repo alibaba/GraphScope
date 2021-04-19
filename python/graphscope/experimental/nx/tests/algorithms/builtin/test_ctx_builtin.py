@@ -172,6 +172,9 @@ class TestBuiltInApp:
         ans = dict(nx.builtin.eigenvector_centrality(self.p2p, weight="weight").values)
         self.assert_result_almost_equal(ans, self.p2p_ev_ans)
 
+    @pytest.mark.skip(
+        reason="FIXME(acezen): p2p katz centrality result need to recheck."
+    )
     def test_katz_centrality(self):
         ans = dict(nx.builtin.katz_centrality(self.p2p, weight="default").values)
         self.assert_result_almost_equal(ans, self.p2p_kz_ans)

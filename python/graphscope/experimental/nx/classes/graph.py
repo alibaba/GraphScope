@@ -20,7 +20,6 @@
 #
 
 import copy
-import hashlib
 import json
 
 from networkx.classes.coreviews import AdjacencyView
@@ -463,8 +462,6 @@ class Graph(object):
         >>> G[0]
         NbrsView({1: {}})
         """
-        if not isinstance(n, (int, str)):
-            raise TypeError(n)
         return self.adj[n]
 
     @property
@@ -556,8 +553,6 @@ class Graph(object):
                 node = [nn, data]
             except (TypeError, ValueError):
                 node = [n, data]
-            if not isinstance(node[0], (int, str)):
-                continue
             if self._schema.add_nx_vertex_properties(data):
                 nodes.append(json.dumps(node))
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_ADD_NODES, nodes)
@@ -814,10 +809,11 @@ class Graph(object):
         >>> 0 in G
         True
         """
-        if not isinstance(n, (int, str)):
+        try:
+            op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n]))
+            return int(op.eval())
+        except TypeError:
             return False
-        op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n]))
-        return int(op.eval())
 
     def add_edge(self, u_of_edge, v_of_edge, **attr):
         """Add an edge between u and v.
@@ -916,8 +912,6 @@ class Graph(object):
                 raise NetworkXError(
                     "Edge tuple %s must be a 2-tuple or 3-tuple." % (e,)
                 )
-            if not isinstance(u, (int, str)) or not isinstance(v, (int, str)):
-                continue
             # FIXME: support dynamic data type in same property
             self._schema.add_nx_edge_properties(data)
             edge = [u, v, data]
@@ -1590,17 +1584,13 @@ class Graph(object):
         """
         if nbunch is None:  # include all nodes via iterator
             bunch = iter(self.nodes)
-        elif (
-            isinstance(nbunch, (int, str)) and nbunch in self
-        ):  # if nbunch is a single node
+        elif nbunch in self:  # if nbunch is a single node
             bunch = iter([nbunch])
         else:  # if nbunch is a sequence of nodes
 
             def bunch_iter(nlist, adj):
                 try:
                     for n in nlist:
-                        if not isinstance(n, (int, str)):
-                            raise TypeError("invalid node")
                         if n in adj:
                             yield n
                 except TypeError as e:
@@ -1608,11 +1598,11 @@ class Graph(object):
                     # capture error for non-sequence/iterator nbunch.
                     if "iter" in message:
                         msg = "nbunch is not a node or a sequence of nodes."
-                        raise NetworkXError(msg)
+                        raise NetworkXError(msg) from e
                     # capture error for invalid node.
-                    elif "invalid" in message:
+                    elif "hashable" in message:
                         msg = "Node {} in sequence nbunch is not a valid node."
-                        raise NetworkXError(msg.format(n))
+                        raise NetworkXError(msg) from e
                     else:
                         raise
 
@@ -2054,7 +2044,7 @@ class Graph(object):
         )
         return op.eval()
 
-    def project_to_simple(self, v_prop=None, e_prop=None):
+    def _project_to_simple(self, v_prop=None, e_prop=None):
         """Project nx graph to a simple graph to run builtin alogorithms.
 
         A simple graph is a accesser wrapper of property graph that only single edge

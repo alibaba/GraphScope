@@ -50,16 +50,9 @@ def parse_ret_as_dict(func):
         if not isinstance(r, list):
             return r
         ret = dict()
-        graph = args[0]
-        if graph.is_multigraph():
-            for i in range(len(r[0])):
-                key_attr = dict()
-                for e in r[1][i]:
-                    key_attr[e[0]] = e[1]
-                ret[r[0][i]] = key_attr
-        else:
-            for i in range(len(r[0])):
-                ret[r[0][i]] = r[1][i]
+        for i in range(len(r[0])):
+            key = tuple(r[0][i]) if isinstance(r[0][i], list) else r[0][i]
+            ret[key] = r[1][i]
         return ret
 
     return wrapper
