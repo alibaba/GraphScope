@@ -19,10 +19,10 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
-use std::sync::Mutex;
+use std::sync::RwLock;
 
 lazy_static! {
-    static ref TYPE_TABLE: Mutex<HashMap<TypeId, Box<dyn Ph>>> = Mutex::new(HashMap::new());
+    static ref TYPE_TABLE: RwLock<HashMap<TypeId, Box<dyn Ph>>> = RwLock::new(HashMap::new());
 }
 
 /// The register_type fn is used to register types used in DynType for serializing and deserializing;
@@ -49,7 +49,7 @@ lazy_static! {
 pub fn register_type<T: 'static + Decode + DynType>() -> io::Result<()> {
     let ty_id = TypeId::of::<T>();
     let ph: PhImpl<T> = PhImpl { _ph: std::marker::PhantomData };
-    if let Ok(mut table) = TYPE_TABLE.lock() {
+    if let Ok(mut table) = TYPE_TABLE.write() {
         table.insert(ty_id, Box::new(ph));
         Ok(())
     } else {
@@ -58,7 +58,7 @@ pub fn register_type<T: 'static + Decode + DynType>() -> io::Result<()> {
 }
 
 pub fn de_dyn_obj(ty_id: &TypeId, bytes: &[u8]) -> io::Result<Box<dyn DynType>> {
-    if let Ok(table) = TYPE_TABLE.lock() {
+    if let Ok(table) = TYPE_TABLE.read() {
         if let Some(ph_impl) = table.get(ty_id) {
             ph_impl.from_bytes(bytes)
         } else {

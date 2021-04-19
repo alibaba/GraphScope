@@ -115,9 +115,8 @@ impl EncodeFunction<Traverser> for TraverserSinkEncoder {
 }
 
 pub fn register_gremlin_types() -> io::Result<()> {
-    register_type::<ShadeSync<(Traverser, Count<Traverser>)>>()?;
-    register_type::<ShadeSync<(Traverser, ToList<Traverser>)>>()?;
     register_type::<ShadeSync<(Traverser, Traverser)>>()?;
-    register_type::<ShadeSync<Vec<Traverser>>>()?;
+    register_type::<ShadeSync<Count<Traverser>>>()?;
+    register_type::<ShadeSync<ToList<Traverser>>>()?;
     Ok(())
 }
