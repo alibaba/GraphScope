@@ -22,13 +22,13 @@
 import copy
 import json
 
+from networkx import freeze
 from networkx.classes.coreviews import AdjacencyView
 from networkx.classes.function import create_empty_copy
 from networkx.classes.graphviews import generic_graph_view
 from networkx.classes.reportviews import DegreeView
 from networkx.classes.reportviews import EdgeView
 from networkx.classes.reportviews import NodeView
-from networkx import freeze
 
 from graphscope.client.session import default_session
 from graphscope.client.session import get_default_session

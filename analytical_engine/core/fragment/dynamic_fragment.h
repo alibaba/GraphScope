@@ -872,9 +872,13 @@ class DynamicFragment {
 
   inline virtual size_t GetEdgeNum() const { return ienum_ + oenum_; }
 
-  inline virtual vid_t GetVerticesNum() const { return alive_ivnum_ + alive_ovnum_; }
+  inline virtual vid_t GetVerticesNum() const {
+    return alive_ivnum_ + alive_ovnum_;
+  }
 
-  virtual size_t GetTotalVerticesNum() const { return vm_ptr_->GetTotalVertexSize(); }
+  virtual size_t GetTotalVerticesNum() const {
+    return vm_ptr_->GetTotalVertexSize();
+  }
 
   inline virtual vertex_range_t InnerVertices() const {
     auto inner_vertices = grape::VertexRange<vid_t>(0, ivnum_);
@@ -1072,7 +1076,8 @@ class DynamicFragment {
     }
   }
 
-  inline virtual bool InnerVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
+  inline virtual bool InnerVertexGid2Vertex(const vid_t& gid,
+                                            vertex_t& v) const {
     vid_t lid = gid & id_mask_;
     if (lid < ivnum_ && isAlive(lid)) {
       assert(isAlive(lid));
@@ -1082,7 +1087,8 @@ class DynamicFragment {
     return false;
   }
 
-  inline virtual bool OuterVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
+  inline virtual bool OuterVertexGid2Vertex(const vid_t& gid,
+                                            vertex_t& v) const {
     auto iter = ovg2i_.find(gid);
     if (iter != ovg2i_.end()) {
       assert(isAlive(ivnum_ + iter->second));
@@ -1352,7 +1358,8 @@ class DynamicFragment {
     return false;
   }
 
-  inline virtual bool GetEdgeData(const oid_t& u, const oid_t& v, std::string& ret) {
+  inline virtual bool GetEdgeData(const oid_t& u, const oid_t& v,
+                                  std::string& ret) {
     vid_t uid, vid;
     if (Oid2Gid(u, uid) && Oid2Gid(v, vid)) {
       vid_t ulid, vlid;

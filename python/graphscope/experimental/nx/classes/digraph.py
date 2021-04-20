@@ -21,13 +21,13 @@
 
 from copy import deepcopy
 
+from networkx import freeze
 from networkx.classes.coreviews import AdjacencyView
 from networkx.classes.reportviews import DiDegreeView
 from networkx.classes.reportviews import InDegreeView
 from networkx.classes.reportviews import InEdgeView
 from networkx.classes.reportviews import OutDegreeView
 from networkx.classes.reportviews import OutEdgeView
-from networkx import freeze
 
 from graphscope.client.session import get_default_session
 from graphscope.experimental.nx import NetworkXError

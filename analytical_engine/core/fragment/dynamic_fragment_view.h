@@ -18,6 +18,7 @@
 
 #ifdef EXPERIMENTAL_ON
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -63,21 +64,15 @@ class DynamicFragmentView : public DynamicFragment {
     return fragment_->GetOuterVerticesGid();
   }
 
-  inline size_t GetEdgeNum() const {
-    return fragment_->GetEdgeNum();
-  }
+  inline size_t GetEdgeNum() const { return fragment_->GetEdgeNum(); }
 
-  inline vid_t GetVerticesNum() const {
-    return fragment_->GetVerticesNum();
-  }
+  inline vid_t GetVerticesNum() const { return fragment_->GetVerticesNum(); }
 
   size_t GetTotalVerticesNum() const {
     return fragment_->GetTotalVerticesNum();
   }
 
-  inline vertex_range_t Vertices() const {
-    return fragment_->Vertices();
-  }
+  inline vertex_range_t Vertices() const { return fragment_->Vertices(); }
 
   inline vertex_range_t InnerVertices() const {
     return fragment_->InnerVertices();
