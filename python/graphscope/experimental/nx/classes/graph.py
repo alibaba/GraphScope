@@ -1245,7 +1245,8 @@ class Graph(object):
 
         """
         if u is None:
-            return int(self.size())
+            op = dag_utils.report_graph(self, types_pb2.EDGE_NUM)
+            return int(op.eval()) // 2
         elif self.has_edge(u, v):
             return 1
         else:
@@ -1858,8 +1859,18 @@ class Graph(object):
         [(0, 1), (1, 2)]
         """
         # NB: fallback subgraph
-        ng = to_networkx_graph(self)
-        return ng.subgraph(nodes)
+        # ng = to_networkx_graph(self)
+        # return ng.subgraph(nodes)
+        induced_nodes = []
+        for n in nodes:
+            induced_nodes.append(json.dumps([n]))
+        g = self.__class__(create_empty_in_engine=False)
+        g.graph.update(self.graph)
+        op = dag_utils.create_subgraph(self, nodes=induced_nodes)
+        graph_def = op.eval()
+        g._key = graph_def.key
+        g._schema = copy.deepcopy(self._schema)
+        return g
 
     def edge_subgraph(self, edges):
         """Returns the subgraph induced by the specified edges.
@@ -1900,8 +1911,19 @@ class Graph(object):
 
         """
         # NB: fallback edge subgraph
-        ng = to_networkx_graph(self)
-        return ng.edge_subgraph(edges)
+        # ng = to_networkx_graph(self)
+        # return ng.edge_subgraph(edges)
+        induced_edges = []
+        for e in edges:
+            u, v = e
+            induced_edges.append(json.dumps([u, v]))
+        g = self.__class__(create_empty_in_engine=False)
+        g.graph.update(self.graph)
+        op = dag_utils.create_subgraph(self, edges=induced_edges)
+        graph_def = op.eval()
+        g._key = graph_def.key
+        g._schema = copy.deepcopy(self._schema)
+        return g
 
     @parse_ret_as_dict
     def batch_get_node(self, location):

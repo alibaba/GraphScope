@@ -91,6 +91,7 @@ enum OperationType {
   TO_UNDIRECTED = 18;  // return graph, generate undirected graph from directed graph
   CLEAR_EDGES = 19;  // clear edges
   VIEW_GRAPH = 20;
+  INDUCE_SUBGRAPH = 21;  // clear edges
 
   // data
   CONTEXT_TO_NUMPY = 50;

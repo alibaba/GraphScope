@@ -19,10 +19,10 @@
 
 import pytest
 from networkx.classes.tests.test_digraph import BaseAttrDiGraphTester
-from networkx.classes.tests.test_digraph import TestEdgeSubgraph
 from networkx.testing import assert_nodes_equal
 
 from graphscope.experimental import nx
+from graphscope.experimental.nx.tests.classes.test_graph import TestEdgeSubgraph
 from graphscope.experimental.nx.tests.classes.test_graph import TestGraph
 
 
@@ -136,6 +136,7 @@ class TestDiGraph(BaseAttrDiGraphTester, TestGraph):
         assert [(y, x)] == list(G.reverse().edges())
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestEdgeSubgraph(TestEdgeSubgraph):
     def setup_method(self):
         # Create a doubly-linked path graph on five nodes.
@@ -143,7 +144,7 @@ class TestEdgeSubgraph(TestEdgeSubgraph):
         G = nx.path_graph(5, nx.DiGraph)
         # Add some node, edge, and graph attributes.
         for i in range(5):
-            G.nodes[i]["name"] = "node{}".format(i)
+            G.nodes[i]["name"] = f"node{i}"
         G.edges[0, 1]["name"] = "edge01"
         G.edges[3, 4]["name"] = "edge34"
         G.graph["name"] = "graph"
@@ -151,18 +152,20 @@ class TestEdgeSubgraph(TestEdgeSubgraph):
         self.G = G
         self.H = G.edge_subgraph([(0, 1), (3, 4)])
 
-    @pytest.mark.skip(reason="edge_subgraph now is fallback with networkx, not view")
-    def test_node_attr_dict(self):
-        pass
+    def test_correct_edges(self):
+        """Tests that the subgraph has the correct edges."""
+        assert [(0, 1, "edge01"), (3, 4, "edge34")] == sorted(self.H.edges(data="name"))
 
-    @pytest.mark.skip(reason="edge_subgraph now is fallback with networkx, not view")
-    def test_edge_attr_dict(self):
-        pass
+    def test_pred_succ(self):
+        """Test that nodes are added to predecessors and successors.
 
-    @pytest.mark.skip(reason="edge_subgraph now is fallback with networkx, not view")
-    def test_graph_attr_dict(self):
-        pass
+        For more information, see GitHub issue #2370.
 
-    @pytest.mark.skip(reason="edge_subgraph now is fallback with networkx, not view")
-    def test_remove_node(self):
-        pass
+        """
+        G = nx.DiGraph()
+        G.add_edge(0, 1)
+        H = G.edge_subgraph([(0, 1)])
+        assert list(H.predecessors(0)) == []
+        assert list(H.successors(0)) == [1]
+        assert list(H.predecessors(1)) == [0]
+        assert list(H.successors(1)) == []

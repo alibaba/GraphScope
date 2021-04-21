@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -33,6 +34,7 @@
 #include "grape/worker/comm_spec.h"
 
 #include "core/context/i_context.h"
+#include "core/fragment/dynamic_fragment.h"
 #include "core/object/object_manager.h"
 #include "core/server/dispatcher.h"
 #include "core/server/graphscope_service.h"
@@ -125,6 +127,16 @@ class GrapeInstance : public Subscriber {
   bl::result<rpc::GraphDef> toUnDirected(const rpc::GSParams& params);
 
   bl::result<rpc::GraphDef> createGraphView(const rpc::GSParams& params);
+
+#ifdef EXPERIMENTAL_ON
+  bl::result<rpc::GraphDef> induceSubGraph(
+      const rpc::GSParams& params,
+      const std::unordered_set<typename DynamicFragment::oid_t>&
+          induced_vertices,
+      const std::vector<std::pair<typename DynamicFragment::oid_t,
+                                  typename DynamicFragment::oid_t>>&
+          induced_edges);
+#endif  // EXPERIMENTAL_ON
 
   bl::result<rpc::GraphDef> addLabelsToGraph(const rpc::GSParams& params);
 

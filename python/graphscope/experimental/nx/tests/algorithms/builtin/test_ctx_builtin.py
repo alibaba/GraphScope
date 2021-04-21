@@ -142,6 +142,23 @@ class TestBuiltInApp:
         ans = dict(ret.values)
         assert replace_with_inf(ans) == self.p2p_length_ans
 
+        # test subgraph and edge_subgraph with p2p_undirected
+        SG = self.p2p_undirected.subgraph(self.p2p_undirected.nodes)
+        ret_sg = nx.builtin.single_source_dijkstra_path_length(SG, 6)
+        assert dict(ret.values) == dict(ret_sg.values)
+        ESG = self.p2p_undirected.edge_subgraph(self.p2p_undirected.edges)
+        ret_esg = nx.builtin.single_source_dijkstra_path_length(ESG, 6)
+        assert dict(ret.values) == dict(ret_esg.values)
+
+        # test subgraph and edge_subgraph with p2p directed
+        ret2 = nx.builtin.single_source_dijkstra_path_length(self.p2p, 6)
+        SDG = self.p2p.subgraph(self.p2p.nodes)
+        ret_sdg = nx.builtin.single_source_dijkstra_path_length(SDG, 6)
+        assert dict(ret2.values) == dict(ret_sdg.values)
+        ESDG = self.p2p.edge_subgraph(self.p2p.edges)
+        ret_esdg = nx.builtin.single_source_dijkstra_path_length(ESDG, 6)
+        assert dict(ret2.values) == dict(ret_esdg.values)
+
     def test_shortest_path(self):
         ctx1 = nx.builtin.shortest_path(self.grid, source=1, weight="weight")
         ret1 = dict(ctx1.to_numpy("r"))
