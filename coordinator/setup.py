@@ -195,8 +195,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="GRAPE Team, Damo Academy",
-    author_email="7br@alibaba-inc.com",
-    url="https://code.aone.alibaba-inc.com/7br/pygrape",
+    author_email="graphscope@alibaba-inc.com",
+    url="https://github.com/alibaba/GraphScope",
     license="Apache License 2.0",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
