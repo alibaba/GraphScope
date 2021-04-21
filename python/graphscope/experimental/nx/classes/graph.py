@@ -321,8 +321,8 @@ class Graph(object):
     @property
     def key(self):
         """String key of the coresponding engine graph."""
-        if hasattr(self, "_graph") and self._view_type == "copy":
-            return self._graph.key  # this graph is a graph view, use host graph key
+        if hasattr(self, "_graph") and self._is_client_view:
+            return self._graph.key  # this graph is a client side graph view, use host graph key
         return self._key
 
     @property
@@ -1669,7 +1669,7 @@ class Graph(object):
         """
         if as_view:
             g = generic_graph_view(self)
-            g._view_type = "copy"
+            g._is_client_view = True
         else:
             g = self.__class__(create_empty_in_engine=False)
             g.graph = copy.deepcopy(self.graph)
@@ -1726,7 +1726,7 @@ class Graph(object):
                 g._key = graph_def.key
                 g._schema = copy.deepcopy(self._schema)
                 g._graph = self
-                g._view_type = "directed"
+                g._is_client_view = False
                 g = freeze(g)
                 return g
             g = graph_class(create_empty_in_engine=False)
@@ -1787,7 +1787,7 @@ class Graph(object):
                 g._key = graph_def.key
                 g._schema = copy.deepcopy(self._schema)
                 g._graph = self
-                g._view_type = "directed"
+                g._is_client_view = False
                 g = freeze(g)
                 return g
             g = graph_class(create_empty_in_engine=False)
