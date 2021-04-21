@@ -60,6 +60,8 @@ using grape::Array;
 using grape::CommSpec;
 using grape::OutArchive;
 
+class DynamicFragmentView;
+
 namespace dynamic_fragment_impl {
 /**
  * @brief This is the counterpart of VertexArray. VertexArray requires a range
@@ -1669,6 +1671,21 @@ class DynamicFragment {
   }
 
  private:
+
+  inline virtual dynamic_fragment_impl::NbrMapSpace<edata_t>& inner_edge_space() {
+    return inner_edge_space_;
+  }
+
+  inline virtual Array<int32_t, grape::Allocator<int32_t>>& inner_ie_pos() {
+    return inner_ie_pos_;
+  }
+
+  inline virtual Array<int32_t, grape::Allocator<int32_t>>& inner_oe_pos() {
+    return inner_oe_pos_;
+  }
+
+  inline virtual vid_t ivnum() { return ivnum_; }
+
   inline bool isAlive(vid_t lid) const {
     if (lid < ivnum_) {
       return inner_vertex_alive_[lid];
@@ -2425,6 +2442,8 @@ class DynamicFragment {
 
   template <typename _VDATA_T, typename _EDATA_T>
   friend class DynamicProjectedFragment;
+
+  friend class DynamicFragmentView;
 };
 }  // namespace gs
 

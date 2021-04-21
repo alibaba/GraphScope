@@ -109,10 +109,16 @@ class DynamicFragmentView : public DynamicFragment {
   }
 
   inline int GetLocalOutDegree(const vertex_t& v) const {
+    if (view_type_ == "reverse") {
+      return fragment_->GetLocalInDegree(v);
+    }
     return fragment_->GetLocalOutDegree(v);
   }
 
   inline int GetLocalInDegree(const vertex_t& v) const {
+    if (view_type_ == "reverse") {
+      return fragment_->GetLocalOutDegree(v);
+    }
     return fragment_->GetLocalInDegree(v);
   }
 
@@ -206,6 +212,7 @@ class DynamicFragmentView : public DynamicFragment {
 
   inline adj_list_t GetOutgoingAdjList(const vertex_t& v) {
     if (view_type_ == "reversed") {
+      LOG(INFO) << "get outgoing edges";
       return fragment_->GetIncomingAdjList(v);
     }
     return fragment_->GetOutgoingAdjList(v);
@@ -251,6 +258,29 @@ class DynamicFragmentView : public DynamicFragment {
   bl::result<folly::dynamic::Type> GetOidType(
       const grape::CommSpec& comm_spec) const {
     return fragment_->GetOidType(comm_spec);
+  }
+
+ private:
+  inline dynamic_fragment_impl::NbrMapSpace<edata_t>& inner_edge_space() {
+    return fragment_->inner_edge_space();
+  }
+
+  inline Array<int32_t, grape::Allocator<int32_t>>& inner_ie_pos() {
+    if (view_type_ == "reversed" || view_type_ == "directed") {
+      return fragment_->inner_oe_pos();
+    }
+    return fragment_->inner_ie_pos();
+  }
+
+  inline Array<int32_t, grape::Allocator<int32_t>>& inner_oe_pos() {
+    if (view_type_ == "reversed") {
+      return fragment_->inner_ie_pos();
+    }
+    return fragment_->inner_oe_pos();
+  }
+
+  inline vid_t ivnum() {
+    return fragment_->ivnum();
   }
 
  private:

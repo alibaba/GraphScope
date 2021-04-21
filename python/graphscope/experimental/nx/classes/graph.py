@@ -2086,7 +2086,7 @@ class Graph(object):
         -------
             the method is implicit called in builtin apps.
         """
-        if hasattr(self, "_graph"):
+        if hasattr(self, "_graph") and self._is_client_view:
             # is a graph view, project the original graph(just for copy)
             graph = self._graph
             while hasattr(graph, "_graph"):

@@ -503,26 +503,26 @@ class DynamicProjectedFragment {
   }
 
   inline projected_adj_linked_list_t GetIncomingAdjList(const vertex_t& v) {
-    auto ie_pos = fragment_->inner_ie_pos_[v.GetValue()];
+    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
     if (ie_pos == -1) {
       return projected_adj_linked_list_t();
     }
     return projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_[ie_pos].begin(),
-        fragment_->inner_edge_space_[ie_pos].end());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space()[ie_pos].begin(),
+        fragment_->inner_edge_space()[ie_pos].end());
   }
 
   inline const_projected_adj_linked_list_t GetIncomingAdjList(
       const vertex_t& v) const {
-    auto ie_pos = fragment_->inner_ie_pos_[v.GetValue()];
+    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
     if (ie_pos == -1) {
       return const_projected_adj_linked_list_t();
     }
     return const_projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_[ie_pos].cbegin(),
-        fragment_->inner_edge_space_[ie_pos].cend());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space()[ie_pos].cbegin(),
+        fragment_->inner_edge_space()[ie_pos].cend());
   }
 
   inline projected_adj_linked_list_t GetIncomingInnerVertexAdjList(
@@ -574,26 +574,26 @@ class DynamicProjectedFragment {
   }
 
   inline projected_adj_linked_list_t GetOutgoingAdjList(const vertex_t& v) {
-    auto oe_pos = fragment_->inner_oe_pos_[v.GetValue()];
+    auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
     if (oe_pos == -1) {
       return projected_adj_linked_list_t();
     }
     return projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_[oe_pos].begin(),
-        fragment_->inner_edge_space_[oe_pos].end());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space()[oe_pos].begin(),
+        fragment_->inner_edge_space()[oe_pos].end());
   }
 
   inline const_projected_adj_linked_list_t GetOutgoingAdjList(
       const vertex_t& v) const {
-    auto oe_pos = fragment_->inner_oe_pos_[v.GetValue()];
+    auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
     if (oe_pos == -1) {
       return const_projected_adj_linked_list_t();
     }
     return const_projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_[oe_pos].cbegin(),
-        fragment_->inner_edge_space_[oe_pos].cend());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space()[oe_pos].cbegin(),
+        fragment_->inner_edge_space()[oe_pos].cend());
   }
 
   inline projected_adj_linked_list_t GetOutgoingInnerVertexAdjList(

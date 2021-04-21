@@ -659,7 +659,7 @@ class DiGraph(Graph):
             g._key = graph_def.key
             g._schema = deepcopy(self._schema)
             g._graph = self
-            g._view_type = "reversed"
+            g._is_client_view = False
             g = freeze(g)
         else:
             g = self.__class__(create_empty_in_engine=False)
