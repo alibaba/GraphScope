@@ -421,7 +421,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Can not view ArrowFragment");
+                    "Cannot generate a graph view over an ArrowFragment.");
   }
 
  private:
@@ -695,7 +695,7 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Can not view DynamicProjectedFragment");
+                    "Cannot generate a graph view over an ArrowFragment.");
   }
 
  private:
