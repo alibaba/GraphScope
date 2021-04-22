@@ -676,7 +676,7 @@ bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
   return {};
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::getGraphView(
+bl::result<rpc::GraphDef> GrapeInstance::createGraphView(
     const rpc::GSParams& params) {
 #ifdef EXPERIMENTAL_ON
   std::string view_id = "graph_view_" + generateId();
@@ -689,7 +689,7 @@ bl::result<rpc::GraphDef> GrapeInstance::getGraphView(
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
   BOOST_LEAF_AUTO(view_wrapper,
-                  wrapper->GetGraphView(comm_spec_, view_id, view_type));
+                  wrapper->CreateGraphView(comm_spec_, view_id, view_type));
   BOOST_LEAF_CHECK(object_manager_.PutObject(view_wrapper));
 
   return view_wrapper->graph_def();
@@ -912,7 +912,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::VIEW_GRAPH: {
 #ifdef EXPERIMENTAL_ON
-    BOOST_LEAF_AUTO(graph_def, getGraphView(params));
+    BOOST_LEAF_AUTO(graph_def, createGraphView(params));
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,

@@ -54,7 +54,7 @@ class IFragmentWrapper : public GSObject {
   virtual bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name) = 0;
 
-  virtual bl::result<std::shared_ptr<IFragmentWrapper>> GetGraphView(
+  virtual bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& view_type) = 0;
 

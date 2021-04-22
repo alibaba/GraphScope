@@ -417,7 +417,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
                     "Can not to undirected ArrowFragment");
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> GetGraphView(
+  bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
@@ -475,7 +475,7 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
                     "Can not to undirected DynamicProjectedFragment");
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> GetGraphView(
+  bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
@@ -627,12 +627,11 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> GetGraphView(
+  bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
       const grape::CommSpec& comm_spec, const std::string& view_graph_id,
       const std::string& view_type) override {
-    auto input_frag = std::static_pointer_cast<fragment_t>(fragment_);
-    auto frag_view = fragment_view_t::Init(
-        input_frag, parse_fragment_view_type(view_type));
+    auto frag_view = std::make_shared<fragment_view_t>(
+        fragment_.get(), parse_fragment_view_type(view_type));
 
     auto dst_graph_def = graph_def_;
     dst_graph_def.set_key(view_graph_id);
@@ -692,7 +691,7 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
                     "Can not to undirected DynamicProjectedFragment");
   }
 
-  bl::result<std::shared_ptr<IFragmentWrapper>> GetGraphView(
+  bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,

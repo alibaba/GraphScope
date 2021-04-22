@@ -22,11 +22,19 @@ __all__ = [
     "assert_edges_equal",
     "assert_graphs_equal",
     "almost_equal",
+    "replace_with_inf",
 ]
 
 
 def almost_equal(x, y, places=7):
     return round(abs(x - y), places) == 0
+
+
+def replace_with_inf(data):
+    for k, v in data.items():
+        if v == 1.7976931348623157e308:
+            data[k] = float("inf")
+    return data
 
 
 def assert_nodes_equal(nodes1, nodes2):

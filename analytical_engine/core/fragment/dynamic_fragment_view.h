@@ -36,7 +36,7 @@ FragmentViewType parse_fragment_view_type(const std::string& view_type) {
   } else if (view_type == "undirected") {
     return FragmentViewType::UNDIRECTED;
   } else {
-    LOG(FATAL) << "invalid fragment view type: " << view_type;
+    throw std::runtime_error("Invalid fragment view type" + view_type);
   }
 }
 
@@ -54,14 +54,13 @@ class DynamicFragmentView : public DynamicFragment {
  public:
   using fragment_t = DynamicFragment;
 
-  DynamicFragmentView(fragment_t* frag, const FragmentViewType& view_type)
+  DynamicFragmentView() = default;
+
+  explicit DynamicFragmentView(fragment_t* frag,
+                               const FragmentViewType& view_type)
       : fragment_(frag), view_type_(view_type) {}
 
-  static std::shared_ptr<DynamicFragmentView> Init(
-      const std::shared_ptr<DynamicFragment>& frag,
-      const FragmentViewType& view_type) {
-    return std::make_shared<DynamicFragmentView>(frag.get(), view_type);
-  }
+  virtual ~DynamicFragmentView() = default;
 
   inline fid_t fid() const { return fragment_->fid(); }
 
