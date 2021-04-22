@@ -45,6 +45,7 @@ fn main() {
     println!("cargo:rustc-link-lib=glog");
 
     if cfg!(target_os = "linux") {
+        println!("cargo:rustc-link-lib=mpi_cxx");
         if Path::new("/usr/ali/alicpp/built/gcc-4.9.2").exists() {
             println!("cargo:cfg=tunnel");
         }

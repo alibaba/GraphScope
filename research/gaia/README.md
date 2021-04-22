@@ -135,7 +135,7 @@ RUST_LOG=Info DATA_PATH=<graph_store> bin/start_rpc_server
 
 This will by default start RPC server at `0.0.0.0:1234`. Type `--help` to see available options if want to customize.
 As we've mentioned earlier, we have built two toy graphs for your convenience:
-* To use the sampled LDBC data, specify `DATA_PATH=/path/to/codebase/gremlin/gremlin_core/resource/data/ldbc_graph`.
+* To use the sampled LDBC data, specify `DATA_PATH=/path/to/this/codebase/gremlin/gremlin_core/resource/data/ldbc_graph`.
 * To use the modern graph of Tinkerpop, simply remove `DATA_PATH=<graph_store>` in the above command. 
 
 
@@ -215,7 +215,7 @@ There are some configurations to make in `conf`:
 * Gremlin server uses `conf/ldbc.schema.json` as the default graph schema, reconfig `gremlin.graph.schema` 
   in `conf/graph.properties` for your convenience.
 * Gremlin server address and port: You are free from this configuration if the service is deployed in single host.
-  Otherwise, please configure the "hosts" field in `conf/system.args.json` corresponding to the hosts that are running
+  Otherwise, please configure the "hosts" field in `conf/gaia.args.json` corresponding to the hosts that are running
   the RPC services (while starting the RPC server):
 
   ```json
@@ -237,7 +237,7 @@ There are some configurations to make in `conf`:
 
 Then start up the Gremlin server using
 ```shell
-java -cp bin/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar com.compiler.demo.server.GremlinServiceMain
+java -cp bin/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar com.alibaba.graphscope.gaia.GremlinServiceMain
 ```
 
 ## Run Query
@@ -257,18 +257,22 @@ java -cp bin/gremlin-server-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar com.co
   ```
 - parameterized query
   ```gremlin
-   # if not set, use conf/system.args.json
+   # if not set, use conf/gaia.args.json
    graph.variables().set("workers",4)
    # check variable value
    graph.variables().get("workers")
   ```
 - Submit query in console. For example:
   ```gremlin
-  g.V().hasLabel('PERSON').has('firstName', 'John' ).out('PERSON_KNOWS_PERSON').limit(1)
+  g.V().hasLabel('PERSON').has('firstName', 'John' ).out('KNOWS').limit(1)
   ```
 Note that the available labels/properties are confined to what is defined in the schema file, e.g.
 `/path/to/workdir/conf/modern.schema.json` for modern graph, or `/path/to/workdir/conf/ldbc.schema.json` for ldbc data.
 The compiler shall complain if the other labels are used.
+
+## LDBC Benchmark Driver
+We have connected GAIA with LDBC driver for the convenience of benchmarking.
+Please refer to `/path/to/this/codebase/benchmark/README.md` for details. 
 
 # Contact
 * Zhengping Qian: zhengping.qzp@alibaba-inc.com

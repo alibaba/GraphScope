@@ -402,6 +402,20 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     return arc;
   }
 
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Can not to directed ArrowFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Can not to undirected ArrowFragment");
+  }
+
  private:
   rpc::GraphDef graph_def_;
   std::shared_ptr<fragment_t> fragment_;
@@ -437,6 +451,20 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
       const std::string& copy_type) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "Can not copy ArrowProjectedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Can not to directed DynamicProjectedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Can not to undirected DynamicProjectedFragment");
   }
 
  private:
@@ -498,7 +526,83 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     // copy fragment
     auto dst_frag = std::make_shared<fragment_t>(new_vm_ptr);
 
-    dst_frag->Copy(fragment_, copy_type);
+    dst_frag->CopyFrom(fragment_, copy_type);
+
+    auto dst_graph_def = graph_def_;
+    dst_graph_def.set_key(dst_graph_name);
+    auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
+        dst_graph_name, dst_graph_def, dst_frag);
+    return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    // copy vertex map
+    auto ori_vm_ptr = fragment_->GetVertexMap();
+    auto new_vm_ptr =
+        std::make_shared<typename fragment_t::vertex_map_t>(comm_spec);
+    new_vm_ptr->Init();
+    std::vector<std::thread> copy_vm_threads(comm_spec.fnum());
+    for (size_t fid = 0; fid < comm_spec.fnum(); ++fid) {
+      copy_vm_threads[fid] = std::thread(
+          [&](size_t fid) {
+            typename fragment_t::oid_t oid;
+            typename fragment_t::vid_t gid{};
+            typename fragment_t::vid_t fvnum =
+                ori_vm_ptr->GetInnerVertexSize(fid);
+            for (typename fragment_t::vid_t lid = 0; lid < fvnum; lid++) {
+              ori_vm_ptr->GetOid(fid, lid, oid);
+              CHECK(new_vm_ptr->AddVertex(fid, oid, gid));
+            }
+          },
+          fid);
+    }
+    for (auto& thrd : copy_vm_threads) {
+      thrd.join();
+    }
+    // copy fragment
+    auto dst_frag = std::make_shared<fragment_t>(new_vm_ptr);
+
+    dst_frag->ToDirectedFrom(fragment_);
+
+    auto dst_graph_def = graph_def_;
+    dst_graph_def.set_key(dst_graph_name);
+    auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
+        dst_graph_name, dst_graph_def, dst_frag);
+    return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    // copy vertex map
+    auto ori_vm_ptr = fragment_->GetVertexMap();
+    auto new_vm_ptr =
+        std::make_shared<typename fragment_t::vertex_map_t>(comm_spec);
+    new_vm_ptr->Init();
+    std::vector<std::thread> copy_vm_threads(comm_spec.fnum());
+    for (size_t fid = 0; fid < comm_spec.fnum(); ++fid) {
+      copy_vm_threads[fid] = std::thread(
+          [&](size_t fid) {
+            typename fragment_t::oid_t oid;
+            typename fragment_t::vid_t gid{};
+            typename fragment_t::vid_t fvnum =
+                ori_vm_ptr->GetInnerVertexSize(fid);
+            for (typename fragment_t::vid_t lid = 0; lid < fvnum; lid++) {
+              ori_vm_ptr->GetOid(fid, lid, oid);
+              CHECK(new_vm_ptr->AddVertex(fid, oid, gid));
+            }
+          },
+          fid);
+    }
+    for (auto& thrd : copy_vm_threads) {
+      thrd.join();
+    }
+    // copy fragment
+    auto dst_frag = std::make_shared<fragment_t>(new_vm_ptr);
+
+    dst_frag->ToUnDirectedFrom(fragment_);
 
     auto dst_graph_def = graph_def_;
     dst_graph_def.set_key(dst_graph_name);
@@ -542,6 +646,20 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
       const std::string& copy_type) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "Can not copy DynamicProjectedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Can not to directed DynamicProjectedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Can not to undirected DynamicProjectedFragment");
   }
 
  private:

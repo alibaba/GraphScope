@@ -332,28 +332,28 @@ class TestGraphProjectTest(object):
 
     def test_project_to_simple(self):
         # default, e_prop='', v_prop=''
-        sg1 = self.g.project_to_simple()
+        sg1 = self.g._project_to_simple()
         assert (
             sg1.schema.vdata_type == types_pb2.NULLVALUE
             and sg1.schema.edata_type == types_pb2.NULLVALUE
         )
 
         # to_simple with e_prop
-        sg2 = self.g.project_to_simple(e_prop="edata_float")
+        sg2 = self.g._project_to_simple(e_prop="edata_float")
         assert (
             sg2.schema.vdata_type == types_pb2.NULLVALUE
             and sg2.schema.edata_type == types_pb2.DOUBLE
         )
 
         # to_simple with v_prop
-        sg3 = self.g.project_to_simple(v_prop="vdata_str")
+        sg3 = self.g._project_to_simple(v_prop="vdata_str")
         assert (
             sg3.schema.vdata_type == types_pb2.STRING
             and sg3.schema.edata_type == types_pb2.NULLVALUE
         )
 
         # to_simple with e_prop and v_prop
-        sg4 = self.g.project_to_simple(v_prop="vdata_int", e_prop="edata_str")
+        sg4 = self.g._project_to_simple(v_prop="vdata_int", e_prop="edata_str")
         assert (
             sg4.schema.vdata_type == types_pb2.INT64
             and sg4.schema.edata_type == types_pb2.STRING
@@ -361,7 +361,7 @@ class TestGraphProjectTest(object):
 
         # empty graph to simple
         empty_g = self.NXGraph()
-        sg5 = empty_g.project_to_simple()
+        sg5 = empty_g._project_to_simple()
         assert (
             sg5.schema.vdata_type == types_pb2.NULLVALUE
             and sg5.schema.edata_type == types_pb2.NULLVALUE
@@ -369,7 +369,7 @@ class TestGraphProjectTest(object):
         with pytest.raises(
             InvalidArgumentError, match="graph not contains the vertex property foo"
         ):
-            sg6 = empty_g.project_to_simple(v_prop="foo")
+            sg6 = empty_g._project_to_simple(v_prop="foo")
 
     @pytest.mark.skip(reason="It use much memory, exceeds the limit of Github runner")
     def test_implicit_project_to_simple(self):
@@ -377,19 +377,13 @@ class TestGraphProjectTest(object):
         nx.builtin.degree_centrality(g)
         nx.builtin.single_source_dijkstra_path_length(g, source=6, weight="weight")
 
-    def test_error_on_view_project_to_simple(self):
-        g = self.NXGraph()
-        g._graph = None  # a graph view always has '_graph_' attribute
-        with pytest.raises(TypeError, match="graph view can't project to simple graph"):
-            sg = g.project_to_simple()
-
     def test_error_on_not_exist_vertex_property(self):
         g = self.NXGraph()
         g.add_node(0, foo="node")
         with pytest.raises(
             InvalidArgumentError, match="graph not contains the vertex property weight"
         ):
-            sg = g.project_to_simple(v_prop="weight")
+            sg = g._project_to_simple(v_prop="weight")
 
     def test_error_on_not_exist_edge_property(self):
         g = self.NXGraph()
@@ -397,7 +391,7 @@ class TestGraphProjectTest(object):
         with pytest.raises(
             InvalidArgumentError, match="graph not contains the edge property type"
         ):
-            sg = g.project_to_simple(e_prop="type")
+            sg = g._project_to_simple(e_prop="type")
 
     @pytest.mark.skip(reason="FIXME: engine can not catch the app throw error now")
     def test_error_on_some_edges_not_contain_property(self):

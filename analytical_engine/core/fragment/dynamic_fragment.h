@@ -523,6 +523,8 @@ class NbrMapSpace {
  public:
   NbrMapSpace() : index_(0) {}
 
+  size_t size() { return buffer_.size(); }
+
   // Create a new linked list
   inline size_t emplace(VID_T vid, const EDATA_T& edata) {
     buffer_.resize(index_ + 1);
@@ -603,6 +605,27 @@ class NbrMapSpace {
     }
   }
 
+  // copy the edge space double size, use for undirected graph to directed
+  // graph.
+  void double_copy(const NbrMapSpace<EDATA_T>& other) {
+    index_ = other.index_ * 2;
+    size_t old_index = other.index_;
+    buffer_.resize(other.buffer_.size() * 2);
+    for (size_t i = 0; i < other.buffer_.size(); ++i) {
+      if (other.buffer_[i] != nullptr) {
+        buffer_[i] = new std::map<VID_T, NbrT>();
+        buffer_[i + old_index] = new std::map<VID_T, NbrT>();
+        for (auto& item : *(other.buffer_[i])) {
+          buffer_[i]->operator[](item.first) = item.second;
+          buffer_[i + old_index]->operator[](item.first) = item.second;
+        }
+      } else {
+        buffer_[i] = nullptr;
+        buffer_[i + old_index] = nullptr;
+      }
+    }
+  }
+
   void Clear() {
     for (size_t i = 0; i < buffer_.size(); ++i) {
       delete buffer_[i];
@@ -668,7 +691,8 @@ class DynamicFragment {
 
   using IsEdgeCut = std::true_type;
   using IsVertexCut = std::false_type;
-  // This member is used by grape::check_load_strategy_compatible()
+  // This member is used by grape::check_load_strategy_compatible(), not use in
+  // DynamicFragment, real strategy is member load_strategy_
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
 
@@ -753,68 +777,61 @@ class DynamicFragment {
     Init(fid, empty_vertices, empty_edges, directed);
   }
 
-  void Copy(std::shared_ptr<DynamicFragment> other,
-            const std::string& copy_type = "identical") {
-    ivnum_ = other->ivnum_;
-    ovnum_ = other->ovnum_;
-    tvnum_ = other->tvnum_;
-    alive_ivnum_ = other->alive_ivnum_;
-    alive_ovnum_ = other->alive_ovnum_;
-    id_mask_ = other->id_mask_;
-    fid_offset_ = other->fid_offset_;
-    fid_ = other->fid_;
-    fnum_ = other->fnum_;
-    message_strategy_ = other->message_strategy_;
+  void CopyFrom(std::shared_ptr<DynamicFragment> other,
+                const std::string& copy_type = "identical") {
     directed_ = other->directed_;
     load_strategy_ = other->load_strategy_;
 
-    ovg2i_ = other->ovg2i_;
-    ovgid_.resize(other->ovgid_.size());
-    memcpy(&ovgid_[0], &(other->ovgid_[0]),
-           other->ovgid_.size() * sizeof(vid_t));
+    copyVertices(other);
+    copyEdges(other, copy_type);
 
-    vdata_.clear();
-    vdata_.resize(other->vdata_.size());
-    for (size_t i = 0; i < ivnum_; ++i) {
-      vdata_[i] = other->vdata_[i];
-    }
+    mirrors_of_frag_.resize(fnum_);
+    InvalidCache();
+  }
 
-    inner_vertex_alive_.resize(other->inner_vertex_alive_.size());
-    memcpy(&inner_vertex_alive_[0], &(other->inner_vertex_alive_[0]),
-           other->inner_vertex_alive_.size() * sizeof(bool));
+  // generate directed graph from orignal undirected graph.
+  void ToDirectedFrom(std::shared_ptr<DynamicFragment> origin) {
+    // original graph must be undirected.
+    assert(!origin->directed());
 
-    outer_vertex_alive_.resize(other->outer_vertex_alive_.size());
-    memcpy(&outer_vertex_alive_[0], &(other->outer_vertex_alive_[0]),
-           other->outer_vertex_alive_.size() * sizeof(bool));
+    directed_ = true;
+    load_strategy_ = grape::LoadStrategy::kBothOutIn;
+    copyVertices(origin);
+    toDirectedEdges(origin);
+    mirrors_of_frag_.resize(fnum_);
+    InvalidCache();
+  }
 
-    if (copy_type == "reverse") {
-      ienum_ = other->oenum_;
-      oenum_ = other->ienum_;
-      inner_ie_pos_.resize(other->inner_oe_pos_.size());
-      memcpy(&inner_ie_pos_[0], &(other->inner_oe_pos_[0]),
-             other->inner_oe_pos_.size() * sizeof(int32_t));
-      inner_oe_pos_.resize(other->inner_ie_pos_.size());
-      memcpy(&inner_oe_pos_[0], &(other->inner_ie_pos_[0]),
-             other->inner_ie_pos_.size() * sizeof(int32_t));
-    } else {
-      ienum_ = other->ienum_;
-      oenum_ = other->oenum_;
-      inner_ie_pos_.resize(other->inner_ie_pos_.size());
-      memcpy(&inner_ie_pos_[0], &(other->inner_ie_pos_[0]),
-             other->inner_ie_pos_.size() * sizeof(int32_t));
+  // generate undirected graph from original directed graph.
+  void ToUnDirectedFrom(std::shared_ptr<DynamicFragment> origin) {
+    // original graph must be directed.
+    assert(origin->directed());
 
-      inner_oe_pos_.resize(other->inner_oe_pos_.size());
-      memcpy(&inner_oe_pos_[0], &(other->inner_oe_pos_[0]),
-             other->inner_oe_pos_.size() * sizeof(int32_t));
-    }
+    directed_ = false;
+    load_strategy_ = grape::LoadStrategy::kOnlyOut;
+    copyVertices(origin);
+    toUnDirectedEdges(origin);
+    mirrors_of_frag_.resize(fnum_);
+    InvalidCache();
+  }
 
-    // inner_edge_space_
-    inner_edge_space_.copy(other->inner_edge_space_);
+  void ClearEdges() {
+    // clear outer vertices.
+    ovgid_.clear();
+    ovg2i_.clear();
+    outer_vertex_alive_.clear();
+    // clear edges.
+    inner_ie_pos_.clear();
+    inner_oe_pos_.clear();
+    inner_ie_pos_.resize(ivnum_, -1);
+    inner_oe_pos_.resize(ivnum_, -1);
+    inner_edge_space_.Clear();
 
-    outer_vertices_of_frag_.resize(fnum_);
-    for (size_t i = 0; i < fnum_; ++i) {
-      outer_vertices_of_frag_[i] = other->outer_vertices_of_frag_[i];
-    }
+    ovnum_ = 0;
+    tvnum_ = ivnum_;
+    alive_ovnum_ = 0;
+    oenum_ = 0;
+    ienum_ = 0;
 
     mirrors_of_frag_.resize(fnum_);
     InvalidCache();
@@ -2215,6 +2232,107 @@ class DynamicFragment {
       inner_oe_pos_[src_lid] =
           inner_edge_space_.emplace(pos, dst_lid, edata, created);
       return created;
+    }
+  }
+
+  void copyVertices(std::shared_ptr<DynamicFragment>& other) {
+    ivnum_ = other->ivnum_;
+    ovnum_ = other->ovnum_;
+    tvnum_ = other->tvnum_;
+    alive_ivnum_ = other->alive_ivnum_;
+    alive_ovnum_ = other->alive_ovnum_;
+    id_mask_ = other->id_mask_;
+    fid_offset_ = other->fid_offset_;
+    fid_ = other->fid_;
+    fnum_ = other->fnum_;
+    message_strategy_ = other->message_strategy_;
+
+    ovg2i_ = other->ovg2i_;
+    ovgid_.resize(other->ovgid_.size());
+    memcpy(&ovgid_[0], &(other->ovgid_[0]),
+           other->ovgid_.size() * sizeof(vid_t));
+
+    vdata_.clear();
+    vdata_.resize(other->vdata_.size());
+    for (size_t i = 0; i < ivnum_; ++i) {
+      vdata_[i] = other->vdata_[i];
+    }
+
+    inner_vertex_alive_.resize(other->inner_vertex_alive_.size());
+    memcpy(&inner_vertex_alive_[0], &(other->inner_vertex_alive_[0]),
+           other->inner_vertex_alive_.size() * sizeof(bool));
+
+    outer_vertex_alive_.resize(other->outer_vertex_alive_.size());
+    memcpy(&outer_vertex_alive_[0], &(other->outer_vertex_alive_[0]),
+           other->outer_vertex_alive_.size() * sizeof(bool));
+
+    outer_vertices_of_frag_.resize(fnum_);
+    for (size_t i = 0; i < fnum_; ++i) {
+      outer_vertices_of_frag_[i] = other->outer_vertices_of_frag_[i];
+    }
+  }
+
+  void copyEdges(std::shared_ptr<DynamicFragment>& other,
+                 const std::string& type) {
+    if (type == "reverse") {
+      assert(other->directed());
+      ienum_ = other->oenum_;
+      oenum_ = other->ienum_;
+      inner_ie_pos_.resize(other->inner_oe_pos_.size());
+      memcpy(&inner_ie_pos_[0], &(other->inner_oe_pos_[0]),
+             other->inner_oe_pos_.size() * sizeof(int32_t));
+      inner_oe_pos_.resize(other->inner_ie_pos_.size());
+      memcpy(&inner_oe_pos_[0], &(other->inner_ie_pos_[0]),
+             other->inner_ie_pos_.size() * sizeof(int32_t));
+    } else {
+      ienum_ = other->ienum_;
+      oenum_ = other->oenum_;
+      inner_ie_pos_.resize(other->inner_ie_pos_.size());
+      memcpy(&inner_ie_pos_[0], &(other->inner_ie_pos_[0]),
+             other->inner_ie_pos_.size() * sizeof(int32_t));
+
+      inner_oe_pos_.resize(other->inner_oe_pos_.size());
+      memcpy(&inner_oe_pos_[0], &(other->inner_oe_pos_[0]),
+             other->inner_oe_pos_.size() * sizeof(int32_t));
+    }
+
+    inner_edge_space_.copy(other->inner_edge_space_);
+  }
+
+  void toDirectedEdges(std::shared_ptr<DynamicFragment>& origin) {
+    ienum_ = origin->oenum_ / 2;
+    oenum_ = origin->oenum_ / 2;
+
+    inner_edge_space_.double_copy(origin->inner_edge_space_);
+    inner_oe_pos_.resize(origin->inner_oe_pos_.size());
+    memcpy(&inner_oe_pos_[0], &(origin->inner_oe_pos_[0]),
+           origin->inner_oe_pos_.size() * sizeof(int32_t));
+    inner_ie_pos_.resize(origin->inner_oe_pos_.size(), -1);
+    size_t old_edge_space_size = origin->inner_edge_space_.size();
+    for (size_t i = 0; i < origin->inner_oe_pos_.size(); ++i) {
+      if (origin->inner_oe_pos_[i] != -1) {
+        inner_ie_pos_[i] = origin->inner_oe_pos_[i] + old_edge_space_size;
+      }
+    }
+  }
+
+  void toUnDirectedEdges(std::shared_ptr<DynamicFragment>& origin) {
+    oenum_ = origin->oenum_;
+    ienum_ = 0;
+    inner_oe_pos_.resize(origin->inner_oe_pos_.size());
+    memcpy(&inner_oe_pos_[0], &(origin->inner_oe_pos_[0]),
+           origin->inner_oe_pos_.size() * sizeof(int32_t));
+    inner_edge_space_.copy(origin->inner_edge_space_);
+    inner_ie_pos_.resize(ivnum_, -1);
+
+    auto inner_vertices = origin->InnerVertices();
+    for (auto v : inner_vertices) {
+      for (auto& e : origin->GetIncomingAdjList(v)) {
+        vid_t vlid = e.get_neighbor().GetValue();
+        if (addOutgoingEdge(v.GetValue(), vlid, e.get_data())) {
+          ++oenum_;
+        }
+      }
     }
   }
 

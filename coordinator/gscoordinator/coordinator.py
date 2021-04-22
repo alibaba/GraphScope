@@ -291,8 +291,7 @@ class CoordinatorServiceServicer(
             )
             or op.op == types_pb2.TRANSFORM_GRAPH
             or op.op == types_pb2.PROJECT_TO_SIMPLE
-            or op.op == types_pb2.ADD_EDGES
-            or op.op == types_pb2.ADD_VERTICES
+            or op.op == types_pb2.ADD_LABELS
         ):
             try:
                 op = self._maybe_register_graph(op, request.session_id)
@@ -338,8 +337,7 @@ class CoordinatorServiceServicer(
             if op.op in (
                 types_pb2.CREATE_GRAPH,
                 types_pb2.PROJECT_GRAPH,
-                types_pb2.ADD_VERTICES,
-                types_pb2.ADD_EDGES,
+                types_pb2.ADD_LABELS,
                 types_pb2.ADD_COLUMN,
             ):
                 schema_path = os.path.join("/tmp", response.graph_def.key + ".json")
@@ -506,6 +504,7 @@ class CoordinatorServiceServicer(
                 {
                     "vineyardIpcSocket": self._launcher.vineyard_socket,
                     "schemaPath": request.schema_path,
+                    "zookeeperPort": str(self._launcher.zookeeper_port),
                 }
             )
             post_url = "http://%s/instance/create_local" % manager_host
@@ -863,7 +862,7 @@ def parse_sys_args():
         help="Memory of vineyard container, suffix with ['Mi', 'Gi', 'Ti'].",
     )
     parser.add_argument(
-        "--k8s_vineyard_shared_mem",
+        "--vineyard_shared_mem",
         type=str,
         default="8Gi",
         help="Plasma memory in vineyard, suffix with ['Mi', 'Gi', 'Ti'].",
@@ -1017,7 +1016,7 @@ def launch_graphscope():
             vineyard_daemonset=args.k8s_vineyard_daemonset,
             vineyard_cpu=args.k8s_vineyard_cpu,
             vineyard_mem=args.k8s_vineyard_mem,
-            vineyard_shared_mem=args.k8s_vineyard_shared_mem,
+            vineyard_shared_mem=args.vineyard_shared_mem,
             mars_worker_cpu=args.k8s_mars_worker_cpu,
             mars_worker_mem=args.k8s_mars_worker_mem,
             mars_scheduler_cpu=args.k8s_mars_scheduler_cpu,
@@ -1039,8 +1038,9 @@ def launch_graphscope():
             num_workers=args.num_workers,
             hosts=args.hosts,
             vineyard_socket=args.vineyard_socket,
-            shared_mem=args.k8s_vineyard_shared_mem,
+            shared_mem=args.vineyard_shared_mem,
             log_level=args.log_level,
+            instance_id=args.instance_id,
             timeout_seconds=args.timeout_seconds,
         )
     else:

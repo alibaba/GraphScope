@@ -1,9 +1,9 @@
 g.V().hasLabel('PERSON').has('id', 13194139542834) \
-  .both('PERSON_KNOWS_PERSON') \
-  .union(identity(), both('PERSON_KNOWS_PERSON')) \
+  .both('KNOWS') \
+  .union(identity(), both('KNOWS')) \
   .dedup() \
   .has('id', neq(13194139542834)).as('friends') \
-  .in('POST_HASCREATOR_PERSON').has('creationDate',lt(20111217000000000)).as('post') \
+  .in('HASCREATOR').hasLabel('POST').has('creationDate',lt(20111217000000000)).as('post') \
   .order().by('creationDate', desc).by('id', asc).limit(20) \
   .select('friends','post') \
   .by(valueMap('id', 'firstName', 'lastName')) \

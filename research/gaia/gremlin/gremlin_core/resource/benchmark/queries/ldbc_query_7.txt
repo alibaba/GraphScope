@@ -1,6 +1,6 @@
 g.V().hasLabel('PERSON').has('id',17592186053137) \
-    .in('POST_HASCREATOR_PERSON', 'COMMENT_HASCREATOR_PERSON').as('message') \
-    .inE('PERSON_LIKES_POST', 'PERSON_LIKES_COMMENT').as('like') \
+    .in('HASCREATOR').as('message') \
+    .inE('LIKES').as('like') \
     .values('creationDate').as('likedate') \
     .select('like') \
     .outV().as('liker') \

@@ -1,11 +1,11 @@
 g.V().hasLabel('PERSON').has('id', 30786325583618).as('root') \
-    .both('PERSON_KNOWS_PERSON').union(identity(), both('PERSON_KNOWS_PERSON')) \
+    .both('KNOWS').union(identity(), both('KNOWS')) \
     .dedup().has('id', neq(30786325583618)).as('friends') \
-    .outE('PERSON_WORKAT_ORGANISATION').has('workFrom', lt(2010)).as('startWork') \
+    .outE('WORKAT').has('workFrom', lt(2010)).as('startWork') \
     .values('workFrom').as('works').select('startWork') \
     .inV().as('comp') \
     .values('name').as('orgname').select('comp') \
-    .out('ORGANISATION_ISLOCATEDIN_PLACE').has('name', 'Laos') \
+    .out('ISLOCATEDIN').has('name', 'Laos') \
     .select('friends') \
     .order() \
     .by(select('works'), asc) \

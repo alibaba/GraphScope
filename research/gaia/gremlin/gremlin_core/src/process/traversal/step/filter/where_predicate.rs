@@ -26,7 +26,7 @@ pub struct WherePredicateStep {
     pub symbol: StepSymbol,
     pub start_key: Option<Tag>,
     pub start_token: Token,
-    tags: Vec<Tag>,
+    as_tags: Vec<Tag>,
     filter: Arc<TraverserFilterChain>,
 }
 
@@ -36,7 +36,7 @@ impl WherePredicateStep {
             symbol: StepSymbol::Where,
             start_key,
             start_token,
-            tags: vec![],
+            as_tags: vec![],
             filter: Arc::new(filter),
         }
     }
@@ -48,11 +48,11 @@ impl Step for WherePredicateStep {
     }
 
     fn add_tag(&mut self, tag: Tag) {
-        self.tags.push(tag);
+        self.as_tags.push(tag);
     }
 
-    fn tags(&self) -> &[Tag] {
-        &self.tags
+    fn tags_as_slice(&self) -> &[Tag] {
+        &self.as_tags
     }
 }
 
@@ -98,9 +98,10 @@ impl FilterFunction<Traverser> for Select {
 
         let result = self.filter.test(input).unwrap_or(false);
         if result && !self.tags.is_empty() {
-            info!("Now we don't support as() in where step");
+            Err(str_to_dyn_error("Now we don't support as() in where step"))
+        } else {
+            Ok(result)
         }
-        Ok(result)
     }
 }
 

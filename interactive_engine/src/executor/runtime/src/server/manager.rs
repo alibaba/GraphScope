@@ -230,7 +230,7 @@ impl PegasusServerManager
         }
     }
 
-    fn intial_task_partition_manager(&self, task_partition_manager: TaskPartitionManager) {
+    fn initial_task_partition_manager(&self, task_partition_manager: TaskPartitionManager) {
         let mut manager = self.task_partition_manager.write().unwrap();
         manager.replace(task_partition_manager);
     }
@@ -281,7 +281,7 @@ impl ServerManager for PegasusServerManager
 
                     let remote_store_service_manager = RemoteStoreServiceManager::new(task_partition_manager.get_partition_process_list(), store_ip_list);
                     self.remote_store_service_manager.write().unwrap().replace(remote_store_service_manager);
-                    self.intial_task_partition_manager(task_partition_manager);
+                    self.initial_task_partition_manager(task_partition_manager);
                     self.signal.store(true, Ordering::Relaxed);
                 } else {
                     continue;

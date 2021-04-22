@@ -20,7 +20,6 @@
 #
 
 import copy
-import hashlib
 import json
 
 from networkx.classes.coreviews import AdjacencyView
@@ -463,8 +462,6 @@ class Graph(object):
         >>> G[0]
         NbrsView({1: {}})
         """
-        if not isinstance(n, (int, str)):
-            raise TypeError(n)
         return self.adj[n]
 
     @property
@@ -556,8 +553,6 @@ class Graph(object):
                 node = [nn, data]
             except (TypeError, ValueError):
                 node = [n, data]
-            if not isinstance(node[0], (int, str)):
-                continue
             if self._schema.add_nx_vertex_properties(data):
                 nodes.append(json.dumps(node))
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_ADD_NODES, nodes)
@@ -814,10 +809,11 @@ class Graph(object):
         >>> 0 in G
         True
         """
-        if not isinstance(n, (int, str)):
+        try:
+            op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n]))
+            return int(op.eval())
+        except TypeError:
             return False
-        op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps([n]))
-        return int(op.eval())
 
     def add_edge(self, u_of_edge, v_of_edge, **attr):
         """Add an edge between u and v.
@@ -916,8 +912,6 @@ class Graph(object):
                 raise NetworkXError(
                     "Edge tuple %s must be a 2-tuple or 3-tuple." % (e,)
                 )
-            if not isinstance(u, (int, str)) or not isinstance(v, (int, str)):
-                continue
             # FIXME: support dynamic data type in same property
             self._schema.add_nx_edge_properties(data)
             edge = [u, v, data]
@@ -1536,6 +1530,10 @@ class Graph(object):
         self._key = graph_def.key
         self.schema.init_nx_schema()
 
+    def clear_edges(self):
+        op = dag_utils.clear_edges(self)
+        op.eval()
+
     def is_directed(self):
         """Returns True if graph is directed, False otherwise."""
         return False
@@ -1586,17 +1584,13 @@ class Graph(object):
         """
         if nbunch is None:  # include all nodes via iterator
             bunch = iter(self.nodes)
-        elif (
-            isinstance(nbunch, (int, str)) and nbunch in self
-        ):  # if nbunch is a single node
+        elif nbunch in self:  # if nbunch is a single node
             bunch = iter([nbunch])
         else:  # if nbunch is a sequence of nodes
 
             def bunch_iter(nlist, adj):
                 try:
                     for n in nlist:
-                        if not isinstance(n, (int, str)):
-                            raise TypeError("invalid node")
                         if n in adj:
                             yield n
                 except TypeError as e:
@@ -1604,11 +1598,11 @@ class Graph(object):
                     # capture error for non-sequence/iterator nbunch.
                     if "iter" in message:
                         msg = "nbunch is not a node or a sequence of nodes."
-                        raise NetworkXError(msg)
+                        raise NetworkXError(msg) from e
                     # capture error for invalid node.
-                    elif "invalid" in message:
+                    elif "hashable" in message:
                         msg = "Node {} in sequence nbunch is not a valid node."
-                        raise NetworkXError(msg.format(n))
+                        raise NetworkXError(msg) from e
                     else:
                         raise
 
@@ -1674,7 +1668,7 @@ class Graph(object):
         if as_view:
             return generic_graph_view(self)
         g = self.__class__(create_empty_in_engine=False)
-        g.graph.update(self.graph)
+        g.graph = copy.deepcopy(self.graph)
         op = dag_utils.copy_graph(self, "identical")
         graph_def = op.eval()
         g._key = graph_def.key
@@ -1719,13 +1713,16 @@ class Graph(object):
         [(0, 1)]
         """
         if self.is_directed():
+            graph_class = self.to_undirected_class()
             if as_view:
-                graph_class = self.to_undirected_class()
                 return generic_graph_view(self, graph_class)
-            else:
-                # NB: fallback, maybe slow, here should be deecopy
-                fallback_G = to_networkx_graph(self)
-                return fallback_G.to_undirected(as_view=as_view)
+            g = graph_class(create_empty_in_engine=False)
+            g.graph = copy.deepcopy(self.graph)
+            op = dag_utils.to_undirected(self)
+            graph_def = op.eval()
+            g._key = graph_def.key
+            g._schema = copy.deepcopy(self._schema)
+            return g
         else:
             return self.copy(as_view=as_view)
 
@@ -1768,13 +1765,16 @@ class Graph(object):
         if self.is_directed():
             return self.copy(as_view=as_view)
         else:
+            graph_class = self.to_directed_class()
             if as_view:
-                graph_class = self.to_directed_class()
                 return generic_graph_view(self, graph_class)
-            else:
-                # NB: fallback, maybe slow
-                fallback_G = to_networkx_graph(self)
-                return fallback_G.to_directed(as_view=as_view)
+            g = graph_class(create_empty_in_engine=False)
+            g.graph = copy.deepcopy(self.graph)
+            op = dag_utils.to_directed(self)
+            graph_def = op.eval()
+            g._key = graph_def.key
+            g._schema = copy.deepcopy(self._schema)
+            return g
 
     def subgraph(self, nodes):
         """Returns a SubGraph view of the subgraph induced on `nodes`.
@@ -2044,7 +2044,7 @@ class Graph(object):
         )
         return op.eval()
 
-    def project_to_simple(self, v_prop=None, e_prop=None):
+    def _project_to_simple(self, v_prop=None, e_prop=None):
         """Project nx graph to a simple graph to run builtin alogorithms.
 
         A simple graph is a accesser wrapper of property graph that only single edge
@@ -2065,7 +2065,11 @@ class Graph(object):
             the method is implicit called in builtin apps.
         """
         if hasattr(self, "_graph"):
-            raise TypeError("graph view can't project to simple graph")
+            # is a graph view, project the original graph(just for copy)
+            graph = self._graph
+            while hasattr(graph, "_graph"):
+                graph = graph._graph
+            return graph._project_to_simple(v_prop=v_prop, e_prop=e_prop)
 
         if v_prop is None:
             v_prop = str(v_prop)

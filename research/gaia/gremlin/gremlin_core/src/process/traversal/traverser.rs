@@ -35,14 +35,14 @@ bitflags! {
     #[derive(Default)]
     pub struct Requirement: u64 {
         const BULK          = 0b000000001;
-        const LABELEDPATH   = 0b000000010;
-        const NESTEDLOOP    = 0b000000100;
+        const LABELED_PATH    = 0b000000010;
+        const NESTED_LOOP    = 0b000000100;
         const OBJECT        = 0b000001000;
-        const ONEBULK       = 0b000010000;
+        const ONE_BULK       = 0b000010000;
         const PATH          = 0b000100000;
         const SACK          = 0b001000000;
-        const SIDEEFFECT    = 0b010000000;
-        const SINGLELOOP    = 0b100000000;
+        const SIDE_EFFECT    = 0b010000000;
+        const SINGLE_LOOP    = 0b100000000;
     }
 }
 
@@ -55,14 +55,14 @@ impl FromPb<Vec<pb::TraverserRequirement>> for Requirement {
         for requirement_pb in requirements_pb {
             match requirement_pb {
                 TraverserRequirement::Bulk => requirements.insert(Requirement::BULK),
-                TraverserRequirement::LabeledPath => requirements.insert(Requirement::LABELEDPATH),
-                TraverserRequirement::NestedLoop => requirements.insert(Requirement::NESTEDLOOP),
+                TraverserRequirement::LabeledPath => requirements.insert(Requirement::LABELED_PATH),
+                TraverserRequirement::NestedLoop => requirements.insert(Requirement::NESTED_LOOP),
                 TraverserRequirement::Object => requirements.insert(Requirement::OBJECT),
-                TraverserRequirement::OneBulk => requirements.insert(Requirement::ONEBULK),
+                TraverserRequirement::OneBulk => requirements.insert(Requirement::ONE_BULK),
                 TraverserRequirement::Path => requirements.insert(Requirement::PATH),
                 TraverserRequirement::Sack => requirements.insert(Requirement::SACK),
-                TraverserRequirement::SideEffects => requirements.insert(Requirement::SIDEEFFECT),
-                TraverserRequirement::SingleLoop => requirements.insert(Requirement::SINGLELOOP),
+                TraverserRequirement::SideEffects => requirements.insert(Requirement::SIDE_EFFECT),
+                TraverserRequirement::SingleLoop => requirements.insert(Requirement::SINGLE_LOOP),
             }
         }
         Ok(requirements)
@@ -72,9 +72,9 @@ impl FromPb<Vec<pb::TraverserRequirement>> for Requirement {
 #[derive(Clone, Debug)]
 pub enum Traverser {
     Path(Path),
-    LabelPath(Path),
+    LabeledPath(Path),
     NoPath(GraphElement),
-    Unknown(Object),
+    Object(Object),
 }
 
 impl Traverser {
@@ -82,51 +82,51 @@ impl Traverser {
         Traverser::NoPath(e.into())
     }
 
-    pub fn with_path<E: Into<GraphElement>>(
-        e: E, labels: &BitSet, requirement: Requirement,
-    ) -> Self {
+    pub fn with_path<E: Into<GraphElement>>(e: E, tags: &BitSet, requirement: Requirement) -> Self {
         if requirement.contains(Requirement::PATH) {
             debug!("start a path traverser");
             let mut path = Path::new(e.into(), false);
-            path.extend(labels);
+            path.extend(tags);
             Traverser::Path(path)
         } else {
             debug!("start a label path traverser");
             let mut path = Path::new(e.into(), true);
-            path.extend(labels);
-            Traverser::LabelPath(path)
+            path.extend(tags);
+            Traverser::LabeledPath(path)
         }
     }
 
     pub fn get_element(&self) -> Option<&GraphElement> {
         match self {
-            Traverser::Path(p) | Traverser::LabelPath(p) => p.head().as_element(),
+            Traverser::Path(p) | Traverser::LabeledPath(p) => p.head().and_then(|x| x.as_element()),
             Traverser::NoPath(e) => Some(e),
-            Traverser::Unknown(_) => None,
+            Traverser::Object(_) => None,
         }
     }
 
     pub fn get_element_mut(&mut self) -> Option<&mut GraphElement> {
         match self {
-            Traverser::Path(p) | Traverser::LabelPath(p) => p.head_mut().as_mut_element(),
+            Traverser::Path(p) | Traverser::LabeledPath(p) => p.head_mut().as_mut_element(),
             Traverser::NoPath(e) => Some(e),
-            Traverser::Unknown(_) => None,
+            Traverser::Object(_) => None,
         }
     }
 
     pub fn get_object(&self) -> Option<&Object> {
         match self {
-            Traverser::Path(p) | Traverser::LabelPath(p) => p.head().as_detached(),
+            Traverser::Path(p) | Traverser::LabeledPath(p) => {
+                p.head().and_then(|x| x.as_detached())
+            }
             Traverser::NoPath(_) => None,
-            Traverser::Unknown(o) => Some(o),
+            Traverser::Object(o) => Some(o),
         }
     }
 
     pub fn get_object_mut(&mut self) -> Option<&mut Object> {
         match self {
-            Traverser::Path(p) | Traverser::LabelPath(p) => p.head_mut().as_mut_detached(),
+            Traverser::Path(p) | Traverser::LabeledPath(p) => p.head_mut().as_mut_detached(),
             Traverser::NoPath(_) => None,
-            Traverser::Unknown(o) => Some(o),
+            Traverser::Object(o) => Some(o),
         }
     }
 
@@ -138,63 +138,63 @@ impl Traverser {
         }
     }
 
-    pub fn split<E: Into<GraphElement>>(&mut self, e: E, labels: &BitSet) {
+    pub fn split<E: Into<GraphElement>>(&mut self, e: E, tags: &BitSet) {
         match self {
             Traverser::Path(p) => {
-                p.extend_with(e.into(), labels, false);
+                p.extend_with(e.into(), tags, false);
             }
-            Traverser::LabelPath(p) => {
-                p.extend_with(e.into(), labels, true);
+            Traverser::LabeledPath(p) => {
+                p.extend_with(e.into(), tags, true);
             }
             Traverser::NoPath(ori) => *ori = e.into(),
-            Traverser::Unknown(_) => unimplemented!(),
+            Traverser::Object(_) => unimplemented!(),
         }
     }
 
-    pub fn split_with_value<T: Into<Object>>(&mut self, o: T, labels: &BitSet) {
+    pub fn split_with_value<T: Into<Object>>(&mut self, o: T, tags: &BitSet) {
         match self {
             Traverser::Path(p) => {
-                p.extend_with(o.into(), labels, false);
+                p.extend_with(o.into(), tags, false);
             }
-            Traverser::LabelPath(p) => {
-                p.extend_with(o.into(), labels, true);
+            Traverser::LabeledPath(p) => {
+                p.extend_with(o.into(), tags, true);
             }
-            Traverser::NoPath(_) => *self = Traverser::Unknown(o.into()),
-            Traverser::Unknown(ori) => {
+            Traverser::NoPath(_) => *self = Traverser::Object(o.into()),
+            Traverser::Object(ori) => {
                 *ori = o.into();
             }
         }
     }
 
-    pub fn modify_head<E: Into<GraphElement>>(&mut self, e: E, labels: &BitSet) {
+    pub fn modify_head<E: Into<GraphElement>>(&mut self, e: E, tags: &BitSet) {
         match self {
-            Traverser::Path(p) | Traverser::LabelPath(p) => {
-                p.modify_head_with(e, labels);
+            Traverser::Path(p) | Traverser::LabeledPath(p) => {
+                p.modify_head_with(e, tags);
             }
             Traverser::NoPath(ori) => *ori = e.into(),
-            Traverser::Unknown(_) => unimplemented!(),
+            Traverser::Object(_) => unimplemented!(),
         }
     }
 
-    pub fn remove_labels(&mut self, labels: &BitSet) {
+    pub fn remove_tags(&mut self, tags: &BitSet) {
         match self {
             Traverser::Path(p) => {
-                debug!("Remove tags {:?} in Path {:?}, but why?", labels, p);
-                p.remove_tag(labels, false)
+                debug!("Remove tags {:?} in Path {:?}, but why?", tags, p);
+                p.remove_tag(tags, false)
             }
-            Traverser::LabelPath(p) => p.remove_tag(labels, true),
+            Traverser::LabeledPath(p) => p.remove_tag(tags, true),
             Traverser::NoPath(e) => {
-                debug!("Try remove tags {:?} in NoPath {:?}, but will not", labels, e)
+                debug!("Try remove tags {:?} in NoPath {:?}, but will not", tags, e)
             }
-            Traverser::Unknown(o) => {
-                debug!("Try remove tags {:?} in Unknown {:?}, but will not", labels, o)
+            Traverser::Object(o) => {
+                debug!("Try remove tags {:?} in Unknown {:?}, but will not", tags, o)
             }
         }
     }
 
-    pub fn add_labels(&mut self, labels: &BitSet) {
+    pub fn add_tags(&mut self, tags: &BitSet) {
         match self {
-            Traverser::Path(p) | Traverser::LabelPath(p) => p.extend(labels),
+            Traverser::Path(p) | Traverser::LabeledPath(p) => p.extend(tags),
             _ => (),
         }
     }
@@ -206,37 +206,36 @@ impl Traverser {
         }
     }
 
-    pub fn select(&self, label: &Tag) -> Option<&PathItem> {
+    pub fn select(&self, tag: &Tag) -> Option<&PathItem> {
         match self {
-            Traverser::Path(p) | Traverser::LabelPath(p) => p.select(label),
+            Traverser::Path(p) | Traverser::LabeledPath(p) => p.select(tag),
             _ => None,
         }
     }
 
-    pub fn select_as_element(&self, label: Option<&Tag>) -> Option<&GraphElement> {
-        if let Some(label) = label {
-            self.select_pop_as_element(Pop::Last, label)
+    pub fn select_as_element(&self, tag: Option<&Tag>) -> Option<&GraphElement> {
+        if let Some(tag) = tag {
+            self.select_pop_as_element(Pop::Last, tag)
         } else {
             self.get_element()
         }
     }
 
-    pub fn select_as_value(&self, label: &Tag) -> Option<&Object> {
-        self.select_pop_as_value(Pop::Last, label)
+    pub fn select_as_value(&self, tag: &Tag) -> Option<&Object> {
+        self.select_pop_as_value(Pop::Last, tag)
     }
 
-    // TODO: select_pop
-    pub fn select_pop(&self, pop: Pop, label: &Tag) -> Option<&PathItem> {
+    pub fn select_pop(&self, pop: Pop, tag: &Tag) -> Option<&PathItem> {
         match self {
-            Traverser::Path(p) | Traverser::LabelPath(p) => match pop {
-                _ => p.select(label),
+            Traverser::Path(p) | Traverser::LabeledPath(p) => match pop {
+                _ => p.select(tag),
             },
             _ => None,
         }
     }
 
-    pub fn select_pop_as_element(&self, pop: Pop, label: &Tag) -> Option<&GraphElement> {
-        let path_item = self.select_pop(pop, label);
+    pub fn select_pop_as_element(&self, pop: Pop, tag: &Tag) -> Option<&GraphElement> {
+        let path_item = self.select_pop(pop, tag);
         if let Some(path_item) = path_item {
             path_item.as_element()
         } else {
@@ -244,8 +243,8 @@ impl Traverser {
         }
     }
 
-    pub fn select_pop_as_value(&self, pop: Pop, label: &Tag) -> Option<&Object> {
-        let path_item = self.select_pop(pop, label);
+    pub fn select_pop_as_value(&self, pop: Pop, tag: &Tag) -> Option<&Object> {
+        let path_item = self.select_pop(pop, tag);
         if let Some(path_item) = path_item {
             path_item.as_detached()
         } else {
@@ -262,15 +261,19 @@ impl Traverser {
 
     pub fn take_path(self) -> ResultPath {
         match self {
-            Traverser::Path(p) | Traverser::LabelPath(p) => p.finalize(),
+            Traverser::Path(p) | Traverser::LabeledPath(p) => p.finalize(),
             Traverser::NoPath(e) => ResultPath::new(vec![PathItem::OnGraph(e)]),
-            Traverser::Unknown(e) => ResultPath::new(vec![PathItem::Detached(e)]),
+            Traverser::Object(e) => ResultPath::new(vec![PathItem::Detached(e)]),
         }
     }
 
     pub fn get_path_len(&self) -> usize {
         match self {
             Traverser::Path(p) => p.length(),
+            Traverser::LabeledPath(p) => {
+                debug!("May not be right, since this is label path length rather than path");
+                p.length()
+            }
             _ => 0,
         }
     }
@@ -280,20 +283,22 @@ impl Traverser {
             Traverser::Path(p) => {
                 if requirement.contains(Requirement::PATH) {
                     Traverser::Path(p)
-                } else if requirement.contains(Requirement::LABELEDPATH) {
-                    Traverser::LabelPath(p)
+                } else if requirement.contains(Requirement::LABELED_PATH) {
+                    Traverser::LabeledPath(p)
                 } else {
                     // Assume it's object for now
                     match p.head() {
-                        PathItem::OnGraph(e) => Traverser::NoPath(e.clone()),
-                        PathItem::Detached(o) => Traverser::Unknown(o.clone()),
-                        PathItem::Empty => unimplemented!(),
+                        Some(PathItem::OnGraph(e)) => Traverser::NoPath(e.clone()),
+                        Some(PathItem::Detached(o)) => Traverser::Object(o.clone()),
+                        // TODO(bingqing) unimplemented!()
+                        Some(PathItem::Empty) => unimplemented!(),
+                        None => unimplemented!(),
                     }
                 }
             }
-            Traverser::LabelPath(_) => unimplemented!(),
+            Traverser::LabeledPath(_) => unimplemented!(),
             Traverser::NoPath(_) => unimplemented!(),
-            Traverser::Unknown(_) => unimplemented!(),
+            Traverser::Object(_) => unimplemented!(),
         }
     }
 }
@@ -309,11 +314,11 @@ impl Encode for Traverser {
                 writer.write_u8(1)?;
                 element.write_to(writer)?;
             }
-            Traverser::Unknown(object) => {
+            Traverser::Object(object) => {
                 writer.write_u8(2)?;
                 object.write_to(writer)?;
             }
-            Traverser::LabelPath(p) => {
+            Traverser::LabeledPath(p) => {
                 writer.write_u8(3)?;
                 p.write_to(writer)?;
             }
@@ -336,69 +341,71 @@ impl Decode for Traverser {
             }
             2 => {
                 let object = <Object>::read_from(reader)?;
-                Ok(Traverser::Unknown(object))
+                Ok(Traverser::Object(object))
             }
             3 => {
                 let p = <Path>::read_from(reader)?;
-                Ok(Traverser::LabelPath(p))
+                Ok(Traverser::LabeledPath(p))
             }
             _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
         }
     }
 }
 
+/// To compare the `Traverser` for `groupby` or `dedup`.
+///
+/// It should require only compare on the `head` of the traverser.
+/// In addition, if two traversers have different types, for example, one is a `Path` or `LabeledPath`
+/// and the other is a `NoPath` or `Object`, the comparison will be made while detaching the
+/// graph element or object from the head of the path.
 impl PartialEq for Traverser {
     fn eq(&self, other: &Self) -> bool {
-        match self {
-            Traverser::Path(p) | Traverser::LabelPath(p) => match p.head() {
-                PathItem::OnGraph(e) => match other {
-                    Traverser::Path(other_p) | Traverser::LabelPath(other_p) => {
-                        match other_p.head() {
-                            PathItem::OnGraph(o) => e == o,
-                            PathItem::Detached(_) => false,
-                            PathItem::Empty => false,
-                        }
-                    }
-                    Traverser::NoPath(o) => e == o,
-                    Traverser::Unknown(_) => false,
-                },
-                PathItem::Detached(obj) => match other {
-                    Traverser::Path(other_p) | Traverser::LabelPath(other_p) => {
-                        match other_p.head() {
-                            PathItem::OnGraph(_) => false,
-                            PathItem::Detached(other_obj) => obj == other_obj,
-                            PathItem::Empty => false,
-                        }
-                    }
-                    Traverser::NoPath(_) => false,
-                    Traverser::Unknown(other_obj) => obj == other_obj,
-                },
-                PathItem::Empty => match other {
-                    Traverser::Path(other_p) => match other_p.head() {
-                        PathItem::Empty => true,
-                        _ => false,
-                    },
-                    _ => false,
-                },
-            },
-            Traverser::NoPath(e) => match other {
-                Traverser::Path(p) | Traverser::LabelPath(p) => match p.head() {
-                    PathItem::OnGraph(o) => e == o,
-                    PathItem::Detached(_) => false,
-                    PathItem::Empty => false,
-                },
-                Traverser::NoPath(o) => e == o,
-                Traverser::Unknown(_) => false,
-            },
-            Traverser::Unknown(obj) => match other {
-                Traverser::Path(p) | Traverser::LabelPath(p) => match p.head() {
-                    PathItem::OnGraph(_) => false,
-                    PathItem::Detached(other_obj) => obj == other_obj,
-                    PathItem::Empty => false,
-                },
-                Traverser::NoPath(_) => false,
-                Traverser::Unknown(other_obj) => obj == other_obj,
-            },
+        let _is_path_eq_elem = |path: &Path, e: &GraphElement| -> bool {
+            if let Some(head) = path.head() {
+                if let Some(e1) = head.as_element() {
+                    e1 == e
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        };
+
+        let _is_path_eq_obj = |path: &Path, o: &Object| -> bool {
+            if let Some(head) = path.head() {
+                if let Some(o1) = head.as_detached() {
+                    o1 == o
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        };
+
+        match (self, other) {
+            // Path compare with Path
+            (Traverser::Path(p1), Traverser::Path(p2))
+            | (Traverser::Path(p1), Traverser::LabeledPath(p2))
+            | (Traverser::LabeledPath(p1), Traverser::Path(p2))
+            | (Traverser::LabeledPath(p1), Traverser::LabeledPath(p2)) => p1.is_head_eq(p2),
+            // Path compare with NoPath, namely GraphElement
+            (Traverser::Path(p), Traverser::NoPath(e))
+            | (Traverser::LabeledPath(p), Traverser::NoPath(e))
+            | (Traverser::NoPath(e), Traverser::Path(p))
+            | (Traverser::NoPath(e), Traverser::LabeledPath(p)) => _is_path_eq_elem(p, e),
+            // Path compare with Object
+            (Traverser::Path(p), Traverser::Object(o))
+            | (Traverser::LabeledPath(p), Traverser::Object(o))
+            | (Traverser::Object(o), Traverser::Path(p))
+            | (Traverser::Object(o), Traverser::LabeledPath(p)) => _is_path_eq_obj(p, o),
+            // GraphElement compare with GraphElement
+            (Traverser::NoPath(e1), Traverser::NoPath(e2)) => e1 == e2,
+            // Object compare with Object
+            (Traverser::Object(o1), Traverser::Object(o2)) => o1 == o2,
+            // `false` for all other cases
+            (_, _) => false,
         }
     }
 }
@@ -450,14 +457,14 @@ impl<T: Send> ShadeSync<T> {
 }
 
 pub struct TraverserSplitIter<E> {
-    labels: Arc<BitSet>,
+    tags: Arc<BitSet>,
     origin: Traverser,
     children: DynIter<E>,
 }
 
 impl<E> TraverserSplitIter<E> {
-    pub fn new(origin: Traverser, labels: &Arc<BitSet>, children: DynIter<E>) -> Self {
-        TraverserSplitIter { labels: labels.clone(), origin, children }
+    pub fn new(origin: Traverser, tags: &Arc<BitSet>, children: DynIter<E>) -> Self {
+        TraverserSplitIter { tags: tags.clone(), origin, children }
     }
 }
 
@@ -468,7 +475,7 @@ impl<E: Into<GraphElement>> Iterator for TraverserSplitIter<E> {
         let mut traverser = self.origin.clone();
         match self.children.next() {
             Some(Ok(elem)) => {
-                traverser.split(elem, &self.labels);
+                traverser.split(elem, &self.tags);
                 Some(Ok(traverser))
             }
             Some(Err(e)) => Some(Err(e)),
@@ -480,16 +487,19 @@ impl<E: Into<GraphElement>> Iterator for TraverserSplitIter<E> {
 impl Hash for Traverser {
     fn hash<H: Hasher>(&self, mut state: &mut H) {
         match self {
-            Traverser::Path(p) | Traverser::LabelPath(p) => {
+            Traverser::Path(p) | Traverser::LabeledPath(p) => {
                 let head = p.head();
                 match head {
-                    PathItem::OnGraph(e) => e.id().hash(&mut state),
-                    PathItem::Detached(o) => o.hash(&mut state),
-                    PathItem::Empty => {}
+                    Some(PathItem::OnGraph(e)) => e.id().hash(&mut state),
+                    Some(PathItem::Detached(o)) => o.hash(&mut state),
+                    // "Special token "" to hash an empty `PathItem`
+                    Some(PathItem::Empty) => "".hash(&mut state),
+                    // "Special token "~NONE" to hash an none `PathItem`
+                    None => "~NONE".hash(&mut state),
                 }
             }
             Traverser::NoPath(e) => e.id().hash(&mut state),
-            Traverser::Unknown(o) => o.hash(&mut state),
+            Traverser::Object(o) => o.hash(&mut state),
         }
     }
 }
@@ -506,6 +516,6 @@ impl AnyData for Traverser {}
 impl Traverser {
     pub fn with<T: Data + Eq>(raw: T) -> Self {
         let v = ShadeSync { inner: raw };
-        Traverser::Unknown(Object::UnknownOwned(Box::new(v)))
+        Traverser::Object(Object::UnknownOwned(Box::new(v)))
     }
 }

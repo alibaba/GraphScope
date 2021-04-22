@@ -15,9 +15,15 @@
 
 export cluster_type=$1
 export port=$2
+export instance_id=$3
+export zookeeper_port=$4
 
 BINDIR=$(cd "$(dirname "$0")";pwd)
 WORKSPACE=$BINDIR/../
+
+if [ ! -n "$GRAPHSCOPE_RUNTIME" ]; then
+  export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
+fi
 
 LIBPATH="."
 for file in `ls ${WORKSPACE}/lib`; do
@@ -25,13 +31,16 @@ for file in `ls ${WORKSPACE}/lib`; do
 done
 
 if [ "$cluster_type" == "local" ]; then
-    echo "server.port=${port}" > $WORKSPACE/config/application_local.properties
-    echo "logging.config=classpath:logback-spring.xml" >> $WORKSPACE/config/application_local.properties
-    echo "instance.createScript=$WORKSPACE/script/create_local_instance.sh" >> $WORKSPACE/config/application_local.properties
-    echo "instance.closeScript=$WORKSPACE/script/close_local_instance.sh" >> $WORKSPACE/config/application_local.properties
-    echo "instance.zookeeper.hosts=127.0.0.1:2181" >>  $WORKSPACE/config/application_local.properties
+    INSTANCE_DIR=$GRAPHSCOPE_RUNTIME/$instance_id
+    mkdir -p $INSTANCE_DIR
+    echo "server.port=$port" > $INSTANCE_DIR/application_local.properties
+    echo "logging.config=classpath:logback-spring.xml" >> $INSTANCE_DIR/application_local.properties
+    echo "instance.createScript=$WORKSPACE/script/create_local_instance.sh" >> $INSTANCE_DIR/application_local.properties
+    echo "instance.closeScript=$WORKSPACE/script/close_local_instance.sh" >> $INSTANCE_DIR/application_local.properties
+    echo "instance.zookeeper.hosts=127.0.0.1:$zookeeper_port" >>  $INSTANCE_DIR/application_local.properties
 
-    java -cp $LIBPATH -Dspring.config.location=$WORKSPACE/config/application_local.properties com.alibaba.maxgraph.admin.InstanceManagerApplication
+    java -cp $LIBPATH -Dspring.config.location=$INSTANCE_DIR/application_local.properties com.alibaba.maxgraph.admin.InstanceManagerApplication &
+    echo $! > $INSTANCE_DIR/graphmanager.pid
 else
     java -cp $LIBPATH -Dspring.config.location=$WORKSPACE/config/application.properties com.alibaba.maxgraph.admin.InstanceManagerApplication
 fi

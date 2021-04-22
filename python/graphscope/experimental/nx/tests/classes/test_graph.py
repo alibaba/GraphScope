@@ -21,7 +21,6 @@ from networkx.classes.tests.test_graph import TestEdgeSubgraph as _TestEdgeSubgr
 from networkx.classes.tests.test_graph import TestGraph as _TestGraph
 
 from graphscope.experimental import nx
-from graphscope.experimental.nx.tests.utils import assert_nodes_equal
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -58,13 +57,17 @@ class TestGraph(_TestGraph):
         G[1][2]["foo"] = "new_foo"
         assert G[1][2]["foo"] == H[1][2]["foo"]
 
-    def add_attributes(self, G):
-        G.graph["foo"] = "foo"
-        G.nodes[0]["foo"] = "foo"
-        G.remove_edge(1, 2)
-        ll = "ll"
-        G.add_edge(1, 2, foo=ll)
-        G.add_edge(2, 1, foo=ll)
+    def deepcopy_node_attr(self, H, G):
+        assert G.nodes[0]["foo"] == H.nodes[0]["foo"]
+        attr = G.nodes[0]["foo"]
+        G.nodes[0]["foo"] = attr.append(1)
+        assert G.nodes[0]["foo"] != H.nodes[0]["foo"]
+
+    def deepcopy_edge_attr(self, H, G):
+        assert G[1][2]["foo"] == H[1][2]["foo"]
+        attr = G[1][2]["foo"]
+        G[1][2]["foo"] = attr.append(1)
+        assert G[1][2]["foo"] != H[1][2]["foo"]
 
     def test_memory_leak(self):
         pass
@@ -72,17 +75,17 @@ class TestGraph(_TestGraph):
     def test_pickle(self):
         pass
 
-    @pytest.mark.skip(reason="not support to_undirected not as view")
     def test_to_undirected(self):
-        pass
+        G = self.K3
+        self.add_attributes(G)
+        H = G.to_undirected()
+        self.is_deepcopy(H, G)
 
-    @pytest.mark.skip(reason="not support to_directed not as view")
     def test_to_directed(self):
-        pass
-
-    @pytest.mark.skip(reason="not support clear_edges in Graph yet.")
-    def test_clear_edges(self):
-        pass
+        G = self.K3
+        self.add_attributes(G)
+        H = G.to_directed()
+        self.is_deepcopy(H, G)
 
     def test_graph_chain(self):
         # subgraph now is fallback with networkx, not view
@@ -116,6 +119,17 @@ class TestGraph(_TestGraph):
         self.add_attributes(G)
         H = G.subgraph([0, 1, 2, 5])
         self.graphs_equal(H, G)
+
+    def test_node_type(self):
+        G = self.Graph()
+        nodes = [(0, 1), 3, "n", 3.14, True, False]
+        edges = [((0, 1), 3, 1), ("n", 3.14, 3.14), (True, False, True)]
+        G.add_nodes_from(nodes)
+        G.add_weighted_edges_from(edges)
+        assert list(G.nodes) == [(0, 1), 3, "n", 3.14, True, False]
+        assert G[(0, 1)][3]["weight"] == 1
+        assert G["n"][3.14]["weight"] == 3.14
+        assert G[True][False]["weight"] == True
 
 
 class TestEdgeSubgraph(_TestEdgeSubgraph):

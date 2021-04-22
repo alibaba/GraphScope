@@ -17,7 +17,6 @@ use crate::process::traversal::step::util::result_downcast::try_downcast_list;
 use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::{FlatMapGen, Step};
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::Tag;
 use crate::{str_to_dyn_error, DynResult};
 use pegasus::api::function::{DynIter, FlatMapFunction};
 
@@ -31,14 +30,6 @@ struct UnfoldFunc {}
 impl Step for UnfoldStep {
     fn get_symbol(&self) -> StepSymbol {
         StepSymbol::Unfold
-    }
-
-    fn add_tag(&mut self, _label: Tag) {
-        unimplemented!()
-    }
-
-    fn tags(&self) -> &[Tag] {
-        unimplemented!()
     }
 }
 

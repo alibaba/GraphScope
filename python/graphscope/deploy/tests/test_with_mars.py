@@ -70,7 +70,7 @@ def gs_session():
         k8s_engine_mem="4Gi",
         k8s_etcd_cpu=2,
         k8s_etcd_mem="256Mi",
-        k8s_vineyard_shared_mem="4Gi",
+        vineyard_shared_mem="4Gi",
         k8s_volumes=get_k8s_volumes(),
         with_mars=True,  # enable mars
     )

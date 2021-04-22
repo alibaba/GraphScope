@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2020 Alibaba Group Holding Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,24 +15,42 @@
 
 object_id=$1
 schema_path=$2
+zookeeper_port=$3
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
 WORKSPACE=$SCRIPT_DIR/../
+export object_id
+source $SCRIPT_DIR/common.sh
 
-LOG_DIR=$WORKSPACE/logs/frontend/frontend_${object_id}
-mkdir -p $LOG_DIR
-
-JAVA_OPT="-server -verbose:gc -Xloggc:./gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-frontend.log -Dlogbasedir=/home/maxgraph/logs/frontend -Dlog4j.configurationFile=file:$WORKSPACE/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath $WORKSPACE/0.0.1-SNAPSHOT/conf/*:$WORKSPACE/0.0.1-SNAPSHOT/lib/*:"
+JAVA_OPT="-server -verbose:gc -Xloggc:${LOG_DIR}/maxgraph-frontend.gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-frontend.log -Dlogbasedir=${LOG_DIR}/frontend -Dlog4j.configurationFile=file:$WORKSPACE/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath $WORKSPACE/0.0.1-SNAPSHOT/conf/*:$WORKSPACE/0.0.1-SNAPSHOT/lib/*:"
 
 REPLACE_SCHEMA_PATH=`echo ${schema_path//\//\\\/}`
 
-cp $WORKSPACE/config/frontend.local.vineyard.properties.tpl $WORKSPACE/config/frontend.local.vineyard.properties
-inner_config=$WORKSPACE/config/frontend.local.vineyard.properties
-sed -i "s/VINEYARD_SCHEMA_PATH/${REPLACE_SCHEMA_PATH}/g" $inner_config
+inner_config=$CONFIG_DIR/frontend.local.vineyard.properties
+cp $WORKSPACE/config/frontend.local.vineyard.properties.tpl $inner_config
+sed -i "s/VINEYARD_SCHEMA_PATH/$REPLACE_SCHEMA_PATH/g" $inner_config
+sed -i "s/ZOOKEEPER_PORT/$zookeeper_port/g" $inner_config
 
-# cd ./src/frontend/frontendservice/target/classes/
 cd $WORKSPACE/frontend/frontendservice/target/classes/
 
 java ${JAVA_OPT} com.alibaba.maxgraph.frontendservice.FrontendServiceMain $inner_config $object_id 1>$LOG_DIR/maxgraph-frontend.out 2>$LOG_DIR/maxgraph-frontend.err &
 
-echo $! > $WORKSPACE/pid/frontend_${object_id}.pid 
+timeout_seconds=60
+wait_period_seconds=0
+
+while true
+do
+  gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.log | awk -F: '{print $6}'`
+  if [ -n "$gremlin_server_port" ]; then
+    echo "FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
+    break
+  fi
+  wait_period_seconds=$(($wait_period_seconds+5))
+  if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+    echo "Get external ip of ${GREMLIN_EXPOSE} failed."
+    break
+  fi
+  sleep 5
+done
+
+echo $! > $PID_DIR/frontend.pid

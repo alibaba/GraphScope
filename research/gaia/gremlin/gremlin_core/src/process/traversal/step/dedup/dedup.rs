@@ -17,7 +17,6 @@ use crate::process::traversal::step::dedup::CollectionFactoryGen;
 use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::Tag;
 use crate::DynResult;
 use pegasus_common::collections::{CollectionFactory, Set};
 use std::collections::HashSet;
@@ -27,14 +26,6 @@ pub struct HashDedupStep {}
 impl Step for HashDedupStep {
     fn get_symbol(&self) -> StepSymbol {
         StepSymbol::Dedup
-    }
-
-    fn add_tag(&mut self, _label: Tag) {
-        unimplemented!()
-    }
-
-    fn tags(&self) -> &[Tag] {
-        unimplemented!()
     }
 }
 

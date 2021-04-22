@@ -1,22 +1,26 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::common::{Label, LabelId};
+extern crate chrono;
+
+use self::chrono::Datelike;
+use crate::common::{DefaultId, Label, LabelId};
 use crate::error::{GDBError, GDBResult};
 use crate::schema::*;
 use crate::table::Row;
+use chrono::offset::{TimeZone, Utc};
 use std::fmt::Debug;
 use std::str::FromStr;
 
@@ -92,7 +96,44 @@ pub struct EdgeMeta<G> {
 
 /// Typical symbols that split a string-format of a time data.
 fn is_time_splitter(c: char) -> bool {
-    c == '-' || c == ':' || c == ' ' || c == 'T' || c == 'Z'
+    c == '-' || c == ':' || c == ' ' || c == 'T' || c == 'Z' || c == '.'
+}
+
+/// Parse a datetime into a long integer, which formatted as: yyyyMMddHHmmssSSS
+fn parse_datetime(val: &str) -> GDBResult<u64> {
+    let mut dt_str = val;
+    #[allow(unused_assignments)]
+    let mut s = String::new();
+    let mut is_millis = false;
+    if let Ok(millis) = dt_str.parse::<i64>() {
+        if let Some(dt) = Utc.timestamp_millis_opt(millis).single() {
+            if dt.year() > 1970 && dt.year() < 2030 {
+                s = dt.to_rfc3339();
+                dt_str = s.as_ref();
+                is_millis = true;
+            }
+        }
+    }
+    let mut _time = String::with_capacity(dt_str.len());
+    for c in dt_str.chars() {
+        if c == '+' {
+            // "2012-07-21T07:59:14.322+000", skip the content after "."
+            break;
+        } else if is_time_splitter(c) {
+            continue; // replace any time splitter with void
+        } else {
+            _time.push(c);
+        }
+    }
+
+    if is_millis {
+        // pad '0' if not 'yyyyMMddHHmmssSSS'
+        while _time.len() < 17 {
+            // push the SSS to fill the datetime as the required format
+            _time.push('0');
+        }
+    }
+    Ok(_time.parse::<u64>()?)
 }
 
 pub fn parse_properties<'a, Iter: Iterator<Item = &'a str>>(
@@ -118,22 +159,11 @@ pub fn parse_properties<'a, Iter: Iterator<Item = &'a str>>(
             } else if ty == &DataType::Float {
                 properties.push(json!(val.parse::<f32>()?));
             } else if ty == &DataType::Date {
-                let mut _date = String::with_capacity(val.len());
-                for c in val.chars() {
-                    if c == '.' {
-                        // "2012-07-21T07:59:14.322+000", skip the content after "."
-                        break;
-                    } else if is_time_splitter(c) {
-                        continue; // replace any time splitter with void
-                    } else {
-                        _date.push(c);
-                    }
-                }
-                properties.push(json!(_date.parse::<u64>()?));
+                properties.push(json!(parse_datetime(val)?));
             } else if ty == &DataType::ID {
                 // do not record the starting (ldbc) id and end id of an edge
                 if field != START_ID_FIELD && field != END_ID_FIELD {
-                    properties.push(json!(val.parse::<usize>()?));
+                    properties.push(json!(val.parse::<DefaultId>()?));
                 }
             } else if ty == &DataType::LABEL {
                 // do not further record the label of a vertex
@@ -166,4 +196,27 @@ pub trait ParserTrait<G: FromStr + PartialEq> {
     fn parse_edge_meta<'a, Iter: Iterator<Item = &'a str>>(
         &self, record_iter: Iter,
     ) -> GDBResult<EdgeMeta<G>>;
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_parse_datetime() {
+        let time1 = "2010-04-10";
+        let time11 = "19600410";
+        let time2 = "2012-07-21T07:59:14.322+0000";
+        let time3 = "20120721075914";
+        // java miniseconds
+        let time4 = "1316563200000";
+        let time5 = "628646400000";
+
+        assert_eq!(parse_datetime(time1).unwrap(), 20100410);
+        assert_eq!(parse_datetime(time11).unwrap(), 19600410);
+        assert_eq!(parse_datetime(time2).unwrap(), 20120721075914322);
+        assert_eq!(parse_datetime(time3).unwrap(), 20120721075914);
+        assert_eq!(parse_datetime(time4).unwrap(), 20110921000000000);
+        assert_eq!(parse_datetime(time5).unwrap(), 19891203000000000);
+    }
 }

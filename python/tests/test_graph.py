@@ -170,12 +170,9 @@ def test_error_on_project_to_simple_wrong_graph_type_2(dynamic_property_graph):
 
 def test_error_on_operation_on_graph(graphscope_session):
     g = graphscope_session.g()
-    with pytest.raises(RuntimeError, match="Empty graph"):
+    with pytest.raises(KeyError, match="v"):
         pg = g.project(vertices={"v": []}, edges={"e": []})
         pg._project_to_simple()._ensure_loaded()
-
-    with pytest.raises(RuntimeError):
-        property_sssp(g, src=6)
 
 
 def test_error_on_app_query_non_compatible_graph(arrow_property_graph):
@@ -311,8 +308,6 @@ def test_add_vertices_edges(graphscope_session):
     assert graph.schema.vertex_labels == ["person"]
     assert graph.schema.edge_labels == ["knows"]
 
-    with pytest.raises(ValueError, match="src label and dst label cannot be None"):
-        graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "created")
     with pytest.raises(ValueError, match="src label or dst_label not existed in graph"):
         graph = graph.add_edges(
             Loader(f"{prefix}/created.csv", delimiter="|"),
@@ -324,6 +319,8 @@ def test_add_vertices_edges(graphscope_session):
     graph = graph.add_vertices(
         Loader(f"{prefix}/software.csv", delimiter="|"), "software"
     )
+    with pytest.raises(ValueError, match="Ambiguous vertex label"):
+        graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "created")
 
     with pytest.raises(ValueError, match="Cannot add new relation to existed graph"):
         graph = graph.add_edges(
@@ -432,6 +429,16 @@ def test_multiple_add_vertices_edges(graphscope_session):
         src_label="person2",
         dst_label="person2",
     )
+    assert sorted(graph.schema.vertex_labels) == [
+        "person",
+        "person2",
+        "software",
+    ]
+    assert sorted(graph.schema.edge_labels) == [
+        "created",
+        "knows",
+        "knows2",
+    ]
     graph = graph.add_vertices(
         Loader(f"{prefix}/software.csv", delimiter="|"), "software2"
     )

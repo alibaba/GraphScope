@@ -1,1 +1,1 @@
-g.V().out("PERSON_KNOWS_PERSON").out("PERSON_KNOWS_PERSON").out("PERSON_KNOWS_PERSON").out("PERSON_KNOWS_PERSON")
+g.V().out("KNOWS").out("KNOWS").out("KNOWS").out("KNOWS")

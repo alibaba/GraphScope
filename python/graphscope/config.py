@@ -70,7 +70,7 @@ class GSConfig(object):
     k8s_vineyard_daemonset = ""
     k8s_vineyard_cpu = 0.5
     k8s_vineyard_mem = "512Mi"
-    k8s_vineyard_shared_mem = "4Gi"
+    vineyard_shared_mem = "4Gi"
 
     # engine resource configuration
     k8s_engine_cpu = 0.5

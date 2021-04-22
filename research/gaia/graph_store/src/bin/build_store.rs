@@ -455,7 +455,7 @@ fn main() {
 
             // Send edge_data
             for (edge_type, edge_dir) in &edge_dirs {
-                let _label_tuple = schema_clone.get_edge_label_id(&edge_type);
+                let _label_tuple = schema_clone.get_edge_label_tuple(&edge_type);
                 if _label_tuple.is_none() {
                     continue;
                 }

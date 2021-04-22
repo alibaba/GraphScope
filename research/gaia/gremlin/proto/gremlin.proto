@@ -85,6 +85,7 @@ message GremlinStep {
     UnfoldStep unfold_step = 19;
     EdgeBothVStep edge_both_v_step = 20;
     TransformTraverserStep transform_traverser_step = 21;
+    IsStep is_step = 22;
   };
 }
 
@@ -300,4 +301,14 @@ message DedupStep {
 // It is actually a ListFlatMapStep,
 // which is only used in group().by().by(out().out()) -> group().by().by(select(values).unfold().out().out())
 message UnfoldStep {
+}
+
+message FilterValueExp {
+  Compare cmp   = 1;
+  common.Value   right = 2;
+}
+
+// Support a simple is, without filter chain for now
+message IsStep {
+    FilterValueExp single = 1;
 }

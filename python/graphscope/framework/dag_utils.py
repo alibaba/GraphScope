@@ -98,64 +98,42 @@ def create_graph(session_id, graph_type, **kwargs):
     return op
 
 
-def add_vertices(graph, **kwargs):
-    """Create an `ADD_VERTICES` op, add op to default dag.
+def add_labels_to_graph(graph, **kwargs):
+    """Add new labels to existed graph.
 
     Args:
-        graph (:class:`Graph`): a :class:`Graph` instance.
-        **kwargs: additional properties respect to different `graph_type`.
+        graph (:class:`Graph`): A graph instance.
+            May not be fully loaded. i.e. it's in a building
+            procedure.
+
+    Raises:
+        NotImplementedError: When encountered not supported graph type.
 
     Returns:
-        An op to add vertices to a graph in c++ side with necessary configurations.
+        The operation.
+
+    Notes:
+        Since we don't want to trigger the loading, we must not use
+        any api that can trigger the loading process implicitly.
     """
     config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph._key),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph._graph_type),
     }
 
-    if graph.graph_type == types_pb2.ARROW_PROPERTY:
+    if graph._graph_type == types_pb2.ARROW_PROPERTY:
         attrs = kwargs.pop("attrs", None)
         if attrs:
             for k, v in attrs.items():
                 if isinstance(v, attr_value_pb2.AttrValue):
                     config[k] = v
     else:
-        raise ValueError(f"Not support add vertices on graph type {graph.graph_type}")
+        raise NotImplementedError(
+            f"Add vertices or edges is not supported yet on graph type {graph._graph_type}"
+        )
     op = Operation(
-        graph.session_id,
-        types_pb2.ADD_VERTICES,
-        config=config,
-        output_types=types_pb2.GRAPH,
-    )
-    return op
-
-
-def add_edges(graph, **kwargs):
-    """Create an `ADD_EDGES` op, add op to default dag.
-
-    Args:
-        graph (:class:`Graph`): a :class:`Graph` instance.
-        **kwargs: additional properties respect to different `graph_type`.
-
-    Returns:
-        An op to add edges to a graph in c++ side with necessary configurations.
-    """
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
-    }
-
-    if graph.graph_type == types_pb2.ARROW_PROPERTY:
-        attrs = kwargs.pop("attrs", None)
-        if attrs:
-            for k, v in attrs.items():
-                if isinstance(v, attr_value_pb2.AttrValue):
-                    config[k] = v
-    else:
-        raise ValueError(f"Not support add edges on graph type {graph.graph_type}")
-    op = Operation(
-        graph.session_id,
-        types_pb2.ADD_EDGES,
+        graph._session.session_id,
+        types_pb2.ADD_LABELS,
         config=config,
         output_types=types_pb2.GRAPH,
     )
@@ -503,6 +481,74 @@ def copy_graph(graph, copy_type="identical"):
     op = Operation(
         graph.session_id,
         types_pb2.COPY_GRAPH,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
+def to_directed(graph):
+    """Create to_directed operation for nx graph.
+
+    Args:
+        graph (:class:`nx.Graph`): A nx graph.
+
+    Returns:
+        Operation
+    """
+    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+    }
+
+    op = Operation(
+        graph.session_id,
+        types_pb2.TO_DIRECTED,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
+def to_undirected(graph):
+    """Create to_undirected operation for nx graph.
+
+    Args:
+        graph (:class:`nx.Graph`): A nx graph.
+
+    Returns:
+        Operation
+    """
+    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+    }
+
+    op = Operation(
+        graph.session_id,
+        types_pb2.TO_UNDIRECTED,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
+def clear_edges(graph):
+    """Create clear edges operation for nx graph.
+
+    Args:
+        graph (:class:`nx.Graph`): A nx graph.
+
+    Returns:
+        An op to modify edges on the graph.
+    """
+    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+    }
+    op = Operation(
+        graph.session_id,
+        types_pb2.CLEAR_EDGES,
         config=config,
         output_types=types_pb2.GRAPH,
     )

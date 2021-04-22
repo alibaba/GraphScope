@@ -23,7 +23,7 @@ function install_libgrape-lite() {
 
 function install_vineyard() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') build and install vineyard"
-  git clone -b v0.1.14 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git /tmp/libvineyard
+  git clone -b v0.1.15 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git /tmp/libvineyard
   pushd /tmp/libvineyard
   git submodule update --init
   mkdir build && pushd build

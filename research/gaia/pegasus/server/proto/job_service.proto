@@ -158,7 +158,12 @@ message JobConfig {
   uint64 job_id             = 1;
   string job_name           = 2;
   uint32 workers            = 3;
-  repeated uint64 servers   = 4;
+  uint64 time_limit         = 4;
+  uint32 batch_size         = 5;
+  uint32 output_capacity    = 6;
+  uint32 memory_limit       = 7;
+  bool plan_print           = 8;
+  repeated uint64 servers   = 9;
 }
 
 message JobRequest {

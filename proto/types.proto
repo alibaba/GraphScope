@@ -48,6 +48,7 @@ enum DataType {
   BOOLEAN = 20;
   STRING = 21;
   DATETIME = 22;
+  LIST = 23;
   INVALID = 536870911;
 };
 
@@ -83,8 +84,12 @@ enum OperationType {
   PROJECT_GRAPH = 11;  // return graph, general form project
   PROJECT_TO_SIMPLE = 12;  // return graph, specifically project to a simple graph
   COPY_GRAPH = 13;
-  ADD_VERTICES = 14;  // return graph, add new label of vertices to a property graph
-  ADD_EDGES = 15;  // return graph, add new label of edges to a property graph
+  ADD_VERTICES = 14;  // not used, leaves room for future development
+  ADD_EDGES = 15;  // not used, leaves room for future development
+  ADD_LABELS = 16;  // return graph, add new label of vertices or label of edges to existed graph
+  TO_DIRECTED = 17;  // return graph, generate directed graph from undirected graph
+  TO_UNDIRECTED = 18;  // return graph, generate undirected graph from directed graph
+  CLEAR_EDGES = 19;  // clear edges
 
   // data
   CONTEXT_TO_NUMPY = 50;

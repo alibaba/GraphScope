@@ -613,7 +613,70 @@ bl::result<rpc::GraphDef> GrapeInstance::copyGraph(
   return dst_wrapper->graph_def();
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::addVertices(
+bl::result<rpc::GraphDef> GrapeInstance::toDirected(
+    const rpc::GSParams& params) {
+#ifdef EXPERIMENTAL_ON
+  BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
+  // BOOST_LEAF_AUTO(copy_type, params.Get<std::string>(rpc::COPY_TYPE));
+
+  BOOST_LEAF_AUTO(src_wrapper,
+                  object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
+  std::string dst_graph_name = "graph_" + generateId();
+
+  BOOST_LEAF_AUTO(dst_wrapper,
+                  src_wrapper->ToDirected(comm_spec_, dst_graph_name));
+  BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
+  return dst_wrapper->graph_def();
+#else
+  RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
+                  "GS is compiled without folly");
+#endif  // EXPERIMENTAL_ON
+}
+
+bl::result<rpc::GraphDef> GrapeInstance::toUnDirected(
+    const rpc::GSParams& params) {
+#ifdef EXPERIMENTAL_ON
+  BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
+  // BOOST_LEAF_AUTO(copy_type, params.Get<std::string>(rpc::COPY_TYPE));
+
+  BOOST_LEAF_AUTO(src_wrapper,
+                  object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
+  std::string dst_graph_name = "graph_" + generateId();
+
+  BOOST_LEAF_AUTO(dst_wrapper,
+                  src_wrapper->ToUnDirected(comm_spec_, dst_graph_name));
+  BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
+  return dst_wrapper->graph_def();
+#else
+  RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
+                  "GS is compiled without folly");
+#endif  // EXPERIMENTAL_ON
+}
+
+bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
+#ifdef EXPERIMENTAL_ON
+  BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
+  BOOST_LEAF_AUTO(wrapper,
+                  object_manager_.GetObject<IFragmentWrapper>(graph_name));
+  auto graph_type = wrapper->graph_def().graph_type();
+
+  if (graph_type != rpc::DYNAMIC_PROPERTY) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                    "Error graph type: " + std::to_string(graph_type) +
+                        ", graph id: " + graph_name);
+  }
+
+  auto fragment =
+      std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
+  fragment->ClearEdges();
+#else
+  RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
+                  "GS is compiled without folly");
+#endif  // EXPERIMENTAL_ON
+  return {};
+}
+
+bl::result<rpc::GraphDef> GrapeInstance::addLabelsToGraph(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(
@@ -630,31 +693,7 @@ bl::result<rpc::GraphDef> GrapeInstance::addVertices(
   BOOST_LEAF_AUTO(graph_utils,
                   object_manager_.GetObject<PropertyGraphUtils>(type_sig));
   std::string dst_graph_name = "graph_" + generateId();
-  BOOST_LEAF_AUTO(dst_wrapper, graph_utils->AddVerticesToGraph(
-                                   src_frag_id, comm_spec_, *client_,
-                                   dst_graph_name, params));
-  BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
-
-  return dst_wrapper->graph_def();
-}
-
-bl::result<rpc::GraphDef> GrapeInstance::addEdges(const rpc::GSParams& params) {
-  BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
-  BOOST_LEAF_AUTO(
-      src_wrapper,
-      object_manager_.GetObject<ILabeledFragmentWrapper>(graph_name));
-  if (src_wrapper->graph_def().graph_type() != rpc::ARROW_PROPERTY) {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "AddEdges is only avaiable for ArrowFragment");
-  }
-
-  auto src_frag_id =
-      std::static_pointer_cast<vineyard::Object>(src_wrapper->fragment())->id();
-  BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
-  BOOST_LEAF_AUTO(graph_utils,
-                  object_manager_.GetObject<PropertyGraphUtils>(type_sig));
-  std::string dst_graph_name = "graph_" + generateId();
-  BOOST_LEAF_AUTO(dst_wrapper, graph_utils->AddEdgesToGraph(
+  BOOST_LEAF_AUTO(dst_wrapper, graph_utils->AddLabelsToGraph(
                                    src_frag_id, comm_spec_, *client_,
                                    dst_graph_name, params));
   BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
@@ -819,13 +858,37 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     r->set_graph_def(graph_def);
     break;
   }
-  case rpc::ADD_VERTICES: {
-    BOOST_LEAF_AUTO(graph_def, addVertices(params));
+  case rpc::TO_DIRECTED: {
+#ifdef EXPERIMENTAL_ON
+    BOOST_LEAF_AUTO(graph_def, toDirected(params));
     r->set_graph_def(graph_def);
+#else
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "GS is built with experimental off");
+#endif
     break;
   }
-  case rpc::ADD_EDGES: {
-    BOOST_LEAF_AUTO(graph_def, addEdges(params));
+  case rpc::TO_UNDIRECTED: {
+#ifdef EXPERIMENTAL_ON
+    BOOST_LEAF_AUTO(graph_def, toUnDirected(params));
+    r->set_graph_def(graph_def);
+#else
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "GS is built with experimental off");
+#endif
+    break;
+  }
+  case rpc::CLEAR_EDGES: {
+#ifdef EXPERIMENTAL_ON
+    BOOST_LEAF_CHECK(clearEdges(params));
+#else
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "GS is built with experimental off");
+#endif
+    break;
+  }
+  case rpc::ADD_LABELS: {
+    BOOST_LEAF_AUTO(graph_def, addLabelsToGraph(params));
     r->set_graph_def(graph_def);
     break;
   }

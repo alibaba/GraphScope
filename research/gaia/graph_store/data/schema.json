@@ -15,29 +15,21 @@
     "UNIVERSITY": 12
   },
   "edge_type_map": {
-    "COMMENT_HASCREATOR_PERSON": [0, 2, 1],
-    "COMMENT_HASTAG_TAG": [1, 2, 7],
-    "COMMENT_ISLOCATEDIN_PLACE": [2, 2, 0],
-    "COMMENT_REPLYOF_COMMENT": [3, 2, 2],
-    "COMMENT_REPLYOF_POST": [4, 2, 3],
-    "FORUM_CONTAINEROF_POST": [5, 4, 3],
-    "FORUM_HASMEMBER_PERSON": [6, 4, 1],
-    "FORUM_HASMODERATOR_PERSON": [7, 4, 1],
-    "FORUM_HASTAG_TAG": [8, 4, 7],
-    "ORGANISATION_ISLOCATEDIN_PLACE": [9, 5, 0],
-    "PERSON_HASINTEREST_TAG": [10, 1, 7],
-    "PERSON_ISLOCATEDIN_PLACE": [11, 1, 0],
-    "PERSON_KNOWS_PERSON": [12, 1, 1],
-    "PERSON_LIKES_COMMENT": [13, 1, 2],
-    "PERSON_LIKES_POST": [14, 1, 3],
-    "PERSON_STUDYAT_ORGANISATION": [15, 1, 5],
-    "PERSON_WORKAT_ORGANISATION": [16, 1, 5],
-    "PLACE_ISPARTOF_PLACE": [17, 0, 0],
-    "POST_HASCREATOR_PERSON": [18, 3, 1],
-    "POST_HASTAG_TAG": [19, 3, 7],
-    "POST_ISLOCATEDIN_PLACE": [20, 3, 0],
-    "TAG_HASTYPE_TAGCLASS": [21, 7, 6],
-    "TAGCLASS_ISSUBCLASSOF_TAGCLASS": [22, 6, 6]
+    "HASCREATOR": 0,
+    "HASTAG": 1,
+    "REPLYOF": 3,
+    "CONTAINEROF": 5,
+    "HASMEMBER": 6,
+    "HASMODERATOR": 7,
+    "HASINTEREST": 10,
+    "ISLOCATEDIN": 11,
+    "KNOWS": 12,
+    "LIKES": 13,
+    "STUDYAT": 15,
+    "WORKAT": 16,
+    "ISPARTOF": 17,
+    "HASTYPE": 21,
+    "ISSUBCLASSOF": 22
   },
   "vertex_prop": {
     "TAGCLASS": [
@@ -214,7 +206,7 @@
     ]
   },
   "edge_prop": {
-    "COMMENT_HASCREATOR_PERSON": [
+    "HASCREATOR": [
       [
         "start_id",
         "ID"
@@ -224,7 +216,7 @@
         "ID"
       ]
     ],
-    "COMMENT_HASTAG_TAG": [
+    "HASTAG": [
       [
         "start_id",
         "ID"
@@ -234,7 +226,7 @@
         "ID"
       ]
     ],
-    "COMMENT_ISLOCATEDIN_PLACE": [
+    "ISLOCATEDIN": [
       [
         "start_id",
         "ID"
@@ -244,7 +236,7 @@
         "ID"
       ]
     ],
-    "COMMENT_REPLYOF_COMMENT": [
+    "REPLYOF": [
       [
         "start_id",
         "ID"
@@ -254,7 +246,7 @@
         "ID"
       ]
     ],
-    "COMMENT_REPLYOF_POST": [
+    "CONTAINEROF": [
       [
         "start_id",
         "ID"
@@ -264,17 +256,7 @@
         "ID"
       ]
     ],
-    "FORUM_CONTAINEROF_POST": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "FORUM_HASMEMBER_PERSON": [
+    "HASMEMBER": [
       [
         "start_id",
         "ID"
@@ -288,7 +270,7 @@
         "Date"
       ]
     ],
-    "FORUM_HASMODERATOR_PERSON": [
+    "HASMODERATOR": [
       [
         "start_id",
         "ID"
@@ -298,7 +280,7 @@
         "ID"
       ]
     ],
-    "FORUM_HASTAG_TAG": [
+    "HASINTEREST": [
       [
         "start_id",
         "ID"
@@ -308,37 +290,7 @@
         "ID"
       ]
     ],
-    "ORGANISATION_ISLOCATEDIN_PLACE": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "PERSON_HASINTEREST_TAG": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "PERSON_ISLOCATEDIN_PLACE": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "PERSON_KNOWS_PERSON": [
+    "KNOWS": [
       [
         "start_id",
         "ID"
@@ -352,7 +304,7 @@
         "Date"
       ]
     ],
-    "PERSON_LIKES_COMMENT": [
+    "LIKES": [
       [
         "start_id",
         "ID"
@@ -366,21 +318,7 @@
         "Date"
       ]
     ],
-    "PERSON_LIKES_POST": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ],
-      [
-        "creationDate",
-        "Date"
-      ]
-    ],
-    "PERSON_STUDYAT_ORGANISATION": [
+    "STUDYAT": [
       [
         "start_id",
         "ID"
@@ -394,7 +332,7 @@
         "Integer"
       ]
     ],
-    "PERSON_WORKAT_ORGANISATION": [
+    "WORKAT": [
       [
         "start_id",
         "ID"
@@ -408,7 +346,7 @@
         "Integer"
       ]
     ],
-    "PLACE_ISPARTOF_PLACE": [
+    "ISPARTOF": [
       [
         "start_id",
         "ID"
@@ -418,7 +356,7 @@
         "ID"
       ]
     ],
-    "POST_HASCREATOR_PERSON": [
+    "HASTYPE": [
       [
         "start_id",
         "ID"
@@ -428,37 +366,7 @@
         "ID"
       ]
     ],
-    "POST_HASTAG_TAG": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "POST_ISLOCATEDIN_PLACE": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "TAG_HASTYPE_TAGCLASS": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "TAGCLASS_ISSUBCLASSOF_TAGCLASS": [
+    "ISSUBCLASSOF": [
       [
         "start_id",
         "ID"

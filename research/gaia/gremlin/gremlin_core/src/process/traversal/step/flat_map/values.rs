@@ -23,18 +23,18 @@ use pegasus::api::function::FlatMapFunction;
 
 pub struct ValuesStep {
     props: Vec<String>,
-    as_labels: Vec<Tag>,
+    as_tags: Vec<Tag>,
 }
 
 impl ValuesStep {
     pub fn new(props: Vec<String>) -> Self {
-        ValuesStep { props, as_labels: vec![] }
+        ValuesStep { props, as_tags: vec![] }
     }
 }
 
 struct ValuesFunc {
     props: Vec<String>,
-    labels: BitSet,
+    tags: BitSet,
 }
 
 impl Step for ValuesStep {
@@ -43,11 +43,11 @@ impl Step for ValuesStep {
     }
 
     fn add_tag(&mut self, label: Tag) {
-        self.as_labels.push(label);
+        self.as_tags.push(label);
     }
 
-    fn tags(&self) -> &[Tag] {
-        self.as_labels.as_slice()
+    fn tags_as_slice(&self) -> &[Tag] {
+        self.as_tags.as_slice()
     }
 }
 
@@ -65,14 +65,15 @@ impl FlatMapFunction<Traverser, Traverser> for ValuesFunc {
                         prop_value
                             .try_to_owned()
                             .ok_or(str_to_dyn_error("Can't get owned property value"))?,
-                        &self.labels,
+                        &self.tags,
                     );
                     result.push(Ok(traverser));
                 }
             }
+
             Ok(Box::new(result.into_iter()))
         } else {
-            panic!("invalid input for values;")
+            Err(str_to_dyn_error("invalid input for values;"))
         }
     }
 }
@@ -82,7 +83,7 @@ impl FlatMapGen for ValuesStep {
         &self,
     ) -> DynResult<Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>>
     {
-        let labels = self.get_tags();
-        Ok(Box::new(ValuesFunc { props: self.props.clone(), labels }))
+        let tags = self.get_tags();
+        Ok(Box::new(ValuesFunc { props: self.props.clone(), tags }))
     }
 }
