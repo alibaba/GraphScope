@@ -44,6 +44,16 @@ pub struct TaskPartitionManager {
 }
 
 impl TaskPartitionManager {
+    pub fn new(task_partition_list: HashMap<u32, Vec<u32>>,
+               partition_task_list: HashMap<u32, u32>,
+               partition_process_list: HashMap<u32, u32>) -> Self {
+        TaskPartitionManager {
+            task_partition_list,
+            partition_task_list,
+            partition_process_list,
+        }
+    }
+
     // for test
     pub fn empty() -> Self {
         TaskPartitionManager {
@@ -52,6 +62,7 @@ impl TaskPartitionManager {
             partition_process_list: HashMap::new(),
         }
     }
+
     pub fn parse_proto(task_partition_proto: &[RuntimeTaskPartitionProto]) -> Self {
         let mut task_partition_list = HashMap::new();
         let mut partition_process_list = HashMap::new();

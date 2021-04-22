@@ -31,11 +31,9 @@ public class EngineServerListener implements NodeDiscovery.Listener {
                 List<MaxGraphNode> nodeList = Lists.newArrayList(this.nodes.values());
                 nodeList.sort(Comparator.comparingInt(MaxGraphNode::getIdx));
                 logger.info("All the engine servers are started " + nodeList);
-
-                EngineServerAddresses serverAddresses = EngineServerAddresses.newBuilder().addAllAddresses(
-                        nodeList.stream().map(v -> AddressUtils.joinAddress(v.getHost(), v.getPort())).collect(Collectors.toList())
-                ).build();
-                executorManager.connectEngineServerList(serverAddresses);
+                List<String> addrs = nodeList.stream().map(v -> AddressUtils.joinAddress(v.getHost(), v.getPort()))
+                        .collect(Collectors.toList());
+                executorManager.connectEngineServerList(addrs);
             } else if (this.nodes.size() > this.executorManager.getNodeCount()) {
                 throw new IllegalArgumentException("count of nodes " + this.nodes + " > " + this.executorManager.getNodeCount());
             }

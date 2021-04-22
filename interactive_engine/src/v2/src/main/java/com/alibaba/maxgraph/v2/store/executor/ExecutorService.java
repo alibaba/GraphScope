@@ -66,24 +66,11 @@ public class ExecutorService implements Cloneable {
     }
 
     public void start() {
-//        executor.execute(() -> {
         logger.info("Start to launch executor service");
         int nodeCount = CommonConfig.STORE_NODE_COUNT.get(this.configs);
         int workerPerProcess = ExecutorConfig.EXECUTOR_WORKER_PER_PROCESS.get(this.configs);
-        ExecutorConfigPb executorConfig = ExecutorConfigPb.newBuilder()
-                .setGraphName(CommonConfig.GRAPH_NAME.get(this.configs))
-                .setLocalDataRoot(StoreConfig.STORE_DATA_PATH.get(this.configs))
-                .setNodeId(CommonConfig.NODE_IDX.get(this.configs))
-                .setNodeCount(nodeCount)
-                .setPartitionCount(CommonConfig.PARTITION_COUNT.get(this.configs))
-                .setHbIntervalMs(ExecutorConfig.EXECUTOR_HB_INTERVAL_MS.get(this.configs))
-                .setInnerCpuConfig(ExecutorConfig.EXECUTOR_INNER_CPU_CONFIG.get(this.configs))
-                .setQueryQueueSize(ExecutorConfig.EXECUTOR_QUERY_QUEUE_SIZE.get(this.configs))
-                .setWorkerPerProcess(workerPerProcess)
-                .setEngineType(StringUtils.upperCase(CommonConfig.ENGINE_TYPE.get(this.configs)))
-                .setLog4RsConfig(CommonConfig.LOG4RS_CONFIG.get(this.configs))
-                .build();
-        byte[] configBytes = executorConfig.toByteArray();
+        byte[] configBytes = this.configs.toProto().toByteArray();
+
         logger.info("Start to open executor server");
         Pointer pointer = ExecutorLibrary.INSTANCE.openExecutorServer(configBytes, configBytes.length);
         // Add graph store with partition id to executor
@@ -127,7 +114,6 @@ public class ExecutorService implements Cloneable {
             logger.info("Wait all the engine server to build connection with each other");
         }
         logger.info("All engine server build connection with each success");
-//        });
     }
 
     public void close() {

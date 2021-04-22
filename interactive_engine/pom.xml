@@ -14,6 +14,7 @@
         <module>src</module>
         <module>tests</module>
         <module>benchmark</module>
+        <module>distribution</module>
     </modules>
 
     <properties>

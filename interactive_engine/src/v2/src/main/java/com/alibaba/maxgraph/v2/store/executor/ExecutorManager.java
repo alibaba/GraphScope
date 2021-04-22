@@ -1,6 +1,5 @@
 package com.alibaba.maxgraph.v2.store.executor;
 
-import com.alibaba.maxgraph.proto.v2.EngineServerAddresses;
 import com.alibaba.maxgraph.proto.v2.ExecutorRpcConfigPb;
 import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.store.executor.jna.ExecutorLibrary;
@@ -9,6 +8,7 @@ import com.alibaba.maxgraph.v2.store.executor.jna.JnaRpcServerPortResponse;
 import com.sun.jna.Pointer;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ExecutorManager {
@@ -40,9 +40,8 @@ public class ExecutorManager {
         }
     }
 
-    public void connectEngineServerList(EngineServerAddresses serverAddresses) {
-        byte[] addressBytes = serverAddresses.toByteArray();
-        ExecutorLibrary.INSTANCE.connectEngineServerList(this.executorHandler, addressBytes, addressBytes.length);
+    public void connectEngineServerList(List<String> serverAddresses) {
+        ExecutorLibrary.INSTANCE.connectEngineServerList(this.executorHandler, String.join(",", serverAddresses));
         engineFlag.set(true);
     }
 

@@ -39,6 +39,15 @@ unsafe impl Send for GlobalGraph {}
 unsafe impl Sync for GlobalGraph {}
 
 impl GlobalGraph {
+    pub fn empty() -> Self {
+        GlobalGraph {
+            graph_partitions: HashMap::new(),
+        }
+    }
+
+    pub fn add_partition(&mut self, partition_id: PartitionId, graph_store: Arc<GraphStore>) {
+        self.graph_partitions.insert(partition_id, graph_store);
+    }
 
     pub fn new(disks: Vec<String>, graph_config: &GraphConfig, partition_ids: &Vec<PartitionId>) -> GraphResult<Self> {
         let mut graph_partitions = HashMap::new();

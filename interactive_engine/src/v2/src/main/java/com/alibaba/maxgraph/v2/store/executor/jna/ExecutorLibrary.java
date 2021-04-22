@@ -5,7 +5,7 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 
 public interface ExecutorLibrary extends Library {
-    ExecutorLibrary INSTANCE = Native.load("maxgraph_query", ExecutorLibrary.class);
+    ExecutorLibrary INSTANCE = Native.load("maxgraph_runtime", ExecutorLibrary.class);
 
     /**
      * Open executor server and get handler with given config
@@ -47,9 +47,8 @@ public interface ExecutorLibrary extends Library {
      *
      * @param executor  The given executor handler
      * @param addresses The address list
-     * @param len       The len of address list bytes
      */
-    void connectEngineServerList(Pointer executor, byte[] addresses, int len);
+    void connectEngineServerList(Pointer executor, String addresses);
 
     /**
      * Stop the given engine server
