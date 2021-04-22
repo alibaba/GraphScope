@@ -26,20 +26,40 @@
 
 namespace gs {
 
+enum class FragmentViewType { REVERSED, DIRECTED, UNDIRECTED };
+
+FragmentViewType parse_fragment_view_type(const std::string& view_type) {
+  if (view_type == "reversed") {
+    return FragmentViewType::REVERSED;
+  } else if (view_type == "directed") {
+    return FragmentViewType::DIRECTED;
+  } else if (view_type == "undirected") {
+    return FragmentViewType::UNDIRECTED;
+  } else {
+    LOG(FATAL) << "invalid fragment view type: " << view_type;
+  }
+}
+
 /**
  * @brief A wrapper class of DynamicFragment to behaves as a view.
- *
+ * here implement three type of views.
+ * - reversed: view of original graph with edge directions reverse, original
+ *             graph is directed.
+ * - directed: view of original graph with edge directed, original graph is
+ *             undirected.
+ * - undirected: view of original graph with edge undirected, original graph is
+ *               directed.
  */
 class DynamicFragmentView : public DynamicFragment {
  public:
   using fragment_t = DynamicFragment;
 
-  DynamicFragmentView(fragment_t* frag, const std::string& view_type)
+  DynamicFragmentView(fragment_t* frag, const FragmentViewType& view_type)
       : fragment_(frag), view_type_(view_type) {}
 
   static std::shared_ptr<DynamicFragmentView> Init(
       const std::shared_ptr<DynamicFragment>& frag,
-      const std::string& view_type) {
+      const FragmentViewType& view_type) {
     return std::make_shared<DynamicFragmentView>(frag.get(), view_type);
   }
 
@@ -52,11 +72,17 @@ class DynamicFragmentView : public DynamicFragment {
   inline int fid_offset() const { return fragment_->fid_offset(); }
 
   inline bool directed() const {
-    if (view_type_ == "directed") {
+    switch (view_type_) {
+    case FragmentViewType::DIRECTED: {
       return true;
-    } else if (view_type_ == "undirected") {
+    }
+    case FragmentViewType::UNDIRECTED: {
       return false;
     }
+    default:
+      return fragment_->directed();
+    }
+
     return fragment_->directed();
   }
 
@@ -109,14 +135,17 @@ class DynamicFragmentView : public DynamicFragment {
   }
 
   inline int GetLocalOutDegree(const vertex_t& v) const {
-    if (view_type_ == "reverse" || view_type_ == "directed") {
+    if (view_type_ == FragmentViewType::REVERSED) {
       return fragment_->GetLocalInDegree(v);
+    } else if (view_type_ == FragmentViewType::UNDIRECTED) {
+      return fragment_->GetLocalOutDegree(v) + fragment_->GetLocalInDegree(v);
     }
     return fragment_->GetLocalOutDegree(v);
   }
 
   inline int GetLocalInDegree(const vertex_t& v) const {
-    if (view_type_ == "reverse") {
+    if (view_type_ == FragmentViewType::REVERSED ||
+        view_type_ == FragmentViewType::DIRECTED) {
       return fragment_->GetLocalOutDegree(v);
     }
     return fragment_->GetLocalInDegree(v);
@@ -211,15 +240,15 @@ class DynamicFragmentView : public DynamicFragment {
   }
 
   inline adj_list_t GetOutgoingAdjList(const vertex_t& v) {
-    if (view_type_ == "reversed") {
-      LOG(INFO) << "get outgoing edges";
+    if (view_type_ == FragmentViewType::REVERSED) {
       return fragment_->GetIncomingAdjList(v);
     }
     return fragment_->GetOutgoingAdjList(v);
   }
 
   inline adj_list_t GetIncomingAdjList(const vertex_t& v) {
-    if (view_type_ == "reversed" || view_type_ == "directed") {
+    if (view_type_ == FragmentViewType::REVERSED ||
+        view_type_ == FragmentViewType::DIRECTED) {
       return fragment_->GetOutgoingAdjList(v);
     }
     return fragment_->GetIncomingAdjList(v);
@@ -238,7 +267,7 @@ class DynamicFragmentView : public DynamicFragment {
   }
 
   inline bool HasEdge(const oid_t& u, const oid_t& v) {
-    if (view_type_ == "reversed") {
+    if (view_type_ == FragmentViewType::REVERSED) {
       return fragment_->HasEdge(v, u);
     }
     return fragment_->HasEdge(u, v);
@@ -249,7 +278,7 @@ class DynamicFragmentView : public DynamicFragment {
   }
 
   inline bool GetEdgeData(const oid_t& u, const oid_t& v, std::string& ret) {
-    if (view_type_ == "reversed") {
+    if (view_type_ == FragmentViewType::REVERSED) {
       return fragment_->GetEdgeData(v, u, ret);
     }
     return fragment_->GetEdgeData(u, v, ret);
@@ -266,14 +295,15 @@ class DynamicFragmentView : public DynamicFragment {
   inline Array<vdata_t, grape::Allocator<vdata_t>>& vdata() { return vdata_; }
 
   inline Array<int32_t, grape::Allocator<int32_t>>& inner_ie_pos() {
-    if (view_type_ == "reversed" || view_type_ == "directed") {
+    if (view_type_ == FragmentViewType::REVERSED ||
+        view_type_ == FragmentViewType::DIRECTED) {
       return fragment_->inner_oe_pos();
     }
     return fragment_->inner_ie_pos();
   }
 
   inline Array<int32_t, grape::Allocator<int32_t>>& inner_oe_pos() {
-    if (view_type_ == "reversed") {
+    if (view_type_ == FragmentViewType::REVERSED) {
       return fragment_->inner_ie_pos();
     }
     return fragment_->inner_oe_pos();
@@ -285,7 +315,7 @@ class DynamicFragmentView : public DynamicFragment {
 
  private:
   fragment_t* fragment_;
-  std::string view_type_;
+  FragmentViewType view_type_;
 };
 
 }  // namespace gs

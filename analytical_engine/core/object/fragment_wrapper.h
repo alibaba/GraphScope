@@ -631,7 +631,8 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
       const grape::CommSpec& comm_spec, const std::string& view_graph_id,
       const std::string& view_type) override {
     auto input_frag = std::static_pointer_cast<fragment_t>(fragment_);
-    auto frag_view = fragment_view_t::Init(input_frag, view_type);
+    auto frag_view = fragment_view_t::Init(
+        input_frag, parse_fragment_view_type(view_type));
 
     auto dst_graph_def = graph_def_;
     dst_graph_def.set_key(view_graph_id);
