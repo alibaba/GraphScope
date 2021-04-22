@@ -6,7 +6,7 @@ import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.discovery.RoleType;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.coordinator.Coordinator;
-import com.alibaba.maxgraph.v2.frontend.Frontend;
+import com.alibaba.maxgraph.v2.grafting.frontend.Frontend;
 import com.alibaba.maxgraph.v2.ingestor.Ingestor;
 import com.alibaba.maxgraph.v2.store.Store;
 import org.slf4j.Logger;

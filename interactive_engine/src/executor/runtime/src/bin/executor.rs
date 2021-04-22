@@ -145,7 +145,6 @@ fn run_main<V, VI, E, EI>(store_config: Arc<StoreConfig>,
     };
 
     ctrl_service = PegasusCtrlService::new_service(query_manager.clone(), pegasus_runtime.clone());
-
     async_maxgraph_service = PegasusAsyncService::new_service(store_config.clone(),
                                                               pegasus_runtime.clone(),
                                                               query_manager.clone(),
@@ -155,17 +154,12 @@ fn run_main<V, VI, E, EI>(store_config: Arc<StoreConfig>,
                                                               graph.clone(),
                                                               partition_manager.clone(),
                                                               task_partition_manager);
-
     maxgraph_service = PegasusService::new_service(store_config.clone(), query_manager.clone());
-
     let ctrl_and_async_server = start_ctrl_and_async_service(0, ctrl_service, async_maxgraph_service).expect("Start ctrl and async service error.");
     info!("async maxgraph service and control service bind to: {:?}", ctrl_and_async_server.bind_addrs());
     let ctrl_and_async_service_port = ctrl_and_async_server.bind_addrs()[0].1;
-
     let store_context = StoreContext::new(graph, partition_manager);
-    start_rpc_service(runtime_info_clone, store_config.clone(), maxgraph_service, ctrl_and_async_service_port, hb_resp_sender, store_context);
-    let _manager_guards = ServerManager::start_server(server_manager, store_config, Box::new(recover_prepare)).unwrap();
-
+    start_rpc_service(runtime_info_clone, store_config, maxgraph_service, ctrl_and_async_service_port, hb_resp_sender, store_context);
     thread::sleep(Duration::from_secs(u64::max_value()));
     ::std::mem::drop(ctrl_and_async_server)
 }
