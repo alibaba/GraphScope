@@ -109,7 +109,7 @@ class DynamicFragmentView : public DynamicFragment {
   }
 
   inline int GetLocalOutDegree(const vertex_t& v) const {
-    if (view_type_ == "reverse") {
+    if (view_type_ == "reverse" || view_type_ == "directed") {
       return fragment_->GetLocalInDegree(v);
     }
     return fragment_->GetLocalOutDegree(v);
@@ -261,9 +261,9 @@ class DynamicFragmentView : public DynamicFragment {
   }
 
  private:
-  inline dynamic_fragment_impl::NbrMapSpace<edata_t>& inner_edge_space() {
-    return fragment_->inner_edge_space();
-  }
+  inline vid_t ivnum() { return fragment_->ivnum(); }
+
+  inline Array<vdata_t, grape::Allocator<vdata_t>>& vdata() { return vdata_; }
 
   inline Array<int32_t, grape::Allocator<int32_t>>& inner_ie_pos() {
     if (view_type_ == "reversed" || view_type_ == "directed") {
@@ -279,8 +279,8 @@ class DynamicFragmentView : public DynamicFragment {
     return fragment_->inner_oe_pos();
   }
 
-  inline vid_t ivnum() {
-    return fragment_->ivnum();
+  dynamic_fragment_impl::NbrMapSpace<edata_t>& inner_edge_space() {
+    return fragment_->inner_edge_space();
   }
 
  private:

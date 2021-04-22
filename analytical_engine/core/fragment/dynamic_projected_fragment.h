@@ -527,50 +527,50 @@ class DynamicProjectedFragment {
 
   inline projected_adj_linked_list_t GetIncomingInnerVertexAdjList(
       const vertex_t& v) {
-    auto ie_pos = fragment_->inner_ie_pos_[v.GetValue()];
+    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
     if (ie_pos == -1) {
       return projected_adj_linked_list_t();
     }
     return projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_.InnerNbr(ie_pos).begin(),
-        fragment_->inner_edge_space_.InnerNbr(ie_pos).end());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space().InnerNbr(ie_pos).begin(),
+        fragment_->inner_edge_space().InnerNbr(ie_pos).end());
   }
 
   inline const_projected_adj_linked_list_t GetIncomingInnerVertexAdjList(
       const vertex_t& v) const {
-    auto ie_pos = fragment_->inner_ie_pos_[v.GetValue()];
+    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
     if (ie_pos == -1) {
       return const_projected_adj_linked_list_t();
     }
     return const_projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_.InnerNbr(ie_pos).cbegin(),
-        fragment_->inner_edge_space_.InnerNbr(ie_pos).cend());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space().InnerNbr(ie_pos).cbegin(),
+        fragment_->inner_edge_space().InnerNbr(ie_pos).cend());
   }
 
   inline projected_adj_linked_list_t GetIncomingOuterVertexAdjList(
       const vertex_t& v) {
-    auto ie_pos = fragment_->inner_ie_pos_[v.GetValue()];
+    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
     if (ie_pos == -1) {
       return projected_adj_linked_list_t();
     }
     return projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_.OuterNbr(ie_pos).begin(),
-        fragment_->inner_edge_space_.OuterNbr(ie_pos).end());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space().OuterNbr(ie_pos).begin(),
+        fragment_->inner_edge_space().OuterNbr(ie_pos).end());
   }
 
   inline const_projected_adj_linked_list_t GetIncomingOuterVertexAdjList(
       const vertex_t& v) const {
-    auto ie_pos = fragment_->inner_ie_pos_[v.GetValue()];
+    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
     if (ie_pos == -1) {
       return const_projected_adj_linked_list_t();
     }
     return const_projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_.OuterNbr(ie_pos).cbegin(),
-        fragment_->inner_edge_space_.OuterNbr(ie_pos).cend());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space().OuterNbr(ie_pos).cbegin(),
+        fragment_->inner_edge_space().OuterNbr(ie_pos).cend());
   }
 
   inline projected_adj_linked_list_t GetOutgoingAdjList(const vertex_t& v) {
@@ -598,50 +598,50 @@ class DynamicProjectedFragment {
 
   inline projected_adj_linked_list_t GetOutgoingInnerVertexAdjList(
       const vertex_t& v) {
-    auto oe_pos = fragment_->inner_oe_pos_[v.GetValue()];
+    auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
     if (oe_pos == -1) {
       return projected_adj_linked_list_t();
     }
     return projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_.InnerNbr(oe_pos).begin(),
-        fragment_->inner_edge_space_.InnerNbr(oe_pos).end());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space().InnerNbr(oe_pos).begin(),
+        fragment_->inner_edge_space().InnerNbr(oe_pos).end());
   }
 
   inline const_projected_adj_linked_list_t GetOutgoingInnerVertexAdjList(
       const vertex_t& v) const {
-    auto oe_pos = fragment_->inner_oe_pos_[v.GetValue()];
+    auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
     if (oe_pos == -1) {
       return const_projected_adj_linked_list_t();
     }
     return const_projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_.InnerNbr(oe_pos).cbegin(),
-        fragment_->inner_edge_space_.InnerNbr(oe_pos).cend());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space().InnerNbr(oe_pos).cbegin(),
+        fragment_->inner_edge_space().InnerNbr(oe_pos).cend());
   }
 
   inline projected_adj_linked_list_t GetOutgoingOuterVertexAdjList(
       const vertex_t& v) {
-    auto oe_pos = fragment_->inner_oe_pos_[v.GetValue()];
+    auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
     if (oe_pos == -1) {
       return projected_adj_linked_list_t();
     }
     return projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_.OuterNbr(oe_pos).begin(),
-        fragment_->inner_edge_space_.OuterNbr(oe_pos).end());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space().OuterNbr(oe_pos).begin(),
+        fragment_->inner_edge_space().OuterNbr(oe_pos).end());
   }
 
   inline const_projected_adj_linked_list_t GetOutgoingOuterVertexAdjList(
       const vertex_t& v) const {
-    auto oe_pos = fragment_->inner_oe_pos_[v.GetValue()];
+    auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
     if (oe_pos == -1) {
       return const_projected_adj_linked_list_t();
     }
     return const_projected_adj_linked_list_t(
-        fragment_->id_mask_, fragment_->ivnum_, e_prop_key_,
-        fragment_->inner_edge_space_.OuterNbr(oe_pos).cbegin(),
-        fragment_->inner_edge_space_.OuterNbr(oe_pos).cend());
+        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
+        fragment_->inner_edge_space().OuterNbr(oe_pos).cbegin(),
+        fragment_->inner_edge_space().OuterNbr(oe_pos).cend());
   }
 
   inline fid_t fid() const { return fragment_->fid_; }
@@ -686,7 +686,7 @@ class DynamicProjectedFragment {
 
   inline vdata_t GetData(const vertex_t& v) const {
     assert(fragment_->IsInnerVertex(v));
-    auto data = fragment_->vdata_[v.GetValue()];
+    auto data = fragment_->vdata()[v.GetValue()];
     return dynamic_projected_fragment_impl::unpack_dynamic<vdata_t>(
         data, v_prop_key_);
   }
@@ -694,7 +694,7 @@ class DynamicProjectedFragment {
   inline void SetData(const vertex_t& v, const vdata_t& val) {
     assert(fragment_->IsInnerVertex(v));
     dynamic_projected_fragment_impl::pack_dynamic(
-        fragment_->vdata_[v.GetValue()][v_prop_key_], val);
+        fragment_->vdata()[v.GetValue()][v_prop_key_], val);
   }
 
   inline bool HasChild(const vertex_t& v) const {

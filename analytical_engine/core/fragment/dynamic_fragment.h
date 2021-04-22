@@ -1671,9 +1671,10 @@ class DynamicFragment {
   }
 
  private:
+  inline virtual vid_t ivnum() { return ivnum_; }
 
-  inline virtual dynamic_fragment_impl::NbrMapSpace<edata_t>& inner_edge_space() {
-    return inner_edge_space_;
+  inline virtual Array<vdata_t, grape::Allocator<vdata_t>>& vdata() {
+    return vdata_;
   }
 
   inline virtual Array<int32_t, grape::Allocator<int32_t>>& inner_ie_pos() {
@@ -1684,7 +1685,9 @@ class DynamicFragment {
     return inner_oe_pos_;
   }
 
-  inline virtual vid_t ivnum() { return ivnum_; }
+  virtual dynamic_fragment_impl::NbrMapSpace<edata_t>& inner_edge_space() {
+    return inner_edge_space_;
+  }
 
   inline bool isAlive(vid_t lid) const {
     if (lid < ivnum_) {
