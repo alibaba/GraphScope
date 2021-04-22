@@ -322,7 +322,9 @@ class Graph(object):
     def key(self):
         """String key of the coresponding engine graph."""
         if hasattr(self, "_graph") and self._is_client_view:
-            return self._graph.key  # this graph is a client side graph view, use host graph key
+            return (
+                self._graph.key
+            )  # this graph is a client side graph view, use host graph key
         return self._key
 
     @property
