@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+import "message.proto";
+import "query_flow.proto";
+
+option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_multiple_files = true;
+
+service GraphQueryExecuteService {
+    rpc execute(QueryFlow) returns (stream QueryResponse) {}
+}
+
+
+// The graph scope service definition.
+message ShowProcessListRequest {
+}
+
+message RunningQuery {
+  string query_id                   = 1;
+  string script                     = 2;
+  int64 elapsed_nano                = 3;
+  uint32 front_id                   = 4;
+  string dataflow_id                = 5;
+}
+
+message ShowProcessListResponse {
+  repeated RunningQuery queries     = 1;
+}
+
+message CancelDataflowRequest {
+  uint32 front_id                   = 1;
+  string query_id                   = 2;
+}
+
+message CancelDataflowResponse {
+  bool success                      = 1;
+  string message                    = 2;
+}
+
+service GraphQueryManageService {
+    rpc showProcessList(ShowProcessListRequest) returns (ShowProcessListResponse) {}
+    rpc cancelDataflow(CancelDataflowRequest) returns (CancelDataflowResponse) {}
+}

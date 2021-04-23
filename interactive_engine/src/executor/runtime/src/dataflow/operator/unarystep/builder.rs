@@ -55,14 +55,18 @@ use maxgraph_store::api::MVGraph;
 use dataflow::operator::unarystep::vineyard::VineyardStreamOperator;
 use dataflow::operator::unarystep::vineyard_writer::{VineyardWriteVertexOperator, VineyardWriteEdgeOperator};
 
-pub fn build_unary_chain_operator<F>(input_id: i32,
+pub fn build_unary_chain_operator<V, VI, E, EI, F>(input_id: i32,
                                                    stream_index: i32,
                                                    shuffle_type: &InputEdgeShuffle,
                                                    base: &OperatorBase,
                                                    query_id: &str,
                                                    script: &str,
-                                                   context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+                                                   context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let unary_chain_shuffle = {
         match shuffle_type.get_shuffle_type() {
             InputShuffleType::FORWARD_TYPE => {
@@ -109,14 +113,18 @@ pub fn build_unary_chain_operator<F>(input_id: i32,
                                                  chain_operator_list)));
 }
 
-pub fn build_vertex_direction_operator<F>(
+pub fn build_vertex_direction_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     _shuffle_type: &InputEdgeShuffle,
     direction: EdgeDirection,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let exec_local_disable = base.get_argument().get_exec_local_disable();
     let exec_local_flag = context.unwrap().get_exec_local_flag() && !exec_local_disable;
     let input_shuffle = {
@@ -147,17 +155,21 @@ pub fn build_vertex_direction_operator<F>(
                                                       base,
                                                       context.unwrap().get_schema().clone(),
                                                       task_context,
-                                                      context.unwrap().get_vineyard_store().clone())));
+                                                      context.unwrap().get_store().clone())));
 }
 
-pub fn build_vertex_direction_edge_operator<F>(
+pub fn build_vertex_direction_edge_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     _shuffle_type: &InputEdgeShuffle,
     direction: EdgeDirection,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let exec_local_flag = context.unwrap().get_exec_local_flag() && !base.get_argument().get_exec_local_disable();
     let input_shuffle = {
         if exec_local_flag {
@@ -185,17 +197,21 @@ pub fn build_vertex_direction_edge_operator<F>(
                                                           base,
                                                           context.unwrap().get_schema().clone(),
                                                           task_context,
-                                                          context.unwrap().get_vineyard_store().clone())));
+                                                          context.unwrap().get_store().clone())));
 }
 
-pub fn build_edge_direction_operator<F>(
+pub fn build_edge_direction_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     _shuffle_type: &InputEdgeShuffle,
     direction: EdgeVertexType,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(EdgeDirectionOperator::new(input_id,
                                                     stream_index,
@@ -206,14 +222,18 @@ pub fn build_edge_direction_operator<F>(
                                                     context.unwrap().get_debug_flag())));
 }
 
-pub fn build_vertex_direction_count_operator<F>(
+pub fn build_vertex_direction_count_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     _shuffle_type: &InputEdgeShuffle,
     direction: EdgeDirection,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let exec_local_flag = context.unwrap().get_exec_local_flag();
     let input_shuffle = {
         if exec_local_flag {
@@ -241,15 +261,19 @@ pub fn build_vertex_direction_count_operator<F>(
                                                            base,
                                                            context.unwrap().get_schema().clone(),
                                                            task_context,
-                                                           context.unwrap().get_vineyard_store().clone())));
+                                                           context.unwrap().get_store().clone())));
 }
 
-pub fn build_count_local_operator<F>(
+pub fn build_count_local_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(CountLocalOperator::new(base.get_id(), input_id, stream_index, input_shuffle, base)));
 }
@@ -264,62 +288,86 @@ pub fn build_count_operator(input_id: i32,
     return Some(Box::new(CountGlobalOperator::new(base.get_id(), input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_group_count_operator<F>(
+pub fn build_group_count_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle = StreamShuffleType::exchange(context.unwrap().get_route().clone(), 0);
     return Some(Box::new(GroupCountOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_count_by_key_operator<F>(
+pub fn build_count_by_key_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle = StreamShuffleKeyType::exchange(context.unwrap().get_route().clone(), 0);
     return Some(Box::new(CountByKeyOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_select_operator<F>(
+pub fn build_select_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(SelectOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_select_one_operator<F>(
+pub fn build_select_one_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(SelectOneOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_unfold_operator<F>(
+pub fn build_unfold_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(UnfoldOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_prop_value_operator<F>(
+pub fn build_prop_value_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let remote_graph_flag = context.unwrap().get_exec_local_flag();
     let input_shuffle = {
         if base.get_argument().get_bool_flag() || remote_graph_flag {
@@ -343,26 +391,34 @@ pub fn build_prop_value_operator<F>(
                                                 base,
                                                 context.unwrap().get_schema().clone(),
                                                 task_context,
-                                                context.unwrap().get_vineyard_store().clone())));
+                                                context.unwrap().get_store().clone())));
 
 }
 
-pub fn build_prop_key_value_operator<F>(
+pub fn build_prop_key_value_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(PropKeyValueOperator::new(input_id, stream_index, input_shuffle, base, context.unwrap())));
 }
 
-pub fn build_prop_map_operator<F>(
+pub fn build_prop_map_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let remote_graph_flag = context.unwrap().get_exec_local_flag();
     let prop_local = base.get_argument().get_bool_flag();
     let input_shuffle = {
@@ -388,15 +444,19 @@ pub fn build_prop_map_operator<F>(
                                               base,
                                               context.unwrap().get_schema().clone(),
                                               task_context,
-                                              context.unwrap().get_vineyard_store().clone())));
+                                              context.unwrap().get_store().clone())));
 }
 
-pub fn build_prop_fill_operator<F>(
+pub fn build_prop_fill_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let remote_graph_flag = context.unwrap().get_exec_local_flag();
     let input_shuffle = {
         if remote_graph_flag {
@@ -419,15 +479,19 @@ pub fn build_prop_fill_operator<F>(
                                                input_shuffle,
                                                base,
                                                task_context,
-                                               context.unwrap().get_vineyard_store().clone())));
+                                               context.unwrap().get_store().clone())));
 }
 
-pub fn build_filter_operator<F>(
+pub fn build_filter_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let filter_manager = FilterManager::new(base.get_logical_compare(),
                                             context.unwrap().get_schema().clone());
     let exec_local_flag = context.unwrap().get_exec_local_flag();
@@ -457,19 +521,23 @@ pub fn build_filter_operator<F>(
                                              shuffle_flag,
                                              task_context,
                                              filter_manager,
-                                             context.unwrap().get_vineyard_store().clone())));
+                                             context.unwrap().get_store().clone())));
 
 }
 
-pub fn build_lambda_operator<F>(
+pub fn build_lambda_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
     query_id: &str,
     script: &str,
     lambda_type: LambdaType,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let lambda_index = base.get_argument().get_str_value();
     let shuffle_bool_value = base.get_argument().get_bool_value();
     let (shuffle_flag, input_shuffle) = {
@@ -485,12 +553,16 @@ pub fn build_lambda_operator<F>(
                                              context.unwrap().get_lambda_manager().clone(), lambda_index.to_string(), lambda_type)));
 }
 
-pub fn build_where_operator<F>(
+pub fn build_where_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
 
     let values = base.get_argument().get_int_value_list();
@@ -499,12 +571,16 @@ pub fn build_where_operator<F>(
     return Some(Box::new(WhereOperator::new(input_id, stream_index, input_shuffle, base, 0, label_id, compare_type)));
 }
 
-pub fn build_where_label_operator<F>(
+pub fn build_where_label_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
     let values = base.get_argument().get_int_value_list();
     let compare_type = CompareType::from_i32(values[0]).unwrap();
@@ -513,44 +589,60 @@ pub fn build_where_label_operator<F>(
     return Some(Box::new(WhereOperator::new(input_id, stream_index, input_shuffle, base, start_label_id, label_id, compare_type)));
 }
 
-pub fn build_simple_path_operator<F>(
+pub fn build_simple_path_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(SimplePathOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_path_out_operator<F>(
+pub fn build_path_out_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(PathOutOperator::new(input_id, stream_index, input_shuffle, base, context.unwrap().get_schema().clone())));
 }
 
-pub fn build_dedup_operator<F>(
+pub fn build_dedup_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let prop_id = base.get_argument().get_int_value();
     let input_shuffle = StreamShuffleKeyType::exchange(context.unwrap().get_route().clone(),
                                                        prop_id);
     return Some(Box::new(DedupOperator::new(input_id, stream_index, input_shuffle, base, prop_id)));
 }
 
-pub fn build_combiner_range_operator<F>(
+pub fn build_combiner_range_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let early_stop_argument = base.get_early_stop_argument();
     let input_shuffle: StreamShuffleCompositeType<F> = StreamShuffleCompositeType::composite(Some(StreamShuffleType::forward()),
                                                                                              None);
@@ -563,83 +655,115 @@ pub fn build_combiner_range_operator<F>(
     }
 }
 
-pub fn build_range_operator<F>(
+pub fn build_range_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle = StreamShuffleCompositeType::composite(None,
                                                               Some(StreamShuffleKeyType::constant(context.unwrap().get_route().clone())));
     return Some(Box::new(RangeOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_range_local_operator<F>(
+pub fn build_range_local_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(RangeLocalOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_fold_operator<F>(
+pub fn build_fold_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle = StreamShuffleKeyType::constant(context.unwrap().get_route().clone());
     return Some(Box::new(FoldOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_fold_store_operator<F>(
+pub fn build_fold_store_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle = StreamShuffleKeyType::constant(context.unwrap().get_route().clone());
     return Some(Box::new(FoldStoreOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_foldmap_operator<F>(
+pub fn build_foldmap_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle = StreamShuffleKeyType::constant(context.unwrap().get_route().clone());
     return Some(Box::new(FoldMapOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_order_operator<F>(
+pub fn build_order_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle = StreamShuffleKeyType::constant(context.unwrap().get_route().clone());
     return Some(Box::new(OrderOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_order_local_operator<F>(
+pub fn build_order_local_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(OrderLocalOperator::new(input_id, stream_index, input_shuffle, base)));
 }
 
-pub fn build_column_operator<F>(
+pub fn build_column_operator<V, VI, E, EI, F>(
     input_id: i32,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_shuffle: StreamShuffleType<F> = StreamShuffleType::forward();
 
     let argument = base.get_argument();
@@ -659,15 +783,19 @@ pub fn build_column_operator<F>(
                                              label_id_name_list)));
 }
 
-pub fn build_label_value_operator<F>(
+pub fn build_label_value_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
     query_id: &str,
     script: &str,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let label_id = base.get_argument().get_int_value();
     let input_shuffle = StreamShuffleType::exchange(context.unwrap().get_route().clone(),
                                                     label_id);
@@ -696,13 +824,17 @@ pub fn build_label_value_operator<F>(
                                                  label_value_operator)));
 }
 
-pub fn build_enter_key_operator<F>(
+pub fn build_enter_key_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let exec_local_flag = context.unwrap().get_exec_local_flag();
     let enter_key_argument = parse_from_bytes::<EnterKeyArgumentProto>(base.get_argument().get_payload())
         .expect("parse enter key argument");
@@ -743,16 +875,20 @@ pub fn build_enter_key_operator<F>(
                                                task_context,
                                                shuffle_type,
                                                enter_key_argument,
-                                               context.unwrap().get_vineyard_store().clone())));
+                                               context.unwrap().get_store().clone())));
 }
 
-pub fn build_bykey_entry_operator<F>(
+pub fn build_bykey_entry_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(ByKeyEntryOperator::new(base,
                                                  input_id,
@@ -760,13 +896,17 @@ pub fn build_bykey_entry_operator<F>(
                                                  shuffle_type)));
 }
 
-pub fn build_key_message_operator<F>(
+pub fn build_key_message_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(KeyMessageOperator::new(base,
                                                  input_id,
@@ -774,13 +914,17 @@ pub fn build_key_message_operator<F>(
                                                  shuffle_type)));
 }
 
-pub fn build_combiner_sum_operator<F>(
+pub fn build_combiner_sum_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type: StreamShuffleType<F> = StreamShuffleType::forward();
     let shuffle_composite_type = StreamShuffleCompositeType::composite(Some(shuffle_type), None);
     return Some(Box::new(SumOperator::new(base,
@@ -789,13 +933,17 @@ pub fn build_combiner_sum_operator<F>(
                                           shuffle_composite_type)));
 }
 
-pub fn build_sum_operator<F>(
+pub fn build_sum_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type = StreamShuffleKeyType::constant(context.unwrap().get_route().clone());
     let shuffle_composite_type = StreamShuffleCompositeType::composite(None, Some(shuffle_type));
     return Some(Box::new(SumOperator::new(base,
@@ -804,13 +952,17 @@ pub fn build_sum_operator<F>(
                                           shuffle_composite_type)));
 }
 
-pub fn build_max_operator<F>(
+pub fn build_max_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type = StreamShuffleKeyType::constant(context.unwrap().get_route().clone());
     return Some(Box::new(MaxOperator::new(base,
                                           input_id,
@@ -818,13 +970,17 @@ pub fn build_max_operator<F>(
                                           shuffle_type)));
 }
 
-pub fn build_min_operator<F>(
+pub fn build_min_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type = StreamShuffleKeyType::constant(context.unwrap().get_route().clone());
     return Some(Box::new(MinOperator::new(base,
                                           input_id,
@@ -832,13 +988,17 @@ pub fn build_min_operator<F>(
                                           shuffle_type)));
 }
 
-pub fn build_constant_operator<F>(
+pub fn build_constant_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type: StreamShuffleType<F> = StreamShuffleType::forward();
     return Some(Box::new(ConstantOperator::new(input_id,
                                                stream_index,
@@ -846,13 +1006,17 @@ pub fn build_constant_operator<F>(
                                                base)));
 }
 
-pub fn build_properties_operator<F>(
+pub fn build_properties_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let prop_local_flag = base.get_argument().get_bool_flag();
     let shuffle_type = {
         if prop_local_flag {
@@ -876,16 +1040,20 @@ pub fn build_properties_operator<F>(
                                                  base,
                                                  prop_local_flag,
                                                  task_context,
-                                                 context.unwrap().get_vineyard_store().clone())));
+                                                 context.unwrap().get_store().clone())));
 }
 
-pub fn build_dfs_repeat_graph_operator<F>(
+pub fn build_dfs_repeat_graph_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let vertex_flag = base.get_argument().get_bool_value();
     if vertex_flag {
         let shuffle_type: StreamShuffleType<F> = StreamShuffleType::forward();
@@ -901,13 +1069,17 @@ pub fn build_dfs_repeat_graph_operator<F>(
     }
 }
 
-pub fn build_dfs_repeat_cmd_operator<F>(
+pub fn build_dfs_repeat_cmd_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type: StreamShuffleType<F> = StreamShuffleType::forward();
     let dfs_repeat_operator = DfsRepeatCmdOperator::new(input_id,
                                                         stream_index,
@@ -916,13 +1088,17 @@ pub fn build_dfs_repeat_cmd_operator<F>(
     return Some(Box::new(dfs_repeat_operator));
 }
 
-pub fn build_dfs_repeat_data_operator<F>(
+pub fn build_dfs_repeat_data_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    _context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    _context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type: StreamShuffleType<F> = StreamShuffleType::forward();
     let dfs_repeat_operator = DfsRepeatDataOperator::new(input_id,
                                                          stream_index,
@@ -931,13 +1107,17 @@ pub fn build_dfs_repeat_data_operator<F>(
     return Some(Box::new(dfs_repeat_operator));
 }
 
-pub fn build_subgraph_operator<F>(
+pub fn build_subgraph_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type: StreamShuffleType<F> = StreamShuffleType::forward();
     let vertex_flag = base.get_argument().get_bool_flag();
     return Some(Box::new(SubGraphOperator::new(input_id,
@@ -949,13 +1129,17 @@ pub fn build_subgraph_operator<F>(
                                                context.unwrap().get_debug_flag())));
 }
 
-pub fn build_cache_operator<F>(
+pub fn build_cache_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type = StreamShuffleType::exchange(context.unwrap().get_route().clone(), 0);
     return Some(Box::new(CacheOperator::new(input_id,
                                             stream_index,
@@ -964,13 +1148,17 @@ pub fn build_cache_operator<F>(
                                             context.unwrap().get_cache_store().clone())));
 }
 
-pub fn build_write_odps_operator<F>(
+pub fn build_write_odps_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type = StreamShuffleType::exchange(context.unwrap().get_route().clone(), 0);
     return Some(Box::new(WriteOdpsOperator::new(input_id,
                                                 stream_index,
@@ -978,13 +1166,17 @@ pub fn build_write_odps_operator<F>(
                                                 base)));
 }
 
-pub fn build_sample_operator<F>(
+pub fn build_sample_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type = StreamShuffleKeyType::constant(context.unwrap().get_route().clone());
     let amount_sample = base.get_argument().get_int_value();
     return Some(Box::new(MetapathSampleOperator::new(base,
@@ -994,13 +1186,17 @@ pub fn build_sample_operator<F>(
                                                      amount_sample)));
 }
 
-pub fn build_barrier_operator<F>(
+pub fn build_barrier_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let shuffle_type: StreamShuffleType<F> = StreamShuffleType::forward();
     let barrier_size = base.get_argument().get_int_value();
     return Some(Box::new(BarrierOperator::new(base,
@@ -1010,13 +1206,17 @@ pub fn build_barrier_operator<F>(
                                               barrier_size)));
 }
 
-pub fn build_vineyard_stream_operator<F>(
+pub fn build_vineyard_stream_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let graph_name = base.get_argument().get_str_value().to_owned();
     let shuffle_type: StreamShuffleType<F> = StreamShuffleType::constant();
     let stream_operator = VineyardStreamOperator::new(base.get_id(),
@@ -1027,13 +1227,17 @@ pub fn build_vineyard_stream_operator<F>(
     return Some(Box::new(stream_operator));
 }
 
-pub fn build_vineyard_output_vertex_operator<F>(
+pub fn build_vineyard_output_vertex_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let exec_local_flag = context.unwrap().get_exec_local_flag();
     let graph_name = base.get_argument().get_str_value().to_owned();
     let partition_manager = context.unwrap().get_graph_partition_manager();
@@ -1049,18 +1253,22 @@ pub fn build_vineyard_output_vertex_operator<F>(
                                                           input_id,
                                                           shuffle_type,
                                                           stream_index,
-                                                          context.unwrap().get_vineyard_store().clone(),
+                                                          context.unwrap().get_store().clone(),
                                                           graph_name,
                                                           task_context)));
 }
 
-pub fn build_vineyard_output_edge_operator<F>(
+pub fn build_vineyard_output_edge_operator<V, VI, E, EI, F>(
     input_id: i32,
     _input_shuffle_type: &InputEdgeShuffle,
     stream_index: i32,
     base: &OperatorBase,
-    context: Option<&RuntimeContext<F>>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    context: Option<&RuntimeContext<V, VI, E, EI, F>>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let exec_local_flag = context.unwrap().get_exec_local_flag();
     let graph_name = base.get_argument().get_str_value().to_owned();
     let worker_index = context.unwrap().get_index();
@@ -1069,7 +1277,7 @@ pub fn build_vineyard_output_edge_operator<F>(
                                                         input_id,
                                                         shuffle_type,
                                                         stream_index,
-                                                        context.unwrap().get_vineyard_store().clone(),
+                                                        context.unwrap().get_store().clone(),
                                                         graph_name,
                                                         worker_index as i32,
                                                         context.unwrap().get_subgraph().clone(),

@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+import "common.proto";
+
+option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_multiple_files = true;
+
+service Client {
+  rpc addVertices(AddVerticesRequest) returns (AddVerticesResponse);
+  rpc addEdges(AddEdgesRequest) returns (AddEdgesResponse);
+  rpc remoteFlush(RemoteFlushRequest) returns (RemoteFlushResponse);
+  rpc getSchema(GetSchemaRequest) returns (GetSchemaResponse);
+  rpc ingestData(IngestDataRequest) returns (IngestDataResponse);
+  rpc getMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+}
+
+message VertexDataPb {
+  string label = 1;
+  map<string, string> properties = 2;
+}
+
+message AddVerticesRequest {
+  string session = 1;
+  repeated VertexDataPb dataList = 2;
+}
+
+message AddVerticesResponse {
+  int64 snapshotId = 1;
+}
+
+message EdgeDataPb {
+  string label = 1;
+  string srcLabel = 2;
+  string dstLabel = 3;
+  map<string, string> srcPk = 4;
+  map<string, string> dstPk = 5;
+  map<string, string> properties = 6;
+}
+
+message AddEdgesRequest {
+  string session = 1;
+  repeated EdgeDataPb dataList = 2;
+}
+
+message AddEdgesResponse {
+  int64 snapshotId = 1;
+}
+
+message RemoteFlushRequest {
+  int64 snapshotId = 1;
+}
+
+message RemoteFlushResponse {
+
+}
+
+message GetSchemaRequest {
+
+}
+
+message GetSchemaResponse {
+  GraphDefPb graphDef = 1;
+}
+
+message IngestDataRequest {
+  string dataPath = 1;
+}
+
+message IngestDataResponse {
+}
+
+message GetMetricsRequest {
+  string roleNames = 1;
+}
+
+message GetMetricsResponse {
+  string metricsJson = 1;
+}

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_multiple_files = true;
+
+service SnapshotCommit {
+    rpc commitSnapshotId(CommitSnapshotIdRequest) returns(CommitSnapshotIdResponse);
+}
+
+message CommitSnapshotIdRequest {
+    int32 storeId = 1;
+    int64 snapshotId = 2;
+    int64 ddlSnapshotId = 3;
+    repeated int64 queueOffsets = 4;
+}
+
+message CommitSnapshotIdResponse {
+}

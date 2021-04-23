@@ -17,6 +17,7 @@ use structopt::StructOpt;
 use std::env;
 use serde_json::Value;
 use serde_json;
+use std::collections::HashMap;
 
 pub const VINEYARD_GRAPH: &str = "vineyard";
 
@@ -269,6 +270,17 @@ impl StoreConfig {
                     args.push(v.to_owned());
                 }
             }
+        }
+        StoreConfig::from_iter(args.into_iter())
+    }
+
+    pub fn init_from_config(store_options: &HashMap<String, String>) -> Self {
+        let mut args = Vec::new();
+        args.push("executor".to_owned());
+        for (k, v) in store_options {
+            let option = format!("--{}", k.replace(".", "-"));
+            args.push(option);
+            args.push(v.to_owned());
         }
         StoreConfig::from_iter(args.into_iter())
     }

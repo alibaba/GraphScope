@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "common.proto";
+
+option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_multiple_files = true;
+
+service FrontendSnapshot {
+    rpc advanceQuerySnapshot(AdvanceQuerySnapshotRequest) returns (AdvanceQuerySnapshotResponse);
+}
+
+message AdvanceQuerySnapshotRequest {
+    int64 snapshotId = 1;
+    GraphDefPb graphDef = 2;
+}
+
+message AdvanceQuerySnapshotResponse {
+    int64 previousSnapshotId = 1;
+}

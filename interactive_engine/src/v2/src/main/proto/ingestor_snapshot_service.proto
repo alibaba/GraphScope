@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option java_package = "com.alibaba.maxgraph.proto.v2";
+option java_multiple_files = true;
+
+service IngestorSnapshot {
+    rpc advanceIngestSnapshotId(AdvanceIngestSnapshotIdRequest) returns (AdvanceIngestSnapshotIdResponse);
+}
+
+message AdvanceIngestSnapshotIdRequest {
+    int64 snapshotId = 1;
+}
+
+message AdvanceIngestSnapshotIdResponse {
+    int64 previousSnapshotId = 1;
+}

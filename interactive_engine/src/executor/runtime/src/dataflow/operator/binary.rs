@@ -19,8 +19,12 @@ use dataflow::builder::BinaryOperator;
 use dataflow::operator::binarystep::builder::*;
 use maxgraph_store::api::{Vertex, Edge};
 
-pub fn build_binary_operator<F>(binary_operator: &query_flow::BinaryOperator, context: &RuntimeContext<F>) -> Option<Box<BinaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+pub fn build_binary_operator<V, VI, E, EI, F>(binary_operator: &query_flow::BinaryOperator, context: &RuntimeContext<V, VI, E, EI, F>) -> Option<Box<BinaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let operator_type = binary_operator.get_base().get_operator_type();
     match operator_type {
         query_flow::OperatorType::UNION => {

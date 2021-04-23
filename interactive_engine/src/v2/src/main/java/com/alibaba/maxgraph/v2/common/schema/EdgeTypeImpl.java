@@ -1,0 +1,71 @@
+package com.alibaba.maxgraph.v2.common.schema;
+
+import com.alibaba.maxgraph.v2.common.frontend.api.schema.EdgeRelation;
+import com.alibaba.maxgraph.v2.common.frontend.api.schema.EdgeType;
+import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphProperty;
+import com.alibaba.maxgraph.v2.common.frontend.api.schema.PrimaryKeyConstraint;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class EdgeTypeImpl implements EdgeType {
+
+    private TypeDef typeDef;
+    private List<EdgeRelation> edgeRelations;
+    private PrimaryKeyConstraint primaryKeyConstraint;
+
+    public EdgeTypeImpl(TypeDef typeDef, List<EdgeRelation> edgeRelations) {
+        this.typeDef = typeDef;
+        this.edgeRelations = edgeRelations;
+        List<Integer> pkIdxs = typeDef.getPkIdxs();
+        if (pkIdxs != null && pkIdxs.size() > 0) {
+            List<PropertyDef> properties = typeDef.getProperties();
+            List<String> pkNameList = new ArrayList<>(pkIdxs.size());
+            for (Integer pkIdx : pkIdxs) {
+                PropertyDef propertyDef = properties.get(pkIdx);
+                pkNameList.add(propertyDef.getName());
+            }
+            this.primaryKeyConstraint = new PrimaryKeyConstraint(pkNameList);
+        }
+    }
+
+    @Override
+    public List<EdgeRelation> getRelationList() {
+        return edgeRelations;
+    }
+
+    @Override
+    public String getLabel() {
+        return typeDef.getLabel();
+    }
+
+    @Override
+    public int getLabelId() {
+        return typeDef.getLabelId();
+    }
+
+    @Override
+    public List<GraphProperty> getPropertyList() {
+        return typeDef.getPropertyList();
+    }
+
+    @Override
+    public GraphProperty getProperty(int propId) {
+        return typeDef.getProperty(propId);
+    }
+
+    @Override
+    public GraphProperty getProperty(String propName) {
+        return typeDef.getProperty(propName);
+    }
+
+    @Override
+    public int getVersionId() {
+        return typeDef.getVersionId();
+    }
+
+    @Override
+    public PrimaryKeyConstraint getPrimaryKeyConstraint() {
+        return this.primaryKeyConstraint;
+    }
+}

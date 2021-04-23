@@ -19,20 +19,27 @@ import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import org.apache.curator.CuratorZookeeperClient;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.WatcherRemoveCuratorFramework;
 import org.apache.curator.framework.api.*;
+import org.apache.curator.framework.api.transaction.CuratorMultiTransaction;
 import org.apache.curator.framework.api.transaction.CuratorTransaction;
+import org.apache.curator.framework.api.transaction.TransactionOp;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.apache.curator.framework.listen.Listenable;
+import org.apache.curator.framework.schema.SchemaSet;
+import org.apache.curator.framework.state.ConnectionStateErrorPolicy;
 import org.apache.curator.framework.state.ConnectionStateListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.EnsurePath;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.server.quorum.flexible.QuorumVerifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -165,8 +172,28 @@ public class ZkClient implements CuratorFramework {
     }
 
     @Override
+    public ReconfigBuilder reconfig() {
+        return delegate.reconfig();
+    }
+
+    @Override
+    public GetConfigBuilder getConfig() {
+        return delegate.getConfig();
+    }
+
+    @Override
     public CuratorTransaction inTransaction() {
         return delegate.inTransaction();
+    }
+
+    @Override
+    public CuratorMultiTransaction transaction() {
+        return delegate.transaction();
+    }
+
+    @Override
+    public TransactionOp transactionOp() {
+        return delegate.transactionOp();
     }
 
     @Override
@@ -182,6 +209,16 @@ public class ZkClient implements CuratorFramework {
     @Override
     public SyncBuilder sync() {
         return delegate.sync();
+    }
+
+    @Override
+    public RemoveWatchesBuilder watches() {
+        return delegate.watches();
+    }
+
+    @Override
+    public WatchesBuilder watchers() {
+        return delegate.watchers();
     }
 
     @Override
@@ -244,5 +281,30 @@ public class ZkClient implements CuratorFramework {
         while (!isConnected) {
             isConnected = blockUntilConnected(60, TimeUnit.SECONDS);
         }
+    }
+
+    @Override
+    public WatcherRemoveCuratorFramework newWatcherRemoveCuratorFramework() {
+        return delegate.newWatcherRemoveCuratorFramework();
+    }
+
+    @Override
+    public ConnectionStateErrorPolicy getConnectionStateErrorPolicy() {
+        return delegate.getConnectionStateErrorPolicy();
+    }
+
+    @Override
+    public QuorumVerifier getCurrentConfig() {
+        return delegate.getCurrentConfig();
+    }
+
+    @Override
+    public SchemaSet getSchemaSet() {
+        return delegate.getSchemaSet();
+    }
+
+    @Override
+    public CompletableFuture<Void> runSafe(Runnable runnable) {
+        return delegate.runSafe(runnable);
     }
 }
