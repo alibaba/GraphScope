@@ -654,7 +654,7 @@ class DiGraph(Graph):
         if not copy:
             g = self.__class__(create_empty_in_engine=False)
             g.graph.update(self.graph)
-            op = dag_utils.get_graph_view(self, "reversed")
+            op = dag_utils.create_graph_view(self, "reversed")
             graph_def = op.eval()
             g._key = graph_def.key
             g._schema = deepcopy(self._schema)

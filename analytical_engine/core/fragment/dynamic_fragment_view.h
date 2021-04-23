@@ -290,7 +290,7 @@ class DynamicFragmentView : public DynamicFragment {
   inline vid_t ivnum() { return fragment_->ivnum(); }
 
   inline Array<vdata_t, grape::Allocator<vdata_t>>& vdata() {
-    return fragment->vdata();
+    return fragment_->vdata();
   }
 
   inline Array<int32_t, grape::Allocator<int32_t>>& inner_ie_pos() {

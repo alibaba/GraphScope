@@ -533,7 +533,7 @@ def to_undirected(graph):
     return op
 
 
-def get_graph_view(graph, view_type):
+def create_graph_view(graph, view_type):
     """Create view of nx graph.
     Args:
         graph (:class:`nx.Graph`): A nx graph.

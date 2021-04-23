@@ -1723,7 +1723,7 @@ class Graph(object):
             if as_view:
                 g = graph_class(create_empty_in_engine=False)
                 g.graph.update(self.graph)
-                op = dag_utils.get_graph_view(self, "undirected")
+                op = dag_utils.create_graph_view(self, "undirected")
                 graph_def = op.eval()
                 g._key = graph_def.key
                 g._schema = copy.deepcopy(self._schema)
@@ -1784,7 +1784,7 @@ class Graph(object):
             if as_view:
                 g = graph_class(create_empty_in_engine=False)
                 g.graph.update(self.graph)
-                op = dag_utils.get_graph_view(self, "directed")
+                op = dag_utils.create_graph_view(self, "directed")
                 graph_def = op.eval()
                 g._key = graph_def.key
                 g._schema = copy.deepcopy(self._schema)
