@@ -172,4 +172,3 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         assert G.__class__.__name__ == "OrderedMultiGraph"
         G = G.copy(as_view=True)
         assert G.__class__.__name__ == "OrderedMultiGraph"
-
