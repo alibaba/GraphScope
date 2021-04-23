@@ -582,10 +582,12 @@ def clear_edges(graph):
 
 
 def create_subgraph(graph, nodes=None, edges=None):
-    """Create to_undirected operation for nx graph.
+    """Create subgraph operation for nx graph.
 
     Args:
         graph (:class:`nx.Graph`): A nx graph.
+        nodes (list): the nodes to induce a subgraph.
+        edges (list): the edges to induce a edge-induced subgraph.
 
     Returns:
         Operation
