@@ -1059,7 +1059,7 @@ class DynamicFragment {
     return vm_ptr_->GetGid(oid, gid);
   }
 
-  inline virtual bool Gid2Lid(const vid_t& gid, vid_t& lid) const {
+  inline bool Gid2Lid(const vid_t& gid, vid_t& lid) const {
     if ((gid >> fid_offset_) == fid_) {
       lid = gid & id_mask_;
       if (lid < ivnum_) {

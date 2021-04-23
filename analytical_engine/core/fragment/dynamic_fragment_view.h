@@ -136,8 +136,6 @@ class DynamicFragmentView : public DynamicFragment {
   inline int GetLocalOutDegree(const vertex_t& v) const {
     if (view_type_ == FragmentViewType::REVERSED) {
       return fragment_->GetLocalInDegree(v);
-    } else if (view_type_ == FragmentViewType::UNDIRECTED) {
-      return fragment_->GetLocalOutDegree(v) + fragment_->GetLocalInDegree(v);
     }
     return fragment_->GetLocalOutDegree(v);
   }
@@ -214,18 +212,6 @@ class DynamicFragmentView : public DynamicFragment {
     return fragment_->GetInnerVertexGid(v);
   }
 
-  inline bool IsAliveVertex(const vertex_t& v) const {
-    return fragment_->IsAliveVertex(v);
-  }
-
-  inline bool IsAliveInnerVertex(const vertex_t& v) const {
-    return fragment_->IsAliveInnerVertex(v);
-  }
-
-  inline bool IsAliveOuterVertex(const vertex_t& v) const {
-    return fragment_->IsAliveOuterVertex(v);
-  }
-
   inline grape::DestList IEDests(const vertex_t& v) const {
     return fragment_->IEDests(v);
   }
@@ -288,10 +274,24 @@ class DynamicFragmentView : public DynamicFragment {
     return fragment_->GetOidType(comm_spec);
   }
 
+  inline bool IsAliveVertex(const vertex_t& v) const {
+    return fragment_->IsAliveVertex(v);
+  }
+
+  inline bool IsAliveInnerVertex(const vertex_t& v) const {
+    return fragment_->IsAliveInnerVertex(v);
+  }
+
+  inline bool IsAliveOuterVertex(const vertex_t& v) const {
+    return fragment_->IsAliveOuterVertex(v);
+  }
+
  private:
   inline vid_t ivnum() { return fragment_->ivnum(); }
 
-  inline Array<vdata_t, grape::Allocator<vdata_t>>& vdata() { return vdata_; }
+  inline Array<vdata_t, grape::Allocator<vdata_t>>& vdata() {
+    return fragment->vdata();
+  }
 
   inline Array<int32_t, grape::Allocator<int32_t>>& inner_ie_pos() {
     if (view_type_ == FragmentViewType::REVERSED ||
