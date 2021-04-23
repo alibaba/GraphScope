@@ -7,6 +7,7 @@ import pytest
 import graphscope
 from graphscope.experimental import nx
 from graphscope.experimental.nx.tests.utils import almost_equal
+from graphscope.experimental.nx.tests.utils import replace_with_inf
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -127,12 +128,6 @@ class TestBuiltInApp:
             ).values
         )
 
-    def replace_with_inf(self, data):
-        for k, v in data.items():
-            if v == 1.7976931348623157e308:
-                data[k] = float("inf")
-        return data
-
     def assert_result_almost_equal(self, r1, r2):
         assert len(r1) == len(r2)
         for k in r1.keys():
@@ -145,7 +140,7 @@ class TestBuiltInApp:
 
         ret = nx.builtin.single_source_dijkstra_path_length(self.p2p_undirected, 6)
         ans = dict(ret.values)
-        assert self.replace_with_inf(ans) == self.p2p_length_ans
+        assert replace_with_inf(ans) == self.p2p_length_ans
 
     def test_shortest_path(self):
         ctx1 = nx.builtin.shortest_path(self.grid, source=1, weight="weight")

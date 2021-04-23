@@ -29,12 +29,15 @@ from graphscope.experimental.nx.tests.utils import assert_nodes_equal
 class TestReverseView(test_gvs.TestReverseView):
     def setup_method(self):
         self.G = nx.path_graph(9, create_using=nx.DiGraph())
-        self.rv = nx.reverse_view(self.G)
+        self.rv = self.G.reverse(copy=False)
+        # self.rv = nx.reverse_view(self.G)
 
+    # replace nx with graphscope.nx
     def test_exceptions(self):
         nxg = networkx.graphviews
         pytest.raises(nx.NetworkXNotImplemented, nxg.reverse_view, nx.Graph())
 
+    # replace nx with graphscope.nx
     def test_subclass(self):
         class MyGraph(nx.DiGraph):
             def my_method(self):
@@ -45,7 +48,8 @@ class TestReverseView(test_gvs.TestReverseView):
 
         M = MyGraph()
         M.add_edge(1, 2)
-        RM = nx.reverse_view(M)
+        RM = M.reverse(copy=False)
+        # RM = nx.reverse_view(M)
         print("RM class", RM.__class__)
         # RMC = RM.copy()
         RMC = RM.copy(as_view=True)
@@ -55,6 +59,7 @@ class TestReverseView(test_gvs.TestReverseView):
         assert RMC.my_method() == "me"
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestToDirected(test_gvs.TestToDirected):
     def setup_method(self):
         self.G = nx.path_graph(9)
@@ -68,6 +73,7 @@ class TestToDirected(test_gvs.TestToDirected):
         assert_edges_equal(dd.edges, self.dv.edges)
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestToUndirected(test_gvs.TestToUndirected):
     def setup_method(self):
         self.DG = nx.path_graph(9, create_using=nx.DiGraph())
@@ -82,6 +88,7 @@ class TestToUndirected(test_gvs.TestToUndirected):
         assert_edges_equal(uu.edges, self.uv.edges)
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestChainsOfViews(test_gvs.TestChainsOfViews):
     @classmethod
     def setup_class(cls):
@@ -94,7 +101,6 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         for G in cls.graphs:
             G.edges, G.nodes, G.degree
 
-    @pytest.mark.skip(reason="not support pickle remote graph.")
     def test_pickle(self):
         pass
 
@@ -147,6 +153,7 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
             H = SG.copy()
             assert type(G) == type(H)
 
+    @pytest.mark.skip(reason="not support yet")
     def test_subgraph_toundirected(self):
         SG = nx.induced_subgraph(self.G, [4, 5, 6])
         # FIXME: not match like networkx.

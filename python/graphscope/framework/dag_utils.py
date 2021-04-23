@@ -533,6 +533,32 @@ def to_undirected(graph):
     return op
 
 
+def create_graph_view(graph, view_type):
+    """Create view of nx graph.
+    Args:
+        graph (:class:`nx.Graph`): A nx graph.
+        view_type (str): 'reversed': get a reverse view of graph.
+                         'directed': get a directed view of graph
+                         'undirected': get a undirected view of graph
+    Returns:
+        Operation
+    """
+    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(view_type in ("reversed", "directed", "undirected"))
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+        types_pb2.VIEW_TYPE: utils.s_to_attr(view_type),
+    }
+
+    op = Operation(
+        graph.session_id,
+        types_pb2.VIEW_GRAPH,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
 def clear_edges(graph):
     """Create clear edges operation for nx graph.
 

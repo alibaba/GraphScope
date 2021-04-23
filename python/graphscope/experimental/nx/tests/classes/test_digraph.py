@@ -20,6 +20,7 @@
 import pytest
 from networkx.classes.tests.test_digraph import BaseAttrDiGraphTester
 from networkx.classes.tests.test_digraph import TestEdgeSubgraph
+from networkx.testing import assert_nodes_equal
 
 from graphscope.experimental import nx
 from graphscope.experimental.nx.tests.classes.test_graph import TestGraph
@@ -91,6 +92,48 @@ class TestDiGraph(BaseAttrDiGraphTester, TestGraph):
         assert G.succ == {0: {2: {}}, 1: {0: {}, 2: {}}, 2: {0: {}, 1: {}}}
         assert G.pred == {0: {1: {}, 2: {}}, 1: {2: {}}, 2: {0: {}, 1: {}}}
         G.remove_edges_from([(0, 0)])  # silent fail
+
+    # replace the nx
+    def test_out_edges_data(self):
+        G = nx.DiGraph([(0, 1, {"data": 0}), (1, 0, {})])
+        assert sorted(G.out_edges(data=True)) == [(0, 1, {"data": 0}), (1, 0, {})]
+        assert sorted(G.out_edges(0, data=True)) == [(0, 1, {"data": 0})]
+        assert sorted(G.out_edges(data="data")) == [(0, 1, 0), (1, 0, None)]
+        assert sorted(G.out_edges(0, data="data")) == [(0, 1, 0)]
+
+    # replace the nx
+    def test_in_edges_data(self):
+        G = nx.DiGraph([(0, 1, {"data": 0}), (1, 0, {})])
+        assert sorted(G.in_edges(data=True)) == [(0, 1, {"data": 0}), (1, 0, {})]
+        assert sorted(G.in_edges(1, data=True)) == [(0, 1, {"data": 0})]
+        assert sorted(G.in_edges(data="data")) == [(0, 1, 0), (1, 0, None)]
+        assert sorted(G.in_edges(1, data="data")) == [(0, 1, 0)]
+
+    # replace the nx
+    def test_reverse_copy(self):
+        G = nx.DiGraph([(0, 1), (1, 2)])
+        R = G.reverse()
+        assert sorted(R.edges()) == [(1, 0), (2, 1)]
+        R.remove_edge(1, 0)
+        assert sorted(R.edges()) == [(2, 1)]
+        assert sorted(G.edges()) == [(0, 1), (1, 2)]
+
+    # replace the nx
+    def test_reverse_nocopy(self):
+        G = nx.DiGraph([(0, 1), (1, 2)])
+        R = G.reverse(copy=False)
+        assert sorted(R.edges()) == [(1, 0), (2, 1)]
+        with pytest.raises(nx.NetworkXError):
+            R.remove_edge(1, 0)
+
+    # original test use function object as node, here we change to tuple.
+    def test_reverse_hashable(self):
+        x = (1, 2)
+        y = (2, 3)
+        G = nx.DiGraph()
+        G.add_edge(x, y)
+        assert_nodes_equal(G.nodes(), G.reverse().nodes())
+        assert [(y, x)] == list(G.reverse().edges())
 
 
 class TestEdgeSubgraph(TestEdgeSubgraph):
