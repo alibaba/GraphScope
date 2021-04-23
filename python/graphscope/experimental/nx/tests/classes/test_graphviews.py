@@ -134,7 +134,7 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         SG = self.G.subgraph([4, 5, 6])
         SSG = SG.to_undirected()
         assert sorted(list(SSG)) == [4, 5, 6]
-        assert sorted(SSG.edges) == [(5, 4), (6, 5)]
+        assert sorted(SSG.edges) == [(4, 5), (6, 5)]
 
     def test_reverse_subgraph_toundirected(self):
         # a view can not project subgraph in graphscope.nx
@@ -142,7 +142,7 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         SG = G.subgraph([4, 5, 6])
         SSG = SG.to_undirected()
         assert sorted(list(SSG)) == [4, 5, 6]
-        assert sorted(SSG.edges) == [(5, 4), (6, 5)]
+        assert sorted(SSG.edges) == [(4, 5), (6, 5)]
 
     def test_reverse_reverse_copy(self):
         G = self.DG.reverse(copy=False)
@@ -156,7 +156,7 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         SSG = SG.edge_subgraph([(4, 5), (5, 4)])
         USSG = SSG.to_undirected()
         assert sorted(list(USSG)) == [4, 5]
-        assert sorted(USSG.edges) == [(5, 4)]
+        assert sorted(USSG.edges) == [(5, 4)] or sorted(USSG.edges) == [(4, 5)]
 
     @pytest.mark.skip(reason="not support multigraph.")
     def test_copy_multidisubgraph(self):
