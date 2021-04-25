@@ -77,7 +77,9 @@ class TestBuiltInApp:
 
         data_dir = os.path.expandvars("${GS_TEST_DIR}")
         p2p_file = os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist")
-        p2p_sub_file = os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_subgraph_dynamic.edgelist")
+        p2p_sub_file = os.path.expandvars(
+            "${GS_TEST_DIR}/dynamic/p2p-31_dynamic_subgraph.edgelist"
+        )
         cls.p2p = nx.read_edgelist(
             p2p_file, nodetype=int, data=True, create_using=nx.DiGraph
         )
@@ -151,7 +153,9 @@ class TestBuiltInApp:
 
     def test_subgraph_single_source_dijkstra_path_length(self):
         # test subgraph and edge_subgraph with p2p_subgraph_undirected
-        ret = nx.builtin.single_source_dijkstra_path_length(self.p2p_subgraph_undirected, 6)
+        ret = nx.builtin.single_source_dijkstra_path_length(
+            self.p2p_subgraph_undirected, 6
+        )
         SG = self.p2p_undirected.subgraph(self.p2p_subgraph_undirected.nodes)
         ret_sg = nx.builtin.single_source_dijkstra_path_length(SG, 6)
         assert dict(ret.values) == dict(ret_sg.values)
