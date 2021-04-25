@@ -54,7 +54,7 @@ class NodeDict(MutableMapping):
         pos = (0, 0)  # start iterate from the (worker:0, lid:0) node.
         while count < node_num:
             while True:
-                ret = self._graph.batch_get_node(pos)
+                ret = self._graph._batch_get_node(pos)
                 pos = ret["next"]
                 if ret["status"] is True:
                     break
@@ -133,7 +133,7 @@ class AdjDict(MutableMapping):
         pos = (0, 0)  # start iterate from the (worker:0, lid:0) node.
         while count < node_num:
             while True:
-                ret = self._graph.batch_get_node(pos)
+                ret = self._graph._batch_get_node(pos)
                 pos = ret["next"]
                 if ret["status"] is True:
                     break
@@ -153,7 +153,7 @@ class AdjInnerDict(MutableMapping):
         self._graph = graph
         self._node = node
         self._type = rtype
-        self.mapping = graph.get_nbrs(node, rtype)
+        self.mapping = graph._get_nbrs(node, rtype)
 
     def __len__(self):
         return len(self.mapping)

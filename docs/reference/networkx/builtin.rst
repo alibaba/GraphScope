@@ -3,7 +3,6 @@
 Builtin algorithms
 ---------------------
 
-.. autofunction:: graphscope.experimental.nx.Graph.project_to_simple
 .. autofunction:: graphscope.experimental.nx.builtin.pagerank
 .. autofunction:: graphscope.experimental.nx.builtin.hits
 .. autofunction:: graphscope.experimental.nx.builtin.degree_centrality

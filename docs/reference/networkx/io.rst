@@ -1,6 +1,6 @@
 .. _io:
 
-Reading and writing graphs
+Reading graphs
 --------------------------
 
 Edge List
