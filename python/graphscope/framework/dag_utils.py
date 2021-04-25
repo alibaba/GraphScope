@@ -581,6 +581,35 @@ def clear_edges(graph):
     return op
 
 
+def create_subgraph(graph, nodes=None, edges=None):
+    """Create subgraph operation for nx graph.
+
+    Args:
+        graph (:class:`nx.Graph`): A nx graph.
+        nodes (list): the nodes to induce a subgraph.
+        edges (list): the edges to induce a edge-induced subgraph.
+
+    Returns:
+        Operation
+    """
+    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+    }
+    if nodes is not None:
+        config[types_pb2.NODES] = utils.list_str_to_attr(nodes)
+    if edges is not None:
+        config[types_pb2.EDGES] = utils.list_str_to_attr(edges)
+
+    op = Operation(
+        graph.session_id,
+        types_pb2.INDUCE_SUBGRAPH,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
 def unload_app(app):
     """Unload a loaded app.
 

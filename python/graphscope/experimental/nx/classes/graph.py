@@ -1245,7 +1245,8 @@ class Graph(object):
 
         """
         if u is None:
-            return int(self.size())
+            op = dag_utils.report_graph(self, types_pb2.EDGE_NUM)
+            return int(op.eval()) // 2
         elif self.has_edge(u, v):
             return 1
         else:
@@ -1801,7 +1802,7 @@ class Graph(object):
             return g
 
     def subgraph(self, nodes):
-        """Returns a SubGraph view of the subgraph induced on `nodes`.
+        """Returns a SubGraph of the subgraph induced on `nodes`.
 
         The induced subgraph of the graph contains the nodes in `nodes`
         and the edges between those nodes.
@@ -1813,42 +1814,8 @@ class Graph(object):
 
         Returns
         -------
-        G : SubGraph View
-            A subgraph view of the graph. The graph structure cannot be
-            changed but node/edge attributes can and are shared with the
-            original graph.
-
-        Notes
-        -----
-        The graph, edge and node attributes are shared with the original graph.
-        Changes to the graph structure is ruled out by the view, but changes
-        to attributes are reflected in the original graph.
-
-        To create a subgraph with its own copy of the edge/node attributes use:
-        G.subgraph(nodes).copy()
-
-        For an inplace reduction of a graph to a subgraph you can remove nodes:
-        G.remove_nodes_from([n for n in G if n not in set(nodes)])
-
-        Subgraph views are sometimes NOT what you want. In most cases where
-        you want to do more than simply look at the induced edges, it makes
-        more sense to just create the subgraph as its own graph with code like:
-
-        ::
-
-            # Create a subgraph SG based on a (possibly multigraph) G
-            SG = G.__class__()
-            SG.add_nodes_from((n, G.nodes[n]) for n in largest_wcc)
-            if SG.is_multigraph:
-                SG.add_edges_from((n, nbr, key, d)
-                    for n, nbrs in G.adj.items() if n in largest_wcc
-                    for nbr, keydict in nbrs.items() if nbr in largest_wcc
-                    for key, d in keydict.items())
-            else:
-                SG.add_edges_from((n, nbr, d)
-                    for n, nbrs in G.adj.items() if n in largest_wcc
-                    for nbr, d in nbrs.items() if nbr in largest_wcc)
-            SG.graph.update(G.graph)
+        G : Graph
+            A subgraph of the graph.
 
         Examples
         --------
@@ -1857,9 +1824,16 @@ class Graph(object):
         >>> list(H.edges)
         [(0, 1), (1, 2)]
         """
-        # NB: fallback subgraph
-        ng = to_networkx_graph(self)
-        return ng.subgraph(nodes)
+        induced_nodes = []
+        for n in nodes:
+            induced_nodes.append(json.dumps([n]))
+        g = self.__class__(create_empty_in_engine=False)
+        g.graph.update(self.graph)
+        op = dag_utils.create_subgraph(self, nodes=induced_nodes)
+        graph_def = op.eval()
+        g._key = graph_def.key
+        g._schema = copy.deepcopy(self._schema)
+        return g
 
     def edge_subgraph(self, edges):
         """Returns the subgraph induced by the specified edges.
@@ -1878,17 +1852,6 @@ class Graph(object):
             An edge-induced subgraph of this graph with the same edge
             attributes.
 
-        Notes
-        -----
-        The graph, edge, and node attributes in the returned subgraph
-        view are references to the corresponding attributes in the original
-        graph. The view is read-only.
-
-        To create a full graph version of the subgraph with its own copy
-        of the edge or node attributes, use::
-
-            >>> G.edge_subgraph(edges).copy()  # doctest: +SKIP
-
         Examples
         --------
         >>> G = nx.path_graph(5)
@@ -1899,9 +1862,17 @@ class Graph(object):
         [(0, 1), (3, 4)]
 
         """
-        # NB: fallback edge subgraph
-        ng = to_networkx_graph(self)
-        return ng.edge_subgraph(edges)
+        induced_edges = []
+        for e in edges:
+            u, v = e
+            induced_edges.append(json.dumps([u, v]))
+        g = self.__class__(create_empty_in_engine=False)
+        g.graph.update(self.graph)
+        op = dag_utils.create_subgraph(self, edges=induced_edges)
+        graph_def = op.eval()
+        g._key = graph_def.key
+        g._schema = copy.deepcopy(self._schema)
+        return g
 
     @parse_ret_as_dict
     def batch_get_node(self, location):

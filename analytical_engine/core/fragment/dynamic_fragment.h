@@ -817,6 +817,67 @@ class DynamicFragment {
     InvalidCache();
   }
 
+  // induce a subgraph that contains the induced_vertices and the edges between
+  // those vertices or a edge subgraph that contains the induced_edges and the
+  // nodes incident to induced_edges.
+  void InduceSubgraph(
+      std::shared_ptr<DynamicFragment> origin,
+      const std::unordered_set<oid_t>& induced_vertices,
+      const std::vector<std::pair<oid_t, oid_t>>& induced_edges) {
+    // copy base elements
+    directed_ = origin->directed();
+    directed() ? load_strategy_ = grape::LoadStrategy::kBothOutIn
+               : load_strategy_ = grape::LoadStrategy::kOnlyOut;
+    fid_ = origin->fid();
+    fnum_ = vm_ptr_->GetFragmentNum();
+    calcFidBitWidth(fnum_, id_mask_, fid_offset_);
+
+    ivnum_ = vm_ptr_->GetInnerVertexSize(fid_);
+    ovnum_ = 0;
+    oenum_ = 0;
+    ienum_ = 0;
+
+    inner_ie_pos_.clear();
+    inner_oe_pos_.clear();
+    inner_ie_pos_.resize(ivnum_, -1);
+    inner_oe_pos_.resize(ivnum_, -1);
+    inner_vertex_alive_.resize(ivnum_, false);
+
+    vdata_.clear();
+    vdata_.resize(ivnum_);
+
+    // induce active edges
+    std::vector<edge_t> edges;
+    if (induced_edges.empty()) {
+      induceFromVertices(origin, induced_vertices, edges);
+    } else {
+      induceFromEdges(origin, induced_edges, edges);
+    }
+
+    {
+      // find out outer vertices and calculate outer vertices num
+      std::vector<vid_t> outer_vertices =
+          getOuterVerticesAndInvalidEdges(edges, load_strategy_);
+
+      grape::DistinctSort(outer_vertices);
+
+      ovgid_.resize(outer_vertices.size());
+      memcpy(&ovgid_[0], &outer_vertices[0],
+             outer_vertices.size() * sizeof(vid_t));
+      for (auto gid : ovgid_) {
+        ovg2i_.emplace(gid, ovnum_);
+        ++ovnum_;
+      }
+    }
+
+    tvnum_ = ivnum_ + ovnum_;
+    alive_ovnum_ = ovnum_;
+    outer_vertex_alive_.resize(ovnum_, true);
+
+    AddEdges(edges, load_strategy_);
+    initOuterVerticesOfFragment();
+  }
+
   void ClearEdges() {
     // clear outer vertices.
     ovgid_.clear();
@@ -1346,6 +1407,16 @@ class DynamicFragment {
             return true;
           }
         }
+      } else if ((vid >> fid_offset_) == fid_ && Gid2Lid(uid, ulid) &&
+                 Gid2Lid(vid, vlid) && isAlive(vlid)) {
+        int32_t pos;
+        directed() ? pos = inner_ie_pos_[vlid] : pos = inner_oe_pos_[vlid];
+        if (pos != -1) {
+          auto& es = inner_edge_space_[pos];
+          if (es.find(ulid) != es.end()) {
+            return true;
+          }
+        }
       }
     }
     return false;
@@ -1372,6 +1443,36 @@ class DynamicFragment {
           auto& oe = inner_edge_space_[pos];
           if (oe.find(vlid) != oe.end()) {
             ret = folly::toJson(oe[vlid].data());
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  inline bool GetEdgeData(const oid_t& u, const oid_t& v, edata_t& data) {
+    vid_t uid, vid;
+    if (Oid2Gid(u, uid) && Oid2Gid(v, vid)) {
+      vid_t ulid, vlid;
+      if ((uid >> fid_offset_) == fid_ && Gid2Lid(uid, ulid) &&
+          Gid2Lid(vid, vlid) && isAlive(ulid)) {
+        auto pos = inner_oe_pos_[ulid];
+        if (pos != -1) {
+          auto& oe = inner_edge_space_[pos];
+          if (oe.find(vlid) != oe.end()) {
+            data = oe[vlid].data();
+            return true;
+          }
+        }
+      } else if ((vid >> fid_offset_) == fid_ && Gid2Lid(uid, ulid) &&
+                 Gid2Lid(vid, vlid) && isAlive(vlid)) {
+        int32_t pos;
+        directed() ? pos = inner_ie_pos_[vlid] : pos = inner_oe_pos_[vlid];
+        if (pos != -1) {
+          auto& es = inner_edge_space_[pos];
+          if (es.find(ulid) != es.end()) {
+            data = es[ulid].data();
             return true;
           }
         }
@@ -2360,6 +2461,94 @@ class DynamicFragment {
         if (addOutgoingEdge(v.GetValue(), vlid, e.get_data())) {
           ++oenum_;
         }
+      }
+    }
+  }
+
+  // induce subgraph from induced_nodes
+  void induceFromVertices(std::shared_ptr<DynamicFragment>& origin,
+                          const std::unordered_set<oid_t>& induced_vertices,
+                          std::vector<edge_t>& edges) {
+    vertex_t vertex;
+    vid_t gid, dst_gid;
+    for (auto& oid : induced_vertices) {
+      if (origin->GetVertex(oid, vertex) && origin->IsInnerVertex(vertex)) {
+        // store the vertex data
+        CHECK(vm_ptr_->GetGid(fid_, oid, gid));
+        vdata_[(gid & id_mask_)] = origin->GetData(vertex);
+        inner_vertex_alive_[(gid & id_mask_)] = true;
+
+        for (auto& e : origin->GetOutgoingAdjList(vertex)) {
+          auto dst_oid = origin->GetId(e.get_neighbor());
+          if (induced_vertices.find(dst_oid) != induced_vertices.end()) {
+            CHECK(Oid2Gid(dst_oid, dst_gid));
+            edges.emplace_back(gid, dst_gid, e.get_data());
+          }
+        }
+        if (directed()) {
+          // filter the cross-fragment incoming edges
+          for (auto& e : origin->GetIncomingAdjList(vertex)) {
+            if (origin->IsOuterVertex(e.get_neighbor())) {
+              auto dst_oid = origin->GetId(e.get_neighbor());
+              if (induced_vertices.find(dst_oid) != induced_vertices.end()) {
+                CHECK(Oid2Gid(dst_oid, dst_gid));
+                edges.emplace_back(dst_gid, gid, e.get_data());
+              }
+            }
+          }
+        }
+      }
+    }
+    // since we filtering alive vertex in vertex map construct, alive_ivnum
+    // equal to ivnum
+    alive_ivnum_ = ivnum_;
+  }
+
+  // induce edge_subgraph from induced_edges
+  void induceFromEdges(
+      std::shared_ptr<DynamicFragment>& origin,
+      const std::vector<std::pair<oid_t, oid_t>>& induced_edges,
+      std::vector<edge_t>& edges) {
+    vertex_t vertex;
+    vid_t gid, dst_gid;
+    edata_t edata;
+    for (auto& e : induced_edges) {
+      const auto& src_oid = e.first;
+      const auto& dst_oid = e.second;
+      if (origin->HasEdge(src_oid, dst_oid)) {
+        if (vm_ptr_->GetGid(fid_, src_oid, gid)) {
+          // src is inner vertex
+          CHECK(origin->GetVertex(src_oid, vertex));
+          vdata_[(gid & id_mask_)] = origin->GetData(vertex);
+          inner_vertex_alive_[(gid & id_mask_)] = true;
+          CHECK(vm_ptr_->GetGid(dst_oid, dst_gid));
+          CHECK(origin->GetEdgeData(src_oid, dst_oid, edata));
+          edges.emplace_back(gid, dst_gid, edata);
+          if ((dst_gid >> fid_offset_) == fid_ && gid != dst_gid) {
+            // dst is inner vertex too
+            CHECK(origin->GetVertex(dst_oid, vertex));
+            vdata_[(dst_gid & id_mask_)] = origin->GetData(vertex);
+            inner_vertex_alive_[(dst_gid & id_mask_)] = true;
+            if (!directed_) {
+              edges.emplace_back(dst_gid, gid, edata);
+            }
+          }
+        } else if (vm_ptr_->GetGid(fid_, dst_oid, dst_gid)) {
+          // dst is inner vertex but src is outer vertex
+          CHECK(origin->GetVertex(dst_oid, vertex));
+          vdata_[(dst_gid & id_mask_)] = origin->GetData(vertex);
+          inner_vertex_alive_[(dst_gid & id_mask_)] = true;
+          CHECK(vm_ptr_->GetGid(src_oid, gid));
+          origin->GetEdgeData(src_oid, dst_oid, edata);
+          directed() ? edges.emplace_back(gid, dst_gid, edata)
+                     : edges.emplace_back(dst_gid, gid, edata);
+        }
+      }
+    }
+    // init alive_ivnum with inner_vertex_alive_ array
+    for (size_t i = 0; i < ivnum_; ++i) {
+      if (inner_vertex_alive_[i]) {
+        ++alive_ivnum_;
       }
     }
   }
