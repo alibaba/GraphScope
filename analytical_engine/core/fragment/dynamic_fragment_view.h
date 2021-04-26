@@ -70,6 +70,8 @@ class DynamicFragmentView : public DynamicFragment {
 
   inline int fid_offset() const { return fragment_->fid_offset(); }
 
+  inline size_t selfloops_num() const { return fragment_->selfloops_num(); }
+
   inline bool directed() const {
     switch (view_type_) {
     case FragmentViewType::DIRECTED: {

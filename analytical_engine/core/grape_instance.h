@@ -105,6 +105,8 @@ class GrapeInstance : public Subscriber {
 
   bl::result<void> clearEdges(const rpc::GSParams& params);
 
+  bl::result<void> clearGraph(const rpc::GSParams& params);
+
   bl::result<std::shared_ptr<grape::InArchive>> contextToNumpy(
       const rpc::GSParams& params);
 

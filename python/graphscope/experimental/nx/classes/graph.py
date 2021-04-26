@@ -246,36 +246,40 @@ class Graph(object):
         >>> G = nx.Graph(g)  # or DiGraph, etc
 
         """
-        sess = get_default_session()
-        if sess is None:
-            raise ValueError(
-                "Cannot find a default session. "
-                "Please register a session using graphscope.session(...).as_default()"
-            )
-        self._session_id = sess.session_id
-
-        self._key = None
-        self._op = None
-        self._schema = GraphSchema()
-        self._schema.init_nx_schema()
-        create_empty_in_engine = attr.pop(
-            "create_empty_in_engine", True
-        )  # a hidden parameter
-        if not self.is_gs_graph(incoming_graph_data) and create_empty_in_engine:
-            graph_def = empty_graph_in_engine(self, self.is_directed())
-            self._key = graph_def.key
-
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
         self.adjlist_dict_factory = self.adjlist_dict_factory
-
         self.graph = self.graph_attr_dict_factory()
         self._node = self.node_dict_factory(self)
         self._adj = self.adjlist_dict_factory(self)
 
+        self._key = None
+        self._op = None
+        self._session_id = None
+        self._schema = GraphSchema()
+        self._schema.init_nx_schema()
+
+        if self._is_gs_graph(incoming_graph_data):
+            self._session_id = incoming_graph_data.session_id
+        else:
+            sess = get_default_session()
+            if sess is None:
+                raise ValueError(
+                    "Cannot find a default session. "
+                    "Please register a session using graphscope.session(...).as_default()"
+                )
+            self._session_id = sess.session_id
+
+        create_empty_in_engine = attr.pop(
+            "create_empty_in_engine", True
+        )  # a hidden parameter
+        if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
+            graph_def = empty_graph_in_engine(self, self.is_directed())
+            self._key = graph_def.key
+
         # attempt to load graph with data
         if incoming_graph_data is not None:
-            if self.is_gs_graph(incoming_graph_data):
+            if self._is_gs_graph(incoming_graph_data):
                 graph_def = from_gs_graph(incoming_graph_data, self)
                 self._key = graph_def.key
                 self._schema.init_nx_schema(incoming_graph_data.schema)
@@ -287,7 +291,7 @@ class Graph(object):
         self.graph.update(attr)
         self._saved_signature = self.signature
 
-    def is_gs_graph(self, incoming_graph_data):
+    def _is_gs_graph(self, incoming_graph_data):
         return (
             hasattr(incoming_graph_data, "graph_type")
             and incoming_graph_data.graph_type == types_pb2.ARROW_PROPERTY
@@ -1188,15 +1192,8 @@ class Graph(object):
         if weight:
             return sum(d for v, d in self.degree(weight=weight)) / 2
         else:
-            return sum(d for v, d in self.degree(weight=weight)) // 2
-        # TODO: make the selfloop edge number correct.
-        # else:
-        #     config = dict()
-        #     config['graph_name'] = self._graph_name
-        #     config['graph_type'] = self._graph_type
-        #     config['report_type'] = 'edge_num'
-        #     op = report_graph(self, config=config)
-        #     return int(get_default_session().run(op)) // 2
+            op = dag_utils.report_graph(self, types_pb2.EDGE_NUM)
+            return int(op.eval()) // 2
 
     def number_of_edges(self, u=None, v=None):
         """Returns the number of edges between two nodes.
@@ -1245,12 +1242,15 @@ class Graph(object):
 
         """
         if u is None:
-            op = dag_utils.report_graph(self, types_pb2.EDGE_NUM)
-            return int(op.eval()) // 2
+            return self.size()
         elif self.has_edge(u, v):
             return 1
         else:
             return 0
+
+    def number_of_selfloops(self):
+        op = dag_utils.report_graph(self, types_pb2.SELFLOOPS_NUM)
+        return int(op.eval())
 
     def has_edge(self, u, v):
         """Returns True if the edge (u, v) is in the graph.
@@ -1526,14 +1526,11 @@ class Graph(object):
 
     def clear(self):
         """Remove all nodes and edges from the graph."""
-        # unload graph in grape, then create a new empty graph.
-        op = dag_utils.unload_graph(self)
-        op.eval()
         self.graph.clear()
         self.schema.clear()
-        graph_def = empty_graph_in_engine(self, self.is_directed())
-        self._key = graph_def.key
         self.schema.init_nx_schema()
+        op = dag_utils.clear_graph(self)
+        op.eval()
 
     def clear_edges(self):
         op = dag_utils.clear_edges(self)

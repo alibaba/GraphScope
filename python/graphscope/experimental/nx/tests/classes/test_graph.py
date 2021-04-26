@@ -137,6 +137,30 @@ class TestGraph(_TestGraph):
         assert G["n"][3.14]["weight"] == 3.14
         assert G[True][False]["weight"] == True
 
+    def test_selfloops(self):
+        G = self.Graph()
+        G.add_edge(0, 0)
+        assert G.number_of_edges() == 1
+        G.add_edge(0, 1)
+        assert G.number_of_selfloops() == 1
+        G.add_edge(2, 2)
+        assert G.number_of_edges() == 3
+        assert G.number_of_selfloops() == 2
+        SG = G.subgraph([0, 1])
+        assert SG.number_of_edges() == 2
+        assert SG.number_of_selfloops() == 1
+        ESG = G.edge_subgraph([(0, 0), (2, 2)])
+        assert ESG.number_of_edges() == 2
+        assert ESG.number_of_selfloops() == 2
+        H = G.copy()
+        assert H.number_of_selfloops() == 2
+        Gv = G.copy(as_view=True)
+        assert Gv.number_of_selfloops() == 2
+        G.remove_node(0)
+        assert G.number_of_selfloops() == 1
+        G.remove_edge(2, 2)
+        assert G.number_of_selfloops() == 0
+
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestEdgeSubgraph(_TestEdgeSubgraph):

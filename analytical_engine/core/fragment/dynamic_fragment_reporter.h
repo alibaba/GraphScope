@@ -62,6 +62,9 @@ class DynamicGraphReporter : public grape::Communicator {
     case rpc::EDGE_NUM: {
       return std::to_string(reportEdgeNum(fragment));
     }
+    case rpc::SELFLOOPS_NUM: {
+      return std::to_string(reportSelfloopsNum(fragment));
+    }
     case rpc::HAS_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
       oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
@@ -141,6 +144,13 @@ class DynamicGraphReporter : public grape::Communicator {
     frag_enum = fragment->GetEdgeNum();
     Sum(frag_enum, total_enum);
     return total_enum;
+  }
+
+  inline size_t reportSelfloopsNum(std::shared_ptr<fragment_t>& fragment) {
+    size_t frag_selfloops_num = 0, total_selfloops_num = 0;
+    frag_selfloops_num = fragment->selfloops_num();
+    Sum(frag_selfloops_num, total_selfloops_num);
+    return total_selfloops_num;
   }
 
   bool hasNode(std::shared_ptr<fragment_t>& fragment, const oid_t& node) {
