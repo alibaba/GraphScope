@@ -31,12 +31,12 @@ pub struct StoreConfig {
     #[structopt(long = "alive-id", default_value = "1313145512")]
     pub alive_id: u64,
 
-    #[structopt(short = "n", long = "worker-num", default_value = "0")]
+    #[structopt(short = "n", long = "worker-num", default_value = "4")]
     pub worker_num: u32,
 
     /// zookeeper uRL, e.g.
     /// 127.0.0.1:2181/test or 127.0.0.1:2181/test,xx.xx.xx.xx:2181/xx/xx
-    #[structopt(short = "z", long = "zk")]
+    #[structopt(short = "z", long = "zk", default_value = "")]
     pub zk_url: String,
 
     /// graph name
@@ -77,7 +77,7 @@ pub struct StoreConfig {
     pub download_thread_count: u32,
 
     /// hadoop home
-    #[structopt(long = "hadoop-home")]
+    #[structopt(long = "hadoop-home", default_value = "./")]
     pub hadoop_home: String,
 
     /// all local data will store at $local.data.root/$graph.name/label/partition_id/
@@ -271,17 +271,18 @@ impl StoreConfig {
                 }
             }
         }
-        StoreConfig::from_iter(args.into_iter())
+        StoreConfig::from_iter_safe(args.into_iter()).unwrap()
     }
 
     pub fn init_from_config(store_options: &HashMap<String, String>) -> Self {
         let mut args = Vec::new();
         args.push("executor".to_owned());
-        for (k, v) in store_options {
-            let option = format!("--{}", k.replace(".", "-"));
-            args.push(option);
-            args.push(v.to_owned());
-        }
+        args.push("--worker-id".to_owned());
+        args.push(store_options.get("node.idx").unwrap().to_owned());
+        args.push("--graph-name".to_owned());
+        args.push(store_options.get("graph.name").unwrap().to_owned());
+        args.push("--partition-num".to_owned());
+        args.push(store_options.get("partition.count").unwrap().to_owned());
         StoreConfig::from_iter(args.into_iter())
     }
 

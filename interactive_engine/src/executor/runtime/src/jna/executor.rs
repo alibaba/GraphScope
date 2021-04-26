@@ -17,13 +17,13 @@ pub type ExecutorHandle = *const c_void;
 pub type GraphHandle = *const c_void;
 
 #[no_mangle]
-pub extern fn openExecutor(config_bytes: *const u8, len: usize) -> ExecutorHandle {
+pub extern fn openExecutorServer(config_bytes: *const u8, len: usize) -> ExecutorHandle {
     let buf = unsafe { ::std::slice::from_raw_parts(config_bytes, len) };
     let proto = parse_pb::<ConfigPb>(buf).expect("parse config pb failed");
     let mut config_builder = GraphConfigBuilder::new();
     config_builder.set_storage_options(proto.get_configs().clone());
     let config = Arc::new(config_builder.build());
-    let handle = Box::new(ExecutorServer::new(config));
+    let handle = Box::new(ExecutorServer::new(config).unwrap());
     let ret = Box::into_raw(handle);
     ret as ExecutorHandle
 }
@@ -63,7 +63,7 @@ pub extern fn startEngineServer(executor_handle: ExecutorHandle) -> Box<JnaEngin
 }
 
 #[no_mangle]
-pub extern fn startService(executor_handle: ExecutorHandle) -> Box<JnaRpcServerPortResponse> {
+pub extern fn startRpcServer(executor_handle: ExecutorHandle, _config_bytes: *const u8, _len: usize) -> Box<JnaRpcServerPortResponse> {
     let executor_ptr = unsafe {
         to_mut(&*(executor_handle as *const ExecutorServer))
     };
@@ -74,7 +74,7 @@ pub extern fn startService(executor_handle: ExecutorHandle) -> Box<JnaRpcServerP
 }
 
 #[no_mangle]
-pub extern fn connect(executor_handle: ExecutorHandle, addrs: *const c_char) {
+pub extern fn connectEngineServerList(executor_handle: ExecutorHandle, addrs: *const c_char) {
     let slice =  unsafe { CStr::from_ptr(addrs) }.to_bytes();
     let addrs_str = str::from_utf8(slice).unwrap();
     let address_list =  addrs_str.split(",").map(|s| s.to_string()).collect::<Vec<String>>();

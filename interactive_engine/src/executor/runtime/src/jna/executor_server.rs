@@ -39,6 +39,7 @@ impl ExecutorServer {
     pub fn new(graph_config: Arc<GraphConfig>) -> GraphResult<Self> {
         let node_id = graph_config.get_storage_option("node.idx").unwrap().parse::<usize>().unwrap();
         let store_config = Arc::new(StoreConfig::init_from_config(graph_config.get_storage_options()));
+        info!("store config created");
         Ok(ExecutorServer {
             graph_config,
             store_config,

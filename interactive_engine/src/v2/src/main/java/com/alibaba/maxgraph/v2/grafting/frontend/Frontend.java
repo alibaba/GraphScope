@@ -48,11 +48,8 @@ public class Frontend extends NodeBase {
     private RpcServer rpcServer;
     private MaxGraphServer maxGraphServer;
 
-    private SchemaFetcher oldSchemaFetcher;
-
     public Frontend(Configs configs) {
         super(configs);
-        this.oldSchemaFetcher = new JsonFileSchemaFetcher(FrontendConfig.QUERY_VINEYARD_SCHEMA_PATH.get(configs));
         configs = reConfig(configs);
         this.curator = CuratorUtils.makeCurator(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
@@ -88,12 +85,13 @@ public class Frontend extends NodeBase {
         SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
                 RoleType.COORDINATOR, SchemaClient::new));
 
-        ReadOnlyGraph readOnlyGraph = new ReadOnlyGraph(this.discovery, oldSchemaFetcher, partitionManager);
+        WrappedSchemaFetcher wrappedSchemaFetcher = new WrappedSchemaFetcher(snapshotCache, metaService);
+        ReadOnlyGraph readOnlyGraph = new ReadOnlyGraph(this.discovery, wrappedSchemaFetcher, partitionManager);
         TinkerMaxGraph graph = new TinkerMaxGraph(new InstanceConfig(configs.getInnerProperties()), readOnlyGraph,
                 new DefaultGraphDfs());
         GraphWriterContext graphWriterContext = new GraphWriterContext(realtimeWriter, schemaWriter, new DdlExecutors(),
                 snapshotCache, true);
-        this.maxGraphServer = new ReadOnlyMaxGraphServer(configs, graph, oldSchemaFetcher,
+        this.maxGraphServer = new ReadOnlyMaxGraphServer(configs, graph, wrappedSchemaFetcher,
                 new DiscoveryAddressFetcher(this.discovery));
     }
 
