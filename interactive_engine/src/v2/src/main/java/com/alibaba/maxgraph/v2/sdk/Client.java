@@ -8,9 +8,13 @@ import io.grpc.ManagedChannelBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -111,6 +115,13 @@ public class Client implements Closeable {
 
     public void ingestData(String path) {
         this.stub.ingestData(IngestDataRequest.newBuilder().setDataPath(path).build());
+    }
+
+    public String loadJsonSchema(Path jsonFile) throws IOException {
+        String json = new String(Files.readAllBytes(jsonFile), StandardCharsets.UTF_8);
+        LoadJsonSchemaResponse response = this.stub.loadJsonSchema(LoadJsonSchemaRequest.newBuilder()
+                .setSchemaJson(json).build());
+        return GraphDef.parseProto(response.getGraphDef()).toString();
     }
 
     @Override

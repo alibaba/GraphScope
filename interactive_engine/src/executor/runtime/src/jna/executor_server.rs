@@ -83,7 +83,7 @@ impl ExecutorServer {
         let tcp_address = tcp_listener.local_addr().expect("bind local address failed");
         self.listener = Some(tcp_listener);
         self.engine_server_manager = Some(Box::new(server_manager));
-        Ok(format!("{}:{}", get_local_ip(), tcp_address.port()))
+        Ok(format!("{}", tcp_address.port()))
     }
 
     pub fn start_rpc(&self) -> (u16, u16) {

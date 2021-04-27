@@ -12,6 +12,8 @@ service Client {
   rpc getSchema(GetSchemaRequest) returns (GetSchemaResponse);
   rpc ingestData(IngestDataRequest) returns (IngestDataResponse);
   rpc getMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+  rpc loadJsonSchema(LoadJsonSchemaRequest) returns(LoadJsonSchemaResponse);
+  rpc dropSchema(DropSchemaRequest) returns(DropSchemaResponse);
 }
 
 message VertexDataPb {
@@ -75,4 +77,20 @@ message GetMetricsRequest {
 
 message GetMetricsResponse {
   string metricsJson = 1;
+}
+
+message LoadJsonSchemaRequest {
+  string schemaJson = 1;
+}
+
+message LoadJsonSchemaResponse {
+  GraphDefPb graphDef = 1;
+}
+
+message DropSchemaRequest {
+
+}
+
+message DropSchemaResponse {
+  GraphDefPb graphDef = 1;
 }

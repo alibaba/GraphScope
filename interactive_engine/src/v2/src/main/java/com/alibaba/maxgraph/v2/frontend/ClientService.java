@@ -6,7 +6,8 @@ import com.alibaba.maxgraph.v2.common.CompletionCallback;
 import com.alibaba.maxgraph.v2.common.MetaService;
 import com.alibaba.maxgraph.v2.common.OperationBatch;
 import com.alibaba.maxgraph.v2.common.exception.PropertyDefNotFoundException;
-import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphProperty;
+import com.alibaba.maxgraph.v2.common.frontend.api.graph.MaxGraphWriter;
+import com.alibaba.maxgraph.v2.common.frontend.api.schema.*;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsAggregator;
 import com.alibaba.maxgraph.v2.common.operation.EdgeId;
 import com.alibaba.maxgraph.v2.common.operation.LabelId;
@@ -14,12 +15,7 @@ import com.alibaba.maxgraph.v2.common.operation.VertexId;
 import com.alibaba.maxgraph.v2.common.operation.dml.OverwriteEdgeOperation;
 import com.alibaba.maxgraph.v2.common.operation.dml.OverwriteVertexOperation;
 import com.alibaba.maxgraph.v2.common.rpc.RoleClients;
-import com.alibaba.maxgraph.v2.common.schema.DataType;
-import com.alibaba.maxgraph.v2.common.schema.EdgeKind;
-import com.alibaba.maxgraph.v2.common.schema.GraphDef;
-import com.alibaba.maxgraph.v2.common.schema.PropertyDef;
-import com.alibaba.maxgraph.v2.common.schema.PropertyValue;
-import com.alibaba.maxgraph.v2.common.schema.TypeDef;
+import com.alibaba.maxgraph.v2.common.schema.*;
 import com.alibaba.maxgraph.v2.common.util.PkHashUtils;
 import com.alibaba.maxgraph.v2.common.util.UuidUtils;
 import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
@@ -31,27 +27,78 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientService extends ClientGrpc.ClientImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientService.class);
 
+    private static final long COMMIT_TIMEOUT_SEC = 30;
+
     private RealtimeWriter realtimeWriter;
     private SnapshotCache snapshotCache;
     private MetricsAggregator metricsAggregator;
     private StoreIngestor storeIngestor;
     private MetaService metaService;
+    private MaxGraphWriter writer;
 
     public ClientService(RealtimeWriter realtimeWriter, SnapshotCache snapshotCache,
                          MetricsAggregator metricsAggregator, StoreIngestor storeIngestor, MetaService metaService,
-                         RoleClients<QueryStoreRpcClient> queryStoreClients) {
+                         RoleClients<QueryStoreRpcClient> queryStoreClients, MaxGraphWriter writer) {
         this.realtimeWriter = realtimeWriter;
         this.snapshotCache = snapshotCache;
         this.metricsAggregator = metricsAggregator;
         this.storeIngestor = storeIngestor;
         this.metaService = metaService;
+        this.writer = writer;
+    }
+
+    @Override
+    public void loadJsonSchema(LoadJsonSchemaRequest request, StreamObserver<LoadJsonSchemaResponse> responseObserver) {
+        String schemaJson = request.getSchemaJson();
+        GraphSchema graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
+        this.writer.setAutoCommit(false);
+        for (VertexType vertexType : graphSchema.getVertexTypes()) {
+            this.writer.createVertexType(vertexType.getLabel(), vertexType.getPropertyList(), vertexType.getPrimaryKeyConstraint().getPrimaryKeyList());
+        }
+        for (EdgeType edgeType : graphSchema.getEdgeTypes()) {
+            this.writer.createEdgeType(edgeType.getLabel(), edgeType.getPropertyList(), edgeType.getRelationList());
+        }
+        try {
+            this.writer.commit().get(COMMIT_TIMEOUT_SEC, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            logger.error("commit failed", e);
+            throw new RuntimeException(e);
+        }
+        GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
+        responseObserver.onNext(LoadJsonSchemaResponse.newBuilder().setGraphDef(graphDef.toProto()).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void dropSchema(DropSchemaRequest request, StreamObserver<DropSchemaResponse> responseObserver) {
+        GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
+        for (EdgeType edgeType : graphDef.getEdgeTypes()) {
+            String label = edgeType.getLabel();
+            for (EdgeRelation relation : edgeType.getRelationList()) {
+                this.writer.dropEdgeRelation(label, relation.getSource().getLabel(), relation.getTarget().getLabel());
+            }
+            this.writer.dropEdgeType(label);
+        }
+        for (VertexType vertexType : graphDef.getVertexTypes()) {
+            this.writer.dropVertexType(vertexType.getLabel());
+        }
+        try {
+            this.writer.commit().get(COMMIT_TIMEOUT_SEC, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            logger.error("drop schema commit failed", e);
+            throw new RuntimeException(e);
+        }
+        responseObserver.onNext(DropSchemaResponse.newBuilder().build());
+        responseObserver.onCompleted();
     }
 
     @Override

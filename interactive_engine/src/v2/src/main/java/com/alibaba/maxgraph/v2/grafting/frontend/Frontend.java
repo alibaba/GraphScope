@@ -18,6 +18,7 @@ import com.alibaba.maxgraph.v2.common.discovery.ZkDiscovery;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
 import com.alibaba.maxgraph.v2.common.frontend.api.graph.GraphPartitionManager;
+import com.alibaba.maxgraph.v2.common.frontend.api.graph.MaxGraphWriter;
 import com.alibaba.maxgraph.v2.common.frontend.remote.RemoteGraphPartitionManager;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsAggregator;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectClient;
@@ -64,7 +65,6 @@ public class Frontend extends NodeBase {
         this.realtimeWriter = new RealtimeWriter(this.metaService, snapshotCache, ingestorWriteClients,
                 metricsCollector);
         FrontendSnapshotService frontendSnapshotService = new FrontendSnapshotService(snapshotCache);
-
         RoleClients<MetricsCollectClient> frontendMetricsCollectClients = new RoleClients<>(this.channelManager,
                 RoleType.FRONTEND, MetricsCollectClient::new);
         RoleClients<MetricsCollectClient> ingestorMetricsCollectClients = new RoleClients<>(this.channelManager,
@@ -75,15 +75,19 @@ public class Frontend extends NodeBase {
                 StoreIngestClient::new);
         RoleClients<QueryStoreRpcClient> queryStoreClients = new RoleClients<>(this.channelManager,
                 RoleType.EXECUTOR_GRAPH, QueryStoreRpcClient::new);
+        SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
+                RoleType.COORDINATOR, SchemaClient::new));
+        MaxGraphWriter writer = new MaxGraphWriterImpl(this.realtimeWriter, schemaWriter, new DdlExecutors(),
+                snapshotCache, "schema", false, null);
         ClientService clientService = new ClientService(this.realtimeWriter, snapshotCache, metricsAggregator,
-                storeIngestClients, this.metaService, queryStoreClients);
+                storeIngestClients, this.metaService, queryStoreClients, writer);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
+
         this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
                 metricsCollectService);
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         GraphPartitionManager partitionManager = new RemoteGraphPartitionManager(this.metaService);
-        SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
-                RoleType.COORDINATOR, SchemaClient::new));
+
 
         WrappedSchemaFetcher wrappedSchemaFetcher = new WrappedSchemaFetcher(snapshotCache, metaService);
         ReadOnlyGraph readOnlyGraph = new ReadOnlyGraph(this.discovery, wrappedSchemaFetcher, partitionManager);

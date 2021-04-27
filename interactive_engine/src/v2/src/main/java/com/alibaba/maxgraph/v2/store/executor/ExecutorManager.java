@@ -32,8 +32,7 @@ public class ExecutorManager {
     public void startEngineServer() {
         JnaEngineServerResponse engineServerResponse = ExecutorLibrary.INSTANCE.startEngineServer(this.executorHandler);
         if (engineServerResponse.errCode == 0) {
-            Pair<String, Integer> engineServerPort = AddressUtils.parseAddress(engineServerResponse.address);
-            discoveryManager.getEngineServerProvider().apply(engineServerPort.getRight());
+            discoveryManager.getEngineServerProvider().apply(Integer.parseInt(engineServerResponse.address));
             discoveryManager.getEngineServerDiscovery().start();
         } else {
             throw new RuntimeException(engineServerResponse.errMsg);

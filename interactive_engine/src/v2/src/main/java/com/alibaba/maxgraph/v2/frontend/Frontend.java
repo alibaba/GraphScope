@@ -74,7 +74,7 @@ public class Frontend extends NodeBase {
         RoleClients<QueryStoreRpcClient> queryStoreClients = new RoleClients<>(this.channelManager,
                 RoleType.EXECUTOR_GRAPH, QueryStoreRpcClient::new);
         ClientService clientService = new ClientService(this.realtimeWriter, snapshotCache, metricsAggregator,
-                storeIngestClients, this.metaService, queryStoreClients);
+                storeIngestClients, this.metaService, queryStoreClients, null);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
         this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
                 metricsCollectService);
