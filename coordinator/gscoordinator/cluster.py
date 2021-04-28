@@ -338,10 +338,7 @@ class KubernetesClusterLauncher(Launcher):
         return self._gie_graph_manager_service_name
 
     def get_manager_host(self):
-        return self._MAXGRAPH_MANAGER_HOST % (
-            self._gie_graph_manager_service_name,
-            self._namespace,
-        )
+        return "http://{0}".format(self._get_graph_manager_service_endpoint())
 
     @property
     def preemptive(self):
@@ -904,6 +901,16 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._namespace,
             name=self._etcd_service_name,
+            type="ClusterIP",
+        )
+        return endpoints[0]
+
+    def _get_graph_manager_service_endpoint(self):
+        # Always len(endpoints) >= 1
+        endpoints = get_service_endpoints(
+            api_client=self._api_client,
+            namespace=self._namespace,
+            name=self._gie_graph_manager_service_name,
             type="ClusterIP",
         )
         return endpoints[0]
