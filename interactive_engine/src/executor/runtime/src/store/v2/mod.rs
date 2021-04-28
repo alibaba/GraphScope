@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 pub mod global_graph;
 mod edge_iterator;
+pub mod global_graph_schema;
 
 pub fn create_global_graph(config: &StoreConfig, partition_ids: &Vec<PartitionId>) -> GlobalGraph {
     let paths = config.local_data_root.split(",").collect::<Vec<&str>>();

@@ -10,12 +10,12 @@ use crate::db::proto::common::{TypeDefPb, PropertyDefPb, GraphDefPb, TypeEnumPb,
 use protobuf::{ProtobufEnum, Message};
 use crate::db::api::{LabelId, EdgeKind};
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct GraphDef {
     version: i64,
-    label_to_types: HashMap<LabelId, TypeDef>,
+    pub label_to_types: HashMap<LabelId, TypeDef>,
     edge_kinds: HashSet<EdgeKind>,
-    property_name_to_id: HashMap<String, i32>,
+    pub property_name_to_id: HashMap<String, i32>,
     label_idx: i32,
     property_idx: i32,
     vertex_table_ids: HashMap<LabelId, i64>,

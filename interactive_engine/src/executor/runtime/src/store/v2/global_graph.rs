@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 
-use maxgraph_store::db::api::{Vertex, Edge, GraphStorage, GraphResult, EdgeResultIter, PropIter, ValueRef, ValueType, EdgeDirection, VertexWrapper, VertexResultIter, GraphConfigBuilder, GraphConfig};
+use maxgraph_store::db::api::{Vertex, Edge, GraphStorage, GraphResult, EdgeResultIter, PropIter, ValueRef, ValueType, EdgeDirection, VertexWrapper, VertexResultIter, GraphConfigBuilder, GraphConfig, GraphDef};
 use std::sync::Arc;
 use maxgraph_store::api::{GlobalGraphQuery, SnapshotId, PartitionVertexIds, LabelId, Condition, PropId, VertexId, PartitionId, PartitionLabeledVertexIds};
 use maxgraph_store::db::graph::vertex::VertexImpl;
@@ -30,6 +30,7 @@ use itertools::Itertools;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::config::StoreConfig;
 use maxgraph_store::db::graph::store::GraphStore;
+use store::v2::global_graph_schema::GlobalGraphSchema;
 
 pub struct GlobalGraph {
     graph_partitions: HashMap<PartitionId, Arc<GraphStore>>,
@@ -477,7 +478,9 @@ impl GlobalGraphQuery for GlobalGraph {
     }
 
     fn get_schema(&self, si: i64) -> Option<Arc<dyn Schema>> {
-        unimplemented!()
+        let partition = self.graph_partitions.values().nth(0)?;
+        let graph_def = partition.get_graph_def().ok()?;
+        Some(Arc::new(GlobalGraphSchema::new(graph_def)))
     }
 }
 

@@ -2,15 +2,15 @@ package com.alibaba.maxgraph.v2.grafting.frontend;
 
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
+import com.alibaba.maxgraph.server.MaxGraphWsAndHttpSocketChannelizer;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.tinkerpop.Utils;
 import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
 import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
-import com.alibaba.maxgraph.v2.frontend.server.MaxGraphServerImpl;
-import com.alibaba.maxgraph.v2.frontend.server.gremlin.channelizer.MaxGraphWsAndHttpSocketChannelizer;
 import com.alibaba.maxgraph.v2.frontend.server.loader.ProcessorLoader;
 import io.netty.channel.Channel;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
@@ -22,17 +22,19 @@ import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ReadOnlyMaxGraphServer implements MaxGraphServer {
-    private static final Logger logger = LoggerFactory.getLogger(MaxGraphServerImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReadOnlyMaxGraphServer.class);
 
     private Configs configs;
     private Settings settings;
@@ -109,8 +111,10 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
     }
 
     private void loadSettings() {
-        InputStream input = this.getClass().getClassLoader().getResourceAsStream("conf/server.yaml");
-        InputStream groovy = this.getClass().getClassLoader().getResourceAsStream("conf/generate-classic.groovy");
+        InputStream input = com.alibaba.maxgraph.server.MaxGraphServer.class.getClassLoader()
+                .getResourceAsStream("conf/server.yaml");
+        InputStream groovy = com.alibaba.maxgraph.server.MaxGraphServer.class.getClassLoader()
+                .getResourceAsStream("conf/generate-classic.groovy");
         checkNotNull(input, "cant find conf/server.yaml in path");
         checkNotNull(groovy, "cant find conf/generate-classic.groovy file in path");
         File tmp = new File("/tmp/generate-classic.groovy");
@@ -121,6 +125,16 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
             logger.warn("get error : ", e);
         }
         this.settings = Settings.read(input);
+        List<String> customSerializerList = null;
+        try {
+            customSerializerList = IOUtils.readLines(com.alibaba.maxgraph.server.MaxGraphServer.class
+                    .getClassLoader().getResourceAsStream("serializer.custom.config"), "utf-8");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        for (Settings.SerializerSettings serializerSettings : this.settings.serializers) {
+            serializerSettings.config.put("custom", customSerializerList);
+        }
     }
 
     public GremlinExecutor getGremlinExecutor() {

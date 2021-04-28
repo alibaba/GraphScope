@@ -453,6 +453,11 @@ impl GraphStore {
         let p = [data_path];
         self.storage.load(&p)
     }
+
+    pub fn get_graph_def(&self) -> GraphResult<GraphDef> {
+        let graph_def = self.meta.get_graph_def().lock()?;
+        Ok((&*graph_def).clone())
+    }
 }
 
 fn merge_updates<'a>(old: &mut HashMap<PropId, ValueRef<'a>>, updates: &'a dyn PropertyMap) {

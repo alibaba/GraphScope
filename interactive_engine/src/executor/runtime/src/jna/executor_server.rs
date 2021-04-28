@@ -23,6 +23,8 @@ use maxgraph_common::proto::gremlin_query_grpc;
 use server::manager::{ServerManager, ManagerGuards};
 use maxgraph_store::db::graph::store::GraphStore;
 use std::borrow::BorrowMut;
+use std::sync::mpsc::channel;
+use std::time::Duration;
 
 pub struct ExecutorServer {
     graph_config: Arc<GraphConfig>,
@@ -104,36 +106,49 @@ impl ExecutorServer {
             self.graph.clone(),
             task_partition_manager);
         let maxgraph_service = PegasusService::new_service(self.store_config.clone(), query_manager.clone());
-        let ctrl_and_async_server = Self::start_ctrl_and_async_service(0, ctrl_service, async_maxgraph_service).expect("Start ctrl and async service error.");
-        info!("async maxgraph service and control service bind to: {:?}", ctrl_and_async_server.bind_addrs());
-        let ctrl_and_async_service_port = ctrl_and_async_server.bind_addrs()[0].1;
+        let ctrl_and_async_service_port = Self::start_ctrl_and_async_service(0, ctrl_service, async_maxgraph_service);
+        info!("async maxgraph service and control service bind to port: {:?}", ctrl_and_async_service_port);
 
         let gremlin_service = gremlin_query_grpc::create_gremlin_service(
             GremlinRpcService::new(
                 Arc::new(StoreContext::new(self.graph.clone(),
                                            self.graph.clone()))));
-        let env = Arc::new(Environment::new(self.store_config.rpc_thread_count as usize));
-        let mut server_builder = ServerBuilder::new(env.clone())
-            .channel_args(ChannelBuilder::new(env).reuse_port(false).build_args())
-            .register_service(gremlin_service)
-            .bind("0.0.0.0", self.store_config.rpc_port as u16);
-        let mut server = server_builder.build().expect("Error when build rpc server");
-        server.start();
-        let (_, port) = server.bind_addrs()[0];
+        let (tx, rx) = channel();
+        let rpc_thread_count = self.store_config.rpc_thread_count;
+        let rpc_port = self.store_config.rpc_port as u16;
+        std::thread::spawn(move || {
+            let env = Arc::new(Environment::new(rpc_thread_count as usize));
+            let mut server_builder = ServerBuilder::new(env.clone())
+                .channel_args(ChannelBuilder::new(env).reuse_port(false).build_args())
+                .register_service(gremlin_service)
+                .bind("0.0.0.0", rpc_port);
+            let mut server = server_builder.build().expect("Error when build rpc server");
+            server.start();
+            let (_, port) = server.bind_addrs()[0];
+            tx.send(port).unwrap();
+            std::thread::sleep(Duration::from_millis(u64::max_value()));
+        });
+        let port = rx.recv().unwrap();
         return (ctrl_and_async_service_port, port);
     }
 
     fn start_ctrl_and_async_service(port: u16, ctrl_service: grpcio::Service, async_maxgraph_service: grpcio::Service)
-        -> Result<Server, String> {
-        let env = Arc::new(Environment::new(1));
-        let server_builder = ServerBuilder::new(env.clone())
-            .channel_args(ChannelBuilder::new(env).reuse_port(false).build_args())
-            .register_service(async_maxgraph_service)
-            .register_service(ctrl_service)
-            .bind("0.0.0.0", port);
-        let mut server = server_builder.build().map_err(|err| format!("Error when build rpc server: {:?}", err))?;
-        server.start();
-        Ok(server)
+                                    -> u16 {
+        let (tx, rx) = channel();
+        std::thread::spawn(move || {
+            let env = Arc::new(Environment::new(1));
+            let server_builder = ServerBuilder::new(env.clone())
+                .channel_args(ChannelBuilder::new(env).reuse_port(false).build_args())
+                .register_service(async_maxgraph_service)
+                .register_service(ctrl_service)
+                .bind("0.0.0.0", port);
+            let mut server = server_builder.build().expect( "Error when build rpc server");
+            server.start();
+            let (_, port) = server.bind_addrs()[0];
+            tx.send(port).unwrap();
+            std::thread::sleep(Duration::from_millis(u64::max_value()));
+        });
+        rx.recv().unwrap()
     }
 
     pub fn engine_connect(&mut self, address_list: Vec<String>) {

@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DiscoveryAddressFetcher implements RpcAddressFetcher, NodeDiscovery.Listener {
 
     private Map<Integer, MaxGraphNode> executorNodes = new ConcurrentHashMap<>();
+    private Map<Integer, MaxGraphNode> graphNodes = new ConcurrentHashMap<>();
 
     public DiscoveryAddressFetcher(NodeDiscovery discovery) {
         discovery.addListener(this);
@@ -23,7 +24,7 @@ public class DiscoveryAddressFetcher implements RpcAddressFetcher, NodeDiscovery
     @Override
     public List<RpcAddress> getAddressList() {
         List<RpcAddress> rpcAddressList = new ArrayList<>();
-        for (MaxGraphNode maxGraphNode : executorNodes.values()) {
+        for (MaxGraphNode maxGraphNode : graphNodes.values()) {
             rpcAddressList.add(new RpcAddress(maxGraphNode.getHost(), maxGraphNode.getPort()));
         }
         return rpcAddressList;
@@ -33,8 +34,7 @@ public class DiscoveryAddressFetcher implements RpcAddressFetcher, NodeDiscovery
     public List<Endpoint> getServiceAddress() {
         List<Endpoint> endpoints = new ArrayList<>();
         for (MaxGraphNode node : executorNodes.values()) {
-            // TODO change to other type ports
-            endpoints.add(new Endpoint(node.getHost(), node.getPort()));
+            endpoints.add(new Endpoint(node.getHost(), 0, 0, node.getPort()));
         }
         return endpoints;
     }
@@ -46,15 +46,19 @@ public class DiscoveryAddressFetcher implements RpcAddressFetcher, NodeDiscovery
 
     @Override
     public void nodesJoin(RoleType role, Map<Integer, MaxGraphNode> nodes) {
-        if (role == RoleType.EXECUTOR_ENGINE) {
+        if (role == RoleType.EXECUTOR_QUERY) {
             this.executorNodes.putAll(nodes);
+        } else if (role == RoleType.EXECUTOR_GRAPH) {
+            this.graphNodes.putAll(nodes);
         }
     }
 
     @Override
     public void nodesLeft(RoleType role, Map<Integer, MaxGraphNode> nodes) {
-        if (role == RoleType.EXECUTOR_ENGINE) {
+        if (role == RoleType.EXECUTOR_QUERY) {
             nodes.keySet().forEach(k -> this.executorNodes.remove(k));
+        } else if (role == RoleType.EXECUTOR_GRAPH) {
+            nodes.keySet().forEach(k -> this.graphNodes.remove(k));
         }
     }
 }

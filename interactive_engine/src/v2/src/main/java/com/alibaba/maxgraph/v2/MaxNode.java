@@ -116,7 +116,7 @@ public class MaxNode extends NodeBase {
                 throw new MaxGraphException(e);
             }
         }
-
+        logger.info("maxnode started");
     }
 
     @Override
