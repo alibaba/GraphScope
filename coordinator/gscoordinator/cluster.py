@@ -718,7 +718,7 @@ class KubernetesClusterLauncher(Launcher):
             cpu=self._gie_graph_manager_cpu,
             mem=self._gie_graph_manager_mem,
             preemptive=self._preemptive,
-            port=self._interactive_engine_manager_port,
+            ports=self._interactive_engine_manager_port,
         )
 
         # add zookeeper container
@@ -728,7 +728,7 @@ class KubernetesClusterLauncher(Launcher):
             cpu=self._zookeeper_cpu,
             mem=self._zookeeper_mem,
             preemptive=self._preemptive,
-            port=self._zookeeper_port,
+            ports=self._zookeeper_port,
         )
 
         self._resource_object.append(
