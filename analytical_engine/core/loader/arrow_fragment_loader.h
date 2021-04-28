@@ -677,14 +677,8 @@ class ArrowFragmentLoader {
       auto read_procedure =
           [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
         std::shared_ptr<arrow::Table> table;
-        if (vertices[i]->protocol == "file" ||
-            vertices[i]->protocol == "cupid") {
-          auto path = vertices[i]->values;
-          BOOST_LEAF_AUTO(tmp, readTableFromLocation(vertices[i]->values, index,
-                                                     total_parts));
-          table = tmp;
-        } else if (vertices[i]->protocol == "numpy" ||
-                   vertices[i]->protocol == "pandas") {
+        if (vertices[i]->protocol == "numpy" ||
+            vertices[i]->protocol == "pandas") {
           BOOST_LEAF_AUTO(
               tmp, readTableFromNumpy(vertices[i]->data, vertices[i]->row_num,
                                       vertices[i]->column_num, index,
@@ -703,7 +697,11 @@ class ArrowFragmentLoader {
             VLOG(2) << "vertex table is null";
           }
         } else {
-          LOG(ERROR) << "Unsupported protocol: " << vertices[i]->protocol;
+          // Let the IOFactory to parse other protocols.
+          auto path = vertices[i]->values;
+          BOOST_LEAF_AUTO(tmp, readTableFromLocation(vertices[i]->values, index,
+                                                     total_parts));
+          table = tmp;
         }
         return table;
       };
@@ -880,12 +878,8 @@ class ArrowFragmentLoader {
         auto load_procedure =
             [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
           std::shared_ptr<arrow::Table> table;
-          if (sub_labels[j].protocol == "file" ||
-              sub_labels[j].protocol == "cupid") {
-            BOOST_LEAF_ASSIGN(table, readTableFromLocation(sub_labels[j].values,
-                                                           index, total_parts));
-          } else if (sub_labels[j].protocol == "numpy" ||
-                     sub_labels[j].protocol == "pandas") {
+          if (sub_labels[j].protocol == "numpy" ||
+              sub_labels[j].protocol == "pandas") {
             BOOST_LEAF_ASSIGN(
                 table,
                 readTableFromNumpy(sub_labels[j].data, sub_labels[j].row_num,
@@ -905,7 +899,9 @@ class ArrowFragmentLoader {
                       << table->schema()->ToString();
             }
           } else {
-            LOG(ERROR) << "Unrecognized protocol: " << sub_labels[j].protocol;
+            // Let the IOFactory to parse other protocols.
+            BOOST_LEAF_ASSIGN(table, readTableFromLocation(sub_labels[j].values,
+                                                           index, total_parts));
           }
           return table;
         };
