@@ -31,8 +31,8 @@
 #include "vineyard/basic/stream/parallel_stream.h"
 #include "vineyard/client/client.h"
 #include "vineyard/graph/loader/arrow_fragment_loader.h"
+#include "vineyard/io/io/i_io_adaptor.h"
 #include "vineyard/io/io/io_factory.h"
-#include "vineyard/io/io/local_io_adaptor.h"
 
 #include "core/error.h"
 #include "core/io/property_parser.h"
@@ -568,6 +568,10 @@ class ArrowFragmentLoader {
       const std::string& location, int index, int total_parts) {
     std::shared_ptr<arrow::Table> table;
     auto io_adaptor = vineyard::IOFactory::CreateIOAdaptor(location);
+    if (io_adaptor == nullptr) {
+      RETURN_GS_ERROR(vineyard::ErrorCode::kIOError,
+                      "Cannot find a supported adaptor for " + location);
+    }
     ARROW_OK_OR_RAISE(io_adaptor->SetPartialRead(index, total_parts));
     ARROW_OK_OR_RAISE(io_adaptor->Open());
     ARROW_OK_OR_RAISE(io_adaptor->ReadTable(&table));
@@ -582,10 +586,11 @@ class ArrowFragmentLoader {
     std::vector<std::shared_ptr<arrow::Table>> tables(label_num);
 
     for (label_id_t label_id = 0; label_id < label_num; ++label_id) {
-      std::unique_ptr<vineyard::LocalIOAdaptor,
-                      std::function<void(vineyard::LocalIOAdaptor*)>>
-          io_adaptor(new vineyard::LocalIOAdaptor(files[label_id] +
-                                                  "#header_row=true"),
+      std::unique_ptr<vineyard::IIOAdaptor,
+                      std::function<void(vineyard::IIOAdaptor*)>>
+          io_adaptor(vineyard::IOFactory::CreateIOAdaptor(files[label_id] +
+                                                          "#header_row=true")
+                         .release(),
                      io_deleter_);
       auto read_procedure =
           [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
@@ -676,13 +681,8 @@ class ArrowFragmentLoader {
       auto read_procedure =
           [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
         std::shared_ptr<arrow::Table> table;
-        if (vertices[i]->protocol == "file") {
-          auto path = vertices[i]->values;
-          BOOST_LEAF_AUTO(tmp, readTableFromLocation(vertices[i]->values, index,
-                                                     total_parts));
-          table = tmp;
-        } else if (vertices[i]->protocol == "numpy" ||
-                   vertices[i]->protocol == "pandas") {
+        if (vertices[i]->protocol == "numpy" ||
+            vertices[i]->protocol == "pandas") {
           BOOST_LEAF_AUTO(
               tmp, readTableFromNumpy(vertices[i]->data, vertices[i]->row_num,
                                       vertices[i]->column_num, index,
@@ -701,7 +701,11 @@ class ArrowFragmentLoader {
             VLOG(2) << "vertex table is null";
           }
         } else {
-          LOG(ERROR) << "Unsupported protocol: " << vertices[i]->protocol;
+          // Let the IOFactory to parse other protocols.
+          auto path = vertices[i]->values;
+          BOOST_LEAF_AUTO(tmp, readTableFromLocation(vertices[i]->values, index,
+                                                     total_parts));
+          table = tmp;
         }
         return table;
       };
@@ -735,10 +739,11 @@ class ArrowFragmentLoader {
         boost::split(sub_label_files, files[label_id], boost::is_any_of(";"));
 
         for (size_t j = 0; j < sub_label_files.size(); ++j) {
-          std::unique_ptr<vineyard::LocalIOAdaptor,
-                          std::function<void(vineyard::LocalIOAdaptor*)>>
-              io_adaptor(new vineyard::LocalIOAdaptor(sub_label_files[j] +
-                                                      "#header_row=true"),
+          std::unique_ptr<vineyard::IIOAdaptor,
+                          std::function<void(vineyard::IIOAdaptor*)>>
+              io_adaptor(vineyard::IOFactory::CreateIOAdaptor(
+                             sub_label_files[j] + "#header_row=true")
+                             .release(),
                          io_deleter_);
           auto read_procedure =
               [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
@@ -877,11 +882,8 @@ class ArrowFragmentLoader {
         auto load_procedure =
             [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
           std::shared_ptr<arrow::Table> table;
-          if (sub_labels[j].protocol == "file") {
-            BOOST_LEAF_ASSIGN(table, readTableFromLocation(sub_labels[j].values,
-                                                           index, total_parts));
-          } else if (sub_labels[j].protocol == "numpy" ||
-                     sub_labels[j].protocol == "pandas") {
+          if (sub_labels[j].protocol == "numpy" ||
+              sub_labels[j].protocol == "pandas") {
             BOOST_LEAF_ASSIGN(
                 table,
                 readTableFromNumpy(sub_labels[j].data, sub_labels[j].row_num,
@@ -901,7 +903,9 @@ class ArrowFragmentLoader {
                       << table->schema()->ToString();
             }
           } else {
-            LOG(ERROR) << "Unrecognized protocol: " << sub_labels[j].protocol;
+            // Let the IOFactory to parse other protocols.
+            BOOST_LEAF_ASSIGN(table, readTableFromLocation(sub_labels[j].values,
+                                                           index, total_parts));
           }
           return table;
         };
@@ -950,8 +954,8 @@ class ArrowFragmentLoader {
   bool directed_;
   bool generate_eid_;
 
-  std::function<void(vineyard::LocalIOAdaptor*)> io_deleter_ =
-      [](vineyard::LocalIOAdaptor* adaptor) {
+  std::function<void(vineyard::IIOAdaptor*)> io_deleter_ =
+      [](vineyard::IIOAdaptor* adaptor) {
         VINEYARD_CHECK_OK(adaptor->Close());
         delete adaptor;
       };
