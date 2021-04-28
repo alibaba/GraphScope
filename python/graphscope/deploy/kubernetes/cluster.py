@@ -510,7 +510,7 @@ class KubernetesClusterLauncher(Launcher):
             "--instance_id",
             self._instance_id,
             "--log_level",
-            self._log_level,
+            gs_config.log_level,
             "--k8s_namespace",
             self._namespace,
             "--k8s_service_type",
