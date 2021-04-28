@@ -84,7 +84,6 @@ GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
 
 ENGINE_CONTAINER = "engine"
 VINEYARD_CONTAINER = "vineyard"
-MAXGRAPH_MANAGER_HOST = "http://%s.%s.svc.cluster.local:8080"
 
 logger = logging.getLogger("graphscope")
 

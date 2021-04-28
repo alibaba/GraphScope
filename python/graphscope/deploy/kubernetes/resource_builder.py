@@ -455,7 +455,7 @@ class DeploymentBuilder(object):
         self._volumes = []
         self._envs = dict()
         self._image_pull_secrets = []
-        self._host_network = True
+        self._host_network = False
 
         self.add_field_envs(BASE_MACHINE_ENVS)
 
