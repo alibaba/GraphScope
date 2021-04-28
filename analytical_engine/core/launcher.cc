@@ -44,7 +44,8 @@ void VineyardServer::Start() {
                 std::chrono::system_clock::now().time_since_epoch())
                 .count();
   if (getenv("VINEYARD_IPC_SOCKET")) {
-    vineyard_socket_ = vineyard::ExpandEnvironmentVariables("$VINEYARD_IPC_SOCKET");
+    vineyard_socket_ =
+        vineyard::ExpandEnvironmentVariables("$VINEYARD_IPC_SOCKET");
   } else {
     // random vineyard socket
     vineyard_socket_ = "/tmp/vineyard.sock." + std::to_string(ts);
