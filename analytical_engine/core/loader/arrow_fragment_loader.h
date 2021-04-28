@@ -31,8 +31,8 @@
 #include "vineyard/basic/stream/parallel_stream.h"
 #include "vineyard/client/client.h"
 #include "vineyard/graph/loader/arrow_fragment_loader.h"
+#include "vineyard/io/io/i_io_adaptor.h"
 #include "vineyard/io/io/io_factory.h"
-#include "vineyard/io/io/local_io_adaptor.h"
 
 #include "core/error.h"
 #include "core/io/property_parser.h"
@@ -582,10 +582,11 @@ class ArrowFragmentLoader {
     std::vector<std::shared_ptr<arrow::Table>> tables(label_num);
 
     for (label_id_t label_id = 0; label_id < label_num; ++label_id) {
-      std::unique_ptr<vineyard::LocalIOAdaptor,
-                      std::function<void(vineyard::LocalIOAdaptor*)>>
-          io_adaptor(new vineyard::LocalIOAdaptor(files[label_id] +
-                                                  "#header_row=true"),
+      std::unique_ptr<vineyard::IIOAdaptor,
+                      std::function<void(vineyard::IIOAdaptor*)>>
+          io_adaptor(vineyard::IOFactory::CreateIOAdaptor(files[label_id] +
+                                                          "#header_row=true")
+                         .release(),
                      io_deleter_);
       auto read_procedure =
           [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
@@ -735,10 +736,11 @@ class ArrowFragmentLoader {
         boost::split(sub_label_files, files[label_id], boost::is_any_of(";"));
 
         for (size_t j = 0; j < sub_label_files.size(); ++j) {
-          std::unique_ptr<vineyard::LocalIOAdaptor,
-                          std::function<void(vineyard::LocalIOAdaptor*)>>
-              io_adaptor(new vineyard::LocalIOAdaptor(sub_label_files[j] +
-                                                      "#header_row=true"),
+          std::unique_ptr<vineyard::IIOAdaptor,
+                          std::function<void(vineyard::IIOAdaptor*)>>
+              io_adaptor(vineyard::IOFactory::CreateIOAdaptor(
+                             sub_label_files[j] + "#header_row=true")
+                             .release(),
                          io_deleter_);
           auto read_procedure =
               [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
@@ -950,8 +952,8 @@ class ArrowFragmentLoader {
   bool directed_;
   bool generate_eid_;
 
-  std::function<void(vineyard::LocalIOAdaptor*)> io_deleter_ =
-      [](vineyard::LocalIOAdaptor* adaptor) {
+  std::function<void(vineyard::IIOAdaptor*)> io_deleter_ =
+      [](vineyard::IIOAdaptor* adaptor) {
         VINEYARD_CHECK_OK(adaptor->Close());
         delete adaptor;
       };
