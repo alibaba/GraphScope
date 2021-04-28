@@ -475,7 +475,7 @@ class CoordinatorServiceServicer(
         }
 
         if self._launcher_type == types_pb2.K8S:
-            post_url = "{0}/create".format(self._launcher.get_manager_host())
+            post_url = "{0}/instance/create".format(self._launcher.get_manager_host())
             params.update(
                 {
                     "schemaJson": schema_json,
