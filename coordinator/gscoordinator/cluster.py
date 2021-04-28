@@ -159,6 +159,8 @@ class KubernetesClusterLauncher(Launcher):
     _mars_scheduler_port = 7103  # fixed
     _mars_worker_port = 7104  # fixed
 
+    _MAXGRAPH_MANAGER_HOST = "http://%s.%s.svc.cluster.local:8080"
+
     def __init__(
         self,
         namespace=None,
@@ -335,6 +337,12 @@ class KubernetesClusterLauncher(Launcher):
     def get_gie_graph_manager_service_name(self):
         return self._gie_graph_manager_service_name
 
+    def get_manager_host(self):
+        return self._MAXGRAPH_MANAGER_HOST % (
+            self._gie_graph_manager_service_name,
+            self._namespace,
+        )
+
     @property
     def preemptive(self):
         return self._preemptive
@@ -483,6 +491,7 @@ class KubernetesClusterLauncher(Launcher):
 
         # add engine container
         engine_builder.add_engine_container(
+            cmd=["tail", "-f", "/dev/null"],
             name=self._engine_container_name,
             image=self._gs_image,
             cpu=self._engine_cpu,
@@ -702,6 +711,8 @@ class KubernetesClusterLauncher(Launcher):
 
         # add manager container
         graph_manager_builder.add_manager_container(
+            cmd=["/bin/bash", "-c", "--"],
+            args=["/home/maxgraph/manager-entrypoint.sh"],
             name=self._gie_manager_container_name,
             image=self._gie_graph_manager_image,
             cpu=self._gie_graph_manager_cpu,

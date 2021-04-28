@@ -56,7 +56,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/instance")
 public class InstanceManagerController {
     private static final Logger logger = LoggerFactory.getLogger(InstanceManagerController.class);
-    private static final long LAUNCH_MAX_TIME_LILL = 5 * 60 * 1000;
+    private static final long LAUNCH_MAX_TIME_LILL = 10 * 60 * 1000;
     private static final String NAME_PATTERN = "[a-z0-9]+[a-z0-9\\-.]*[a-z0-9]+";
 
     @Autowired

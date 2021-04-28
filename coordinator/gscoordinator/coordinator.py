@@ -129,9 +129,6 @@ class CoordinatorServiceServicer(
         if self._launcher_type == types_pb2.K8S:
             self._pods_list = self._launcher.get_pods_list()
             self._k8s_namespace = self._launcher.get_namespace()
-            self._gie_graph_manager_service_name = (
-                self._launcher.get_gie_graph_manager_service_name()
-            )
         else:
             self._pods_list = []  # locally launched
             self._k8s_namespace = ""
@@ -478,10 +475,7 @@ class CoordinatorServiceServicer(
         }
 
         if self._launcher_type == types_pb2.K8S:
-            manager_host = MAXGRAPH_MANAGER_HOST % (
-                self._gie_graph_manager_service_name,
-                self._k8s_namespace,
-            )
+            post_url = "{0}/create".format(self._launcher.get_manager_host())
             params.update(
                 {
                     "schemaJson": schema_json,
@@ -492,7 +486,6 @@ class CoordinatorServiceServicer(
                     "gremlinServerMem": gremlin_server_mem,
                 }
             )
-            post_url = "%s/instance/create" % manager_host
             engine_params = [
                 "{}:{}".format(key, value)
                 for key, value in request.engine_params.items()
@@ -547,10 +540,7 @@ class CoordinatorServiceServicer(
     def CloseInteractiveInstance(self, request, context):
         object_id = request.object_id
         if self._launcher_type == types_pb2.K8S:
-            manager_host = MAXGRAPH_MANAGER_HOST % (
-                self._gie_graph_manager_service_name,
-                self._k8s_namespace,
-            )
+            manager_host = self._launcher_type.get_manager_host()
             pod_name_list = ",".join(self._pods_list)
             close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
                 manager_host,
