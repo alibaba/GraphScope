@@ -540,7 +540,7 @@ class CoordinatorServiceServicer(
     def CloseInteractiveInstance(self, request, context):
         object_id = request.object_id
         if self._launcher_type == types_pb2.K8S:
-            manager_host = self._launcher_type.get_manager_host()
+            manager_host = self._launcher.get_manager_host()
             pod_name_list = ",".join(self._pods_list)
             close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
                 manager_host,
