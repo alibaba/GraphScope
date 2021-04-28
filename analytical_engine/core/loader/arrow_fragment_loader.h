@@ -677,7 +677,8 @@ class ArrowFragmentLoader {
       auto read_procedure =
           [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
         std::shared_ptr<arrow::Table> table;
-        if (vertices[i]->protocol == "file") {
+        if (vertices[i]->protocol == "file" ||
+            vertices[i]->protocol == "cupid") {
           auto path = vertices[i]->values;
           BOOST_LEAF_AUTO(tmp, readTableFromLocation(vertices[i]->values, index,
                                                      total_parts));
@@ -879,7 +880,8 @@ class ArrowFragmentLoader {
         auto load_procedure =
             [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
           std::shared_ptr<arrow::Table> table;
-          if (sub_labels[j].protocol == "file") {
+          if (sub_labels[j].protocol == "file" ||
+              sub_labels[j].protocol == "cupid") {
             BOOST_LEAF_ASSIGN(table, readTableFromLocation(sub_labels[j].values,
                                                            index, total_parts));
           } else if (sub_labels[j].protocol == "numpy" ||
