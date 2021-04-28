@@ -568,6 +568,10 @@ class ArrowFragmentLoader {
       const std::string& location, int index, int total_parts) {
     std::shared_ptr<arrow::Table> table;
     auto io_adaptor = vineyard::IOFactory::CreateIOAdaptor(location);
+    if (io_adaptor == nullptr) {
+      RETURN_GS_ERROR(vineyard::ErrorCode::kIOError,
+                      "Cannot find a supported adaptor for " + location);
+    }
     ARROW_OK_OR_RAISE(io_adaptor->SetPartialRead(index, total_parts));
     ARROW_OK_OR_RAISE(io_adaptor->Open());
     ARROW_OK_OR_RAISE(io_adaptor->ReadTable(&table));
