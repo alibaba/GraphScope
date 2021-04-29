@@ -3,7 +3,6 @@
 # A script to build GraphScope standalone.
 
 set -e
-set -x
 set -o pipefail
 
 is_in_wsl=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && is_in_wsl=true
@@ -59,7 +58,7 @@ function check_os_compatibility() {
 }
 
 function check_dependencies_version() {
-  err_msg="could not be found, you can install it via `install_dependencies.sh`."
+  err_msg="could not be found, you can install it manually, or via install_dependencies.sh."
   if ! command -v mvn &> /dev/null; then
       echo "maven ${err_msg}"
       exit
@@ -212,6 +211,5 @@ install_client_and_coordinator
 echo "The script has successfully builded GraphScope."
 echo "Now you are ready to have fun with GraphScope."
 
-set +x
 set +e
 set +o pipefail
