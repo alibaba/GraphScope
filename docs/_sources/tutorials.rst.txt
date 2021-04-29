@@ -16,6 +16,7 @@ All tutorials are listed as follows:
    :caption: Contents
 
    How to Create a Session <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_how_to_launch_a_session.ipynb>
+   Graph Manipulations with NetowrkX Compatible APIs <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/2_graph_manipulations_with_networkx_compatible_apis.ipynb>
    Loading Graphs <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/2_loading_graphs.ipynb>
    Built-in Analytical Algorithms <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/3_builtin_analytical_algorithms.ipynb>
    Writing Your Own Algorithms <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/4_writing_your_own_algorithms.ipynb>

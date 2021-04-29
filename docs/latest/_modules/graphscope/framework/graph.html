@@ -213,7 +213,7 @@
 
 <span class="sd">    A :class:`Graph` object holds the metadata of a graph, such as key, schema, and the graph is directed or not.</span>
 
-<span class="sd">    It is worth noting that the graph is stored by the backend such as Analytical Engine, Vineyard.</span>
+<span class="sd">    It is worth noticing that the graph is stored by the backend such as Analytical Engine, Vineyard.</span>
 <span class="sd">    In other words, the graph object holds nothing but metadata.</span>
 
 <span class="sd">    The following example demonstrates its usage:</span>
@@ -288,7 +288,7 @@
         <span class="k">if</span> <span class="n">incoming_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Don&#39;t import the :code:`NXGraph` in top-level statements to improve the</span>
             <span class="c1"># performance of :code:`import graphscope`.</span>
-            <span class="kn">from</span> <span class="nn">graphscope.experimental</span> <span class="k">import</span> <span class="n">nx</span>
+            <span class="kn">from</span> <span class="nn">graphscope</span> <span class="k">import</span> <span class="n">nx</span>
 
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">,</span> <span class="n">Operation</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_pending_op</span> <span class="o">=</span> <span class="n">incoming_data</span>
@@ -1156,6 +1156,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
               
             
 

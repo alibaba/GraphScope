@@ -199,8 +199,10 @@
 <span class="kn">from</span> <span class="nn">queue</span> <span class="k">import</span> <span class="n">Empty</span> <span class="k">as</span> <span class="n">EmptyQueue</span>
 
 <span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kubernetes</span> <span class="k">import</span> <span class="n">client</span> <span class="k">as</span> <span class="n">kube_client</span>
     <span class="kn">from</span> <span class="nn">kubernetes</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">kube_config</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">kube_client</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">kube_config</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="kn">import</span> <span class="nn">graphscope</span>
@@ -918,9 +920,15 @@
                 <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gs_image&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
             <span class="p">):</span>
                 <span class="k">raise</span> <span class="n">K8sError</span><span class="p">(</span><span class="s2">&quot;None image found.&quot;</span><span class="p">)</span>
-            <span class="n">api_client</span> <span class="o">=</span> <span class="n">kube_config</span><span class="o">.</span><span class="n">new_client_from_config</span><span class="p">(</span>
-                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">],</span>
+                <span class="n">kube_client</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">ApiClient</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="n">api_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">api_client</span> <span class="o">=</span> <span class="n">kube_config</span><span class="o">.</span><span class="n">new_client_from_config</span><span class="p">(</span>
+                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
+                <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="o">=</span> <span class="n">KubernetesClusterLauncher</span><span class="p">(</span>
                 <span class="n">api_client</span><span class="o">=</span><span class="n">api_client</span><span class="p">,</span>
                 <span class="n">namespace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">],</span>
@@ -1547,6 +1555,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.0/index.html">v0.4.0</a></dd>
               
             
 

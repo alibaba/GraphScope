@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.DiGraph.clear
-========================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: DiGraph.clear

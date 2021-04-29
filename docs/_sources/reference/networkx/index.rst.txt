@@ -1,6 +1,6 @@
 .. _networkx:
 
-NetworkX-style API(Preview)
+NetworkX-style API
 =============================
 
  .. toctree::
@@ -10,6 +10,4 @@ NetworkX-style API(Preview)
     builtin
     functions
     generators
-    convert
-    relabel
     io

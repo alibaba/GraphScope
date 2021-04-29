@@ -31,7 +31,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Functions" href="functions.html" />
-    <link rel="prev" title="graphscope.experimental.nx.DiGraph.reverse" href="generated/graphscope.experimental.nx.DiGraph.reverse.html" /> 
+    <link rel="prev" title="Graph types" href="graphs.html" /> 
 
   
   <script src="../../_static/js/modernizr.min.js"></script>
@@ -111,14 +111,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../cython_sdk.html">Cython SDK API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../learning.html">Graph Learning</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="index.html">NetworkX-style API(Preview)</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">NetworkX-style API</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="graphs.html">Graph types</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Builtin algorithms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="functions.html">Functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generators.html">Graph generators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="convert.html">Converting to and from other data formats</a></li>
-<li class="toctree-l3"><a class="reference internal" href="relabel.html">Relabeling nodes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="io.html">Reading and writing graphs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="io.html">Reading graphs</a></li>
 </ul>
 </li>
 </ul>
@@ -171,7 +169,7 @@
         
           <li><a href="../python_index.html">Python API Reference</a> &raquo;</li>
         
-          <li><a href="index.html">NetworkX-style API(Preview)</a> &raquo;</li>
+          <li><a href="index.html">NetworkX-style API</a> &raquo;</li>
         
       <li>Builtin algorithms</li>
     
@@ -195,70 +193,34 @@
   <section id="builtin-algorithms">
 <span id="builtin"></span><h1>Builtin algorithms<a class="headerlink" href="#builtin-algorithms" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.pagerank">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">pagerank</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">0.85</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-06</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.pagerank" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the PageRank of the nodes in the graph.</p>
-<p>PageRank computes a ranking of the nodes in the graph G based on
-the structure of the incoming links. It was originally designed as
-an algorithm to rank web pages.</p>
+<dt id="graphscope.nx.builtin.hits">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">hits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-08</span></em>, <em class="sig-param"><span class="n">normalized</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.hits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns HITS hubs and authorities values for nodes.</p>
+<p>The HITS algorithm computes two numbers for a node.
+Authorities estimates the node value based on the incoming links.
+Hubs estimates the node value based on outgoing links.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph.  Undirected graphs will be converted to a directed
-graph with two directed edges for each undirected edge.</p></li>
-<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – Damping parameter for PageRank, default=0.85.</p></li>
-<li><p><strong>personalization</strong> (<em>dict</em><em>, </em><em>optional</em>) – The “personalization vector” consisting of a dictionary with a
-key some subset of graph nodes and personalization value each of those.
-At least one personalization value must be non-zero.
-If not specfiied, a nodes personalization value will be zero.
-By default, a uniform distribution is used.</p></li>
-<li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em>) – Maximum number of iterations in power method eigenvalue solver.</p></li>
-<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Error tolerance used to check convergence in power method solver.</p></li>
-<li><p><strong>nstart</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Starting value of PageRank iteration for each node.</p></li>
-<li><p><strong>weight</strong> (<em>key</em><em>, </em><em>optional</em>) – Edge data key to use as weight.  If None weights are set to 1.</p></li>
-<li><p><strong>dangling</strong> (<em>dict</em><em>, </em><em>optional</em>) – The outedges to be assigned to any “dangling” nodes, i.e., nodes without
-any outedges. The dict key is the node the outedge points to and the dict
-value is the weight of that outedge. By default, dangling nodes are given
-outedges according to the personalization vector (uniform if not
-specified). This must be selected to result in an irreducible transition
-matrix (see notes under google_matrix). It may be common to have the
-dangling dict to be the same as the personalization dict.</p></li>
+<li><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p></li>
+<li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em>) – Maximum number of iterations in power method.</p></li>
+<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Error tolerance used to check convergence in power method iteration.</p></li>
+<li><p><strong>normalized</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – Normalize results by the sum of all of the values.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>pagerank</strong> – Dictionary of nodes with PageRank as value</p>
+<dd class="field-even"><p><strong>(node, hubs,authorities)</strong> –  node containing the hub and authority
+values.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dictionary</p>
+<dd class="field-odd"><p>three-column of dataframe</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pr</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">pagerank</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">hits</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 </pre></div>
 </div>
-<p class="rubric">Notes</p>
-<p>The eigenvector calculation is done by the power iteration method
-and has no guarantee of convergence.  The iteration will stop after
-an error tolerance of <code class="docutils literal notranslate"><span class="pre">len(G)</span> <span class="pre">*</span> <span class="pre">tol</span></code> has been reached. If the
-number of iterations exceed <cite>max_iter</cite>, a
-<code class="xref py py-exc docutils literal notranslate"><span class="pre">networkx.exception.PowerIterationFailedConvergence</span></code> exception
-is raised.</p>
-<p>The PageRank algorithm was designed for directed graphs but this
-algorithm does not check if the input graph is directed and will
-execute on undirected graphs by converting each edge in the
-directed graph to two edges.</p>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pagerank_numpy</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">pagerank_scipy</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">google_matrix</span></code></p>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>PowerIterationFailedConvergence</strong> – If the algorithm fails to converge to the specified tolerance
-    within the specified number of iterations of the power iteration
-    method.</p>
-</dd>
-</dl>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
 <dt class="label" id="id1"><span class="brackets">1</span></dt>
@@ -267,64 +229,6 @@ directed graph to two edges.</p>
 <a class="reference external" href="http://citeseer.ist.psu.edu/713792.html">http://citeseer.ist.psu.edu/713792.html</a></p>
 </dd>
 <dt class="label" id="id2"><span class="brackets">2</span></dt>
-<dd><p>Page, Lawrence; Brin, Sergey; Motwani, Rajeev and Winograd, Terry,
-The PageRank citation ranking: Bringing order to the Web. 1999
-<a class="reference external" href="http://dbpubs.stanford.edu:8090/pub/showDoc.Fulltext?lang=en&amp;doc=1999-66&amp;format=pdf">http://dbpubs.stanford.edu:8090/pub/showDoc.Fulltext?lang=en&amp;doc=1999-66&amp;format=pdf</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.hits">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">hits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-08</span></em>, <em class="sig-param"><span class="n">normalized</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.hits" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns HITS hubs and authorities values for nodes.</p>
-<p>The HITS algorithm computes two numbers for a node.
-Authorities estimates the node value based on the incoming links.
-Hubs estimates the node value based on outgoing links.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph</p></li>
-<li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em>) – Maximum number of iterations in power method.</p></li>
-<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em>) – Error tolerance used to check convergence in power method iteration.</p></li>
-<li><p><strong>nstart</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Starting value of each node for power method iteration.</p></li>
-<li><p><strong>normalized</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – Normalize results by the sum of all of the values.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>(hubs,authorities)</strong> – Two dictionaries keyed by node containing the hub and authority
-values.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>two-tuple of dictionaries</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>PowerIterationFailedConvergence</strong> – If the algorithm fails to converge to the specified tolerance
-    within the specified number of iterations of the power iteration
-    method.</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">hits</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-</pre></div>
-</div>
-<p class="rubric">Notes</p>
-<p>The eigenvector calculation is done by the power iteration method
-and has no guarantee of convergence.  The iteration will stop
-after max_iter iterations or an error tolerance of
-number_of_nodes(G)*tol has been reached.</p>
-<p>The HITS algorithm was designed for directed graphs but this
-algorithm does not check if the input graph is directed and will
-execute on undirected graphs.</p>
-<p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id3"><span class="brackets">1</span></dt>
-<dd><p>A. Langville and C. Meyer,
-“A survey of eigenvector methods of web information retrieval.”
-<a class="reference external" href="http://citeseer.ist.psu.edu/713792.html">http://citeseer.ist.psu.edu/713792.html</a></p>
-</dd>
-<dt class="label" id="id4"><span class="brackets">2</span></dt>
 <dd><p>Jon Kleinberg,
 Authoritative sources in a hyperlinked environment
 Journal of the ACM 46 (5): 604-32, 1999.
@@ -335,8 +239,8 @@ http://www.cs.cornell.edu/home/kleinber/auth.pdf.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.degree_centrality">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">degree_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.degree_centrality" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.nx.builtin.degree_centrality">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">degree_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.degree_centrality" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the degree centrality for nodes.</p>
 <p>The degree centrality for a node v is the fraction of nodes it
 is connected to.</p>
@@ -345,39 +249,36 @@ is connected to.</p>
 <dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with degree centrality as the value.</p>
+<dd class="field-even"><p><strong>nodes</strong> – Dataframe of nodes with degree centrality as the value.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dictionary</p>
+<dd class="field-odd"><p>dataframe</p>
 </dd>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">betweenness_centrality</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">load_centrality</span></code>, <a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.eigenvector_centrality" title="graphscope.experimental.nx.builtin.eigenvector_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality</span></code></a></p>
+<p><a class="reference internal" href="#graphscope.nx.builtin.eigenvector_centrality" title="graphscope.nx.builtin.eigenvector_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
 <p>The degree centrality values are normalized by dividing by the maximum
 possible degree in a simple graph n-1 where n is the number of nodes in G.</p>
-<p>For multigraphs or graphs with self loops the maximum degree might
-be higher than n-1 and values of degree centrality greater than 1
-are possible.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.in_degree_centrality">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">in_degree_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.in_degree_centrality" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.nx.builtin.in_degree_centrality">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">in_degree_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.in_degree_centrality" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the in-degree centrality for nodes.</p>
 <p>The in-degree centrality for a node v is the fraction of nodes its
 incoming edges are connected to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph</p>
+<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with in-degree centrality as values.</p>
+<dd class="field-even"><p><strong>nodes</strong> – Dataframe of nodes with in-degree centrality as values.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dictionary</p>
+<dd class="field-odd"><p>dataframe</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>NetworkXNotImplemented</strong> – If G is undirected.</p>
@@ -385,31 +286,28 @@ incoming edges are connected to.</p>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p><a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.degree_centrality" title="graphscope.experimental.nx.builtin.degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">degree_centrality</span></code></a>, <a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.out_degree_centrality" title="graphscope.experimental.nx.builtin.out_degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">out_degree_centrality</span></code></a></p>
+<p><a class="reference internal" href="#graphscope.nx.builtin.degree_centrality" title="graphscope.nx.builtin.degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">degree_centrality</span></code></a>, <a class="reference internal" href="#graphscope.nx.builtin.out_degree_centrality" title="graphscope.nx.builtin.out_degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">out_degree_centrality</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
 <p>The degree centrality values are normalized by dividing by the maximum
 possible degree in a simple graph n-1 where n is the number of nodes in G.</p>
-<p>For multigraphs or graphs with self loops the maximum degree might
-be higher than n-1 and values of degree centrality greater than 1
-are possible.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.out_degree_centrality">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">out_degree_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.out_degree_centrality" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.nx.builtin.out_degree_centrality">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">out_degree_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.out_degree_centrality" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the out-degree centrality for nodes.</p>
 <p>The out-degree centrality for a node v is the fraction of nodes its
 outgoing edges are connected to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph</p>
+<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with out-degree centrality as values.</p>
+<dd class="field-even"><p><strong>nodes</strong> – Dataframe of nodes with out-degree centrality as values.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dictionary</p>
+<dd class="field-odd"><p>dataframe</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>NetworkXNotImplemented</strong> – If G is undirected.</p>
@@ -417,19 +315,16 @@ outgoing edges are connected to.</p>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p><a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.degree_centrality" title="graphscope.experimental.nx.builtin.degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">degree_centrality</span></code></a>, <a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.in_degree_centrality" title="graphscope.experimental.nx.builtin.in_degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">in_degree_centrality</span></code></a></p>
+<p><a class="reference internal" href="#graphscope.nx.builtin.degree_centrality" title="graphscope.nx.builtin.degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">degree_centrality</span></code></a>, <a class="reference internal" href="#graphscope.nx.builtin.in_degree_centrality" title="graphscope.nx.builtin.in_degree_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">in_degree_centrality</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
 <p>The degree centrality values are normalized by dividing by the maximum
 possible degree in a simple graph n-1 where n is the number of nodes in G.</p>
-<p>For multigraphs or graphs with self loops the maximum degree might
-be higher than n-1 and values of degree centrality greater than 1
-are possible.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.eigenvector_centrality">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">eigenvector_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.eigenvector_centrality" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.nx.builtin.eigenvector_centrality">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">eigenvector_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.eigenvector_centrality" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the eigenvector centrality for the graph <cite>G</cite>.</p>
 <p>Eigenvector centrality computes the centrality for a node based on the
 centrality of its neighbors. The eigenvector centrality for node $i$ is
@@ -439,79 +334,38 @@ the $i$-th element of the vector $x$ defined by the equation</p>
 <p>where $A$ is the adjacency matrix of the graph <cite>G</cite> with eigenvalue
 $lambda$. By virtue of the Perron–Frobenius theorem, there is a unique
 solution $x$, all of whose entries are positive, if $lambda$ is the
-largest eigenvalue of the adjacency matrix $A$ (<a href="#id25"><span class="problematic" id="id5">[2]_</span></a>).</p>
+largest eigenvalue of the adjacency matrix $A$ (<a href="#id14"><span class="problematic" id="id3">[2]_</span></a>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p></li>
 <li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em><em> (</em><em>default=100</em><em>)</em>) – Maximum number of iterations in power method.</p></li>
 <li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default=1.0e-6</em><em>)</em>) – Error tolerance used to check convergence in power method iteration.</p></li>
-<li><p><strong>nstart</strong> (<em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – Starting value of eigenvector iteration for each node.</p></li>
-<li><p><strong>weight</strong> (<em>None</em><em> or </em><em>string</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – If None, all edge weights are considered equal.
+<li><p><strong>weight</strong> (<em>None</em><em> or </em><em>string</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – If None, that take it as edge attribute ‘weight’
 Otherwise holds the name of the edge attribute used as weight.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with eigenvector centrality as the value.</p>
+<dd class="field-even"><p><strong>nodes</strong> – Dataframe of nodes with eigenvector centrality as the value.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dictionary</p>
+<dd class="field-odd"><p>dataframe</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">centrality</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">eigenvector_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{c:0.2f}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">centrality</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-<span class="go">[(0, &#39;0.37&#39;), (1, &#39;0.60&#39;), (2, &#39;0.60&#39;), (3, &#39;0.37&#39;)]</span>
 </pre></div>
 </div>
-<dl class="field-list simple">
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>NetworkXPointlessConcept</strong> – If the graph <cite>G</cite> is the null graph.</p></li>
-<li><p><strong>NetworkXError</strong> – If each value in <cite>nstart</cite> is zero.</p></li>
-<li><p><strong>PowerIterationFailedConvergence</strong> – If the algorithm fails to converge to the specified tolerance
-    within the specified number of iterations of the power iteration
-    method.</p></li>
-</ul>
-</dd>
-</dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality_numpy</span></code>, <a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.pagerank" title="graphscope.experimental.nx.builtin.pagerank"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pagerank</span></code></a>, <a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.hits" title="graphscope.experimental.nx.builtin.hits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hits</span></code></a></p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality_numpy</span></code>, <a class="reference internal" href="#graphscope.nx.builtin.hits" title="graphscope.nx.builtin.hits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hits</span></code></a></p>
 </div>
-<p class="rubric">Notes</p>
-<p>The measure was introduced by <a href="#id26"><span class="problematic" id="id6">[1]_</span></a> and is discussed in <a href="#id27"><span class="problematic" id="id7">[2]_</span></a>.</p>
-<p>The power iteration method is used to compute the eigenvector and
-convergence is <strong>not</strong> guaranteed. Our method stops after <code class="docutils literal notranslate"><span class="pre">max_iter</span></code>
-iterations or when the change in the computed vector between two
-iterations is smaller than an error tolerance of
-<code class="docutils literal notranslate"><span class="pre">G.number_of_nodes()</span> <span class="pre">*</span> <span class="pre">tol</span></code>. This implementation uses ($A + I$)
-rather than the adjacency matrix $A$ because it shifts the spectrum
-to enable discerning the correct eigenvector even for networks with
-multiple dominant eigenvalues.</p>
-<p>For directed graphs this is “left” eigenvector centrality which corresponds
-to the in-edges in the graph. For out-edges eigenvector centrality
-first reverse the graph with <code class="docutils literal notranslate"><span class="pre">G.reverse()</span></code>.</p>
-<p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id8"><span class="brackets">1</span></dt>
-<dd><p>Phillip Bonacich.
-“Power and Centrality: A Family of Measures.”
-<em>American Journal of Sociology</em> 92(5):1170–1182, 1986
-&lt;<a class="reference external" href="http://www.leonidzhukov.net/hse/2014/socialnetworks/papers/Bonacich-Centrality.pdf">http://www.leonidzhukov.net/hse/2014/socialnetworks/papers/Bonacich-Centrality.pdf</a>&gt;</p>
-</dd>
-<dt class="label" id="id9"><span class="brackets">2</span></dt>
-<dd><p>Mark E. J. Newman.
-<em>Networks: An Introduction.</em>
-Oxford University Press, USA, 2010, pp. 169.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.katz_centrality">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">katz_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">beta</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">nstart</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">normalized</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.katz_centrality" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.nx.builtin.katz_centrality">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">katz_centrality</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">0.1</span></em>, <em class="sig-param"><span class="n">beta</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">normalized</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.katz_centrality" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the Katz centrality for the nodes of the graph G.</p>
 <p>Katz centrality computes the centrality for a node based on the centrality
 of its neighbors. It is a generalization of the eigenvector centrality. The
@@ -531,36 +385,26 @@ parameter $beta$.  Connections made with distant neighbors
 are, however, penalized by an attenuation factor $alpha$ which
 should be strictly less than the inverse largest eigenvalue of the
 adjacency matrix in order for the Katz centrality to be computed
-correctly. More information is provided in <a href="#id28"><span class="problematic" id="id10">[1]_</span></a>.</p>
+correctly. More information is provided in <a href="#id15"><span class="problematic" id="id4">[1]_</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>graph</em>) – A NetworkX graph.</p></li>
+<li><p><strong>G</strong> (<em>graph</em>) – A networkx graph.</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – Attenuation factor</p></li>
 <li><p><strong>beta</strong> (<em>scalar</em><em> or </em><em>dictionary</em><em>, </em><em>optional</em><em> (</em><em>default=1.0</em><em>)</em>) – Weight attributed to the immediate neighborhood. If not a scalar, the
 dictionary must have an value for every node.</p></li>
 <li><p><strong>max_iter</strong> (<em>integer</em><em>, </em><em>optional</em><em> (</em><em>default=1000</em><em>)</em>) – Maximum number of iterations in power method.</p></li>
 <li><p><strong>tol</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default=1.0e-6</em><em>)</em>) – Error tolerance used to check convergence in power method iteration.</p></li>
-<li><p><strong>nstart</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Starting value of Katz iteration for each node.</p></li>
 <li><p><strong>normalized</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=True</em><em>)</em>) – If True normalize the resulting values.</p></li>
-<li><p><strong>weight</strong> (<em>None</em><em> or </em><em>string</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – If None, all edge weights are considered equal.
+<li><p><strong>weight</strong> (<em>None</em><em> or </em><em>string</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – If None, that take it as edge attribute ‘weight’.
 Otherwise holds the name of the edge attribute used as weight.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>nodes</strong> – Dictionary of nodes with Katz centrality as the value.</p>
+<dd class="field-even"><p><strong>nodes</strong> – Dataframe of nodes with Katz centrality as the value.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dictionary</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>NetworkXError</strong> – If the parameter <cite>beta</cite> is not a scalar but lacks a value for at least
-    one node</p></li>
-<li><p><strong>PowerIterationFailedConvergence</strong> – If the algorithm fails to converge to the specified tolerance
-    within the specified number of iterations of the power iteration
-    method.</p></li>
-</ul>
+<dd class="field-odd"><p>dataframe</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -568,57 +412,18 @@ Otherwise holds the name of the edge attribute used as weight.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">phi</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="o">/</span> <span class="mf">2.0</span>  <span class="c1"># largest eigenvalue of adj matrix</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">centrality</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">katz_centrality</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">phi</span> <span class="o">-</span> <span class="mf">0.01</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">centrality</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{n}</span><span class="s2"> </span><span class="si">{c:.2f}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="go">0 0.37</span>
-<span class="go">1 0.60</span>
-<span class="go">2 0.60</span>
-<span class="go">3 0.37</span>
 </pre></div>
 </div>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">katz_centrality_numpy</span></code>, <a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.eigenvector_centrality" title="graphscope.experimental.nx.builtin.eigenvector_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality_numpy</span></code>, <a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.pagerank" title="graphscope.experimental.nx.builtin.pagerank"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pagerank</span></code></a>, <a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.hits" title="graphscope.experimental.nx.builtin.hits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hits</span></code></a></p>
-</div>
-<p class="rubric">Notes</p>
-<p>Katz centrality was introduced by <a href="#id29"><span class="problematic" id="id11">[2]_</span></a>.</p>
-<p>This algorithm it uses the power method to find the eigenvector
-corresponding to the largest eigenvalue of the adjacency matrix of <code class="docutils literal notranslate"><span class="pre">G</span></code>.
-The parameter <code class="docutils literal notranslate"><span class="pre">alpha</span></code> should be strictly less than the inverse of largest
-eigenvalue of the adjacency matrix for the algorithm to converge.
-You can use <code class="docutils literal notranslate"><span class="pre">max(nx.adjacency_spectrum(G))</span></code> to get $lambda_{max}$ the largest
-eigenvalue of the adjacency matrix.
-The iteration will stop after <code class="docutils literal notranslate"><span class="pre">max_iter</span></code> iterations or an error tolerance of
-<code class="docutils literal notranslate"><span class="pre">number_of_nodes(G)</span> <span class="pre">*</span> <span class="pre">tol</span></code> has been reached.</p>
-<p>When $alpha = 1/lambda_{max}$ and $beta=0$, Katz centrality is the same
-as eigenvector centrality.</p>
-<p>For directed graphs this finds “left” eigenvectors which corresponds
-to the in-edges in the graph. For out-edges Katz centrality
-first reverse the graph with <code class="docutils literal notranslate"><span class="pre">G.reverse()</span></code>.</p>
-<p class="rubric">References</p>
-<dl class="footnote brackets">
-<dt class="label" id="id12"><span class="brackets">1</span></dt>
-<dd><p>Mark E. J. Newman:
-Networks: An Introduction.
-Oxford University Press, USA, 2010, p. 720.</p>
-</dd>
-<dt class="label" id="id13"><span class="brackets">2</span></dt>
-<dd><p>Leo Katz:
-A New Status Index Derived from Sociometric Index.
-Psychometrika 18(1):39–43, 1953
-<a class="reference external" href="http://phya.snu.ac.kr/~dkim/PRL87278701.pdf">http://phya.snu.ac.kr/~dkim/PRL87278701.pdf</a></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.has_path">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">has_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">target</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.has_path" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.nx.builtin.has_path">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">has_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">target</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.has_path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns <em>True</em> if <em>G</em> has a path from <em>source</em> to <em>target</em>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
+<li><p><strong>G</strong> (<em>networkx graph</em>) – </p></li>
 <li><p><strong>source</strong> (<em>node</em>) – Starting node for path</p></li>
 <li><p><strong>target</strong> (<em>node</em>) – Ending node for path</p></li>
 </ul>
@@ -627,148 +432,52 @@ Psychometrika 18(1):39–43, 1953
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.shortest_path">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">shortest_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">source</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.shortest_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute shortest paths in the graph.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
-<li><p><strong>source</strong> (<em>node</em><em>, </em><em>optional</em>) – Starting node for path. If not specified, compute shortest
-paths for each possible starting node.</p></li>
-<li><p><strong>target</strong> (<em>node</em><em>, </em><em>optional</em>) – Ending node for path. If not specified, compute shortest
-paths to all possible nodes.</p></li>
-<li><p><strong>weight</strong> (<em>None</em><em> or </em><em>string</em><em>, </em><em>optional</em><em> (</em><em>default = None</em><em>)</em>) – If None, every edge has weight/distance/cost 1.
-If a string, use this edge attribute as the edge weight.
-Any edge attribute not present defaults to 1.</p></li>
-<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default = 'dijkstra'</em><em>)</em>) – The algorithm to use to compute the path.
-Supported options: ‘dijkstra’, ‘bellman-ford’.
-Other inputs produce a ValueError.
-If <cite>weight</cite> is None, unweighted graph methods are used, and this
-suggestion is ignored.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p><strong>path</strong> – All returned paths include both the source and target in the path.</p>
-<p>If the source and target are both specified, return a single list
-of nodes in a shortest path from the source to the target.</p>
-<p>If only the source is specified, return a dictionary keyed by
-targets with a list of nodes in a shortest path from the source
-to one of the targets.</p>
-<p>If only the target is specified, return a dictionary keyed by
-sources with a list of nodes in a shortest path from one of the
-sources to the target.</p>
-<p>If neither the source nor target are specified return a dictionary
-of dictionaries with path[source][target]=[list of nodes in path].</p>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list or dictionary</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>NodeNotFound</strong> – If <cite>source</cite> is not in <cite>G</cite>.</p></li>
-<li><p><strong>ValueError</strong> – If <cite>method</cite> is not among the supported options.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
-<span class="go">[0, 1, 2, 3, 4]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># target not specified</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
-<span class="go">[0, 1, 2, 3, 4]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># source not specified</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">[0, 1, 2, 3, 4]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>  <span class="c1"># source, target not specified</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
-<span class="go">[0, 1, 2, 3, 4]</span>
-</pre></div>
-</div>
-<p class="rubric">Notes</p>
-<p>There may be more than one shortest path between a source and target.
-This returns only one of them.</p>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">all_pairs_shortest_path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">all_pairs_dijkstra_path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">all_pairs_bellman_ford_path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">single_source_shortest_path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">single_source_dijkstra_path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">single_source_bellman_ford_path</span></code></p>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.average_shortest_path_length">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">average_shortest_path_length</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.average_shortest_path_length" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.nx.builtin.average_shortest_path_length">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">average_shortest_path_length</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.average_shortest_path_length" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the average shortest path length.</p>
-<p>The average shortest path length is</p>
+<blockquote>
+<div><p>The average shortest path length is</p>
 <div class="math notranslate nohighlight">
-\[a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}\]</div>
-<p>where <cite>V</cite> is the set of nodes in <cite>G</cite>,
+\[a =\sum_{s,t \in V}\]</div>
+</div></blockquote>
+<p>rac{d(s, t)}{n(n-1)}</p>
+<blockquote>
+<div><p>where <cite>V</cite> is the set of nodes in <cite>G</cite>,
 <cite>d(s, t)</cite> is the shortest path from <cite>s</cite> to <cite>t</cite>,
 and <cite>n</cite> is the number of nodes in <cite>G</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
-<li><p><strong>weight</strong> (<em>None</em><em> or </em><em>string</em><em>, </em><em>optional</em><em> (</em><em>default = None</em><em>)</em>) – If None, every edge has weight/distance/cost 1.
-If a string, use this edge attribute as the edge weight.
-Any edge attribute not present defaults to 1.</p></li>
-<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default = 'unweighted'</em><em> or </em><em>'djikstra'</em><em>)</em>) – The algorithm to use to compute the path lengths.
-Supported options are ‘unweighted’, ‘dijkstra’, ‘bellman-ford’,
-‘floyd-warshall’ and ‘floyd-warshall-numpy’.
-Other method values produce a ValueError.
-The default method is ‘unweighted’ if <cite>weight</cite> is None,
-otherwise the default method is ‘dijkstra’.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>NetworkXPointlessConcept</strong> – If <cite>G</cite> is the null graph (that is, the graph on zero nodes).</p></li>
-<li><p><strong>NetworkXError</strong> – If <cite>G</cite> is not connected (or not weakly connected, in the case
-    of a directed graph).</p></li>
-<li><p><strong>ValueError</strong> – If <cite>method</cite> is not among the supported options.</p></li>
-</ul>
+<p>G : networkx graph</p>
+<dl class="simple">
+<dt>weight<span class="classifier">None or string, optional (default = None)</span></dt><dd><p>If None, default take as ‘weight’.
+If a string, use this edge attribute as the edge weight.</p>
 </dd>
 </dl>
-<p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">average_shortest_path_length</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 <span class="go">2.0</span>
 </pre></div>
 </div>
-<p>For disconnected graphs, you can compute the average shortest path
-length for each component</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">([(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">)):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">average_shortest_path_length</span><span class="p">(</span><span class="n">C</span><span class="p">))</span>
-<span class="go">1.0</span>
-<span class="go">1.0</span>
-</pre></div>
-</div>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.bfs_edges">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">bfs_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">reverse</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">depth_limit</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.bfs_edges" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterate over edges in a breadth-first-search starting at source.</p>
+<dt id="graphscope.nx.builtin.bfs_edges">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">bfs_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">depth_limit</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.bfs_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>edges in a breadth-first-search starting at source.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
+<li><p><strong>G</strong> (<em>networkx graph</em>) – </p></li>
 <li><p><strong>source</strong> (<em>node</em>) – Specify starting node for breadth-first search; this function
 iterates over only those edges in the component reachable from
 this node.</p></li>
-<li><p><strong>reverse</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True traverse a directed graph in the reverse direction</p></li>
 <li><p><strong>depth_limit</strong> (<em>int</em><em>, </em><em>optional</em><em>(</em><em>default=len</em><em>(</em><em>G</em><em>)</em><em>)</em>) – Specify the maximum search depth</p></li>
-<li><p><strong>sort_neighbors</strong> (<em>function</em>) – A function that takes the list of neighbors of given node as input, and
-returns an <em>iterator</em> over these neighbors but with custom ordering.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>edges</strong> – A generator of edges in the breadth-first-search.</p>
+<dd class="field-even"><p><strong>edges</strong> – A list of edges in the breadth-first-search.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>generator</p>
+<dd class="field-odd"><p>list</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -780,166 +489,31 @@ returns an <em>iterator</em> over these neighbors but with custom ordering.</p><
 <span class="go">[(0, 1)]</span>
 </pre></div>
 </div>
-<p>To get the nodes in a breadth-first search order:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">edges</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">bfs_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">root</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nodes</span>
-<span class="go">[2, 1, 0]</span>
-</pre></div>
-</div>
-<p class="rubric">Notes</p>
-<p>The naming of this function is very similar to edge_bfs. The difference
-is that ‘edge_bfs’ yields edges even if they extend back to an already
-explored node while ‘bfs_edges’ yields the edges of the tree that results
-from a breadth-first-search (BFS) so no edges are reported if they extend
-to already explored nodes. That means ‘edge_bfs’ reports all edges while
-‘bfs_edges’ only reports those traversed by a node-based BFS. Yet another
-description is that ‘bfs_edges’ reports the edges traversed during BFS
-while ‘edge_bfs’ reports all edges in the order they are explored.</p>
-<p>Based on <a class="reference external" href="http://www.ics.uci.edu/~eppstein/PADS/BFS.py">http://www.ics.uci.edu/~eppstein/PADS/BFS.py</a>.
-by D. Eppstein, July 2004. The modifications
-to allow depth limits based on the Wikipedia article
-“<a class="reference external" href="https://en.wikipedia.org/wiki/Depth-limited_search">Depth-limited-search</a>”.</p>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bfs_tree</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">dfs_edges</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">edge_bfs</span></code></p>
-</div>
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.bfs_predecessors">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">bfs_predecessors</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">depth_limit</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.bfs_predecessors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns an iterator of predecessors in breadth-first-search from source.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
-<li><p><strong>source</strong> (<em>node</em>) – Specify starting node for breadth-first search</p></li>
-<li><p><strong>depth_limit</strong> (<em>int</em><em>, </em><em>optional</em><em>(</em><em>default=len</em><em>(</em><em>G</em><em>)</em><em>)</em>) – Specify the maximum search depth</p></li>
-<li><p><strong>sort_neighbors</strong> (<em>function</em>) – A function that takes the list of neighbors of given node as input, and
-returns an <em>iterator</em> over these neighbors but with custom ordering.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>pred</strong> – (node, predecessors) iterator where predecessors is the list of
-predecessors of the node.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>iterator</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">bfs_predecessors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
-<span class="go">{1: 0, 2: 1}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">bfs_predecessors</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
-<span class="go">{1: 0, 2: 0, 3: 1, 4: 1, 5: 2, 6: 2}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">add_path</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">add_path</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">bfs_predecessors</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="mi">3</span><span class="p">)))</span>
-<span class="go">[(0, 1), (2, 1), (3, 2), (4, 3), (7, 2), (8, 7)]</span>
-</pre></div>
-</div>
-<p class="rubric">Notes</p>
-<p>Based on <a class="reference external" href="http://www.ics.uci.edu/~eppstein/PADS/BFS.py">http://www.ics.uci.edu/~eppstein/PADS/BFS.py</a>
-by D. Eppstein, July 2004. The modifications
-to allow depth limits based on the Wikipedia article
-“<a class="reference external" href="https://en.wikipedia.org/wiki/Depth-limited_search">Depth-limited-search</a>”.</p>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bfs_tree</span></code>, <a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.bfs_edges" title="graphscope.experimental.nx.builtin.bfs_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bfs_edges</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">edge_bfs</span></code></p>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.bfs_successors">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">bfs_successors</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">depth_limit</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.bfs_successors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns an iterator of successors in breadth-first-search from source.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
-<li><p><strong>source</strong> (<em>node</em>) – Specify starting node for breadth-first search</p></li>
-<li><p><strong>depth_limit</strong> (<em>int</em><em>, </em><em>optional</em><em>(</em><em>default=len</em><em>(</em><em>G</em><em>)</em><em>)</em>) – Specify the maximum search depth</p></li>
-<li><p><strong>sort_neighbors</strong> (<em>function</em>) – A function that takes the list of neighbors of given node as input, and
-returns an <em>iterator</em> over these neighbors but with custom ordering.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>succ</strong> – (node, successors) iterator where successors is the list of
-successors of the node.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>iterator</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">bfs_successors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
-<span class="go">{0: [1], 1: [2]}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">H</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">bfs_successors</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
-<span class="go">{0: [1, 2], 1: [3, 4], 2: [5, 6]}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">add_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">nx</span><span class="o">.</span><span class="n">add_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">bfs_successors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">depth_limit</span><span class="o">=</span><span class="mi">3</span><span class="p">)))</span>
-<span class="go">{1: [0, 2], 2: [3, 7], 3: [4], 7: [8]}</span>
-</pre></div>
-</div>
-<p class="rubric">Notes</p>
-<p>Based on <a class="reference external" href="http://www.ics.uci.edu/~eppstein/PADS/BFS.py">http://www.ics.uci.edu/~eppstein/PADS/BFS.py</a>
-by D. Eppstein, July 2004.The modifications
-to allow depth limits based on the Wikipedia article
-“<a class="reference external" href="https://en.wikipedia.org/wiki/Depth-limited_search">Depth-limited-search</a>”.</p>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bfs_tree</span></code>, <a class="reference internal" href="graphs.html#graphscope.experimental.nx.builtin.bfs_edges" title="graphscope.experimental.nx.builtin.bfs_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bfs_edges</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">edge_bfs</span></code></p>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.k_core">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">k_core</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">core_number</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.k_core" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.nx.builtin.k_core">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">k_core</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">core_number</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.k_core" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the k-core of G.</p>
 <p>A k-core is a maximal subgraph that contains nodes of degree k or more.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>NetworkX graph</em>) – A graph or directed graph</p></li>
+<li><p><strong>G</strong> (<em>networkx graph</em>) – A graph or directed graph</p></li>
 <li><p><strong>k</strong> (<em>int</em><em>, </em><em>optional</em>) – The order of the core.  If not specified return the main core.</p></li>
-<li><p><strong>core_number</strong> (<em>dictionary</em><em>, </em><em>optional</em>) – Precomputed core numbers for the graph G.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>G</strong> – The k-core subgraph</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>NetworkX graph</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>NetworkXError</strong> – The k-core is not defined for graphs with self loops or parallel edges.</p>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>:class:`VertexDataContext`</strong> (<em>A context with each vertex assigned with a boolean:</em>)</p></li>
+<li><p><em>1 if the vertex satisfies k-core, otherwise 0.</em></p></li>
+</ul>
+</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>The main core is the core with the largest degree.</p>
-<p>Not implemented for graphs with parallel edges or self loops.</p>
-<p>For directed graphs the node degree is defined to be the
-in-degree + out-degree.</p>
-<p>Graph, node, and edge attributes are copied to the subgraph.</p>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">core_number</span></code></p>
-</div>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
-<dt class="label" id="id16"><span class="brackets">1</span></dt>
+<dt class="label" id="id5"><span class="brackets">1</span></dt>
 <dd><p>An O(m) Algorithm for Cores Decomposition of Networks
 Vladimir Batagelj and Matjaz Zaversnik,  2003.
 <a class="reference external" href="https://arxiv.org/abs/cs.DS/0310049">https://arxiv.org/abs/cs.DS/0310049</a></p>
@@ -948,8 +522,8 @@ Vladimir Batagelj and Matjaz Zaversnik,  2003.
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.clustering">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">clustering</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.clustering" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.nx.builtin.clustering">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">clustering</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.clustering" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the clustering coefficient for nodes.</p>
 <p>For unweighted graphs, the clustering of a node <span class="math notranslate nohighlight">\(u\)</span>
 is the fraction of possible triangles through that node that exist,</p>
@@ -957,9 +531,9 @@ is the fraction of possible triangles through that node that exist,</p>
 \[c_u = \frac{2 T(u)}{deg(u)(deg(u)-1)},\]</div>
 <p>where <span class="math notranslate nohighlight">\(T(u)\)</span> is the number of triangles through node <span class="math notranslate nohighlight">\(u\)</span> and
 <span class="math notranslate nohighlight">\(deg(u)\)</span> is the degree of <span class="math notranslate nohighlight">\(u\)</span>.</p>
-<p>For weighted graphs, there are several ways to define clustering <a href="#id30"><span class="problematic" id="id17">[1]_</span></a>.
+<p>For weighted graphs, there are several ways to define clustering <a href="#id16"><span class="problematic" id="id6">[1]_</span></a>.
 the one used here is defined
-as the geometric average of the subgraph edge weights <a href="#id31"><span class="problematic" id="id18">[2]_</span></a>,</p>
+as the geometric average of the subgraph edge weights <a href="#id17"><span class="problematic" id="id7">[2]_</span></a>,</p>
 <div class="math notranslate nohighlight">
 \[c_u = \frac{1}{deg(u)(deg(u)-1))}
       \sum_{vw} (\hat{w}_{uv} \hat{w}_{uw} \hat{w}_{vw})^{1/3}.\]</div>
@@ -968,7 +542,7 @@ in the network <span class="math notranslate nohighlight">\(\hat{w}_{uv} = w_{uv
 <p>The value of <span class="math notranslate nohighlight">\(c_u\)</span> is assigned to 0 if <span class="math notranslate nohighlight">\(deg(u) &lt; 2\)</span>.</p>
 <p>For directed graphs, the clustering is similarly defined as the fraction
 of all possible directed triangles or geometric average of the subgraph
-edge weights for unweighted and weighted directed graph respectively <a class="footnote-reference brackets" href="#id22" id="id19">3</a>.</p>
+edge weights for unweighted and weighted directed graph respectively <a class="footnote-reference brackets" href="#id11" id="id8">3</a>.</p>
 <div class="math notranslate nohighlight">
 \[c_u = \frac{1}{deg^{tot}(u)(deg^{tot}(u)-1) - 2deg^{\leftrightarrow}(u)}
       T(u),\]</div>
@@ -978,44 +552,34 @@ edge weights for unweighted and weighted directed graph respectively <a class="f
 <span class="math notranslate nohighlight">\(u\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>graph</em>) – </p></li>
-<li><p><strong>nodes</strong> (<em>container of nodes</em><em>, </em><em>optional</em><em> (</em><em>default=all nodes in G</em><em>)</em>) – Compute clustering for nodes in this container.</p></li>
-<li><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The edge attribute that holds the numerical value used as a weight.
-If None, then each edge has weight 1.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – </p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>out</strong> – Clustering coefficient at specified nodes</p>
+<dd class="field-even"><p><strong>out</strong> – Clustering coefficient at nodes</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float, or dictionary</p>
+<dd class="field-odd"><p>dataframe</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">clustering</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-<span class="go">1.0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">clustering</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
-<span class="go">{0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;nx.clustering(G)</span>
 </pre></div>
 </div>
-<p class="rubric">Notes</p>
-<p>Self loops are ignored.</p>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
-<dt class="label" id="id20"><span class="brackets">1</span></dt>
+<dt class="label" id="id9"><span class="brackets">1</span></dt>
 <dd><p>Generalizations of the clustering coefficient to weighted
 complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
 K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
 <a class="reference external" href="http://jponnela.com/web_documents/a9.pdf">http://jponnela.com/web_documents/a9.pdf</a></p>
 </dd>
-<dt class="label" id="id21"><span class="brackets">2</span></dt>
+<dt class="label" id="id10"><span class="brackets">2</span></dt>
 <dd><p>Intensity and coherence of motifs in weighted complex
 networks by J. P. Onnela, J. Saramäki, J. Kertész, and K. Kaski,
 Physical Review E, 71(6), 065103 (2005).</p>
 </dd>
-<dt class="label" id="id22"><span class="brackets"><a class="fn-backref" href="#id19">3</a></span></dt>
+<dt class="label" id="id11"><span class="brackets"><a class="fn-backref" href="#id8">3</a></span></dt>
 <dd><p>Clustering in complex directed networks by G. Fagiolo,
 Physical Review E, 76(2), 026107 (2007).</p>
 </dd>
@@ -1023,71 +587,29 @@ Physical Review E, 76(2), 026107 (2007).</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.triangles">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">triangles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.triangles" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.nx.builtin.triangles">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">triangles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.triangles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the number of triangles.</p>
 <p>Finds the number of triangles that include a node as one vertex.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p></li>
-<li><p><strong>nodes</strong> (<em>container of nodes</em><em>, </em><em>optional</em><em> (</em><em>default= all nodes in G</em><em>)</em>) – Compute triangles for nodes in this container.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>out</strong> – Number of triangles keyed by node label.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dictionary</p>
+<dd class="field-odd"><p>dataframe</p>
 </dd>
 </dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-<span class="go">6</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
-<span class="go">{0: 6, 1: 6, 2: 6, 3: 6, 4: 6}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-<span class="go">[6, 6]</span>
-</pre></div>
-</div>
 <p class="rubric">Notes</p>
 <p>When computing triangles for the entire graph each triangle is counted
 three times, once at each node.  Self loops are ignored.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.transitivity">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">transitivity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.transitivity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute graph transitivity, the fraction of all possible triangles
-present in G.</p>
-<p>Possible triangles are identified by the number of “triads”
-(two edges with a shared vertex).</p>
-<p>The transitivity is</p>
-<div class="math notranslate nohighlight">
-\[T = 3\frac{\#triangles}{\#triads}.\]</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – </p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>out</strong> – Transitivity</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">transitivity</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
-<span class="go">1.0</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt id="graphscope.experimental.nx.builtin.average_clustering">
-<code class="sig-prename descclassname">graphscope.experimental.nx.builtin.</code><code class="sig-name descname">average_clustering</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">count_zeros</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.experimental.nx.builtin.average_clustering" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.nx.builtin.average_clustering">
+<code class="sig-prename descclassname">graphscope.nx.builtin.</code><code class="sig-name descname">average_clustering</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">G</span></em>, <em class="sig-param"><span class="n">nodes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">count_zeros</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.average_clustering" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the average clustering coefficient for the graph G.</p>
 <p>The clustering coefficient for the graph is the average,</p>
 <div class="math notranslate nohighlight">
@@ -1122,13 +644,13 @@ to use the clustering function to get a list and then take the average.</p>
 <p>Self loops are ignored.</p>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
-<dt class="label" id="id23"><span class="brackets">1</span></dt>
+<dt class="label" id="id12"><span class="brackets">1</span></dt>
 <dd><p>Generalizations of the clustering coefficient to weighted
 complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
 K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
 <a class="reference external" href="http://jponnela.com/web_documents/a9.pdf">http://jponnela.com/web_documents/a9.pdf</a></p>
 </dd>
-<dt class="label" id="id24"><span class="brackets">2</span></dt>
+<dt class="label" id="id13"><span class="brackets">2</span></dt>
 <dd><p>Marcus Kaiser,  Mean clustering coefficients: the role of isolated
 nodes and leafs on clustering measures for small-world networks.
 <a class="reference external" href="https://arxiv.org/abs/0802.2512">https://arxiv.org/abs/0802.2512</a></p>
@@ -1149,7 +671,7 @@ nodes and leafs on clustering measures for small-world networks.
         <a href="functions.html" class="btn btn-neutral float-right" title="Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="generated/graphscope.experimental.nx.DiGraph.reverse.html" class="btn btn-neutral" title="graphscope.experimental.nx.DiGraph.reverse" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="graphs.html" class="btn btn-neutral" title="Graph types" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -1223,6 +745,16 @@ nodes and leafs on clustering measures for small-world networks.
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.0/index.html">v0.4.0</a></dd>
               
             
 

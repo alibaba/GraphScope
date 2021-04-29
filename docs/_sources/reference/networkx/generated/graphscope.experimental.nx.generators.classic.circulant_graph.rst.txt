@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.generators.classic.circulant\_graph
-==============================================================
-
-.. currentmodule:: graphscope.experimental.nx.generators.classic
-
-.. autofunction:: circulant_graph

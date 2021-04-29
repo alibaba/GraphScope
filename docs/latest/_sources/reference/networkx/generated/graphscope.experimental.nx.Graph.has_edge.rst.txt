@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.Graph.has\_edge
-==========================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: Graph.has_edge

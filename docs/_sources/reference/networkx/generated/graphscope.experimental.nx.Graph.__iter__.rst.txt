@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.Graph.\_\_iter\_\_
-=============================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: Graph.__iter__

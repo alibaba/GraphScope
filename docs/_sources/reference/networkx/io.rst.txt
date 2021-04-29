@@ -1,12 +1,12 @@
 .. _io:
 
-Reading and writing graphs
+Reading graphs
 --------------------------
 
 Edge List
 ^^^^^^^^^
-.. autofunction:: graphscope.experimental.nx.read_edgelist
+.. autofunction:: graphscope.nx.read_edgelist
 
 Adjacency List
 ^^^^^^^^^^^^^^
-.. autofunction:: graphscope.experimental.nx.read_adjlist
+.. autofunction:: graphscope.nx.read_adjlist

@@ -724,6 +724,28 @@
     <span class="k">return</span> <span class="n">op</span>
 
 
+<span class="k">def</span> <span class="nf">clear_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create clear graph operation for nx graph.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        graph (:class:`nx.Graph`): A nx graph.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An op to modify edges on the graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_argument</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">CLEAR_GRAPH</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
 <span class="k">def</span> <span class="nf">clear_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create clear edges operation for nx graph.</span>
 
@@ -1079,6 +1101,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
               
             
 

@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.DiGraph.to\_directed
-===============================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: DiGraph.to_directed
