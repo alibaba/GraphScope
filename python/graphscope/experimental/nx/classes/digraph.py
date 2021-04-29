@@ -194,26 +194,6 @@ class DiGraph(Graph):
 
     @patch_docstring(Graph.__init__)
     def __init__(self, incoming_graph_data=None, **attr):
-        sess = get_default_session()
-        if sess is None:
-            raise ValueError(
-                "Cannot find a default session. "
-                "Please register a session using graphscope.session(...).as_default()"
-            )
-        self._session_id = sess.session_id
-
-        self._key = None
-        self._op = None
-        self._graph_type = self._graph_type
-        self._schema = GraphSchema()
-        self._schema.init_nx_schema()
-        create_empty_in_engine = attr.pop(
-            "create_empty_in_engine", True
-        )  # a hidden parameter
-        if not self.is_gs_graph(incoming_graph_data) and create_empty_in_engine:
-            graph_def = empty_graph_in_engine(self, self.is_directed())
-            self._key = graph_def.key
-
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
         self.adjlist_dict_factory = self.adjlist_dict_factory
@@ -223,14 +203,40 @@ class DiGraph(Graph):
         self._adj = self.adjlist_dict_factory(self)
         self._pred = self.adjlist_dict_factory(self, types_pb2.PREDS_BY_NODE)
         self._succ = self._adj
+
+        self._key = None
+        self._op = None
+        self._graph_type = self._graph_type
+        self._schema = GraphSchema()
+        self._schema.init_nx_schema()
+
+        if self._is_gs_graph(incoming_graph_data):
+            self._session_id = incoming_graph_data.session_id
+        else:
+            sess = get_default_session()
+            if sess is None:
+                raise ValueError(
+                    "Cannot find a default session. "
+                    "Please register a session using graphscope.session(...).as_default()"
+                )
+            self._session_id = sess.session_id
+
+        create_empty_in_engine = attr.pop(
+            "create_empty_in_engine", True
+        )  # a hidden parameter
+        if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
+            graph_def = empty_graph_in_engine(self, self.is_directed())
+            self._key = graph_def.key
+
         # attempt to load graph with data
         if incoming_graph_data is not None:
-            if self.is_gs_graph(incoming_graph_data):
+            if self._is_gs_graph(incoming_graph_data):
                 graph_def = from_gs_graph(incoming_graph_data, self)
                 self._key = graph_def.key
                 self._schema.init_nx_schema(incoming_graph_data.schema)
             else:
                 to_nx_graph(incoming_graph_data, create_using=self)
+
         # load graph attributes (must be after to_nx_graph)
         self.graph.update(attr)
         self._saved_signature = self.signature
