@@ -15,7 +15,7 @@ import java.util.Map;
 public class ClientTest {
 
     String host = "localhost";
-    int port = 54493;
+    int port = 52944;
 
     @Test
     void testLoadSchema() throws URISyntaxException, IOException {
@@ -43,6 +43,13 @@ public class ClientTest {
         properties.put("firstname", "bob");
         properties.put("id", "88888");
         client.addVertex("person", properties);
+
+        for (int i = 0; i < 100; i++) {
+            properties = new HashMap<>();
+            properties.put("firstname", "test" + i);
+            properties.put("id", "" + i);
+            client.addVertex("person", properties);
+        }
 
         client.addEdge("person_knows_person",
                 "person",

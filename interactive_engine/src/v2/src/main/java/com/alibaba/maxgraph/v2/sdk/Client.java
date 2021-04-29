@@ -107,6 +107,12 @@ public class Client implements Closeable {
         return GraphDef.parseProto(response.getGraphDef());
     }
 
+
+    public GraphSchema prepareDataLoad(List<DataLoadTarget> labels) {
+
+        return null;
+    }
+
     public String getMetrics(String roleNames) {
         GetMetricsResponse response =
                 this.stub.getMetrics(GetMetricsRequest.newBuilder().setRoleNames(roleNames).build());

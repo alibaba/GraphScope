@@ -14,6 +14,7 @@ service Client {
   rpc getMetrics(GetMetricsRequest) returns (GetMetricsResponse);
   rpc loadJsonSchema(LoadJsonSchemaRequest) returns(LoadJsonSchemaResponse);
   rpc dropSchema(DropSchemaRequest) returns(DropSchemaResponse);
+  rpc prepareDataLoad(PrepareDataLoadRequest) returns(PrepareDataLoadResponse);
 }
 
 message VertexDataPb {
@@ -92,5 +93,13 @@ message DropSchemaRequest {
 }
 
 message DropSchemaResponse {
+  GraphDefPb graphDef = 1;
+}
+
+message PrepareDataLoadRequest {
+  repeated DataLoadTargetPb dataLoadTargets = 1;
+}
+
+message PrepareDataLoadResponse {
   GraphDefPb graphDef = 1;
 }

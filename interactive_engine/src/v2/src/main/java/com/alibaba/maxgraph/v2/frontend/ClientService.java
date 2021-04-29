@@ -19,6 +19,7 @@ import com.alibaba.maxgraph.v2.common.schema.*;
 import com.alibaba.maxgraph.v2.common.util.PkHashUtils;
 import com.alibaba.maxgraph.v2.common.util.UuidUtils;
 import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
+import com.alibaba.maxgraph.v2.sdk.DataLoadTarget;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,23 @@ public class ClientService extends ClientGrpc.ClientImplBase {
         this.storeIngestor = storeIngestor;
         this.metaService = metaService;
         this.writer = writer;
+    }
+
+    @Override
+    public void prepareDataLoad(PrepareDataLoadRequest request, StreamObserver<PrepareDataLoadResponse> responseObserver) {
+        for (DataLoadTargetPb dataLoadTargetPb : request.getDataLoadTargetsList()) {
+            DataLoadTarget dataLoadTarget = DataLoadTarget.parseProto(dataLoadTargetPb);
+            ((MaxGraphWriterImpl)this.writer).prepareDataLoad(dataLoadTarget);
+        }
+        try {
+            this.writer.commit().get(COMMIT_TIMEOUT_SEC, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            logger.error("commit prepare data load failed", e);
+            throw new RuntimeException(e);
+        }
+        GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
+        responseObserver.onNext(PrepareDataLoadResponse.newBuilder().setGraphDef(graphDef.toProto()).build());
+        responseObserver.onCompleted();
     }
 
     @Override

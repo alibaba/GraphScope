@@ -18,7 +18,9 @@ public enum OperationType {
 
     DROP_VERTEX_TYPE(10),
     DROP_EDGE_TYPE(11),
-    REMOVE_EDGE_KIND(12);
+    REMOVE_EDGE_KIND(12),
+
+    PREPARE_DATA_LOAD(13);
 
     private final byte b;
 

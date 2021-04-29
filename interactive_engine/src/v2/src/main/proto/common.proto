@@ -36,6 +36,8 @@ enum OpTypePb {
     DROP_VERTEX_TYPE = 10;
     DROP_EDGE_TYPE = 11;
     REMOVE_EDGE_KIND = 12;
+
+    PREPARE_DATA_LOAD = 13;
 }
 
 message MarkerOperationPb {
@@ -138,6 +140,17 @@ message CreateVertexTypePb {
 
 message AddEdgeKindPb {
     EdgeKindPb edgeKind = 1;
+    int64 tableIdx = 2;
+}
+
+message DataLoadTargetPb {
+    string label = 1;
+    string srcLabel = 2;
+    string dstLabel = 3;
+}
+
+message PrepareDataLoadPb {
+    DataLoadTargetPb target = 1;
     int64 tableIdx = 2;
 }
 

@@ -29,15 +29,10 @@ import com.alibaba.maxgraph.v2.common.schema.PropertyValue;
 import com.alibaba.maxgraph.v2.common.schema.TypeDef;
 import com.alibaba.maxgraph.v2.common.schema.TypeEnum;
 import com.alibaba.maxgraph.v2.common.schema.ddl.DdlExecutors;
-import com.alibaba.maxgraph.v2.common.schema.request.AddEdgeKindRequest;
-import com.alibaba.maxgraph.v2.common.schema.request.CreateEdgeTypeRequest;
-import com.alibaba.maxgraph.v2.common.schema.request.CreateVertexTypeRequest;
-import com.alibaba.maxgraph.v2.common.schema.request.DdlRequestBatch;
-import com.alibaba.maxgraph.v2.common.schema.request.DropEdgeTypeRequest;
-import com.alibaba.maxgraph.v2.common.schema.request.DropVertexTypeRequest;
-import com.alibaba.maxgraph.v2.common.schema.request.RemoveEdgeKindRequest;
+import com.alibaba.maxgraph.v2.common.schema.request.*;
 import com.alibaba.maxgraph.v2.common.util.PkHashUtils;
 import com.alibaba.maxgraph.v2.common.util.UuidUtils;
+import com.alibaba.maxgraph.v2.sdk.DataLoadTarget;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
@@ -134,6 +129,27 @@ public class MaxGraphWriterImpl implements MaxGraphWriter {
         if (this.autoCommit) {
             this.commit();
         }
+    }
+
+    public Future<Void> prepareDataLoad(DataLoadTarget dataLoadTarget) {
+        this.ensureState(BatchType.Ddl);
+        PrepareDataLoadRequest ddlRequest = new PrepareDataLoadRequest(dataLoadTarget);
+        this.ddlBatchBuilder.addDdlRequest(ddlRequest);
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        this.pendingCallbacks.add(new CompletionCallback<Object>() {
+            @Override
+            public void onCompleted(Object res) {
+                future.complete(null);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                future.completeExceptionally(new GraphCreateSchemaException("prepareDataLoad callback error. " +
+                        "DataLoadTarget [" + dataLoadTarget + "]", t));
+            }
+        });
+        maybeCommit();
+        return future;
     }
 
     @Override
