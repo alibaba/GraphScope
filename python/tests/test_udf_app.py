@@ -954,7 +954,7 @@ def test_create_cython_app(
 
 
 @pytest.mark.skipif(
-    os.environ.get("EXPERIMENTAL_ON") != "ON", reason="dynamic graph is in experimental"
+    os.environ.get("NETWORKX") != "ON", reason="dynamic graph is in NETWORKX ON"
 )
 def test_error_on_create_cython_app(
     graphscope_session, dynamic_property_graph, dynamic_project_graph, random_gar

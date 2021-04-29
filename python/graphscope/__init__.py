@@ -38,7 +38,7 @@ GraphScope provides a one-stop environment for performing diverse graph
 operations on a cluster of computers through a user-friendly Python interface.
 GraphScope makes multi-staged processing of large-scale graph data on compute
 clusters simple by combining several important pieces of Alibaba technology:
-including GRAPE, MaxGraph, and Graph-Learn (GL) for analytics, interactive, 
+including GRAPE, MaxGraph, and Graph-Learn (GL) for analytics, interactive,
 and graph neural networks (GNN) computation, respectively, and
 the vineyard store that offers efficient in-memory data transfers.
 

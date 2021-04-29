@@ -21,7 +21,7 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 #include "folly/dynamic.h"
 #endif
 #include "boost/foreach.hpp"
@@ -32,7 +32,7 @@ limitations under the License.
 
 #include "core/context/column.h"
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 namespace grape {
 inline grape::InArchive& operator<<(grape::InArchive& archive,
                                     const folly::dynamic& d) {
@@ -49,7 +49,7 @@ inline grape::InArchive& operator<<(grape::InArchive& archive,
 
 namespace gs {
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 template <typename T>
 struct is_dynamic {
   constexpr static bool value = std::is_same<T, folly::dynamic>::value;
@@ -143,7 +143,7 @@ typename std::enable_if<!is_dynamic<OID_T>::value, OID_T>::type string_to_oid(
   return boost::lexical_cast<OID_T>(s_oid);
 }
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 template <typename OID_T>
 typename std::enable_if<is_dynamic<OID_T>::value, OID_T>::type string_to_oid(
     const std::string& s_oid) {
@@ -825,7 +825,7 @@ class TransformUtils<
   const FRAG_T& frag_;
 };
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 /**
  * A transform utils for the non-labeled fragment but the type of oid is
  * dynamic, like DynamicFragment, DynamicProjectedFragment. This utility

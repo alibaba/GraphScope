@@ -16,7 +16,7 @@
 #ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_REPORTER_H_
 #define ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_REPORTER_H_
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 
 #include <map>
 #include <memory>
@@ -375,5 +375,5 @@ class DynamicGraphReporter : public grape::Communicator {
 };
 }  // namespace gs
 
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
 #endif  // ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_REPORTER_H_

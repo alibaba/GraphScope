@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 #include "folly/dynamic.h"
 #endif
 
@@ -54,7 +54,7 @@ inline InArchive& operator<<(InArchive& in_archive,
   return in_archive;
 }
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 inline InArchive& operator<<(
     InArchive& in_archive, const gs::trivial_tensor_t<folly::dynamic>& tensor) {
   size_t size = tensor.size();
@@ -471,7 +471,7 @@ class TensorContextWrapper : public ITensorContextWrapper {
   std::shared_ptr<context_t> ctx_;
 };
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 /**
  * @brief This is the specialized TensorContextWrapper for folly::dynamic type
  * of oid

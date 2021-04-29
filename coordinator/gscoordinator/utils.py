@@ -134,7 +134,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         workspace (str): working dir.
         library_name (str): name of library
         attr (`AttrValue`): All information needed to compile an app.
-        engine_config (dict): for options of experimental_on
+        engine_config (dict): for options of NETWORKX
 
     Returns:
         str: Path of the built library.
@@ -172,7 +172,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     cmake_commands = [
         "cmake",
         ".",
-        "-DEXPERIMENTAL_ON=" + engine_config["experimental"],
+        "-DNETWORKX=" + engine_config["networkx"],
     ]
     if app_type != "cpp_pie":
         if app_type == "cython_pregel":
@@ -252,7 +252,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         workspace (str): Working dir.
         library_name (str): name of library
         attr (`AttrValue`): All information needed to compile a graph library.
-        engine_config (dict): for options of experimental_on
+        engine_config (dict): for options of NETWORKX
 
     Raises:
         ValueError: When graph_type is not supported.
@@ -275,7 +275,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     cmake_commands = [
         "cmake",
         ".",
-        "-DEXPERIMENTAL_ON=" + engine_config["experimental"],
+        "-DNETWORKX=" + engine_config["networkx"],
     ]
     if graph_type == types_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]

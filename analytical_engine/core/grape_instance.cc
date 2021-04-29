@@ -53,7 +53,7 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
 
   switch (graph_type) {
   case rpc::DYNAMIC_PROPERTY: {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     using fragment_t = DynamicFragment;
     using vertex_map_t = typename fragment_t::vertex_map_t;
     BOOST_LEAF_AUTO(directed, params.Get<bool>(rpc::DIRECTED));
@@ -93,7 +93,7 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
     return graph_def;
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with experimental off");
+                    "GS is built with networkx off");
 #endif
   }
   case rpc::ARROW_PROPERTY: {
@@ -223,7 +223,7 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
 
 bl::result<std::string> GrapeInstance::reportGraph(
     const rpc::GSParams& params) {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
@@ -241,12 +241,12 @@ bl::result<std::string> GrapeInstance::reportGraph(
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GS is compiled without folly");
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
 }
 
 bl::result<void> GrapeInstance::modifyVertices(
     const rpc::GSParams& params, const std::vector<std::string>& vertices) {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
   BOOST_LEAF_AUTO(modify_type, params.Get<rpc::ModifyType>(rpc::MODIFY_TYPE));
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
@@ -271,7 +271,7 @@ bl::result<void> GrapeInstance::modifyVertices(
 
 bl::result<void> GrapeInstance::modifyEdges(
     const rpc::GSParams& params, const std::vector<std::string>& edges) {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
   BOOST_LEAF_AUTO(modify_type, params.Get<rpc::ModifyType>(rpc::MODIFY_TYPE));
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
@@ -290,7 +290,7 @@ bl::result<void> GrapeInstance::modifyEdges(
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GS is compiled without folly");
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
   return {};
 }
 
@@ -618,7 +618,7 @@ bl::result<rpc::GraphDef> GrapeInstance::copyGraph(
 
 bl::result<rpc::GraphDef> GrapeInstance::toDirected(
     const rpc::GSParams& params) {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
   BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   // BOOST_LEAF_AUTO(copy_type, params.Get<std::string>(rpc::COPY_TYPE));
 
@@ -633,12 +633,12 @@ bl::result<rpc::GraphDef> GrapeInstance::toDirected(
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GS is compiled without folly");
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
 }
 
 bl::result<rpc::GraphDef> GrapeInstance::toUnDirected(
     const rpc::GSParams& params) {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
   BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
 
   BOOST_LEAF_AUTO(src_wrapper,
@@ -652,10 +652,10 @@ bl::result<rpc::GraphDef> GrapeInstance::toUnDirected(
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GS is compiled without folly");
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
 }
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 bl::result<rpc::GraphDef> GrapeInstance::induceSubGraph(
     const rpc::GSParams& params,
     const std::unordered_set<typename DynamicFragment::oid_t>& induced_vertices,
@@ -699,10 +699,10 @@ bl::result<rpc::GraphDef> GrapeInstance::induceSubGraph(
   BOOST_LEAF_CHECK(object_manager_.PutObject(wrapper));
   return wrapper->graph_def();
 }
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
 
 bl::result<void> GrapeInstance::clearGraph(const rpc::GSParams& params) {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
@@ -723,12 +723,12 @@ bl::result<void> GrapeInstance::clearGraph(const rpc::GSParams& params) {
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GS is compiled without folly");
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
   return {};
 }
 
 bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
@@ -746,13 +746,13 @@ bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GS is compiled without folly");
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
   return {};
 }
 
 bl::result<rpc::GraphDef> GrapeInstance::createGraphView(
     const rpc::GSParams& params) {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
   std::string view_id = "graph_view_" + generateId();
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(view_type, params.Get<std::string>(rpc::VIEW_TYPE));
@@ -770,7 +770,7 @@ bl::result<rpc::GraphDef> GrapeInstance::createGraphView(
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GS is compiled without folly");
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
 }
 
 bl::result<rpc::GraphDef> GrapeInstance::addLabelsToGraph(
@@ -911,7 +911,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     break;
   }
   case rpc::MODIFY_VERTICES: {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     std::vector<std::string> vertices_to_modify;
     int size = cmd.params.at(rpc::NODES).list().s_size();
     vertices_to_modify.reserve(size);
@@ -921,12 +921,12 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     BOOST_LEAF_CHECK(modifyVertices(params, vertices_to_modify));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with experimental off");
+                    "GS is built with networkx off");
 #endif
     break;
   }
   case rpc::MODIFY_EDGES: {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     std::vector<std::string> edges_to_modify;
     int size = cmd.params.at(rpc::EDGES).list().s_size();
     edges_to_modify.reserve(size);
@@ -936,17 +936,17 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     BOOST_LEAF_CHECK(modifyEdges(params, edges_to_modify));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with experimental off");
+                    "GS is built with networkx off");
 #endif
     break;
   }
   case rpc::TRANSFORM_GRAPH: {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     BOOST_LEAF_AUTO(graph_def, convertGraph(params));
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with experimental off");
+                    "GS is built with networkx off");
 #endif
     break;
   }
@@ -956,27 +956,27 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     break;
   }
   case rpc::TO_DIRECTED: {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     BOOST_LEAF_AUTO(graph_def, toDirected(params));
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with experimental off");
+                    "GS is built with networkx off");
 #endif
     break;
   }
   case rpc::TO_UNDIRECTED: {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     BOOST_LEAF_AUTO(graph_def, toUnDirected(params));
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with experimental off");
+                    "GS is built with networkx off");
 #endif
     break;
   }
   case rpc::INDUCE_SUBGRAPH: {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     std::unordered_set<DynamicFragment::oid_t> induced_vertices;
     std::vector<std::pair<DynamicFragment::oid_t, DynamicFragment::oid_t>>
         induced_edges;
@@ -1011,35 +1011,35 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with experimental off");
+                    "GS is built with networkx off");
 #endif
     break;
   }
   case rpc::CLEAR_GRAPH: {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     BOOST_LEAF_CHECK(clearGraph(params));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with experimental off");
+                    "GS is built with networkx off");
 #endif
     break;
   }
   case rpc::CLEAR_EDGES: {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     BOOST_LEAF_CHECK(clearEdges(params));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with experimental off");
+                    "GS is built with networkx off");
 #endif
     break;
   }
   case rpc::VIEW_GRAPH: {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     BOOST_LEAF_AUTO(graph_def, createGraphView(params));
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "GS is built with experimental off");
+                    "GS is built with networkx off");
 #endif
     break;
   }
@@ -1089,10 +1089,10 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::GET_ENGINE_CONFIG: {
     EngineConfig conf;
-#ifdef EXPERIMENTAL_ON
-    conf.experimental = "ON";
+#ifdef NETWORKX
+    conf.networkx = "ON";
 #else
-    conf.experimental = "OFF";
+    conf.networkx = "OFF";
 #endif
     conf.vineyard_socket = client_->IPCSocket();
     conf.vineyard_rpc_endpoint = client_->RPCEndpoint();

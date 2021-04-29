@@ -210,8 +210,8 @@ class AppAssets(object):
             graph,
             (
                 graphscope.framework.graph.Graph,
-                graphscope.experimental.nx.classes.graph.Graph,
-                graphscope.experimental.nx.classes.digraph.DiGraph,
+                graphscope.nx.classes.graph.Graph,
+                graphscope.nx.classes.digraph.DiGraph,
             ),
         ):
             raise InvalidArgumentError("Wrong type of graph.")

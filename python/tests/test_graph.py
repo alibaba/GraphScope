@@ -159,7 +159,7 @@ def test_error_on_project_to_simple_wrong_graph_type(arrow_property_graph):
 
 
 @pytest.mark.skipif(
-    os.environ.get("EXPERIMENTAL_ON") != "ON", reason="dynamic graph is in experimental"
+    os.environ.get("NETWORKX") != "ON", reason="dynamic graph is in NETWORKX ON"
 )
 def test_error_on_project_to_simple_wrong_graph_type_2(dynamic_property_graph):
     sdg = dynamic_property_graph.project_to_simple()

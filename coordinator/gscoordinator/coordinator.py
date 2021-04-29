@@ -699,7 +699,7 @@ class CoordinatorServiceServicer(
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
         if self._analytical_engine_config is None:
-            # fetch experimental_on compile option from engine
+            # fetch NETWORKX compile option from engine
             self._analytical_engine_config = self._get_engine_config()
         space = self._builtin_workspace
         if types_pb2.GAR in op.attr:
