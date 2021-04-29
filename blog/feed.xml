@@ -1,51 +1,478 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
-<channel>
-<title/>
-<description>graphscope blog</description>
-<link>https://graphscope.io/blog/</link>
-<atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-<pubDate>Thu, 15 Apr 2021 03:48:46 +0000</pubDate>
-<lastBuildDate>Thu, 15 Apr 2021 03:48:46 +0000</lastBuildDate>
-<generator>Jekyll v4.2.0</generator>
-<item>
-<title>Release Notes: v0.3.0</title>
-<description><p><img src="/blog/assets/images/release_note_t.png" alt="release-note" /> GraphScope v0.3.0 is released as scheduled. This release includes new features and major updates for frontend APIs for graph manipulation, integration with other systems as well as code optimization for some operators. Another direction we are working on is to ease the deployment of GraphScope with/without Kubernetes.</p> <p>We highlight the following improvements included in this release:</p> <ol> <li> <p>Better integration with other systems</p> <ul> <li>GraphScope aims to support easy integrations with other big data processing systems. As a first step, this release supported that the results (in the format of dataframe) of GraphScope can be further processed by Mars, a distributed tensor-based computation engine.</li> </ul> </li> <li> <p>Performance and function enhancement</p> <ul> <li>Pre-compile a set of commonly used applications and graphs into the docker image to improve the response time of each operation in Python.</li> <li>Optimize the implementation of <code class="language-plaintext highlighter-rouge">session.gremlin(...)</code>and <code class="language-plaintext highlighter-rouge">session.close()</code>.</li> <li>Support Louvain algorithm as a built-in application in the graph analytics engine.</li> </ul> </li> <li> <p>Improved graph manipulation APIs</p> <ul> <li>Support for adding vertices and edges to an existing graph.</li> <li>Add a general project operator.</li> </ul> </li> <li> <p>Easier deployment with/without Kubernetes.</p> <ul> <li>GraphScope v0.3.0 provided a <a href="https://github.com/alibaba/GraphScope/blob/main/scripts/launch_cluster.py">script</a> to deploy GraphScope on a Kubernetes cluster of AWS/aliyun.</li> <li>Support deployment with <a href="https://artifacthub.io/packages/helm/graphscope/graphscope">HELM</a> and generalize <code class="language-plaintext highlighter-rouge">k8s_volumes</code> to support PVC mount.</li> <li>This release started to support the deployment and running of GraphScope locally without Kubernetes.</li> </ul> </li> </ol> <p>For more detailed improvements that have been made in this release, please refer to the complete <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.3.0">changelog</a>.</p> </description>
-<pubDate>Sun, 11 Apr 2021 03:33:20 +0000</pubDate>
-<link>https://graphscope.io/blog/releasenotes/2021/04/11/release-notes-0.3.0.html</link>
-<guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2021/04/11/release-notes-0.3.0.html</guid>
-<category>ReleaseNotes</category>
-</item>
-<item>
-<title>A Review of Programming Models for Parallel Graph Processing</title>
-<description><p><img src="/blog/assets/images/programing-models.jpg" alt="programing-models" /> To explore underlying insights hidden in graph data, many graph analytics algorithms, e.g., PageRank and single source shortest paths (the Dijkstra’s algorithm), have been designed to solve different problems.</p> <p>In a single machine environment, developers can easily implement sequential solutions to these algorithms as they have a global view of the graph and can freely iterate through all vertices and edges. Current graph data in real industrial scenarios usually consists of billions of vertices and trillions of edges. Such a graph has to be divided into multiple partitions, and stored and processed in a distributed/parallel way. To allow developers to succinctly express graph algorithms under such environment, many programming models for parallel graph processing have been proposed. In this post, we would like to introduce some commonly used programming models, and further discuss their pros and cons.</p> <h4 id="think-like-a-vertex">Think like a vertex</h4> <p>The vertex-centric model proposed in Pregel[1] follows the philosophy of “think like a vertex”, where each vertex contains information about itself as well as all its adjacent edges, and the computation is expressed at the level of a single vertex. More specifically, the entire computation process is divided into multiple iterations (called <em>supersteps</em>), and in each superstep, all vertices execute the same user-defined function (called <em>vertex program</em>) that expresses the logic of a given algorithm. The vertex program defines how each vertex processes incoming messages (sent in the previous superstep), and sends messages to other vertices (for the next superstep). The iterations terminate until no messages are sent from any vertex, indicating a halt.</p> <p><img src="/blog/assets/images/vertex-messaging.png" alt="vertex-model" /></p> <p>With the vertex-centric model, the vertex program of single source shortest paths (SSSP) is expressed as follows.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">VertexProgramForSSSP</span><span class="p">():</span> <span class="c1"># receive and merge incoming messages </span> <span class="n">incoming_msgs</span> <span class="o">=</span> <span class="n">ReceiveMessages</span><span class="p">()</span> <span class="n">merged_msg</span> <span class="o">=</span> <span class="n">Reduce</span><span class="p">(</span><span class="n">incoming_msgs</span><span class="p">,</span> <span class="n">MIN</span><span class="p">)</span> <span class="c1"># update vertex property </span> <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="n">merged_msg</span><span class="p">:</span> <span class="n">dist</span> <span class="o">=</span> <span class="n">merged_msg</span> <span class="c1"># send messages to neighbors </span> <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">neighbors</span><span class="p">:</span> <span class="k">if</span> <span class="n">dist</span> <span class="o">+</span> <span class="n">edge_weight</span> <span class="o">&lt;</span> <span class="n">neighbor_dist</span><span class="p">:</span> <span class="n">SendMessage</span><span class="p">(</span><span class="n">neighbor</span><span class="p">,</span> <span class="n">dist</span> <span class="o">+</span> <span class="n">edge_weight</span><span class="p">)</span> </code></pre></div></div> <p>However, the performance of Pregel drops dramatically when facing natural graphs which follow a power-law distribution. To solve this problem, PowerGraph[2] proposed the GAS (Gather-Apply-Scatter) programming model for the vertex-cut graph partitioning strategy. The <em>Gather</em> function runs locally on each partition and then one accumulator is sent from each mirror to the master. The master runs the <em>Apply</em> function and then sends the updated vertex data to all mirrors. Finally, the <em>Scatter</em> phase is run in parallel on mirrors to update the data on adjacent edges.</p> <p><img src="/blog/assets/images/gas.png" alt="gas-model" /></p> <p>Following the GAS abstraction, the SSSP can be implemented as follows.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">GASForSSSP</span><span class="p">():</span> <span class="c1"># gather_nbrs: ALL_NBRS </span> <span class="k">def</span> <span class="nf">gather</span><span class="p">(</span><span class="n">D_u</span><span class="p">,</span> <span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">),</span> <span class="n">D_v</span><span class="p">):</span> <span class="k">return</span> <span class="n">D_v</span> <span class="o">+</span> <span class="n">D</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">u</span><span class="p">)</span> <span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span> <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="n">D_u</span><span class="p">,</span> <span class="n">new_dist</span><span class="p">):</span> <span class="n">D_u</span> <span class="o">=</span> <span class="n">new_dist</span> <span class="c1"># scatter_nbrs: ALL_NBRS </span> <span class="k">def</span> <span class="nf">scatter</span><span class="p">(</span><span class="n">D_u</span><span class="p">,</span><span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">),</span><span class="n">D_v</span><span class="p">):</span> <span class="c1"># If changed, activate neighbor </span> <span class="k">if</span><span class="p">(</span><span class="n">changed</span><span class="p">(</span><span class="n">D_u</span><span class="p">)):</span> <span class="n">Activate</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">if</span><span class="p">(</span><span class="n">increased</span><span class="p">(</span><span class="n">D_u</span><span class="p">)):</span> <span class="k">return</span> <span class="n">NULL</span> <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">D_u</span> <span class="o">+</span> <span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> </code></pre></div></div> <h5 id="pros">Pros:</h5> <ul> <li>Powerful expressiveness to express various graph algorithms.</li> <li>The vertex program is easy to run parallelly.</li> </ul> <h5 id="cons">Cons:</h5> <ul> <li>Existing sequential (single-machine) graph algorithms have to be modified to comply with the “think like a vertex” principle.</li> <li>Each vertex is very short-sighted: it only has information about its 1-hop neighbors, and thus information is propagated through the graph slowly, one hop at a time. As a result, it may take many computation iterations to propagate a piece of information from a source to a destination.</li> </ul> <h4 id="think-like-a-graph">Think like a graph</h4> <p>To tackle the problem of short-sighted vertices in the vertex-centric model, the subgraph-centric (a.k.a. block-centric, partition-centric) programming model[3, 4] is proposed. Different from the vertex-centric model, the subgraph-centric model focuses on the entire subgraph, and is labeled as “think like a graph”. For the vertex-centric model, it uses the information of 1-hop neighbors to update the value of each vertex in one superstep. Instead, the subgraph-centric model leverages information within the whole subgraph. In addition, each vertex can send messages to any vertex in the graph, instead of 1-hop neighbors. In this way, the communication overhead and the number of supersteps are greatly reduced.</p> <p>The SSSP is expressed as follows in the subgraph-centric model.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">ComputeSSSP</span><span class="p">(</span><span class="n">subgraph</span><span class="p">,</span> <span class="n">messages</span><span class="p">):</span> <span class="c1"># vertices with improved distances </span> <span class="n">openset</span> <span class="o">=</span> <span class="n">NULL</span> <span class="k">if</span> <span class="n">superstep</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># initialize distances </span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">subgraph</span><span class="p">.</span><span class="n">internal_vertices</span><span class="p">:</span> <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">SOURCE</span><span class="p">:</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># set distance to source as 0 </span> <span class="n">openset</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="c1"># distance has improved </span> <span class="k">else</span><span class="p">:</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">MAX_INT</span> <span class="c1"># not source vertex </span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">:</span> <span class="c1"># process input messages </span> <span class="k">if</span> <span class="n">subgraph</span><span class="p">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">m</span><span class="p">.</span><span class="n">vertex</span><span class="p">].</span><span class="n">value</span> <span class="o">&gt;</span> <span class="n">m</span><span class="p">.</span><span class="n">value</span><span class="p">:</span> <span class="n">subgraph</span><span class="p">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">m</span><span class="p">.</span><span class="n">vertex</span><span class="p">].</span><span class="n">value</span> <span class="o">=</span> <span class="n">m</span><span class="p">.</span><span class="n">value</span> <span class="n">openset</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">vertex</span><span class="p">)</span> <span class="c1"># distance improved </span> <span class="n">boundarySet</span> <span class="o">=</span> <span class="n">dijkstra</span><span class="p">(</span><span class="n">openset</span><span class="p">)</span> <span class="c1"># Send new distances to boundary vertices </span> <span class="k">for</span> <span class="p">(</span><span class="n">boundarySG</span><span class="p">,</span> <span class="n">vertex</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">boundarySet</span><span class="p">:</span> <span class="n">SendToSubgraphVertex</span><span class="p">(</span><span class="n">boundarySG</span><span class="p">,</span> <span class="n">vertex</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="n">VoteToHalt</span><span class="p">()</span> <span class="k">def</span> <span class="nf">dijkstra</span><span class="p">(</span><span class="n">openset</span><span class="p">):</span> <span class="n">boundaryOpenset</span> <span class="o">=</span> <span class="n">NULL</span> <span class="k">while</span> <span class="n">openset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NULL</span><span class="p">:</span> <span class="n">v</span> <span class="o">=</span> <span class="n">GetShortestVertex</span><span class="p">(</span><span class="n">openset</span><span class="p">)</span> <span class="k">for</span> <span class="n">v2</span> <span class="ow">in</span> <span class="n">v</span><span class="p">.</span><span class="n">neighbors</span><span class="p">:</span> <span class="c1"># update neighbors, notify if boundary. </span> <span class="k">if</span> <span class="n">v2</span><span class="p">.</span><span class="n">isBoundary</span><span class="p">():</span> <span class="n">boundaryOpenset</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">v2</span><span class="p">.</span><span class="n">subgraph</span><span class="p">,</span><span class="n">v2</span><span class="p">,</span><span class="n">v</span><span class="p">.</span><span class="n">value</span><span class="o">+</span><span class="n">dis</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v2</span><span class="p">))</span> <span class="k">else</span> <span class="k">if</span> <span class="n">v2</span><span class="p">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span> <span class="o">+</span> <span class="n">dis</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v2</span><span class="p">):</span> <span class="n">v2</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">v</span><span class="p">.</span><span class="n">value</span> <span class="o">+</span> <span class="n">dis</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v2</span><span class="p">)</span> <span class="n">openset</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span> <span class="c1"># distance has improved </span> <span class="n">openset</span><span class="p">.</span><span class="n">remove</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="c1"># done with this local vertex </span> <span class="k">return</span> <span class="n">boundaryOpenset</span> </code></pre></div></div> <h5 id="pros-1">Pros:</h5> <ul> <li>The same expressiveness with the vertex-centric model.</li> <li>Offer lower communication overhead, lower scheduling overhead, and lower memory overhead compared with vertex-centric approaches.</li> </ul> <h5 id="cons-1">Cons:</h5> <ul> <li>Still need to recast existing sequential graph algorithms into the new programming model.</li> <li>Developers need to know a lot of concepts (e.g., internal and boundary vertices), causing the implementation challenge.</li> </ul> <h4 id="think-sequential-run-parallel">Think sequential, run parallel</h4> <p>To make parallel graph computations accessible to average users while achieving high performance at the same time, the PIE (PEval-IncEval-Assemble) programming model[5] is proposed. In this model, users only need to provide three functions,</p> <ul> <li>(1) PEval, a sequential (single-machine) function for given a query, computes the answer on a local partition;</li> <li>(2) IncEval, a sequential incremental function, computes changes to the old output by treating incoming messages as updates; and</li> <li>(3) Assemble, which collects partial answers, and combines them into a complete answer.</li> </ul> <p>The PIE model works on a graph G and each worker maintains a partition of G. Given a query, each worker first executes PEval against its local partition, to compute partial answers in parallel. Then each worker may exchange partial results with other workers via synchronous message passing. Upon receiving messages, each worker incrementally computes IncEval. The incremental step iterates until no further messages can be generated. At this point, Assemble pulls partial answers and assembles the final result. In this way, the PIE model parallelizes existing sequential graph algorithms, without revising their logic and workflow.</p> <p><img src="/blog/assets/images/gs-workflow.png" alt="vertex-model" /></p> <p>The following pseudo-code shows how SSSP is expressed in the PIE model, where the Dijkstra’s algorithm is directly used for the computation of parallel SSSP.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span> <span class="n">heap</span> <span class="o">=</span> <span class="n">VertexHeap</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">updates</span><span class="p">:</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">updates</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="n">heap</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="n">updates</span><span class="p">.</span><span class="n">clear</span><span class="p">()</span> <span class="k">while</span> <span class="ow">not</span> <span class="n">heap</span><span class="p">.</span><span class="n">empty</span><span class="p">():</span> <span class="n">u</span> <span class="o">=</span> <span class="n">heap</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">vid</span> <span class="n">distu</span> <span class="o">=</span> <span class="n">heap</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">val</span> <span class="n">heap</span><span class="p">.</span><span class="n">pop</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">g</span><span class="p">.</span><span class="n">get_outgoing_edges</span><span class="p">(</span><span class="n">u</span><span class="p">):</span> <span class="n">v</span> <span class="o">=</span> <span class="n">e</span><span class="p">.</span><span class="n">get_neighbor</span><span class="p">()</span> <span class="n">distv</span> <span class="o">=</span> <span class="n">distu</span> <span class="o">+</span> <span class="n">e</span><span class="p">.</span><span class="n">data</span><span class="p">()</span> <span class="k">if</span> <span class="n">vals</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">distv</span><span class="p">:</span> <span class="n">vals</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">distv</span> <span class="k">if</span> <span class="n">g</span><span class="p">.</span><span class="n">is_inner_vertex</span><span class="p">(</span><span class="n">v</span><span class="p">):</span> <span class="n">heap</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">distv</span><span class="p">)</span> <span class="n">updates</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">distv</span> <span class="k">return</span> <span class="n">updates</span> <span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vertices</span><span class="p">:</span> <span class="n">updates</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">MAX_INT</span> <span class="n">updates</span><span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="n">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span> <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span> <span class="n">dijkstra</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">updates</span><span class="p">)</span> </code></pre></div></div> <p>Currently, the PIE model has been developed and evaluated in the graph analytical engine of GraphScope. On the LDBC Graph Analytics benchmark, GraphScope outperforms other state-of-the-art graph processing systems (see <a href="https://github.com/alibaba/libgrape-lite/blob/master/Performance.md">link</a>). Welcome to try and develop your own graph algorithms with GraphScope.</p> <h4 id="references">References</h4> <ul> <li>Some images in this article are cited from [2] and https://twitter.com/katestarbird/status/1358088750765539329/photo/1.</li> <li>[1] Malewicz, Grzegorz, et al. “Pregel: a system for large-scale graph processing.” Proceedings of the 2010 ACM SIGMOD International Conference on Management of data. 2010.</li> <li>[2] Gonzalez, Joseph E., et al. “Powergraph: Distributed graph-parallel computation on natural graphs.” 10th USENIX Symposium on Operating Systems Design and Implementation (OSDI 12). 2012.</li> <li>[3] Tian, Yuanyuan, et al. “From” think like a vertex” to” think like a graph”.” Proceedings of the VLDB Endowment 7.3 (2013): 193-204.</li> <li>[4] Yan, Da, et al. “Blogel: A block-centric framework for distributed computation on real-world graphs.” Proceedings of the VLDB Endowment 7.14 (2014): 1981-1992.</li> <li>[5] Fan, Wenfei, et al. “Parallelizing sequential graph computations.” ACM Transactions on Database Systems (TODS) 43.4 (2018): 1-39.</li> </ul> </description>
-<pubDate>Thu, 25 Mar 2021 10:21:42 +0000</pubDate>
-<link>https://graphscope.io/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing.html</link>
-<guid isPermaLink="true">https://graphscope.io/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing.html</guid>
-<category>Tech</category>
-</item>
-<item>
-<title>Introducing GraphScope Playground</title>
-<description><p><img src="/blog/assets/images/try-record.gif" alt="try-record.gif" /> Today we released <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.2.0">GraphScope 0.2.0</a>. With this release, we are happy to introduce <a href="http://try.graphscope.app/">GraphScope Playground</a>, a hosted JupyterLab with GraphScope ready out-of-the-box. Now you can get started with GraphScope straight away in your browser without any hassle for setting it up.</p> <h4 id="signing-in">Signing-in</h4> <p>The GraphScope Playground is built on top of <a href="https://jupyter.org/hub">JupyterHub</a>. At the moment, it only supports Github OAuth for signing-in. Please make sure you have a <a href="https://github.com/join">Github account</a> before proceed.</p> <p><img src="/blog/assets/images/try-login.gif" alt="try-login.gif" /></p> <p>Open <a href="https://try.graphscope.app/">GraphScope PlayGround</a> in your browser. You will be shown a landing page of GraphScope Playground. It only take a few clicks to get authenticated with your Github account. A JupyterLab session will be created for you in a few seconds.</p> <h4 id="in-the-playground">In the Playground</h4> <p>You will be redirected to the JupyterLab interface after signing-in. It is a modern integrated development environment for Notebooks, where documents and activities integrate with each other, enabling new workflows for interactive computing in Python.</p> <p><img src="/blog/assets/images/raw-playground-snapshot.png" alt="gs-snapshot" /></p> <p>On the left, there is a sidebar, where you can navigate your workspace with the file browser, as well as check the list of running kernels and terminals, the command palette, and the list of tabs in the main work area etc. One the right, it is the main work area, where tabs and panes can be created for the files and notebooks you edit. You can also open a terminal if you like.</p> <p>A JupyterLab session lives inside a docker container is specifically created for you after signing-in. The session will live for up to 120 mins (or 15 mins without user interactions). Based on the the official <code class="language-plaintext highlighter-rouge">jupyterhub/singleuser:1.3</code> image, we added necessary packages, tutorials and sample datasets for running GraphScope to the Playground image. You are given 1 CPU core and 2GB memory for the JupyterLab container, and you are also given the access to a Kubernetes cluster with a limit of 16 CPU cores and 32GB memory for you to run GraphScope sessions. Following the convention of JupyterLab, the default working directory is <code class="language-plaintext highlighter-rouge">/home/jovyan/</code>, where you can find tutorials at the root, datasets under the <code class="language-plaintext highlighter-rouge">datasets</code> folder and a <code class="language-plaintext highlighter-rouge">workspace</code> folder.</p> <p>You can open an existing / create a new notebook, and start coding with GraphScope straight away. If you want to access the files you edited at a later time, you can place them under <code class="language-plaintext highlighter-rouge">workspace</code> folder. All the changes elsewhere will be reset after session ends. We place <strong>a copy of the sample datasets</strong> on K8s hosts, which can be <a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_how_to_launch_a_session.ipynb#Mounting-Volumes">mounted to the GraphScope pods</a>. Please note that your local edits to the <code class="language-plaintext highlighter-rouge">~/datasets</code> won’t affect the copy on K8s hosts (<em>stay tuned!</em>).</p> <h4 id="tutorials">Tutorials</h4> <p>In the GraphScope Playground, you have access to a set of comprehensive tutorials to get started with GraphScope. In the tutorials you could learn how to launch a session, to load graphs, and to run analytical analysis, interactive queries as well as graph neural network trainings in GraphScope. At the moment, we have the following tutorials included.</p> <ol> <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_how_to_launch_a_session.ipynb">How to Create a Session</a></li> <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/2_loading_graphs.ipynb">Loading Graphs</a></li> <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/3_builtin_analytical_algorithms.ipynb">Built-in Analytical Algorithms</a></li> <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/4_writing_your_own_algorithms.ipynb">Writing Your Own Algorithms</a></li> <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/5_interactive_query_with_gremlin.ipynb">Interactive Query with Gremlin</a></li> <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/6_unsupervised_learning_with_graphsage.ipynb">Unsupervised Learning with GraphSage</a></li> <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/7_supervised_learning_with_gcn.ipynb">Supervised Learning with GCN</a></li> <li><a href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/8_node_classification_on_citation_network.ipynb">A Complex Workflow: Node Classification on Citation Network</a></li> </ol> <h1 id="stay-tuned-for-new-features">Stay tuned for new features</h1> <p>With GraphScope Playground, we wish to make getting started with GraphScope as easy as possible. We are constantly working on improving the experience. If you have any questions or feedbacks, feel free to write a <a href="https://github.com/alibaba/GraphScope/discussions">post at Github Discussions</a>. Happy Coding!</p> <p>Please note that the service provided by GraphScope Playground is strictly limited to the trial of GraphScope only. Any other use is strictly prohibited. Your use of the service will be at your own risk. And we provide no warranties to the service.</p> </description>
-<pubDate>Mon, 01 Feb 2021 06:33:20 +0000</pubDate>
-<link>https://graphscope.io/blog/newsroom/2021/02/01/introducing-graphscope-playground.html</link>
-<guid isPermaLink="true">https://graphscope.io/blog/newsroom/2021/02/01/introducing-graphscope-playground.html</guid>
-<category>Newsroom</category>
-</item>
-<item>
-<title>Release Notes: v0.2.0</title>
-<description><p><img src="/blog/assets/images/release_note_t.png" alt="release-note" /> The GraphScope team is pleased to announce the 0.2.0 release after two-months development. The 0.2.0 release is focused on better getting started experience for end-users and we have make a lot of improvements since the last minor release. We have improved our documentation a lot, and made the kubernetes integration work for more settings. We have also brought the support for various I/O to make GraphScope suitable for more production environments.</p> <p>Along with the 0.2.0 release we also bring <a href="https://try.graphscope.app">GraphScope Playground</a> to users for getting started with GraphScope easier.</p> <p>We highlights the following improvements included in this releases:</p> <ol> <li> <p>Better Kubernetes integration.</p> <ul> <li><code class="language-plaintext highlighter-rouge">LoadBalancer</code> service type has been supported in this release, which brings GraphScope to vendored could environments like Alibabacloud, AWS and Azure.</li> <li>A <code class="language-plaintext highlighter-rouge">volumes</code> parameter has been added to <code class="language-plaintext highlighter-rouge">graphscope.session()</code> to allow users mount their volumes (host path, or cloud volumes, etc.) to worker pods for input graph data and retrieve results.</li> </ul> </li> <li> <p>Enhancement for interactive query.</p> <ul> <li>GraphScope v0.2.0 added a <code class="language-plaintext highlighter-rouge">InteractiveQuery.traversal_source()</code> method to allows an interative query seamlessly works with the <code class="language-plaintext highlighter-rouge">gremlinpython</code> SDK.</li> </ul> </li> <li> <p>Better I/O and serialization support.</p> <ul> <li>GraphScope v0.2.0 started to support various I/O, including Aliyun OSS, AWS S3, HDFS and other storage services that the filesystem-spec could support, for input datasets and result sink.</li> <li>GraphScope v0.2.0 added a <code class="language-plaintext highlighter-rouge">Graph.serialize()</code> method to allow users serialize a graph to external storage and restore it back via <code class="language-plaintext highlighter-rouge">Graph.deserailize()</code>.</li> </ul> </li> <li> <p>Bugfix for learning engine.</p> <ul> <li>A bug in closing learning instance of a graph has been fixed along this release.</li> </ul> </li> </ol> <p>For more detailed bugfixes and improvements that have been made in this version, please refer to the <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.2.0">complete changelog</a>.</p> </description>
-<pubDate>Mon, 01 Feb 2021 03:33:20 +0000</pubDate>
-<link>https://graphscope.io/blog/releasenotes/2021/02/01/release-notes-0.2.0.html</link>
-<guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2021/02/01/release-notes-0.2.0.html</guid>
-<category>ReleaseNotes</category>
-</item>
-<item>
-<title>Say Hello to GraphScope!</title>
-<description><p><img src="/blog/assets/images/releasing.png" alt="graphscope-releasing" /> The source code of GraphScope is released today!</p> <p>github repo: <a href="https://github.com/alibaba/graphscope">https://github.com/alibaba/graphscope</a></p> <p>GraphScope aims to provide a single system that is able to support three types of computation tasks, i.e., graph interactive query, graph analytics and graph deep learning. We carefully design GraphScope with user-friendly interface and extensible programming APIs, so that users can easily construct customized end-to-end graph processing pipelines involving different types of graph computation tasks. In specific, GraphScope fully embraces the Python and Gremlin ecosystem, and thus comes with a shallow learning curve for both data scientists and developers. Under the hood, GraphScope comprises core engines specifically optimized for each graph computation paradigm, and can smoothly orchestrate multiple engines to cooperate efficiently, avoiding the complexity of manually stitching multiple independent systems together. GraphScope can scale to ultra-large graphs, and run in industrial speed and robustness.</p> <p>GraphScope is released under Apache License 2.0. Any contributions are greatly appreciated! You may reach us at <a href="http://slack.graphscope.io/">Slack channel</a> or submit <a href="https://github.com/alibaba/GraphScope/issues">GitHub issues</a>.</p> </description>
-<pubDate>Mon, 07 Dec 2020 10:18:42 +0000</pubDate>
-<link>https://graphscope.io/blog/newsroom/2020/12/07/say-hello-to-graphscope.html</link>
-<guid isPermaLink="true">https://graphscope.io/blog/newsroom/2020/12/07/say-hello-to-graphscope.html</guid>
-<category>Newsroom</category>
-</item>
-</channel>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title></title>
+    <description>graphscope blog</description>
+    <link>https://graphscope.io/blog/</link>
+    <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Thu, 29 Apr 2021 11:28:08 +0800</pubDate>
+    <lastBuildDate>Thu, 29 Apr 2021 11:28:08 +0800</lastBuildDate>
+    <generator>Jekyll v4.1.1</generator>
+    
+      <item>
+        <title>Introducing GAIA: A Scalable Engine for Gremlin – the SQL for Graphs</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/gaia.png&quot; alt=&quot;gaia&quot; /&gt;
+GAIA extends GraphScope with &lt;a href=&quot;https://tinkerpop.apache.org/gremlin.html&quot;&gt;Gremlin&lt;/a&gt;, the industry’s de facto standard property graph query language defined and maintained by &lt;a href=&quot;http://tinkerpop.apache.org/&quot;&gt;the Apache TinkerPop project&lt;/a&gt;, which is widely adopted by popular graph database vendors such as &lt;a href=&quot;https://neo4j.com/&quot;&gt;Neo4j&lt;/a&gt;, &lt;a href=&quot;https://www.orientdb.org/&quot;&gt;OrientDB&lt;/a&gt;, &lt;a href=&quot;https://janusgraph.org/&quot;&gt;JanusGraph&lt;/a&gt;, &lt;a href=&quot;https://azure.microsoft.com/en-us/services/cosmos-db/&quot;&gt;Microsoft Cosmos DB&lt;/a&gt;, and &lt;a href=&quot;https://aws.amazon.com/neptune/&quot;&gt;Amazon Neptune&lt;/a&gt;. GAIA is the first open-source implementation of Gremlin in a distributed or big-data environment in the industry.&lt;/p&gt;
+
+&lt;h4 id=&quot;making-gremlin-accessible-to-data-scientists-historical-background&quot;&gt;Making Gremlin Accessible to Data Scientists: Historical Background&lt;/h4&gt;
+
+&lt;p&gt;Since about two years ago, we have heard an increasing demand from data scientists at Alibaba to extract insights from structural patterns on massive heterogeneous datasets in a wide variety of important application domains such as e-commerce, on-line payments, and social media. Such data is naturally modeled as graphs to encode complex interrelationships among entities.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/gaia-graph.png&quot; alt=&quot;cycle_detection.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As an example, consider the graph depicted in the above figure. It is a simplified subgraph pattern of the one employed at Alibaba for credit-card fraud detection [2,3]. By using a fake identifier, the “criminal” may obtain a short-term credit from a bank (vertex 4). He/she tries to illegally cash out money by forging a purchase (edge 2–&amp;gt;3) at time t1 with the help of a merchant (vertex 3). Once receiving payment (edge 4–&amp;gt;3) from the bank (vertex 4), the merchant tries to send the money back (edges 3–&amp;gt;1 and 1–&amp;gt;2) to the “criminal” via multiple accounts of a middle man (vertex 1) at time t3 and t4, respectively. This pattern eventually forms a cycle (2–&amp;gt;3–&amp;gt;1…–&amp;gt;2).&lt;/p&gt;
+
+&lt;p&gt;In practice, the graph can contain billions of vertices (e.g., users) and hundreds of billions to trillions of edges (e.g., payments), and the entire fraudulent process can involve much more complex chains of transactions, through many entities, with various constraints, which therefore requires complex interactive analysis to identify. Although many distributed and parallel graph processing frameworks exist, writing efficient distributed algorithms for each particular task is exceedingly hard [4], especially for our target users of domain experts or data scientists.&lt;/p&gt;
+
+&lt;p&gt;Motivated by the above (and many other) use cases, we started the GAIA project to offer a new distributed infrastructure for this new class of graph applications. GAIA differs from prior systems in two important ways: by exploiting Gremlin to provide a high-level language for graph and/or pattern traversal, and by supporting automatic parallel execution with advanced optimizations such as hybrid (BFS/DFS) traversal for bounded-memory execution and early stop (to avoid wasted computation).&lt;/p&gt;
+
+&lt;h4 id=&quot;scaling-gremlin-for-large-distributed-graphs-a-closer-look&quot;&gt;Scaling Gremlin for Large Distributed Graphs: A Closer Look&lt;/h4&gt;
+
+&lt;p&gt;Gremlin offers a flexible and expressive programming model to enable non-technical users to succinctly express complex traversal patterns in real-world applications. For example, one can write the above fraud-detection query in just a couple of lines using Gremlin, as shown below. In contrast, even common operations like cycle detection, which is a core part of the fraud-detection use case, is tricky to implement in existing graph systems.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;g.V('account').has('id','2').as('s')
+  .repeat(out('transfer').simplePath())
+  .times(k-1)
+  .where(out('transfer').as('s'))
+  .path().limit(1)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The query finds cyclic paths of length &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k&lt;/code&gt;, starting from a given account. First, the source operator &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;V&lt;/code&gt; (with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;has&lt;/code&gt; filter) returns all the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;account&lt;/code&gt; vertices with an identifier of “2”. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;as&lt;/code&gt; operator is a &lt;em&gt;modulator&lt;/em&gt; that introduces a tag (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s&lt;/code&gt; in this case) for later references. Second, it traverses the outgoing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;transfer&lt;/code&gt; edges for exactly &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k-1&lt;/code&gt; times, skipping any repeated vertices (by the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;simplePath&lt;/code&gt; operator). Third, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;where&lt;/code&gt; operator checks if the starting vertex &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s&lt;/code&gt; can be reached by one more step, that is, whether a cycle of length &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k&lt;/code&gt; is formed. Finally, for qualifying traversers, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;path&lt;/code&gt; operator returns the full path information. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;limit&lt;/code&gt; operator at the end indicates only one such result is needed.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;GAIA is designed to faithfully preserve the programming model of Gremlin. As a result, it can be used to scale existing Gremlin applications to large compute clusters with no (or minimum) modification. GAIA achieves high performance for complex Gremlin traversal by compiling it into a  dataflow that can be executed efficiently in a distributed system deployed on large clusters. We refer interested readers to this paper [1] for the full technical details of GAIA.&lt;/p&gt;
+
+&lt;p&gt;The following figure shows a comparison between GAIA and JanusGraph using the &lt;a href=&quot;http://ldbcouncil.org/benchmarks/snb&quot;&gt;LDBC Social Network Benchmark&lt;/a&gt; (Interactive Workload). JanusGraph cannot process query in parallel, and we run GAIA in one machine for fair comparison. We run each query on GAIA with the degree of parallelism varying from 1 to 16, and report its max and min latency for each query while compared to JanusGraph.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/gaia-perf.png&quot; alt=&quot;GAIA-perf_JanusGraph.png&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;JanusGraph fails to answer many queries (CR-&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;3,5,9&lt;/code&gt;) due to out-of-time (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;OT&lt;/code&gt;). As shown, even the maximum latency (single-thread) of GAIA is much shorter than that of JanusGraph in all cases. In addition, GAIA can scale those large, complex traversal queries almost linearly across multiple servers [1].&lt;/p&gt;
+
+&lt;h4 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h4&gt;
+
+&lt;p&gt;We’ve been building GAIA at Alibaba for over a year now and it is still under very active development. Find the current &lt;a href=&quot;https://github.com/alibaba/GraphScope/tree/main/research/gaia&quot;&gt;pre-release on GitHub here&lt;/a&gt;. Meanwhile, we are working on integrating GAIA into &lt;a href=&quot;https://github.com/alibaba/GraphScope&quot;&gt;the GraphScope project&lt;/a&gt; to make the “SQL for Graphs” available for a wider community of users to work with big data or data science. An early alpha release of GAIA will be included in GraphScope coming this summer, and we will further develop and refine GAIA to ship more Gremlin features such as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;match&lt;/code&gt;-step for declarative pattern queries and iterative graph algorithms via the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;subgraph&lt;/code&gt;-step, both tentatively scheduled for release in late 2021.&lt;/p&gt;
+
+&lt;p&gt;Graph technology is changing AI [5]. We’re excited to be creating new tools and fostering innovative graph solutions in the amazing community. We look forward to your feedbacks and contributions.&lt;/p&gt;
+
+&lt;h4 id=&quot;references&quot;&gt;References&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;[1] Zhengping Qian, Chenqiang Min, Longbin Lai, Yong Fang, Gaofeng Li, Youyang Yao, Bingqing Lyu, Zhimin Chen, Jingren Zhou. GraphScope: A System for Interactive Analysis on Distributed Graphs Using a High-Level Language. (&lt;a href=&quot;https://www.usenix.org/system/files/nsdi21-qian.pdf&quot;&gt;pdf&lt;/a&gt;)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;[2] Bingqing Lyu, Lu Qin, Xuemin Lin, Ying Zhang, Zhengping Qian, and Jingren Zhou. Maximum biclique search at billion scale.  Awarded Best Paper Runner-up in VLDB 2020. (&lt;a href=&quot;http://www.vldb.org/pvldb/vol13/p1359-lyu.pdf&quot;&gt;pdf&lt;/a&gt;)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;[3] Xiafei Qiu, Wubin Cen, Zhengping Qian, You Peng, Ying Zhang, Xuemin Lin, and Jingren Zhou. Real-time constrained cycle detection in large dynamic graphs.  In VLDB 2018. (&lt;a href=&quot;http://www.vldb.org/pvldb/vol11/p1876-qiu.pdf&quot;&gt;pdf&lt;/a&gt;)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;[4] Vasiliki Kalavri, Vladimir Vlassov, Seif Haridi. High-Level Programming Abstractions for Distributed Graph Processing. (&lt;a href=&quot;https://arxiv.org/pdf/1607.02646v1.pdf&quot;&gt;pdf&lt;/a&gt;)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;[5] Robert H.P. Engels. The Rise of Graph Technology. https://www.linkedin.com/pulse/rise-graph-technology-robert-h-p-engels-/&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Thu, 29 Apr 2021 10:10:42 +0800</pubDate>
+        <link>https://graphscope.io/blog/tech/2021/04/29/Introducing-gaia-a-scalable-engine-for-gremlin-the-sql-for-graphs.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2021/04/29/Introducing-gaia-a-scalable-engine-for-gremlin-the-sql-for-graphs.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
+    
+      <item>
+        <title>Release Notes: v0.3.0</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/release_note_t.png&quot; alt=&quot;release-note&quot; /&gt;
+GraphScope v0.3.0 is released as scheduled. This release includes new features and major updates for  frontend APIs for graph manipulation, integration with other systems as well as code optimization for some operators. Another direction we are working on is to ease the deployment of GraphScope with/without Kubernetes.&lt;/p&gt;
+
+&lt;p&gt;We highlight the following improvements included in this release:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Better integration with other systems&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;GraphScope aims to support easy integrations with other big data processing systems. As a first step, this release supported that the results (in the format of dataframe) of GraphScope can be further processed by Mars, a distributed tensor-based computation engine.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Performance and function enhancement&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Pre-compile a set of commonly used applications and graphs into the docker image to improve the response time of each operation in Python.&lt;/li&gt;
+      &lt;li&gt;Optimize the implementation of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;session.gremlin(...)&lt;/code&gt;and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;session.close()&lt;/code&gt;.&lt;/li&gt;
+      &lt;li&gt;Support Louvain algorithm as a built-in application in the graph analytics engine.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Improved graph manipulation APIs&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;Support for adding vertices and edges to an existing graph.&lt;/li&gt;
+      &lt;li&gt;Add a general project operator.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Easier deployment with/without Kubernetes.&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;GraphScope v0.3.0 provided a &lt;a href=&quot;https://github.com/alibaba/GraphScope/blob/main/scripts/launch_cluster.py&quot;&gt;script&lt;/a&gt; to deploy GraphScope on a Kubernetes cluster of AWS/aliyun.&lt;/li&gt;
+      &lt;li&gt;Support deployment with &lt;a href=&quot;https://artifacthub.io/packages/helm/graphscope/graphscope&quot;&gt;HELM&lt;/a&gt; and generalize &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k8s_volumes&lt;/code&gt; to support PVC mount.&lt;/li&gt;
+      &lt;li&gt;This release started to support the deployment and running of GraphScope locally without Kubernetes.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;For more detailed improvements that have been made in this release, please refer to the complete &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.3.0&quot;&gt;changelog&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Sun, 11 Apr 2021 11:33:20 +0800</pubDate>
+        <link>https://graphscope.io/blog/releasenotes/2021/04/11/release-notes-0.3.0.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2021/04/11/release-notes-0.3.0.html</guid>
+        
+        
+        <category>ReleaseNotes</category>
+        
+      </item>
+    
+      <item>
+        <title>A Review of Programming Models for Parallel Graph Processing</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/programing-models.jpg&quot; alt=&quot;programing-models&quot; /&gt;
+To explore underlying insights hidden in graph data, many graph analytics algorithms, e.g., PageRank and single source shortest paths (the Dijkstra’s algorithm), have been designed to solve different problems.&lt;/p&gt;
+
+&lt;p&gt;In a single machine environment, developers can easily implement sequential solutions to these algorithms as they have a global view of the graph and can freely iterate through all vertices and edges. Current graph data in real industrial scenarios usually consists of billions of vertices and trillions of edges. Such a graph has to be divided into multiple partitions, and stored and processed in a distributed/parallel way. To allow developers to succinctly express graph algorithms under such environment, many programming models for parallel graph processing have been proposed. In this post, we would like to introduce some commonly used programming models, and further discuss their pros and cons.&lt;/p&gt;
+
+&lt;h4 id=&quot;think-like-a-vertex&quot;&gt;Think like a vertex&lt;/h4&gt;
+
+&lt;p&gt;The vertex-centric model proposed in Pregel[1] follows the philosophy of “think like a vertex”, where each vertex contains information about itself as well as all its adjacent edges, and the computation is expressed at the level of a single vertex. More specifically, the entire computation process is divided into multiple iterations (called &lt;em&gt;supersteps&lt;/em&gt;), and in each superstep, all vertices execute the same user-defined function (called &lt;em&gt;vertex program&lt;/em&gt;) that expresses the logic of a given algorithm. The vertex program defines how each vertex processes incoming messages (sent in the previous superstep), and sends messages to other vertices (for the next superstep). The iterations terminate until no messages are sent from any vertex, indicating a halt.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/vertex-messaging.png&quot; alt=&quot;vertex-model&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;With the vertex-centric model, the vertex program of single source shortest paths (SSSP) is expressed as follows.&lt;/p&gt;
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;VertexProgramForSSSP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# receive and merge incoming messages
+&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;incoming_msgs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ReceiveMessages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;merged_msg&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Reduce&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;incoming_msgs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MIN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;c1&quot;&gt;# update vertex property
+&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dist&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;merged_msg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;dist&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;merged_msg&lt;/span&gt;
+    
+    &lt;span class=&quot;c1&quot;&gt;# send messages to neighbors
+&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;neighbor&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;neighbors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dist&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;edge_weight&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;neighbor_dist&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;SendMessage&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;neighbor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dist&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;edge_weight&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;However, the performance of Pregel drops dramatically when facing natural graphs which follow a power-law distribution. To solve this problem, PowerGraph[2] proposed the GAS (Gather-Apply-Scatter) programming model for the vertex-cut graph partitioning strategy. The &lt;em&gt;Gather&lt;/em&gt; function runs locally on each partition and then one accumulator is sent from each mirror to the master. The master runs the &lt;em&gt;Apply&lt;/em&gt; function and then sends the updated vertex data to all mirrors. Finally, the &lt;em&gt;Scatter&lt;/em&gt; phase is run in parallel on mirrors to update the data on adjacent edges.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/gas.png&quot; alt=&quot;gas-model&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Following the GAS abstraction, the SSSP can be implemented as follows.&lt;/p&gt;
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;GASForSSSP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# gather_nbrs: ALL_NBRS
+&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;gather&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;D_u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;D_v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;D_v&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;sum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt; 
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;min&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;apply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;D_u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;new_dist&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;D_u&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;new_dist&lt;/span&gt;
+        
+    &lt;span class=&quot;c1&quot;&gt;# scatter_nbrs: ALL_NBRS
+&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;scatter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;D_u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;D_v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;# If changed, activate neighbor
+&lt;/span&gt;	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;changed&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;D_u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)):&lt;/span&gt;
+	    &lt;span class=&quot;n&quot;&gt;Activate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;increased&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;D_u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)):&lt;/span&gt;
+	    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NULL&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;D_u&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h5 id=&quot;pros&quot;&gt;Pros:&lt;/h5&gt;
+&lt;ul&gt;
+  &lt;li&gt;Powerful expressiveness to express various graph algorithms.&lt;/li&gt;
+  &lt;li&gt;The vertex program is easy to run parallelly.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&quot;cons&quot;&gt;Cons:&lt;/h5&gt;
+&lt;ul&gt;
+  &lt;li&gt;Existing sequential (single-machine) graph algorithms have to be modified to comply with the “think like a vertex” principle.&lt;/li&gt;
+  &lt;li&gt;Each vertex is very short-sighted: it only has information about its 1-hop neighbors, and thus information is propagated through the graph slowly, one hop at a time. As a result, it may take many computation iterations to propagate a piece of information from a source to a destination.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;think-like-a-graph&quot;&gt;Think like a graph&lt;/h4&gt;
+
+&lt;p&gt;To tackle the problem of short-sighted vertices in the vertex-centric model, the subgraph-centric (a.k.a. block-centric, partition-centric) programming model[3, 4] is proposed. Different from the vertex-centric model, the subgraph-centric model focuses on the entire subgraph, and is labeled as “think like a graph”. For the vertex-centric model, it uses the information of 1-hop neighbors to update the value of each vertex in one superstep. Instead, the subgraph-centric model leverages information within the whole subgraph. In addition, each vertex can send messages to any vertex in the graph, instead of 1-hop neighbors. In this way, the communication overhead and the number of supersteps are greatly reduced.&lt;/p&gt;
+
+&lt;p&gt;The SSSP is expressed as follows in the subgraph-centric model.&lt;/p&gt;
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ComputeSSSP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;subgraph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;messages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# vertices with improved distances
+&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;openset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NULL&lt;/span&gt; 
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;superstep&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# initialize distances
+&lt;/span&gt;    	&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subgraph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;internal_vertices&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+	    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SOURCE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# set distance to source as 0
+&lt;/span&gt;		&lt;span class=&quot;n&quot;&gt;openset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# distance has improved
+&lt;/span&gt;	    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MAX_INT&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# not source vertex
+&lt;/span&gt;	&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;messages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# process input messages
+&lt;/span&gt;	    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subgraph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vertices&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;subgraph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vertices&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;openset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# distance improved
+&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;boundarySet&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dijkstra&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;openset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;c1&quot;&gt;# Send new distances to boundary vertices
+&lt;/span&gt;	&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;boundarySG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;boundarySet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+	    &lt;span class=&quot;n&quot;&gt;SendToSubgraphVertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;boundarySG&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;VoteToHalt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;dijkstra&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;openset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;boundaryOpenset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NULL&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;openset&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;is&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GetShortestVertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;openset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;neighbors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;# update neighbors, notify if boundary.
+&lt;/span&gt;	    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;isBoundary&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;boundaryOpenset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;subgraph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+	    &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;openset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# distance has improved
+&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;openset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;remove&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;# done with this local vertex
+&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;boundaryOpenset&lt;/span&gt; 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h5 id=&quot;pros-1&quot;&gt;Pros:&lt;/h5&gt;
+&lt;ul&gt;
+  &lt;li&gt;The same expressiveness with the vertex-centric model.&lt;/li&gt;
+  &lt;li&gt;Offer lower communication overhead, lower scheduling overhead, and lower memory overhead compared with vertex-centric approaches.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&quot;cons-1&quot;&gt;Cons:&lt;/h5&gt;
+&lt;ul&gt;
+  &lt;li&gt;Still need to recast existing sequential graph algorithms into the new programming model.&lt;/li&gt;
+  &lt;li&gt;Developers need to know a lot of concepts (e.g., internal and boundary vertices), causing the implementation challenge.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;think-sequential-run-parallel&quot;&gt;Think sequential, run parallel&lt;/h4&gt;
+
+&lt;p&gt;To make parallel graph computations accessible to average users while achieving high performance at the same time, the PIE (PEval-IncEval-Assemble) programming model[5] is proposed. In this model, users only need to provide three functions,&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;(1) PEval, a sequential (single-machine) function for given a query, computes the answer on a local partition;&lt;/li&gt;
+  &lt;li&gt;(2) IncEval, a sequential incremental function, computes changes to the old output by treating incoming messages as updates; and&lt;/li&gt;
+  &lt;li&gt;(3) Assemble, which collects partial answers, and combines them into a complete answer.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The PIE model works on a graph G and each worker maintains a partition of G. Given a query, each worker first executes PEval against its local partition, to compute partial answers in parallel. Then each worker may exchange partial results with other workers via synchronous message passing. Upon receiving messages, each worker incrementally computes IncEval. The incremental step iterates until no further messages can be generated. At this point, Assemble pulls partial answers and assembles the final result. In this way, the PIE model parallelizes existing sequential graph algorithms, without revising their logic and workflow.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/gs-workflow.png&quot; alt=&quot;vertex-model&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The following pseudo-code shows how SSSP is expressed in the PIE model, where the Dijkstra’s algorithm is directly used for the computation of parallel SSSP.&lt;/p&gt;
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;dijkstra&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;heap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;VertexHeap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;vals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;heap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+        
+    &lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clear&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;not&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;heap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;u&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;heap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vid&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;distu&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;heap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;heap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_outgoing_edges&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+	    &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_neighbor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	    &lt;span class=&quot;n&quot;&gt;distv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;distu&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+	    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;distv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;vals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;distv&lt;/span&gt;
+		    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;is_inner_vertex&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;heap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;distv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;distv&lt;/span&gt;       
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;PEval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertices&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MAX_INT&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;dijkstra&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    
+&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;IncEval&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;dijkstra&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;updates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Currently, the PIE model has been developed and evaluated in the graph analytical engine of GraphScope. On the LDBC Graph Analytics benchmark, GraphScope outperforms other state-of-the-art graph processing systems (see &lt;a href=&quot;https://github.com/alibaba/libgrape-lite/blob/master/Performance.md&quot;&gt;link&lt;/a&gt;). Welcome to try and develop your own graph algorithms with GraphScope.&lt;/p&gt;
+
+&lt;h4 id=&quot;references&quot;&gt;References&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Some images in this article are cited from [2] and https://twitter.com/katestarbird/status/1358088750765539329/photo/1.&lt;/li&gt;
+  &lt;li&gt;[1] Malewicz, Grzegorz, et al. “Pregel: a system for large-scale graph processing.” Proceedings of the 2010 ACM SIGMOD International Conference on Management of data. 2010.&lt;/li&gt;
+  &lt;li&gt;[2] Gonzalez, Joseph E., et al. “Powergraph: Distributed graph-parallel computation on natural graphs.” 10th USENIX Symposium on Operating Systems Design and Implementation (OSDI 12). 2012.&lt;/li&gt;
+  &lt;li&gt;[3] Tian, Yuanyuan, et al. “From” think like a vertex” to” think like a graph”.” Proceedings of the VLDB Endowment 7.3 (2013): 193-204.&lt;/li&gt;
+  &lt;li&gt;[4] Yan, Da, et al. “Blogel: A block-centric framework for distributed computation on real-world graphs.” Proceedings of the VLDB Endowment 7.14 (2014): 1981-1992.&lt;/li&gt;
+  &lt;li&gt;[5] Fan, Wenfei, et al. “Parallelizing sequential graph computations.” ACM Transactions on Database Systems (TODS) 43.4 (2018): 1-39.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Thu, 25 Mar 2021 18:21:42 +0800</pubDate>
+        <link>https://graphscope.io/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
+    
+      <item>
+        <title>Introducing GraphScope Playground</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/try-record.gif&quot; alt=&quot;try-record.gif&quot; /&gt; 
+Today we released &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.2.0&quot;&gt;GraphScope 0.2.0&lt;/a&gt;.  With this release, we are happy to introduce &lt;a href=&quot;http://try.graphscope.app/&quot;&gt;GraphScope Playground&lt;/a&gt;, a hosted JupyterLab with GraphScope ready out-of-the-box. Now you can get started with GraphScope straight away in your browser without any hassle for setting it up.&lt;/p&gt;
+
+&lt;h4 id=&quot;signing-in&quot;&gt;Signing-in&lt;/h4&gt;
+&lt;p&gt;The GraphScope Playground is built on top of &lt;a href=&quot;https://jupyter.org/hub&quot;&gt;JupyterHub&lt;/a&gt;. At the moment, it only supports Github OAuth for signing-in. Please make sure you have a &lt;a href=&quot;https://github.com/join&quot;&gt;Github account&lt;/a&gt; before proceed.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/try-login.gif&quot; alt=&quot;try-login.gif&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Open &lt;a href=&quot;https://try.graphscope.app/&quot;&gt;GraphScope PlayGround&lt;/a&gt; in your browser. You will be shown a landing page of GraphScope Playground. It only take a few clicks to get authenticated with your Github account. A JupyterLab session will be created for you in a few seconds.&lt;/p&gt;
+
+&lt;h4 id=&quot;in-the-playground&quot;&gt;In the Playground&lt;/h4&gt;
+&lt;p&gt;You will be redirected to the JupyterLab interface after signing-in. It is a modern integrated development environment for Notebooks, where documents and activities integrate with each other, enabling new workflows for interactive computing in Python.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/raw-playground-snapshot.png&quot; alt=&quot;gs-snapshot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;On the left, there is a sidebar, where you can navigate your workspace with the file browser, as well as check the list of running kernels and terminals, the command palette, and the list of tabs in the main work area etc. One the right, it is the main work area, where tabs and panes can be created for the files and notebooks you edit. You can also open a terminal if you like.&lt;/p&gt;
+
+&lt;p&gt;A JupyterLab session lives inside a docker container is specifically created for you after signing-in. The session will live for up to 120 mins (or 15 mins without user interactions). Based on the the official &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jupyterhub/singleuser:1.3&lt;/code&gt; image, we added necessary packages, tutorials and sample datasets for running GraphScope to the  Playground image. You are given 1 CPU core and 2GB memory for the JupyterLab container, and you are also given the access to a Kubernetes cluster with a limit of 16 CPU cores and 32GB memory for you to run GraphScope sessions. Following the convention of JupyterLab, the default working directory is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/home/jovyan/&lt;/code&gt;,  where you can find tutorials at the root, datasets under the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;datasets&lt;/code&gt; folder and a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;workspace&lt;/code&gt; folder.&lt;/p&gt;
+
+&lt;p&gt;You can open an existing / create a new notebook, and start coding with GraphScope straight away. If you want to access the files you edited at a later time, you can place them under &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;workspace&lt;/code&gt; folder. All the changes elsewhere will be reset after session ends. We place  &lt;strong&gt;a copy of the sample datasets&lt;/strong&gt; on K8s hosts, which can be &lt;a href=&quot;https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_how_to_launch_a_session.ipynb#Mounting-Volumes&quot;&gt;mounted to the GraphScope pods&lt;/a&gt;. Please note that your local edits to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/datasets&lt;/code&gt; won’t affect the copy on K8s hosts (&lt;em&gt;stay tuned!&lt;/em&gt;).&lt;/p&gt;
+
+&lt;h4 id=&quot;tutorials&quot;&gt;Tutorials&lt;/h4&gt;
+
+&lt;p&gt;In the GraphScope Playground, you have access to a set of comprehensive tutorials to get started with GraphScope. In the tutorials you could learn how to launch a session, to load graphs, and to run analytical analysis, interactive queries as well as graph neural network trainings in GraphScope. At the moment, we have the following tutorials included.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_how_to_launch_a_session.ipynb&quot;&gt;How to Create a Session&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/2_loading_graphs.ipynb&quot;&gt;Loading Graphs&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/3_builtin_analytical_algorithms.ipynb&quot;&gt;Built-in Analytical Algorithms&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/4_writing_your_own_algorithms.ipynb&quot;&gt;Writing Your Own Algorithms&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/5_interactive_query_with_gremlin.ipynb&quot;&gt;Interactive Query with Gremlin&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/6_unsupervised_learning_with_graphsage.ipynb&quot;&gt;Unsupervised Learning with GraphSage&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/7_supervised_learning_with_gcn.ipynb&quot;&gt;Supervised Learning with GCN&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/8_node_classification_on_citation_network.ipynb&quot;&gt;A Complex Workflow: Node Classification on Citation Network&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;stay-tuned-for-new-features&quot;&gt;Stay tuned for new features&lt;/h1&gt;
+&lt;p&gt;With GraphScope Playground, we wish to make getting started with GraphScope as easy as possible. We are constantly working on improving the experience. If you have any questions or feedbacks, feel free to write a &lt;a href=&quot;https://github.com/alibaba/GraphScope/discussions&quot;&gt;post at Github Discussions&lt;/a&gt;. Happy Coding!&lt;/p&gt;
+
+&lt;p&gt;Please note that the service provided by GraphScope Playground is strictly limited to the trial of GraphScope only. Any other use is strictly prohibited. Your use of the service will be at your own risk. And we provide no warranties to the service.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 01 Feb 2021 14:33:20 +0800</pubDate>
+        <link>https://graphscope.io/blog/newsroom/2021/02/01/introducing-graphscope-playground.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/newsroom/2021/02/01/introducing-graphscope-playground.html</guid>
+        
+        
+        <category>Newsroom</category>
+        
+      </item>
+    
+      <item>
+        <title>Release Notes: v0.2.0</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/release_note_t.png&quot; alt=&quot;release-note&quot; /&gt;
+The GraphScope team is pleased to announce the 0.2.0 release after two-months development.
+The 0.2.0 release is focused on better getting started experience for end-users and we have
+make a lot of improvements since the last minor release. We have improved our documentation
+a lot, and made the kubernetes integration work for more settings. We have also brought the
+support for various I/O to make GraphScope suitable for more production environments.&lt;/p&gt;
+
+&lt;p&gt;Along with the 0.2.0 release we also bring &lt;a href=&quot;https://try.graphscope.app&quot;&gt;GraphScope Playground&lt;/a&gt; to users
+for getting started with GraphScope easier.&lt;/p&gt;
+
+&lt;p&gt;We highlights the following improvements included in this releases:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Better Kubernetes integration.&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LoadBalancer&lt;/code&gt; service type has been supported in this release, which brings GraphScope to
+vendored could environments like Alibabacloud, AWS and Azure.&lt;/li&gt;
+      &lt;li&gt;A &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;volumes&lt;/code&gt; parameter has been added to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;graphscope.session()&lt;/code&gt; to allow users mount their
+volumes (host path, or cloud volumes, etc.) to worker pods for input graph data and retrieve
+results.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Enhancement for interactive query.&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;GraphScope v0.2.0 added a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;InteractiveQuery.traversal_source()&lt;/code&gt; method to allows an interative
+query seamlessly works with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;gremlinpython&lt;/code&gt; SDK.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Better I/O and serialization support.&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;GraphScope v0.2.0 started to support various I/O, including Aliyun OSS, AWS S3, HDFS and other
+storage services that the filesystem-spec could support, for input datasets and result sink.&lt;/li&gt;
+      &lt;li&gt;GraphScope v0.2.0 added a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Graph.serialize()&lt;/code&gt; method to allow users serialize a graph to external
+storage and restore it back via &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Graph.deserailize()&lt;/code&gt;.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Bugfix for learning engine.&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;A bug in closing learning instance of a graph has been fixed along this release.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;For more detailed bugfixes and improvements that have been made in
+this version, please refer to the &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.2.0&quot;&gt;complete changelog&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 01 Feb 2021 11:33:20 +0800</pubDate>
+        <link>https://graphscope.io/blog/releasenotes/2021/02/01/release-notes-0.2.0.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2021/02/01/release-notes-0.2.0.html</guid>
+        
+        
+        <category>ReleaseNotes</category>
+        
+      </item>
+    
+      <item>
+        <title>Say Hello to GraphScope!</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/releasing.png&quot; alt=&quot;graphscope-releasing&quot; /&gt;
+The source code of GraphScope is released today!&lt;/p&gt;
+
+&lt;p&gt;github repo: &lt;a href=&quot;https://github.com/alibaba/graphscope&quot;&gt;https://github.com/alibaba/graphscope&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;GraphScope aims to provide a single system that is able to support three
+types of computation tasks, i.e., graph interactive query, graph analytics and graph deep learning.
+We carefully design GraphScope with user-friendly interface and extensible programming APIs,
+so that users can easily construct customized end-to-end graph processing pipelines involving
+different types of graph computation tasks. In specific, GraphScope fully embraces the Python and
+Gremlin ecosystem, and thus comes with a shallow learning curve for both data scientists and
+developers. Under the hood, GraphScope comprises core engines specifically optimized for each
+graph computation paradigm, and can smoothly orchestrate multiple engines to cooperate efficiently,
+avoiding the complexity of manually stitching multiple independent systems together. GraphScope
+can scale to ultra-large graphs, and run in industrial speed and robustness.&lt;/p&gt;
+
+&lt;p&gt;GraphScope is released under Apache License 2.0. Any contributions are greatly appreciated!
+You may reach us at &lt;a href=&quot;http://slack.graphscope.io/&quot;&gt;Slack channel&lt;/a&gt; or submit 
+&lt;a href=&quot;https://github.com/alibaba/GraphScope/issues&quot;&gt;GitHub issues&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 07 Dec 2020 18:18:42 +0800</pubDate>
+        <link>https://graphscope.io/blog/newsroom/2020/12/07/say-hello-to-graphscope.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/newsroom/2020/12/07/say-hello-to-graphscope.html</guid>
+        
+        
+        <category>Newsroom</category>
+        
+      </item>
+    
+  </channel>
 </rss>
