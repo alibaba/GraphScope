@@ -49,11 +49,13 @@ def parse_readable_memory(value):
 
 
 def try_to_read_namespace_from_context():
-    contexts, active_context = kube_config.list_kube_config_contexts()
-    if contexts and "namespace" in active_context["context"]:
-        return active_context["context"]["namespace"]
-    else:
-        return None
+    try:
+        contexts, active_context = kube_config.list_kube_config_contexts()
+        if contexts and "namespace" in active_context["context"]:
+            return active_context["context"]["namespace"]
+    except:  # noqa: E722
+        pass
+    return None
 
 
 def wait_for_deployment_complete(api_client, namespace, name, timeout_seconds=60):

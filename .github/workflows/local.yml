@@ -83,7 +83,7 @@ jobs:
 
     - name: Install libvineyard
       run: |
-        git clone -b v0.1.15 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
+        git clone -b v0.2.1 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
         cd libvineyard
         git submodule update --init
         mkdir build && pushd build
@@ -101,6 +101,10 @@ jobs:
         export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin
         # Default to /usr/local
         make install WITH_LEARNING_ENGINE=ON
+
+    - name: DEBUG
+      if: false
+      uses: mxschmitt/action-tmate@v2
 
     - name: Run Local Test
       run: |

@@ -34,8 +34,10 @@ import warnings
 from queue import Empty as EmptyQueue
 
 try:
+    from kubernetes import client as kube_client
     from kubernetes import config as kube_config
 except ImportError:
+    kube_client = None
     kube_config = None
 
 import graphscope
@@ -753,9 +755,15 @@ class Session(object):
                 or self._config_params["k8s_gs_image"] is None
             ):
                 raise K8sError("None image found.")
-            api_client = kube_config.new_client_from_config(
-                **self._config_params["k8s_client_config"]
-            )
+            if isinstance(
+                self._config_params["k8s_client_config"],
+                kube_client.api_client.ApiClient,
+            ):
+                api_client = self._config_params["k8s_client_config"]
+            else:
+                api_client = kube_config.new_client_from_config(
+                    **self._config_params["k8s_client_config"]
+                )
             self._launcher = KubernetesClusterLauncher(
                 api_client=api_client,
                 namespace=self._config_params["k8s_namespace"],

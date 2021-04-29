@@ -18,6 +18,7 @@
 
 
 import atexit
+import json
 import logging
 import os
 import queue
@@ -239,6 +240,7 @@ class KubernetesClusterLauncher(Launcher):
             self._image_pull_secrets = []
         elif not isinstance(self._image_pull_secrets, list):
             self._image_pull_secrets = [self._image_pull_secrets]
+        self._image_pull_secrets_str = ",".join(self._image_pull_secrets)
 
         self._etcd_num_pods = etcd_num_pods
         self._etcd_cpu = etcd_cpu
@@ -475,47 +477,13 @@ class KubernetesClusterLauncher(Launcher):
         coordinator_builder.add_simple_envs(envs)
 
         coordinator_builder.add_coordinator_container(
+            cmd=self._build_coordinator_cmd(),
             name=self._coordinator_container_name,
-            port=self._random_coordinator_service_port,
-            num_workers=self._num_workers,
+            image=self._gs_image,
+            cpu=self._coordinator_cpu,
+            mem=self._coordinator_mem,
             preemptive=self._preemptive,
-            instance_id=self._instance_id,
-            log_level=gs_config.log_level,
-            namespace=self._namespace,
-            service_type=self._service_type,
-            gs_image=self._gs_image,
-            etcd_image=self._etcd_image,
-            gie_graph_manager_image=self._gie_graph_manager_image,
-            zookeeper_image=self._zookeeper_image,
-            image_pull_policy=self._image_pull_policy,
-            image_pull_secrets=",".join(self._image_pull_secrets),
-            coordinator_name=self._coordinator_name,
-            coordinator_cpu=self._coordinator_cpu,
-            coordinator_mem=self._coordinator_mem,
-            coordinator_service_name=self._coordinator_service_name,
-            etcd_num_pods=self._etcd_num_pods,
-            etcd_cpu=self._etcd_cpu,
-            etcd_mem=self._etcd_mem,
-            zookeeper_cpu=self._zookeeper_cpu,
-            zookeeper_mem=self._zookeeper_mem,
-            gie_graph_manager_cpu=self._gie_graph_manager_cpu,
-            gie_graph_manager_mem=self._gie_graph_manager_mem,
-            vineyard_daemonset=self._vineyard_daemonset,
-            vineyard_cpu=self._vineyard_cpu,
-            vineyard_mem=self._vineyard_mem,
-            vineyard_shared_mem=self._vineyard_shared_mem,
-            engine_cpu=self._engine_cpu,
-            engine_mem=self._engine_mem,
-            mars_worker_cpu=self._mars_worker_cpu,
-            mars_worker_mem=self._mars_worker_mem,
-            mars_scheduler_cpu=self._mars_scheduler_cpu,
-            mars_scheduler_mem=self._mars_scheduler_mem,
-            with_mars=self._with_mars,
-            volumes=self._volumes,
-            timeout_seconds=self._timeout_seconds,
-            dangling_timeout_seconds=self._dangling_timeout_seconds,
-            waiting_for_delete=self._waiting_for_delete,
-            delete_namespace=self._delete_namespace,
+            ports=self._random_coordinator_service_port,
         )
 
         targets.append(
@@ -525,6 +493,92 @@ class KubernetesClusterLauncher(Launcher):
         )
 
         self._resource_object.extend(targets)
+
+    def _build_coordinator_cmd(self):
+        cmd = [
+            "python3",
+            "-m",
+            "gscoordinator",
+            "--cluster_type",
+            "k8s",
+            "--port",
+            str(self._random_coordinator_service_port),
+            "--num_workers",
+            str(self._num_workers),
+            "--preemptive",
+            str(self._preemptive),
+            "--instance_id",
+            self._instance_id,
+            "--log_level",
+            gs_config.log_level,
+            "--k8s_namespace",
+            self._namespace,
+            "--k8s_service_type",
+            self._service_type,
+            "--k8s_gs_image",
+            self._gs_image,
+            "--k8s_etcd_image",
+            self._etcd_image,
+            "--k8s_gie_graph_manager_image",
+            self._gie_graph_manager_image,
+            "--k8s_zookeeper_image",
+            self._zookeeper_image,
+            "--k8s_image_pull_policy",
+            self._image_pull_policy,
+            "--k8s_image_pull_secrets",
+            self._image_pull_secrets_str if self._image_pull_secrets_str else '""',
+            "--k8s_coordinator_name",
+            self._coordinator_name,
+            "--k8s_coordinator_service_name",
+            self._coordinator_service_name,
+            "--k8s_etcd_num_pods",
+            str(self._etcd_num_pods),
+            "--k8s_etcd_cpu",
+            str(self._etcd_cpu),
+            "--k8s_etcd_mem",
+            self._etcd_mem,
+            "--k8s_zookeeper_cpu",
+            str(self._zookeeper_cpu),
+            "--k8s_zookeeper_mem",
+            self._zookeeper_mem,
+            "--k8s_gie_graph_manager_cpu",
+            str(self._gie_graph_manager_cpu),
+            "--k8s_gie_graph_manager_mem",
+            self._gie_graph_manager_mem,
+            "--k8s_vineyard_daemonset",
+            str(self._vineyard_daemonset),
+            "--k8s_vineyard_cpu",
+            str(self._vineyard_cpu),
+            "--k8s_vineyard_mem",
+            self._vineyard_mem,
+            "--vineyard_shared_mem",
+            self._vineyard_shared_mem,
+            "--k8s_engine_cpu",
+            str(self._engine_cpu),
+            "--k8s_engine_mem",
+            self._engine_mem,
+            "--k8s_mars_worker_cpu",
+            str(self._mars_worker_cpu),
+            "--k8s_mars_worker_mem",
+            self._mars_worker_mem,
+            "--k8s_mars_scheduler_cpu",
+            str(self._mars_scheduler_cpu),
+            "--k8s_mars_scheduler_mem",
+            self._mars_scheduler_mem,
+            "--k8s_with_mars",
+            str(self._with_mars),
+            "--k8s_volumes",
+            json.dumps(self._volumes),
+            "--timeout_seconds",
+            str(self._timeout_seconds),
+            "--dangling_timeout_seconds",
+            str(self._dangling_timeout_seconds),
+            "--waiting_for_delete",
+            str(self._waiting_for_delete),
+            "--k8s_delete_namespace",
+            str(self._delete_namespace),
+        ]
+        return cmd
 
     def _create_services(self):
         self._create_coordinator()
