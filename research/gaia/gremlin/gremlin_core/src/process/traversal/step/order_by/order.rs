@@ -19,8 +19,6 @@ use crate::process::traversal::step::order_by::CompareFunctionGen;
 use crate::process::traversal::step::util::result_downcast::{
     try_downcast_group_count_value, try_downcast_group_key,
 };
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::codec::ParseError;
 use crate::structure::{Details, GraphElement, Token};
@@ -48,27 +46,11 @@ impl FromPb<pb::order_by_compare_pair::Order> for Order {
     }
 }
 
-pub struct OrderStep {
+struct OrderStep {
     tag_key_order: Vec<(TagKey, Order)>,
 }
 
 impl OrderStep {
-    pub fn new(tag_key_order: Vec<(TagKey, Order)>) -> Self {
-        OrderStep { tag_key_order }
-    }
-}
-
-struct OrderBy {
-    tag_key_order: Vec<(TagKey, Order)>,
-}
-
-impl Step for OrderStep {
-    fn get_symbol(&self) -> StepSymbol {
-        StepSymbol::Order
-    }
-}
-
-impl OrderBy {
     fn compare_element_traverser_with_token_opt(
         &self, left_element: Option<&GraphElement>, right_element: Option<&GraphElement>,
         token: &Token,
@@ -94,7 +76,7 @@ impl OrderBy {
 }
 
 // TODO(bingqing): In the case that the values can not compare, for example, 1. tag "a" or head should be an element or attached with a value, but it is not as expected. 2. None with not None or the value itself does not implement Ord (only partially comparable). We now by default return Ordering::Equal, this must be further investigated.
-impl CompareFunction<Traverser> for OrderBy {
+impl CompareFunction<Traverser> for OrderStep {
     fn compare(&self, left: &Traverser, right: &Traverser) -> Ordering {
         let mut result = Ordering::Equal;
         for (tag_key, order) in self.tag_key_order.iter() {
@@ -125,10 +107,8 @@ impl CompareFunction<Traverser> for OrderBy {
                             let right_key_traverser = try_downcast_group_key(&right);
                             if left_key_traverser.is_some() && right_key_traverser.is_some() {
                                 if let Some(opt_group_keys_token) = opt_group_keys {
-                                    let left_element =
-                                        left_key_traverser.as_ref().unwrap().get_element();
-                                    let right_element =
-                                        right_key_traverser.as_ref().unwrap().get_element();
+                                    let left_element = left_key_traverser.unwrap().get_element();
+                                    let right_element = right_key_traverser.unwrap().get_element();
                                     ordering = self.compare_element_traverser_with_token_opt(
                                         left_element,
                                         right_element,
@@ -166,9 +146,7 @@ impl CompareFunction<Traverser> for OrderBy {
                         let (left_value, right_value) =
                             (left.get_element_attached(), right.get_element_attached());
                         // TODO: only support count() computed by engine for now
-                        if left_value.is_some() && right_value.is_some() {
-                            ordering = left_value.unwrap().partial_cmp(right_value.unwrap())
-                        }
+                        ordering = left_value.partial_cmp(&right_value);
                     }
                     _ => {}
                 }
@@ -179,9 +157,7 @@ impl CompareFunction<Traverser> for OrderBy {
                 } else {
                     (left.get_object(), right.get_object())
                 };
-                if left_value.is_some() && right_value.is_some() {
-                    ordering = left_value.unwrap().partial_cmp(right_value.unwrap());
-                }
+                ordering = left_value.partial_cmp(&right_value);
             }
             if let Some(ordering) = ordering {
                 if Ordering::Equal != ordering {
@@ -199,9 +175,21 @@ impl CompareFunction<Traverser> for OrderBy {
     }
 }
 
-impl CompareFunctionGen for OrderStep {
-    fn gen(&self) -> DynResult<Box<dyn CompareFunction<Traverser>>> {
-        for (tag_key, _) in self.tag_key_order.iter() {
+impl CompareFunctionGen for pb::OrderByStep {
+    fn gen_cmp(self) -> DynResult<Box<dyn CompareFunction<Traverser>>> {
+        let mut order_keys = vec![];
+        for cmp in self.pairs {
+            let tag_key = if let Some(tag_key_pb) = cmp.key {
+                TagKey::from_pb(tag_key_pb)?
+            } else {
+                TagKey::default()
+            };
+            let order_type_pb = unsafe { std::mem::transmute(cmp.order) };
+            let order_type = Order::from_pb(order_type_pb)?;
+            order_keys.push((tag_key, order_type));
+        }
+
+        for (tag_key, _) in order_keys.iter() {
             let (tag, key) = (tag_key.tag.as_ref(), tag_key.by_key.as_ref());
             if let Some(key) = key {
                 match key {
@@ -219,6 +207,6 @@ impl CompareFunctionGen for OrderStep {
                 }
             }
         }
-        Ok(Box::new(OrderBy { tag_key_order: self.tag_key_order.clone() }))
+        Ok(Box::new(OrderStep { tag_key_order: order_keys }))
     }
 }

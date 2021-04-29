@@ -13,60 +13,31 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::generated::gremlin as pb;
 use crate::process::traversal::step::filter::FilterFuncGen;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::{Tag, TraverserFilterChain};
-use crate::{str_to_dyn_error, DynResult};
-use bit_set::BitSet;
+use crate::structure::codec::pb_chain_to_filter;
+use crate::structure::{
+    without_tag, Filter, IsSimple, TraverserFilter, TraverserFilterChain, ValueFilter,
+};
+use crate::{str_to_dyn_error, DynResult, FromPb};
 use pegasus::api::function::{FilterFunction, FnResult};
 use std::sync::Arc;
 
-pub struct HasStep {
-    has: Arc<TraverserFilterChain>,
-    as_tags: Vec<Tag>,
-}
-
-impl HasStep {
-    pub fn new(has: TraverserFilterChain) -> Self {
-        HasStep { has: Arc::new(has), as_tags: vec![] }
-    }
-}
-
-impl Step for HasStep {
-    fn get_symbol(&self) -> StepSymbol {
-        StepSymbol::Has
-    }
-
-    fn add_tag(&mut self, label: Tag) {
-        self.as_tags.push(label);
-    }
-
-    fn tags_as_slice(&self) -> &[Tag] {
-        &self.as_tags
-    }
-}
-
 struct HasTraverser {
     filter: Arc<TraverserFilterChain>,
-    tags: BitSet,
 }
 
 impl HasTraverser {
-    pub fn new(filter: &Arc<TraverserFilterChain>, labels: BitSet) -> Self {
-        HasTraverser { filter: filter.clone(), tags: labels }
+    pub fn new(filter: Arc<TraverserFilterChain>) -> Self {
+        HasTraverser { filter }
     }
 }
 
 impl FilterFunction<Traverser> for HasTraverser {
     fn exec(&self, input: &Traverser) -> FnResult<bool> {
         if let Some(true) = self.filter.test(input) {
-            if !self.tags.is_empty() {
-                Err(str_to_dyn_error("Now we don't support as() in filter step"))
-            } else {
-                Ok(true)
-            }
+            Ok(true)
         } else {
             // TODO: `None` means can't compare, should it be different with compare false;
             Ok(false)
@@ -74,9 +45,35 @@ impl FilterFunction<Traverser> for HasTraverser {
     }
 }
 
-impl FilterFuncGen for HasStep {
-    fn gen(&self) -> DynResult<Box<dyn FilterFunction<Traverser>>> {
-        let labels = self.get_tags();
-        Ok(Box::new(HasTraverser::new(&self.has, labels)))
+impl FilterFuncGen for pb::HasStep {
+    fn gen_filter(self) -> DynResult<Box<dyn FilterFunction<Traverser>>> {
+        let mut filter = Filter::default();
+        if let Some(predicates) = self.predicates {
+            if let Some(test) = pb_chain_to_filter(&predicates)? {
+                filter = without_tag(test)
+            }
+        }
+        Ok(Box::new(HasTraverser::new(Arc::new(filter))))
+    }
+}
+
+impl FilterFuncGen for pb::PathFilterStep {
+    fn gen_filter(self) -> DynResult<Box<dyn FilterFunction<Traverser>>> {
+        let filter = if self.hint == 0 {
+            TraverserFilter::HasCycle(IsSimple::Simple)
+        } else {
+            TraverserFilter::HasCycle(IsSimple::Cyclic)
+        };
+        Ok(Box::new(HasTraverser::new(Arc::new(Filter::with(filter)))))
+    }
+}
+
+impl FilterFuncGen for pb::IsStep {
+    fn gen_filter(self) -> DynResult<Box<dyn FilterFunction<Traverser>>> {
+        let value_filter_pb =
+            self.single.ok_or(str_to_dyn_error("filter is not set in is step"))?;
+        let value_filter = ValueFilter::from_pb(value_filter_pb)?;
+        let traverser_filter = TraverserFilter::IsValue(value_filter);
+        Ok(Box::new(HasTraverser::new(Arc::new(Filter::with(traverser_filter)))))
     }
 }

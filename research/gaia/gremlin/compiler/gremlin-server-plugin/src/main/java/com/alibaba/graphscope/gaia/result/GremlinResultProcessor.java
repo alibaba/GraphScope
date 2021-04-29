@@ -34,9 +34,11 @@ public class GremlinResultProcessor implements ResultProcessor {
     private Context writeResult;
     private List<Object> resultCollectors = new ArrayList<>();
     private boolean locked = false;
+    private ResultParser resultParser;
 
-    public GremlinResultProcessor(Context writeResult) {
+    public GremlinResultProcessor(Context writeResult, ResultParser resultParser) {
         this.writeResult = writeResult;
+        this.resultParser = resultParser;
     }
 
     @Override
@@ -44,13 +46,13 @@ public class GremlinResultProcessor implements ResultProcessor {
         synchronized (this) {
             try {
                 if (!locked) {
-                    logger.debug("start to process response");
+                    logger.info("start to process response");
                     if (response.getResultCase() == PegasusClient.JobResponse.ResultCase.DATA) {
                         GremlinResult.Result resultData = GremlinResult.Result.parseFrom(response.getData());
-                        logger.debug("data is {}", resultData);
-                        resultCollectors.addAll(ResultParser.parseFrom(resultData));
+                        logger.info("data is {}", resultData);
+                        resultCollectors.addAll(resultParser.parseFrom(resultData));
                     } else if (response.getResultCase() == PegasusClient.JobResponse.ResultCase.ERR) {
-                        logger.error("error is {}", response.getErr());
+                        logger.info("error is {}", response.getErr());
                     }
                 }
             } catch (Exception e) {
@@ -65,7 +67,7 @@ public class GremlinResultProcessor implements ResultProcessor {
     public void finish() {
         synchronized (this) {
             if (!locked) {
-                logger.debug("start finish");
+                logger.info("start finish");
                 MaxGraphOpProcessor.writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
                 locked = true;
             }
@@ -76,7 +78,7 @@ public class GremlinResultProcessor implements ResultProcessor {
     public void error(Status status) {
         synchronized (this) {
             if (!locked) {
-                logger.debug("start error");
+                logger.info("start error");
                 MaxGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(status.toString()), ResponseStatusCode.SERVER_ERROR);
                 locked = true;
             }

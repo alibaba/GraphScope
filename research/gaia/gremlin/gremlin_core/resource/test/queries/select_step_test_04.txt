@@ -1,1 +1,1 @@
-g.V().as("a").select("a").by(valueMap("id","name"))
+g.V().hasLabel("SOFTWARE").order().by("id").as("a").select("a").by(valueMap("id","name"))

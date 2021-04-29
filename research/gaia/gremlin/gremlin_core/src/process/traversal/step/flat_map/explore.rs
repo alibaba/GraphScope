@@ -13,85 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::process::traversal::step::flat_map::FlatMapGen;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::Step;
+use super::FlatMapFuncGen;
+use crate::generated::gremlin as pb;
 use crate::process::traversal::traverser::{Traverser, TraverserSplitIter};
-use crate::structure::{
-    Direction, Edge, Element, GraphElement, QueryParams, Statement, Tag, Vertex, ID,
-};
-use crate::{str_to_dyn_error, DynIter, DynResult};
+use crate::structure::codec::pb_chain_to_filter;
+use crate::structure::{Direction, Element, GraphElement, Label, QueryParams, Statement, ID};
+use crate::{str_to_dyn_error, DynIter, DynResult, FromPb};
 use bit_set::BitSet;
+use graph_store::prelude::LabelId;
 use pegasus::api::function::FlatMapFunction;
 use std::sync::Arc;
-
-/// out(), in(), both()
-pub struct VertexStep {
-    pub symbol: StepSymbol,
-    pub params: QueryParams<Vertex>,
-    direction: Direction,
-    as_tags: Vec<Tag>,
-}
-
-impl VertexStep {
-    pub fn new(direction: Direction) -> Self {
-        let symbol = match direction {
-            Direction::Out => StepSymbol::Out,
-            Direction::In => StepSymbol::In,
-            Direction::Both => StepSymbol::Both,
-        };
-
-        VertexStep { symbol, params: QueryParams::new(), direction, as_tags: vec![] }
-    }
-}
-
-impl Step for VertexStep {
-    fn get_symbol(&self) -> StepSymbol {
-        self.symbol
-    }
-
-    fn add_tag(&mut self, label: Tag) {
-        self.as_tags.push(label);
-    }
-
-    fn tags_as_slice(&self) -> &[Tag] {
-        self.as_tags.as_slice()
-    }
-}
-
-/// outE(), inE(), bothE();
-pub struct EdgeStep {
-    pub symbol: StepSymbol,
-    pub params: QueryParams<Edge>,
-    pub direction: Direction,
-    as_tags: Vec<Tag>,
-}
-
-impl EdgeStep {
-    pub fn new(direction: Direction) -> Self {
-        let symbol = match direction {
-            Direction::Out => StepSymbol::OutE,
-            Direction::In => StepSymbol::InE,
-            Direction::Both => StepSymbol::BothE,
-        };
-
-        EdgeStep { symbol, params: QueryParams::new(), direction, as_tags: vec![] }
-    }
-}
-
-impl Step for EdgeStep {
-    fn get_symbol(&self) -> StepSymbol {
-        self.symbol
-    }
-
-    fn add_tag(&mut self, label: Tag) {
-        self.as_tags.push(label);
-    }
-
-    fn tags_as_slice(&self) -> &[Tag] {
-        self.as_tags.as_slice()
-    }
-}
 
 pub struct FlatMapStatement<E: Into<GraphElement>> {
     tags: Arc<BitSet>,
@@ -114,28 +45,44 @@ impl<E: Into<GraphElement> + 'static> FlatMapFunction<Traverser, Traverser>
     }
 }
 
-impl FlatMapGen for VertexStep {
-    fn gen(
-        &self,
-    ) -> DynResult<Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>>
-    {
-        let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
-        let labels = Arc::new(self.get_tags());
-        let stmt = graph.prepare_explore_vertex(self.direction, &self.params)?;
-
-        Ok(Box::new(FlatMapStatement { tags: labels, stmt }))
-    }
+/// out(), in(), both(), outE(), inE(), bothE()
+pub struct VertexStep {
+    pub step: pb::VertexStep,
+    pub tags: BitSet,
 }
 
-impl FlatMapGen for EdgeStep {
-    fn gen(
-        &self,
+impl FlatMapFuncGen for VertexStep {
+    fn gen_flat_map(
+        self,
     ) -> DynResult<Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>>
     {
+        let mut step = self.step;
+        let direction_pb = unsafe { std::mem::transmute(step.direction) };
+        let direction = Direction::from_pb(direction_pb)?;
+        let labels = step.edge_labels.iter().map(|id| Label::Id(*id as LabelId)).collect();
         let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
-        let tags = Arc::new(self.get_tags());
-        let stmt = graph.prepare_explore_edge(self.direction, &self.params)?;
-
-        Ok(Box::new(FlatMapStatement { tags, stmt }))
+        if step.return_type == 0 {
+            let mut params = QueryParams::new();
+            params.labels = labels;
+            if let Some(test) = step.predicates.take() {
+                if let Some(filter) = pb_chain_to_filter(&test)? {
+                    params.set_filter(filter);
+                }
+            }
+            let stmt = graph.prepare_explore_vertex(direction, &params)?;
+            Ok(Box::new(FlatMapStatement { tags: Arc::new(self.tags), stmt }))
+        } else if step.return_type == 1 {
+            let mut params = QueryParams::new();
+            params.labels = labels;
+            if let Some(test) = step.predicates.take() {
+                if let Some(filter) = pb_chain_to_filter(&test)? {
+                    params.set_filter(filter);
+                }
+            }
+            let stmt = graph.prepare_explore_edge(direction, &params)?;
+            Ok(Box::new(FlatMapStatement { tags: Arc::new(self.tags), stmt }))
+        } else {
+            Err(str_to_dyn_error("Wrong return type in VertexStep"))
+        }
     }
 }

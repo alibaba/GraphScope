@@ -14,23 +14,22 @@
 //! limitations under the License.
 
 use crate::generated::gremlin as pb;
-use crate::process::traversal::pop::Pop;
-use crate::process::traversal::step::by_key::TagKey;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::{RemoveTag, Step};
+use crate::process::traversal::step::map::edge_v::EdgeVertexStep;
+use crate::process::traversal::step::map::get_path::PathLocalCountStep;
+use crate::process::traversal::step::map::identity::IdentityStep;
+use crate::process::traversal::step::map::select_one::SelectOneStep;
+use crate::process::traversal::step::map::transform_traverser::TransformTraverserStep;
+use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::{Requirement, Traverser};
-use crate::structure::codec::ParseError;
-use crate::structure::{EndPointOpt, Tag};
-use crate::DynResult;
+use crate::structure::Tag;
 use crate::FromPb;
-use bit_set::BitSet;
+use crate::{str_to_dyn_error, DynResult};
 pub use get_property::ResultProperty;
 use pegasus::api::function::MapFunction;
-use pegasus_common::downcast::*;
 
 #[enum_dispatch]
 pub trait MapFuncGen {
-    fn gen(&self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>>;
+    fn gen_map(self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>>;
 }
 
 mod edge_v;
@@ -40,102 +39,43 @@ mod identity;
 mod select_one;
 mod transform_traverser;
 
-#[enum_dispatch(Step, MapFuncGen)]
-pub enum MapStep {
-    EdgeVertex(edge_v::EdgeVertexStep),
-    GetPath(get_path::GetPathStep),
-    GetProperty(get_property::GetPropertyStep),
-    Identity(identity::IdentityStep),
-    SelectOne(select_one::SelectOneStep),
-    PathLocalCount(get_path::PathLocalCount),
-    TransformTraverser(transform_traverser::TransformTraverserStep),
-}
-
-impl FromPb<pb::GremlinStep> for MapStep {
-    fn from_pb(step: pb::GremlinStep) -> Result<Self, ParseError>
-    where
-        Self: Sized,
-    {
-        match step.step {
-            Some(pb::gremlin_step::Step::PathStep(_p)) => {
-                Ok(MapStep::GetPath(get_path::GetPathStep))
+impl MapFuncGen for pb::GremlinStep {
+    fn gen_map(self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>> {
+        let tags = self.get_tags();
+        let remove_tags = self.get_remove_tags();
+        if let Some(step) = self.step {
+            match step {
+                pb::gremlin_step::Step::PathStep(path_step) => Ok(Box::new(path_step)),
+                pb::gremlin_step::Step::SelectStep(select_step) => select_step.gen_map(),
+                pb::gremlin_step::Step::IdentityStep(identity_step) => {
+                    let identity_step = IdentityStep { step: identity_step, tags, remove_tags };
+                    identity_step.gen_map()
+                }
+                pb::gremlin_step::Step::SelectOneWithoutBy(select_one_step) => {
+                    let select_tag = Tag::from_pb(
+                        select_one_step
+                            .tag
+                            .ok_or(str_to_dyn_error("tag is none in SelectOneWithoutBy"))?,
+                    )?;
+                    Ok(Box::new(SelectOneStep { select_tag, tags, remove_tags }))
+                }
+                pb::gremlin_step::Step::PathLocalCountStep(_s) => {
+                    Ok(Box::new(PathLocalCountStep { tags, remove_tags }))
+                }
+                pb::gremlin_step::Step::EdgeVertexStep(edge_vertex_step) => {
+                    let edge_vertex_step =
+                        EdgeVertexStep { step: edge_vertex_step, tags, remove_tags };
+                    edge_vertex_step.gen_map()
+                }
+                pb::gremlin_step::Step::TransformTraverserStep(s) => {
+                    let requirements_pb = unsafe { std::mem::transmute(s.traverser_requirements) };
+                    let requirements = Requirement::from_pb(requirements_pb)?;
+                    Ok(Box::new(TransformTraverserStep { requirement: requirements, remove_tags }))
+                }
+                _ => Err(str_to_dyn_error("pb GremlinStep is not a Map Step")),
             }
-            Some(pb::gremlin_step::Step::SelectStep(s)) => {
-                let pop_pb = unsafe { std::mem::transmute(s.pop) };
-                let pop = Pop::from_pb(pop_pb)?;
-                let mut tag_keys = vec![];
-                let tag_keys_pb = s.select_keys;
-                for tag_key_pb in tag_keys_pb {
-                    tag_keys.push(TagKey::from_pb(tag_key_pb)?);
-                }
-                let get_property_step = get_property::GetPropertyStep::new(tag_keys, pop);
-                Ok(MapStep::GetProperty(get_property_step))
-            }
-            Some(pb::gremlin_step::Step::IdentityStep(i)) => {
-                let is_all = i.is_all;
-                let properties = i.properties;
-                let mut identity_step = if is_all || !properties.is_empty() {
-                    // the case when we need all properties or given properties
-                    identity::IdentityStep::new(Some(properties))
-                } else {
-                    // the case when we do not need any property
-                    identity::IdentityStep::new(None)
-                };
-                for tag in step.tags {
-                    identity_step.add_tag(Tag::from_pb(tag)?);
-                }
-                for tag in step.remove_tags {
-                    identity_step.remove_tag(Tag::from_pb(tag)?);
-                }
-                Ok(MapStep::Identity(identity_step))
-            }
-            Some(pb::gremlin_step::Step::SelectOneWithoutBy(s)) => {
-                let mut select_step = select_one::SelectOneStep::new(Tag::from_pb(
-                    s.tag.ok_or("tag is none in SelectOneWithoutBy")?,
-                )?);
-                for tag in step.tags {
-                    select_step.add_tag(Tag::from_pb(tag)?);
-                }
-                for tag in step.remove_tags {
-                    select_step.remove_tag(Tag::from_pb(tag)?);
-                }
-                Ok(MapStep::SelectOne(select_step))
-            }
-            Some(pb::gremlin_step::Step::PathLocalCountStep(_s)) => {
-                let mut path_local_count_step = get_path::PathLocalCount::empty();
-                for tag in step.tags {
-                    path_local_count_step.add_tag(Tag::from_pb(tag)?);
-                }
-                for tag in step.remove_tags {
-                    path_local_count_step.remove_tag(Tag::from_pb(tag)?);
-                }
-                Ok(MapStep::PathLocalCount(path_local_count_step))
-            }
-            Some(pb::gremlin_step::Step::EdgeVertexStep(s)) => {
-                let opt_pb = unsafe { std::mem::transmute(s.endpoint_opt) };
-                let opt = EndPointOpt::from_pb(opt_pb)?;
-                let mut edge_vertex_step = edge_v::EdgeVertexStep::new(opt);
-                for tag in step.tags {
-                    edge_vertex_step.add_tag(Tag::from_pb(tag)?);
-                }
-                for tag in step.remove_tags {
-                    edge_vertex_step.remove_tag(Tag::from_pb(tag)?);
-                }
-                Ok(MapStep::EdgeVertex(edge_vertex_step))
-            }
-            Some(pb::gremlin_step::Step::TransformTraverserStep(s)) => {
-                let requirements_pb = unsafe { std::mem::transmute(s.traverser_requirements) };
-                let requirements = Requirement::from_pb(requirements_pb)?;
-                let mut transform_traverser_step =
-                    transform_traverser::TransformTraverserStep::new(requirements);
-                for tag in step.remove_tags {
-                    transform_traverser_step.remove_tag(Tag::from_pb(tag)?);
-                }
-                Ok(MapStep::TransformTraverser(transform_traverser_step))
-            }
-            _ => Err(ParseError::InvalidData),
+        } else {
+            Err(str_to_dyn_error("pb GremlinStep does not have a step"))
         }
     }
 }
-
-impl_as_any!(MapStep);

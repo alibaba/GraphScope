@@ -14,42 +14,27 @@
 //! limitations under the License.
 
 use crate::generated::gremlin as pb;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::codec::ParseError;
-use crate::structure::Tag;
-use crate::{DynResult, FromPb};
-use bit_set::BitSet;
+use crate::{str_to_dyn_error, DynResult};
 use pegasus_common::collections::{CollectionFactory, Set};
-use pegasus_common::downcast::*;
 
 mod dedup;
 
 #[enum_dispatch]
 pub trait CollectionFactoryGen {
-    fn gen(
-        &self,
+    fn gen_collection(
+        self,
     ) -> DynResult<Box<dyn CollectionFactory<Traverser, Target = Box<dyn Set<Traverser>>>>>;
 }
 
-#[enum_dispatch(CollectionFactoryGen, Step)]
-pub enum DedupStep {
-    HashDedup(dedup::HashDedupStep),
-}
-
-impl FromPb<pb::GremlinStep> for DedupStep {
-    fn from_pb(step: pb::GremlinStep) -> Result<Self, ParseError>
-    where
-        Self: Sized,
-    {
-        match step.step {
-            Some(pb::gremlin_step::Step::DedupStep(_)) => {
-                Ok(DedupStep::HashDedup(dedup::HashDedupStep {}))
-            }
-            _ => Err(ParseError::InvalidData),
+impl CollectionFactoryGen for pb::GremlinStep {
+    fn gen_collection(
+        self,
+    ) -> DynResult<Box<dyn CollectionFactory<Traverser, Target = Box<dyn Set<Traverser>>>>> {
+        if let Some(pb::gremlin_step::Step::DedupStep(dedup)) = self.step {
+            Ok(Box::new(dedup))
+        } else {
+            Err(str_to_dyn_error("pb GremlinStep is not a Dedup Step"))
         }
     }
 }
-
-impl_as_any!(DedupStep);

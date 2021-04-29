@@ -13,57 +13,22 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::{FilterFuncGen, Step};
+use crate::generated::gremlin as pb;
+use crate::process::traversal::step::FilterFuncGen;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::{Details, Element, Tag, Token, TraverserFilterChain};
-use crate::{str_to_dyn_error, DynResult};
-use bit_set::BitSet;
+use crate::structure::codec::pb_chain_to_filter;
+use crate::structure::{with_tag, Details, Element, Filter, Tag, Token, TraverserFilterChain};
+use crate::{str_to_dyn_error, DynResult, FromPb};
 use pegasus::api::function::{FilterFunction, FnResult};
 use std::sync::Arc;
 
-pub struct WherePredicateStep {
-    pub symbol: StepSymbol,
-    pub start_key: Option<Tag>,
-    pub start_token: Token,
-    as_tags: Vec<Tag>,
-    filter: Arc<TraverserFilterChain>,
-}
-
-impl WherePredicateStep {
-    pub fn new(start_key: Option<Tag>, start_token: Token, filter: TraverserFilterChain) -> Self {
-        WherePredicateStep {
-            symbol: StepSymbol::Where,
-            start_key,
-            start_token,
-            as_tags: vec![],
-            filter: Arc::new(filter),
-        }
-    }
-}
-
-impl Step for WherePredicateStep {
-    fn get_symbol(&self) -> StepSymbol {
-        self.symbol
-    }
-
-    fn add_tag(&mut self, tag: Tag) {
-        self.as_tags.push(tag);
-    }
-
-    fn tags_as_slice(&self) -> &[Tag] {
-        &self.as_tags
-    }
-}
-
-struct Select {
+struct WhereStep {
     pub start_key: Option<Tag>,
     pub start_token: Token,
     filter: Arc<TraverserFilterChain>,
-    tags: BitSet,
 }
 
-impl FilterFunction<Traverser> for Select {
+impl FilterFunction<Traverser> for WhereStep {
     fn exec(&self, input: &Traverser) -> FnResult<bool> {
         let start = if let Some(ref start) = self.start_key {
             if let Some(t) = input.select(start) {
@@ -97,22 +62,33 @@ impl FilterFunction<Traverser> for Select {
         };
 
         let result = self.filter.test(input).unwrap_or(false);
-        if result && !self.tags.is_empty() {
-            Err(str_to_dyn_error("Now we don't support as() in where step"))
-        } else {
-            Ok(result)
-        }
+        Ok(result)
     }
 }
 
-impl FilterFuncGen for WherePredicateStep {
-    fn gen(&self) -> DynResult<Box<dyn FilterFunction<Traverser>>> {
-        let tags = self.get_tags();
-        Ok(Box::new(Select {
-            start_key: self.start_key.clone(),
-            start_token: self.start_token.clone(),
-            filter: self.filter.clone(),
-            tags,
-        }))
+impl FilterFuncGen for pb::WhereStep {
+    fn gen_filter(mut self) -> DynResult<Box<dyn FilterFunction<Traverser>>> {
+        let start_key = if self.start_tag.is_none() {
+            None
+        } else {
+            Some(Tag::from_pb(self.start_tag.unwrap())?)
+        };
+        let start_token_pb =
+            self.start_token.take().ok_or(str_to_dyn_error("start token is none"))?;
+        let start_token = Token::from_pb(start_token_pb)?;
+        let tags_pb = std::mem::replace(&mut self.tags, vec![]);
+        let mut select_tags = vec![];
+        for tag_pb in tags_pb {
+            select_tags.push(Tag::from_pb(tag_pb)?);
+        }
+        let mut filter = Filter::default();
+        if let Some(predicates) = self.predicates {
+            if let Some(test) = pb_chain_to_filter(&predicates)? {
+                let mut iter = select_tags.into_iter();
+                filter = with_tag(&mut iter, test);
+            }
+        };
+
+        Ok(Box::new(WhereStep { start_key, start_token, filter: Arc::new(filter) }))
     }
 }

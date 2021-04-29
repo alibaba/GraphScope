@@ -14,55 +14,27 @@
 //! limitations under the License.
 
 use crate::generated::gremlin as pb;
-use crate::process::traversal::step::by_key::TagKey;
 pub use crate::process::traversal::step::order_by::order::Order;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::codec::ParseError;
-use crate::structure::Tag;
-use crate::DynResult;
-use crate::FromPb;
-use bit_set::BitSet;
+use crate::{str_to_dyn_error, DynResult};
 use pegasus::api::function::CompareFunction;
-use pegasus_common::downcast::*;
 
 mod order;
 
 #[enum_dispatch]
 pub trait CompareFunctionGen {
-    fn gen(&self) -> DynResult<Box<dyn CompareFunction<Traverser>>>;
+    fn gen_cmp(self) -> DynResult<Box<dyn CompareFunction<Traverser>>>;
 }
 
-#[enum_dispatch(Step, CompareFunctionGen)]
-pub enum OrderStep {
-    OrderStep(order::OrderStep),
-}
-
-impl FromPb<pb::GremlinStep> for OrderStep {
-    fn from_pb(step: pb::GremlinStep) -> Result<Self, ParseError>
-    where
-        Self: Sized,
-    {
-        match step.step {
-            Some(pb::gremlin_step::Step::OrderByStep(o)) => {
-                let mut order_keys = vec![];
-                for cmp in o.pairs {
-                    let tag_key = if let Some(tag_key_pb) = cmp.key {
-                        TagKey::from_pb(tag_key_pb)?
-                    } else {
-                        TagKey::default()
-                    };
-                    let order_type_pb = unsafe { std::mem::transmute(cmp.order) };
-                    let order_type = Order::from_pb(order_type_pb)?;
-                    order_keys.push((tag_key, order_type));
-                }
-                let order_step = order::OrderStep::new(order_keys);
-                Ok(OrderStep::OrderStep(order_step))
+impl CompareFunctionGen for pb::GremlinStep {
+    fn gen_cmp(self) -> DynResult<Box<dyn CompareFunction<Traverser>>> {
+        if let Some(step) = self.step {
+            match step {
+                pb::gremlin_step::Step::OrderByStep(order_step) => order_step.gen_cmp(),
+                _ => Err(str_to_dyn_error("pb GremlinStep is not a Compare Step")),
             }
-            _ => Err(ParseError::InvalidData),
+        } else {
+            Err(str_to_dyn_error("pb GremlinStep does not have a step"))
         }
     }
 }
-
-impl_as_any!(OrderStep);

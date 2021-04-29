@@ -25,7 +25,7 @@ usage() {
  To build the utilities for GAIA.
  ${bold}Options:${reset}
   -o, --options    Options for building GAIA.
-                   Available options: build_store, start_rpc, gremlin_server, all
+                   Available options: graph_loader, start_rpc, gremlin_server, all
   -h, --help       Display this help and exit.
 "
 }
@@ -42,7 +42,7 @@ done
 
 echo "Build GAIA utilities for: ${options}"
 
-if [ "${options}" != "all"  ] && [ "${options}" != "build_store"  ]  \
+if [ "${options}" != "all"  ] && [ "${options}" != "graph_loader"  ]  \
   && [ "${options}" != "start_rpc"  ] && [ "${options}" != "gremlin_server" ]
 then
     echo "Invalid options: ${options}"
@@ -50,15 +50,17 @@ then
     exit;
 fi
 
-if [ "${options}" = "all"  ] || [ "${options}" = "build_store"  ]
+if [ "${options}" = "all"  ] || [ "${options}" = "graph_loader"  ]
 then
   # Build graph storage
   cd ../graph_store
   echo "Build tools for graph storage..."
-  cargo build --release --bin download_raw
-  cargo build --release --bin build_store
-  cp target/release/download_raw ../scripts/bin
-  cp target/release/build_store ../scripts/bin
+  cargo build --release --bin downloader
+  cargo build --release --bin par_loader
+  cargo build --release --bin simple_loader
+  cp target/release/downloader ../scripts/bin
+  cp target/release/par_loader ../scripts/bin
+  cp target/release/simple_loader ../scripts/bin
   cd ../scripts
 fi
 

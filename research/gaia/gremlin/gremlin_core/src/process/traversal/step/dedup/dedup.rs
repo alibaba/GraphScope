@@ -13,35 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::process::traversal::step::dedup::CollectionFactoryGen;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::Step;
+use crate::generated::gremlin as pb;
 use crate::process::traversal::traverser::Traverser;
-use crate::DynResult;
 use pegasus_common::collections::{CollectionFactory, Set};
 use std::collections::HashSet;
 
-pub struct HashDedupStep {}
-
-impl Step for HashDedupStep {
-    fn get_symbol(&self) -> StepSymbol {
-        StepSymbol::Dedup
-    }
-}
-
-pub struct HashDedupFactory {}
-
-impl CollectionFactory<Traverser> for HashDedupFactory {
+impl CollectionFactory<Traverser> for pb::DedupStep {
     type Target = Box<dyn Set<Traverser>>;
     fn create(&self) -> Self::Target {
         Box::new(HashSet::new()) as Box<dyn Set<Traverser>>
-    }
-}
-
-impl CollectionFactoryGen for HashDedupStep {
-    fn gen(
-        &self,
-    ) -> DynResult<Box<dyn CollectionFactory<Traverser, Target = Box<dyn Set<Traverser>>>>> {
-        Ok(Box::new(HashDedupFactory {}))
     }
 }

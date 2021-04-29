@@ -28,7 +28,9 @@ import org.apache.tinkerpop.gremlin.structure.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
     private static final Logger logger = LoggerFactory.getLogger(SchemaIdMakerStrategy.class);
@@ -44,8 +46,13 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
     @Override
     public void apply(Traversal.Admin<?, ?> traversal) {
         List<Step> steps = traversal.getSteps();
+        // point to the same object after RepeatUnroll, avoid this
+        Set<Step> converted = new HashSet<>();
         for (int i = 0; i < steps.size(); ++i) {
             Step step = steps.get(i);
+            if (converted.contains(step)) {
+                continue;
+            }
             if (step instanceof HasContainerHolder) {
                 List<HasContainer> containers = ((HasContainerHolder) step).getHasContainers();
                 for (HasContainer container : containers) {
@@ -57,6 +64,7 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                             return;
                         }
                         predicate.setValue(String.valueOf(labelId));
+                        converted.add(step);
                     }
                 }
             } else if (step instanceof VertexStep) {
@@ -68,6 +76,7 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                         return;
                     }
                     edgeLabels[j] = String.valueOf(labelId);
+                    converted.add(step);
                 }
             }
         }

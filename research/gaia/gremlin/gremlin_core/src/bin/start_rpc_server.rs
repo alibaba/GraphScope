@@ -16,7 +16,7 @@
 extern crate clap;
 
 use gremlin_core::compiler::GremlinJobCompiler;
-use gremlin_core::{create_demo_graph, register_gremlin_types, Partitioner};
+use gremlin_core::{create_demo_graph, register_gremlin_types, Partition};
 use log::info;
 use pegasus::Configuration;
 use pegasus_server::config::combine_config;
@@ -89,25 +89,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("try to start rpc server;");
     let partition = Partition { num_servers: num_servers.clone() };
-    let factory = GremlinJobCompiler::new(partition, num_servers as u32, server_config.server_id);
+    let factory = GremlinJobCompiler::new(partition, num_servers, server_config.server_id);
     let service = Service::new(factory);
     start_debug_rpc_server(addr.parse().unwrap(), service, server_config.report).await?;
 
     Ok(())
-}
-
-pub struct Partition {
-    pub num_servers: usize,
-}
-
-impl Partitioner for Partition {
-    fn get_partition(&self, id: &u128, job_workers: u32) -> u64 {
-        let workers = job_workers as usize;
-        let id_usize = *id as usize;
-        (id_usize % self.num_servers * workers + (_hash(id_usize)) % workers) as u64
-    }
-}
-
-fn _hash(key: usize) -> usize {
-    fasthash::metro::hash64_with_seed(&key.to_le_bytes(), 2654435761) as usize
 }

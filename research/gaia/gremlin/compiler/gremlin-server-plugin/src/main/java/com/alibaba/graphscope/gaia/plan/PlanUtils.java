@@ -28,6 +28,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
@@ -43,8 +44,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class PlanUtils {
@@ -337,6 +340,8 @@ public class PlanUtils {
             return Gremlin.SubTaskJoiner.newBuilder().setByJoiner(Gremlin.ByJoiner.newBuilder()).build();
         } else if (type == BySubTaskStep.JoinerType.GroupValueBy) {
             return Gremlin.SubTaskJoiner.newBuilder().setGroupValueJoiner(Gremlin.GroupValueJoiner.newBuilder()).build();
+        } else if (type == BySubTaskStep.JoinerType.Select) {
+            return Gremlin.SubTaskJoiner.newBuilder().setSelectByJoiner(Gremlin.SelectBySubJoin.newBuilder()).build();
         } else {
             throw new UnsupportedOperationException("cannot support other by joiner type " + type);
         }
@@ -344,5 +349,13 @@ public class PlanUtils {
 
     public static IdMaker getTagIdMaker(Configuration conf) {
         return (IdMaker) conf.getProperty(PlanConfig.TAG_ID_MAKER);
+    }
+
+    public static String readJsonFromFile(String fileName) {
+        try {
+            return FileUtils.readFileToString(new File(fileName), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

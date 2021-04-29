@@ -404,7 +404,7 @@ impl Details for LazyVertexDetails {
         })
     }
 
-    fn get_id(&self) -> u128 {
+    fn get_id(&self) -> ID {
         unreachable!()
     }
 
@@ -436,7 +436,7 @@ impl Details for LazyEdgeDetails {
         unimplemented!()
     }
 
-    fn get_id(&self) -> u128 {
+    fn get_id(&self) -> ID {
         unimplemented!()
     }
 
@@ -457,8 +457,15 @@ fn encode_runtime_v_id(v: &LocalVertex<DefaultId>) -> ID {
     v.get_id() as ID
 }
 
+#[cfg(not(feature = "llong_id"))]
 fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
-    ((e.get_src_id() as ID) << 64) | (e.get_dst_id() as ID)
+    // TODO(longbin) Use source id for edge id for now
+    e.get_src_id() as ID
+}
+
+#[cfg(feature = "llong_id")]
+fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
+    ((e.get_dst_id() as ID) << 64) | (e.get_src_id() as ID)
 }
 
 fn encode_runtime_v_label(v: &LocalVertex<DefaultId>) -> Option<Label> {

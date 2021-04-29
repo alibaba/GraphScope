@@ -15,6 +15,7 @@
 
 use crate::process::traversal::step::util::result_downcast::try_downcast_group_key;
 use crate::process::traversal::traverser::Traverser;
+use bit_set::BitSet;
 use pegasus::api::function::LeftJoinFunction;
 use std::sync::Arc;
 
@@ -69,7 +70,23 @@ pub struct GroupBySubJoin;
 impl LeftJoinFunction<Traverser> for GroupBySubJoin {
     fn exec(&self, parent: &Traverser, sub: Traverser) -> Option<Traverser> {
         if let Some(parent_obj) = parent.get_object() {
-            try_downcast_group_key(parent_obj).and_then(|first| Some(Traverser::with((first, sub))))
+            try_downcast_group_key(parent_obj)
+                .and_then(|first| Some(Traverser::with((first.clone(), sub))))
+        } else {
+            None
+        }
+    }
+}
+
+// for e.g., select("a").by(out().out().count())
+pub struct SelectBySubJoin;
+
+impl LeftJoinFunction<Traverser> for SelectBySubJoin {
+    fn exec(&self, parent: &Traverser, sub: Traverser) -> Option<Traverser> {
+        if let Some(obj) = sub.get_object() {
+            let mut parent = parent.clone();
+            parent.split_with_value(obj.clone(), &BitSet::default());
+            Some(parent)
         } else {
             None
         }

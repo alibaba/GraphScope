@@ -18,8 +18,9 @@ use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::{Requirement, Traverser};
 use crate::structure::codec::pb_chain_to_filter;
-use crate::structure::{Label, QueryParams, Tag, Vertex, ID};
+use crate::structure::{Label, QueryParams, Vertex, ID};
 use crate::FromPb;
+use bit_set::BitSet;
 use graph_store::common::LabelId;
 use pegasus::BuildJobError;
 use pegasus_common::downcast::*;
@@ -29,10 +30,10 @@ pub struct GraphVertexStep {
     pub symbol: StepSymbol,
     pub params: QueryParams<Vertex>,
     src: Option<Vec<Vec<ID>>>,
-    as_labels: Vec<Tag>,
+    as_tags: BitSet,
     requirement: Requirement,
     // workers per server, for gen_source
-    workers: u32,
+    workers: usize,
     server_index: u64,
 }
 
@@ -43,7 +44,7 @@ impl GraphVertexStep {
         GraphVertexStep {
             symbol: StepSymbol::V,
             src: None,
-            as_labels: vec![],
+            as_tags: BitSet::new(),
             requirement: req,
             params: QueryParams::new(),
             workers: 1,
@@ -51,7 +52,7 @@ impl GraphVertexStep {
         }
     }
 
-    pub fn set_num_workers(&mut self, workers: u32) {
+    pub fn set_num_workers(&mut self, workers: usize) {
         self.workers = workers;
     }
 
@@ -59,13 +60,13 @@ impl GraphVertexStep {
         self.server_index = index;
     }
 
-    pub fn set_src(&mut self, ids: Vec<ID>, server_num: u32) {
-        let mut partition = Vec::with_capacity(server_num as usize);
+    pub fn set_src(&mut self, ids: Vec<ID>, server_num: usize) {
+        let mut partition = Vec::with_capacity(server_num);
         for _ in 0..server_num {
             partition.push(vec![]);
         }
         for id in ids {
-            let idx = (id % server_num as u128) as usize;
+            let idx = (id % server_num as ID) as usize;
             partition[idx].push(id);
         }
         self.src = Some(partition);
@@ -74,25 +75,20 @@ impl GraphVertexStep {
     pub fn set_requirement(&mut self, requirement: Requirement) {
         self.requirement = requirement;
     }
+    pub fn set_tags(&mut self, tags: BitSet) {
+        self.as_tags = tags;
+    }
 }
 
 impl Step for GraphVertexStep {
     fn get_symbol(&self) -> StepSymbol {
         self.symbol
     }
-
-    fn add_tag(&mut self, label: Tag) {
-        self.as_labels.push(label);
-    }
-
-    fn tags_as_slice(&self) -> &[Tag] {
-        self.as_labels.as_slice()
-    }
 }
 
 impl GraphVertexStep {
     pub fn gen_source(
-        &self, worker_index: Option<u32>,
+        self, worker_index: Option<usize>,
     ) -> Box<dyn Iterator<Item = Traverser> + Send> {
         let gen_flag =
             if let Some(w_index) = worker_index { w_index % self.workers == 0 } else { true };
@@ -126,7 +122,7 @@ impl GraphVertexStep {
         if self.requirement.contains(Requirement::PATH)
             || self.requirement.contains(Requirement::LABELED_PATH)
         {
-            let tags = self.get_tags();
+            let tags = self.as_tags;
             let requirement = self.requirement.clone();
             Box::new(source.map(move |v| Traverser::with_path(v, &tags, requirement)))
         } else {
@@ -136,7 +132,7 @@ impl GraphVertexStep {
 }
 
 pub fn graph_step_from(
-    gremlin_step: &mut pb::GremlinStep, num_servers: u32,
+    gremlin_step: &mut pb::GremlinStep, num_servers: usize,
 ) -> Result<GraphVertexStep, BuildJobError> {
     if let Some(option) = gremlin_step.step.take() {
         match option {
@@ -144,9 +140,7 @@ pub fn graph_step_from(
                 let requirements_pb = unsafe { std::mem::transmute(opt.traverser_requirements) };
                 let requirements = Requirement::from_pb(requirements_pb)?;
                 let mut step = GraphVertexStep::new(requirements);
-                for tag in gremlin_step.tags.drain(..) {
-                    step.add_tag(Tag::from_pb(tag)?);
-                }
+                step.set_tags(gremlin_step.get_tags());
                 let mut ids = vec![];
                 for id in opt.ids {
                     ids.push(id as ID);

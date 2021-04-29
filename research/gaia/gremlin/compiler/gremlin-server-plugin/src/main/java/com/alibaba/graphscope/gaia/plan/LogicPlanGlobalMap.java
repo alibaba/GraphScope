@@ -17,7 +17,9 @@ package com.alibaba.graphscope.gaia.plan;
 
 import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
-import com.alibaba.graphscope.gaia.plan.strategy.MaxGraphStep;
+import com.alibaba.graphscope.gaia.plan.extractor.PropertyExtractor;
+import com.alibaba.graphscope.gaia.plan.meta.object.*;
+import com.alibaba.graphscope.gaia.plan.strategy.*;
 import com.alibaba.graphscope.gaia.plan.strategy.global.TransformTraverserStep;
 import com.alibaba.graphscope.gaia.FilterHelper;
 import com.alibaba.pegasus.builder.JobBuilder;
@@ -28,9 +30,6 @@ import com.alibaba.graphscope.gaia.plan.resource.JobBuilderResource;
 import com.alibaba.graphscope.gaia.plan.resource.StepResource;
 import com.alibaba.graphscope.gaia.plan.predicate.HasContainerP;
 import com.alibaba.graphscope.gaia.plan.predicate.WherePredicateP;
-import com.alibaba.graphscope.gaia.plan.strategy.BySubTaskStep;
-import com.alibaba.graphscope.gaia.plan.strategy.OrderGlobalLimitStep;
-import com.alibaba.graphscope.gaia.plan.strategy.PropertyIdentityStep;
 import com.alibaba.graphscope.gaia.plan.translator.PredicateTranslator;
 import com.alibaba.graphscope.gaia.plan.translator.TraversalTranslator;
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
@@ -77,6 +76,7 @@ public class LogicPlanGlobalMap {
         BySubTaskStep,
         UnionStep,
         PropertiesStep,
+        PropertyMapStep,
         TraversalMapStep,
         PathLocalCountStep,
         IdentityStep,
@@ -87,7 +87,8 @@ public class LogicPlanGlobalMap {
         PhysicalPlanUnfoldStep,
         TransformTraverserStep,
         HasAnyStep,
-        IsStep
+        IsStep,
+        FoldStep
     }
 
     public static STEP stepType(Step t) {
@@ -374,7 +375,7 @@ public class LogicPlanGlobalMap {
         stepPlanMap.put(STEP.PropertiesStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
-                Gremlin.ValuesStep.Builder builder = Gremlin.ValuesStep.newBuilder();
+                Gremlin.PropertiesStep.Builder builder = Gremlin.PropertiesStep.newBuilder();
                 String[] properties = ((PropertiesStep) t).getPropertyKeys();
                 if (properties != null && properties.length > 0) {
                     builder.addAllProperties(Arrays.asList(properties));
@@ -449,5 +450,42 @@ public class LogicPlanGlobalMap {
 
     public static Optional<StepResource> getResourceConstructor(STEP step) {
         return Optional.ofNullable(stepPlanMap.get(step));
+    }
+
+    private final static Map<STEP, StepMetaRequiredInfo> stepMetaInfoMap;
+
+    static {
+        stepMetaInfoMap = new HashMap<>();
+        // examples
+        stepMetaInfoMap.put(STEP.PathFilterStep, StepMetaRequiredInfo.Builder.newBuilder()
+                .setNeedPathHistory(true).build()
+        );
+        stepMetaInfoMap.put(STEP.PropertiesStep, StepMetaRequiredInfo.Builder.newBuilder()
+                .setTraverserMapFunc((stepEle) -> new TraverserElement(new CompositeObject(String.class)))
+                .setExtractor(new PropertyExtractor() {
+                    @Override
+                    public List<String> extractProperties(Step step) {
+                        List<String> properties = new ArrayList<>();
+                        PropertiesStep step1 = (PropertiesStep) step;
+                        if (step1.getPropertyKeys() != null) {
+                            properties.addAll(Arrays.asList(step1.getPropertyKeys()));
+                        }
+                        return properties;
+                    }
+                }).build()
+        );
+        stepMetaInfoMap.put(STEP.VertexStep, StepMetaRequiredInfo.Builder.newBuilder()
+                .setTraverserMapFunc(
+                        (stepEle) -> {
+                            VertexStep step = (VertexStep) stepEle.getStep();
+                            CompositeObject returnObj = step.returnsVertex() ? new CompositeObject(new Vertex()) : new CompositeObject(new Edge());
+                            return new TraverserElement(returnObj);
+                        }
+                ).build()
+        );
+    }
+
+    public static Optional<StepMetaRequiredInfo> getStepMetaRequiredInfo(STEP step) {
+        return Optional.ofNullable(stepMetaInfoMap.get(step));
     }
 }

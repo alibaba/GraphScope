@@ -48,9 +48,9 @@ pub fn try_downcast_list(obj: &Object) -> Option<Vec<Traverser>> {
 }
 
 /// downcast result of group().by() and get key where key is a Traverser
-pub fn try_downcast_group_key(obj: &Object) -> Option<Traverser> {
+pub fn try_downcast_group_key(obj: &Object) -> Option<&Traverser> {
     if let Some(pair) = try_downcast_pair(obj) {
-        let first = pair.clone().0;
+        let first = &pair.0;
         Some(first)
     } else {
         None
@@ -58,9 +58,9 @@ pub fn try_downcast_group_key(obj: &Object) -> Option<Traverser> {
 }
 
 /// downcast result of group().by() and get value where key is a Traverser
-pub fn try_downcast_group_value(obj: &Object) -> Option<Traverser> {
+pub fn try_downcast_group_value(obj: &Object) -> Option<&Traverser> {
     if let Some(pair) = try_downcast_pair(obj) {
-        let second = pair.clone().1;
+        let second = &pair.1;
         Some(second)
     } else {
         None

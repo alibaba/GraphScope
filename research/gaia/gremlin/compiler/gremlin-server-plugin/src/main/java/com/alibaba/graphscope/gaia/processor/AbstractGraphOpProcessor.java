@@ -28,6 +28,7 @@ import com.alibaba.graphscope.gaia.GlobalEngineConf;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.idmaker.IncrementalQueryIdMaker;
 import com.alibaba.graphscope.gaia.plan.strategy.GraphTraversalStrategies;
+import com.alibaba.graphscope.gaia.plan.strategy.OrderGuaranteeStrategy;
 import com.alibaba.graphscope.gaia.plan.strategy.global.PathHistoryStrategy;
 import com.codahale.metrics.Timer;
 import com.alibaba.graphscope.gaia.plan.strategy.PropertyShuffleStrategy;
@@ -185,8 +186,10 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
         logger.debug("remove {}, require {}, cache {}", removeTagOn, labelPathRequireOn, propertyCacheOn);
         if (propertyCacheOn) {
             traversalStrategies.removeStrategies(PropertyShuffleStrategy.class);
+            traversalStrategies.removeStrategies(OrderGuaranteeStrategy.class);
         } else {
             traversalStrategies.addStrategyByPriority(GraphTraversalStrategies.PROPERTY_SHUFFLE_PRIORITY, PropertyShuffleStrategy.instance());
+            traversalStrategies.addStrategyByPriority(GraphTraversalStrategies.ORDER_GUARANTEE_PRIORITY, OrderGuaranteeStrategy.instance());
         }
         traversal.asAdmin().setStrategies(traversalStrategies);
         traversal.asAdmin().applyStrategies();

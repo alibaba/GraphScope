@@ -28,9 +28,9 @@ extern crate pegasus;
 extern crate pegasus_config;
 #[macro_use]
 extern crate log;
-extern crate fasthash;
 
 extern crate graph_store;
+
 use crate::process::traversal::traverser::{ShadeSync, Traverser};
 pub use crate::structure::{get_graph, register_graph};
 pub use crate::structure::{Element, GraphProxy, ID};
@@ -45,6 +45,7 @@ pub mod common;
 pub mod compiler;
 mod result_process;
 mod storage;
+
 use crate::common::serde_dyn::register_type;
 use crate::result_process::result_to_pb;
 use crate::structure::filter::codec::ParseError;
@@ -82,6 +83,13 @@ pub type DynError = Box<dyn std::error::Error + Send>;
 pub type DynResult<T> = Result<T, Box<dyn std::error::Error + Send>>;
 pub type DynIter<T> = Box<dyn Iterator<Item = DynResult<T>> + Send>;
 
+impl From<ParseError> for DynError {
+    fn from(e: ParseError) -> Self {
+        let err: Box<dyn std::error::Error + Send + Sync> = format!("Parse error: {}", e).into();
+        err
+    }
+}
+
 /// A tricky bypassing of Rust's compiler. It is useful to simplify throwing a `DynError`
 /// from a `&str` as `Err(str_to_dyn_err('some str'))`
 fn str_to_dyn_error(str: &str) -> DynError {
@@ -100,7 +108,26 @@ pub trait FromPb<T> {
 }
 
 pub trait Partitioner: Send + Sync + 'static {
-    fn get_partition(&self, id: &ID, job_workers: u32) -> u64;
+    fn get_partition(&self, id: &ID, job_workers: usize) -> u64;
+}
+
+/// A simple partition utility
+pub struct Partition {
+    pub num_servers: usize,
+}
+
+impl Partitioner for Partition {
+    fn get_partition(&self, id: &ID, workers: usize) -> u64 {
+        let id_usize = *id as usize;
+        let magic_num = id_usize / self.num_servers;
+        // The partitioning logics is as follows:
+        // 1. `R = id - magic_num * num_servers = id % num_servers` routes a given id
+        // to the machine R that holds its data.
+        // 2. `R * workers` shifts the worker's id in the machine R.
+        // 3. `magic_num % workers` then picks up one of the workers in the machine R
+        // to do the computation.
+        ((id_usize - magic_num * self.num_servers) * workers + magic_num % workers) as u64
+    }
 }
 
 pub struct TraverserSinkEncoder;
