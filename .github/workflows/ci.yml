@@ -305,6 +305,10 @@ jobs:
         pushd python && python3 setup.py build_proto && popd
         pushd coordinator && python3 setup.py build_builtin && popd
 
+    - name: Setup tmate session debug
+      if: true
+      uses: mxschmitt/action-tmate@v2
+
     - name: App Test with Expr Off
       if: matrix.experimental == 'OFF'
       run: |
