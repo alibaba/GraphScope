@@ -54,7 +54,7 @@ public class TraversalMetaCollector extends AttributeTranslator<TraversalMetaBui
             Meta<GraphElement, StepPropertiesMeta> elementProperties = (Meta) t.getConfig(MetaConfig.ELEMENT_PROPERTIES);
             if (elementProperties != null && admin instanceof ElementValueTraversal && head.getObject().isGraphElement()) {
                 ElementValueTraversal admin1 = (ElementValueTraversal) admin;
-                Step parent = admin1.getParent().asStep();
+                Step parent = StepMetaCollector.getParentOfTraversalId(t.getMetaId(), admin1);
                 int stepIdx = TraversalHelper.stepIndex(parent, parent.getTraversal());
                 elementProperties.add(head.getObject().getElement(), new StepPropertiesMeta(Collections.singletonList(admin1.getPropertyKey()),
                         new StepId(t.getMetaId(), stepIdx), parent));

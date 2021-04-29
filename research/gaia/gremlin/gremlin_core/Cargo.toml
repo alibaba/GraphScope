@@ -27,10 +27,6 @@ tokio = { version = "1.0", features = ["macros", "sync"] }
 structopt = "0.2"
 vec_map = "0.8.2"
 tempdir = "0.3"
-rand = "0.8"
-
-[dependencies.fasthash]
-git = "https://github.com/flier/rust-fasthash.git"
 
 [build-dependencies]
 tonic-build = "0.4"
@@ -38,3 +34,4 @@ tonic-build = "0.4"
 [features]
 default = []
 proto_inplace = []
+llong_id = []

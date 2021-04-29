@@ -1,55 +1,32 @@
+//
+//! Copyright 2020 Alibaba Group Holding Limited.
+//!
+//! Licensed under the Apache License, Version 2.0 (the "License");
+//! you may not use this file except in compliance with the License.
+//! You may obtain a copy of the License at
+//!
+//! http://www.apache.org/licenses/LICENSE-2.0
+//!
+//! Unless required by applicable law or agreed to in writing, software
+//! distributed under the License is distributed on an "AS IS" BASIS,
+//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//! See the License for the specific language governing permissions and
+//! limitations under the License.
+
 use crate::process::traversal::path::PathItem;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::{MapFuncGen, RemoveTag, Step};
 use crate::process::traversal::traverser::Traverser;
+use crate::str_to_dyn_error;
 use crate::structure::Tag;
-use crate::{str_to_dyn_error, DynResult};
 use bit_set::BitSet;
 use pegasus::api::function::{FnResult, MapFunction};
 
 pub struct SelectOneStep {
-    select_tag: Tag,
-    as_tags: Vec<Tag>,
-    remove_tags: Vec<Tag>,
+    pub select_tag: Tag,
+    pub tags: BitSet,
+    pub remove_tags: BitSet,
 }
 
-impl SelectOneStep {
-    pub fn new(select_tag: Tag) -> Self {
-        SelectOneStep { select_tag, as_tags: vec![], remove_tags: vec![] }
-    }
-}
-
-impl Step for SelectOneStep {
-    fn get_symbol(&self) -> StepSymbol {
-        StepSymbol::Select
-    }
-
-    fn add_tag(&mut self, label: Tag) {
-        self.as_tags.push(label);
-    }
-
-    fn tags_as_slice(&self) -> &[Tag] {
-        self.as_tags.as_slice()
-    }
-}
-
-impl RemoveTag for SelectOneStep {
-    fn remove_tag(&mut self, label: Tag) {
-        self.remove_tags.push(label);
-    }
-
-    fn get_remove_tags_as_slice(&self) -> &[Tag] {
-        self.remove_tags.as_slice()
-    }
-}
-
-struct SelectOneFunc {
-    select_tag: Tag,
-    tags: BitSet,
-    remove_tags: BitSet,
-}
-
-impl MapFunction<Traverser, Traverser> for SelectOneFunc {
+impl MapFunction<Traverser, Traverser> for SelectOneStep {
     fn exec(&self, mut input: Traverser) -> FnResult<Traverser> {
         if let Some(path_item) = input.select(&self.select_tag) {
             match path_item {
@@ -72,13 +49,5 @@ impl MapFunction<Traverser, Traverser> for SelectOneFunc {
         } else {
             Err(str_to_dyn_error("Cannot get tag"))
         }
-    }
-}
-
-impl MapFuncGen for SelectOneStep {
-    fn gen(&self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>> {
-        let tags = self.get_tags();
-        let remove_tags = self.get_remove_tags();
-        Ok(Box::new(SelectOneFunc { select_tag: self.select_tag.clone(), tags, remove_tags }))
     }
 }

@@ -23,7 +23,31 @@ use std::io;
 use std::ops::{Deref, DerefMut};
 pub use vertex::Vertex;
 
+#[cfg(not(feature = "llong_id"))]
+pub type ID = u64;
+
+#[cfg(not(feature = "llong_id"))]
+pub fn write_id<W: WriteExt>(id: ID, writer: &mut W) -> io::Result<()> {
+    writer.write_u64(id)
+}
+
+#[cfg(not(feature = "llong_id"))]
+pub fn read_id<R: ReadExt>(reader: &mut R) -> io::Result<ID> {
+    reader.read_u64()
+}
+
+#[cfg(feature = "llong_id")]
 pub type ID = u128;
+
+#[cfg(feature = "llong_id")]
+pub fn write_id<W: WriteExt>(id: ID, writer: &mut W) -> io::Result<()> {
+    writer.write_u128(id)
+}
+
+#[cfg(feature = "llong_id")]
+pub fn read_id<R: ReadExt>(reader: &mut R) -> io::Result<ID> {
+    reader.read_u128()
+}
 
 #[derive(Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub enum Label {
@@ -132,7 +156,7 @@ pub struct GraphElement {
 }
 
 impl Element for GraphElement {
-    fn id(&self) -> u128 {
+    fn id(&self) -> ID {
         self.element.id()
     }
 

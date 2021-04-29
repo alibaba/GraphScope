@@ -31,7 +31,7 @@ pub enum DataType {
     String,
     Integer,
     Long,
-    Float,
+    Double,
     Date,
     ID,
     LABEL,
@@ -47,6 +47,8 @@ impl<'a> From<&'a str> for DataType {
             DataType::Long
         } else if token == "INT" {
             DataType::Integer
+        } else if token == "DOUBLE" {
+            DataType::Double
         } else if token == "DATE" {
             DataType::Date
         } else if token == "ID" {
@@ -156,8 +158,8 @@ pub fn parse_properties<'a, Iter: Iterator<Item = &'a str>>(
                 properties.push(json!(val.parse::<i32>()?));
             } else if ty == &DataType::Long {
                 properties.push(json!(val.parse::<i64>()?));
-            } else if ty == &DataType::Float {
-                properties.push(json!(val.parse::<f32>()?));
+            } else if ty == &DataType::Double {
+                properties.push(json!(val.parse::<f64>()?));
             } else if ty == &DataType::Date {
                 properties.push(json!(parse_datetime(val)?));
             } else if ty == &DataType::ID {

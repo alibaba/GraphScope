@@ -14,37 +14,21 @@
 //! limitations under the License.
 
 use crate::generated::gremlin as pb;
-use crate::process::traversal::step::fold::fold::CommonFoldStep;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::Step;
+use crate::process::traversal::step::fold::fold::FoldFunc;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::codec::ParseError;
-use crate::structure::Tag;
-use crate::{DynResult, FromPb};
-use bit_set::BitSet;
-use pegasus_common::downcast::*;
+use crate::DynResult;
 use pegasus_server::factory::FoldFunction;
 
 mod fold;
 
 #[enum_dispatch]
 pub trait FoldFunctionGen {
-    fn gen(&self) -> DynResult<Box<dyn FoldFunction<Traverser>>>;
+    fn gen_fold(self) -> DynResult<Box<dyn FoldFunction<Traverser>>>;
 }
 
-#[enum_dispatch(Step, FoldFunctionGen)]
-pub enum FoldStep {
-    Fold(CommonFoldStep),
-}
-
-impl FromPb<pb::GremlinStep> for FoldStep {
-    fn from_pb(_: pb::GremlinStep) -> Result<Self, ParseError>
-    where
-        Self: Sized,
-    {
-        // it seems that we do not need any info from pb
-        Ok(FoldStep::Fold(CommonFoldStep {}))
+impl FoldFunctionGen for pb::GremlinStep {
+    fn gen_fold(self) -> DynResult<Box<dyn FoldFunction<Traverser>>> {
+        // TODO: should define a unfold step pb with compiler, which provides the choices of different unfold types
+        Ok(Box::new(FoldFunc {}))
     }
 }
-
-impl_as_any!(FoldStep);

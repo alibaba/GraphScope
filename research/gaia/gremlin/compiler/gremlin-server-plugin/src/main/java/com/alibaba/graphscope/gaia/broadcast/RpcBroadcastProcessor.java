@@ -15,7 +15,6 @@
  */
 package com.alibaba.graphscope.gaia.broadcast;
 
-import com.alibaba.graphscope.gaia.result.GremlinResultProcessor;
 import com.alibaba.pegasus.RpcChannel;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.CloseableIterator;
@@ -46,9 +45,9 @@ public class RpcBroadcastProcessor extends AbstractBroadcastProcessor {
     }
 
     @Override
-    public void broadcast(PegasusClient.JobRequest request, Context writeResult) {
+    public void broadcast(PegasusClient.JobRequest request, Context writeResult, ResultProcessor processor) {
         CloseableIterator<PegasusClient.JobResponse> iterator = null;
-        ResultProcessor processor = new GremlinResultProcessor(writeResult);
+        // ResultProcessor processor = new GremlinResultProcessor(writeResult);
         try {
             iterator = rpcClient.submit(request);
             // process response

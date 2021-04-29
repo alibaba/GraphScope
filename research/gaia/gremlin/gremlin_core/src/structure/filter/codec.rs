@@ -37,7 +37,7 @@ pub fn pb_chain_to_filter<E: Element>(
         let node = &pb_chain.node[0];
         parse_node(node)
     } else {
-        let mut chain = Filter::new();
+        let mut chain = Filter::default();
         let mut connect = ChainKind::Or;
         for node in pb_chain.node.iter() {
             if let Some(f) = parse_node(node)? {
@@ -137,6 +137,9 @@ fn eq(left: &Key, right: &Value) -> Result<ElementFilter, ParseError> {
         }
         Some(key::Item::NameId(_)) => unimplemented!(),
         Some(key::Item::Id(_)) => {
+            #[cfg(not(feature = "llong_id"))]
+            let r = right.map(|r| r.as_u64()).transpose()?;
+            #[cfg(feature = "llong_id")]
             let r = right.map(|r| r.as_u128()).transpose()?;
             Ok(has_id(r))
         }

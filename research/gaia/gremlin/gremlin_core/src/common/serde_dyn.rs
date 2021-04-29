@@ -60,7 +60,8 @@ pub fn register_type<T: 'static + Decode + DynType>() -> io::Result<()> {
 pub fn de_dyn_obj(ty_id: &TypeId, bytes: &[u8]) -> io::Result<Box<dyn DynType>> {
     if let Ok(table) = TYPE_TABLE.read() {
         if let Some(ph_impl) = table.get(ty_id) {
-            ph_impl.from_bytes(bytes)
+            let res = ph_impl.from_bytes(bytes);
+            res
         } else {
             Err(io::Error::new(io::ErrorKind::InvalidInput, "type not exists"))
         }

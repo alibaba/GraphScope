@@ -10,6 +10,7 @@ import java.util.Map;
 
 public class PropertiesMapMeta extends DefaultMapMeta<GraphElement, StepPropertiesMeta> {
     private Map<GraphElement, StepId> firstAsStepMap = new HashMap<>();
+    private Map<GraphElement, StepId> orderStepId = new HashMap<>();
 
     @Override
     public void add(GraphElement object, StepPropertiesMeta data) {
@@ -29,5 +30,13 @@ public class PropertiesMapMeta extends DefaultMapMeta<GraphElement, StepProperti
 
     public StepId getAsStep(GraphElement element) {
         return firstAsStepMap.get(element);
+    }
+
+    public StepId getOrderStepId(GraphElement element) {
+        return orderStepId.get(element);
+    }
+
+    public void addOrderStepId(GraphElement element, StepId stepId) {
+        orderStepId.put(element, stepId);
     }
 }

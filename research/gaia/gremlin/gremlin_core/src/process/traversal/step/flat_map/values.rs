@@ -13,45 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::{FlatMapGen, Step};
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::{Details, Tag};
+use crate::structure::Details;
 use crate::{str_to_dyn_error, DynIter, DynResult, Element};
 use bit_set::BitSet;
 use pegasus::api::function::FlatMapFunction;
 
-pub struct ValuesStep {
-    props: Vec<String>,
-    as_tags: Vec<Tag>,
+pub struct PropertiesStep {
+    pub props: Vec<String>,
+    pub tags: BitSet,
 }
 
-impl ValuesStep {
-    pub fn new(props: Vec<String>) -> Self {
-        ValuesStep { props, as_tags: vec![] }
-    }
-}
-
-struct ValuesFunc {
-    props: Vec<String>,
-    tags: BitSet,
-}
-
-impl Step for ValuesStep {
-    fn get_symbol(&self) -> StepSymbol {
-        StepSymbol::Values
-    }
-
-    fn add_tag(&mut self, label: Tag) {
-        self.as_tags.push(label);
-    }
-
-    fn tags_as_slice(&self) -> &[Tag] {
-        self.as_tags.as_slice()
-    }
-}
-
-impl FlatMapFunction<Traverser, Traverser> for ValuesFunc {
+impl FlatMapFunction<Traverser, Traverser> for PropertiesStep {
     type Target = DynIter<Traverser>;
 
     fn exec(&self, input: Traverser) -> DynResult<DynIter<Traverser>> {
@@ -75,15 +48,5 @@ impl FlatMapFunction<Traverser, Traverser> for ValuesFunc {
         } else {
             Err(str_to_dyn_error("invalid input for values;"))
         }
-    }
-}
-
-impl FlatMapGen for ValuesStep {
-    fn gen(
-        &self,
-    ) -> DynResult<Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>>
-    {
-        let tags = self.get_tags();
-        Ok(Box::new(ValuesFunc { props: self.props.clone(), tags }))
     }
 }

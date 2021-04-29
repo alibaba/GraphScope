@@ -86,19 +86,6 @@ mod test {
         run_test(test_job_factory, pb_request);
     }
 
-    // g.V().has("name", without("marko","josh"))
-    // TODO: with_in not implemented
-    #[test]
-    #[ignore]
-    fn has_step_test_07() {
-        initialize();
-        let mut expected = to_global_ids(vec![2, 3, 5, 6]);
-        expected.sort();
-        let test_job_factory = TestJobFactory::with_expect_ids(expected);
-        let pb_request = read_pb_request(gen_path("has_step_test_07")).expect("read pb failed");
-        run_test(test_job_factory, pb_request);
-    }
-
     // g.V().as("a").both("KNOWS").where(both("KNOWS").as("a"))
     #[test]
     fn where_step_test_01() {

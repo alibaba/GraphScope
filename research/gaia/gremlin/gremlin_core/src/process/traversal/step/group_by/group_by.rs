@@ -3,8 +3,6 @@ use crate::generated::protobuf as result_pb;
 use crate::process::traversal::step::by_key::{ByStepOption, TagKey};
 use crate::process::traversal::step::group_by::GroupFunctionGen;
 use crate::process::traversal::step::order_by::Order;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
 use crate::result_process::pair_element_to_pb;
 use crate::structure::codec::ParseError;
@@ -48,29 +46,7 @@ impl FromPb<pb::group_by_step::AccumKind> for AccumKind {
     }
 }
 
-pub struct GroupByStep {
-    tag_key: TagKey,
-    map_opt: MapOpt,
-    unfold_opt: UnfoldOpt,
-}
-
-impl GroupByStep {
-    pub fn new(tag_key: TagKey, map_opt: MapOpt) -> Self {
-        GroupByStep { tag_key, map_opt, unfold_opt: UnfoldOpt {} }
-    }
-
-    pub fn set_unfold_opt(&mut self, unfold_opt: UnfoldOpt) {
-        self.unfold_opt = unfold_opt;
-    }
-}
-
-impl Step for GroupByStep {
-    fn get_symbol(&self) -> StepSymbol {
-        StepSymbol::Group
-    }
-}
-
-struct GroupBy {
+struct GroupStep {
     tag_key: TagKey,
     map_opt: MapOpt,
     unfold_opt: UnfoldOpt,
@@ -87,29 +63,26 @@ pub struct MapOpt {
 }
 
 #[derive(Clone, Debug)]
-pub struct UnfoldOpt {}
+pub struct UnfoldOpt;
 
-struct GroupBySink {}
+struct GroupBySink;
 
-impl GroupFunction<Traverser> for GroupBy {
+impl GroupFunction<Traverser> for GroupStep {
     fn key(&self) -> CompileResult<Box<dyn KeyFunction<Traverser, Key = Traverser>>> {
         let key_by = KeyBy { tag_key: self.tag_key.clone() };
         Ok(Box::new(key_by) as Box<dyn KeyFunction<Traverser, Key = Traverser>>)
     }
 
     fn map_factory(&self) -> CompileResult<DynMapFactory<Traverser>> {
-        let map_opt = self.map_opt.clone();
-        Ok(Box::new(map_opt) as DynMapFactory<Traverser>)
+        Ok(Box::new(self.map_opt.clone()) as DynMapFactory<Traverser>)
     }
 
     fn unfold(&self) -> CompileResult<DynGroupUnfold<Traverser>> {
-        let unfold_opt = self.unfold_opt.clone();
-        Ok(Box::new(unfold_opt) as DynGroupUnfold<Traverser>)
+        Ok(Box::new(self.unfold_opt.clone()) as DynGroupUnfold<Traverser>)
     }
 
     fn sink(&self) -> CompileResult<DynGroupSink<Traverser>> {
-        let group_by_sink = GroupBySink {};
-        Ok(Box::new(group_by_sink) as DynGroupSink<Traverser>)
+        Ok(Box::new(GroupBySink) as DynGroupSink<Traverser>)
     }
 }
 
@@ -283,10 +256,34 @@ impl EncodeFunction<DynMap<Traverser>> for GroupBySink {
     }
 }
 
-impl GroupFunctionGen for GroupByStep {
-    fn gen(&self) -> DynResult<Box<dyn GroupFunction<Traverser>>> {
+impl GroupFunctionGen for pb::GroupByStep {
+    fn gen_group(self) -> DynResult<Box<dyn GroupFunction<Traverser>>> {
+        let tag_key = if let Some(tag_key_pb) = self.key {
+            TagKey::from_pb(tag_key_pb)?
+        } else {
+            TagKey::default()
+        };
+        let accum_kind_pb = unsafe { std::mem::transmute(self.accum) };
+        let accum_kind = AccumKind::from_pb(accum_kind_pb)?;
+        let mut order_keys = vec![];
+        for cmp in self.opt_order {
+            let order_tag_key = if let Some(tag_key_pb) = cmp.key {
+                TagKey::from_pb(tag_key_pb)?
+            } else {
+                TagKey::default()
+            };
+            let order_type_pb = unsafe { std::mem::transmute(cmp.order) };
+            let order_type = Order::from_pb(order_type_pb)?;
+            order_keys.push((order_tag_key, order_type));
+        }
+        let map_opt = if order_keys.is_empty() {
+            MapOpt { accum_kind, order_tag_key: None }
+        } else {
+            MapOpt { accum_kind, order_tag_key: Some(order_keys) }
+        };
+
         // check tag_key
-        let (tag, key) = (self.tag_key.tag.as_ref(), self.tag_key.by_key.as_ref());
+        let (tag, key) = (tag_key.tag.as_ref(), tag_key.by_key.as_ref());
         if let Some(key) = key {
             match key {
                 ByStepOption::OptProperties(_) => {
@@ -306,16 +303,13 @@ impl GroupFunctionGen for GroupByStep {
             }
         }
         // check accum_kind
-        match self.map_opt.accum_kind {
+        match map_opt.accum_kind {
             AccumKind::Sum | AccumKind::Max | AccumKind::Min | AccumKind::ToSet => {
                 Err(str_to_dyn_error("Do not support the accum kind group by yet"))?;
             }
             _ => {}
         }
-        Ok(Box::new(GroupBy {
-            tag_key: self.tag_key.clone(),
-            map_opt: self.map_opt.clone(),
-            unfold_opt: self.unfold_opt.clone(),
-        }))
+
+        Ok(Box::new(GroupStep { tag_key, map_opt, unfold_opt: UnfoldOpt }))
     }
 }

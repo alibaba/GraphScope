@@ -166,23 +166,13 @@ impl Traverser {
         }
     }
 
-    pub fn modify_head<E: Into<GraphElement>>(&mut self, e: E, tags: &BitSet) {
-        match self {
-            Traverser::Path(p) | Traverser::LabeledPath(p) => {
-                p.modify_head_with(e, tags);
-            }
-            Traverser::NoPath(ori) => *ori = e.into(),
-            Traverser::Object(_) => unimplemented!(),
-        }
-    }
-
     pub fn remove_tags(&mut self, tags: &BitSet) {
         match self {
             Traverser::Path(p) => {
                 debug!("Remove tags {:?} in Path {:?}, but why?", tags, p);
-                p.remove_tag(tags, false)
+                p.remove_tag(tags)
             }
-            Traverser::LabeledPath(p) => p.remove_tag(tags, true),
+            Traverser::LabeledPath(p) => p.remove_tag(tags),
             Traverser::NoPath(e) => {
                 debug!("Try remove tags {:?} in NoPath {:?}, but will not", tags, e)
             }

@@ -12,7 +12,6 @@ The property data are maintained in a variety of ways, as can be found in `src/t
 usually contain multiple properties, it is very common for the edges to only contain on single property in practice.
   In addition, edges are often in a much larger order (10X~100X largers) than vertices. We thus implement `SingleValueTable`
   as an optimization to ease the edges' storage burden.
-* `RocksTable`: A option to leverage [RocksDB](https://rocksdb.org/) for disk-based storage.
 
 # Usage of LDBC Parser
 ## Preliminaries
