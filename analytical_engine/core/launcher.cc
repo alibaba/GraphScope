@@ -64,7 +64,7 @@ void VineyardServer::Start() {
   auto env = boost::this_process::environment();
   // Set verbosity level to 2 can get rid of most of vineyard server's
   // debugging output
-  env["GLOG_v"] = "100";
+  env["GLOG_v"] = "2";
   std::error_code ec;
   proc_ = std::make_unique<bp::child>(cmd, bp::std_out > stdout,
                                       bp::std_err > stderr, env, ec);
