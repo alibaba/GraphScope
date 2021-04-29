@@ -559,6 +559,28 @@ def create_graph_view(graph, view_type):
     return op
 
 
+def clear_graph(graph):
+    """Create clear graph operation for nx graph.
+
+    Args:
+        graph (:class:`nx.Graph`): A nx graph.
+
+    Returns:
+        An op to modify edges on the graph.
+    """
+    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+    }
+    op = Operation(
+        graph.session_id,
+        types_pb2.CLEAR_GRAPH,
+        config=config,
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
 def clear_edges(graph):
     """Create clear edges operation for nx graph.
 

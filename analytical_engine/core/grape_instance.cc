@@ -701,6 +701,32 @@ bl::result<rpc::GraphDef> GrapeInstance::induceSubGraph(
 }
 #endif  // EXPERIMENTAL_ON
 
+bl::result<void> GrapeInstance::clearGraph(const rpc::GSParams& params) {
+#ifdef EXPERIMENTAL_ON
+  BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
+  BOOST_LEAF_AUTO(wrapper,
+                  object_manager_.GetObject<IFragmentWrapper>(graph_name));
+  auto graph_type = wrapper->graph_def().graph_type();
+
+  if (graph_type != rpc::DYNAMIC_PROPERTY) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                    "Error graph type: " + std::to_string(graph_type) +
+                        ", graph id: " + graph_name);
+  }
+
+  auto vm_ptr = std::shared_ptr<DynamicFragment::vertex_map_t>(
+      new DynamicFragment::vertex_map_t(comm_spec_));
+  vm_ptr->Init();
+  auto fragment =
+      std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
+  fragment->ClearGraph(vm_ptr);
+#else
+  RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
+                  "GS is compiled without folly");
+#endif  // EXPERIMENTAL_ON
+  return {};
+}
+
 bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
 #ifdef EXPERIMENTAL_ON
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
@@ -983,6 +1009,15 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     BOOST_LEAF_AUTO(graph_def,
                     induceSubGraph(params, induced_vertices, induced_edges));
     r->set_graph_def(graph_def);
+#else
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "GS is built with experimental off");
+#endif
+    break;
+  }
+  case rpc::CLEAR_GRAPH: {
+#ifdef EXPERIMENTAL_ON
+    BOOST_LEAF_CHECK(clearGraph(params));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GS is built with experimental off");

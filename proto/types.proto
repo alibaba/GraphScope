@@ -90,8 +90,9 @@ enum OperationType {
   TO_DIRECTED = 17;  // return graph, generate directed graph from undirected graph
   TO_UNDIRECTED = 18;  // return graph, generate undirected graph from directed graph
   CLEAR_EDGES = 19;  // clear edges
-  VIEW_GRAPH = 20;
-  INDUCE_SUBGRAPH = 21;  // clear edges
+  CLEAR_GRAPH = 20;  // clear graph
+  VIEW_GRAPH = 21;  // create graph view
+  INDUCE_SUBGRAPH = 22;  // induce subgraph
 
   // data
   CONTEXT_TO_NUMPY = 50;
@@ -232,4 +233,5 @@ enum ReportType {
   IN_DEG_BY_LOC = 16;
   OUT_DEG_BY_LOC = 17;
   NODES_BY_LOC = 18;
+  SELFLOOPS_NUM = 19;
 }
