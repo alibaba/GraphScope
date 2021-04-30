@@ -19,8 +19,7 @@
 import networkx.classes.coreviews
 import networkx.classes.graphviews
 import networkx.classes.reportviews
-from networkx.classes import function
-from networkx.classes.function import *
 
 from graphscope.experimental.nx.classes.digraph import DiGraph
+from graphscope.experimental.nx.classes.function import *
 from graphscope.experimental.nx.classes.graph import Graph

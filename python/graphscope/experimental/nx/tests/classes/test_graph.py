@@ -14,7 +14,6 @@
 # NetworkX is distributed under a BSD license; see LICENSE.txt for more
 # information.
 #
-import pickle
 
 import pytest
 from networkx.classes.tests.test_graph import TestEdgeSubgraph as _TestEdgeSubgraph

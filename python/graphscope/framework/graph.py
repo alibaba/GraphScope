@@ -48,7 +48,7 @@ class Graph(object):
 
     A :class:`Graph` object holds the metadata of a graph, such as key, schema, and the graph is directed or not.
 
-    It is worth noting that the graph is stored by the backend such as Analytical Engine, Vineyard.
+    It is worth noticing that the graph is stored by the backend such as Analytical Engine, Vineyard.
     In other words, the graph object holds nothing but metadata.
 
     The following example demonstrates its usage:

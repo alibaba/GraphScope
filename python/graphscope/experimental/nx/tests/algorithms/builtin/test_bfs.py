@@ -65,13 +65,6 @@ class TestBFS:
         edges = nx.builtin.bfs_edges(self.G, source=0, depth_limit=10)
         assert sorted(edges) == [[0, 1], [1, 2], [1, 3], [2, 4]]
 
-    @pytest.mark.skip(reason="output not ready, wait to check.")
-    def test_bfs_edges_reverse(self):
-        D = nx.DiGraph()
-        D.add_edges_from([(0, 1), (1, 2), (1, 3), (2, 4), (3, 4)])
-        edges = nx.builtin.bfs_edges(D, source=4, reverse=True)
-        assert list(edges) == [(4, 2), (4, 3), (2, 1), (1, 0)]
-
     @pytest.mark.skip(reason="tensor context not support empty result.")
     def test_bfs_tree_isolates(self):
         G = nx.Graph()

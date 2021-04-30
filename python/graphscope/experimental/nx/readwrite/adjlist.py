@@ -68,7 +68,6 @@ def parse_adjlist(
 
 
 @open_file(0, mode="rb")
-@patch_docstring(_read_adjlist)
 def read_adjlist(
     path,
     comments="#",
@@ -77,6 +76,39 @@ def read_adjlist(
     nodetype=None,
     encoding="utf-8",
 ):
+    """Read graph in adjacency list format from path.
+
+    Parameters
+    ----------
+    path : string or file
+       Filename or file handle to read.
+       Filenames ending in .gz or .bz2 will be uncompressed.
+
+    create_using : graphscope.nx graph constructor, optional (default=nx.Graph)
+       Graph type to create. If graph instance, then cleared before populated.
+
+    nodetype : int, str, float, tuple, bool Python object, optional
+       Convert nodes to this type.
+
+    comments : string, optional
+       Marker for comment lines
+
+    delimiter : string, optional
+       Separator for node labels.  The default is whitespace.
+
+    Returns
+    -------
+    G: graphscope.nx graph
+        The graph corresponding to the lines in adjacency list format.
+
+    Notes
+    -----
+    This format does not store graph or node data.
+
+    See Also
+    --------
+    read_edgelist
+    """
     lines = (line.decode(encoding) for line in path)
     return parse_adjlist(
         lines,
