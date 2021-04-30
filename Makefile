@@ -1,14 +1,14 @@
 MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
 
-VERSION     	 	  			?= 0.1.0
-INSTALL_PREFIX      		?= /usr/local
+VERSION                     ?= 0.1.0
+INSTALL_PREFIX              ?= /usr/local
 
 # GAE build options
-NETWORKX     		?= OFF
+NETWORKX                    ?= OFF
 
 # client build options
-WITH_LEARNING_ENGINE 		?= OFF
+WITH_LEARNING_ENGINE        ?= OFF
 
 .PHONY: all
 all: graphscope
