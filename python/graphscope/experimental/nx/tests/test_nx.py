@@ -357,6 +357,8 @@ class TestGraphTransformation(object):
         sg2 = nx_g2.edge_subgraph([(274877907301, 274877907299)])
         assert sg2.session_id == nx_g2.session_id
 
+        sess2.close()
+
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestGraphProjectTest(object):

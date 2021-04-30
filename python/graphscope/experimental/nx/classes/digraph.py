@@ -441,4 +441,5 @@ class DiGraph(Graph):
             graph_def = op.eval()
             g._key = graph_def.key
             g._schema = deepcopy(self._schema)
+        g._session_id = self._session_id
         return g
