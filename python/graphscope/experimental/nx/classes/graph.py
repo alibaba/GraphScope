@@ -217,7 +217,8 @@ class Graph(object):
             or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a graphscope
             Graph.
 
-            If incomming_garph_data is graphscope.Graph, since graphscope.Graph support
+            If incomming_garph_data is graphscope.Graph, the directed of graphscope.Graph
+            must match graphscope.nx Graph. Since graphscope.Graph support
             label of node and edge, the node id must be unique in all labels nodes and
             not allow parallel edge in different edge label, otherwise would raise
             AnalyticalEngineInternalError in transformation. finally, the labels
@@ -231,7 +232,7 @@ class Graph(object):
         AnalyticalEngineInternalError
             if incomming_graph_data is graphscope.Graph and it contain same node id
             in different node label or contain parallel edge in defferent edge label.
-
+            or directed of graphscope.Graph not match to graphscope.nx Graph.
 
 
         Examples
@@ -249,8 +250,9 @@ class Graph(object):
 
         graphscope graph can convert to nx.Graph throught incomming_graph_data.
 
-        >>> g = graphscope.g()
-        >>> G = nx.Graph(g)  # or DiGraph, etc
+        >>> g = graphscope.g(directed=False)  # if transform to DiGraph, directed=True
+        >>> g.add_vertices(...).add_edges(...)
+        >>> G = nx.Graph(g) # or DiGraph
 
         """
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
@@ -266,9 +268,13 @@ class Graph(object):
         self._schema = GraphSchema()
         self._schema.init_nx_schema()
 
+        create_empty_in_engine = attr.pop(
+            "create_empty_in_engine", True
+        )  # a hidden parameter
+
         if self._is_gs_graph(incoming_graph_data):
             self._session_id = incoming_graph_data.session_id
-        else:
+        elif create_empty_in_engine:
             sess = get_default_session()
             if sess is None:
                 raise ValueError(
@@ -277,9 +283,6 @@ class Graph(object):
                 )
             self._session_id = sess.session_id
 
-        create_empty_in_engine = attr.pop(
-            "create_empty_in_engine", True
-        )  # a hidden parameter
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(self, self.is_directed())
             self._key = graph_def.key
@@ -1511,6 +1514,7 @@ class Graph(object):
             graph_def = op.eval()
             g._key = graph_def.key
             g._schema = copy.deepcopy(self._schema)
+        g._session_id = self._session_id
         return g
 
     def to_undirected(self, as_view=False):
@@ -1554,6 +1558,7 @@ class Graph(object):
                 op = dag_utils.create_graph_view(self, "undirected")
                 graph_def = op.eval()
                 g._key = graph_def.key
+                g._session_id = self._session_id
                 g._schema = copy.deepcopy(self._schema)
                 g._graph = self
                 g._is_client_view = False
@@ -1564,6 +1569,7 @@ class Graph(object):
             op = dag_utils.to_undirected(self)
             graph_def = op.eval()
             g._key = graph_def.key
+            g._session_id = self._session_id
             g._schema = copy.deepcopy(self._schema)
             return g
         else:
@@ -1616,6 +1622,7 @@ class Graph(object):
                 op = dag_utils.create_graph_view(self, "directed")
                 graph_def = op.eval()
                 g._key = graph_def.key
+                g._session_id = self._session_id
                 g._schema = copy.deepcopy(self._schema)
                 g._graph = self
                 g._is_client_view = False
@@ -1626,6 +1633,7 @@ class Graph(object):
             op = dag_utils.to_directed(self)
             graph_def = op.eval()
             g._key = graph_def.key
+            g._session_id = self._session_id
             g._schema = copy.deepcopy(self._schema)
             return g
 
@@ -1664,6 +1672,7 @@ class Graph(object):
         op = dag_utils.create_subgraph(self, nodes=induced_nodes)
         graph_def = op.eval()
         g._key = graph_def.key
+        g._session_id = self._session_id
         g._schema = copy.deepcopy(self._schema)
         return g
 
@@ -1707,6 +1716,7 @@ class Graph(object):
         op = dag_utils.create_subgraph(self, edges=induced_edges)
         graph_def = op.eval()
         g._key = graph_def.key
+        g._session_id = self._session_id
         g._schema = copy.deepcopy(self._schema)
         return g
 
@@ -1938,12 +1948,11 @@ class Graph(object):
             self, v_prop, e_prop, v_prop_type, e_prop_type
         )
         graph_def = op.eval()
-        sess = get_session_by_id(self._session_id)
-        with default_session(sess):
-            graph = self.__class__(create_empty_in_engine=False)
+        graph = self.__class__(create_empty_in_engine=False)
         graph = nx.freeze(graph)
         graph._graph_type = types_pb2.DYNAMIC_PROJECTED
         graph._key = graph_def.key
+        graph._session_id = self._session_id
         graph.schema.get_schema_from_def(graph_def.schema_def)
         graph._saved_signature = self._saved_signature
         return graph

@@ -52,6 +52,18 @@ def ldbc_sample_single_label(prefix, directed):
     return graph
 
 
+def ldbc_sample_single_label_with_sess(sess, prefix, directed):
+    graph = sess.g(directed=directed)
+    graph = graph.add_vertices(
+        Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "comment_replyOf_comment_0_0.csv"), delimiter="|"),
+        "replyOf",
+    )
+    return graph
+
+
 def ldbc_sample_multi_labels(prefix, directed):
     graph = graphscope.g(directed=directed)
     graph = (
@@ -109,10 +121,10 @@ class TestGraphTransformation(object):
     def setup_class(cls):
         cls.NXGraph = nx.Graph
 
-        data_dir = os.path.expandvars("${GS_TEST_DIR}/ldbc_sample")
-        cls.single_label_g = ldbc_sample_single_label(data_dir, False)
-        cls.multi_label_g = ldbc_sample_multi_labels(data_dir, False)
-        cls.duplicated_oid_g = ldbc_sample_with_duplicated_oid(data_dir, False)
+        cls.data_dir = os.path.expandvars("${GS_TEST_DIR}/ldbc_sample")
+        cls.single_label_g = ldbc_sample_single_label(cls.data_dir, False)
+        cls.multi_label_g = ldbc_sample_multi_labels(cls.data_dir, False)
+        cls.duplicated_oid_g = ldbc_sample_with_duplicated_oid(cls.data_dir, False)
 
         # FIXME: this is tricky way to create a str gs graph
         les_g = nx.les_miserables_graph()
@@ -316,6 +328,34 @@ class TestGraphTransformation(object):
         g = self.duplicated_oid_g
         with pytest.raises(AnalyticalEngineInternalError):
             nx_g = self.NXGraph(g)
+
+    def test_multiple_sessions(self):
+        g = self.single_label_g
+        sess2 = graphscope.session(cluster_type="hosts", num_workers=1)
+        g2 = ldbc_sample_single_label_with_sess(sess2, self.data_dir, False)
+        assert g.session_id != g2.session_id
+
+        nx_g = self.NXGraph(g)
+        nx_g2 = self.NXGraph(g2)
+        self.assert_convert_success(g2, nx_g2)
+        assert nx_g.session_id == g.session_id
+        assert nx_g2.session_id == g2.session_id
+
+        # copies
+        cg1 = nx_g2.copy()
+        assert cg1.session_id == nx_g2.session_id
+        cg2 = nx_g2.copy(as_view=True)
+        assert cg2.session_id == nx_g2.session_id
+        dg1 = nx_g2.to_directed()
+        assert dg1.session_id == nx_g2.session_id
+        dg2 = nx_g2.to_directed(as_view=True)
+        assert dg2.session_id == nx_g2.session_id
+
+        # subgraph
+        sg1 = nx_g2.subgraph([274877907301, 274877907299])
+        assert sg1.session_id == nx_g2.session_id
+        sg2 = nx_g2.edge_subgraph([(274877907301, 274877907299)])
+        assert sg2.session_id == nx_g2.session_id
 
 
 @pytest.mark.usefixtures("graphscope_session")
