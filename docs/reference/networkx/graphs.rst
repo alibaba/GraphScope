@@ -17,7 +17,7 @@ Graph
 ^^^^^^^
 Undirected graphs with self loops
 
-.. currentmodule:: graphscope.experimental.nx
+.. currentmodule:: graphscope.nx
 .. autoclass:: Graph
    :special-members:
    :members:
@@ -28,7 +28,7 @@ DiGraph
 ^^^^^^^
 Directed graphs with self loops
 
-.. currentmodule:: graphscope.experimental.nx
+.. currentmodule:: graphscope.nx
 .. autoclass:: DiGraph
    :special-members:
    :inherited-members:
@@ -41,10 +41,11 @@ transformation
 
 In GraphScope, the immutable graphscope.Graph and the mutable graphscope.nx.Graph
 can be transformed into each other. We define the transformation in each Graph class
-constructor.
+constructors.
 
 .. autofunction:: graphscope.framework.graph.Graph.__init__
-.. autofunction:: graphscope.experimental.nx.Graph.__init__
+.. autofunction:: graphscope.nx.Graph.__init__
+.. autofunction:: graphscope.nx.convert.from_gs_graph
 
 
 

@@ -62,7 +62,8 @@ class Graph(object):
     Graphs support undirected edges. Self loops are allowed but multiple
     (parallel) edges are not.
 
-    Nodes can be many hashable objects including int/float/tuple/bool with optional key/value attributes.
+    Nodes can be many hashable objects including int/str/float/tuple/bool object
+    with optional key/value attributes.
 
     Edges are represented as links between nodes with optional
     key/value attributes
@@ -223,13 +224,6 @@ class Graph(object):
 
         attr : keyword arguments, optional (default= no attributes)
             Attributes to add to graph as key=value pairs.
-
-        Raises
-        ------
-        AnalyticalEngineInternalError
-            if incomming_graph_data is graphscope.Graph and it contain same node id
-            in different node label or contain parallel edge in defferent edge label.
-            or directed of graphscope.Graph not match to graphscope.nx Graph.
 
 
         Examples
@@ -511,7 +505,7 @@ class Graph(object):
 
         Notes
         -----
-        nx.Graph support int, float, string, tuple or bool object of nodes.
+        nx.Graph support int, float, str, tuple or bool object of nodes.
         """
         return self.add_nodes_from([node_for_adding], **attr)
 
@@ -613,7 +607,7 @@ class Graph(object):
 
         Parameters
         ----------
-        nodes : iterable container
+        nodes_for_removing : iterable container
             A container of nodes (list, dict, set, etc.).  If a node
             in the container is not in the graph it is silently
             ignored.
@@ -692,7 +686,7 @@ class Graph(object):
 
         See Also
         --------
-        order, __len__  which are identical
+        order, __len__ which are identical
 
         Examples
         --------
@@ -946,7 +940,7 @@ class Graph(object):
         Parameters
         ----------
         u, v : nodes
-            Nodes can be int/string/float/tuple/bool hashable Python objects.
+            Nodes can be int, str, float, tuple, bool hashable Python objects.
         data: dict
             Edge data to set to edge (u, v)
 
@@ -978,7 +972,7 @@ class Graph(object):
         Parameters
         ----------
         n : node
-            node can be int/string/float/tuple/bool hashable Python object which is existed in graph.
+            node can be int, str, float, tuple, bool hashable Python object which is existed in graph.
         data : dict
             data to set to n
 
@@ -1133,7 +1127,7 @@ class Graph(object):
         ----------
         u, v : nodes
             Nodes can be, for example, strings or numbers.
-            Nodes must be int/string/float/tuple/bool hashable Python objects.
+            Nodes must be int, str, float, tuple, bool  hashable Python objects.
 
         Returns
         -------

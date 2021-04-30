@@ -166,20 +166,31 @@ def from_gs_graph(gs_graph, dst_nx_graph):
     Parameters
     ----------
     graph: gs graph
-        A gs graph that contains graph data.
+        A gs graph that contains graph data. the gs graph shoube be nodes id unique
+        in all labels and not has parallel edge between edge label.
 
     dst_nx_graph: nx graph
         the nx graph convert to.
 
-    Return;
+    Returns
+    -------
     graph_def: GraphDef
         graph definition contains meta data and schema.
 
+    Raises
+    -------
+    TypeError
+        if directed of gs graph not match to dst_nx_graph
+    AnalyticalEngineInternalError
+        if gs graph contain same node id between labels or has parallel edges
+        between edge labels.
+
     Examples
     --------
-    >>> import graphscope as gs
+    >>> import graphscope
     >>> from graphscope import nx
-    >>> gs_g = gs.Graph()
+    >>> gs_g = graphscope.g(directed=False)
+    >>> gs_g = gs_g.add_vertices(...).add_edges(...)
     >>> nx_g = nx.Graph(gs_g)
     """
     if dst_nx_graph.is_directed() != gs_graph.is_directed():

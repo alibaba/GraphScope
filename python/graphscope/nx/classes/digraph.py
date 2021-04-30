@@ -45,7 +45,7 @@ from graphscope.proto import types_pb2
 
 class DiGraph(Graph):
     """
-    Base class for undirected graphs in graphscope.nx.
+    Base class for directed graphs in graphscope.nx.
 
     A DiGraph that hold the metadata of a graph, and provide NetworkX-like DiGraph APIs.
 
@@ -57,7 +57,8 @@ class DiGraph(Graph):
     DiGraphs support directed edges.  Self loops are allowed but multiple
     (parallel) edges are not.
 
-    Nodes can be some hashable objects including int/float/tuple/bool with optional key/value attributes.
+    Nodes can be some hashable objects including int/str/float/tuple/bool object
+    with optional key/value attributes.
 
     Edges are represented as links between nodes with optional
     key/value attributes.
@@ -206,13 +207,18 @@ class DiGraph(Graph):
 
         self._key = None
         self._op = None
+        self._session_id = None
         self._graph_type = self._graph_type
         self._schema = GraphSchema()
         self._schema.init_nx_schema()
 
+        create_empty_in_engine = attr.pop(
+            "create_empty_in_engine", True
+        )  # a hidden parameter
+
         if self._is_gs_graph(incoming_graph_data):
             self._session_id = incoming_graph_data.session_id
-        else:
+        elif create_empty_in_engine:
             sess = get_default_session()
             if sess is None:
                 raise ValueError(
@@ -221,9 +227,6 @@ class DiGraph(Graph):
                 )
             self._session_id = sess.session_id
 
-        create_empty_in_engine = attr.pop(
-            "create_empty_in_engine", True
-        )  # a hidden parameter
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(self, self.is_directed())
             self._key = graph_def.key

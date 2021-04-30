@@ -4,7 +4,7 @@
 Functions
 *********
 
-.. automodule:: graphscope.experimental.nx.classes.function
+.. automodule:: graphscope.nx.classes.function
 
 Graph
 -----

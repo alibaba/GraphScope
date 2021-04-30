@@ -3,11 +3,11 @@
 Graph generators
 ****************
 
-.. currentmodule:: graphscope.experimental.nx
+.. currentmodule:: graphscope.nx
 
 Classic
 -------
-.. automodule:: graphscope.experimental.nx.generators.classic
+.. automodule:: graphscope.nx.generators.classic
 .. autosummary::
    :toctree: generated/
 
@@ -20,7 +20,7 @@ Classic
 
 Social Networks
 ---------------
-.. automodule:: graphscope.experimental.nx.generators.social
+.. automodule:: graphscope.nx.generators.social
 .. autosummary::
    :toctree: generated/
 
