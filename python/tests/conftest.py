@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 
 import graphscope
-import graphscope.experimental.nx as nx
+import graphscope.nx as nx
 from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.client.session import default_session

@@ -73,7 +73,7 @@ function check_dependencies_version() {
     exit 1
   fi
   if ! command -v cargo &> /dev/null; then
-      echo "cargo ${err_msg}"
+      echo "cargo ${err_msg} or source ~/.cargo/env"
       exit
   fi
   if ! command -v go &> /dev/null; then

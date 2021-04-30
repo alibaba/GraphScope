@@ -21,7 +21,7 @@
 #include <string>
 #include <type_traits>
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 #include "folly/dynamic.h"
 #endif
 #include "glog/logging.h"
@@ -112,7 +112,7 @@ struct ArgsUnpacker<std::string> {
   }
 };
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 /**
  * @brief A specialized ArgsUnpacker with folly::dynamic type
  */

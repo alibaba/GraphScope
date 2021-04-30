@@ -17,7 +17,7 @@ def compute_sig(s):
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
 
-EXPERIMENTAL_ON = os.environ.get("EXPERIMENTAL_ON", "ON")
+NETWORKX = os.environ.get("NETWORKX", "ON")
 try:
     import gscoordinator
 
@@ -62,7 +62,7 @@ def cmake_graph(graph_class):
         )
         with open(cmakelists_file, mode="w") as f:
             f.write(content)
-    cmake_commands = ["cmake", ".", "-DEXPERIMENTAL_ON=" + EXPERIMENTAL_ON]
+    cmake_commands = ["cmake", ".", "-DNETWORKX=" + NETWORKX]
     if "ArrowFragment" in graph_class:
         cmake_commands.append("-DPROPERTY_GRAPH_FRAME=True")
     else:
@@ -101,7 +101,7 @@ def cmake_app(app):
         )
         with open(cmakelists_file, mode="w") as f:
             f.write(content)
-    cmake_commands = ["cmake", ".", "-DEXPERIMENTAL_ON=" + EXPERIMENTAL_ON]
+    cmake_commands = ["cmake", ".", "-DNETWORKX=" + NETWORKX]
 
     cmake_and_make(cmake_commands)
     print("Finished compiling", app_class, graph_class)

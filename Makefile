@@ -1,14 +1,14 @@
 MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
 
-VERSION     	 	  			?= 0.1.0
-INSTALL_PREFIX      		?= /usr/local
+VERSION                     ?= 0.1.0
+INSTALL_PREFIX              ?= /usr/local
 
 # GAE build options
-EXPERIMENTAL_ON     		?= OFF
+NETWORKX                    ?= OFF
 
 # client build options
-WITH_LEARNING_ENGINE 		?= OFF
+WITH_LEARNING_ENGINE        ?= OFF
 
 .PHONY: all
 all: graphscope
@@ -52,7 +52,7 @@ coordinator: client
 gae:
 	mkdir -p $(WORKING_DIR)/analytical_engine/build
 	cd $(WORKING_DIR)/analytical_engine/build && \
-	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DEXPERIMENTAL_ON=$(EXPERIMENTAL_ON) .. && \
+	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) .. && \
 	make -j`nproc` && \
 	sudo make install
 

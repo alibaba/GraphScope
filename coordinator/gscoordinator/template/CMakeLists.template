@@ -12,7 +12,9 @@ option(PROJECT_FRAME "Whether to build project frame" False)
 
 option(ENABLE_PREGEL_COMBINE "Whether enable combinator in pregel app." False)
 
-if (EXPERIMENTAL_ON)
+if (NETWORKX)
+    add_definitions(-DNETWORKX)
+    # TODO: need by vineyard, remove when vineyard version update.
     add_definitions(-DEXPERIMENTAL_ON)
 endif ()
 

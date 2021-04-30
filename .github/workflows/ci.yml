@@ -35,7 +35,7 @@ jobs:
         --shm-size 4096m
     strategy:
       matrix:
-        experimental: [ON, OFF]
+        networkx: [ON, OFF]
 
     steps:
     - name: Install Dependencies
@@ -105,7 +105,7 @@ jobs:
         cd build
         cmake .. -DCMAKE_PREFIX_PATH=/opt/graphscope \
                  -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
-                 -DEXPERIMENTAL_ON=${{ matrix.experimental }}
+                 -DNETWORKX=${{ matrix.networkx }}
         make -j`nproc`
         make install
         cd ${GITHUB_WORKSPACE}
@@ -123,7 +123,7 @@ jobs:
         ../test/app_tests.sh --test_dir ${GITHUB_WORKSPACE}/gstest
 
     - name: Upload Artifact
-      if: matrix.experimental == 'ON'
+      if: matrix.networkx == 'ON'
       uses: actions/upload-artifact@v2
       with:
         name: gae-${{ github.sha }}
@@ -276,7 +276,7 @@ jobs:
         --shm-size 4096m
     strategy:
       matrix:
-        experimental: [ON, OFF]
+        networkx: [ON, OFF]
     steps:
     - name: Install Dependencies
       run: |
@@ -310,7 +310,7 @@ jobs:
       uses: mxschmitt/action-tmate@v2
 
     - name: App Test with Expr Off
-      if: matrix.experimental == 'OFF'
+      if: matrix.networkx == 'OFF'
       run: |
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/dev/shm/default.etcd &
@@ -323,23 +323,23 @@ jobs:
         pkill -TERM etcd || true
 
     - name: Upload Coverage
-      if: matrix.experimental == 'OFF'
+      if: matrix.networkx == 'OFF'
       uses: codecov/codecov-action@v1
       with:
         file: ./python/coverage.xml
         fail_ci_if_error: true
 
     - name: App Test with Expr On
-      if: matrix.experimental == 'ON'
+      if: matrix.networkx == 'ON'
       run: |
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/dev/shm/default.etcd &
 
         export GS_TEST_DIR='/root/gstest'
-        python3 -m pytest --exitfirst -s -v python/graphscope/experimental/nx/tests/classes
-        python3 -m pytest --exitfirst -s -v python/graphscope/experimental/nx/tests/test_nx.py
-        python3 -m pytest --exitfirst -s -v python/graphscope/experimental/nx/tests/algorithms/builtin \
-                                            python/graphscope/experimental/nx/tests/test_utils.py
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/classes
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/test_nx.py
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/algorithms/builtin \
+                                            python/graphscope/nx/tests/test_utils.py
 
         pkill -TERM etcd || true
 

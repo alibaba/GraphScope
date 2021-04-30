@@ -487,7 +487,7 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
   std::shared_ptr<fragment_t> fragment_;
 };
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 /**
  * @brief A specialized FragmentWrapper for DynamicFragment.
  * @tparam OID_T OID type

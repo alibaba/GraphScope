@@ -16,7 +16,7 @@
 #ifndef ANALYTICAL_ENGINE_CORE_IO_DYNAMIC_LINE_PARSER_H_
 #define ANALYTICAL_ENGINE_CORE_IO_DYNAMIC_LINE_PARSER_H_
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 
 #include <cctype>
 
@@ -70,5 +70,5 @@ class DynamicLineParser
 };
 }  // namespace gs
 
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
 #endif  // ANALYTICAL_ENGINE_CORE_IO_DYNAMIC_LINE_PARSER_H_

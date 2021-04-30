@@ -123,7 +123,7 @@ class Graph(object):
         if incoming_data is not None:
             # Don't import the :code:`NXGraph` in top-level statements to improve the
             # performance of :code:`import graphscope`.
-            from graphscope.experimental import nx
+            from graphscope import nx
 
             if isinstance(incoming_data, Operation):
                 self._pending_op = incoming_data

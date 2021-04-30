@@ -119,14 +119,14 @@ class PropertyGraphUtils : public GSObject {
       vineyard::Client& client, const grape::CommSpec& comm_spec,
       std::shared_ptr<IFragmentWrapper>& wrapper_in,
       const std::string& dst_graph_name) {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     bl::result<std::shared_ptr<IFragmentWrapper>> wrapper;
 
     to_arrow_fragment_(client, comm_spec, wrapper_in, dst_graph_name, wrapper);
     return wrapper;
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
-                    "GS is compiled with EXPERIMENTAL_ON=OFF");
+                    "GS is compiled with NETWORKX=OFF");
 #endif
   }
 
@@ -134,14 +134,14 @@ class PropertyGraphUtils : public GSObject {
       const grape::CommSpec& comm_spec,
       std::shared_ptr<IFragmentWrapper>& wrapper_in,
       const std::string& dst_graph_name) {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
     bl::result<std::shared_ptr<IFragmentWrapper>> wrapper;
 
     to_dynamic_fragment_(comm_spec, wrapper_in, dst_graph_name, wrapper);
     return wrapper;
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
-                    "GS is compiled with EXPERIMENTAL_ON=OFF");
+                    "GS is compiled with NETWORKX=OFF");
 #endif
   }
 

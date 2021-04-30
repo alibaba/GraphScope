@@ -45,17 +45,17 @@
 namespace gs {
 /**
  * @brief EngineConfig contains configurations about the analytical engine, such
- * as experimental features in enabled or not, vineyard socket, and vineyard rpc
+ * as networkx features in enabled or not, vineyard socket, and vineyard rpc
  * endpoint.
  */
 struct EngineConfig {
-  std::string experimental;
+  std::string networkx;
   std::string vineyard_socket;
   std::string vineyard_rpc_endpoint;
 
   std::string ToJsonString() const {
     boost::property_tree::ptree pt;
-    pt.put("experimental", experimental);
+    pt.put("networkx", networkx);
     pt.put("vineyard_socket", vineyard_socket);
     pt.put("vineyard_rpc_endpoint", vineyard_rpc_endpoint);
     std::stringstream ss;
@@ -130,7 +130,7 @@ class GrapeInstance : public Subscriber {
 
   bl::result<rpc::GraphDef> createGraphView(const rpc::GSParams& params);
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
   bl::result<rpc::GraphDef> induceSubGraph(
       const rpc::GSParams& params,
       const std::unordered_set<typename DynamicFragment::oid_t>&
@@ -138,7 +138,7 @@ class GrapeInstance : public Subscriber {
       const std::vector<std::pair<typename DynamicFragment::oid_t,
                                   typename DynamicFragment::oid_t>>&
           induced_edges);
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
 
   bl::result<rpc::GraphDef> addLabelsToGraph(const rpc::GSParams& params);
 
