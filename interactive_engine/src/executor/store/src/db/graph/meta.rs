@@ -11,7 +11,7 @@ use protobuf::Message;
 use crate::db::api::GraphErrorCode::InvalidData;
 use crate::db::util::lock::GraphMutexLock;
 use crate::db::common::bytes::util::parse_pb;
-use crate::db::proto::common::EdgeKindPb;
+use crate::db::proto::common::{EdgeKindPb, DataLoadTargetPb};
 use std::collections::{HashMap, HashSet};
 
 const META_TABLE_ID: TableId = i64::min_value();
@@ -130,6 +130,17 @@ impl Meta {
                     graph_def.remove_edge_kind(&x.edge_kind);
                     graph_def.increase_version();
                 }
+                MetaItem::PrepareDataLoad(x) => {
+                    let mut graph_def = self.graph_def_lock.lock()?;
+                    if x.target.src_label_id > 0 {
+                        let edge_kind = EdgeKind::new(x.target.label_id, x.target.src_label_id, x.target.dst_label_id);
+                        graph_def.put_edge_table_id(edge_kind, x.table_id);
+                    } else {
+                        graph_def.put_vertex_table_id(x.target.label_id, x.table_id);
+                    }
+                    graph_def.set_table_idx(x.table_id);
+                    graph_def.increase_version();
+                }
             }
         }
         Ok((vertex_manager_builder.build(), edge_manager_builder.build()))
@@ -149,6 +160,27 @@ impl Meta {
     #[allow(dead_code)]
     pub fn gc(&self, _si: SnapshotId) -> GraphResult<()> {
         unimplemented!()
+    }
+
+    pub fn prepare_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget,
+                             table_id: i64) -> GraphResult<()> {
+        self.check_version(schema_version)?;
+        let item = PrepareDataLoadItem::new(si, schema_version, target.clone(), table_id);
+        self.write_item(item)?;
+        {
+            let mut graph_def = self.graph_def_lock.lock()?;
+            if target.src_label_id > 0 {
+                // EdgeKind
+                let edge_kind = EdgeKind::new(target.label_id, target.src_label_id, target.dst_label_id);
+                graph_def.put_edge_table_id(edge_kind, table_id);
+            } else {
+                // Vertex
+                graph_def.put_vertex_table_id(target.label_id, table_id);
+            }
+            graph_def.set_table_idx(table_id);
+            graph_def.increase_version();
+        }
+        Ok(())
     }
 
     pub fn create_vertex_type(&self, si: SnapshotId, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64) -> GraphResult<Table> {
@@ -294,6 +326,7 @@ enum MetaItem {
     DropVertexType(DropVertexTypeItem),
     DropEdgeType(DropEdgeTypeItem),
     RemoveEdgeKind(RemoveEdgeKindItem),
+    PrepareDataLoad(PrepareDataLoadItem),
 }
 
 impl MetaItem {
@@ -306,6 +339,7 @@ impl MetaItem {
             MetaItem::DropVertexType(ref item) => item.schema_version,
             MetaItem::DropEdgeType(ref item) => item.schema_version,
             MetaItem::RemoveEdgeKind(ref item) => item.schema_version,
+            MetaItem::PrepareDataLoad(ref item) => item.schema_version,
         }
     }
 }
@@ -334,6 +368,51 @@ fn meta_key(key: &str) -> Vec<u8> {
     ret.extend_from_slice(&prefix);
     ret.extend_from_slice(bytes);
     ret
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct PrepareDataLoadItem {
+    si: SnapshotId,
+    schema_version: i64,
+    target: DataLoadTarget,
+    table_id: TableId,
+}
+
+impl PrepareDataLoadItem {
+    fn new(si: SnapshotId, schema_version: i64, target: DataLoadTarget, table_id: TableId) -> Self {
+        PrepareDataLoadItem {
+            si,
+            schema_version,
+            target,
+            table_id,
+        }
+    }
+}
+
+impl ItemCommon for PrepareDataLoadItem {
+    fn from_kv(k: &[u8], v: &[u8]) -> GraphResult<Self> {
+        let items = res_unwrap!(common_parse_key(k, Self::prefix(), 4), from_kv)?;
+        let si = res_unwrap!(parse_str(items[1]), from_kv)?;
+        let schema_version = res_unwrap!(parse_str(items[2]), from_kv)?;
+        let table_id = res_unwrap!(parse_str(items[3]), from_kv)?;
+
+        let pb = parse_pb::<DataLoadTargetPb>(v)?;
+        let target = DataLoadTarget::from_proto(&pb);
+        let ret = Self::new(si, schema_version, target, table_id);
+        Ok(ret)
+    }
+
+    fn prefix() -> &'static str {
+        "PrepareDataLoad"
+    }
+
+    fn to_kv(&self) -> GraphResult<(Vec<u8>, Vec<u8>)> {
+        let key = format!("{}#{}#{}#{}", Self::prefix(), self.si, self.schema_version, self.table_id);
+        let target_pb = self.target.to_proto();
+        let bytes = target_pb.write_to_bytes()
+            .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
+        Ok((meta_key(&key), bytes))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

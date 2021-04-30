@@ -2,10 +2,10 @@
 use std::os::raw::{c_char, c_void};
 use std::ffi::CStr;
 use std::str;
-use crate::db::api::{GraphConfigBuilder, SnapshotId, GraphResult, GraphStorage, Vertex, TypeDef, EdgeId, EdgeKind, GraphError};
+use crate::db::api::{GraphConfigBuilder, SnapshotId, GraphResult, GraphStorage, Vertex, TypeDef, EdgeId, EdgeKind, GraphError, DataLoadTarget};
 use crate::db::jna::jna_response::JnaResponse;
 use crate::db::api::PropertyMap;
-use crate::db::proto::common::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb};
+use crate::db::proto::common::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, PrepareDataLoadPb};
 use crate::db::graph::store::GraphStore;
 use crate::db::common::bytes::util::parse_pb;
 use std::sync::Once;
@@ -154,9 +154,24 @@ fn do_write_batch<G: GraphStorage>(graph: &G, snapshot_id: SnapshotId, buf: &[u8
                     has_ddl = true;
                 }
             },
+            OpTypePb::PREPARE_DATA_LOAD => {
+                if prepare_data_load(graph, snapshot_id, op)? {
+                    has_ddl = true;
+                }
+            }
         };
     }
     Ok(has_ddl)
+}
+
+fn prepare_data_load<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+    let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
+    let schema_version = ddl_operation_pb.get_schemaVersion();
+    let prepare_data_load_pb = parse_pb::<PrepareDataLoadPb>(ddl_operation_pb.get_ddlBlob())?;
+    let table_id = prepare_data_load_pb.get_tableIdx();
+    let target_pb = prepare_data_load_pb.get_target();
+    let target = DataLoadTarget::from_proto(target_pb);
+    graph.prepare_data_load(snapshot_id, schema_version, &target, table_id)
 }
 
 fn create_vertex_type<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {

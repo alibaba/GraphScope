@@ -147,6 +147,9 @@ message DataLoadTargetPb {
     string label = 1;
     string srcLabel = 2;
     string dstLabel = 3;
+    int32 labelId = 4;
+    int32 srcLabelId = 5;
+    int32 dstLabelId = 6;
 }
 
 message PrepareDataLoadPb {

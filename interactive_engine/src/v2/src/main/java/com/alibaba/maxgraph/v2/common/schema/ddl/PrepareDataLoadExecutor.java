@@ -31,17 +31,17 @@ public class PrepareDataLoadExecutor extends AbstractDdlExecutor {
         }
 
         GraphDef.Builder graphDefBuilder = GraphDef.newBuilder(graphDef);
-        graphDefBuilder.setVersion(version + 1);
         TypeDef typeDef = graphDef.getTypeDef(label);
         long tableIdx = graphDef.getTableIdx();
         tableIdx++;
+        DataLoadTarget.Builder targetBuilder = DataLoadTarget.newBuilder(dataLoadTarget);
         if (srcLabel == null || srcLabel.isEmpty()) {
             // Vertex type
             if (typeDef.getTypeEnum() != TypeEnum.VERTEX) {
                 throw new DdlException("invalid data load target [" + dataLoadTarget + "], label is not a vertex");
             }
             graphDefBuilder.putVertexTableId(typeDef.getTypeLabelId(), tableIdx);
-            graphDefBuilder.setTableIdx(tableIdx);
+            targetBuilder.setLabelId(typeDef.getLabelId());
         } else {
             // Edge kind
             if (typeDef.getTypeEnum() != TypeEnum.EDGE) {
@@ -53,28 +53,32 @@ public class PrepareDataLoadExecutor extends AbstractDdlExecutor {
                 throw new DdlException("invalid edgeLabel [" + label + "], schema version [" + version + "]");
             }
             edgeKindBuilder.setEdgeLabelId(edgeLabelId);
+            targetBuilder.setLabelId(edgeLabelId.getId());
             LabelId srcVertexLabelId = graphDef.getLabelId(srcLabel);
             if (srcVertexLabelId == null) {
                 throw new DdlException("invalid srcVertexLabel [" + srcLabel + "], schema version [" + version + "]");
             }
             edgeKindBuilder.setSrcVertexLabelId(srcVertexLabelId);
+            targetBuilder.setSrcLabelId(srcVertexLabelId.getId());
             LabelId dstVertexLabelId = graphDef.getLabelId(dstLabel);
             if (dstVertexLabelId == null) {
                 throw new DdlException("invalid dstVertexLabel [" + dstLabel + "], schema version [" + version + "]");
             }
             edgeKindBuilder.setDstVertexLabelId(dstVertexLabelId);
+            targetBuilder.setDstLabelId(dstVertexLabelId.getId());
             EdgeKind edgeKind = edgeKindBuilder.build();
             if (!graphDef.hasEdgeKind(edgeKind)) {
                 throw new DdlException("invalid data load target [" + dataLoadTarget + "], edgeKind not exists");
             }
             graphDefBuilder.putEdgeTableId(edgeKind, tableIdx);
-            graphDefBuilder.setTableIdx(tableIdx);
         }
-
+        version++;
+        graphDefBuilder.setTableIdx(tableIdx);
+        graphDefBuilder.setVersion(version);
         GraphDef newGraphDef = graphDefBuilder.build();
         List<Operation> operations = new ArrayList<>(partitionCount);
         for (int i = 0; i < partitionCount; i++) {
-            operations.add(new PrepareDataLoadOperation(i, version, dataLoadTarget, tableIdx));
+            operations.add(new PrepareDataLoadOperation(i, version, targetBuilder.build(), tableIdx));
         }
         return new DdlResult(newGraphDef, operations);
     }

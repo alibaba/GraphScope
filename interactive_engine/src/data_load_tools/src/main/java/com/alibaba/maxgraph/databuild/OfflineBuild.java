@@ -63,8 +63,11 @@ public class OfflineBuild {
             Client client = new Client(graphUrl, "");
             List<DataLoadTarget> targets = new ArrayList<>();
             for (FileColumnMapping fileColumnMapping : columnMappingConfig.values()) {
-                targets.add(new DataLoadTarget(fileColumnMapping.getLabel(), fileColumnMapping.getSrcLabel(),
-                        fileColumnMapping.getDstLabel()));
+                targets.add(DataLoadTarget.newBuilder()
+                        .setLabel(fileColumnMapping.getLabel())
+                        .setSrcLabel(fileColumnMapping.getSrcLabel())
+                        .setDstLabel(fileColumnMapping.getDstLabel())
+                        .build());
             }
             schema = client.prepareDataLoad(targets);
             schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();

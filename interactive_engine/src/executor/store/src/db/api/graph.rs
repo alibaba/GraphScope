@@ -4,6 +4,7 @@ use super::schema::*;
 use super::{VertexId, SnapshotId, LabelId, GraphResult, EdgeId,
             Vertex, Edge, EdgeKind, PropId, PropertyMap, Condition,
             PropertiesRef, ValueRef};
+use crate::db::api::DataLoadTarget;
 
 pub trait GraphStorage {
     type V: Vertex;
@@ -157,6 +158,9 @@ pub trait GraphStorage {
 
     /// Returns current GraphDefPb bytes
     fn get_graph_def_blob(&self) -> GraphResult<Vec<u8>>;
+
+    /// prepare data load
+    fn prepare_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool>;
 }
 
 pub trait VertexResultIter {

@@ -103,6 +103,16 @@ impl GraphStorage for GraphStore {
         res_unwrap!(res, query_edges, si, label)
     }
 
+    fn prepare_data_load(&self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool> {
+        let _guard = res_unwrap!(self.lock.lock(), prepare_data_load)?;
+        self.check_si_guard(si)?;
+        if let Err(_) = self.meta.check_version(schema_version) {
+            return Ok(false);
+        }
+        self.meta.prepare_data_load(si, schema_version, target, table_id)?;
+        Ok(true)
+    }
+
     fn create_vertex_type(&self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64) -> GraphResult<bool> {
         let _guard = res_unwrap!(self.lock.lock(), create_vertex_type)?;
         self.check_si_guard(si)?;
@@ -284,7 +294,6 @@ impl GraphStorage for GraphStore {
         let pb = graph_def.to_proto()?;
         pb.write_to_bytes().map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))
     }
-
 }
 
 impl GraphStore {
