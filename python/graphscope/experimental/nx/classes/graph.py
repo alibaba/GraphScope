@@ -327,6 +327,10 @@ class Graph(object):
         Returns:
             str: Return session id that the graph belongs to.
         """
+        if hasattr(self, "_graph") and self._is_client_view:
+            return (
+                self._graph.session_id
+            )  # this graph is a client side graph view, use host graph session_id
         return self._session_id
 
     @property
