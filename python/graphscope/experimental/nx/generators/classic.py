@@ -203,8 +203,40 @@ def dorogovtsev_goltsev_mendes_graph(n, create_using=None):
 
 
 @nodes_or_number(0)
-@patch_docstring(nxa.empty_graph)
 def empty_graph(n=0, create_using=None, default=nx.Graph, **kw):
+    """Returns the empty graph with n nodes and zero edges.
+
+    Parameters
+    ----------
+    n : int or iterable container of nodes (default = 0)
+        If n is an integer, nodes are from `range(n)`.
+        If n is a container of nodes, those nodes appear in the graph.
+    create_using : Graph Instance, Constructor or None
+        Indicator of type of graph to return.
+        If a Graph-type instance, then clear and use it.
+        If None, use the `default` constructor.
+        If a constructor, call it to create an empty graph.
+    default : Graph constructor (optional, default = nx.Graph)
+        The constructor to use if create_using is None.
+        If None, then nx.Graph is used.
+        This is used when passing an unknown `create_using` value
+        through your home-grown function to `empty_graph` and
+        you want a default constructor other than nx.Graph.
+
+    Examples
+    --------
+    >>> G = nx.empty_graph(10)
+    >>> G.number_of_nodes()
+    10
+    >>> G.number_of_edges()
+    0
+    >>> G = nx.empty_graph("ABC")
+    >>> G.number_of_nodes()
+    3
+    >>> sorted(G)
+    ['A', 'B', 'C']
+
+    """
     if create_using is None:
         G = default(**kw)
     elif hasattr(create_using, "_adj"):

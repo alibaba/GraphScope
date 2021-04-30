@@ -215,14 +215,24 @@ class Graph(object):
             by the to_nx_graph() function, currently including edge list,
             dict of dicts, dict of lists, NetworkX graph, NumPy matrix
             or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a graphscope
-            graph.
+            Graph.
+
+            If incomming_garph_data is graphscope.Graph, since graphscope.Graph support
+            label of node and edge, the node id must be unique in all labels nodes and
+            not allow parallel edge in different edge label, otherwise would raise
+            AnalyticalEngineInternalError in transformation. finally, the labels
+            of nodes and edges would be cleaned in nx.Graph.
 
         attr : keyword arguments, optional (default= no attributes)
             Attributes to add to graph as key=value pairs.
 
-        See Also
-        --------
-        convert
+        Raises
+        ------
+        AnalyticalEngineInternalError
+            if incomming_graph_data is graphscope.Graph and it contain same node id
+            in different node label or contain parallel edge in defferent edge label.
+
+
 
         Examples
         --------

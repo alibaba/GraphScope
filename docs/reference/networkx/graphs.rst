@@ -11,6 +11,8 @@ Graph types
 | DiGraph        | directed   | Yes                | No                     |
 +----------------+------------+--------------------+------------------------+
 
+Notice that graphscope.nx not support MultiGraph and MultiDiGraph.
+
 Graph
 ^^^^^^^
 Undirected graphs with self loops
@@ -32,6 +34,19 @@ Directed graphs with self loops
    :inherited-members:
    :members:
    :exclude-members: __repr__, __copy__, __deepcopy__, __str__, __weakref__
+
+
+transformation
+^^^^^^^^^^^^^^
+
+In GraphScope, the immutable graphscope.Graph and the mutable graphscope.nx.Graph
+can be transformed into each other. We define the transformation in each Graph class
+constructor.
+
+.. autofunction:: graphscope.framework.graph.Graph.__init__
+.. autofunction:: graphscope.experimental.nx.Graph.__init__
+
+
 
 
 .. include:: cython_sdk.rst
