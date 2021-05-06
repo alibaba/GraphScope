@@ -141,6 +141,18 @@ impl Meta {
                     graph_def.set_table_idx(x.table_id);
                     graph_def.increase_version();
                 }
+                MetaItem::CommitDataLoad(x) => {
+                    let mut graph_def = self.graph_def_lock.lock()?;
+                    graph_def.increase_version();
+                    if x.target.src_label_id > 0 {
+                        let edge_kind = EdgeKind::new(x.target.label_id, x.target.src_label_id, x.target.dst_label_id);
+                        edge_manager_builder.add_edge_table(x.si, &edge_kind, Table::new(x.si, x.table_id))?;
+                    } else {
+                        vertex_manager_builder.get_info(x.si, x.target.label_id).and_then(|info| {
+                            info.online_table(Table::new(x.si, x.table_id))
+                        })?;
+                    }
+                }
             }
         }
         Ok((vertex_manager_builder.build(), edge_manager_builder.build()))
@@ -178,6 +190,18 @@ impl Meta {
                 graph_def.put_vertex_table_id(target.label_id, table_id);
             }
             graph_def.set_table_idx(table_id);
+            graph_def.increase_version();
+        }
+        Ok(())
+    }
+
+    pub fn commit_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget,
+                            table_id: i64) -> GraphResult<()> {
+        self.check_version(schema_version)?;
+        let item = CommitDataLoadItem::new(si, schema_version, target.clone(), table_id);
+        self.write_item(item)?;
+        {
+            let mut graph_def = self.graph_def_lock.lock()?;
             graph_def.increase_version();
         }
         Ok(())
@@ -327,6 +351,7 @@ enum MetaItem {
     DropEdgeType(DropEdgeTypeItem),
     RemoveEdgeKind(RemoveEdgeKindItem),
     PrepareDataLoad(PrepareDataLoadItem),
+    CommitDataLoad(CommitDataLoadItem),
 }
 
 impl MetaItem {
@@ -340,6 +365,7 @@ impl MetaItem {
             MetaItem::DropEdgeType(ref item) => item.schema_version,
             MetaItem::RemoveEdgeKind(ref item) => item.schema_version,
             MetaItem::PrepareDataLoad(ref item) => item.schema_version,
+            MetaItem::CommitDataLoad(ref item) => item.schema_version,
         }
     }
 }
@@ -404,6 +430,51 @@ impl ItemCommon for PrepareDataLoadItem {
 
     fn prefix() -> &'static str {
         "PrepareDataLoad"
+    }
+
+    fn to_kv(&self) -> GraphResult<(Vec<u8>, Vec<u8>)> {
+        let key = format!("{}#{}#{}#{}", Self::prefix(), self.si, self.schema_version, self.table_id);
+        let target_pb = self.target.to_proto();
+        let bytes = target_pb.write_to_bytes()
+            .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
+        Ok((meta_key(&key), bytes))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct CommitDataLoadItem {
+    si: SnapshotId,
+    schema_version: i64,
+    target: DataLoadTarget,
+    table_id: TableId,
+}
+
+impl CommitDataLoadItem {
+    fn new(si: SnapshotId, schema_version: i64, target: DataLoadTarget, table_id: TableId) -> Self {
+        CommitDataLoadItem {
+            si,
+            schema_version,
+            target,
+            table_id,
+        }
+    }
+}
+
+impl ItemCommon for CommitDataLoadItem {
+    fn from_kv(k: &[u8], v: &[u8]) -> GraphResult<Self> {
+        let items = res_unwrap!(common_parse_key(k, Self::prefix(), 4), from_kv)?;
+        let si = res_unwrap!(parse_str(items[1]), from_kv)?;
+        let schema_version = res_unwrap!(parse_str(items[2]), from_kv)?;
+        let table_id = res_unwrap!(parse_str(items[3]), from_kv)?;
+
+        let pb = parse_pb::<DataLoadTargetPb>(v)?;
+        let target = DataLoadTarget::from_proto(&pb);
+        let ret = Self::new(si, schema_version, target, table_id);
+        Ok(ret)
+    }
+
+    fn prefix() -> &'static str {
+        "CommitDataLoad"
     }
 
     fn to_kv(&self) -> GraphResult<(Vec<u8>, Vec<u8>)> {

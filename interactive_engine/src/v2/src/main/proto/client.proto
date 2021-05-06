@@ -15,6 +15,7 @@ service Client {
   rpc loadJsonSchema(LoadJsonSchemaRequest) returns(LoadJsonSchemaResponse);
   rpc dropSchema(DropSchemaRequest) returns(DropSchemaResponse);
   rpc prepareDataLoad(PrepareDataLoadRequest) returns(PrepareDataLoadResponse);
+  rpc commitDataLoad(CommitDataLoadRequest) returns(CommitDataLoadResponse);
 }
 
 message VertexDataPb {
@@ -102,4 +103,12 @@ message PrepareDataLoadRequest {
 
 message PrepareDataLoadResponse {
   GraphDefPb graphDef = 1;
+}
+
+message CommitDataLoadRequest {
+  map<int64, DataLoadTargetPb> tableToTarget = 1;
+}
+
+message CommitDataLoadResponse {
+
 }

@@ -107,10 +107,22 @@ public class Client implements Closeable {
         return GraphDef.parseProto(response.getGraphDef());
     }
 
+    public GraphSchema prepareDataLoad(List<DataLoadTarget> targets) {
+        PrepareDataLoadRequest.Builder builder = PrepareDataLoadRequest.newBuilder();
+        for (DataLoadTarget target : targets) {
+            builder.addDataLoadTargets(target.toProto());
+        }
+        PrepareDataLoadResponse response = this.stub.prepareDataLoad(builder.build());
+        return GraphDef.parseProto(response.getGraphDef());
+    }
 
-    public GraphSchema prepareDataLoad(List<DataLoadTarget> labels) {
+    public void commitDataLoad(Map<Long, DataLoadTarget> tableToTarget) {
+        CommitDataLoadRequest.Builder builder = CommitDataLoadRequest.newBuilder();
+        tableToTarget.forEach((tableId, target) -> {
+            builder.putTableToTarget(tableId, target.toProto());
+        });
+        CommitDataLoadResponse response = this.stub.commitDataLoad(builder.build());
 
-        return null;
     }
 
     public String getMetrics(String roleNames) {

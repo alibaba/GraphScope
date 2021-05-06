@@ -38,6 +38,7 @@ enum OpTypePb {
     REMOVE_EDGE_KIND = 12;
 
     PREPARE_DATA_LOAD = 13;
+    COMMIT_DATA_LOAD = 14;
 }
 
 message MarkerOperationPb {
@@ -153,6 +154,11 @@ message DataLoadTargetPb {
 }
 
 message PrepareDataLoadPb {
+    DataLoadTargetPb target = 1;
+    int64 tableIdx = 2;
+}
+
+message CommitDataLoadPb {
     DataLoadTargetPb target = 1;
     int64 tableIdx = 2;
 }

@@ -20,7 +20,8 @@ public enum OperationType {
     DROP_EDGE_TYPE(11),
     REMOVE_EDGE_KIND(12),
 
-    PREPARE_DATA_LOAD(13);
+    PREPARE_DATA_LOAD(13),
+    COMMIT_DATA_LOAD(14);
 
     private final byte b;
 

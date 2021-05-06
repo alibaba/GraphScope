@@ -75,6 +75,23 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     }
 
     @Override
+    public void commitDataLoad(CommitDataLoadRequest request, StreamObserver<CommitDataLoadResponse> responseObserver) {
+        Map<Long, DataLoadTargetPb> tableToTarget = request.getTableToTargetMap();
+        tableToTarget.forEach((tableId, targetPb) -> {
+            DataLoadTarget dataLoadTarget = DataLoadTarget.parseProto(targetPb);
+            ((MaxGraphWriterImpl)this.writer).commitDataLoad(dataLoadTarget, tableId);
+        });
+        try {
+            this.writer.commit().get(COMMIT_TIMEOUT_SEC, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            logger.error("commit prepare data load failed", e);
+            throw new RuntimeException(e);
+        }
+        responseObserver.onNext(CommitDataLoadResponse.newBuilder().build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void loadJsonSchema(LoadJsonSchemaRequest request, StreamObserver<LoadJsonSchemaResponse> responseObserver) {
         String schemaJson = request.getSchemaJson();
         GraphSchema graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();

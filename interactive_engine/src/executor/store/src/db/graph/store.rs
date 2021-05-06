@@ -15,6 +15,7 @@ use super::meta::*;
 use super::bin::*;
 use protobuf::Message;
 use crate::db::api::GraphErrorCode::InvalidData;
+use crate::db::graph::table_manager::Table;
 
 pub struct GraphStore {
     config: GraphConfig,
@@ -101,16 +102,6 @@ impl GraphStorage for GraphStore {
     fn query_edges<'a>(&'a self, si: i64, label: Option<i32>, condition: Option<Arc<Condition>>) -> GraphResult<Box<dyn EdgeResultIter<E=Self::E> + 'a>> {
         let res = self.do_query_edges(si, 0, label, EdgeDirection::Both, condition);
         res_unwrap!(res, query_edges, si, label)
-    }
-
-    fn prepare_data_load(&self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool> {
-        let _guard = res_unwrap!(self.lock.lock(), prepare_data_load)?;
-        self.check_si_guard(si)?;
-        if let Err(_) = self.meta.check_version(schema_version) {
-            return Ok(false);
-        }
-        self.meta.prepare_data_load(si, schema_version, target, table_id)?;
-        Ok(true)
     }
 
     fn create_vertex_type(&self, si: i64, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64) -> GraphResult<bool> {
@@ -293,6 +284,34 @@ impl GraphStorage for GraphStore {
         let graph_def = self.meta.get_graph_def().lock()?;
         let pb = graph_def.to_proto()?;
         pb.write_to_bytes().map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))
+    }
+
+    fn prepare_data_load(&self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool> {
+        let _guard = res_unwrap!(self.lock.lock(), prepare_data_load)?;
+        self.check_si_guard(si)?;
+        if let Err(_) = self.meta.check_version(schema_version) {
+            return Ok(false);
+        }
+        self.meta.prepare_data_load(si, schema_version, target, table_id)?;
+        Ok(true)
+    }
+
+    fn commit_data_load(&self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool> {
+        let _guard = res_unwrap!(self.lock.lock(), prepare_data_load)?;
+        self.check_si_guard(si)?;
+        if let Err(_) = self.meta.check_version(schema_version) {
+            return Ok(false);
+        }
+        self.meta.commit_data_load(si, schema_version, target, table_id)?;
+        if target.src_label_id > 0 {
+            let edge_kind = EdgeKind::new(target.label_id, target.src_label_id, target.dst_label_id);
+            let info = self.edge_manager.get_edge_kind(si, &edge_kind)?;
+            info.online_table(Table::new(si, table_id));
+        } else {
+            let info = self.vertex_manager.get_type(si, target.label_id)?;
+            info.online_table(Table::new(si, table_id));
+        }
+        Ok(true)
     }
 }
 

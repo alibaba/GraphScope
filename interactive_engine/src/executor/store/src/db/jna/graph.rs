@@ -5,7 +5,7 @@ use std::str;
 use crate::db::api::{GraphConfigBuilder, SnapshotId, GraphResult, GraphStorage, Vertex, TypeDef, EdgeId, EdgeKind, GraphError, DataLoadTarget};
 use crate::db::jna::jna_response::JnaResponse;
 use crate::db::api::PropertyMap;
-use crate::db::proto::common::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, PrepareDataLoadPb};
+use crate::db::proto::common::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, PrepareDataLoadPb, CommitDataLoadPb};
 use crate::db::graph::store::GraphStore;
 use crate::db::common::bytes::util::parse_pb;
 use std::sync::Once;
@@ -159,9 +159,24 @@ fn do_write_batch<G: GraphStorage>(graph: &G, snapshot_id: SnapshotId, buf: &[u8
                     has_ddl = true;
                 }
             }
+            OpTypePb::COMMIT_DATA_LOAD => {
+                if commit_data_load(graph, snapshot_id, op)? {
+                    has_ddl = true;
+                }
+            }
         };
     }
     Ok(has_ddl)
+}
+
+fn commit_data_load<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+    let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
+    let schema_version = ddl_operation_pb.get_schemaVersion();
+    let commit_data_load_pb = parse_pb::<CommitDataLoadPb>(ddl_operation_pb.get_ddlBlob())?;
+    let table_id = commit_data_load_pb.get_tableIdx();
+    let target_pb = commit_data_load_pb.get_target();
+    let target = DataLoadTarget::from_proto(target_pb);
+    graph.commit_data_load(snapshot_id, schema_version, &target, table_id)
 }
 
 fn prepare_data_load<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {

@@ -161,6 +161,8 @@ pub trait GraphStorage {
 
     /// prepare data load
     fn prepare_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool>;
+
+    fn commit_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool>;
 }
 
 pub trait VertexResultIter {

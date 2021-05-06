@@ -152,6 +152,27 @@ public class MaxGraphWriterImpl implements MaxGraphWriter {
         return future;
     }
 
+    public Future<Void> commitDataLoad(DataLoadTarget dataLoadTarget, long tableId) {
+        this.ensureState(BatchType.Ddl);
+        CommitDataLoadRequest ddlRequest = new CommitDataLoadRequest(dataLoadTarget, tableId);
+        this.ddlBatchBuilder.addDdlRequest(ddlRequest);
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        this.pendingCallbacks.add(new CompletionCallback<Object>() {
+            @Override
+            public void onCompleted(Object res) {
+                future.complete(null);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                future.completeExceptionally(new GraphCreateSchemaException("prepareDataLoad callback error. " +
+                        "DataLoadTarget [" + dataLoadTarget + "]", t));
+            }
+        });
+        maybeCommit();
+        return future;
+    }
+
     @Override
     public Future<Integer> createVertexType(String label, List<GraphProperty> propertyList, List<String> primaryKeyList)
             throws GraphCreateSchemaException {

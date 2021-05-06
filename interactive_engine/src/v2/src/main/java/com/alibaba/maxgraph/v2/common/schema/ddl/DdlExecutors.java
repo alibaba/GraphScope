@@ -26,6 +26,7 @@ public class DdlExecutors {
         ddlExecutors.put(OperationType.ADD_EDGE_KIND, new AddEdgeKindExecutor());
         ddlExecutors.put(OperationType.REMOVE_EDGE_KIND, new RemoveEdgeKindExecutor());
         ddlExecutors.put(OperationType.PREPARE_DATA_LOAD, new PrepareDataLoadExecutor());
+        ddlExecutors.put(OperationType.COMMIT_DATA_LOAD, new CommitDataLoadExecutor());
     }
 
     public AbstractDdlExecutor getExecutor(OperationType operationType) {

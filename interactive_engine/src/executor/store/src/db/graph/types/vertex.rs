@@ -75,6 +75,10 @@ impl VertexTypeInfoRef {
         self.info.get_decoder(si, version)
     }
 
+    pub fn online_table(&self, table: Table) -> GraphResult<()> {
+        self.info.online_table(table)
+    }
+
     pub fn get_encoder(&self, si: SnapshotId) -> GraphResult<Encoder> {
         self.info.get_encoder(si)
     }
