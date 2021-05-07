@@ -11,7 +11,7 @@ public class DataLoadTarget {
     private int srcLabelId;
     private int dstLabelId;
 
-    public DataLoadTarget(String label, String srcLabel, String dstLabel, int labelId, int srcLabelId, int dstLabelId) {
+    private DataLoadTarget(String label, String srcLabel, String dstLabel, int labelId, int srcLabelId, int dstLabelId) {
         this.label = label;
         this.srcLabel = srcLabel;
         this.dstLabel = dstLabel;

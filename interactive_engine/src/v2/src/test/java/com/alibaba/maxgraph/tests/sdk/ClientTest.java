@@ -2,6 +2,7 @@ package com.alibaba.maxgraph.tests.sdk;
 
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema;
 import com.alibaba.maxgraph.v2.sdk.Client;
+import com.alibaba.maxgraph.v2.sdk.DataLoadTarget;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -14,27 +15,40 @@ import java.util.Map;
 
 public class ClientTest {
 
-    String host = "localhost";
-    int port = 52944;
+    String host = "100.81.128.150";
+    int port = 50389;
+    Client client = new Client(host, port);
+
+    @Test
+    void testIngestData() {
+        String path = "hdfs://100.69.96.93:9000/user/tianli/data/build_1g_p8";
+        client.ingestData(path);
+    }
+
+    @Test
+    void testCommitData() {
+        long tableId = -4611686018427387815L;
+        DataLoadTarget target = DataLoadTarget.newBuilder()
+                .setLabel("person")
+                .build();
+        client.commitDataLoad(Collections.singletonMap(tableId, target));
+    }
 
     @Test
     void testLoadSchema() throws URISyntaxException, IOException {
-        Client client = new Client(host, port);
-        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource("ldbc.schema").toURI());
+        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource("schema.json").toURI());
         String jsonSchemaRes = client.loadJsonSchema(path);
         System.out.println(jsonSchemaRes);
     }
 
     @Test
     void testGetSchema() {
-        Client client = new Client(host, port);
         GraphSchema schema = client.getSchema();
         schema.toString();
     }
 
     @Test
     void testAddData() {
-        Client client = new Client(host, port);
         Map<String, String> properties = new HashMap<>();
         properties.put("firstname", "alice");
         properties.put("id", "12345");
@@ -56,7 +70,7 @@ public class ClientTest {
                 "person",
                 Collections.singletonMap("id", "12345"),
                 Collections.singletonMap("id", "88888"),
-                Collections.singletonMap("creationdate", "20201111"));
+                Collections.singletonMap("creationDate", "20201111"));
         client.commit();
     }
 }

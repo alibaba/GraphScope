@@ -307,9 +307,11 @@ impl GraphStorage for GraphStore {
             let edge_kind = EdgeKind::new(target.label_id, target.src_label_id, target.dst_label_id);
             let info = self.edge_manager.get_edge_kind(si, &edge_kind)?;
             info.online_table(Table::new(si, table_id));
+            info!("online edge. target {:?}, tableId {}, si {}", target, table_id, si);
         } else {
             let info = self.vertex_manager.get_type(si, target.label_id)?;
             info.online_table(Table::new(si, table_id));
+            info!("online vertex. labelId {}, tableId {}, si {}", target.label_id, table_id, si);
         }
         Ok(true)
     }

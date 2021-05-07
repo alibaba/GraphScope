@@ -214,7 +214,7 @@ public class StoreService {
                 logger.info("ingest data [" + path + "]");
                 ingestDataInternal(path);
                 callback.onCompleted(null);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 logger.error("ingest data failed. path [" + path + "]", e);
                 callback.onError(e);
             }
