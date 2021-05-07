@@ -336,7 +336,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     }
     gather_archives(*arc, comm_spec, old_size);
 
-    return arc;
+    return std::move(arc);
   }
 
   bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
@@ -400,7 +400,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
 
       gather_archives(*arc, comm_spec, old_size);
     }
-    return arc;
+    return std::move(arc);
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
