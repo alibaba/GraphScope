@@ -105,7 +105,9 @@ public class OfflineBuild {
         FileInputFormat.addInputPath(job, new Path(inputPath));
         FileInputFormat.setInputDirRecursive(job, true);
         FileOutputFormat.setOutputPath(job, new Path(outputPath));
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+        int status = job.waitForCompletion(true) ? 0 : 1;
+        System.out.println(mappings);
+        System.exit(status);
     }
 
 }

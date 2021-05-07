@@ -14,7 +14,7 @@ public class CommitDataLoadOperation extends Operation {
     private CommitDataLoadPb proto;
 
     public CommitDataLoadOperation(int partitionId, long schemaVersion, CommitDataLoadPb proto) {
-        super(OperationType.PREPARE_DATA_LOAD);
+        super(OperationType.COMMIT_DATA_LOAD);
         this.partitionId = partitionId;
         this.schemaVersion = schemaVersion;
         this.proto = proto;
