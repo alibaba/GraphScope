@@ -36,11 +36,13 @@ public class CommitDataLoadExecutor extends AbstractDdlExecutor {
         GraphDef.Builder graphDefBuilder = GraphDef.newBuilder(graphDef);
         TypeDef typeDef = graphDef.getTypeDef(label);
 
+        DataLoadTarget.Builder targetBuilder = DataLoadTarget.newBuilder(dataLoadTarget);
         if (srcLabel == null || srcLabel.isEmpty()) {
             // Vertex type
             if (typeDef.getTypeEnum() != TypeEnum.VERTEX) {
                 throw new DdlException("invalid data load target [" + dataLoadTarget + "], label is not a vertex");
             }
+            targetBuilder.setLabelId(typeDef.getLabelId());
         } else {
             // Edge kind
             if (typeDef.getTypeEnum() != TypeEnum.EDGE) {
@@ -52,16 +54,19 @@ public class CommitDataLoadExecutor extends AbstractDdlExecutor {
                 throw new DdlException("invalid edgeLabel [" + label + "], schema version [" + version + "]");
             }
             edgeKindBuilder.setEdgeLabelId(edgeLabelId);
+            targetBuilder.setLabelId(edgeLabelId.getId());
             LabelId srcVertexLabelId = graphDef.getLabelId(srcLabel);
             if (srcVertexLabelId == null) {
                 throw new DdlException("invalid srcVertexLabel [" + srcLabel + "], schema version [" + version + "]");
             }
             edgeKindBuilder.setSrcVertexLabelId(srcVertexLabelId);
+            targetBuilder.setSrcLabelId(srcVertexLabelId.getId());
             LabelId dstVertexLabelId = graphDef.getLabelId(dstLabel);
             if (dstVertexLabelId == null) {
                 throw new DdlException("invalid dstVertexLabel [" + dstLabel + "], schema version [" + version + "]");
             }
             edgeKindBuilder.setDstVertexLabelId(dstVertexLabelId);
+            targetBuilder.setDstLabelId(dstVertexLabelId.getId());
             EdgeKind edgeKind = edgeKindBuilder.build();
             if (!graphDef.hasEdgeKind(edgeKind)) {
                 throw new DdlException("invalid data load target [" + dataLoadTarget + "], edgeKind not exists");
@@ -72,7 +77,11 @@ public class CommitDataLoadExecutor extends AbstractDdlExecutor {
         GraphDef newGraphDef = graphDefBuilder.build();
         List<Operation> operations = new ArrayList<>(partitionCount);
         for (int i = 0; i < partitionCount; i++) {
-            operations.add(new CommitDataLoadOperation(i, version, commitDataLoadPb));
+            operations.add(new CommitDataLoadOperation(i, version,
+                    CommitDataLoadPb.newBuilder()
+                            .setTableIdx(commitDataLoadPb.getTableIdx())
+                            .setTarget(targetBuilder.build().toProto())
+                            .build()));
         }
         return new DdlResult(newGraphDef, operations);
     }
