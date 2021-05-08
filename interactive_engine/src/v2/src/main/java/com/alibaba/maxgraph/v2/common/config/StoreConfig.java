@@ -16,4 +16,13 @@ public class StoreConfig {
     public static final Config<Long> STORE_COMMIT_INTERVAL_MS =
             Config.longConfig("store.commit.interval.ms", 1000L);
 
+    public static final Config<Integer> EXECUTOR_GRAPH_PORT =
+            Config.intConfig("executor.graph.port", 0);
+
+    public static final Config<Integer> EXECUTOR_QUERY_PORT =
+            Config.intConfig("executor.query.port", 0);
+
+    public static final Config<Integer> EXECUTOR_ENGINE_PORT =
+            Config.intConfig("executor.engine.port", 0);
+
 }

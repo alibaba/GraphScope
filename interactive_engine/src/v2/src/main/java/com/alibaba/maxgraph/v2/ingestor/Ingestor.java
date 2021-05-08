@@ -4,14 +4,12 @@ import com.alibaba.maxgraph.v2.common.DefaultMetaService;
 import com.alibaba.maxgraph.v2.common.MetaService;
 import com.alibaba.maxgraph.v2.common.NodeBase;
 import com.alibaba.maxgraph.v2.common.NodeLauncher;
+import com.alibaba.maxgraph.v2.common.config.CommonConfig;
+import com.alibaba.maxgraph.v2.common.discovery.*;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectService;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollector;
 import com.alibaba.maxgraph.v2.common.rpc.RoleClients;
 import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.discovery.LocalNodeProvider;
-import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.discovery.ZkDiscovery;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.rpc.ChannelManager;
 import com.alibaba.maxgraph.v2.common.rpc.MaxGraphNameResolverFactory;
@@ -39,7 +37,12 @@ public class Ingestor extends NodeBase {
         configs = reConfig(configs);
         this.curator = CuratorUtils.makeCurator(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
-        this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
+        if (CommonConfig.DISCOVERY_MODE.get(configs).equalsIgnoreCase("file")) {
+            this.discovery = new FileDiscovery(configs);
+        } else {
+            this.curator = CuratorUtils.makeCurator(configs);
+            this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
+        }
         NameResolver.Factory nameResolverFactory = new MaxGraphNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
@@ -60,7 +63,9 @@ public class Ingestor extends NodeBase {
 
     @Override
     public void start() {
-        this.curator.start();
+        if (this.curator != null) {
+            this.curator.start();
+        }
         this.metaService.start();
         try {
             this.rpcServer.start();
@@ -79,7 +84,9 @@ public class Ingestor extends NodeBase {
         this.metaService.stop();
         this.channelManager.stop();
         this.discovery.stop();
-        this.curator.close();
+        if (this.curator != null) {
+            this.curator.close();
+        }
     }
 
     public static void main(String[] args) throws IOException {

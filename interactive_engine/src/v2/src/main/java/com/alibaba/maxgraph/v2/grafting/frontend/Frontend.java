@@ -11,10 +11,7 @@ import com.alibaba.maxgraph.v2.common.NodeBase;
 import com.alibaba.maxgraph.v2.common.NodeLauncher;
 import com.alibaba.maxgraph.v2.common.config.CommonConfig;
 import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.discovery.LocalNodeProvider;
-import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.discovery.ZkDiscovery;
+import com.alibaba.maxgraph.v2.common.discovery.*;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
 import com.alibaba.maxgraph.v2.common.frontend.api.graph.GraphPartitionManager;
@@ -52,9 +49,13 @@ public class Frontend extends NodeBase {
     public Frontend(Configs configs) {
         super(configs);
         configs = reConfig(configs);
-        this.curator = CuratorUtils.makeCurator(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
-        this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
+        if (CommonConfig.DISCOVERY_MODE.get(configs).equalsIgnoreCase("file")) {
+            this.discovery = new FileDiscovery(configs);
+        } else {
+            this.curator = CuratorUtils.makeCurator(configs);
+            this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
+        }
         NameResolver.Factory nameResolverFactory = new MaxGraphNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         SnapshotCache snapshotCache = new SnapshotCache();
@@ -101,7 +102,9 @@ public class Frontend extends NodeBase {
 
     @Override
     public void start() {
-        this.curator.start();
+        if (this.curator != null) {
+            this.curator.start();
+        }
         this.metaService.start();
         try {
             this.rpcServer.start();
@@ -119,7 +122,9 @@ public class Frontend extends NodeBase {
         this.metaService.stop();
         this.channelManager.stop();
         this.discovery.stop();
-        this.curator.close();
+        if (this.curator != null) {
+            this.curator.close();
+        }
         this.maxGraphServer.stop();
     }
 

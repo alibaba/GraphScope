@@ -59,4 +59,7 @@ public class CommonConfig {
     public static final Config<String> LOG4RS_CONFIG =
             Config.stringConfig("log4rs.config", "");
 
+    public static final Config<String> DISCOVERY_MODE =
+            Config.stringConfig("discovery.mode", "file"); // others: zookeeper
+
 }

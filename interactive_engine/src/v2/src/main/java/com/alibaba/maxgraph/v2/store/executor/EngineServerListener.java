@@ -1,6 +1,5 @@
 package com.alibaba.maxgraph.v2.store.executor;
 
-import com.alibaba.maxgraph.proto.v2.EngineServerAddresses;
 import com.alibaba.maxgraph.v2.common.discovery.MaxGraphNode;
 import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
 import com.alibaba.maxgraph.v2.common.discovery.RoleType;
