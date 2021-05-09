@@ -647,7 +647,7 @@ class KubernetesClusterLauncher(Launcher):
                 api_response = self._core_api.read_namespaced_config_map(
                     name=config_map_name, namespace=self._namespace
                 )
-            except K8SApiException as e:
+            except K8SApiException:
                 pass
             else:
                 return "{}:{}".format(
