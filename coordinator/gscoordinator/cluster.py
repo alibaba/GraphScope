@@ -53,6 +53,7 @@ from graphscope.deploy.kubernetes.resource_builder import resolve_volume_builder
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
+from graphscope.deploy.kubernetes.utils import try_to_resolve_api_client
 from graphscope.proto import types_pb2
 
 from gscoordinator.io_utils import PipeWatcher
@@ -201,11 +202,7 @@ class KubernetesClusterLauncher(Launcher):
         delete_namespace=None,
         **kwargs
     ):
-        try:
-            kube_config.load_incluster_config()
-        except:  # noqa: E722
-            kube_config.load_kube_config()
-        self._api_client = kube_client.ApiClient()
+        self._api_client = try_to_resolve_api_client()
         self._core_api = kube_client.CoreV1Api(self._api_client)
         self._app_api = kube_client.AppsV1Api(self._api_client)
 
@@ -343,6 +340,33 @@ class KubernetesClusterLauncher(Launcher):
     @property
     def preemptive(self):
         return self._preemptive
+
+    def distribute_file(self, path):
+        dir = os.path.dirname(path)
+        for pod in self._pod_name_list:
+            subprocess.check_call(
+                [
+                    "kubectl",
+                    "exec",
+                    pod,
+                    "-c",
+                    "engine",
+                    "--",
+                    "mkdir",
+                    "-p",
+                    dir,
+                ]
+            )
+            subprocess.check_call(
+                [
+                    "kubectl",
+                    "cp",
+                    path,
+                    "{}:{}".format(pod, path),
+                    "-c",
+                    "engine",
+                ]
+            )
 
     def _create_mars_scheduler(self):
         logger.info("Launching mars scheduler pod for GraphScope ...")

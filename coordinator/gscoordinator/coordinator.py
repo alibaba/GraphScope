@@ -59,8 +59,6 @@ from gscoordinator.object_manager import ObjectManager
 from gscoordinator.utils import compile_app
 from gscoordinator.utils import compile_graph_frame
 from gscoordinator.utils import create_single_op_dag
-from gscoordinator.utils import distribute_lib_on_k8s
-from gscoordinator.utils import distribute_lib_via_hosts
 from gscoordinator.utils import dump_string
 from gscoordinator.utils import get_app_sha256
 from gscoordinator.utils import get_graph_sha256
@@ -707,10 +705,7 @@ class CoordinatorServiceServicer(
         app_lib_path = compile_func(
             space, lib_name, op.attr, self._analytical_engine_config
         )
-        if self._launcher_type == types_pb2.K8S:
-            distribute_lib_on_k8s(",".join(self._pods_list), app_lib_path)
-        else:
-            distribute_lib_via_hosts(self._launcher.hosts, app_lib_path)
+        self._launcher.distribute_file(app_lib_path)
         return app_lib_path
 
 

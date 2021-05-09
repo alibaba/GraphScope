@@ -18,6 +18,7 @@
 
 
 import logging
+import os
 import re
 import threading
 import time
@@ -31,6 +32,32 @@ from kubernetes.client.rest import ApiException as K8SApiException
 from graphscope.framework.errors import K8sError
 
 logger = logging.getLogger("graphscope")
+
+
+def try_to_resolve_api_client():
+    """The order of resolves are as following.
+
+    1. load from incluster configuration or,
+    2. load from kubernetes config file or,
+    3. set api address from env if `KUBE_API_ADDRESS` exist.
+    4. RuntimeError will be raised if resolve failed.
+    """
+    try:
+        # load from incluster configuration
+        kube_config.load_incluster_config()
+    except:  # noqa: E722
+        try:
+            # load from kubernetes config file
+            kube_config.load_kube_config()
+        except:  # noqa: E722
+            if "KUBE_API_ADDRESS" in os.environ:
+                # try to load from env `KUBE_API_ADDRESS`
+                config = kube_client.Configuration()
+                config.host = os.environ["KUBE_API_ADDRESS"]
+                return kube_client.ApiClient(config)
+            else:
+                raise RuntimeError("Resolve kube api client failed.")
+    return kube_client.ApiClient()
 
 
 def parse_readable_memory(value):

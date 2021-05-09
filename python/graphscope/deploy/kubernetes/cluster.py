@@ -176,6 +176,7 @@ class KubernetesClusterLauncher(Launcher):
     _cluster_role_name_prefix = "gs-cluster-reader-"
     _cluster_role_binding_name_prefix = "gs-cluster-reader-binding-"
 
+    _random_coordinator_placeholder_port = random.randint(58001, 59000)
     _random_coordinator_service_port = random.randint(59001, 60000)
 
     _url_pattern = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"  # noqa: E501
@@ -284,6 +285,10 @@ class KubernetesClusterLauncher(Launcher):
         self._coordinator_envs = kwargs.pop("coordinator_envs", dict())
 
         self._volumes = volumes
+        if "GS_COORDINATOR_MODULE_NAME" in os.environ:
+            self._coordinator_module_name = os.environ["GS_COORDINATOR_MODULE_NAME"]
+        else:
+            self._coordinator_module_name = "gscoordinataor"
 
         self._closed = False
         self._timeout_seconds = timeout_seconds
@@ -469,21 +474,35 @@ class KubernetesClusterLauncher(Launcher):
             replicas=1,
             image_pull_policy=self._image_pull_policy,
         )
+        # enable host network
+        if "ENABLE_HOST_NETWORK" in os.environ:
+            coordinator_builder.host_network = True
 
         for name in self._image_pull_secrets:
             coordinator_builder.add_image_pull_secret(name)
 
-        envs = {"PYTHONPATH": "/root/gsa", "PYTHONUNBUFFERED": "TRUE"}
+        envs = {
+            "PYTHONUNBUFFERED": "TRUE",
+            "KUBE_NAMESPACE": self._namespace,
+            "INSTANCE_ID": self._instance_id,
+        }
+        if "KUBE_API_ADDRESS" in os.environ:
+            envs.update({"KUBE_API_ADDRESS": os.environ["KUBE_API_ADDRESS"]})
+
         coordinator_builder.add_simple_envs(envs)
 
         coordinator_builder.add_coordinator_container(
-            cmd=self._build_coordinator_cmd(),
+            cmd=["/bin/bash", "-c"],
+            args=self._build_coordinator_cmd(),
             name=self._coordinator_container_name,
             image=self._gs_image,
             cpu=self._coordinator_cpu,
             mem=self._coordinator_mem,
             preemptive=self._preemptive,
-            ports=self._random_coordinator_service_port,
+            ports=[
+                self._random_coordinator_service_port,
+                self._random_coordinator_placeholder_port,
+            ],
         )
 
         targets.append(
@@ -496,9 +515,12 @@ class KubernetesClusterLauncher(Launcher):
 
     def _build_coordinator_cmd(self):
         cmd = [
+            "unset",
+            "LD_PRELOAD",
+            "&&",
             "python3",
             "-m",
-            "gscoordinator",
+            self._coordinator_module_name,
             "--cluster_type",
             "k8s",
             "--port",
@@ -514,7 +536,7 @@ class KubernetesClusterLauncher(Launcher):
             "--k8s_namespace",
             self._namespace,
             "--k8s_service_type",
-            self._service_type,
+            str(self._service_type),
             "--k8s_gs_image",
             self._gs_image,
             "--k8s_etcd_image",
@@ -617,7 +639,29 @@ class KubernetesClusterLauncher(Launcher):
             for pod_watcher in self._coordinator_pods_watcher:
                 pod_watcher.stop()
 
+    def _try_to_get_coordinator_service_from_configmap(self):
+        config_map_name = "gs-coordinator-{}".format(self._instance_id)
+        start_time = time.time()
+        while True:
+            try:
+                api_response = self._core_api.read_namespaced_config_map(
+                    name=config_map_name, namespace=self._namespace
+                )
+            except K8SApiException as e:
+                pass
+            else:
+                return "{}:{}".format(
+                    api_response.data["ip"], api_response.data["port"]
+                )
+            time.sleep(1)
+            if time.time() - start_time > self._timeout_seconds:
+                raise TimeoutError("Gete coordinator service from configmap timeout")
+
     def _get_coordinator_endpoint(self):
+        if self._service_type is None:
+            # try to get endpoint from configmap
+            return self._try_to_get_coordinator_service_from_configmap()
+
         # Always len(endpoints) >= 1
         endpoints = get_service_endpoints(
             api_client=self._api_client,

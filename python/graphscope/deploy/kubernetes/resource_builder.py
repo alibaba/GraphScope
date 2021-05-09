@@ -56,6 +56,13 @@ class ConfigMapBuilder(object):
         for k, v in kvs.items() or ():
             self.add_kv(k, v)
 
+    def build(self):
+        return {
+            "kind": "ConfigMap",
+            "metadata": {"name": self._name},
+            "data": self._kvs,
+        }
+
 
 class NamespaceBuilder(object):
     """Builder for k8s namespace."""
