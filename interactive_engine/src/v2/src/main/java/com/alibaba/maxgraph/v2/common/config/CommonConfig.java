@@ -1,6 +1,5 @@
 package com.alibaba.maxgraph.v2.common.config;
 
-
 import com.alibaba.maxgraph.v2.common.discovery.RoleType;
 
 public class CommonConfig {

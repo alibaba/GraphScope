@@ -3,6 +3,7 @@ package com.alibaba.maxgraph.v2.store.executor;
 import com.alibaba.maxgraph.v2.common.MetaService;
 import com.alibaba.maxgraph.v2.common.config.CommonConfig;
 import com.alibaba.maxgraph.v2.common.config.Configs;
+import com.alibaba.maxgraph.v2.common.config.StoreConfig;
 import com.alibaba.maxgraph.v2.common.discovery.LocalNodeProvider;
 import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
 import com.alibaba.maxgraph.v2.common.discovery.RoleType;
@@ -70,7 +71,16 @@ public class ExecutorService implements Cloneable {
         logger.info("Start to launch executor service");
         int nodeCount = CommonConfig.STORE_NODE_COUNT.get(this.configs);
         int workerPerProcess = ExecutorConfig.EXECUTOR_WORKER_PER_PROCESS.get(this.configs);
-        byte[] configBytes = this.configs.toProto().toByteArray();
+
+        Configs executorConfig = Configs.newBuilder()
+                .put("node.idx", String.valueOf(CommonConfig.NODE_IDX.get(configs)))
+                .put("graph.name", CommonConfig.GRAPH_NAME.get(configs))
+                .put("partition.count", String.valueOf(CommonConfig.PARTITION_COUNT.get(configs)))
+                .put("graph.port", String.valueOf(StoreConfig.EXECUTOR_GRAPH_PORT.get(configs)))
+                .put("query.port", String.valueOf(StoreConfig.EXECUTOR_QUERY_PORT.get(configs)))
+                .put("engine.port", String.valueOf(StoreConfig.EXECUTOR_ENGINE_PORT.get(configs)))
+                .build();
+        byte[] configBytes = executorConfig.toProto().toByteArray();
 
         logger.info("Start to open executor server");
         Pointer pointer = ExecutorLibrary.INSTANCE.openExecutorServer(configBytes, configBytes.length);

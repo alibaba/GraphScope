@@ -81,7 +81,8 @@ impl ExecutorServer {
         let server_manager = PegasusServerManager::new(self.node_id,
                                                        self.store_config.pegasus_thread_pool_size as usize,
                                                        self.store_config.worker_num as usize);
-        let tcp_listener = server_manager.register_listener();
+        let default_addr = format!("0.0.0.0:{}", self.store_config.engine_port);
+        let tcp_listener = TcpListener::bind(&default_addr).expect("bind address failed");
         let tcp_address = tcp_listener.local_addr().expect("bind local address failed");
         self.listener = Some(tcp_listener);
         self.engine_server_manager = Some(Box::new(server_manager));
@@ -106,7 +107,7 @@ impl ExecutorServer {
             self.graph.clone(),
             task_partition_manager);
         let maxgraph_service = PegasusService::new_service(self.store_config.clone(), query_manager.clone());
-        let ctrl_and_async_service_port = Self::start_ctrl_and_async_service(0, ctrl_service, async_maxgraph_service);
+        let ctrl_and_async_service_port = Self::start_ctrl_and_async_service(self.store_config.query_port as u16, ctrl_service, async_maxgraph_service);
         info!("async maxgraph service and control service bind to port: {:?}", ctrl_and_async_service_port);
 
         let gremlin_service = gremlin_query_grpc::create_gremlin_service(
@@ -115,7 +116,7 @@ impl ExecutorServer {
                                            self.graph.clone()))));
         let (tx, rx) = channel();
         let rpc_thread_count = self.store_config.rpc_thread_count;
-        let rpc_port = self.store_config.rpc_port as u16;
+        let rpc_port = self.store_config.graph_port as u16;
         std::thread::spawn(move || {
             let env = Arc::new(Environment::new(rpc_thread_count as usize));
             let mut server_builder = ServerBuilder::new(env.clone())

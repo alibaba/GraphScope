@@ -63,7 +63,7 @@ pub extern fn startEngineServer(executor_handle: ExecutorHandle) -> Box<JnaEngin
 }
 
 #[no_mangle]
-pub extern fn startRpcServer(executor_handle: ExecutorHandle, _config_bytes: *const u8, _len: usize) -> Box<JnaRpcServerPortResponse> {
+pub extern fn startRpcServer(executor_handle: ExecutorHandle) -> Box<JnaRpcServerPortResponse> {
     let executor_ptr = unsafe {
         to_mut(&*(executor_handle as *const ExecutorServer))
     };

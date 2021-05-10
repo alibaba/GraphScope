@@ -65,7 +65,7 @@ public interface ExecutorLibrary extends Library {
      * @param len      The len of config
      * @return The rpc server response
      */
-    JnaRpcServerPortResponse startRpcServer(Pointer executor, byte[] config, int len);
+    JnaRpcServerPortResponse startRpcServer(Pointer executor);
 
     /**
      * Stop the rpc server in given executor

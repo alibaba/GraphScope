@@ -94,6 +94,15 @@ pub struct StoreConfig {
     #[structopt(long = "port", default_value = "0")]
     pub rpc_port: u32,
 
+    #[structopt(long = "graph-port", default_value = "0")]
+    pub graph_port: u32,
+
+    #[structopt(long = "query-port", default_value = "0")]
+    pub query_port: u32,
+
+    #[structopt(long = "engine-port", default_value = "0")]
+    pub engine_port: u32,
+
     #[structopt(long = "timely-worker-per-process", default_value = "2")]
     pub timely_worker_per_process: u32,
 
@@ -283,6 +292,12 @@ impl StoreConfig {
         args.push(store_options.get("graph.name").unwrap().to_owned());
         args.push("--partition-num".to_owned());
         args.push(store_options.get("partition.count").unwrap().to_owned());
+        args.push("--graph-port".to_owned());
+        args.push(store_options.get("graph.port").unwrap().to_owned());
+        args.push("--query-port".to_owned());
+        args.push(store_options.get("query.port").unwrap().to_owned());
+        args.push("--engine-port".to_owned());
+        args.push(store_options.get("engine.port").unwrap().to_owned());
         StoreConfig::from_iter(args.into_iter())
     }
 
