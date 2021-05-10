@@ -288,7 +288,7 @@ class KubernetesClusterLauncher(Launcher):
         if "GS_COORDINATOR_MODULE_NAME" in os.environ:
             self._coordinator_module_name = os.environ["GS_COORDINATOR_MODULE_NAME"]
         else:
-            self._coordinator_module_name = "gscoordinataor"
+            self._coordinator_module_name = "gscoordinator"
 
         self._closed = False
         self._timeout_seconds = timeout_seconds
@@ -492,7 +492,7 @@ class KubernetesClusterLauncher(Launcher):
         coordinator_builder.add_simple_envs(envs)
 
         coordinator_builder.add_coordinator_container(
-            cmd=["/bin/bash", "-c"],
+            cmd=["/bin/bash"],
             args=self._build_coordinator_cmd(),
             name=self._coordinator_container_name,
             image=self._gs_image,
@@ -515,9 +515,6 @@ class KubernetesClusterLauncher(Launcher):
 
     def _build_coordinator_cmd(self):
         cmd = [
-            "unset",
-            "LD_PRELOAD",
-            "&&",
             "python3",
             "-m",
             self._coordinator_module_name,
@@ -600,7 +597,7 @@ class KubernetesClusterLauncher(Launcher):
             "--k8s_delete_namespace",
             str(self._delete_namespace),
         ]
-        return cmd
+        return ["-c", " ".join(cmd)]
 
     def _create_services(self):
         self._create_coordinator()
