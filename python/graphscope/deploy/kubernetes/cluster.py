@@ -515,6 +515,9 @@ class KubernetesClusterLauncher(Launcher):
 
     def _build_coordinator_cmd(self):
         cmd = [
+            "unset",
+            "LD_PRELOAD",
+            "&&",
             "python3",
             "-m",
             self._coordinator_module_name,
