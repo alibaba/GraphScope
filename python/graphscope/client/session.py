@@ -78,9 +78,6 @@ class Session(object):
 
     A :class:`Session` object encapsulates the environment in which :class:`Operation`
     objects are executed/evaluated.
-
-    A session may own resources. It is important to release these resources when
-    they are no longer required. To do this, invoke the :meth:`close` method
     on the session.
 
     A Session can register itself as default session with :meth:`as_default`, and all operations
