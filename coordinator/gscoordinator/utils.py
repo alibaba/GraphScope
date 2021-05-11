@@ -452,42 +452,6 @@ def _codegen_graph_info(attr):
     return graph_header, graph_fqn
 
 
-def distribute_lib_on_k8s(hosts: str, lib_path: str):
-    dir = os.path.dirname(lib_path)
-    for pod in hosts.split(","):
-        subprocess.check_call(
-            [
-                "kubectl",
-                "exec",
-                pod,
-                "-c",
-                "engine",
-                "--",
-                "mkdir",
-                "-p",
-                dir,
-            ]
-        )
-        subprocess.check_call(
-            [
-                "kubectl",
-                "cp",
-                lib_path,
-                "{}:{}".format(pod, lib_path),
-                "-c",
-                "engine",
-            ]
-        )
-
-
-def distribute_lib_via_hosts(hosts: str, lib_path: str):
-    dir = os.path.dirname(lib_path)
-    for host in hosts.split(","):
-        if host not in ("localhost", "127.0.0.1"):
-            subprocess.check_call(["ssh", host, "mkdir -p {}".format(dir)])
-            subprocess.check_call(["scp", lib_path, "{}:{}".format(host, lib_path)])
-
-
 def create_single_op_dag(op_type, config=None):
     op_def = op_def_pb2.OpDef(op=op_type, key=uuid.uuid4().hex)
     if config:

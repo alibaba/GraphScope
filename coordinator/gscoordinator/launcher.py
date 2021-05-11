@@ -157,6 +157,13 @@ class LocalLauncher(Launcher):
             self._stop_analytical_engine()
             self._closed = True
 
+    def distribute_file(self, path):
+        dir = os.path.dirname(path)
+        for host in self._hosts.split(","):
+            if host not in ("localhost", "127.0.0.1"):
+                subprocess.check_call(["ssh", host, "mkdir -p {}".format(dir)])
+                subprocess.check_call(["scp", path, "{}:{}".format(host, path)])
+
     def poll(self):
         if self._analytical_engine_process:
             return self._analytical_engine_process.poll()
