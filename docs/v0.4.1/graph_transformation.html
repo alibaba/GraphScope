@@ -1,0 +1,492 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Graph Transformations &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="GraphScope Interactive Engine" href="interactive_engine.html" />
+    <link rel="prev" title="Loading Graphs" href="loading_graph.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Graph Transformations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#attach-new-labels">Attach new labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#projection">Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transform-to-simple-graph-implicitly">Transform to simple graph implicitly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-results-back-to-graph-as-a-property">Add results back to graph as a property</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Graph Transformations</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/graph_transformation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="graph-transformations">
+<span id="graph-transformation"></span><h1>Graph Transformations<a class="headerlink" href="#graph-transformations" title="Permalink to this headline">¶</a></h1>
+<p>We introduce a series of method that can append more labels to a existed grpah, and
+do projection over existed graph. We will also show how to make a complex property graph
+compatible with algorithms that can only run on simple graph. Finally, we show how to add
+the query result of algorithm back to graph as a property on vertex.</p>
+<p>More specically, <code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code> provides two methods for append labels, and one method for
+projection.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">add_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[],</span> <span class="n">vid_field</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">def</span> <span class="nf">add_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[],</span> <span class="n">src_label</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">src_field</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dst_field</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">edges</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>We have already seem <cite>add_vertices</cite> and <cite>add_edges</cite> in <a class="reference internal" href="zh/loading_graph.html#loading-graphs"><span class="std std-ref">loading graphs</span></a>, we use them
+to build a graph iteratively.</p>
+<p>Further, we can use them to attach more vertex labels and edge labels to a existed graph.
+But this won’t modify the source graph, instead, it will return a new graph, which is based
+on the source graph.</p>
+<section id="attach-new-labels">
+<h2>Attach new labels<a class="headerlink" href="#attach-new-labels" title="Permalink to this headline">¶</a></h2>
+<p>Take LDBC-SNB Property Graph as an example，We now load a subset of labels, as the source graph.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.loader</span> <span class="kn">import</span> <span class="n">Loader</span>
+
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">directed</span><span class="o">=</span><span class="n">directed</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;person_0_0.csv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">),</span> <span class="s2">&quot;person&quot;</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;person_knows_person_0_0.csv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;knows&quot;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s2">&quot;person&quot;</span>
+    <span class="p">)</span>
+
+<span class="c1"># graph has 1 vertex label &quot;person&quot;</span>
+<span class="k">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we have an loaded graph, let’s attach some new labels to it.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph1</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;comment_0_0.csv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">),</span> <span class="s2">&quot;comment&quot;</span><span class="p">)</span>
+
+<span class="c1"># Now graph1 has 2 vertex labels &quot;person&quot; and &quot;comment&quot;</span>
+<span class="k">print</span><span class="p">(</span><span class="n">graph1</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+
+<span class="n">graph2</span> <span class="o">=</span> <span class="n">graph1</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;comment_replyOf_comment_0_0.csv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;|&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;replyOf&quot;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span>
+    <span class="p">)</span>
+
+<span class="c1"># graph2 has 2 edge labels &quot;knows&quot; and &quot;replyOf&quot;</span>
+<span class="k">print</span><span class="p">(</span><span class="n">graph2</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can see each operation of <cite>add</cite> will produce a new graph.
+In implementation detail, their common labels will share the common memory, so it won’t
+copy the source graph.</p>
+</section>
+<section id="projection">
+<h2>Projection<a class="headerlink" href="#projection" title="Permalink to this headline">¶</a></h2>
+<p>In some scenario, we need to extract a subgraph from a complex graph. We do that by <cite>project</cite>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">project</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">vertices</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="bp">None</span><span class="p">]],</span>
+        <span class="n">edges</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="bp">None</span><span class="p">]],</span> <span class="bp">None</span><span class="p">]</span>
+    <span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>The parameter definition means it’s a <cite>dict</cite>, the key is the label name, the value is a <cite>list</cite> of <cite>str</cite>, which is the name of properties. Specifically, if the value is <cite>None</cite>, it means select all properties.</p>
+<p>A graph that produced by <cite>project</cite> should just like a normal property graph, and can be projected further.</p>
+<p>Here’s some examples.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sub_graph</span> <span class="o">=</span> <span class="n">graph2</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;person&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;firstName&quot;</span><span class="p">,</span> <span class="s2">&quot;lastName&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;knows&quot;</span><span class="p">:</span> <span class="bp">None</span><span class="p">})</span>
+
+<span class="c1"># contains 1 vertex label &quot;person&quot;, and 1 edge label &quot;knows&quot;, with selected properties.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">sub_graph</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+
+<span class="n">sub_graph2</span> <span class="o">=</span> <span class="n">sub_graph</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;person&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;knows&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;creationDate&quot;</span><span class="p">]})</span>
+
+<span class="c1"># No properties on the vertex, and 1 property on the edge.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">sub_graph2</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="transform-to-simple-graph-implicitly">
+<h2>Transform to simple graph implicitly<a class="headerlink" href="#transform-to-simple-graph-implicitly" title="Permalink to this headline">¶</a></h2>
+<p>When an algorithm that only works on simple graph query a property graph, the property graph will
+be converted to a simple graph implicitly. If such transformation cannot be performed (the vertex label num and
+edge label num is not one, or has more than 1 property on vertex/edge), an exception will be raised.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">wcc</span>
+
+<span class="n">ret</span> <span class="o">=</span> <span class="n">wcc</span><span class="p">(</span><span class="n">sub_graph2</span><span class="p">)</span>
+
+<span class="c1"># wcc(graph2)  # Error! More than 1 vertex label / edge label</span>
+<span class="c1"># wcc(sub_graph)  # Error! More than 1 property.</span>
+</pre></div>
+</div>
+</section>
+<section id="add-results-back-to-graph-as-a-property">
+<h2>Add results back to graph as a property<a class="headerlink" href="#add-results-back-to-graph-as-a-property" title="Permalink to this headline">¶</a></h2>
+<p>The result <cite>ret</cite> produced in previous step can be add to a graph as a property of vertex.</p>
+<p>Note the result can not only be added to the graph it directly queried on, but also the graph which produced
+the queried graph by <cite>project</cite>, as long as the vertex label that will be mutated is the same between the two graphs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">new_graph</span> <span class="o">=</span> <span class="n">sub_graph2</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;cc&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
+
+<span class="n">new_graph</span> <span class="o">=</span> <span class="n">sub_graph</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;cc&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
+
+<span class="n">new_graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;cc&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="interactive_engine.html" class="btn btn-neutral float-right" title="GraphScope Interactive Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="loading_graph.html" class="btn btn-neutral" title="Loading Graphs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="index.html">en</a></dd>
+        <dd><a href="zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

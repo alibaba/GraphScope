@@ -1,0 +1,792 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>graphscope.framework.app &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>graphscope.framework.app</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for graphscope.framework.app</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">zipfile</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">BytesIO</span>
+
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">decorator</span> <span class="k">import</span> <span class="n">decorator</span>
+
+<span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="k">import</span> <span class="n">create_context</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="k">import</span> <span class="n">create_app</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="k">import</span> <span class="n">run_app</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="k">import</span> <span class="n">unload_app</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">InvalidArgumentError</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">check_argument</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="k">import</span> <span class="n">graph_type_to_cpp_class</span>
+<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">types_pb2</span>
+
+<span class="n">DEFAULT_GS_CONFIG_FILE</span> <span class="o">=</span> <span class="s2">&quot;.gs_conf.yaml&quot;</span>
+
+
+<span class="nd">@decorator</span>
+<span class="k">def</span> <span class="nf">project_to_simple</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;graph_type&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Missing graph_type attribute in graph object.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">_project_to_simple</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">not_compatible_for</span><span class="p">(</span><span class="o">*</span><span class="n">graph_types</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator to mark builtin algorithms as not compatible with graph.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        graph_types: list of string</span>
+<span class="sd">            Entries must be one of &#39;arrow_property&#39;, &#39;dynamic_property&#39;, &#39;arrow_projected&#39;, &#39;dynamic_projected&#39;</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The decorated function.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        RuntimeError: If graph is not compatible.</span>
+<span class="sd">        KeyError: If parameter is not correctly.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        Multiple types or use multiple @not_compatible_for() lines</span>
+<span class="sd">        are joined logically with &quot;or&quot;.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; @not_compatible_for(&#39;arrow_property&#39;, &#39;dynamic_property&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; def sssp(G, src):</span>
+<span class="sd">        &gt;&gt;&gt;     pass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@decorator</span>
+    <span class="k">def</span> <span class="nf">_not_compatible_for</span><span class="p">(</span><span class="n">not_compatible_for_func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;graph_type&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Missing graph_type attribute in graph object.&quot;</span><span class="p">)</span>
+
+        <span class="n">terms</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;arrow_property&quot;</span><span class="p">:</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">,</span>
+            <span class="s2">&quot;dynamic_property&quot;</span><span class="p">:</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span><span class="p">,</span>
+            <span class="s2">&quot;arrow_projected&quot;</span><span class="p">:</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROJECTED</span><span class="p">,</span>
+            <span class="s2">&quot;dynamic_projected&quot;</span><span class="p">:</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROJECTED</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">graph_types</span><span class="p">:</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="n">match</span> <span class="ow">or</span> <span class="n">terms</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
+                <span class="s2">&quot;Use one or more of arrow_property,dynamic_property,arrow_projected,dynamic_projected&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
+                <span class="s2">&quot;Not compatible for </span><span class="si">%s</span><span class="s2"> type&quot;</span> <span class="o">%</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">graph_types</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">not_compatible_for_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_not_compatible_for</span>
+
+
+<div class="viewcode-block" id="AppAssets"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets">[docs]</a><span class="k">class</span> <span class="nc">AppAssets</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class holds the bytes of the gar resource.</span>
+
+<span class="sd">    Assets includes name (for builtin algorithm), and gar (for user defined algorithm),</span>
+<span class="sd">    and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`.</span>
+
+<span class="sd">    The instance of this class can be passed to init :class:`graphscope.App`.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        algo (str): Name of the algorithm</span>
+<span class="sd">        type (str): Type of the algorithm</span>
+<span class="sd">        gar (bytes): Byte content of user defined algorithm</span>
+<span class="sd">        signature (str): Unique identifier of this assets.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AppAssets.__init__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">algo</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Init assets of the algorithm.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            algo (str): Represent specific algo inside resource.</span>
+<span class="sd">            gar (bytes or BytesIO, optional): The bytes that encodes the application&#39;s source code.</span>
+<span class="sd">                Default to None</span>
+<span class="sd">            kwargs: Other params, e.g. vd_type and md_type in cython app.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span> <span class="o">=</span> <span class="n">algo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;cpp_pie&quot;</span>  <span class="c1"># default is built_in app with `built_in` type</span>
+
+        <span class="c1"># used for gar resource</span>
+        <span class="k">if</span> <span class="n">gar</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="p">(</span><span class="n">BytesIO</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="o">=</span> <span class="n">gar</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">gar</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># built_in apps has no gar resource.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="AppAssets.__repr__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;graphscope.AppAssets &lt;type: </span><span class="si">{self._type}</span><span class="s2">, algorithm: </span><span class="si">{self._algo}</span><span class="s2">&gt;&quot;</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">algo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Algorithm name, e.g. sssp, pagerank.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Algorithm name of this asset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Algorithm type, one of `cpp_pie`, `cython_pie` or `cython_pregel`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Algorithm type of this asset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gar resource.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bytes: gar resource of this asset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">to_gar</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Path exist: </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_gar</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">bytes</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_gar</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate a signature of the app assets by its algo name (and gar resources).</span>
+
+<span class="sd">        Used to uniquely identify a app assets.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            str: signature of this assets</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_algo</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gar</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+<div class="viewcode-block" id="AppAssets.is_compatible"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.is_compatible">[docs]</a>    <span class="k">def</span> <span class="nf">is_compatible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Determine if this algorithm can run on this type of graph.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            graph (:class:`Graph`): A graph instance.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            InvalidArgumentError:</span>
+<span class="sd">                - :code:`gs_conf.yaml` not exist in gar resource.</span>
+<span class="sd">                - App is not compatible with graph or</span>
+<span class="sd">                - Algo not found in gar resource.</span>
+
+<span class="sd">            ScannerError:</span>
+<span class="sd">                - Yaml file format is incorrect.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">graph</span><span class="p">,</span>
+            <span class="p">(</span>
+                <span class="n">graphscope</span><span class="o">.</span><span class="n">framework</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
+                <span class="n">graphscope</span><span class="o">.</span><span class="n">nx</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
+                <span class="n">graphscope</span><span class="o">.</span><span class="n">nx</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">digraph</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Wrong type of graph.&quot;</span><span class="p">)</span>
+        <span class="c1"># builtin app</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;cpp_pie&quot;</span>
+            <span class="k">return</span>
+        <span class="c1"># check yaml file</span>
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gar</span><span class="p">)</span>
+        <span class="n">archive</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">DEFAULT_GS_CONFIG_FILE</span><span class="p">))</span>
+
+        <span class="c1"># check the compatibility with graph</span>
+        <span class="k">for</span> <span class="n">application</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span> <span class="o">==</span> <span class="n">application</span><span class="p">[</span><span class="s2">&quot;algo&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="n">application</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+                <span class="n">graph_type</span> <span class="o">=</span> <span class="n">graph_type_to_cpp_class</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">graph_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">application</span><span class="p">[</span><span class="s2">&quot;compatible_graph&quot;</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
+                        <span class="s2">&quot;App is uncompatible with graph </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">graph_type</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;App not found in gar: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_algo</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate an App and do queries over it.&quot;&quot;&quot;</span>
+        <span class="n">app_</span> <span class="o">=</span> <span class="n">App</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">app_</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="App"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App">[docs]</a><span class="k">class</span> <span class="nc">App</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An application that can run on graphs and produce results.</span>
+
+<span class="sd">    Analytical engine will build the app dynamic library when instantiate a app instance.</span>
+<span class="sd">    The dynamic library will be reused if subsequent app&#39;s signature matches one of previous ones.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        key (str): Identifier of the app, associated with the dynamic library path.</span>
+<span class="sd">            set by analytical engine after library is built.</span>
+<span class="sd">        signature (str): Combination of app_assets&#39;s and graph&#39;s signature.</span>
+<span class="sd">        session_id (str): Session id of the session that associated with the app.</span>
+<span class="sd">        algo (str): Algorithm name of app_assets.</span>
+<span class="sd">        gar (str): Gar content of app_assets.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="App.__init__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">app_assets</span><span class="p">:</span> <span class="n">AppAssets</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create an application using given :code:`gar` file, or given application</span>
+<span class="sd">            class name.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            graph (:class:`Graph`): A :class:`Graph` instance.</span>
+<span class="sd">            app_assets: A :class:`AppAssets` instance.</span>
+
+<span class="sd">        Raise:</span>
+<span class="sd">            TypeError: The type of app_assets incorrect.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The graph is not loaded.&quot;</span><span class="p">)</span>
+        <span class="n">app_assets</span><span class="o">.</span><span class="n">is_compatible</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span> <span class="o">=</span> <span class="n">app_assets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span>
+
+        <span class="n">opr</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">opr</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;graphscope.App &lt;type: </span><span class="si">{self._app_assets.type}</span><span class="s2">, algorithm: </span><span class="si">{self._app_assets.algo}</span><span class="s2">&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;bounded_graph: {str(self._graph)}&gt;&quot;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A unique identifier of App.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Signature is computed by all critical components of the App.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">signature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">template_str</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+                <span class="s2">&quot;utf-8&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the session_id, which is copied from the graph.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Id of the session which loaded the app.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">algo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Algorithm name, e.g. sssp, pagerank.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Algorithm name of this asset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">algo</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gar resource.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bytes: gar resource of this asset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">gar</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;When called, check arguments based on app type, Then do build and query.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            InvalidArgumentError: If app_type is None,</span>
+<span class="sd">                or positional argument found when app_type not `cpp_pie`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`Context`: Query context, include running results of the app.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">app_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">type</span>
+        <span class="n">check_argument</span><span class="p">(</span><span class="n">app_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;cython_pie&quot;</span><span class="p">,</span> <span class="s2">&quot;cython_pregel&quot;</span><span class="p">]:</span>
+            <span class="c1"># cython app support kwargs only</span>
+            <span class="n">check_argument</span><span class="p">(</span>
+                <span class="ow">not</span> <span class="n">args</span><span class="p">,</span> <span class="s2">&quot;Only support using keyword arguments in cython app.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a `RUN_APP` Operation, and send it to analytical engine to do actual query.</span>
+<span class="sd">        Then retrieve query contexts and return.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">run_app</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
+        <span class="n">context_key</span><span class="p">,</span> <span class="n">context_type</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">],</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_type&quot;</span><span class="p">]</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">create_context</span><span class="p">(</span>
+            <span class="n">context_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="k">def</span> <span class="nf">_check_unmodified</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Ensure app is not modified, cause it may need to recompile the dynamic library.&quot;&quot;&quot;</span>
+        <span class="n">check_argument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signature</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span><span class="p">)</span>
+
+<div class="viewcode-block" id="App.loaded"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.loaded">[docs]</a>    <span class="k">def</span> <span class="nf">loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Since key is only set by engine after it load the app, and unset to None when unload,</span>
+<span class="sd">           we can use the key to detect whether the app is loaded.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: The app is loaded or not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="App.unload"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.unload">[docs]</a>    <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unload app. Both on engine side and python side. Set the key to None.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">unload_app</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="kc">None</span></div></div>
+
+
+<div class="viewcode-block" id="load_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app">[docs]</a><span class="k">def</span> <span class="nf">load_app</span><span class="p">(</span><span class="n">algo</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load an app from gar.</span>
+<span class="sd">    bytes orthe resource of the specified path or bytes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        algo: str</span>
+<span class="sd">          Algo name inside resource.</span>
+<span class="sd">        gar: bytes or BytesIO or str</span>
+<span class="sd">          str represent the path of resource.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Instance of &lt;graphscope.AppAssets&gt;</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        FileNotFoundError: File not exist.</span>
+<span class="sd">        PermissionError: Permission denied of path.</span>
+<span class="sd">        TypeError: File is not a zip file.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; sssp = load_app(&#39;sssp&#39;, gar=&#39;./resource.gar&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; sssp(src=4)</span>
+
+<span class="sd">        which will have following `.gs_conf.yaml` in resource.gar:</span>
+<span class="sd">          app:</span>
+<span class="sd">            - algo: sssp</span>
+<span class="sd">              type: cpp_pie</span>
+<span class="sd">              class_name: grape:SSSP</span>
+<span class="sd">              src: sssp/sssp.h</span>
+<span class="sd">              compatible_graph:</span>
+<span class="sd">                - gs::ArrowProjectedFragment</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="p">(</span><span class="n">BytesIO</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">algo</span><span class="p">),</span> <span class="n">gar</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">is_zipfile</span><span class="p">(</span><span class="n">gar</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a zip file.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gar</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">algo</span><span class="p">),</span> <span class="n">content</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Wrong type with </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gar</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../../index.html">en</a></dd>
+        <dd><a href="../../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

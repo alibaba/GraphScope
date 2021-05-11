@@ -1,0 +1,1676 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Cython SDK API &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Interactive Query" href="interactive.html" />
+    <link rel="prev" title="graphscope.framework.dag_utils.graph_to_dataframe" href="generated/graphscope.framework.dag_utils.graph_to_dataframe.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="python_index.html">Python API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html">Analytical App</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selector.html">Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operation.html">Operation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Cython SDK API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pregel">Pregel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pie">PIE</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning.html">Graph Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="networkx/index.html">NetworkX-style API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="python_index.html">Python API Reference</a> &raquo;</li>
+        
+      <li>Cython SDK API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reference/cython_sdk.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="cython-sdk-api">
+<span id="cython-sdk"></span><h1>Cython SDK API<a class="headerlink" href="#cython-sdk-api" title="Permalink to this headline">¶</a></h1>
+<section id="pregel">
+<h2>Pregel<a class="headerlink" href="#pregel" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt>
+<code class="sig-name descname">Vertex[VD_TYPE, MD_TYPE]</code></dt>
+<dd><blockquote>
+<div><p>Class which holds vertex id, data and edges.</p>
+<p>VD_TYPE: vertex data type
+MD_TYPE: message type</p>
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get vertex id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">label</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get vertex label.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">label_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">properties</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>pair<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of vertex properties, which consisting of property name and property type.
+Note that property type is one of (“INT”, “DOUBLE”, “STRING”)</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">set_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">VD_TYPE</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Set the vertex data, immediately visible in current round.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; VD_TYPE</dt>
+<dd><blockquote>
+<div><p>Get the vertex value, which data stored with vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">get_str</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get vertex str data by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">get_str</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">property_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get vertex str data by property name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">get_double</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; double</dt>
+<dd><blockquote>
+<div><p>Get vertex str data by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">get_double</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">property_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; double</dt>
+<dd><blockquote>
+<div><p>Get vertex double data by property_name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">get_int</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get vertex int data by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">get_int</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">property_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get vertex int data by property_name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">outgoing_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; AdjList<span class="p">[</span>VD_TYPE<span class="p">, </span>MD_TYPE<span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get a iterable of outgoing edges by edge label id of this vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">outgoing_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; AdjList<span class="p">[</span>VD_TYPE<span class="p">, </span>MD_TYPE<span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get a iterable of outgoing edges by edge label name of this vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">incoming_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; AdjList<span class="p">[</span>VD_TYPE<span class="p">, </span>MD_TYPE<span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get a iterable of incoming edges by edge label id of this vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">incoming_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; AdjList<span class="p">[</span>VD_TYPE<span class="p">, </span>MD_TYPE<span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get a iterable of incoming edges by edge label name of this vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">send</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex<span class="p">[</span>VD_TYPE<span class="p">, </span>MD_TYPE<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">msg</span><span class="p">:</span> <span class="n">MD_TYPE</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Send a message to target vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Vertex.</code><code class="sig-name descname">vote_to_halt</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>After this method is called, the <cite>compute()</cite> code will no longer called with this
+vertex util receive messages. The application will finish only when all vertices
+vote to halt.</p>
+</div></blockquote>
+</dd></dl>
+
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<code class="sig-name descname">Neighbor[VD_TYPE, MD_TYPE]</code></dt>
+<dd><blockquote>
+<div><dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Neighbor.</code><code class="sig-name descname">vertex</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Vertex<span class="p">[</span>VD_TYPE<span class="p">, </span>MD_TYPE<span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get neighbor vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Neighbor.</code><code class="sig-name descname">get_str</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get edge str data by column id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Neighbor.</code><code class="sig-name descname">get_int</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get edge int data by column id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Neighbor.</code><code class="sig-name descname">get_double</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get edge double data by column id.</p>
+</div></blockquote>
+</dd></dl>
+
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<code class="sig-name descname">AdjList[VD_TYPE, MD_TYPE]</code></dt>
+<dd><blockquote>
+<div><dl class="py method">
+<dt>
+<code class="sig-prename descclassname">AdjList.</code><code class="sig-name descname">begin</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Neighbor</dt>
+<dd><blockquote>
+<div><p>Return begin addr of the iterator.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">AdjList.</code><code class="sig-name descname">end</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Neighbor</dt>
+<dd><blockquote>
+<div><p>Return end addr of the iterator.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">AdjList.</code><code class="sig-name descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; size_t</dt>
+<dd><blockquote>
+<div><p>Get the size of adj list.</p>
+</div></blockquote>
+</dd></dl>
+
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<code class="sig-name descname">Context[VD_TYPE, MD_TYPE]</code></dt>
+<dd><blockquote>
+<div><p>Class which holds current step, aggregator info, query args and other util function.</p>
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get a value with specific key, or “” with key not exist.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">register_aggregator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">type</span><span class="p">:</span> <span class="n">PregelAggregatorType</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Register a aggregator with specific type, naming by <cite>name</cite>.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">Context.aggregate[AGGR_TYPE](name: str, value: AGGR_TYPE)</code></dt>
+<dd><blockquote>
+<div><p>Add a new value to aggregator.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">Context.get_aggregated_value[AGGR_TYPE](name: str) -&gt; AGGR_TYPE</code></dt>
+<dd><blockquote>
+<div><p>Get value from a aggregator.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">superstep</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get current superstep, begin with 0.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_total_vertices_num</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; size_t</dt>
+<dd><blockquote>
+<div><p>Get total vertex number.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">vertex_label_num</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex label number.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">edge_label_num</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get edge label number.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">vertex_property_num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex property number by vertex label name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">vertex_property_num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex property number by vertex label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">edge_property_num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get edge property number by edge label name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">edge_property_num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex property number by edge label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">vertex_labels</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>str<span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of vertex label.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">edge_labels</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>str<span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of edge label.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_vertex_label_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get vertex label name by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_vertex_label_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex label id by name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_edge_label_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get edge label name by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_edge_label_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get edge label id by name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">vertex_properties</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>pair<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of vertex properties by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">vertex_properties</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>pair<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of vertex properties by label name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">edge_properties</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>pair<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of edge properties by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">edge_properties</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>pair<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of edge properties by label name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_vertex_property_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">vertex_property_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex property id by property name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_vertex_property_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">vertex_property_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex property id by property name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_vertex_property_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">vertex_property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get vertex property name by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_vertex_property_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">vertex_property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex property name by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_edge_property_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">edge_property_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get edge property id by property name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_edge_property_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">edge_property_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get edge property id by property name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_edge_property_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">edge_property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get edge property name by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_edge_property_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">edge_property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get edge property name by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<code class="sig-name descname">MessageIterator[MD_TYPE]</code></dt>
+<dd><blockquote>
+<div><dl class="py method">
+<dt>
+<code class="sig-prename descclassname">MessageIterator.</code><code class="sig-name descname">empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool</dt>
+<dd><blockquote>
+<div><p>Return True if there is no message in queue.</p>
+</div></blockquote>
+</dd></dl>
+
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.analytical.app.pregel.</code><code class="sig-name descname">PregelAggregatorType</code></dt>
+<dd><blockquote>
+<div><dl class="py data">
+<dt>
+<code class="sig-name descname">kBoolAndAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for calculating the AND function over boolean values.
+The default value when nothing is aggregated is true.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kBoolOrAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for calculating the OR function over boolean values.
+The default value when nothing is aggregated is false.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kBoolOverwriteAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator that stores a value that is overwritten once another value is aggregated.
+Note that, in case multiple vertices write to this aggregator, the behavior is
+non-deterministic. The default value for this aggregator is false.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kDoubleMinAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for getting min double value.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kDoubleMaxAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for getting max double value.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kDoubleSumAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for summing up double values.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kDoubleProductAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for calculating products of double value.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kDoubleOverwriteAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator that stores a value that is overwritten once another value is aggregated.
+Note that, in case multiple vertices write to this aggregator, the behavior is
+non-deterministic.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kInt64MinAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for getting min int64 value.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kInt64MaxAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for getting max int64 value.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kInt64SumAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for summing up int64 values.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kInt64ProductAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for calculating products of int64 value.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kInt64OverwriteAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator that stores a value that is overwritten once another value is aggregated.
+Note that, in case multiple vertices write to this aggregator, the behavior is
+non-deterministic.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kTextAppendAggregator</code></dt>
+<dd><blockquote>
+<div><p>Aggregator with string as its value which keeps appending text to it.</p>
+</div></blockquote>
+</dd></dl>
+
+</div></blockquote>
+</dd></dl>
+
+</section>
+<section id="pie">
+<h2>PIE<a class="headerlink" href="#pie" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.analytical.app.pie.</code><code class="sig-name descname">MessageStrategy</code></dt>
+<dd><dl class="py data">
+<dt>
+<code class="sig-name descname">kAlongOutgoingEdgeToOuterVertex</code></dt>
+<dd><blockquote>
+<div><p>For each of inner vertex, it will send messages to target vertex along outgoing edges.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kAlongIncomingEdgeToOuterVertex</code></dt>
+<dd><blockquote>
+<div><p>For each of inner vertex, it will send messages to target vertex along incoming edges.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kAlongEdgeToOuterVertex</code></dt>
+<dd><blockquote>
+<div><p>For each of inner vertex, it will send messages to target vertex along both incoming and outgoing edges.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kSyncOnOuterVertex</code></dt>
+<dd><blockquote>
+<div><p>For each of outer vertex, it will send messages to fragment which it belongs to (sync message to itself).</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.analytical.app.pie.</code><code class="sig-name descname">Vertex</code></dt>
+<dd><dl class="py method">
+<dt>
+<code class="sig-name descname">Vertex</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Vertex in graph.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.analytical.app.pie.</code><code class="sig-name descname">VertexRange</code></dt>
+<dd><dl class="py method">
+<dt>
+<code class="sig-name descname">VertexRange</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>A range list of vertex, which only contain vertex id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">begin</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Vertex</dt>
+<dd><blockquote>
+<div><p>The begin addr of vertex range list.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">end</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Vertex</dt>
+<dd><blockquote>
+<div><p>The end addr of vertex range list.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>The size of vertex range list.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<code class="sig-name descname">VertexArray[T]</code></dt>
+<dd><dl class="py method">
+<dt>
+<code class="sig-prename descclassname">VertexArray.</code><code class="sig-name descname">VertexArray</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>A list of vertex, which also contain a vertex data.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">VertexArray.</code><code class="sig-name descname">Init</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">range</span><span class="p">:</span> <span class="n">VertexRange</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Init VertexArray with default value.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">VertexArray.</code><code class="sig-name descname">Init</code><span class="sig-paren">(</span><em class="sig-param">range: VertexRange</em>, <em class="sig-param">const T&amp; value</em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Init VertexArray with specify value.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">VertexArray.operator[](v: Vertex) -&gt; T</code></dt>
+<dd><blockquote>
+<div><p>Get vertex data.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.analytical.app.pie.</code><code class="sig-name descname">Nbr</code></dt>
+<dd><dl class="py method">
+<dt>
+<code class="sig-name descname">Nbr</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">neighbor</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Vertex</dt>
+<dd><blockquote>
+<div><p>Get nerghbor vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_str</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get edge str data by column id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_int</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get edge int data by column id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_double</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get edge double data by column id.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.analytical.app.pie.</code><code class="sig-name descname">AdjList</code></dt>
+<dd><dl class="py method">
+<dt>
+<code class="sig-name descname">AdjList</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">end</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Nbr</dt>
+<dd><blockquote>
+<div><p>Return end addr of the adj list.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get the size of adj list.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.analytical.app.pie.</code><code class="sig-name descname">Fragment</code></dt>
+<dd><dl class="py method">
+<dt>
+<code class="sig-name descname">Fragment</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">fid</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get fragment id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">fnum</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get fragment number.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">vertex_label_num</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex label number.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">edge_label_num</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get edge label number.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_total_nodes_num</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; size_t</dt>
+<dd><blockquote>
+<div><p>Get total vertex number.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_nodes_num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; size_t</dt>
+<dd><blockquote>
+<div><p>Get vertex(inner + outer) number by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_inner_nodes_num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; size_t</dt>
+<dd><blockquote>
+<div><p>Get inner vertex number by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_outer_nodes_num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; size_t</dt>
+<dd><blockquote>
+<div><p>Get outer vertex number by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">nodes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; VertexRange</dt>
+<dd><blockquote>
+<div><p>Get vertex range of this fragment by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">inner_nodes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; VertexRange</dt>
+<dd><blockquote>
+<div><p>Get inner vertex range of this fragment by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">outer_nodes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; VertexRange</dt>
+<dd><blockquote>
+<div><p>Get outer vertex range of this fragment by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_node_fid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex fragment id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">is_inner_node</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em><span class="sig-paren">)</span> &#x2192; bool</dt>
+<dd><blockquote>
+<div><p>Return True if inner vertex of this fragment.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">is_outer_node</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em><span class="sig-paren">)</span> &#x2192; bool</dt>
+<dd><blockquote>
+<div><p>Return False if outer vertex of this fragment.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_node</code><span class="sig-paren">(</span><em class="sig-param">label_id: int</em>, <em class="sig-param">oid: int64_t</em>, <em class="sig-param">v: Vertex&amp;</em><span class="sig-paren">)</span> &#x2192; bool</dt>
+<dd><blockquote>
+<div><p>Return True if oid exist in this fragment.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_inner_node</code><span class="sig-paren">(</span><em class="sig-param">label_id: int</em>, <em class="sig-param">oid: int64_t</em>, <em class="sig-param">v: Vertex&amp;</em><span class="sig-paren">)</span> &#x2192; bool</dt>
+<dd><blockquote>
+<div><p>Return True if oid exist of inner vertex in this fragment.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_outer_node</code><span class="sig-paren">(</span><em class="sig-param">label_id: int</em>, <em class="sig-param">oid: int64_t</em>, <em class="sig-param">v: Vertex&amp;</em><span class="sig-paren">)</span> &#x2192; bool</dt>
+<dd><blockquote>
+<div><p>Return True if oid exist of outer vertex in this fragment.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_node_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em><span class="sig-paren">)</span> &#x2192; int64_t</dt>
+<dd><blockquote>
+<div><p>Get vertex oid.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_outgoing_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em>, <em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; AdjList</dt>
+<dd><blockquote>
+<div><p>Get a iterable of outgoing edges by label id of this vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_incoming_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em>, <em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; AdjList</dt>
+<dd><blockquote>
+<div><p>Get a iterable of incoming edges by label id of this vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">has_child</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em>, <em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; bool</dt>
+<dd><blockquote>
+<div><p>Return True of vertex has child with connection of edge label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">has_parent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em>, <em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; bool</dt>
+<dd><blockquote>
+<div><p>Return True of vertex has parent with connection of edge label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_indegree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em>, <em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; bool</dt>
+<dd><blockquote>
+<div><p>Return the in-degree of edge with specified edge id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_outdegree</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em>, <em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; bool</dt>
+<dd><blockquote>
+<div><p>Return the out-degree of edge with specified edge id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_str</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em>, <em class="sig-param"><span class="n">vertex_property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get vertex str data by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_int</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em>, <em class="sig-param"><span class="n">vertex_property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex int data by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_double</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em>, <em class="sig-param"><span class="n">vertex_property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; double</dt>
+<dd><blockquote>
+<div><p>Get vertex double data by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">vertex_labels</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>str<span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of vertex label.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">edge_labels</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>str<span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of edge label.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_vertex_label_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get vertex label name by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_vertex_label_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex label id by name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_edge_label_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get edge label name by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_edge_label_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get edge label id by name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">vertex_properties</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>pair<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of vertex properties by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">vertex_properties</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>pair<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of vertex properties by label name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">edge_properties</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>pair<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of edge properties by label id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">edge_properties</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; vector<span class="p">[</span>pair<span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">]</span></dt>
+<dd><blockquote>
+<div><p>Get list of edge properties by label name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_vertex_property_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">vertex_property_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex property id by property name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_vertex_property_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">vertex_property_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex property id by property name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_vertex_property_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">vertex_property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get vertex property name by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_vertex_property_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">vertex_property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get vertex property name by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_edge_property_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">edge_property_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get edge property id by property name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_edge_property_id_by_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">edge_property_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get edge property id by property name.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_edge_property_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">edge_property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get edge property name by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">get_edge_property_by_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edge_label_id</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">edge_property_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get edge property name by property id.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<code class="sig-name descname">Context[VD_TYPE, MD_TYPE]</code></dt>
+<dd><dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">Context</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">superstep</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int</dt>
+<dd><blockquote>
+<div><p>Get current superstep.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Get a value with specific key, or “” with key not exist.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">init_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">range</span><span class="p">:</span> <span class="n">VertexRange</span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">MD_TYPE</span></em>, <em class="sig-param"><span class="n">type</span><span class="p">:</span> <span class="n">PIEAggregateType</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Init vertex range with value and type aggregator.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">register_sync_buffer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v_label_id</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">strategy</span><span class="p">:</span> <span class="n">MessageStrategy</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Set auto parallel message strategy.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">set_node_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">VD_TYPE</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Set the value of vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-prename descclassname">Context.</code><code class="sig-name descname">get_node_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em><span class="sig-paren">)</span> &#x2192; VD_TYPE</dt>
+<dd><blockquote>
+<div><p>Get the value of vertex.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.analytical.app.pie.</code><code class="sig-name descname">PIEAggregateType</code></dt>
+<dd><blockquote>
+<div><p>After messages auto passing, each inner vertex will aggregate messages it received.</p>
+</div></blockquote>
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kMinAggregate</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for getting min value.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kMaxAggregate</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for getting max value.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kSumAggregate</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for summing up values.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kProductAggregate</code></dt>
+<dd><blockquote>
+<div><p>Aggregator for calculating products of values.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="interactive.html" class="btn btn-neutral float-right" title="Interactive Query" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="generated/graphscope.framework.dag_utils.graph_to_dataframe.html" class="btn btn-neutral" title="graphscope.framework.dag_utils.graph_to_dataframe" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../index.html">en</a></dd>
+        <dd><a href="../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

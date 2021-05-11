@@ -1,0 +1,473 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Reading graphs &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Analytical Engine API Reference" href="../analytical_engine_index.html" />
+    <link rel="prev" title="graphscope.nx.generators.social.les_miserables_graph" href="generated/graphscope.nx.generators.social.les_miserables_graph.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../python_index.html">Python API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../session.html">Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app.html">Analytical App</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../selector.html">Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../operation.html">Operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cython_sdk.html">Cython SDK API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learning.html">Graph Learning</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">NetworkX-style API</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="graphs.html">Graph types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="builtin.html">Builtin algorithms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generators.html">Graph generators</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Reading graphs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edge-list">Edge List</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#adjacency-list">Adjacency List</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../python_index.html">Python API Reference</a> &raquo;</li>
+        
+          <li><a href="index.html">NetworkX-style API</a> &raquo;</li>
+        
+      <li>Reading graphs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/reference/networkx/io.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="reading-graphs">
+<span id="io"></span><h1>Reading graphs<a class="headerlink" href="#reading-graphs" title="Permalink to this headline">¶</a></h1>
+<section id="edge-list">
+<h2>Edge List<a class="headerlink" href="#edge-list" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="graphscope.nx.read_edgelist">
+<code class="sig-prename descclassname">graphscope.nx.</code><code class="sig-name descname">read_edgelist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">comments</span><span class="o">=</span><span class="default_value">'#'</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">create_using</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodetype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">edgetype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">encoding</span><span class="o">=</span><span class="default_value">'utf-8'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/readwrite/edgelist.html#read_edgelist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.read_edgelist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a graph from a list of edges.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>file</em><em> or </em><em>string</em>) – File or filename to read. If a file is provided, it must be
+opened in ‘rb’ mode.
+Filenames ending in .gz or .bz2 will be uncompressed.</p></li>
+<li><p><strong>comments</strong> (<em>string</em><em>, </em><em>optional</em>) – The character used to indicate the start of a comment.</p></li>
+<li><p><strong>delimiter</strong> (<em>string</em><em>, </em><em>optional</em>) – The string used to separate values.  The default is whitespace.</p></li>
+<li><p><strong>create_using</strong> (<em>NetworkX graph constructor</em><em>, </em><em>optional</em><em> (</em><em>default=nx.Graph</em><em>)</em>) – Graph type to create. If graph instance, then cleared before populated.</p></li>
+<li><p><strong>nodetype</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em><em>, </em><em>tuple</em><em>, </em><em>bool Python object</em><em>, </em><em>optional</em>) – Convert node data from strings to specified type</p></li>
+<li><p><strong>data</strong> (<em>bool</em><em> or </em><em>list of</em><em> (</em><em>label</em><em>,</em><em>type</em><em>) </em><em>tuples</em>) – Tuples specifying dictionary key names and types for edge data</p></li>
+<li><p><strong>edgetype</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>str</em><em>, </em><em>tuple</em><em>, </em><em>bool Python object</em><em>, </em><em>optional OBSOLETE</em>) – Convert edge data from strings to specified type and use as ‘weight’</p></li>
+<li><p><strong>encoding</strong> (<em>string</em><em>, </em><em>optional</em>) – Specify which encoding to use when reading file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>G</strong> – A networkx Graph or other type specified with create_using</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#graphscope.nx.read_adjlist" title="graphscope.nx.read_adjlist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_adjlist</span></code></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>Since nodes must be hashable, the function nodetype must return hashable
+types (e.g. int, float, str, frozenset - or tuples of those, etc.)</p>
+</dd></dl>
+
+</section>
+<section id="adjacency-list">
+<h2>Adjacency List<a class="headerlink" href="#adjacency-list" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="graphscope.nx.read_adjlist">
+<code class="sig-prename descclassname">graphscope.nx.</code><code class="sig-name descname">read_adjlist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">comments</span><span class="o">=</span><span class="default_value">'#'</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">create_using</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodetype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">encoding</span><span class="o">=</span><span class="default_value">'utf-8'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/readwrite/adjlist.html#read_adjlist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.nx.read_adjlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read graph in adjacency list format from path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>string</em><em> or </em><em>file</em>) – Filename or file handle to read.
+Filenames ending in .gz or .bz2 will be uncompressed.</p></li>
+<li><p><strong>create_using</strong> (<em>graphscope.nx graph constructor</em><em>, </em><em>optional</em><em> (</em><em>default=nx.Graph</em><em>)</em>) – Graph type to create. If graph instance, then cleared before populated.</p></li>
+<li><p><strong>nodetype</strong> (<em>int</em><em>, </em><em>str</em><em>, </em><em>float</em><em>, </em><em>tuple</em><em>, </em><em>bool Python object</em><em>, </em><em>optional</em>) – Convert nodes to this type.</p></li>
+<li><p><strong>comments</strong> (<em>string</em><em>, </em><em>optional</em>) – Marker for comment lines</p></li>
+<li><p><strong>delimiter</strong> (<em>string</em><em>, </em><em>optional</em>) – Separator for node labels.  The default is whitespace.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>G</strong> – The graph corresponding to the lines in adjacency list format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graphscope.nx graph</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This format does not store graph or node data.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#graphscope.nx.read_edgelist" title="graphscope.nx.read_edgelist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_edgelist</span></code></a></p>
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../analytical_engine_index.html" class="btn btn-neutral float-right" title="Analytical Engine API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="generated/graphscope.nx.generators.social.les_miserables_graph.html" class="btn btn-neutral" title="graphscope.nx.generators.social.les_miserables_graph" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../index.html">en</a></dd>
+        <dd><a href="../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

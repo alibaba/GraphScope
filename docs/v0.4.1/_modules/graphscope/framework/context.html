@@ -1,0 +1,752 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>graphscope.framework.context &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>graphscope.framework.context</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for graphscope.framework.context</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Mapping</span>
+
+<span class="kn">from</span> <span class="nn">graphscope.client.session</span> <span class="k">import</span> <span class="n">get_session_by_id</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="k">import</span> <span class="n">dag_utils</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="k">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">InvalidArgumentError</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">check_argument</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="k">import</span> <span class="n">decode_dataframe</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="k">import</span> <span class="n">decode_numpy</span>
+
+
+<div class="viewcode-block" id="BaseContext"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContext">[docs]</a><span class="k">class</span> <span class="nc">BaseContext</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class of concrete contexts.</span>
+<span class="sd">    Hold a handle of app querying context.</span>
+
+<span class="sd">    After evaluating an app, the context (vertex data, partial results, etc.) are preserved,</span>
+<span class="sd">    and can be referenced through a handle.</span>
+
+<span class="sd">    We can further use the handle to retrieve data:</span>
+
+<span class="sd">    - as a numpy.ndarray( `to_numpy()` ),</span>
+<span class="sd">    - as a pandas.DataFrame( `to_dataframe()` ),</span>
+<span class="sd">    - as a vineyard tensor ( `to_vineyard_tensor()` ),</span>
+<span class="sd">    - or as a vineyard dataframe ( `to_vineyard_dataframe()` ).</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    .. code:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; g = get_test_property_graph()</span>
+<span class="sd">        &gt;&gt;&gt; sg = g.project(vertices={&#39;person&#39;: [&#39;id&#39;]}, edges={&#39;knows&#39;: [&#39;weight&#39;]})</span>
+<span class="sd">        &gt;&gt;&gt; ret = sssp(sg, 20)</span>
+<span class="sd">        &gt;&gt;&gt; out = ret.to_numpy(&#39;r&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; out.shape</span>
+<span class="sd">        (20345,)</span>
+<span class="sd">        &gt;&gt;&gt; out = ret.to_dataframe({&#39;id&#39;: &#39;v.id&#39;, &#39;result&#39;: &#39;r&#39;})</span>
+<span class="sd">        &gt;&gt;&gt; out.shape</span>
+<span class="sd">        (20345, 2)</span>
+<span class="sd">        &gt;&gt;&gt; out = ret.to_vineyard_tensor()  # return an object id</span>
+<span class="sd">        &gt;&gt;&gt; out = ret.to_vineyard_dataframe()  # return an object id</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">context_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">session_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;graphscope.</span><span class="si">{self.__class__.__name__}</span><span class="s2"> from graph {str(self._graph)}&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unique identifier of a context.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute digest by key and graph signatures.</span>
+<span class="sd">        Used to ensure the critical information of context is untouched.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_argument</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;Context key error, maybe it is not connected to engine.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">signature</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_check_unmodified</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">check_argument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the session id associated with the context.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
+
+    <span class="k">def</span> <span class="nf">_transform_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BaseContext.to_numpy"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContext.to_numpy">[docs]</a>    <span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return context data as numpy array</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            selector (str): Describes how to select values of context.</span>
+<span class="sd">                See more details in derived context class.</span>
+<span class="sd">            vertex_range (dict): optional, default to None.</span>
+<span class="sd">                Works as slicing. The expression {&#39;begin&#39;: m, &#39;end&#39;: n} select a portion</span>
+<span class="sd">                of vertices from `m` to, but not including `n`. Type of `m`, `n` must be identical with vertices&#39;</span>
+<span class="sd">                oid type.</span>
+<span class="sd">                Omitting the first index starts the slice at the beginning of the vertices,</span>
+<span class="sd">                and omitting the second index extends the slice to the end of the vertices.</span>
+<span class="sd">                Note the comparision is not based on numeric order, but on alphabetic order.</span>
+<span class="sd">            axis (int): optional, default to 0.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy.ndarray.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
+        <span class="n">selector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_selector</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">context_to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="n">raw_values</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">decode_numpy</span><span class="p">(</span><span class="n">raw_values</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseContext.to_dataframe"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContext.to_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return results as a pandas DataFrame</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            selector: dict</span>
+<span class="sd">                The key is column name in dataframe, and the value describes how to select values of context.</span>
+<span class="sd">                See more details in derived context class.</span>
+<span class="sd">            vertex_range: dict, optional, default to None.</span>
+<span class="sd">                Works as slicing. The expression {&#39;begin&#39;: m, &#39;end&#39;: n} select a portion</span>
+<span class="sd">                of vertices from `m` to, but not including `n`. Type of `m`, `n` must be identical with vertices&#39;</span>
+<span class="sd">                oid type.</span>
+<span class="sd">                Only the sub-ranges of vertices data will be retrieved.</span>
+<span class="sd">                Note the comparision is not based on numeric order, but on alphabetic order.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pandas.DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
+
+        <span class="n">check_argument</span><span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">),</span> <span class="s2">&quot;selector of to_dataframe must be a dict&quot;</span>
+        <span class="p">)</span>
+        <span class="n">selector</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_selector</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">selector</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="n">selector</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">context_to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">raw_values</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">decode_dataframe</span><span class="p">(</span><span class="n">raw_values</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseContext.to_vineyard_tensor"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContext.to_vineyard_tensor">[docs]</a>    <span class="k">def</span> <span class="nf">to_vineyard_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return results as a vineyard tensor.</span>
+<span class="sd">        Only object id is returned.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: object id of vineyard tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
+        <span class="n">selector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_selector</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_vineyard_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">object_id</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">ret</span><span class="p">)[</span><span class="s2">&quot;object_id&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">object_id</span></div>
+
+<div class="viewcode-block" id="BaseContext.to_vineyard_dataframe"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContext.to_vineyard_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">to_vineyard_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return results as a vineyard dataframe.</span>
+<span class="sd">        Only object id is returned.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            selector:  dict</span>
+<span class="sd">                Key is used as column name of the dataframe,</span>
+<span class="sd">                and the value describes how to select values of context.</span>
+<span class="sd">                See more details in derived context class.</span>
+<span class="sd">            vertex_range: dict, optional, default to None</span>
+<span class="sd">                Works as slicing. The expression {&#39;begin&#39;: m, &#39;end&#39;: n} select a portion</span>
+<span class="sd">                of vertices from `m` to, but not including `n`. Type of `m`, `n` must be identical with vertices&#39;</span>
+<span class="sd">                oid type.</span>
+<span class="sd">                Only the sub-ranges of vertices data will be retrieved.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: object id of vineyard tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">check_argument</span><span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">),</span>
+                <span class="s2">&quot;selector of to_vineyard_dataframe must be a dict&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">selector</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_selector</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">selector</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="n">selector</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">object_id</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">ret</span><span class="p">)[</span><span class="s2">&quot;object_id&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">object_id</span></div>
+
+<div class="viewcode-block" id="BaseContext.output"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContext.output">[docs]</a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dump results to `fd`.</span>
+<span class="sd">        Support dumps data to local (respect to pod) files, hdfs or oss.</span>
+<span class="sd">        It first write results to a vineyard dataframe, and let vineyard</span>
+<span class="sd">        do the data dumping job.</span>
+<span class="sd">        `fd` must meet specific formats, with auth information if needed. As follows:</span>
+
+<span class="sd">            - local</span>
+<span class="sd">                `file:///tmp/result_path`</span>
+<span class="sd">            - oss</span>
+<span class="sd">                `oss:///bucket/object`</span>
+<span class="sd">            - hdfs</span>
+<span class="sd">                `hdfs:///tmp/result_path`</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fd (str): Output location.</span>
+<span class="sd">            selector (dict): Similar to `to_dataframe`.</span>
+<span class="sd">            vertex_range (dict, optional): Similar to `to_dataframe`. Defaults to None.</span>
+<span class="sd">            kwargs (dict, optional): Storage options with respect to output storage type.</span>
+<span class="sd">                    for example:</span>
+<span class="sd">                    key, secret, endpoint for oss,</span>
+<span class="sd">                    key, secret, client_kwargs for s3,</span>
+<span class="sd">                    host, port for hdfs,</span>
+<span class="sd">                    None for local.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">vineyard</span>
+        <span class="kn">import</span> <span class="nn">vineyard.io</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">sess</span> <span class="o">=</span> <span class="n">get_session_by_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span>
+        <span class="n">deployment</span> <span class="o">=</span> <span class="s2">&quot;kubernetes&quot;</span> <span class="k">if</span> <span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;k8s&quot;</span> <span class="k">else</span> <span class="s2">&quot;ssh&quot;</span>
+        <span class="n">conf</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_config&quot;</span><span class="p">]</span>
+        <span class="n">vineyard_endpoint</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;vineyard_rpc_endpoint&quot;</span><span class="p">]</span>
+        <span class="n">vineyard_ipc_socket</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;k8s&quot;</span><span class="p">:</span>
+            <span class="n">hosts</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;namespace&quot;</span><span class="p">],</span> <span class="n">s</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># type == &quot;hosts&quot;</span>
+            <span class="n">hosts</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="c1"># Write vineyard dataframe as a readable stream</span>
+        <span class="n">dfstream</span> <span class="o">=</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+            <span class="s2">&quot;vineyard://&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
+            <span class="n">vineyard_ipc_socket</span><span class="o">=</span><span class="n">vineyard_ipc_socket</span><span class="p">,</span>
+            <span class="n">vineyard_endpoint</span><span class="o">=</span><span class="n">vineyard_endpoint</span><span class="p">,</span>
+            <span class="n">deployment</span><span class="o">=</span><span class="n">deployment</span><span class="p">,</span>
+            <span class="n">hosts</span><span class="o">=</span><span class="n">hosts</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">vineyard</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+            <span class="n">fd</span><span class="p">,</span>
+            <span class="n">dfstream</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
+            <span class="n">vineyard_ipc_socket</span><span class="o">=</span><span class="n">vineyard_ipc_socket</span><span class="p">,</span>
+            <span class="n">vineyard_endpoint</span><span class="o">=</span><span class="n">vineyard_endpoint</span><span class="p">,</span>
+            <span class="n">storage_options</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="n">deployment</span><span class="o">=</span><span class="n">deployment</span><span class="p">,</span>
+            <span class="n">hosts</span><span class="o">=</span><span class="n">hosts</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">output_to_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch result to client side&quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TensorContext"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.TensorContext">[docs]</a><span class="k">class</span> <span class="nc">TensorContext</span><span class="p">(</span><span class="n">BaseContext</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tensor context holds a tensor.</span>
+<span class="sd">    Only axis is meaningful when considering a TensorContext.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_transform_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="VertexDataContext"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.VertexDataContext">[docs]</a><span class="k">class</span> <span class="nc">VertexDataContext</span><span class="p">(</span><span class="n">BaseContext</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The most simple kind of context.</span>
+<span class="sd">    A vertex has a single value as results.</span>
+
+<span class="sd">    - The syntax of selector on vertex is:</span>
+<span class="sd">        - `v.id`: Get the Id of vertices</span>
+<span class="sd">        - `v.data`: Get the data of vertices (If there is any, means origin data on the graph, not results)</span>
+
+<span class="sd">    - The syntax of selector of edge is:</span>
+<span class="sd">        - `e.src`: Get the source Id of edges</span>
+<span class="sd">        - `e.dst`: Get the destination Id of edges</span>
+<span class="sd">        - `e.data`: Get the edge data on the edges (If there is any, means origin data on the graph)</span>
+
+<span class="sd">    - The syntax of selector of results is:</span>
+<span class="sd">        - `r`: Get quering results of algorithms. e.g. Rankings of vertices after doing PageRank.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_transform_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_data_selector</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LabeledVertexDataContext"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.LabeledVertexDataContext">[docs]</a><span class="k">class</span> <span class="nc">LabeledVertexDataContext</span><span class="p">(</span><span class="n">BaseContext</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The labeld kind of context.</span>
+<span class="sd">    This context has several vertex labels and edge labels,</span>
+<span class="sd">    and each label has several properties.</span>
+<span class="sd">    Selection are performed on labels first, then on properties.</span>
+
+<span class="sd">    We use `:` to filter labels, and `.` to select properties.</span>
+<span class="sd">    And the results has no property, only have labels.</span>
+
+<span class="sd">    - The syntax of selector of vertex is:</span>
+<span class="sd">        - `v:label_name.id`: Get Id that belongs to a specific vertex label.</span>
+<span class="sd">        - `v:label_name.property_name`: Get data that on a specific property of a specific vertex label.</span>
+
+<span class="sd">    - The syntax of selector of edge is:</span>
+<span class="sd">        - `e:label_name.src`: Get source Id of a specific edge label.</span>
+<span class="sd">        - `e:label_name.dst`: Get destination Id of a specific edge label.</span>
+<span class="sd">        - `e:label_name.property_name`: Get data on a specific property of a specific edge label.</span>
+
+<span class="sd">    - The syntax of selector of results is:</span>
+<span class="sd">        - `r:label_name`: Get results data of a vertex label.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_transform_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_labeled_vertex_data_selector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">selector</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VertexPropertyContext"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.VertexPropertyContext">[docs]</a><span class="k">class</span> <span class="nc">VertexPropertyContext</span><span class="p">(</span><span class="n">BaseContext</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The simple kind of context with property.</span>
+<span class="sd">    A vertex can have multiple values (a.k.a. properties) as results.</span>
+
+<span class="sd">    - The syntax of selector on vertex is:</span>
+<span class="sd">        - `v.id`: Get the Id of vertices</span>
+<span class="sd">        - `v.data`: Get the data of vertices (If there is any, means origin data on the graph, not results)</span>
+
+<span class="sd">    - The syntax of selector of edge is:</span>
+<span class="sd">        - `e.src`: Get the source Id of edges</span>
+<span class="sd">        - `e.dst`: Get the destination Id of edges</span>
+<span class="sd">        - `e.data`: Get the edge data on the edges (If there is any, means origin data on the graph)</span>
+
+<span class="sd">    - The syntax of selector of results is:</span>
+<span class="sd">        - `r.column_name`: Get the property named `column_name` in results. e.g. `r.hub` in :func:`graphscope.hits`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_transform_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_property_data_selector</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LabeledVertexPropertyContext"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.LabeledVertexPropertyContext">[docs]</a><span class="k">class</span> <span class="nc">LabeledVertexPropertyContext</span><span class="p">(</span><span class="n">BaseContext</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The labeld kind of context with properties.</span>
+<span class="sd">    This context has several vertex labels and edge labels,</span>
+<span class="sd">    And each label has several properties.</span>
+<span class="sd">    Selection are performed on labels first, then on properties.</span>
+
+<span class="sd">    We use `:` to filter labels, and `.` to select properties.</span>
+<span class="sd">    And the results can have several properties.</span>
+<span class="sd">    - The syntax of selector of vertex is:</span>
+<span class="sd">        - `v:label_name.id`: Get Id that belongs to a specific vertex label.</span>
+<span class="sd">        - `v:label_name.property_name`: Get data that on a specific property of a specific vertex label.</span>
+
+<span class="sd">    - The syntax of selector of edge is:</span>
+<span class="sd">        - `e:label_name.src`: Get source Id of a specific edge label.</span>
+<span class="sd">        - `e:label_name.dst`: Get destination Id of a specific edge label.</span>
+<span class="sd">        - `e:label_name.property_name`: Get data on a specific property of a specific edge label.</span>
+
+<span class="sd">    - The syntax of selector of results is:</span>
+<span class="sd">        - `r:label_name.column_name`: Get the property named `column_name` of `label_name`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_transform_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_labeled_vertex_property_data_selector</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">selector</span>
+        <span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">create_context</span><span class="p">(</span><span class="n">context_type</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A context factory, create concrete context class by context_type.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;tensor&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">TensorContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;vertex_data&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VertexDataContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;labeled_vertex_data&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LabeledVertexDataContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;vertex_property&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VertexPropertyContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;labeled_vertex_property&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LabeledVertexPropertyContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Not supported context type: &quot;</span> <span class="o">+</span> <span class="n">context_type</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../../index.html">en</a></dd>
+        <dd><a href="../../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

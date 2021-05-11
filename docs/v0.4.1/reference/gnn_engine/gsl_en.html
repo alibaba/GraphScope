@@ -1,0 +1,865 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Graph Sampling Language（GSL) &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+      <li>Graph Sampling Language（GSL)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/reference/gnn_engine/gsl_en.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="graph-sampling-language-gsl">
+<h1>Graph Sampling Language（GSL)<a class="headerlink" href="#graph-sampling-language-gsl" title="Permalink to this headline">¶</a></h1>
+<p># 1. Introduction There has been a well-developed programming paradigm
+since Graph Neural Network (GNN) was introduced. Developing a GNN model
+contains two parts: graph data processing and neural network training.
+There are matured Deep Learning framework such as Tensorflow and Pytorch
+for neural network training. Therefore, how to express and implement
+graph data processing easily and efficiently, and how to work with the
+DL frameworks are the focuses of Graphlearn. In reality, sampling is
+necessary due to the sheer scale of graphs. There are several graph
+sampling techniques:</p>
+<ul class="simple">
+<li><p><strong>Traversal based sampling</strong> randomly selects a batch of vertices or
+edges from a graph.</p></li>
+<li><p><strong>Neighborhood/subgraph sampling</strong> samples vertices or edges within a
+n-hop neighborhood, or generates a subgraph from the vertices
+generated by traversal.</p></li>
+<li><p><strong>Negative sampling</strong> is the opposite of neighborhood sampling, which
+is usually used to generate negative samples in unsupervised
+learning.</p></li>
+</ul>
+<p>So we created the Graph Sampling Language (GSL) which is an interface of
+above sampling techniques. Developers can describe the GNN data stream
+by using GSL. For example, in the “customer clicks a product” use case,
+developers can sample 64 users randomly and sample 10 relative products
+for each user based on the weight of the edge.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;edge_weight&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>GSL supports super large graph, heterogeneous graph and property graph
+and has similar syntax like
+<a class="reference external" href="http://tinkerpop.apache.org/docs/current/reference/#_tinkerpop_documentation">Gremlin</a>
+which is easy to understand.</p>
+<p># 2 GSL Syntax</p>
+<p>We call a GSL statement a query, which consists of three types of
+operations: SOURCE, STEP and SINK. SOURCE is the entrance of a query,
+indicating which data to start from; STEP is the path to walk through
+and sample data during the query process, and SINK is the encapsulation
+of execution results. In GSL, a query must have a SOURCE and SINK.</p>
+<p>## 2.1 SOURCE #### 2.1.1 V/E</p>
+<p>SOURCE is the entrance of a GSL query, supporting <code class="docutils literal notranslate"><span class="pre">V()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">E()</span></code>
+APIs, which represent querying from vertices and edges respectively.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">V</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  node_type(string): vertex type, the following operations are based on the vertex type;</span>
+<span class="sd">  feed(None | numpy.ndarray | types.GeneratorType):</span>
+<span class="sd">      None means to get the vertex id from the graph;</span>
+<span class="sd">      Otherwise, it allows users to define the data source, for example numpy array or Generator;</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">E</span><span class="p">(</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): Edge type, the following operations are based on the vertex type;</span>
+<span class="sd">  feed(None | (numpy.ndarray, numpy.ndarray) | types.GeneratorType):</span>
+<span class="sd">      None means to get the edge&#39;s src_id and dst_id from the graph;</span>
+<span class="sd">      Otherwise, it allows users to define the data source, for example numpy array or Generator;</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>### 2.1.2 shuffle</p>
+<p><code class="docutils literal notranslate"><span class="pre">V()</span></code> and <code class="docutils literal notranslate"><span class="pre">E()</span></code> can be followed by <code class="docutils literal notranslate"><span class="pre">shuffle()</span></code>. <code class="docutils literal notranslate"><span class="pre">shuffle()</span></code> is
+an optional API，which provides options to sample the data randomly when
+retrieving data from graphs (<code class="docutils literal notranslate"><span class="pre">feed</span> <span class="pre">=</span> <span class="pre">None</span></code>).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">shuffle</span><span class="p">(</span><span class="n">traverse</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  traverse(boolean): if traverse the data source，default is False。</span>
+<span class="sd">      True means traverse and raises OutOfRangeError at the end. False won&#39;t raise OutOfRangeError.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>### 2.1.3 batch</p>
+<p>When retrieving data from graphs (<code class="docutils literal notranslate"><span class="pre">feed</span> <span class="pre">=</span> <span class="pre">None</span></code>), <code class="docutils literal notranslate"><span class="pre">batch()</span></code>
+determines how much data <code class="docutils literal notranslate"><span class="pre">V()</span></code> and<code class="docutils literal notranslate"><span class="pre">E()</span></code> query each time. If you
+need to use <code class="docutils literal notranslate"><span class="pre">shuffle</span></code>, make sure you use it before <code class="docutils literal notranslate"><span class="pre">batch()</span></code>. When
+<code class="docutils literal notranslate"><span class="pre">shuffle(traverse=True)</span></code> but the remaining data is less than the
+<code class="docutils literal notranslate"><span class="pre">batch_size</span></code>, it will simply return the remaining data if it is not 0,
+and otherwise <code class="docutils literal notranslate"><span class="pre">OutOfRangeError</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  batch_size(int): the amount of data of each batch</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>### 2.1.4 examples</p>
+<p>Randomly sample 64 user type vertices.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Provide ids for the user type vertices.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p>Get user type vertices from a generator.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">gen</span><span class="p">():</span>
+  <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+    <span class="k">yield</span>  <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">gen</span><span class="p">()</span>
+<span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get 64 buy type edges in order.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;buy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Provide src_id and dst_ids for buy type edges.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;buy&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p>Get buy type edges from a generator.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">gen</span><span class="p">():</span>
+  <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+    <span class="k">yield</span>  <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]))</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">gen</span><span class="p">()</span>
+<span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;buy&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>## 2.2 STEP</p>
+<p>STEP is the path to walk through and sample data during the query
+process. A query can have zero or more steps. There are two types of
+steps, which are path steps and sampling steps. A path step describes
+the movement of the current object. For example, with <code class="docutils literal notranslate"><span class="pre">g.V()</span></code>, the
+cursor starts at all the vertices in the graph. One can move the cursor
+to the outgoing edges of the vertices by <code class="docutils literal notranslate"><span class="pre">outE()</span></code> and the following
+operations will be on these edges. When the operations on the outgoing
+edges complete, the cursor moves to the target/source vertices by
+<code class="docutils literal notranslate"><span class="pre">inV()</span></code>/<code class="docutils literal notranslate"><span class="pre">outV()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">inV</span><span class="p">():</span>
+<span class="sd">&quot;&quot;&quot; followed by edges and the following operations are edge operations. inV() represents a destination vertex.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">outV</span><span class="p">():</span>
+<span class="sd">&quot;&quot;&quot; followed by edges and the following operations are edge operations. inV() represents a source vertex.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">inE</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations.inE() represents an ingoing edge.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type, it returns an error when the edge is a directed edge.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">outE</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations.inE() represents an outgoing edge.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type</span>
+<span class="sd">Return:</span>
+<span class="sd">  Query对象</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">inV</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. inV(edge_type) represents an upstream vertex.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type，it returns an error when the edge is a directed edge.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">outV</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. inV(edge_type) represents the downstream vertex.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">outNeg</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. outNeg(edge_type) represents the downstream vertex from negative sampling of the edge.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">inNeg</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. inNeg(edge_type) represents the upstream vertex from negative sampling of the edge.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type，it returns an error when the edge is a directed edge.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">Neg</span><span class="p">(</span><span class="n">node_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. Neg(node_type) represents the negative samples of the vertex candidates.</span>
+<span class="sd">Args:</span>
+<span class="sd">  node_type(string): vertex type</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">each</span><span class="p">():</span>
+<span class="sd">&quot;&quot;&quot; used in multi-branch path, a query has one each() at most and each branch doesn&#39;t support merging.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">alias</span><span class="p">():</span>
+<span class="sd">&quot;&quot;&quot; Give sampling path an alias.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>A sampling step must follow a vertex step. It specifies how to sample
+the node as the neighbors of the previous nodes generated by previous
+steps, including the sample size and strategy. To learn more about the
+sampling strategy, please read <a class="reference external" href="graph_sampling_cn.md">graph sampling</a>
+and <a class="reference external" href="negative_sampling_cn.md">negative sampling</a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; follows a vertex step，specifying the number of samples at this step</span>
+<span class="sd">Args:</span>
+<span class="sd">  N(int): sampling size</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">by</span><span class="p">(</span><span class="n">strategy</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; follow sample()，sampling strategy</span>
+<span class="sd">Args:</span>
+<span class="sd">  strategy(string): sampling strategy</span>
+<span class="sd">      if the previous step is sampling, the supported strategies are</span>
+<span class="sd">      if the previous step is sampling, the supported strategies are “edge_weight”, &quot;in_degree&quot;, &quot;topk&quot;, &quot;random&quot;, &quot;full&quot;;</span>
+<span class="sd">      f the previous step is negative sampling, the supported strategies are &quot;in_degree&quot;, &quot;random&quot;, &quot;node_weight&quot;</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>### 2.2.1 out<em>, in</em></p>
+<p><code class="docutils literal notranslate"><span class="pre">out*()</span></code> and <code class="docutils literal notranslate"><span class="pre">in*()</span></code> are used to describe forward and backward
+propagation while traversing.</p>
+<p>For example, in the heterogeneous graph shown below, start from a ‘user’
+vertex, sample its one-hop neighbors along the ‘u2i’ edge, and then
+sample its two-hop neighbors along the ‘i2i’ edge.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>                       <span class="c1"># (1) randomly get 64 &#39;user&#39; vertices</span>
+ <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;edge_weight&quot;</span><span class="p">)</span>  <span class="c1"># (2) sample 10 neighbors of each &#39;user&#39; vertices</span>
+ <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>       <span class="c1"># (3) for each neighbor, sample 15 neighbors</span>
+</pre></div>
+</div>
+<p>If the data source is edges, you can operate on their endpoints. In
+general, this kind of sampling is often used for unsupervised learning,
+which uses the edges as positive samples, and then samples the source
+vertices of the edges as negative samples.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>                     <span class="c1"># (1) randomly get 64 &#39;u2i&#39; edges</span>
+ <span class="o">.</span><span class="n">ouV</span><span class="p">()</span>                                  <span class="c1"># (2) get the source vertex that is user</span>
+ <span class="o">.</span><span class="n">outNeg</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>  <span class="c1"># (3) for each user vertex, sample 10 negative neighbors</span>
+</pre></div>
+</div>
+<p>When the edge is undirected, one can conduct circular sampling by
+<code class="docutils literal notranslate"><span class="pre">outV()</span></code> and <code class="docutils literal notranslate"><span class="pre">inV()</span></code>. The source and destination vertices are
+neighbors of each other.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>                   <span class="c1"># (1) randomly get 64 &#39;user&#39; vertex</span>
+ <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>   <span class="c1"># (2) for each &#39;user&#39; vertex, sample 10 neighbors (item)</span>
+ <span class="o">.</span><span class="n">inV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>     <span class="c1"># (3) for each &#39;item&#39; vertex, sample 10 neighbors (user)</span>
+</pre></div>
+</div>
+<p>### 2.2.2 each</p>
+<p>A typical GNN algorithm often has multiple sampling branches. The
+<code class="docutils literal notranslate"><span class="pre">each()</span></code> interface can be used to express multiple branches of
+sampling. When a certain stage is reached, different operations are
+performed on the previous results (there may be multiple). A query can
+contain at most one <code class="docutils literal notranslate"><span class="pre">each()</span></code>, and it has to be the last operation of
+the query.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">each</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  func(lambda): the lambda function to build the sub-query. The input of the function is the output of the immediately upstream operation.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>For example, in the user-item-item GraphSAGE algorithm, in order to
+learn the similarity between user and item in the same space, we first
+randomly obtain the u2i edges from the graph as the positive sample for
+training. Then, we sample the negative neighbors (item) of the source
+vertex (user) as negative samples. The user vertex is encoded by its
+one-hop neighbors (aggregating neighborhood information to the central
+node). The item vertex is encoded in a similar way. An example is shown
+below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>                            <span class="c1"># (1) randomly get 512 u2i edegs</span>
+ <span class="o">.</span><span class="n">each</span><span class="p">(</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span>                                        <span class="c1"># edges from upstream</span>
+    <span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;edge_weight&quot;</span><span class="p">),</span> <span class="c1"># (2) sample 10 neighbors of the source vertex (user)</span>
+     <span class="n">edge</span><span class="o">.</span><span class="n">inV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">),</span>       <span class="c1"># (3) sample 10 neighbors of the destination vertex (item)</span>
+     <span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outNeg</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;in_degree&quot;</span><span class="p">)</span> \ <span class="c1"># (4) sample 5 negative neighbors of user vertex</span>
+         <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)))</span>            <span class="c1"># (5) sample 10 neighbors of the negative neighbor of user vertex</span>
+</pre></div>
+</div>
+<p>Please note that the result from different sampling branches are not in
+order. Therefore, we strongly recommend to use <code class="docutils literal notranslate"><span class="pre">each()</span></code> together with
+<code class="docutils literal notranslate"><span class="pre">alias()</span></code> introduced in the next section.</p>
+<p>### 2.2.3 alias</p>
+<p><code class="docutils literal notranslate"><span class="pre">alias()</span></code> is used to label the name of the current SOURCE or STEP,
+which makes accessing the output results easier. In particular, when the
+query is long and we need to keep the results of each step, <code class="docutils literal notranslate"><span class="pre">alias()</span></code>
+is convenient to access these results.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">alias</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  name(string): the alias of the operation。</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>If we use <code class="docutils literal notranslate"><span class="pre">each()</span></code> in the query, we can give alias for each step.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;edges&quot;</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">each</span><span class="p">(</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span>
+    <span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;edge_weight&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;src_1hop&quot;</span><span class="p">),</span>
+     <span class="n">edge</span><span class="o">.</span><span class="n">inV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;dst_1hop&quot;</span><span class="p">),</span>
+     <span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outNeg</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;in_degree&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;neg_i&quot;</span><span class="p">)</span> \
+     <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;neg_i_1hop&quot;</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>### 2.2.4 repeat When the query is relatively long and the operation is
+repeated, you can use <code class="docutils literal notranslate"><span class="pre">repeat()</span></code> to simplify the writing. For example,
+in a certain isomorphic undirected graph, we would like to sample a
+vertex’s 10-hop neighbors. <code class="docutils literal notranslate"><span class="pre">repeat()</span></code> takes in a function, similar to
+the one in <code class="docutils literal notranslate"><span class="pre">each()</span></code>, which means that the operation represented by
+that function is repeated <code class="docutils literal notranslate"><span class="pre">times</span></code> times.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">repeat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">parmas_list</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  func(function): The function body to be expanded; the first parameter is the object to be executed.</span>
+<span class="sd">  times(int): the number of times func is repeated.</span>
+<span class="sd">  params_list(list): The input parameter of func, if it is not None. The signature of func must be func(x, params=None)</span>
+<span class="sd">      Each item in params_list will be used as a parameter every time func is called, so the size of params_list must be times.</span>
+<span class="sd">Return:</span>
+<span class="sd">  Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>The first parameter of <code class="docutils literal notranslate"><span class="pre">func</span></code> takes the upstream output, which can be
+Node or Edge. The operations in func need to comply with the syntax
+specifications of Node and Edge. For example, the following Query
+obtains vertices on the undirected graph i-i, and then expands to 3-hop
+neighbors.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>
+<span class="n">q</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;item&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="c1"># return a list of Nodes,</span>
+         <span class="c1"># shapes are [[64], [64, 5], [64*5, 5], [64*5*5, 5]]</span>
+</pre></div>
+</div>
+<p>The aforementioned Query is equivalent to:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">q</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;item&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>                \
+     <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \
+     <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \
+     <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example for func with parameter as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="n">q</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;u-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span> \
+     <span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">params_list</span><span class="o">=</span><span class="p">[(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;edge_weight&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">)])</span> \
+     <span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>## 2.3 SINK Each Query must end with a <strong>SINK</strong> operation, which means
+that the current Query is completed and can be used to analyze execution
+or return results. <strong>SINK</strong> operation has two interfaces, <code class="docutils literal notranslate"><span class="pre">values()</span></code>
+and <code class="docutils literal notranslate"><span class="pre">emit()</span></code>. The <strong>SINK</strong> operation can only be called once in a
+Query. -<code class="docutils literal notranslate"><span class="pre">values</span></code> returns the entire query, which can be executed
+multiple times. It is generally used when <strong>SOURCE</strong> is graph traversal.
+-<code class="docutils literal notranslate"><span class="pre">Emit</span></code> directly gets the execution result of this query. It is
+generally used when <strong>SOURCE</strong> is a vertex or edge with a given id.</p>
+<p>The <strong>SINK</strong> operation can receive a func parameter, which is used to
+post-process the returned result. Each <strong>SOURCE</strong> and <strong>STEP</strong> operation
+will return a <strong>``Nodes``</strong> object or <strong>``Edges``</strong> object (the sampling
+STEP with <code class="docutils literal notranslate"><span class="pre">full</span></code> as its sampling strategy returns <strong>SparseNodes</strong> or
+<strong>SparseEdges</strong> object). The returned object is related to the object of
+this operation. For example, the <strong>SOURCE</strong> or <strong>STEP</strong> of the <code class="docutils literal notranslate"><span class="pre">*V()</span></code>
+and <code class="docutils literal notranslate"><span class="pre">*Neg()</span></code> series corresponds to the <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> object (the sampling
+STEP with <code class="docutils literal notranslate"><span class="pre">full</span></code> as its sampling strategy returns <strong>SparseNodes</strong>).
+The <strong>SOURCE</strong> or <strong>STEP</strong> of the <code class="docutils literal notranslate"><span class="pre">*E()</span></code> series corresponds to the
+<code class="docutils literal notranslate"><span class="pre">Edges</span></code> object (the sampling STEP with <code class="docutils literal notranslate"><span class="pre">full</span></code> as its sampling
+strategy returns <strong>SparseNodes</strong>). For instruction on how to get the
+value of <code class="docutils literal notranslate"><span class="pre">Nodes</span></code>/<code class="docutils literal notranslate"><span class="pre">Edges</span></code>/<code class="docutils literal notranslate"><span class="pre">SparseNodes</span></code>/<code class="docutils literal notranslate"><span class="pre">SparseEdges</span></code> object,
+please refer to <a class="reference external" href="graph_query_cn.md#FPU74">API</a>. Before <strong>SINK</strong>,
+Query describs multiple operations. These operations may have
+<code class="docutils literal notranslate"><span class="pre">alias()</span></code>. -For Query without <code class="docutils literal notranslate"><span class="pre">alias()</span></code>, the results of all
+operations will be returned, arranged in a list object according to the
+order in the Query. Each element in this returned list is either
+<code class="docutils literal notranslate"><span class="pre">Nodes</span></code> or <code class="docutils literal notranslate"><span class="pre">Edges</span></code>. One thing needs to pay attention is that the
+order here does not include cases where branches exist. If there exist
+branches, please use <code class="docutils literal notranslate"><span class="pre">alias()</span></code>. -When there is <code class="docutils literal notranslate"><span class="pre">alias()</span></code>, the return
+result is a dict, where the key is the name passed in <code class="docutils literal notranslate"><span class="pre">alias()</span></code> and
+the value is the corresponding <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> or <code class="docutils literal notranslate"><span class="pre">Edges</span></code>.</p>
+<p>### 2.3.1 values The generator that returns the execution result of the
+query can be executed by <code class="docutils literal notranslate"><span class="pre">g.run()</span></code>, which is suitable for recursive
+training settings.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  func(function): Post-processing function that processes the result</span>
+<span class="sd">Return:</span>
+<span class="sd">  Generator that returns the execution result</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>func can be an anonymous function or defined by <code class="docutils literal notranslate"><span class="pre">def</span></code>. The input of
+func is a dict or list, depending on whether there exists <code class="docutils literal notranslate"><span class="pre">alias()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; x refers to {&#39;a&#39;:Nodes, &#39;b&#39;:Nodes, &#39;c&#39;:Edges, &#39;d&#39;:Nodes}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">src_ids</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span>
+    <span class="n">src_attrs</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span>
+    <span class="n">neg_attrs</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span>
+    <span class="n">edge_weights</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">weights</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="n">encode_fn</span><span class="p">(</span><span class="n">src_atrs</span><span class="p">,</span> <span class="n">neg_attrs</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+
+<span class="n">q</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>             \
+     <span class="o">.</span><span class="n">outNegV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;in_degree&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>   \
+     <span class="o">.</span><span class="n">outE</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;topK&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">)</span>           \
+     <span class="o">.</span><span class="n">inV</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">)</span>
+
+<span class="n">gen1</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+<span class="n">gen2</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;d&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gen</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;u-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>                  \ <span class="c1"># (0)</span>
+       <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \ <span class="c1"># (1)</span>
+       <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \ <span class="c1"># (2)</span>
+       <span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>  <span class="c1"># res = [Nodes, Nodes, Nodes]</span>
+<span class="k">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>### 2.3.2 emit <code class="docutils literal notranslate"><span class="pre">Emit()</span></code> is equivalent to the combination of
+<code class="docutils literal notranslate"><span class="pre">values()</span></code> and a <code class="docutils literal notranslate"><span class="pre">g.run()</span></code>, which means that the current Query is
+executed once and its result is returned. The result is a dict or a list
+depending on whether there exists <code class="docutils literal notranslate"><span class="pre">alias()</span></code>. Under normal
+circumstances, <code class="docutils literal notranslate"><span class="pre">emit()</span></code> is used in the debugging phase to verify the
+correctness of the code and data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">emit</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  func(function): Post-processing function that returns the result</span>
+<span class="sd">Return:</span>
+<span class="sd">  dict or list object, where each element is Nodes or Edges</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">res</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]))</span> \ <span class="c1"># (0)</span>
+       <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>  \ <span class="c1"># (1)</span>
+       <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>  \ <span class="c1"># (2)</span>
+       <span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+<span class="c1"># res = [Nodes, Nodes, Nodes]</span>
+<span class="k">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Worth noticing that when the query only contains Soure (<code class="docutils literal notranslate"><span class="pre">g.V()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">g.E()</span></code>), <code class="docutils literal notranslate"><span class="pre">emit()</span></code> directly returns the data of list[0].</p>
+<p># 3 Query execution ## 3.1 run <code class="docutils literal notranslate"><span class="pre">run()</span></code> interface is used to execute
+Query and get the final result. The result form is defined by the func
+function of the <code class="docutils literal notranslate"><span class="pre">values()</span></code> interface. You can refer to the example in
+the <code class="docutils literal notranslate"><span class="pre">`values</span></code> &lt;#FOeWa&gt;`__ section.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">generator</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  generator: Query&#39;s generator</span>
+<span class="sd">Return:</span>
+<span class="sd">  Query result, whose format is determined by the values() interface</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>## 3.2 Combining with TensorFlow <code class="docutils literal notranslate"><span class="pre">values(func)</span></code> returns a generator
+whose returned data type is defined by <code class="docutils literal notranslate"><span class="pre">func</span></code>. This generator can be
+directly connected to TensorFlow’s
+<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/data/Dataset">tf.data.Dataset</a>。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;edges&quot;</span><span class="p">)</span>
+         <span class="o">.</span><span class="n">each</span><span class="p">(</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span>
+               <span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;edge_weight&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;src_1hop&quot;</span><span class="p">),</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">inV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;dst_1hop&quot;</span><span class="p">),</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outNeg</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;in_degree&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;neg_i&quot;</span><span class="p">)</span> \
+                  <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;neg_i_1hop&quot;</span><span class="p">)))</span> \
+         <span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_generator</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">value</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../index.html">en</a></dd>
+        <dd><a href="../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

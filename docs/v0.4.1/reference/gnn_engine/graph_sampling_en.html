@@ -1,0 +1,518 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Graph Sampling &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+      <li>Graph Sampling</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/reference/gnn_engine/graph_sampling_en.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="graph-sampling">
+<h1>Graph Sampling<a class="headerlink" href="#graph-sampling" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="introduction">
+<h1>1 Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>Graph sampling is an effective way to deal with very large graphs, which
+has been widely adopted by mainstream Graph Neural Network models such
+as <a class="reference external" href="https://arxiv.org/abs/1706.02216">GraphSage</a>. In practice,
+sampling not only reduces the data scale, but also aligns the data,
+which is conducive to the efficient processing of the tensor-based
+computing framework.</p>
+<p>We characterized the sampling operations into <strong>2 types</strong> according to
+user needs: <strong>neighbor sampling</strong> and <strong>negative sampling</strong>. Neighbor
+sampling retrieves multi-hops neighbors of the given input vertices.
+Those sampled neighbors could be used to construct the receptive field
+in <a class="reference external" href="https://arxiv.org/abs/1609.02907">GCN</a> theory. Negative sampling
+retrieves vertices which are not directly connected to the given input
+vertices. In practice, negative sampling is an important method for
+supervised learning.</p>
+<p>Each type of sampling operation has different sampling strategies, such
+as random, weighted, etc. To support the rich application scenarios, we
+have implemented more than ten kinds of ready-made sampling operators.
+We also expose necessary APIs for users to customize their own sampling
+operators to meet the needs of the rapidly developing GNN. This chapter
+introduces neighbor sampling, and negative sampling will be described in
+detail in the next chapter. In addition, we are working on implementing
+the sub-graph sampling methods proposed in recent AI top conferences.</p>
+<p># 2 Usage ## 2.1 Interface The sampling operator takes meta-path and
+sampling number as input which supports for sampling any heterogeneous
+graph and arbitrary hops. The sampling results are organized into
+<code class="docutils literal notranslate"><span class="pre">Layers</span></code> where the n-th <code class="docutils literal notranslate"><span class="pre">Layer</span></code> contains the sampling result from
+the n-th hop. One can access the <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> and <code class="docutils literal notranslate"><span class="pre">Edges</span></code> in each
+<code class="docutils literal notranslate"><span class="pre">Layer</span></code> object. A sampling operation can be divided into the following
+three steps:</p>
+<ul class="simple">
+<li><p>Define the sampling operator by invoking <code class="docutils literal notranslate"><span class="pre">g.neighbor_sampler()</span></code> to
+get the <code class="docutils literal notranslate"><span class="pre">NeighborSampler</span></code> object <code class="docutils literal notranslate"><span class="pre">S</span></code></p></li>
+<li><p>Invoke <code class="docutils literal notranslate"><span class="pre">S.get(ids)</span></code> to get the neighbor <code class="docutils literal notranslate"><span class="pre">Layers</span></code> object <code class="docutils literal notranslate"><span class="pre">L</span></code> of
+the vertex;</p></li>
+<li><p>Invoke <code class="docutils literal notranslate"><span class="pre">L.layer_nodes(i)</span></code>, <code class="docutils literal notranslate"><span class="pre">L.layer_edges(i)</span></code> to get the vertices
+and edges of the i-th hop neighbors;</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">neighbor_sampler</span><span class="p">(</span><span class="n">meta_path</span><span class="p">,</span> <span class="n">expand_factor</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  meta_path(list):     List of edge_type(string). Stand for paths of neighbor sampling.</span>
+<span class="sd">  expand_factor(list): List of int. The i-th element represents the number of neighbors sampled by the i-th hop; the length must be consistent with meta_path</span>
+<span class="sd">  strategy(string):    Sampling strategy. Please refer to the detailed explanation below.</span>
+<span class="sd">Return:</span>
+<span class="sd">  NeighborSampler object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">NeighborSampler</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ids</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; Sampling multi-hop neighbors of given ids.</span>
+<span class="sd">Args:</span>
+<span class="sd">  ids(numpy.ndarray): 1-d int64 array</span>
+<span class="sd">Return:</span>
+<span class="sd">  Layers object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>The returned result of the sampling is a <code class="docutils literal notranslate"><span class="pre">Layers</span></code> object, which
+represents “the neighbor vertices of the source vertex and the edges in
+between”. The shape of each <code class="docutils literal notranslate"><span class="pre">Layer</span></code>’s ids is two-dimensional.
+Specifically, ids shape=<strong>[expanded size of ids of the previous layer,
+number of samples in the current layer]</strong>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">Layers</span><span class="o">.</span><span class="n">layer_nodes</span><span class="p">(</span><span class="n">layer_id</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; Get the `Nodes` of the i-th layer, layer_id starts from 1. &quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">Layers</span><span class="o">.</span><span class="n">layer_edges</span><span class="p">(</span><span class="n">layer_id</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; Get the `Edges` of the i-th layer, layer_id starts from 1. &quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>In GSL, refer to the <code class="docutils literal notranslate"><span class="pre">g.out*</span></code> and <code class="docutils literal notranslate"><span class="pre">g.in*</span></code> families of interfaces.
+E.g.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Sampling 1-hop neighbor vertices</span>
+<span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">count</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="n">strategy</span><span class="p">)</span>
+
+<span class="c1"># Sampling 2-hop neighbor vertices</span>
+<span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">count</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="n">strategy</span><span class="p">)</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">count</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="n">strategy</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>## 2.2 Example The figure below shows a query that samples the 2-hop
+neighbors of a given “user” vertex. The returned result contains two
+layers, where layer1 is one-hop neighbors and layer2 is two-hop
+neighbors.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">s</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">neighbor_sampler</span><span class="p">([</span><span class="s2">&quot;buy&quot;</span><span class="p">,</span> <span class="s2">&quot;i2i&quot;</span><span class="p">],</span> <span class="n">expand_factor</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="n">l</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="c1"># input ids: shape=(batch_size)</span>
+
+<span class="c1"># Nodes object</span>
+<span class="c1"># shape=(batch_size, expand_factor[0])</span>
+<span class="n">l</span><span class="o">.</span><span class="n">layer_nodes</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">ids</span>
+<span class="n">l</span><span class="o">.</span><span class="n">layer_nodes</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">int_attrs</span>
+
+ <span class="c1"># Edges object</span>
+ <span class="c1"># shape=(batch_size *  expand_factor[0],  expand_factor[1])</span>
+<span class="n">l</span><span class="o">.</span><span class="n">layer_edges</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">weights</span>
+<span class="n">l</span><span class="o">.</span><span class="n">layer_edges</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">float_attrs</span>
+</pre></div>
+</div>
+<p># 3 Sampling Strategy GL currently supports the following sampling
+<code class="docutils literal notranslate"><span class="pre">strategy</span></code> options when creating the <code class="docutils literal notranslate"><span class="pre">NeighborSampler</span></code> object.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><strong>strategy</strong></p></th>
+<th class="head"><p><strong>Description</strong></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>edge_weight</p></td>
+<td><p>Sampling with edge weight as
+probability</p></td>
+</tr>
+<tr class="row-odd"><td><p>random</p></td>
+<td><p>Random sampling with replacement</p></td>
+</tr>
+<tr class="row-even"><td><p>random_without_replacement</p></td>
+<td><p>Random sampling without
+replacement. Refer to the padding
+rule when the number of neighbors
+is not enough</p></td>
+</tr>
+<tr class="row-odd"><td><p>topk</p></td>
+<td><p>Return the top k neighbors with
+edge weight. Refer to the padding
+rule when the number of neighbors
+is not enough</p></td>
+</tr>
+<tr class="row-even"><td><p>in_degree</p></td>
+<td><p>Sampling with vertex in-degree
+probability</p></td>
+</tr>
+<tr class="row-odd"><td><p>full</p></td>
+<td><p>Return all neighbors. The
+expand_factor parameter has no
+effect on this strategy. The
+result object is SparseNodes or
+SparseEdges, see <a class="reference external" href="graph_query_en.md#FPU74">graph
+q
+uery</a>
+for detailed description of those
+objects.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Padding rules: the returned value needs to be padded when the amount of
+data required for sampling is not enough. <code class="docutils literal notranslate"><span class="pre">default_neighbor_id</span></code> is
+used to pad missing <code class="docutils literal notranslate"><span class="pre">id</span></code>, whose value is 0 unless set by users through
+<code class="docutils literal notranslate"><span class="pre">gl.set_default_neighbor_id(xx)</span></code>. One can use other padding modes,
+e.g., padding with existing neighbor ids instead of
+<code class="docutils literal notranslate"><span class="pre">default_neighbor_id</span></code> using <code class="docutils literal notranslate"><span class="pre">gl.set_padding_mode(gl.CIRCULAR)</span></code>.</p>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../index.html">en</a></dd>
+        <dd><a href="../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

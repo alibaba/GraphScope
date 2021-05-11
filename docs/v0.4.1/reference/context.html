@@ -1,0 +1,707 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Context &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Selector" href="selector.html" />
+    <link rel="prev" title="graphscope.framework.app.load_app" href="generated/graphscope.framework.app.load_app.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="python_index.html">Python API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html">Analytical App</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Context</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#context-object">Context object</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="selector.html">Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operation.html">Operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cython_sdk.html">Cython SDK API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning.html">Graph Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="networkx/index.html">NetworkX-style API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="python_index.html">Python API Reference</a> &raquo;</li>
+        
+      <li>Context</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reference/context.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="context">
+<span id="id1"></span><h1>Context<a class="headerlink" href="#context" title="Permalink to this headline">¶</a></h1>
+<section id="context-object">
+<h2>Context object<a class="headerlink" href="#context-object" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="graphscope.framework.context.BaseContext">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">BaseContext</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session_id</span></em>, <em class="sig-param"><span class="n">context_key</span></em>, <em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.BaseContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class of concrete contexts.
+Hold a handle of app querying context.</p>
+<p>After evaluating an app, the context (vertex data, partial results, etc.) are preserved,
+and can be referenced through a handle.</p>
+<p>We can further use the handle to retrieve data:</p>
+<ul class="simple">
+<li><p>as a numpy.ndarray( <cite>to_numpy()</cite> ),</p></li>
+<li><p>as a pandas.DataFrame( <cite>to_dataframe()</cite> ),</p></li>
+<li><p>as a vineyard tensor ( <cite>to_vineyard_tensor()</cite> ),</p></li>
+<li><p>or as a vineyard dataframe ( <cite>to_vineyard_dataframe()</cite> ).</p></li>
+</ul>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">get_test_property_graph</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;person&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;knows&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ret</span> <span class="o">=</span> <span class="n">sssp</span><span class="p">(</span><span class="n">sg</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(20345,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;v.id&#39;</span><span class="p">,</span> <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(20345, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">to_vineyard_tensor</span><span class="p">()</span>  <span class="c1"># return an object id</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">()</span>  <span class="c1"># return an object id</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="graphscope.framework.context.BaseContext.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fd</span></em>, <em class="sig-param"><span class="n">selector</span></em>, <em class="sig-param"><span class="n">vertex_range</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContext.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.BaseContext.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump results to <cite>fd</cite>.
+Support dumps data to local (respect to pod) files, hdfs or oss.
+It first write results to a vineyard dataframe, and let vineyard
+do the data dumping job.
+<cite>fd</cite> must meet specific formats, with auth information if needed. As follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>local</dt><dd><p><cite>file:///tmp/result_path</cite></p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>oss</dt><dd><p><cite>oss:///bucket/object</cite></p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>hdfs</dt><dd><p><cite>hdfs:///tmp/result_path</cite></p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fd</strong> (<em>str</em>) – Output location.</p></li>
+<li><p><strong>selector</strong> (<em>dict</em>) – Similar to <cite>to_dataframe</cite>.</p></li>
+<li><p><strong>vertex_range</strong> (<em>dict</em><em>, </em><em>optional</em>) – Similar to <cite>to_dataframe</cite>. Defaults to None.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Storage options with respect to output storage type.
+for example:
+key, secret, endpoint for oss,
+key, secret, client_kwargs for s3,
+host, port for hdfs,
+None for local.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.context.BaseContext.to_dataframe">
+<code class="sig-name descname">to_dataframe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selector</span></em>, <em class="sig-param"><span class="n">vertex_range</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContext.to_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.BaseContext.to_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return results as a pandas DataFrame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selector</strong> – dict
+The key is column name in dataframe, and the value describes how to select values of context.
+See more details in derived context class.</p></li>
+<li><p><strong>vertex_range</strong> – dict, optional, default to None.
+Works as slicing. The expression {‘begin’: m, ‘end’: n} select a portion
+of vertices from <cite>m</cite> to, but not including <cite>n</cite>. Type of <cite>m</cite>, <cite>n</cite> must be identical with vertices’
+oid type.
+Only the sub-ranges of vertices data will be retrieved.
+Note the comparision is not based on numeric order, but on alphabetic order.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.context.BaseContext.to_numpy">
+<code class="sig-name descname">to_numpy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selector</span></em>, <em class="sig-param"><span class="n">vertex_range</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContext.to_numpy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.BaseContext.to_numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return context data as numpy array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selector</strong> (<em>str</em>) – Describes how to select values of context.
+See more details in derived context class.</p></li>
+<li><p><strong>vertex_range</strong> (<em>dict</em>) – optional, default to None.
+Works as slicing. The expression {‘begin’: m, ‘end’: n} select a portion
+of vertices from <cite>m</cite> to, but not including <cite>n</cite>. Type of <cite>m</cite>, <cite>n</cite> must be identical with vertices’
+oid type.
+Omitting the first index starts the slice at the beginning of the vertices,
+and omitting the second index extends the slice to the end of the vertices.
+Note the comparision is not based on numeric order, but on alphabetic order.</p></li>
+<li><p><strong>axis</strong> (<em>int</em>) – optional, default to 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>numpy.ndarray.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.context.BaseContext.to_vineyard_dataframe">
+<code class="sig-name descname">to_vineyard_dataframe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selector</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vertex_range</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContext.to_vineyard_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.BaseContext.to_vineyard_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return results as a vineyard dataframe.
+Only object id is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selector</strong> – dict
+Key is used as column name of the dataframe,
+and the value describes how to select values of context.
+See more details in derived context class.</p></li>
+<li><p><strong>vertex_range</strong> – dict, optional, default to None
+Works as slicing. The expression {‘begin’: m, ‘end’: n} select a portion
+of vertices from <cite>m</cite> to, but not including <cite>n</cite>. Type of <cite>m</cite>, <cite>n</cite> must be identical with vertices’
+oid type.
+Only the sub-ranges of vertices data will be retrieved.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>object id of vineyard tensor</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.context.BaseContext.to_vineyard_tensor">
+<code class="sig-name descname">to_vineyard_tensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selector</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vertex_range</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContext.to_vineyard_tensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.BaseContext.to_vineyard_tensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return results as a vineyard tensor.
+Only object id is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>object id of vineyard tensor</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.TensorContext">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">TensorContext</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session_id</span></em>, <em class="sig-param"><span class="n">context_key</span></em>, <em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#TensorContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.TensorContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tensor context holds a tensor.
+Only axis is meaningful when considering a TensorContext.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.VertexDataContext">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">VertexDataContext</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session_id</span></em>, <em class="sig-param"><span class="n">context_key</span></em>, <em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#VertexDataContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.VertexDataContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>The most simple kind of context.
+A vertex has a single value as results.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The syntax of selector on vertex is:</dt><dd><ul>
+<li><p><cite>v.id</cite>: Get the Id of vertices</p></li>
+<li><p><cite>v.data</cite>: Get the data of vertices (If there is any, means origin data on the graph, not results)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of edge is:</dt><dd><ul>
+<li><p><cite>e.src</cite>: Get the source Id of edges</p></li>
+<li><p><cite>e.dst</cite>: Get the destination Id of edges</p></li>
+<li><p><cite>e.data</cite>: Get the edge data on the edges (If there is any, means origin data on the graph)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of results is:</dt><dd><ul>
+<li><p><cite>r</cite>: Get quering results of algorithms. e.g. Rankings of vertices after doing PageRank.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.LabeledVertexDataContext">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">LabeledVertexDataContext</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session_id</span></em>, <em class="sig-param"><span class="n">context_key</span></em>, <em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#LabeledVertexDataContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.LabeledVertexDataContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>The labeld kind of context.
+This context has several vertex labels and edge labels,
+and each label has several properties.
+Selection are performed on labels first, then on properties.</p>
+<p>We use <cite>:</cite> to filter labels, and <cite>.</cite> to select properties.
+And the results has no property, only have labels.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The syntax of selector of vertex is:</dt><dd><ul>
+<li><p><cite>v:label_name.id</cite>: Get Id that belongs to a specific vertex label.</p></li>
+<li><p><cite>v:label_name.property_name</cite>: Get data that on a specific property of a specific vertex label.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of edge is:</dt><dd><ul>
+<li><p><cite>e:label_name.src</cite>: Get source Id of a specific edge label.</p></li>
+<li><p><cite>e:label_name.dst</cite>: Get destination Id of a specific edge label.</p></li>
+<li><p><cite>e:label_name.property_name</cite>: Get data on a specific property of a specific edge label.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of results is:</dt><dd><ul>
+<li><p><cite>r:label_name</cite>: Get results data of a vertex label.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.VertexPropertyContext">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">VertexPropertyContext</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session_id</span></em>, <em class="sig-param"><span class="n">context_key</span></em>, <em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#VertexPropertyContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.VertexPropertyContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>The simple kind of context with property.
+A vertex can have multiple values (a.k.a. properties) as results.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The syntax of selector on vertex is:</dt><dd><ul>
+<li><p><cite>v.id</cite>: Get the Id of vertices</p></li>
+<li><p><cite>v.data</cite>: Get the data of vertices (If there is any, means origin data on the graph, not results)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of edge is:</dt><dd><ul>
+<li><p><cite>e.src</cite>: Get the source Id of edges</p></li>
+<li><p><cite>e.dst</cite>: Get the destination Id of edges</p></li>
+<li><p><cite>e.data</cite>: Get the edge data on the edges (If there is any, means origin data on the graph)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of results is:</dt><dd><ul>
+<li><p><cite>r.column_name</cite>: Get the property named <cite>column_name</cite> in results. e.g. <cite>r.hub</cite> in <a class="reference internal" href="app.html#graphscope.hits" title="graphscope.hits"><code class="xref py py-func docutils literal notranslate"><span class="pre">graphscope.hits()</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.LabeledVertexPropertyContext">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">LabeledVertexPropertyContext</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session_id</span></em>, <em class="sig-param"><span class="n">context_key</span></em>, <em class="sig-param"><span class="n">graph</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#LabeledVertexPropertyContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.LabeledVertexPropertyContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>The labeld kind of context with properties.
+This context has several vertex labels and edge labels,
+And each label has several properties.
+Selection are performed on labels first, then on properties.</p>
+<p>We use <cite>:</cite> to filter labels, and <cite>.</cite> to select properties.
+And the results can have several properties.
+- The syntax of selector of vertex is:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>v:label_name.id</cite>: Get Id that belongs to a specific vertex label.</p></li>
+<li><p><cite>v:label_name.property_name</cite>: Get data that on a specific property of a specific vertex label.</p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The syntax of selector of edge is:</dt><dd><ul>
+<li><p><cite>e:label_name.src</cite>: Get source Id of a specific edge label.</p></li>
+<li><p><cite>e:label_name.dst</cite>: Get destination Id of a specific edge label.</p></li>
+<li><p><cite>e:label_name.property_name</cite>: Get data on a specific property of a specific edge label.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of results is:</dt><dd><ul>
+<li><p><cite>r:label_name.column_name</cite>: Get the property named <cite>column_name</cite> of <cite>label_name</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="selector.html" class="btn btn-neutral float-right" title="Selector" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="generated/graphscope.framework.app.load_app.html" class="btn btn-neutral" title="graphscope.framework.app.load_app" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../index.html">en</a></dd>
+        <dd><a href="../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

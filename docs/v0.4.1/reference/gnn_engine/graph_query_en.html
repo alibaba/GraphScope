@@ -1,0 +1,738 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Graph Query &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+      <li>Graph Query</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/reference/gnn_engine/graph_query_en.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="graph-query">
+<h1>Graph Query<a class="headerlink" href="#graph-query" title="Permalink to this headline">¶</a></h1>
+<p>After constructing the graph object, we can query on the graph. Graph
+query refers to getting <strong>meta information</strong> and <strong>data information</strong>
+without complex calculation and sampling logic.</p>
+<p># 1 Meta Query Meta infomation refers to the graph structure and
+statistical data, including graph topology, number of vertices,
+distribution of edges and vertices, maximum in-and-out degrees and etc.</p>
+<p>## 1.1 Graph Topology</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_topology</span><span class="p">()</span>
+<span class="sd">&quot;&quot;&quot; Get the topology of the graph</span>
+<span class="sd">The return type is dict, the key is edge_type and the value consists of src_type and dst_type</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>The following code block retrieves the topology and the return format of
+the heterogeneous graph shown in the following image.</p>
+<div class="docutils container">
+<p>Figure1. Graph topology</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">g</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">topo</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">get_topology</span><span class="p">()</span>
+<span class="n">topo</span><span class="o">.</span><span class="n">print_all</span><span class="p">()</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">egde_type:buy, src_type:user, dst_type:item</span>
+<span class="sd">egde_type:click, src_type:user, dst_type:item</span>
+<span class="sd">egde_type:swing, src_type:item, dst_type:item</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>## 1.2 In-and-Out Degree Distribution Coming soon…</p>
+<p>#2 Data Query</p>
+<p><strong>GL</strong> has two basic data types: <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> and <code class="docutils literal notranslate"><span class="pre">Edges</span></code>. Graph
+raversal, query, and sampling operations all return a batch of vertices
+or edges. In particular, non-aligned sampling returns the sparse form of
+two basic data types, namely <code class="docutils literal notranslate"><span class="pre">SparseNodes</span></code> and <code class="docutils literal notranslate"><span class="pre">SparseEdges</span></code>. The
+interface of <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> is shown as follows.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; vertex id，numpy.ndarray(int64) &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; the shape of vertex id &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">int_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; int attributes，numpy.ndarray(int64)，shape is [ids.shape, the number of int attributes] &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">float_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; float attributes，numpy.ndarray(float32)，shape is [ids.shape, the number of float attributes] &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">string_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; string attributes，numpy.ndarray(string)，shape is [ids.shape, the number of string attributes] &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; weight，numpy.ndarray(float32)，shape is ids.shape &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; lable，numpy.ndarray(int32)，shape is ids.shape &quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>Compared to the <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> interface, <code class="docutils literal notranslate"><span class="pre">Edges</span></code> does not have <code class="docutils literal notranslate"><span class="pre">ids</span></code>
+interface. Instead, it has following four additional interfaces to
+access the source and destination vertices.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">src_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; source vertices &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">dst_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; destination vertices &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">src_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; ids of source vertices，numpy.ndarray(int64) &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">dst_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; ids of destination vertices，numpy.ndarray(int64) &quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>When we traverse vertices and edges, the shape of <code class="docutils literal notranslate"><span class="pre">ids</span></code> is
+one-dimensional and the size is the specified batch size. However, the
+shape of <code class="docutils literal notranslate"><span class="pre">ids</span></code> in sampling operation is two-dimensional, and the size
+is <code class="docutils literal notranslate"><span class="pre">[the</span> <span class="pre">size</span> <span class="pre">of</span> <span class="pre">input</span> <span class="pre">data,</span> <span class="pre">current</span> <span class="pre">sample</span> <span class="pre">size]</span></code>. We use
+<code class="docutils literal notranslate"><span class="pre">SparseNodes</span></code> to represent the sparse neighbor vertices of a vertex.
+In addition to the interfaces of <code class="docutils literal notranslate"><span class="pre">Nodes</span></code>, <code class="docutils literal notranslate"><span class="pre">SparseNodes</span></code> has
+additional interfaces as follows.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">offsets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; one dimentional int array: the number of neighbors of each vertex &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">dense_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; tuple of size 2: the shape of the corresponding Dense Nodes &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; two dimentional arra: the location of each neighbor &quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; iterator: iterate over the neighbors of each vertex &quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">Nodes</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">SparseEdges</span></code> is used to express sparse edges of vertices. In
+addition to the interfaces of <code class="docutils literal notranslate"><span class="pre">Edges</span></code>, <code class="docutils literal notranslate"><span class="pre">SparseEdges</span></code> has additional
+interfaces as follows.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">offsets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; one dimential int array: the number of neighbors of each vertex &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">dense_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; tuple of size 2: the shape of the corresponding Dense Edges &quot;&quot;&quot;</span>
+
+<span class="nd">@property</span>
+<span class="k">def</span> <span class="nf">indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; two dimentional array: the location of each neighbor &quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; iterator: iterate the neighbors of each vertex &quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">Edges</span>
+</pre></div>
+</div>
+<p>## 2.1 Vertices Query We can get Nodes by traversing the graph, sampling
+or specifying the node id. Once we get the nodes, we can query their
+attributes, weights or lables. Query vertices with specified ids:
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">def</span> <span class="pre">get_nodes(node_type,</span> <span class="pre">ids)</span> <span class="pre">'''</span> <span class="pre">get</span> <span class="pre">the</span> <span class="pre">weights,</span> <span class="pre">lables</span> <span class="pre">and</span> <span class="pre">attributes</span> <span class="pre">by</span> <span class="pre">node</span> <span class="pre">type</span> <span class="pre">Args:</span>&#160;&#160; <span class="pre">node_type(string):</span> <span class="pre">vertex</span> <span class="pre">type</span>&#160;&#160; <span class="pre">ids(numpy.array):</span> <span class="pre">vertex</span> <span class="pre">id</span> <span class="pre">Return:</span>&#160;&#160; <span class="pre">Nodes</span> <span class="pre">object</span> <span class="pre">'''</span></code></p>
+<p>We use the following example to show the interface and usage
+<code class="docutils literal notranslate"><span class="pre">get_nodes()</span></code>.</p>
+<p>Table1: user vertices</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 67%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>id</p></th>
+<th class="head"><p>attributes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>10001</p></td>
+<td><p>0:0.1:0</p></td>
+</tr>
+<tr class="row-odd"><td><p>10002</p></td>
+<td><p>1:0.2:3</p></td>
+</tr>
+<tr class="row-even"><td><p>10003</p></td>
+<td><p>3:0.3:4</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">u_nodes</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">get_nodes</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10001</span><span class="p">,</span> <span class="mi">10002</span><span class="p">,</span> <span class="mi">10003</span><span class="p">]))</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">u_nodes</span><span class="o">.</span><span class="n">int_attrs</span><span class="p">)</span> <span class="c1"># shape = [3, 2]</span>
+<span class="c1"># array([[0, 0], [1, 3], [2, 4]])</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">u_nodes</span><span class="o">.</span><span class="n">float_attrs</span><span class="p">)</span> <span class="c1"># shape = [3, 1]</span>
+<span class="c1"># array([[ 0.1],  [0.2],  [0.3]])</span>
+</pre></div>
+</div>
+<p>In GSL，we can use <code class="docutils literal notranslate"><span class="pre">V()</span></code> to replace <code class="docutils literal notranslate"><span class="pre">get_nodes()</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">u_nodes</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10001</span><span class="p">,</span> <span class="mi">10002</span><span class="p">,</span> <span class="mi">10003</span><span class="p">]))</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>## 2.2 Edges Query We can get edges from graph travesal, sampling or
+specifying src_id and dst_id. Once we get the edges, we can query their
+attributes, weights or labels. edges query by specifying src_id, dst_id:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_edges</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">src_ids</span><span class="p">,</span> <span class="n">dst_ids</span><span class="p">)</span>
+<span class="sd">&#39;&#39;&#39; get the edge weight, labels, and attributes by node type, src_ids and dst_ids.</span>
+<span class="sd">Args:</span>
+<span class="sd">  node_type(string): edges type</span>
+<span class="sd">  src_ids(numpy.array): id of source vertex</span>
+<span class="sd">  dst_ids(numpy.array): id of destination vertex</span>
+<span class="sd">Return:</span>
+<span class="sd">  Edges object</span>
+<span class="sd">&#39;&#39;&#39;</span>
+</pre></div>
+</div>
+<p>We use the following example to show the inferface and usage
+<code class="docutils literal notranslate"><span class="pre">get_edges()</span></code></p>
+<p>Table2: swing edges</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>src_id</p></th>
+<th class="head"><p>dst_id</p></th>
+<th class="head"><p>weight</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>10001</p></td>
+<td><p>10002</p></td>
+<td><p>0.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>10002</p></td>
+<td><p>10001</p></td>
+<td><p>0.2</p></td>
+</tr>
+<tr class="row-even"><td><p>10003</p></td>
+<td><p>10002</p></td>
+<td><p>0.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>10004</p></td>
+<td><p>10003</p></td>
+<td><p>0.4</p></td>
+</tr>
+</tbody>
+</table>
+<p>Table3: click edges data</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>src_id</p></th>
+<th class="head"><p>dst_id</p></th>
+<th class="head"><p>weight</p></th>
+<th class="head"><p>attributes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>20001</p></td>
+<td><p>30001</p></td>
+<td><p>0.1</p></td>
+<td><p>0.10,0.11,0.12,0.13,0.14,0.15,0.16,0.17,0.18,0.19</p></td>
+</tr>
+<tr class="row-odd"><td><p>20001</p></td>
+<td><p>30003</p></td>
+<td><p>0.2</p></td>
+<td><p>0.20,0.21,0.22,0.23,0.24,0.25,0.26,0.27,0.28,0.29</p></td>
+</tr>
+<tr class="row-even"><td><p>20003</p></td>
+<td><p>30001</p></td>
+<td><p>0.3</p></td>
+<td><p>0.30,0.31,0.32,0.33,0.34,0.35,0.36,0.37,0.38,0.39</p></td>
+</tr>
+<tr class="row-odd"><td><p>20004</p></td>
+<td><p>30002</p></td>
+<td><p>0.4</p></td>
+<td><p>0.40,0.41,0.42,0.43,0.44,0.45,0.46,0.47,0.48,0.49</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+<span class="n">edges</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">get_edges</span><span class="p">(</span><span class="n">edge_type</span><span class="o">=</span><span class="s2">&quot;swing&quot;</span><span class="p">,</span>
+                    <span class="n">src_ids</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10001</span><span class="p">,</span> <span class="mi">10002</span><span class="p">,</span> <span class="mi">10003</span><span class="p">]),</span>
+                    <span class="n">dst_ids</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10002</span><span class="p">,</span> <span class="mi">10001</span><span class="p">,</span> <span class="mi">10002</span><span class="p">]))</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">edges</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span>  <span class="c1"># shape=[3]</span>
+<span class="c1"># array([0.1,  0.2,  0.3])</span>
+
+<span class="n">click_edges</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">get_edges</span><span class="p">(</span><span class="n">edge_type</span><span class="o">=</span><span class="s2">&quot;click&quot;</span><span class="p">,</span>
+                          <span class="n">src_ids</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">20001</span><span class="p">,</span> <span class="mi">20003</span><span class="p">,</span> <span class="mi">20004</span><span class="p">]),</span>
+                          <span class="n">dst_ids</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">30003</span><span class="p">,</span> <span class="mi">30001</span><span class="p">,</span> <span class="mi">30002</span><span class="p">]))</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">click_edges</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span>  <span class="c1"># shape=[3]</span>
+<span class="c1"># array([0.2,  0.3,  0.4])</span>
+</pre></div>
+</div>
+<p>In GSL，we can use <code class="docutils literal notranslate"><span class="pre">E()</span></code> to replace <code class="docutils literal notranslate"><span class="pre">get_edges()</span></code> as follows.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">edges</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;swing&quot;</span><span class="p">,</span>
+            <span class="n">feed</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10001</span><span class="p">,</span> <span class="mi">10002</span><span class="p">,</span> <span class="mi">10003</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10002</span><span class="p">,</span> <span class="mi">10001</span><span class="p">,</span> <span class="mi">10002</span><span class="p">]))</span> \
+         <span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>## 2.3 Sparse Vertices and Edges Query We can get Nodes or Edges object
+from graph traversal or sampling, and query them by interfaces
+introduced in 2.1 and 2.2.The results of non-aligned sampling are often
+sparse. For instance, the full neighbor sampling returns non-aligned
+results because vertices have different numbers of neighbors. In the
+following example of using the edge attribute query of full neighbor
+sampling, we illustrate the interfaces and the usage of sparse objects.</p>
+<p>Table4: buy edges</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 29%" />
+<col style="width: 43%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>user</p></th>
+<th class="head"><p>item</p></th>
+<th class="head"><p>weight</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>3</p></td>
+<td><p>0.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>0</p></td>
+<td><p>0.1</p></td>
+</tr>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>0.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>1</p></td>
+<td><p>0.1</p></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td><p>1</p></td>
+<td><p>0.5</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>2</p></td>
+<td><p>0.3</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># sampling the &#39;buy&#39; edges of source nodes ids 1, 2, 3, 4</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]))</span><span class="o">.</span><span class="n">outE</span><span class="p">(</span><span class="s2">&quot;buy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;full&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+<span class="c1"># res[0] # Nodes of [1, 2, 3, 4]</span>
+<span class="c1"># res[1] # SparseEdges</span>
+
+<span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">src_ids</span>
+<span class="c1"># array([1, 1, 1, 2, 4, 4])</span>
+
+<span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">dst_ids</span>
+<span class="c1"># array([3, 0, 2, 1, 1, 2])</span>
+
+<span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">offsets</span>
+<span class="c1"># [3, 1, 0, 2]</span>
+<span class="c1"># the numbers of neighbors of user 1, 2, 3, and 4 are 3, 1, 0, 2 respectively.</span>
+
+<span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">dense_shape</span>
+<span class="c1"># [4, 3]</span>
+<span class="c1"># 4 is the number of the source node, 3 is the maximum number of neighbors.</span>
+
+<span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">indices</span>
+<span class="c1"># [[0, 1], [0, 2], [0, 3], [1, 0], [3, 1], [3, 2]]</span>
+<span class="c1"># the corresponding index of source ids in dense Nodes which is similar to the index of destination ids in dense Nodes.</span>
+<span class="c1"># the corresponding dst dense Nodes：</span>
+<span class="c1"># [[ 3,  0,  2],</span>
+<span class="c1">#  [ 1, -1, -1],</span>
+<span class="c1">#  [-1, -1, -1],</span>
+<span class="c1">#  [ 1,  2, -1]]</span>
+
+<span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">weights</span>
+<span class="c1"># [0.2, 0.1, 0.0, 0.1, 0.5, 0.3]</span>
+
+<span class="c1"># traverse all adjacent edges of each vertex.</span>
+<span class="n">iterate</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">edges</span> <span class="ow">in</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Iterate {}:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">iterate</span><span class="p">),</span> <span class="n">edges</span><span class="o">.</span><span class="n">dst_ids</span><span class="p">,</span> <span class="n">edges</span><span class="o">.</span><span class="n">weights</span><span class="p">)</span>
+    <span class="n">iterate</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="c1"># Iterate 0: [3, 0, 2], [0.2, 0.1, 0.0], [[3, 1, 2]]</span>
+<span class="c1"># Iterate 1: [1], [0.1],</span>
+<span class="c1"># Iterate 2: [], []</span>
+<span class="c1"># Iterate 3: [1, 2], [0.5, 0.3]</span>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../index.html">en</a></dd>
+        <dd><a href="../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

@@ -1,0 +1,492 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="graphscope-a-one-stop-large-scale-graph-computing-system-from-alibaba">
+<h1>GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba<a class="headerlink" href="#graphscope-a-one-stop-large-scale-graph-computing-system-from-alibaba" title="Permalink to this headline">¶</a></h1>
+<p>GraphScope is a unified distributed graph computing platform
+that provides a one-stop environment for performing diverse graph
+operations on a cluster of computers through a user-friendly
+Python interface. GraphScope makes multi-staged processing of
+large-scale graph data on compute clusters simple by combining
+several important pieces of Alibaba technology: including GRAPE,
+GraphCompute, and Graph-Learn (GL) for analytics, interactive,
+and graph neural networks (GNN) computation, respectively,
+and the vineyard store that offers efficient in-memory data transfers.</p>
+<div class="toctree-wrapper compound">
+<p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#example-node-clustering-on-citation-network">Example: Node clustering on Citation Network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#launching-session">Launching Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#loading-graph">Loading Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#interactive-query">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#graph-analytics">Graph Analytics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#graph-neural-networks-gnns">Graph Neural Networks (GNNs)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#closing-session">Closing Session</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_how_to_launch_a_session.ipynb">How to Create a Session</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/2_graph_manipulations_with_networkx_compatible_apis.ipynb">Graph Manipulations with NetowrkX Compatible APIs</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/2_loading_graphs.ipynb">Loading Graphs</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/3_builtin_analytical_algorithms.ipynb">Built-in Analytical Algorithms</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/4_writing_your_own_algorithms.ipynb">Writing Your Own Algorithms</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/5_interactive_query_with_gremlin.ipynb">Interactive Query with Gremlin</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/6_unsupervised_learning_with_graphsage.ipynb">Unsupervised Learning with GraphSage</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/7_supervised_learning_with_gcn.ipynb">Supervised Learning with GCN</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/8_node_classification_on_citation_network.ipynb">A Complex Workflow: Node Classification on Citation Network</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#deployment-with-helm">Deployment with Helm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#deploy-with-aws-aliyun">Deploy with AWS/Aliyun</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#deployment-on-local">Deployment on local</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="loading_graph.html#building-a-graph">Building a Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loading_graph.html#graphs-from-numpy-and-pandas">Graphs from Numpy and Pandas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loading_graph.html#graphs-from-given-location">Graphs from Given Location</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#attach-new-labels">Attach new labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#projection">Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#transform-to-simple-graph-implicitly">Transform to simple graph implicitly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#add-results-back-to-graph-as-a-property">Add results back to graph as a property</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#apache-tinkerpop">Apache TinkerPop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#connecting-gremlin-within-python">Connecting Gremlin within Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#connecting-gremlin-within-java">Connecting Gremlin within Java</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#id2">Gremlin Console</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#programming-with-gremlin-101">Programming with Gremlin–101</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#compatibility-with-tinkerpop">Compatibility with TinkerPop</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#built-in-algorithms">Built-in Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#result-processing">Result Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#writing-your-own-algorithms-in-pie">Writing Your Own Algorithms in PIE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#writing-algorithms-in-pregel">Writing Algorithms in Pregel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#run-your-own-algorithms">Run Your Own Algorithms</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine.html#graph-learning-model">Graph Learning Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine.html#developing-your-own-model">Developing Your Own Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#building-and-testing">Building and Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#build-python-wheels">Build Python Wheels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#code-format">Code Format</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/session.html">Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/app.html">Analytical App</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/selector.html">Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/operation.html">Operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/cython_sdk.html">Cython SDK API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/learning.html">Graph Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/networkx/index.html">NetworkX-style API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/analytical_engine_index.html#analytical-engine">Analytical Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/analytical_engine_index.html#fragments-in-graphscope">Fragments in GraphScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/analytical_engine_index.html#analytical-apps">Analytical Apps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/analytical_engine_index.html#analytical-workers">Analytical Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/analytical_engine_index.html#app-s-context">App’s Context</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../#">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="#">en</a></dd>
+        <dd><a href="zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

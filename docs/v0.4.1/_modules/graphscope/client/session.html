@@ -1,0 +1,1674 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>graphscope.client.session &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>graphscope.client.session</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for graphscope.client.session</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="sd">&quot;&quot;&quot; Manage sessions to the GraphScope coordinator.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">atexit</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">queue</span> <span class="k">import</span> <span class="n">Empty</span> <span class="k">as</span> <span class="n">EmptyQueue</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kubernetes</span> <span class="k">import</span> <span class="n">client</span> <span class="k">as</span> <span class="n">kube_client</span>
+    <span class="kn">from</span> <span class="nn">kubernetes</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">kube_config</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">kube_client</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">kube_config</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope.client.rpc</span> <span class="k">import</span> <span class="n">GRPCClient</span>
+<span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="k">import</span> <span class="n">CaptureKeyboardInterrupt</span>
+<span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="k">import</span> <span class="n">GSLogger</span>
+<span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="k">import</span> <span class="n">set_defaults</span>
+<span class="kn">from</span> <span class="nn">graphscope.config</span> <span class="k">import</span> <span class="n">GSConfig</span> <span class="k">as</span> <span class="n">gs_config</span>
+<span class="kn">from</span> <span class="nn">graphscope.deploy.hosts.cluster</span> <span class="k">import</span> <span class="n">HostsClusterLauncher</span>
+<span class="kn">from</span> <span class="nn">graphscope.deploy.kubernetes.cluster</span> <span class="k">import</span> <span class="n">KubernetesClusterLauncher</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="ne">ConnectionError</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">FatalError</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">GRPCError</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">InteractiveEngineInternalError</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">InvalidArgumentError</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">K8sError</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">LearningEngineInternalError</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">check_argument</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="k">import</span> <span class="n">Graph</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.operation</span> <span class="k">import</span> <span class="n">Operation</span>
+<span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="k">import</span> <span class="n">InteractiveQuery</span>
+<span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="k">import</span> <span class="n">InteractiveQueryStatus</span>
+<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">message_pb2</span>
+<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">op_def_pb2</span>
+<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">types_pb2</span>
+
+<span class="n">DEFAULT_CONFIG_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">&quot;GS_CONFIG_PATH&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;~/.graphscope/session.json&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">_session_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;graphscope&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Session"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session">[docs]</a><span class="k">class</span> <span class="nc">Session</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class for interacting with GraphScope graph computation service cluster.</span>
+
+<span class="sd">    A :class:`Session` object encapsulates the environment in which :class:`Operation`</span>
+<span class="sd">    objects are executed/evaluated.</span>
+
+<span class="sd">    A session may own resources. It is important to release these resources when</span>
+<span class="sd">    they are no longer required. To do this, invoke the :meth:`close` method</span>
+<span class="sd">    on the session.</span>
+
+<span class="sd">    A Session can register itself as default session with :meth:`as_default`, and all operations</span>
+<span class="sd">    after that will use the default session. Session deregister itself as a default session</span>
+<span class="sd">    when closed.</span>
+
+<span class="sd">    The following example demonstrates its usage:</span>
+
+<span class="sd">    .. code:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; import graphscope as gs</span>
+
+<span class="sd">        &gt;&gt;&gt; # use session object explicitly</span>
+<span class="sd">        &gt;&gt;&gt; sess = gs.session()</span>
+<span class="sd">        &gt;&gt;&gt; g = sess.g()</span>
+<span class="sd">        &gt;&gt;&gt; pg = g.project(vertices={&#39;v&#39;: []}, edges={&#39;e&#39;: [&#39;dist&#39;]})</span>
+<span class="sd">        &gt;&gt;&gt; r = s.sssp(g, 4)</span>
+<span class="sd">        &gt;&gt;&gt; s.close()</span>
+
+<span class="sd">        &gt;&gt;&gt; # or use a session as default</span>
+<span class="sd">        &gt;&gt;&gt; s = gs.session().as_default()</span>
+<span class="sd">        &gt;&gt;&gt; g = g()</span>
+<span class="sd">        &gt;&gt;&gt; pg = g.project(vertices={&#39;v&#39;: []}, edges={&#39;e&#39;: [&#39;dist&#39;]})</span>
+<span class="sd">        &gt;&gt;&gt; r = gs.sssp(pg, 4)</span>
+<span class="sd">        &gt;&gt;&gt; s.close()</span>
+
+<span class="sd">    We support setup a service cluster and create a RPC session in following ways:</span>
+
+<span class="sd">    - GraphScope graph computation service run in cluster managed by kubernetes.</span>
+
+<span class="sd">        &gt;&gt;&gt; s = graphscope.session()</span>
+
+<span class="sd">        Also, :class:`Session` provides several keyword params for users to define the cluster.</span>
+<span class="sd">        You may use the param :code:`k8s_gs_image` to specify the image for all engine pod, and</span>
+<span class="sd">        param :code:`k8s_engine_cpu` or :code:`k8s_engine_mem` to specify the resources. More,</span>
+<span class="sd">        you can find all params detail in :meth:`__init__` method.</span>
+
+<span class="sd">        &gt;&gt;&gt; s = graphscope.session(</span>
+<span class="sd">        ...         k8s_gs_image=&quot;registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest&quot;,</span>
+<span class="sd">        ...         k8s_vineyard_cpu=0.1,</span>
+<span class="sd">        ...         k8s_vineyard_mem=&quot;256Mi&quot;,</span>
+<span class="sd">        ...         vineyard_shared_mem=&quot;4Gi&quot;,</span>
+<span class="sd">        ...         k8s_engine_cpu=0.1,</span>
+<span class="sd">        ...         k8s_engine_mem=&quot;256Mi&quot;)</span>
+
+<span class="sd">    - or all params can be provided by a json configuration file or configuration dict.</span>
+
+<span class="sd">        &gt;&gt;&gt; s = graphscope.session(config=&#39;/tmp/config.json&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; # Or</span>
+<span class="sd">        &gt;&gt;&gt; s = graphscope.session(config={&#39;k8s_engine_cpu&#39;: 5, &#39;k8s_engine_mem&#39;: &#39;5Gi&#39;})</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Session.__init__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__init__">[docs]</a>    <span class="nd">@set_defaults</span><span class="p">(</span><span class="n">gs_config</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cluster_type</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">cluster_type</span><span class="p">,</span>
+        <span class="n">addr</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">addr</span><span class="p">,</span>
+        <span class="n">num_workers</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span>
+        <span class="n">preemptive</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">preemptive</span><span class="p">,</span>
+        <span class="n">k8s_namespace</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_namespace</span><span class="p">,</span>
+        <span class="n">k8s_service_type</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_service_type</span><span class="p">,</span>
+        <span class="n">k8s_gs_image</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gs_image</span><span class="p">,</span>
+        <span class="n">k8s_etcd_image</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_etcd_image</span><span class="p">,</span>
+        <span class="n">k8s_gie_graph_manager_image</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_graph_manager_image</span><span class="p">,</span>
+        <span class="n">k8s_zookeeper_image</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_zookeeper_image</span><span class="p">,</span>
+        <span class="n">k8s_image_pull_policy</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_image_pull_policy</span><span class="p">,</span>
+        <span class="n">k8s_image_pull_secrets</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_image_pull_secrets</span><span class="p">,</span>
+        <span class="n">k8s_coordinator_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_coordinator_cpu</span><span class="p">,</span>
+        <span class="n">k8s_coordinator_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_coordinator_mem</span><span class="p">,</span>
+        <span class="n">k8s_etcd_num_pods</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_etcd_num_pods</span><span class="p">,</span>
+        <span class="n">k8s_etcd_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_etcd_cpu</span><span class="p">,</span>
+        <span class="n">k8s_etcd_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_etcd_mem</span><span class="p">,</span>
+        <span class="n">k8s_zookeeper_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_zookeeper_cpu</span><span class="p">,</span>
+        <span class="n">k8s_zookeeper_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_zookeeper_mem</span><span class="p">,</span>
+        <span class="n">k8s_gie_graph_manager_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_graph_manager_cpu</span><span class="p">,</span>
+        <span class="n">k8s_gie_graph_manager_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_graph_manager_mem</span><span class="p">,</span>
+        <span class="n">k8s_vineyard_daemonset</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_vineyard_daemonset</span><span class="p">,</span>
+        <span class="n">k8s_vineyard_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_vineyard_cpu</span><span class="p">,</span>
+        <span class="n">k8s_vineyard_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_vineyard_mem</span><span class="p">,</span>
+        <span class="n">vineyard_shared_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">vineyard_shared_mem</span><span class="p">,</span>
+        <span class="n">k8s_engine_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_engine_cpu</span><span class="p">,</span>
+        <span class="n">k8s_engine_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_engine_mem</span><span class="p">,</span>
+        <span class="n">k8s_mars_worker_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mars_worker_cpu</span><span class="p">,</span>
+        <span class="n">k8s_mars_worker_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mars_worker_mem</span><span class="p">,</span>
+        <span class="n">k8s_mars_scheduler_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mars_scheduler_cpu</span><span class="p">,</span>
+        <span class="n">k8s_mars_scheduler_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mars_scheduler_mem</span><span class="p">,</span>
+        <span class="n">k8s_volumes</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_volumes</span><span class="p">,</span>
+        <span class="n">k8s_waiting_for_delete</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_waiting_for_delete</span><span class="p">,</span>
+        <span class="n">timeout_seconds</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="p">,</span>
+        <span class="n">dangling_timeout_seconds</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">dangling_timeout_seconds</span><span class="p">,</span>
+        <span class="n">with_mars</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">with_mars</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kw</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Construct a new GraphScope session.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config (dict or str, optional): The configuration dict or file about how to launch the GraphScope instance.</span>
+<span class="sd">                For str, it will identify it as a path and read the configuration file to build a</span>
+<span class="sd">                session if file exist. If not specified, the global default configuration</span>
+<span class="sd">                :code:`DEFAULT_CONFIG_FILE` will be used, which get value of GS_CONFIG_PATH</span>
+<span class="sd">                in environment. Note that it will overwrite explicit parameters. Defaults to None.</span>
+
+<span class="sd">            addr (str, optional): The endpoint of a pre-launched GraphScope instance with &#39;&lt;ip&gt;:&lt;port&gt;&#39; format.</span>
+<span class="sd">                A new session id will be generated for each session connection.</span>
+
+<span class="sd">            cluster_type (str, optional): Deploy GraphScope instance on hosts or k8s cluster. Defaults to k8s.</span>
+<span class="sd">                Available options: &quot;k8s&quot; and &quot;hosts&quot;. Note that only support deployed on localhost with hosts mode.</span>
+
+<span class="sd">            num_workers (int, optional): The number of workers to launch GraphScope engine. Defaults to 2.</span>
+
+<span class="sd">            preemptive (bool, optional): If True, GraphScope instance will treat resource params (e.g. k8s_coordinator_cpu)</span>
+<span class="sd">                as limits and provide the minimum available value as requests, but this will make pod has a `Burstable` QOS,</span>
+<span class="sd">                which can be preempted by other pods with high QOS. Otherwise, it will set both requests and limits with the</span>
+<span class="sd">                same value.</span>
+
+<span class="sd">            k8s_namespace (str, optional): Contains the namespace to create all resource inside.</span>
+<span class="sd">                If param missing, it will try to read namespace from kubernetes context, or</span>
+<span class="sd">                a random namespace will be created and deleted if namespace not exist.</span>
+<span class="sd">                Defaults to None.</span>
+
+<span class="sd">            k8s_service_type (str, optional): Type determines how the GraphScope service is exposed.</span>
+<span class="sd">                Valid options are NodePort, and LoadBalancer. Defaults to NodePort.</span>
+
+<span class="sd">            k8s_gs_image (str, optional): The GraphScope engine&#39;s image.</span>
+
+<span class="sd">            k8s_etcd_image (str, optional): The image of etcd, which used by vineyard.</span>
+
+<span class="sd">            k8s_image_pull_policy (str, optional): Kubernetes image pull policy. Defaults to &quot;IfNotPresent&quot;.</span>
+
+<span class="sd">            k8s_image_pull_secrets (list[str], optional): A list of secret name used to authorize pull image.</span>
+
+<span class="sd">            k8s_gie_graph_manager_image (str, optional): The GraphScope interactive engine&#39;s graph manager image.</span>
+
+<span class="sd">            k8s_zookeeper_image (str, optional): The image of zookeeper, which used by GIE graph manager.</span>
+
+<span class="sd">            k8s_vineyard_daemonset (str, optional): The name of vineyard Helm deployment to use. GraphScope will try to</span>
+<span class="sd">                discovery the daemonset from kubernetes cluster, then use it if exists, and fallback to launching</span>
+<span class="sd">                a bundled vineyard container otherwise.</span>
+
+<span class="sd">            k8s_vineyard_cpu (float, optional): Minimum number of CPU cores request for vineyard container. Defaults to 0.5.</span>
+
+<span class="sd">            k8s_vineyard_mem (str, optional): Minimum number of memory request for vineyard container. Defaults to &#39;512Mi&#39;.</span>
+
+<span class="sd">            vineyard_shared_mem (str, optional): Init size of vineyard shared memory. Defaults to &#39;4Gi&#39;.</span>
+
+<span class="sd">            k8s_engine_cpu (float, optional): Minimum number of CPU cores request for engine container. Defaults to 0.5.</span>
+
+<span class="sd">            k8s_engine_mem (str, optional): Minimum number of memory request for engine container. Defaults to &#39;4Gi&#39;.</span>
+
+<span class="sd">            k8s_coordinator_cpu (float, optional): Minimum number of CPU cores request for coordinator pod. Defaults to 1.0.</span>
+
+<span class="sd">            k8s_coordinator_mem (str, optional): Minimum number of memory request for coordinator pod. Defaults to &#39;4Gi&#39;.</span>
+
+<span class="sd">            k8s_etcd_num_pods (int, optional): The number of etcd pods. Defaults to 3.</span>
+
+<span class="sd">            k8s_etcd_cpu (float, optional): Minimum number of CPU cores request for etcd pod. Defaults to 0.5.</span>
+
+<span class="sd">            k8s_etcd_mem (str, optional): Minimum number of memory request for etcd pod. Defaults to &#39;128Mi&#39;.</span>
+
+<span class="sd">            k8s_zookeeper_cpu (float, optional):</span>
+<span class="sd">                Minimum number of CPU cores request for zookeeper container. Defaults to 0.5.</span>
+
+<span class="sd">            k8s_zookeeper_mem (str, optional):</span>
+<span class="sd">                Minimum number of memory request for zookeeper container. Defaults to &#39;256Mi&#39;.</span>
+
+<span class="sd">            k8s_gie_graph_manager_cpu (float, optional):</span>
+<span class="sd">                Minimum number of CPU cores request for graphmanager container. Defaults to 1.0.</span>
+
+<span class="sd">            k8s_gie_graph_manager_mem (str, optional):</span>
+<span class="sd">                Minimum number of memory request for graphmanager container. Defaults to &#39;4Gi&#39;.</span>
+
+<span class="sd">            k8s_mars_worker_cpu (float, optional):</span>
+<span class="sd">                Minimum number of CPU cores request for mars worker container. Defaults to 0.5.</span>
+
+<span class="sd">            k8s_mars_worker_mem (str, optional):</span>
+<span class="sd">                Minimum number of memory request for mars worker container. Defaults to &#39;4Gi&#39;.</span>
+
+<span class="sd">            k8s_mars_scheduler_cpu (float, optional):</span>
+<span class="sd">                Minimum number of CPU cores request for mars scheduler container. Defaults to 0.5.</span>
+
+<span class="sd">            k8s_mars_scheduler_mem (str, optional):</span>
+<span class="sd">                Minimum number of memory request for mars scheduler container. Defaults to &#39;2Gi&#39;.</span>
+
+<span class="sd">            with_mars (bool, optional):</span>
+<span class="sd">                Launch graphscope with mars. Defaults to False.</span>
+
+<span class="sd">            k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the</span>
+<span class="sd">                containers in a pod. Defaults to {}.</span>
+
+<span class="sd">                For example, you can mount host path with:</span>
+
+<span class="sd">                k8s_volumes = {</span>
+<span class="sd">                    &quot;my-data&quot;: {</span>
+<span class="sd">                        &quot;type&quot;: &quot;hostPath&quot;,</span>
+<span class="sd">                        &quot;field&quot;: {</span>
+<span class="sd">                            &quot;path&quot;: &quot;&lt;path&gt;&quot;,</span>
+<span class="sd">                            &quot;type&quot;: &quot;Directory&quot;</span>
+<span class="sd">                        },</span>
+<span class="sd">                        &quot;mounts&quot;: [</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;mountPath&quot;: &quot;&lt;path1&gt;&quot;</span>
+<span class="sd">                            },</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;mountPath&quot;: &quot;&lt;path2&gt;&quot;</span>
+<span class="sd">                            }</span>
+<span class="sd">                        ]</span>
+<span class="sd">                    }</span>
+<span class="sd">                }</span>
+
+<span class="sd">                Or you can mount PVC with:</span>
+
+<span class="sd">                k8s_volumes = {</span>
+<span class="sd">                    &quot;my-data&quot;: {</span>
+<span class="sd">                        &quot;type&quot;: &quot;persistentVolumeClaim&quot;,</span>
+<span class="sd">                        &quot;field&quot;: {</span>
+<span class="sd">                            &quot;claimName&quot;: &quot;your-pvc-name&quot;</span>
+<span class="sd">                        },</span>
+<span class="sd">                        &quot;mounts&quot;: [</span>
+<span class="sd">                            {</span>
+<span class="sd">                                &quot;mountPath&quot;: &quot;&lt;path1&gt;&quot;</span>
+<span class="sd">                            }</span>
+<span class="sd">                        ]</span>
+<span class="sd">                    }</span>
+<span class="sd">                }</span>
+
+<span class="sd">                Also, you can mount a single volume with:</span>
+
+<span class="sd">                k8s_volumes = {</span>
+<span class="sd">                    &quot;my-data&quot;: {</span>
+<span class="sd">                        &quot;type&quot;: &quot;hostPath&quot;,</span>
+<span class="sd">                        &quot;field&quot;: {xxx},</span>
+<span class="sd">                        &quot;mounts&quot;: {</span>
+<span class="sd">                            &quot;mountPath&quot;: &quot;&lt;path1&gt;&quot;</span>
+<span class="sd">                        }</span>
+<span class="sd">                    }</span>
+<span class="sd">                }</span>
+
+<span class="sd">            timeout_seconds (int, optional): For waiting service ready (or waiting for delete if</span>
+<span class="sd">                k8s_waiting_for_delete is True).</span>
+
+<span class="sd">            dangling_timeout_seconds (int, optional): After seconds of client disconnect,</span>
+<span class="sd">                coordinator will kill this graphscope instance. Defaults to 600.</span>
+<span class="sd">                Expect this value to be greater than 5 (heartbeat interval).</span>
+<span class="sd">                Disable dangling check by setting -1.</span>
+
+<span class="sd">            k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.</span>
+
+<span class="sd">            **kw (dict, optional): Other optional parameters will be put to :code:`**kw`.</span>
+<span class="sd">                - k8s_minikube_vm_driver: Deprecated.</span>
+
+<span class="sd">                - k8s_client_config (dict, optional):</span>
+<span class="sd">                    Provide configurable parameters for connecting to remote k8s,</span>
+<span class="sd">                    which strongly relies on the `kube_config.new_client_from_config` function.</span>
+<span class="sd">                    eg: {&quot;config_file&quot;: &quot;~/.kube/config&quot;, &quot;context&quot;: None, &quot;persist_config&quot;: True}</span>
+<span class="sd">                    config_file: Name of the kube-config file.</span>
+<span class="sd">                    context: set the active context. If is set to None, current_context from config file will be used.</span>
+<span class="sd">                    persist_config: If True, config file will be updated when changed(e.g GCP token refresh).</span>
+
+<span class="sd">                - log_level: Deprecated.</span>
+<span class="sd">                    Move this param as a global configuration. Set via `graphscope.set_option(log_level=&#39;DEBUG&#39;)`</span>
+
+<span class="sd">                - show_log: Deprecated.</span>
+<span class="sd">                    Move this param as a global configuration.Set via `graphscope.set_option(show_log=True)`</span>
+
+<span class="sd">                - k8s_vineyard_shared_mem: Deprecated.</span>
+<span class="sd">                    Please use vineyard_shared_mem instead.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: If the given argument combination is invalid and cannot be used to create</span>
+<span class="sd">                a GraphScope session.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">num_workers</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_workers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_accessable_params</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;addr&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cluster_type&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;num_workers&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;preemptive&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_namespace&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_service_type&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_gs_image&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_etcd_image&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_image_pull_policy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_image_pull_secrets&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_gie_graph_manager_image&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_zookeeper_image&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_coordinator_cpu&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_coordinator_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_etcd_num_pods&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_etcd_cpu&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_etcd_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_zookeeper_cpu&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_zookeeper_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_gie_graph_manager_cpu&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_gie_graph_manager_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_vineyard_daemonset&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_vineyard_cpu&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_vineyard_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;vineyard_shared_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_engine_cpu&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_engine_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_mars_worker_cpu&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_mars_worker_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_mars_scheduler_cpu&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_mars_scheduler_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;with_mars&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_volumes&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;k8s_waiting_for_delete&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;timeout_seconds&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dangling_timeout_seconds&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">saved_locals</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accessable_params</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">saved_locals</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+
+        <span class="c1"># parse config, which should be a path to config file, or dict</span>
+        <span class="c1"># config has highest priority</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">DEFAULT_CONFIG_FILE</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_config</span><span class="p">(</span><span class="n">DEFAULT_CONFIG_FILE</span><span class="p">)</span>
+
+        <span class="c1"># update other optional params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+
+        <span class="c1"># initial setting of cluster_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_cluster_type</span><span class="p">()</span>
+
+        <span class="c1"># mars cannot work with run-on-local mode</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;with_mars&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Mars cluster cannot be launched along with local GraphScope deployment&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># deprecated params handle</span>
+        <span class="k">if</span> <span class="s2">&quot;show_log&quot;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The `show_log` parameter has been deprecated and has no effect, &quot;</span>
+                <span class="s2">&quot;please use `graphscope.set_option(show_log=</span><span class="si">%s</span><span class="s2">)` instead.&quot;</span>
+                <span class="o">%</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;show_log&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;log_level&quot;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The `log_level` parameter has been deprecated and has no effect, &quot;</span>
+                <span class="s2">&quot;please use `graphscope.set_option(log_level=</span><span class="si">%r</span><span class="s2">)` instead.&quot;</span>
+                <span class="o">%</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;show_log&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;k8s_vineyard_shared_mem&quot;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The `k8s_vineyard_shared_mem` has benn deprecated and has no effect, &quot;</span>
+                <span class="s2">&quot;please use `vineyard_shared_mem` instead.&quot;</span>
+                <span class="o">%</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;k8s_vineyard_shared_mem&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># update k8s_client_config params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="c1"># There should be no more custom keyword arguments.</span>
+        <span class="k">if</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not recognized value: &quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">kw</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Connecting graphscope session with address: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Initializing graphscope session with parameters: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># coordinator service endpoint</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_sending_thread</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># unique identifier across sessions</span>
+        <span class="c1"># engine config:</span>
+        <span class="c1">#</span>
+        <span class="c1">#   {</span>
+        <span class="c1">#       &quot;experiment&quot;: &quot;ON/OFF&quot;,</span>
+        <span class="c1">#       &quot;vineyard_socket&quot;: &quot;...&quot;,</span>
+        <span class="c1">#       &quot;vineyard_rpc_endpoint&quot;: &quot;...&quot;</span>
+        <span class="c1">#   }</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># interactive instance related graph map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># learning engine related graph map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">)</span>
+        <span class="c1"># create and connect session</span>
+        <span class="k">with</span> <span class="n">CaptureKeyboardInterrupt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># heartbeat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_interval_seconds</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_sending_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_send_heartbeat</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_sending_thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_sending_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
+
+    <span class="k">def</span> <span class="nf">_load_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">slient</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exp</span><span class="p">:</span>  <span class="c1"># noqa</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">slient</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exp</span>
+
+    <span class="k">def</span> <span class="nf">_parse_cluster_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># get the cluster type after connecting</span>
+            <span class="k">return</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNDEFINED</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;cluster_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;hosts&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_run_on_local</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;cluster_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;k8s&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expect hosts or k8s of cluster_type parameter&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">engine_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Show the engine configration associated with session in json format.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Show all resources info associated with session in json format.&quot;&quot;&quot;</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;closed&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span><span class="p">:</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;disconnected&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;active&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span><span class="p">:</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;k8s&quot;</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span><span class="p">)</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;namespace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;hosts&quot;</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span>
+
+        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;cluster_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span><span class="p">)</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;session_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;coordinator_endpoint&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span>
+        <span class="k">return</span> <span class="n">info</span>
+
+    <span class="k">def</span> <span class="nf">_send_heartbeat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">send_heartbeat</span><span class="p">()</span>
+                <span class="k">except</span> <span class="n">GRPCError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_interval_seconds</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Session.close"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Closes this session.</span>
+
+<span class="sd">        This method frees all resources associated with the session.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_deregister_default</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_sending_thread</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_sending_thread</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_interval_seconds</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_sending_thread</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># close all interactive instances</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">instance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">instance</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="n">InteractiveEngineInternalError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="c1"># close all learning instances</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">instance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">instance</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="n">LearningEngineInternalError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">_session_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># clean up</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+    <span class="k">def</span> <span class="nf">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close a interactive instance.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">close_interactive_engine</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">object_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">instance</span><span class="o">.</span><span class="n">object_id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_close_learning_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close a learning instance.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">close_learning_engine</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">object_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">instance</span><span class="o">.</span><span class="n">object_id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># cleanly ignore all exceptions</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+            <span class="k">pass</span>
+
+<div class="viewcode-block" id="Session.as_default"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.as_default">[docs]</a>    <span class="k">def</span> <span class="nf">as_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Obtain a context manager that make this object as default session.</span>
+
+<span class="sd">        This method is used when a Session is constructed, which will immediately</span>
+<span class="sd">        install self as a default session.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If default session exist in current context.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A context manager using this session as the default session.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">is_cleared</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;A default session is already active. You must explicitly call Session.close().&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># session context manager</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span> <span class="o">=</span> <span class="n">default_session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_deregister_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove self from the default session stack.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="fm">__exit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run operations of `fetch`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fetch: :class:`Operation`</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError:</span>
+<span class="sd">                Client disconnect to the service. Or run on a closed session.</span>
+
+<span class="sd">            ValueError:</span>
+<span class="sd">                If fetch is not a instance of :class:`Operation`. Or</span>
+<span class="sd">                the fetch has been evaluated.</span>
+
+<span class="sd">            InvalidArgumentError:</span>
+<span class="sd">                Not recognized on output type.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Different values for different output types of :class:`Operation`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># prepare names to run and fetch</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="s2">&quot;op&quot;</span><span class="p">):</span>
+            <span class="n">fetch</span> <span class="o">=</span> <span class="n">fetch</span><span class="o">.</span><span class="n">op</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="n">Operation</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expect a `Operation`&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fetch</span><span class="o">.</span><span class="n">output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The op &lt;</span><span class="si">%s</span><span class="s2">&gt; are evaluated duplicated.&quot;</span> <span class="o">%</span> <span class="n">fetch</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="c1"># convert to list to be compatible with rpc client method signature</span>
+        <span class="n">fetch_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">fetch</span><span class="p">]</span>
+
+        <span class="n">dag</span> <span class="o">=</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">DagDef</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">fetch_ops</span><span class="p">:</span>
+            <span class="n">dag</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">as_op_def</span><span class="p">())])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Attempted to use a closed Session.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Session disconnected.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># execute the query</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">dag</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">FatalError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">raise</span>
+        <span class="n">check_argument</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">fetch_ops</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Cannot execute multiple ops at the same time&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_value</span><span class="p">(</span><span class="n">fetch_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">response</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_parse_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">message_pb2</span><span class="o">.</span><span class="n">RunStepResponse</span><span class="p">):</span>
+        <span class="c1"># attach an output to op, indicating the op is already run.</span>
+        <span class="n">op</span><span class="o">.</span><span class="n">set_output</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
+
+        <span class="c1"># if loads a arrow property graph, will return {&#39;object_id&#39;: xxxx}</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">graph_def</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">APP</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="n">types_pb2</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">,</span>
+            <span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_TENSOR</span><span class="p">,</span>
+            <span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_DATAFRAME</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="ow">in</span> <span class="p">(</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">TENSOR</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DATAFRAME</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">result</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
+                <span class="s2">&quot;Not recognized output type: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># try connect to exist coordinator</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_image&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gs_image&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="n">K8sError</span><span class="p">(</span><span class="s2">&quot;None image found.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">],</span>
+                <span class="n">kube_client</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">ApiClient</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="n">api_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">api_client</span> <span class="o">=</span> <span class="n">kube_config</span><span class="o">.</span><span class="n">new_client_from_config</span><span class="p">(</span>
+                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="o">=</span> <span class="n">KubernetesClusterLauncher</span><span class="p">(</span>
+                <span class="n">api_client</span><span class="o">=</span><span class="n">api_client</span><span class="p">,</span>
+                <span class="n">namespace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">],</span>
+                <span class="n">service_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_service_type&quot;</span><span class="p">],</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">],</span>
+                <span class="n">gs_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gs_image&quot;</span><span class="p">],</span>
+                <span class="n">preemptive</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;preemptive&quot;</span><span class="p">],</span>
+                <span class="n">etcd_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_image&quot;</span><span class="p">],</span>
+                <span class="n">gie_graph_manager_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span>
+                    <span class="s2">&quot;k8s_gie_graph_manager_image&quot;</span>
+                <span class="p">],</span>
+                <span class="n">zookeeper_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_zookeeper_image&quot;</span><span class="p">],</span>
+                <span class="n">image_pull_policy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_image_pull_policy&quot;</span><span class="p">],</span>
+                <span class="n">image_pull_secrets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_image_pull_secrets&quot;</span><span class="p">],</span>
+                <span class="n">vineyard_daemonset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_daemonset&quot;</span><span class="p">],</span>
+                <span class="n">vineyard_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_cpu&quot;</span><span class="p">],</span>
+                <span class="n">vineyard_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_mem&quot;</span><span class="p">],</span>
+                <span class="n">vineyard_shared_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_shared_mem&quot;</span><span class="p">],</span>
+                <span class="n">etcd_num_pods</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_num_pods&quot;</span><span class="p">],</span>
+                <span class="n">etcd_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_cpu&quot;</span><span class="p">],</span>
+                <span class="n">etcd_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_mem&quot;</span><span class="p">],</span>
+                <span class="n">zookeeper_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_zookeeper_cpu&quot;</span><span class="p">],</span>
+                <span class="n">zookeeper_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_zookeeper_mem&quot;</span><span class="p">],</span>
+                <span class="n">gie_graph_manager_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gie_graph_manager_cpu&quot;</span><span class="p">],</span>
+                <span class="n">gie_graph_manager_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gie_graph_manager_mem&quot;</span><span class="p">],</span>
+                <span class="n">engine_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_engine_cpu&quot;</span><span class="p">],</span>
+                <span class="n">engine_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_engine_mem&quot;</span><span class="p">],</span>
+                <span class="n">mars_worker_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_worker_cpu&quot;</span><span class="p">],</span>
+                <span class="n">mars_worker_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_worker_mem&quot;</span><span class="p">],</span>
+                <span class="n">mars_scheduler_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_scheduler_cpu&quot;</span><span class="p">],</span>
+                <span class="n">mars_scheduler_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_scheduler_mem&quot;</span><span class="p">],</span>
+                <span class="n">with_mars</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;with_mars&quot;</span><span class="p">],</span>
+                <span class="n">coordinator_cpu</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_coordinator_cpu&quot;</span><span class="p">]),</span>
+                <span class="n">coordinator_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_coordinator_mem&quot;</span><span class="p">],</span>
+                <span class="n">volumes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_volumes&quot;</span><span class="p">],</span>
+                <span class="n">waiting_for_delete</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_waiting_for_delete&quot;</span><span class="p">],</span>
+                <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;timeout_seconds&quot;</span><span class="p">],</span>
+                <span class="n">dangling_timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span>
+                    <span class="s2">&quot;dangling_timeout_seconds&quot;</span>
+                <span class="p">],</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="c1"># lanuch coordinator with hosts</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="o">=</span> <span class="n">HostsClusterLauncher</span><span class="p">(</span>
+                <span class="n">hosts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">],</span>
+                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">],</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">],</span>
+                <span class="n">vineyard_socket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">],</span>
+                <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;timeout_seconds&quot;</span><span class="p">],</span>
+                <span class="n">vineyard_shared_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_shared_mem&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Session initialize failed.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># launching graphscope service</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="o">.</span><span class="n">coordinator_endpoint</span>
+
+        <span class="c1"># waiting service ready</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span> <span class="o">=</span> <span class="n">GRPCClient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coordinator_endpoint</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">waiting_service_ready</span><span class="p">(</span>
+            <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;timeout_seconds&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="c1"># connect and fetch logs from rpc server</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">],</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                <span class="n">cleanup_instance</span><span class="o">=</span><span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]),</span>
+                <span class="n">dangling_timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span>
+                    <span class="s2">&quot;dangling_timeout_seconds&quot;</span>
+                <span class="p">],</span>
+            <span class="p">)</span>
+            <span class="c1"># fetch logs</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">K8S</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">fetch_logs</span><span class="p">()</span>
+            <span class="n">_session_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">raise</span>
+
+<div class="viewcode-block" id="Session.get_config"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get configuration of the session.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span></div>
+
+    <span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_data</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">directed</span><span class="p">,</span> <span class="n">generate_eid</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Session.load_from"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.load_from">[docs]</a>    <span class="k">def</span> <span class="nf">load_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load a graph within the session.</span>
+<span class="sd">        See more information in :meth:`graphscope.load_from`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">default_session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_run_on_local</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;localhost&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_get_gl_handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dump a handler for GraphLearn for interaction.</span>
+
+<span class="sd">        Fields in :code:`schema` are:</span>
+
+<span class="sd">        + the name of node type or edge type</span>
+<span class="sd">        + whether the graph is weighted graph</span>
+<span class="sd">        + whether the graph is labeled graph</span>
+<span class="sd">        + the number of int attributes</span>
+<span class="sd">        + the number of float attributes</span>
+<span class="sd">        + the number of string attributes</span>
+
+<span class="sd">        An example of the graph handle:</span>
+
+<span class="sd">        .. code:: python</span>
+
+<span class="sd">            {</span>
+<span class="sd">                &quot;server&quot;: &quot;127.0.0.1:8888,127.0.0.1:8889&quot;,</span>
+<span class="sd">                &quot;client_count&quot;: 1,</span>
+<span class="sd">                &quot;vineyard_socket&quot;: &quot;/var/run/vineyard.sock&quot;,</span>
+<span class="sd">                &quot;vineyard_id&quot;: 13278328736,</span>
+<span class="sd">                &quot;node_schema&quot;: [</span>
+<span class="sd">                    &quot;user:false:false:10:0:0&quot;,</span>
+<span class="sd">                    &quot;item:true:false:0:0:5&quot;</span>
+<span class="sd">                ],</span>
+<span class="sd">                &quot;edge_schema&quot;: [</span>
+<span class="sd">                    &quot;user:click:item:true:false:0:0:0&quot;,</span>
+<span class="sd">                    &quot;user:buy:item:true:true:0:0:0&quot;,</span>
+<span class="sd">                    &quot;item:similar:item:false:false:10:0:0&quot;</span>
+<span class="sd">                ],</span>
+<span class="sd">                &quot;node_attribute_types&quot;: {</span>
+<span class="sd">                    &quot;person&quot;: {</span>
+<span class="sd">                        &quot;age&quot;: &quot;i&quot;,</span>
+<span class="sd">                        &quot;name&quot;: &quot;s&quot;,</span>
+<span class="sd">                    },</span>
+<span class="sd">                },</span>
+<span class="sd">                &quot;edge_attribute_types&quot;: {</span>
+<span class="sd">                    &quot;knows&quot;: {</span>
+<span class="sd">                        &quot;weight&quot;: &quot;f&quot;,</span>
+<span class="sd">                    },</span>
+<span class="sd">                },</span>
+<span class="sd">            }</span>
+
+<span class="sd">        The handle can be decoded using:</span>
+
+<span class="sd">        .. code:: python</span>
+
+<span class="sd">           base64.b64decode(handle.encode(&#39;ascii&#39;)).decode(&#39;ascii&#39;)</span>
+
+<span class="sd">        Note that the ports are selected from a range :code:`(8000, 9000)`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            graph (:class:`Graph`): A Property Graph.</span>
+<span class="sd">            client_number (int): Number of client.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Base64 encoded handle</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            InvalidArgumentError: If the graph is not loaded, or graph_type isn&#39;t</span>
+<span class="sd">                `ARROW_PROPERTY`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph has already been unloaded&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph should be a property graph.&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">group_property_types</span><span class="p">(</span><span class="n">props</span><span class="p">):</span>
+            <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span> <span class="o">=</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">prop</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">STRING</span><span class="p">]:</span>
+                    <span class="n">s</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">attr_types</span><span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;s&quot;</span>
+                <span class="k">elif</span> <span class="n">prop</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DOUBLE</span><span class="p">):</span>
+                    <span class="n">f</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">attr_types</span><span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;f&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">attr_types</span><span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;i&quot;</span>
+                <span class="k">if</span> <span class="n">prop</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span>
+                    <span class="n">weighted</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
+                <span class="k">elif</span> <span class="n">prop</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span>
+                    <span class="n">labeled</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
+            <span class="k">return</span> <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span>
+
+        <span class="n">node_schema</span><span class="p">,</span> <span class="n">node_attribute_types</span> <span class="o">=</span> <span class="p">[],</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">vertex_labels</span><span class="p">:</span>
+            <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span> <span class="o">=</span> <span class="n">group_property_types</span><span class="p">(</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_vertex_properties</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">node_schema</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">node_attribute_types</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr_types</span>
+
+        <span class="n">edge_schema</span><span class="p">,</span> <span class="n">edge_attribute_types</span> <span class="o">=</span> <span class="p">[],</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">edge_labels</span><span class="p">:</span>
+            <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span> <span class="o">=</span> <span class="n">group_property_types</span><span class="p">(</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_edge_properties</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_relationships</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
+                <span class="n">edge_schema</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">rel</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="p">,</span> <span class="n">rel</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">edge_attribute_types</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr_types</span>
+
+        <span class="n">handle</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;hosts&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;client_count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;vineyard_id&quot;</span><span class="p">:</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span>
+            <span class="s2">&quot;vineyard_socket&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;node_schema&quot;</span><span class="p">:</span> <span class="n">node_schema</span><span class="p">,</span>
+            <span class="s2">&quot;edge_schema&quot;</span><span class="p">:</span> <span class="n">edge_schema</span><span class="p">,</span>
+            <span class="s2">&quot;node_attribute_types&quot;</span><span class="p">:</span> <span class="n">node_attribute_types</span><span class="p">,</span>
+            <span class="s2">&quot;edge_attribute_types&quot;</span><span class="p">:</span> <span class="n">edge_attribute_types</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">handle_json_string</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">handle_json_string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Session.gremlin"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.gremlin">[docs]</a>    <span class="nd">@set_defaults</span><span class="p">(</span><span class="n">gs_config</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a interactive engine handler to execute gremlin queries.</span>
+
+<span class="sd">        Note that this method will be executed implicitly when a property graph created</span>
+<span class="sd">        and cache a instance of InteractiveQuery in session if `initializing_interactive_engine`</span>
+<span class="sd">        is True. If you want to create a new instance under the same graph by different params,</span>
+<span class="sd">        you should close the instance first.</span>
+
+<span class="sd">        .. code:: python</span>
+
+<span class="sd">            &gt;&gt;&gt; # close and recreate InteractiveQuery.</span>
+<span class="sd">            &gt;&gt;&gt; interactive_query = sess.gremlin(g)</span>
+<span class="sd">            &gt;&gt;&gt; interactive_query.close()</span>
+<span class="sd">            &gt;&gt;&gt; interactive_query = sess.gremlin(g, engine_params={&quot;xxx&quot;:&quot;xxx&quot;})</span>
+
+
+<span class="sd">        Args:</span>
+<span class="sd">            graph (:class:`Graph`): Use the graph to create interactive instance.</span>
+<span class="sd">            engine_params (dict, optional): Configure startup parameters of interactive engine.</span>
+<span class="sd">                You can also configure this param by `graphscope.set_option(engine_params={})`.</span>
+<span class="sd">                See a list of configurable keys in</span>
+<span class="sd">                `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            InvalidArgumentError: :code:`graph` is not a property graph or unloaded.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`InteractiveQuery`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># self._interactive_instance_dict[graph.vineyard_id] will be None if</span>
+        <span class="c1"># InteractiveQuery closed</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="n">interactive_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">interactive_query</span>
+            <span class="k">elif</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InteractiveEngineInternalError</span><span class="p">(</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Initializing.</span>
+                <span class="c1"># while True is ok, as the status is either running or failed eventually after timeout.</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">interactive_query</span>
+                    <span class="k">elif</span> <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">InteractiveEngineInternalError</span><span class="p">(</span>
+                            <span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span>
+                        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph has already been unloaded&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph should be a property graph.&quot;</span><span class="p">)</span>
+
+        <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">object_id</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactive_query</span>
+
+        <span class="k">if</span> <span class="n">engine_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">engine_params</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">):</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">engine_params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">engine_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_interactive_engine</span><span class="p">(</span>
+                <span class="n">object_id</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span>
+                <span class="n">schema_path</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">schema_path</span><span class="p">,</span>
+                <span class="n">gremlin_server_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_gremlin_server_cpu</span><span class="p">,</span>
+                <span class="n">gremlin_server_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_gremlin_server_mem</span><span class="p">,</span>
+                <span class="n">engine_params</span><span class="o">=</span><span class="n">engine_params</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span>
+            <span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InteractiveEngineInternalError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">interactive_query</span><span class="o">.</span><span class="n">set_frontend</span><span class="p">(</span>
+                <span class="n">front_ip</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">frontend_host</span><span class="p">,</span> <span class="n">front_port</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">frontend_port</span>
+            <span class="p">)</span>
+            <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">_attach_interactive_instance</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">interactive_query</span></div>
+
+<div class="viewcode-block" id="Session.learning"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.learning">[docs]</a>    <span class="k">def</span> <span class="nf">learning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Start a graph learning engine.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            nodes (list): The node types that will be used for gnn training.</span>
+<span class="sd">            edges (list): The edge types that will be used for gnn training.</span>
+<span class="sd">            gen_labels (list): Extra node and edge labels on original graph for gnn training.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            `graphscope.learning.Graph`: An instance of `graphscope.learning.Graph`</span>
+<span class="sd">                that could be feed to the learning engine.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">!=</span> <span class="s2">&quot;linux&quot;</span> <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">!=</span> <span class="s2">&quot;linux2&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;The learning engine currently supports Linux only, doesn&#39;t support </span><span class="si">%s</span><span class="s2">&quot;</span>
+                <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph has already been unloaded&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph should be a property graph.&quot;</span><span class="p">)</span>
+
+        <span class="kn">from</span> <span class="nn">graphscope.learning.graph</span> <span class="k">import</span> <span class="n">Graph</span> <span class="k">as</span> <span class="n">LearningGraph</span>
+
+        <span class="n">handle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_gl_handle</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="o">.</span><span class="n">preprocess_args</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">endpoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_learning_engine</span><span class="p">(</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">config</span>
+        <span class="p">)</span>
+
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">handle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="n">handle</span><span class="p">[</span><span class="s2">&quot;server&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">endpoints</span>
+        <span class="n">handle</span><span class="p">[</span><span class="s2">&quot;client_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">learning_graph</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">learning_graph</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_attach_learning_instance</span><span class="p">(</span><span class="n">learning_graph</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">learning_graph</span></div></div>
+
+
+<span class="n">session</span> <span class="o">=</span> <span class="n">Session</span>
+
+
+<div class="viewcode-block" id="set_option"><a class="viewcode-back" href="../../../reference/generated/graphscope.set_option.html#graphscope.set_option">[docs]</a><span class="k">def</span> <span class="nf">set_option</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Set the value of specified options.</span>
+
+<span class="sd">    Available options:</span>
+<span class="sd">        - num_workers</span>
+<span class="sd">        - log_level</span>
+<span class="sd">        - show_log</span>
+<span class="sd">        - vineyard_shared_mem</span>
+<span class="sd">        - k8s_namespace</span>
+<span class="sd">        - k8s_service_type</span>
+<span class="sd">        - k8s_gs_image</span>
+<span class="sd">        - k8s_etcd_image</span>
+<span class="sd">        - k8s_gie_graph_manager_image</span>
+<span class="sd">        - k8s_zookeeper_image</span>
+<span class="sd">        - k8s_image_pull_policy</span>
+<span class="sd">        - k8s_image_pull_secrets</span>
+<span class="sd">        - k8s_coordinator_cpu</span>
+<span class="sd">        - k8s_coordinator_mem</span>
+<span class="sd">        - k8s_vineyard_daemonset</span>
+<span class="sd">        - k8s_vineyard_cpu</span>
+<span class="sd">        - k8s_vineyard_mem</span>
+<span class="sd">        - k8s_engine_cpu</span>
+<span class="sd">        - k8s_engine_mem</span>
+<span class="sd">        - k8s_mars_worker_cpu</span>
+<span class="sd">        - k8s_mars_worker_mem</span>
+<span class="sd">        - k8s_mars_scheduler_cpu</span>
+<span class="sd">        - k8s_mars_scheduler_mem</span>
+<span class="sd">        - with_mars</span>
+<span class="sd">        - k8s_waiting_for_delete</span>
+<span class="sd">        - engine_params</span>
+<span class="sd">        - initializing_interactive_engine</span>
+<span class="sd">        - timeout_seconds</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        kwargs: dict</span>
+<span class="sd">            kv pair of GraphScope config you want to set.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If no such option exists.</span>
+
+<span class="sd">    Returns: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># check exists</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">gs_config</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No such option </span><span class="si">{}</span><span class="s2"> exists.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">gs_config</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="n">GSLogger</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="get_option"><a class="viewcode-back" href="../../../reference/generated/graphscope.get_option.html#graphscope.get_option">[docs]</a><span class="k">def</span> <span class="nf">get_option</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the value of specified option.</span>
+
+<span class="sd">    Available options:</span>
+<span class="sd">        - num_workers</span>
+<span class="sd">        - log_level</span>
+<span class="sd">        - show_log</span>
+<span class="sd">        - vineyard_shared_mem</span>
+<span class="sd">        - k8s_namespace</span>
+<span class="sd">        - k8s_service_type</span>
+<span class="sd">        - k8s_gs_image</span>
+<span class="sd">        - k8s_etcd_image</span>
+<span class="sd">        - k8s_gie_graph_manager_image</span>
+<span class="sd">        - k8s_zookeeper_image</span>
+<span class="sd">        - k8s_image_pull_policy</span>
+<span class="sd">        - k8s_image_pull_secrets</span>
+<span class="sd">        - k8s_coordinator_cpu</span>
+<span class="sd">        - k8s_coordinator_mem</span>
+<span class="sd">        - k8s_vineyard_daemonset</span>
+<span class="sd">        - k8s_vineyard_cpu</span>
+<span class="sd">        - k8s_vineyard_mem</span>
+<span class="sd">        - k8s_engine_cpu</span>
+<span class="sd">        - k8s_engine_mem</span>
+<span class="sd">        - k8s_mars_worker_cpu</span>
+<span class="sd">        - k8s_mars_worker_mem</span>
+<span class="sd">        - k8s_mars_scheduler_cpu</span>
+<span class="sd">        - k8s_mars_scheduler_mem</span>
+<span class="sd">        - with_mars</span>
+<span class="sd">        - k8s_waiting_for_delete</span>
+<span class="sd">        - engine_params</span>
+<span class="sd">        - initializing_interactive_engine</span>
+<span class="sd">        - timeout_seconds</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        key: str</span>
+<span class="sd">            Key of GraphScope config you want to get.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If no such option exists.</span>
+
+<span class="sd">    Returns: result: the value of the option</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">gs_config</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">gs_config</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No such option </span><span class="si">{}</span><span class="s2"> exists.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+
+
+<span class="k">def</span> <span class="nf">default_session</span><span class="p">(</span><span class="n">session</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Python&#39;s :code:`with` handler for defining a default session.</span>
+
+<span class="sd">    This function provides a means of registering a session for handling</span>
+<span class="sd">    and code that need a default session calls.</span>
+
+<span class="sd">    The :code:`with` keyword to specify that code invocations within</span>
+<span class="sd">    the scope of a block should be executed by a particular session.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        session: :class:`Session`</span>
+<span class="sd">            The session to be installed as the default session.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A context manager for the default session.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">get_controller</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.get_default_session.html#graphscope.get_default_session">[docs]</a><span class="k">def</span> <span class="nf">get_default_session</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns the default session for the current context.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        RuntimeError: Default session is not exist.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The default :class:`Session`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">get_default</span><span class="p">()</span></div>
+
+
+<span class="k">def</span> <span class="nf">get_session_by_id</span><span class="p">(</span><span class="n">handle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the session by handle.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">handle</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_session_dict</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Session not exists.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_session_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_DefaultSessionStack</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A stack of objects for providing implicit defaults.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">get_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No default session found.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">is_cleared</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span>
+
+    <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+    <span class="k">def</span> <span class="nf">get_controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A context manager for manipulating a default stack.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">default</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1"># stack may be empty if reset() was called</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+
+
+<span class="n">_default_session_stack</span> <span class="o">=</span> <span class="n">_DefaultSessionStack</span><span class="p">()</span>  <span class="c1"># pylint: disable=protected-access</span>
+
+
+<span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">get_default_session</span><span class="p">()</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">directed</span><span class="p">,</span> <span class="n">generate_eid</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../../index.html">en</a></dd>
+        <dd><a href="../../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

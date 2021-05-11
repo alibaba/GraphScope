@@ -1,0 +1,903 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>networkx.generators.social &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>networkx.generators.social</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for networkx.generators.social</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Famous social networks.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;karate_club_graph&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;davis_southern_women_graph&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;florentine_families_graph&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;les_miserables_graph&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="karate_club_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.social.karate_club_graph.html#graphscope.nx.generators.social.karate_club_graph">[docs]</a><span class="k">def</span> <span class="nf">karate_club_graph</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns Zachary&#39;s Karate Club graph.</span>
+
+<span class="sd">    Each node in the returned graph has a node attribute &#39;club&#39; that</span>
+<span class="sd">    indicates the name of the club to which the member represented by that node</span>
+<span class="sd">    belongs, either &#39;Mr. Hi&#39; or &#39;Officer&#39;.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    To get the name of the club to which a node belongs::</span>
+
+<span class="sd">        &gt;&gt;&gt; G = nx.karate_club_graph()</span>
+<span class="sd">        &gt;&gt;&gt; G.nodes[5][&quot;club&quot;]</span>
+<span class="sd">        &#39;Mr. Hi&#39;</span>
+<span class="sd">        &gt;&gt;&gt; G.nodes[9][&quot;club&quot;]</span>
+<span class="sd">        &#39;Officer&#39;</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Zachary, Wayne W.</span>
+<span class="sd">       &quot;An Information Flow Model for Conflict and Fission in Small Groups.&quot;</span>
+<span class="sd">       *Journal of Anthropological Research*, 33, 452--473, (1977).</span>
+
+<span class="sd">    .. [2] Data file from:</span>
+<span class="sd">       http://vlado.fmf.uni-lj.si/pub/networks/data/Ucinet/UciData.htm</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create the set of all members, and the members of each club.</span>
+    <span class="n">all_members</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">34</span><span class="p">))</span>
+    <span class="n">club1</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">21</span><span class="p">}</span>
+    <span class="c1"># club2 = all_members - club1</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">all_members</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Zachary&#39;s Karate Club&quot;</span>
+
+    <span class="n">zacharydat</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s2">0 1 1 1 1 1 1 1 1 0 1 1 1 1 0 0 0 1 0 1 0 1 0 0 0 0 0 0 0 0 0 1 0 0</span>
+<span class="s2">1 0 1 1 0 0 0 1 0 0 0 0 0 1 0 0 0 1 0 1 0 1 0 0 0 0 0 0 0 0 1 0 0 0</span>
+<span class="s2">1 1 0 1 0 0 0 1 1 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 1 0</span>
+<span class="s2">1 1 1 0 0 0 0 1 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span>
+<span class="s2">1 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span>
+<span class="s2">1 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span>
+<span class="s2">1 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span>
+<span class="s2">1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span>
+<span class="s2">1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 1</span>
+<span class="s2">0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1</span>
+<span class="s2">1 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span>
+<span class="s2">1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span>
+<span class="s2">1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span>
+<span class="s2">1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1</span>
+<span class="s2">0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1</span>
+<span class="s2">0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1</span>
+<span class="s2">0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span>
+<span class="s2">1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span>
+<span class="s2">0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1</span>
+<span class="s2">1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1</span>
+<span class="s2">0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1</span>
+<span class="s2">1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span>
+<span class="s2">0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1</span>
+<span class="s2">0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 1 0 0 1 1</span>
+<span class="s2">0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 1 0 0</span>
+<span class="s2">0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 0 0</span>
+<span class="s2">0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1</span>
+<span class="s2">0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 1</span>
+<span class="s2">0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1</span>
+<span class="s2">0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 0 0 0 0 0 1 1</span>
+<span class="s2">0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1</span>
+<span class="s2">1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 1 0 0 0 1 1</span>
+<span class="s2">0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 1 0 0 1 0 1 0 1 1 0 0 0 0 0 1 1 1 0 1</span>
+<span class="s2">0 0 0 0 0 0 0 0 1 1 0 0 0 1 1 1 0 0 1 1 1 0 1 1 0 0 1 1 1 1 1 1 1 0&quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">zacharydat</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)):</span>
+        <span class="n">thisrow</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()]</span>
+        <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">thisrow</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">entry</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+
+    <span class="c1"># Add the name of each member&#39;s club as a node attribute.</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;club&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Mr. Hi&quot;</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">club1</span> <span class="k">else</span> <span class="s2">&quot;Officer&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="davis_southern_women_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.social.davis_southern_women_graph.html#graphscope.nx.generators.social.davis_southern_women_graph">[docs]</a><span class="k">def</span> <span class="nf">davis_southern_women_graph</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns Davis Southern women social network.</span>
+
+<span class="sd">    This is a bipartite graph.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] A. Davis, Gardner, B. B., Gardner, M. R., 1941. Deep South.</span>
+<span class="sd">        University of Chicago Press, Chicago, IL.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="c1"># Top nodes</span>
+    <span class="n">women</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;Evelyn Jefferson&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Laura Mandeville&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Theresa Anderson&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Brenda Rogers&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Charlotte McDowd&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Frances Anderson&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Eleanor Nye&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Pearl Oglethorpe&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Ruth DeSand&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Verne Sanderson&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Myra Liddel&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Katherina Rogers&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Sylvia Avondale&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Nora Fayette&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Helen Lloyd&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Dorothy Murchison&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Olivia Carleton&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Flora Price&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">women</span><span class="p">,</span> <span class="n">bipartite</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># Bottom nodes</span>
+    <span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;E1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E3&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E4&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E5&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E6&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E7&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E8&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E9&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E10&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E11&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E12&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E13&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;E14&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="n">bipartite</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;Evelyn Jefferson&quot;</span><span class="p">,</span> <span class="s2">&quot;E1&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Evelyn Jefferson&quot;</span><span class="p">,</span> <span class="s2">&quot;E2&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Evelyn Jefferson&quot;</span><span class="p">,</span> <span class="s2">&quot;E3&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Evelyn Jefferson&quot;</span><span class="p">,</span> <span class="s2">&quot;E4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Evelyn Jefferson&quot;</span><span class="p">,</span> <span class="s2">&quot;E5&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Evelyn Jefferson&quot;</span><span class="p">,</span> <span class="s2">&quot;E6&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Evelyn Jefferson&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Evelyn Jefferson&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Laura Mandeville&quot;</span><span class="p">,</span> <span class="s2">&quot;E1&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Laura Mandeville&quot;</span><span class="p">,</span> <span class="s2">&quot;E2&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Laura Mandeville&quot;</span><span class="p">,</span> <span class="s2">&quot;E3&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Laura Mandeville&quot;</span><span class="p">,</span> <span class="s2">&quot;E5&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Laura Mandeville&quot;</span><span class="p">,</span> <span class="s2">&quot;E6&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Laura Mandeville&quot;</span><span class="p">,</span> <span class="s2">&quot;E7&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Laura Mandeville&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Theresa Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E2&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Theresa Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E3&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Theresa Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Theresa Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E5&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Theresa Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E6&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Theresa Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E7&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Theresa Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Theresa Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Brenda Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E1&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Brenda Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E3&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Brenda Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Brenda Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E5&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Brenda Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E6&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Brenda Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E7&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Brenda Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Charlotte McDowd&quot;</span><span class="p">,</span> <span class="s2">&quot;E3&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Charlotte McDowd&quot;</span><span class="p">,</span> <span class="s2">&quot;E4&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Charlotte McDowd&quot;</span><span class="p">,</span> <span class="s2">&quot;E5&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Charlotte McDowd&quot;</span><span class="p">,</span> <span class="s2">&quot;E7&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Frances Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E3&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Frances Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E5&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Frances Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E6&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Frances Anderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Eleanor Nye&quot;</span><span class="p">,</span> <span class="s2">&quot;E5&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Eleanor Nye&quot;</span><span class="p">,</span> <span class="s2">&quot;E6&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Eleanor Nye&quot;</span><span class="p">,</span> <span class="s2">&quot;E7&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Eleanor Nye&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Pearl Oglethorpe&quot;</span><span class="p">,</span> <span class="s2">&quot;E6&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Pearl Oglethorpe&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Pearl Oglethorpe&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Ruth DeSand&quot;</span><span class="p">,</span> <span class="s2">&quot;E5&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Ruth DeSand&quot;</span><span class="p">,</span> <span class="s2">&quot;E7&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Ruth DeSand&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Ruth DeSand&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Verne Sanderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E7&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Verne Sanderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Verne Sanderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Verne Sanderson&quot;</span><span class="p">,</span> <span class="s2">&quot;E12&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Myra Liddel&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Myra Liddel&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Myra Liddel&quot;</span><span class="p">,</span> <span class="s2">&quot;E10&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Myra Liddel&quot;</span><span class="p">,</span> <span class="s2">&quot;E12&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Katherina Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Katherina Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Katherina Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E10&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Katherina Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E12&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Katherina Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E13&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Katherina Rogers&quot;</span><span class="p">,</span> <span class="s2">&quot;E14&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Sylvia Avondale&quot;</span><span class="p">,</span> <span class="s2">&quot;E7&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Sylvia Avondale&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Sylvia Avondale&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Sylvia Avondale&quot;</span><span class="p">,</span> <span class="s2">&quot;E10&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Sylvia Avondale&quot;</span><span class="p">,</span> <span class="s2">&quot;E12&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Sylvia Avondale&quot;</span><span class="p">,</span> <span class="s2">&quot;E13&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Sylvia Avondale&quot;</span><span class="p">,</span> <span class="s2">&quot;E14&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Nora Fayette&quot;</span><span class="p">,</span> <span class="s2">&quot;E6&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Nora Fayette&quot;</span><span class="p">,</span> <span class="s2">&quot;E7&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Nora Fayette&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Nora Fayette&quot;</span><span class="p">,</span> <span class="s2">&quot;E10&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Nora Fayette&quot;</span><span class="p">,</span> <span class="s2">&quot;E11&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Nora Fayette&quot;</span><span class="p">,</span> <span class="s2">&quot;E12&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Nora Fayette&quot;</span><span class="p">,</span> <span class="s2">&quot;E13&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Nora Fayette&quot;</span><span class="p">,</span> <span class="s2">&quot;E14&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Helen Lloyd&quot;</span><span class="p">,</span> <span class="s2">&quot;E7&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Helen Lloyd&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Helen Lloyd&quot;</span><span class="p">,</span> <span class="s2">&quot;E10&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Helen Lloyd&quot;</span><span class="p">,</span> <span class="s2">&quot;E11&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Helen Lloyd&quot;</span><span class="p">,</span> <span class="s2">&quot;E12&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Dorothy Murchison&quot;</span><span class="p">,</span> <span class="s2">&quot;E8&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Dorothy Murchison&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Olivia Carleton&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Olivia Carleton&quot;</span><span class="p">,</span> <span class="s2">&quot;E11&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Flora Price&quot;</span><span class="p">,</span> <span class="s2">&quot;E9&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Flora Price&quot;</span><span class="p">,</span> <span class="s2">&quot;E11&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;top&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">women</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;bottom&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">events</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="florentine_families_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.social.florentine_families_graph.html#graphscope.nx.generators.social.florentine_families_graph">[docs]</a><span class="k">def</span> <span class="nf">florentine_families_graph</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns Florentine families graph.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Ronald L. Breiger and Philippa E. Pattison</span>
+<span class="sd">       Cumulated social roles: The duality of persons and their algebras,1</span>
+<span class="sd">       Social Networks, Volume 8, Issue 3, September 1986, Pages 215-256</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Acciaiuoli&quot;</span><span class="p">,</span> <span class="s2">&quot;Medici&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Castellani&quot;</span><span class="p">,</span> <span class="s2">&quot;Peruzzi&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Castellani&quot;</span><span class="p">,</span> <span class="s2">&quot;Strozzi&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Castellani&quot;</span><span class="p">,</span> <span class="s2">&quot;Barbadori&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Medici&quot;</span><span class="p">,</span> <span class="s2">&quot;Barbadori&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Medici&quot;</span><span class="p">,</span> <span class="s2">&quot;Ridolfi&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Medici&quot;</span><span class="p">,</span> <span class="s2">&quot;Tornabuoni&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Medici&quot;</span><span class="p">,</span> <span class="s2">&quot;Albizzi&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Medici&quot;</span><span class="p">,</span> <span class="s2">&quot;Salviati&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Salviati&quot;</span><span class="p">,</span> <span class="s2">&quot;Pazzi&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Peruzzi&quot;</span><span class="p">,</span> <span class="s2">&quot;Strozzi&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Peruzzi&quot;</span><span class="p">,</span> <span class="s2">&quot;Bischeri&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Strozzi&quot;</span><span class="p">,</span> <span class="s2">&quot;Ridolfi&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Strozzi&quot;</span><span class="p">,</span> <span class="s2">&quot;Bischeri&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Ridolfi&quot;</span><span class="p">,</span> <span class="s2">&quot;Tornabuoni&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Tornabuoni&quot;</span><span class="p">,</span> <span class="s2">&quot;Guadagni&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Albizzi&quot;</span><span class="p">,</span> <span class="s2">&quot;Ginori&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Albizzi&quot;</span><span class="p">,</span> <span class="s2">&quot;Guadagni&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bischeri&quot;</span><span class="p">,</span> <span class="s2">&quot;Guadagni&quot;</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Guadagni&quot;</span><span class="p">,</span> <span class="s2">&quot;Lamberteschi&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="les_miserables_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.social.les_miserables_graph.html#graphscope.nx.generators.social.les_miserables_graph">[docs]</a><span class="k">def</span> <span class="nf">les_miserables_graph</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns coappearance network of characters in the novel Les Miserables.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] D. E. Knuth, 1993.</span>
+<span class="sd">       The Stanford GraphBase: a platform for combinatorial computing,</span>
+<span class="sd">       pp. 74-87. New York: AcM Press.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Napoleon&quot;</span><span class="p">,</span> <span class="s2">&quot;Myriel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MlleBaptistine&quot;</span><span class="p">,</span> <span class="s2">&quot;Myriel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeMagloire&quot;</span><span class="p">,</span> <span class="s2">&quot;Myriel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeMagloire&quot;</span><span class="p">,</span> <span class="s2">&quot;MlleBaptistine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;CountessDeLo&quot;</span><span class="p">,</span> <span class="s2">&quot;Myriel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Geborand&quot;</span><span class="p">,</span> <span class="s2">&quot;Myriel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Champtercier&quot;</span><span class="p">,</span> <span class="s2">&quot;Myriel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Cravatte&quot;</span><span class="p">,</span> <span class="s2">&quot;Myriel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Count&quot;</span><span class="p">,</span> <span class="s2">&quot;Myriel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;OldMan&quot;</span><span class="p">,</span> <span class="s2">&quot;Myriel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="s2">&quot;Labarre&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="s2">&quot;MmeMagloire&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="s2">&quot;MlleBaptistine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="s2">&quot;Myriel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Marguerite&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeDeR&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Isabeau&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gervais&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Listolier&quot;</span><span class="p">,</span> <span class="s2">&quot;Tholomyes&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fameuil&quot;</span><span class="p">,</span> <span class="s2">&quot;Tholomyes&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fameuil&quot;</span><span class="p">,</span> <span class="s2">&quot;Listolier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Blacheville&quot;</span><span class="p">,</span> <span class="s2">&quot;Tholomyes&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Blacheville&quot;</span><span class="p">,</span> <span class="s2">&quot;Listolier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Blacheville&quot;</span><span class="p">,</span> <span class="s2">&quot;Fameuil&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Favourite&quot;</span><span class="p">,</span> <span class="s2">&quot;Tholomyes&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Favourite&quot;</span><span class="p">,</span> <span class="s2">&quot;Listolier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Favourite&quot;</span><span class="p">,</span> <span class="s2">&quot;Fameuil&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Favourite&quot;</span><span class="p">,</span> <span class="s2">&quot;Blacheville&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Dahlia&quot;</span><span class="p">,</span> <span class="s2">&quot;Tholomyes&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Dahlia&quot;</span><span class="p">,</span> <span class="s2">&quot;Listolier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Dahlia&quot;</span><span class="p">,</span> <span class="s2">&quot;Fameuil&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Dahlia&quot;</span><span class="p">,</span> <span class="s2">&quot;Blacheville&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Dahlia&quot;</span><span class="p">,</span> <span class="s2">&quot;Favourite&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Zephine&quot;</span><span class="p">,</span> <span class="s2">&quot;Tholomyes&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Zephine&quot;</span><span class="p">,</span> <span class="s2">&quot;Listolier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Zephine&quot;</span><span class="p">,</span> <span class="s2">&quot;Fameuil&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Zephine&quot;</span><span class="p">,</span> <span class="s2">&quot;Blacheville&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Zephine&quot;</span><span class="p">,</span> <span class="s2">&quot;Favourite&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Zephine&quot;</span><span class="p">,</span> <span class="s2">&quot;Dahlia&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="s2">&quot;Tholomyes&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="s2">&quot;Listolier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="s2">&quot;Fameuil&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="s2">&quot;Blacheville&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="s2">&quot;Favourite&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="s2">&quot;Dahlia&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="s2">&quot;Zephine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="s2">&quot;Marguerite&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeThenardier&quot;</span><span class="p">,</span> <span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeThenardier&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="s2">&quot;MmeThenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Cosette&quot;</span><span class="p">,</span> <span class="s2">&quot;MmeThenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Cosette&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">31</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Cosette&quot;</span><span class="p">,</span> <span class="s2">&quot;Tholomyes&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Cosette&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">17</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="s2">&quot;MmeThenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="s2">&quot;Cosette&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fauchelevent&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Fauchelevent&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bamatabois&quot;</span><span class="p">,</span> <span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bamatabois&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bamatabois&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Perpetue&quot;</span><span class="p">,</span> <span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Simplice&quot;</span><span class="p">,</span> <span class="s2">&quot;Perpetue&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Simplice&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Simplice&quot;</span><span class="p">,</span> <span class="s2">&quot;Fantine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Simplice&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Scaufflaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Woman1&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Woman1&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Judge&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Judge&quot;</span><span class="p">,</span> <span class="s2">&quot;Bamatabois&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Champmathieu&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Champmathieu&quot;</span><span class="p">,</span> <span class="s2">&quot;Judge&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Champmathieu&quot;</span><span class="p">,</span> <span class="s2">&quot;Bamatabois&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Brevet&quot;</span><span class="p">,</span> <span class="s2">&quot;Judge&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Brevet&quot;</span><span class="p">,</span> <span class="s2">&quot;Champmathieu&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Brevet&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Brevet&quot;</span><span class="p">,</span> <span class="s2">&quot;Bamatabois&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Chenildieu&quot;</span><span class="p">,</span> <span class="s2">&quot;Judge&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Chenildieu&quot;</span><span class="p">,</span> <span class="s2">&quot;Champmathieu&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Chenildieu&quot;</span><span class="p">,</span> <span class="s2">&quot;Brevet&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Chenildieu&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Chenildieu&quot;</span><span class="p">,</span> <span class="s2">&quot;Bamatabois&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Cochepaille&quot;</span><span class="p">,</span> <span class="s2">&quot;Judge&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Cochepaille&quot;</span><span class="p">,</span> <span class="s2">&quot;Champmathieu&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Cochepaille&quot;</span><span class="p">,</span> <span class="s2">&quot;Brevet&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Cochepaille&quot;</span><span class="p">,</span> <span class="s2">&quot;Chenildieu&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Cochepaille&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Cochepaille&quot;</span><span class="p">,</span> <span class="s2">&quot;Bamatabois&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Pontmercy&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Boulatruelle&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Eponine&quot;</span><span class="p">,</span> <span class="s2">&quot;MmeThenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Eponine&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Anzelma&quot;</span><span class="p">,</span> <span class="s2">&quot;Eponine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Anzelma&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Anzelma&quot;</span><span class="p">,</span> <span class="s2">&quot;MmeThenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Woman2&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Woman2&quot;</span><span class="p">,</span> <span class="s2">&quot;Cosette&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Woman2&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MotherInnocent&quot;</span><span class="p">,</span> <span class="s2">&quot;Fauchelevent&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MotherInnocent&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gribier&quot;</span><span class="p">,</span> <span class="s2">&quot;Fauchelevent&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeBurgon&quot;</span><span class="p">,</span> <span class="s2">&quot;Jondrette&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="s2">&quot;MmeBurgon&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gillenormand&quot;</span><span class="p">,</span> <span class="s2">&quot;Cosette&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gillenormand&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Magnon&quot;</span><span class="p">,</span> <span class="s2">&quot;Gillenormand&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Magnon&quot;</span><span class="p">,</span> <span class="s2">&quot;MmeThenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MlleGillenormand&quot;</span><span class="p">,</span> <span class="s2">&quot;Gillenormand&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MlleGillenormand&quot;</span><span class="p">,</span> <span class="s2">&quot;Cosette&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MlleGillenormand&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmePontmercy&quot;</span><span class="p">,</span> <span class="s2">&quot;MlleGillenormand&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmePontmercy&quot;</span><span class="p">,</span> <span class="s2">&quot;Pontmercy&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MlleVaubois&quot;</span><span class="p">,</span> <span class="s2">&quot;MlleGillenormand&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;LtGillenormand&quot;</span><span class="p">,</span> <span class="s2">&quot;MlleGillenormand&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;LtGillenormand&quot;</span><span class="p">,</span> <span class="s2">&quot;Gillenormand&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;LtGillenormand&quot;</span><span class="p">,</span> <span class="s2">&quot;Cosette&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="s2">&quot;MlleGillenormand&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="s2">&quot;Gillenormand&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="s2">&quot;Pontmercy&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="s2">&quot;LtGillenormand&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="s2">&quot;Cosette&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">21</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">19</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="s2">&quot;Tholomyes&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="s2">&quot;Eponine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;BaronessT&quot;</span><span class="p">,</span> <span class="s2">&quot;Gillenormand&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;BaronessT&quot;</span><span class="p">,</span> <span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Mabeuf&quot;</span><span class="p">,</span> <span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Mabeuf&quot;</span><span class="p">,</span> <span class="s2">&quot;Eponine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Mabeuf&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="s2">&quot;Mabeuf&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Combeferre&quot;</span><span class="p">,</span> <span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Combeferre&quot;</span><span class="p">,</span> <span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Combeferre&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Combeferre&quot;</span><span class="p">,</span> <span class="s2">&quot;Mabeuf&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Prouvaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Prouvaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Prouvaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Combeferre&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Feuilly&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Feuilly&quot;</span><span class="p">,</span> <span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Feuilly&quot;</span><span class="p">,</span> <span class="s2">&quot;Prouvaire&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Feuilly&quot;</span><span class="p">,</span> <span class="s2">&quot;Combeferre&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Feuilly&quot;</span><span class="p">,</span> <span class="s2">&quot;Mabeuf&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Feuilly&quot;</span><span class="p">,</span> <span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">17</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="s2">&quot;Combeferre&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="s2">&quot;Mabeuf&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="s2">&quot;Eponine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="s2">&quot;Feuilly&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="s2">&quot;Prouvaire&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="s2">&quot;Combeferre&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="s2">&quot;Mabeuf&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="s2">&quot;Feuilly&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="s2">&quot;Prouvaire&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="s2">&quot;Feuilly&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="s2">&quot;Prouvaire&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="s2">&quot;Combeferre&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="s2">&quot;Mabeuf&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="s2">&quot;Feuilly&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="s2">&quot;Prouvaire&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="s2">&quot;Combeferre&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="s2">&quot;Mabeuf&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="s2">&quot;Marius&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Grantaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Grantaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Grantaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Combeferre&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Grantaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Grantaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Grantaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Grantaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Grantaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Feuilly&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Grantaire&quot;</span><span class="p">,</span> <span class="s2">&quot;Prouvaire&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MotherPlutarch&quot;</span><span class="p">,</span> <span class="s2">&quot;Mabeuf&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gueulemer&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gueulemer&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gueulemer&quot;</span><span class="p">,</span> <span class="s2">&quot;MmeThenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gueulemer&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gueulemer&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Gueulemer&quot;</span><span class="p">,</span> <span class="s2">&quot;Eponine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Babet&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Babet&quot;</span><span class="p">,</span> <span class="s2">&quot;Gueulemer&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Babet&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Babet&quot;</span><span class="p">,</span> <span class="s2">&quot;MmeThenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Babet&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Babet&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Babet&quot;</span><span class="p">,</span> <span class="s2">&quot;Eponine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Claquesous&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Claquesous&quot;</span><span class="p">,</span> <span class="s2">&quot;Babet&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Claquesous&quot;</span><span class="p">,</span> <span class="s2">&quot;Gueulemer&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Claquesous&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Claquesous&quot;</span><span class="p">,</span> <span class="s2">&quot;MmeThenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Claquesous&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Claquesous&quot;</span><span class="p">,</span> <span class="s2">&quot;Eponine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Claquesous&quot;</span><span class="p">,</span> <span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Montparnasse&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Montparnasse&quot;</span><span class="p">,</span> <span class="s2">&quot;Babet&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Montparnasse&quot;</span><span class="p">,</span> <span class="s2">&quot;Gueulemer&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Montparnasse&quot;</span><span class="p">,</span> <span class="s2">&quot;Claquesous&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Montparnasse&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Montparnasse&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Montparnasse&quot;</span><span class="p">,</span> <span class="s2">&quot;Eponine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Montparnasse&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Toussaint&quot;</span><span class="p">,</span> <span class="s2">&quot;Cosette&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Toussaint&quot;</span><span class="p">,</span> <span class="s2">&quot;Javert&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Toussaint&quot;</span><span class="p">,</span> <span class="s2">&quot;Valjean&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Child1&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Child2&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Child2&quot;</span><span class="p">,</span> <span class="s2">&quot;Child1&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Brujon&quot;</span><span class="p">,</span> <span class="s2">&quot;Babet&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Brujon&quot;</span><span class="p">,</span> <span class="s2">&quot;Gueulemer&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Brujon&quot;</span><span class="p">,</span> <span class="s2">&quot;Thenardier&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Brujon&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Brujon&quot;</span><span class="p">,</span> <span class="s2">&quot;Eponine&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Brujon&quot;</span><span class="p">,</span> <span class="s2">&quot;Claquesous&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;Brujon&quot;</span><span class="p">,</span> <span class="s2">&quot;Montparnasse&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeHucheloup&quot;</span><span class="p">,</span> <span class="s2">&quot;Bossuet&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeHucheloup&quot;</span><span class="p">,</span> <span class="s2">&quot;Joly&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeHucheloup&quot;</span><span class="p">,</span> <span class="s2">&quot;Grantaire&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeHucheloup&quot;</span><span class="p">,</span> <span class="s2">&quot;Bahorel&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeHucheloup&quot;</span><span class="p">,</span> <span class="s2">&quot;Courfeyrac&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeHucheloup&quot;</span><span class="p">,</span> <span class="s2">&quot;Gavroche&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;MmeHucheloup&quot;</span><span class="p">,</span> <span class="s2">&quot;Enjolras&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../../index.html">en</a></dd>
+        <dd><a href="../../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

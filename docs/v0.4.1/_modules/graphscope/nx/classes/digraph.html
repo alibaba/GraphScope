@@ -1,0 +1,807 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>graphscope.nx.classes.digraph &mdash; GraphScope  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> GraphScope
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.4.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+      
+      
+        
+          
+        
+      
+      
+        <p><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+</ul>
+
+      
+    
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">GraphScope</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>graphscope.nx.classes.digraph</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for graphscope.nx.classes.digraph</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># This file digraph.py is referred and derived from project NetworkX,</span>
+<span class="c1">#</span>
+<span class="c1">#  https://github.com/networkx/networkx/blob/master/networkx/classes/digraph.py</span>
+<span class="c1">#</span>
+<span class="c1"># which has the following license:</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2004-2020, NetworkX Developers</span>
+<span class="c1"># Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1"># Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1"># Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of NetworkX.</span>
+<span class="c1">#</span>
+<span class="c1"># NetworkX is distributed under a BSD license; see LICENSE.txt for more</span>
+<span class="c1"># information.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">from</span> <span class="nn">networkx</span> <span class="k">import</span> <span class="n">freeze</span>
+<span class="kn">from</span> <span class="nn">networkx.classes.coreviews</span> <span class="k">import</span> <span class="n">AdjacencyView</span>
+<span class="kn">from</span> <span class="nn">networkx.classes.digraph</span> <span class="k">import</span> <span class="n">DiGraph</span> <span class="k">as</span> <span class="n">RefDiGraph</span>
+<span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="k">import</span> <span class="n">DiDegreeView</span>
+<span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="k">import</span> <span class="n">InDegreeView</span>
+<span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="k">import</span> <span class="n">InEdgeView</span>
+<span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="k">import</span> <span class="n">OutDegreeView</span>
+<span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="k">import</span> <span class="n">OutEdgeView</span>
+
+<span class="kn">from</span> <span class="nn">graphscope.client.session</span> <span class="k">import</span> <span class="n">get_default_session</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="k">import</span> <span class="n">dag_utils</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="k">import</span> <span class="n">copy_graph</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph_schema</span> <span class="k">import</span> <span class="n">GraphSchema</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx</span> <span class="k">import</span> <span class="n">NetworkXError</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.classes.graph</span> <span class="k">import</span> <span class="n">Graph</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.convert</span> <span class="k">import</span> <span class="n">from_gs_graph</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.convert</span> <span class="k">import</span> <span class="n">to_nx_graph</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.utils.compat</span> <span class="k">import</span> <span class="n">patch_docstring</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.utils.other</span> <span class="k">import</span> <span class="n">empty_graph_in_engine</span>
+<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">types_pb2</span>
+
+
+<div class="viewcode-block" id="DiGraph"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph">[docs]</a><span class="k">class</span> <span class="nc">DiGraph</span><span class="p">(</span><span class="n">Graph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for directed graphs in graphscope.nx.</span>
+
+<span class="sd">    A DiGraph that hold the metadata of a graph, and provide NetworkX-like DiGraph APIs.</span>
+
+<span class="sd">    It is worth noticing that the graph is actually stored by the Analytical Engine backend.</span>
+<span class="sd">    In other words, the graph object holds nothing but metadata of a graph</span>
+
+<span class="sd">    DiGraph support nodes and edges with optional data, or attributes.</span>
+
+<span class="sd">    DiGraphs support directed edges.  Self loops are allowed but multiple</span>
+<span class="sd">    (parallel) edges are not.</span>
+
+<span class="sd">    Nodes can be some hashable objects including int/str/float/tuple/bool object</span>
+<span class="sd">    with optional key/value attributes.</span>
+
+<span class="sd">    Edges are represented as links between nodes with optional</span>
+<span class="sd">    key/value attributes.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    Graph</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create an empty graph structure (a &quot;null graph&quot;) with no nodes and</span>
+<span class="sd">    no edges.</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph()</span>
+
+<span class="sd">    G can be grown in several ways.</span>
+
+<span class="sd">    **Nodes:**</span>
+
+<span class="sd">    Add one node at a time:</span>
+
+<span class="sd">    &gt;&gt;&gt; G.add_node(1)</span>
+
+<span class="sd">    Add the nodes from any container (a list, dict, set or</span>
+<span class="sd">    even the lines from a file or the nodes from another graph).</span>
+
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([2, 3])</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from(range(100, 110))</span>
+<span class="sd">    &gt;&gt;&gt; H = nx.path_graph(10)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from(H)</span>
+
+<span class="sd">    In addition integers, strings can represent a node.</span>
+
+<span class="sd">    &gt;&gt;&gt; G.add_node(&#39;a node&#39;)</span>
+
+<span class="sd">    **Edges:**</span>
+
+<span class="sd">    G can also be grown by adding edges.</span>
+
+<span class="sd">    Add one edge,</span>
+
+<span class="sd">    &gt;&gt;&gt; G.add_edge(1, 2)</span>
+
+<span class="sd">    a list of edges,</span>
+
+<span class="sd">    &gt;&gt;&gt; G.add_edges_from([(1, 2), (1, 3)])</span>
+
+<span class="sd">    or a collection of edges,</span>
+
+<span class="sd">    &gt;&gt;&gt; G.add_edges_from(H.edges)</span>
+
+<span class="sd">    If some edges connect nodes not yet in the graph, the nodes</span>
+<span class="sd">    are added automatically.  There are no errors when adding</span>
+<span class="sd">    nodes or edges that already exist.</span>
+
+<span class="sd">    **Attributes:**</span>
+
+<span class="sd">    Each graph, node, and edge can hold key/value attribute pairs</span>
+<span class="sd">    in an associated attribute dictionary (the keys must be hashable).</span>
+<span class="sd">    By default these are empty, but can be added or changed using</span>
+<span class="sd">    add_edge, add_node or direct manipulation of the attribute</span>
+<span class="sd">    dictionaries named graph, node and edge respectively.</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.DiGraph(day=&quot;Friday&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; G.graph</span>
+<span class="sd">    {&#39;day&#39;: &#39;Friday&#39;}</span>
+
+<span class="sd">    Add node attributes using add_node(), add_nodes_from() or G.nodes</span>
+
+<span class="sd">    &gt;&gt;&gt; G.add_node(1, time=&#39;5pm&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_nodes_from([3], time=&#39;2pm&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes[1]</span>
+<span class="sd">    {&#39;time&#39;: &#39;5pm&#39;}</span>
+<span class="sd">    &gt;&gt;&gt; G.nodes[1][&#39;room&#39;] = 714</span>
+<span class="sd">    &gt;&gt;&gt; del G.nodes[1][&#39;room&#39;] # remove attribute</span>
+<span class="sd">    &gt;&gt;&gt; list(G.nodes(data=True))</span>
+<span class="sd">    [(1, {&#39;time&#39;: &#39;5pm&#39;}), (3, {&#39;time&#39;: &#39;2pm&#39;})]</span>
+
+<span class="sd">    Add edge attributes using add_edge(), add_edges_from(), subscript</span>
+<span class="sd">    notation, or G.edges.</span>
+
+<span class="sd">    &gt;&gt;&gt; G.add_edge(1, 2, weight=4.7 )</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edges_from([(3, 4), (4, 5)], color=&#39;red&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; G.add_edges_from([(1, 2, {&#39;color&#39;:&#39;blue&#39;}), (2, 3, {&#39;weight&#39;:8})])</span>
+<span class="sd">    &gt;&gt;&gt; G[1][2][&#39;weight&#39;] = 4.7</span>
+<span class="sd">    &gt;&gt;&gt; G.edges[1, 2][&#39;weight&#39;] = 4</span>
+
+<span class="sd">    Warning: we protect the graph data structure by making `G.edges[1, 2]` a</span>
+<span class="sd">    read-only dict-like structure. However, you can assign to attributes</span>
+<span class="sd">    in e.g. `G.edges[1, 2]`. Thus, use 2 sets of brackets to add/change</span>
+<span class="sd">    data attributes: `G.edges[1, 2][&#39;weight&#39;] = 4`</span>
+<span class="sd">    (For multigraphs: `MG.edges[u, v, key][name] = value`).</span>
+
+<span class="sd">    **Shortcuts:**</span>
+
+<span class="sd">    Many common graph features allow python syntax to speed reporting.</span>
+
+<span class="sd">    &gt;&gt;&gt; 1 in G     # check if node in graph</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; [n for n in G if n &lt; 3]  # iterate through nodes</span>
+<span class="sd">    [1, 2]</span>
+<span class="sd">    &gt;&gt;&gt; len(G)  # number of nodes in graph</span>
+<span class="sd">    5</span>
+
+<span class="sd">    Often the best way to traverse all edges of a graph is via the neighbors.</span>
+<span class="sd">    The neighbors are reported as an adjacency-dict `G.adj` or `G.adjacency()`</span>
+
+<span class="sd">    &gt;&gt;&gt; for n, nbrsdict in G.adjacency():</span>
+<span class="sd">    ...     for nbr, eattr in nbrsdict.items():</span>
+<span class="sd">    ...        if &#39;weight&#39; in eattr:</span>
+<span class="sd">    ...            # Do something useful with the edges</span>
+<span class="sd">    ...            pass</span>
+
+<span class="sd">    But the edges reporting object is often more convenient:</span>
+
+<span class="sd">    &gt;&gt;&gt; for u, v, weight in G.edges(data=&#39;weight&#39;):</span>
+<span class="sd">    ...     if weight is not None:</span>
+<span class="sd">    ...         # Do something useful with the edges</span>
+<span class="sd">    ...         pass</span>
+
+<span class="sd">    **Reporting:**</span>
+
+<span class="sd">    Simple graph information is obtained using object-attributes and methods.</span>
+<span class="sd">    Reporting usually provides views instead of containers to reduce memory</span>
+<span class="sd">    usage. The views update as the graph is updated similarly to dict-views.</span>
+<span class="sd">    The objects `nodes, `edges` and `adj` provide access to data attributes</span>
+<span class="sd">    via lookup (e.g. `nodes[n], `edges[u, v]`, `adj[u][v]`) and iteration</span>
+<span class="sd">    (e.g. `nodes.items()`, `nodes.data(&#39;color&#39;)`,</span>
+<span class="sd">    `nodes.data(&#39;color&#39;, default=&#39;blue&#39;)` and similarly for `edges`)</span>
+<span class="sd">    Views exist for `nodes`, `edges`, `neighbors()`/`adj` and `degree`.</span>
+
+<span class="sd">    For details on these and other miscellaneous methods, see below.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DiGraph.__init__"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.__init__">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">Graph</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_dict_factory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_dict_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">PREDS_BY_NODE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_succ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">GraphSchema</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">init_nx_schema</span><span class="p">()</span>
+
+        <span class="n">create_empty_in_engine</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span>
+            <span class="s2">&quot;create_empty_in_engine&quot;</span><span class="p">,</span> <span class="kc">True</span>
+        <span class="p">)</span>  <span class="c1"># a hidden parameter</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">incoming_graph_data</span><span class="o">.</span><span class="n">session_id</span>
+        <span class="k">elif</span> <span class="n">create_empty_in_engine</span><span class="p">:</span>
+            <span class="n">sess</span> <span class="o">=</span> <span class="n">get_default_session</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">sess</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Cannot find a default session. &quot;</span>
+                    <span class="s2">&quot;Please register a session using graphscope.session(...).as_default()&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">session_id</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">)</span> <span class="ow">and</span> <span class="n">create_empty_in_engine</span><span class="p">:</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">empty_graph_in_engine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+
+        <span class="c1"># attempt to load graph with data</span>
+        <span class="k">if</span> <span class="n">incoming_graph_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">):</span>
+                <span class="n">graph_def</span> <span class="o">=</span> <span class="n">from_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">init_nx_schema</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">to_nx_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># load graph attributes (must be after to_nx_graph)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;graphscope.nx.DiGraph</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;type: &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">template_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&lt;&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">adj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">AdjacencyView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">)</span>
+
+    <span class="n">succ</span> <span class="o">=</span> <span class="n">adj</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">pred</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">pred</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">AdjacencyView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pred</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DiGraph.has_successor"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.has_successor">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">has_predecessor</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">has_successor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DiGraph.has_predecessor"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.has_predecessor">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">has_predecessor</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">has_predecessor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DiGraph.successors"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.successors">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">successors</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">successors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;The node </span><span class="si">%s</span><span class="s2"> is not in the digraph.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,))</span></div>
+
+    <span class="c1"># digraph definitions</span>
+    <span class="n">neighbors</span> <span class="o">=</span> <span class="n">successors</span>
+
+<div class="viewcode-block" id="DiGraph.predecessors"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.predecessors">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">predecessors</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">predecessors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pred</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;The node </span><span class="si">%s</span><span class="s2"> is not in the digraph.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;An OutEdgeView of the DiGraph as G.edges or G.edges().</span>
+
+<span class="sd">        edges(self, nbunch=None, data=False, default=None)</span>
+
+<span class="sd">        The OutEdgeView provides set-like operations on the edge-tuples</span>
+<span class="sd">        as well as edge attribute lookup. When called, it also provides</span>
+<span class="sd">        an EdgeDataView object which allows control of access to edge</span>
+<span class="sd">        attributes (but does not provide set-like operations).</span>
+<span class="sd">        Hence, `G.edges[u, v][&#39;color&#39;]` provides the value of the color</span>
+<span class="sd">        attribute for edge `(u, v)` while</span>
+<span class="sd">        `for (u, v, c) in G.edges.data(&#39;color&#39;, default=&#39;red&#39;):`</span>
+<span class="sd">        iterates through all the edges yielding the color attribute</span>
+<span class="sd">        with default `&#39;red&#39;` if no color attribute exists.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nbunch : single node, container, or all nodes (default= all nodes)</span>
+<span class="sd">            The view will only report edges incident to these nodes.</span>
+<span class="sd">        data : string or bool, optional (default=False)</span>
+<span class="sd">            The edge attribute returned in 3-tuple (u, v, ddict[data]).</span>
+<span class="sd">            If True, return edge attribute dict in 3-tuple (u, v, ddict).</span>
+<span class="sd">            If False, return 2-tuple (u, v).</span>
+<span class="sd">        default : value, optional (default=None)</span>
+<span class="sd">            Value used for edges that don&#39;t have the requested attribute.</span>
+<span class="sd">            Only relevant if data is not True or False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        edges : OutEdgeView</span>
+<span class="sd">            A view of edge attributes, usually it iterates over (u, v)</span>
+<span class="sd">            or (u, v, d) tuples of edges, but can also be used for</span>
+<span class="sd">            attribute lookup as `edges[u, v][&#39;foo&#39;]`.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        in_edges, out_edges</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Nodes in nbunch that are not in the graph will be (quietly) ignored.</span>
+<span class="sd">        For directed graphs this returns the out-edges.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; G = nx.DiGraph()</span>
+<span class="sd">        &gt;&gt;&gt; nx.add_path(G, [0, 1, 2])</span>
+<span class="sd">        &gt;&gt;&gt; G.add_edge(2, 3, weight=5)</span>
+<span class="sd">        &gt;&gt;&gt; [e for e in G.edges]</span>
+<span class="sd">        [(0, 1), (1, 2), (2, 3)]</span>
+<span class="sd">        &gt;&gt;&gt; G.edges.data()  # default data is {} (empty dict)</span>
+<span class="sd">        OutEdgeDataView([(0, 1, {}), (1, 2, {}), (2, 3, {&#39;weight&#39;: 5})])</span>
+<span class="sd">        &gt;&gt;&gt; G.edges.data(&quot;weight&quot;, default=1)</span>
+<span class="sd">        OutEdgeDataView([(0, 1, 1), (1, 2, 1), (2, 3, 5)])</span>
+<span class="sd">        &gt;&gt;&gt; G.edges([0, 2])  # only edges incident to these nodes</span>
+<span class="sd">        OutEdgeDataView([(0, 1), (2, 3)])</span>
+<span class="sd">        &gt;&gt;&gt; G.edges(0)  # only edges incident to a single node (use G.adj[0]?)</span>
+<span class="sd">        OutEdgeDataView([(0, 1)])</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">OutEdgeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="c1"># alias out_edges to edges</span>
+    <span class="n">out_edges</span> <span class="o">=</span> <span class="n">edges</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">in_edges</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">in_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">InEdgeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">degree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A DegreeView for the Graph as G.degree or G.degree().</span>
+
+<span class="sd">        The node degree is the number of edges adjacent to the node.</span>
+<span class="sd">        The weighted node degree is the sum of the edge weights for</span>
+<span class="sd">        edges incident to that node.</span>
+
+<span class="sd">        This object provides an iterator for (node, degree) as well as</span>
+<span class="sd">        lookup for the degree for a single node.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nbunch : single node, container, or all nodes (default= all nodes)</span>
+<span class="sd">            The view will only report edges incident to these nodes.</span>
+
+<span class="sd">        weight : string or None, optional (default=None)</span>
+<span class="sd">           The name of an edge attribute that holds the numerical value used</span>
+<span class="sd">           as a weight.  If None, then each edge has weight 1.</span>
+<span class="sd">           The degree is the sum of the edge weights adjacent to the node.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        If a single node is requested</span>
+<span class="sd">        deg : int</span>
+<span class="sd">            Degree of the node</span>
+
+<span class="sd">        OR if multiple nodes are requested</span>
+<span class="sd">        nd_iter : iterator</span>
+<span class="sd">            The iterator returns two-tuples of (node, degree).</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        in_degree, out_degree</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; G = nx.DiGraph()</span>
+<span class="sd">        &gt;&gt;&gt; nx.add_path(G, [0, 1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; G.degree(0) # node 0 with degree 1</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; list(G.degree([0, 1, 2]))</span>
+<span class="sd">        [(0, 1), (1, 2), (2, 2)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DiDegreeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">in_degree</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">in_degree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">InDegreeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">out_degree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">OutDegreeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DiGraph.is_directed"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.is_directed">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="DiGraph.is_multigraph"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.is_multigraph">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">is_multigraph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="DiGraph.reverse"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.reverse">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">reverse</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">reverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">copy</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;reversed&quot;</span><span class="p">)</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">copy_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;reverse&quot;</span><span class="p">)</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
+        <span class="k">return</span> <span class="n">g</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020-2023, Damo Academy, Alibaba Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.4.1
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../../../index.html">en</a></dd>
+        <dd><a href="../../../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>
