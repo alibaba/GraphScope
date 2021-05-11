@@ -8,6 +8,15 @@
     <pubDate>Thu, 29 Apr 2021 11:28:08 +0800</pubDate>
     <lastBuildDate>Thu, 29 Apr 2021 11:28:08 +0800</lastBuildDate>
     <generator>Jekyll v4.1.1</generator>
+
+    <item>
+<title>Release Notes: v0.4.0</title>
+<description><p><img src="/blog/assets/images/release_note_t.png" alt="release-note" /> Today, we’re announcing the availability of GraphScope v0.4.0. This release focuses on the compatibility improvement with <a href="https://networkx.org/">NetworkX</a>, with the aim of allowing users to develop graph applications on large-scale graphs in a distributed environment just like doing this on a single machine. In addition, this release improves the experience of standalone deployment.</p> <p>We highlight the following improvements included in this release:</p> <ol> <li> <p>Improved compatibility with NetworkX:</p> <ul> <li>Support <code class="language-plaintext highlighter-rouge">Graph/DiGraph</code> types in NetworkX;</li> <li>Support Networkx APIs of operations and manipulations over the above two types of graphs;</li> <li>A new <a href="https://github.com/alibaba/GraphScope/blob/62b3bbff00767784d0bb3693fe9bb24e8a1b4b2a/tutorials/2_graph_manipulations_with_networkx_compatible_apis.ipynb">tutorial</a> in Playground to introduce graph processing with NetworkX APIs.</li> </ul> </li> <li> <p>Improve the experience of standalone deployment:</p> <ul> <li>Support to launch multiple sessions/instances in standalone mode.</li> </ul> </li> </ol> <p>For more detailed improvements that have been made in this release, please refer to the complete <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.4.0">changelog</a>.</p> </description>
+<pubDate>Mon, 10 May 2021 05:08:20 +0000</pubDate>
+<link>https://graphscope.io/blog/releasenotes/2021/05/10/release-notes-0.4.0.html</link>
+<guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2021/05/10/release-notes-0.4.0.html</guid>
+<category>ReleaseNotes</category>
+</item>
     
       <item>
         <title>Introducing GAIA: A Scalable Engine for Gremlin – the SQL for Graphs</title>
