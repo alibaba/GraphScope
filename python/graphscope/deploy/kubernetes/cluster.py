@@ -590,7 +590,7 @@ class KubernetesClusterLauncher(Launcher):
             "--k8s_with_mars",
             str(self._with_mars),
             "--k8s_volumes",
-            json.dumps(self._volumes),
+            "'{0}'".format(json.dumps(self._volumes)),
             "--timeout_seconds",
             str(self._timeout_seconds),
             "--dangling_timeout_seconds",
