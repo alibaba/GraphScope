@@ -720,9 +720,9 @@ class DynamicFragment {
     oenum_ = 0;
     ienum_ = 0;
     selfloops_num_ = 0;
-
-    inner_ie_pos_.clear();
-    inner_oe_pos_.clear();
+    ovg2i_.clear();
+    ovgid_.clear();
+    selfloops_vertices_.clear();
 
     // first pass: find out outer vertices and calculate inner/outer
     // vertices num
@@ -749,6 +749,10 @@ class DynamicFragment {
     alive_ivnum_ = ivnum_;
     alive_ovnum_ = ovnum_;
 
+    inner_ie_pos_.clear();
+    inner_oe_pos_.clear();
+    inner_vertex_alive_.clear();
+    outer_vertex_alive_.clear();
     inner_ie_pos_.resize(ivnum_, -1);
     inner_oe_pos_.resize(ivnum_, -1);
     inner_vertex_alive_.resize(ivnum_, true);
@@ -1113,14 +1117,14 @@ class DynamicFragment {
   }
 
   inline virtual oid_t GetInnerVertexId(const vertex_t& v) const {
-    assert(isAlive(v.GetValue()));
+    CHECK(isAlive(v.GetValue()));
     oid_t internal_oid;
     vm_ptr_->GetOid(fid_, v.GetValue(), internal_oid);
     return internal_oid;
   }
 
   inline virtual oid_t GetOuterVertexId(const vertex_t& v) const {
-    assert(isAlive(v.GetValue()));
+    CHECK(isAlive(v.GetValue()));
     vid_t gid = ovgid_[v.GetValue() - ivnum_];
     oid_t internal_oid;
     vm_ptr_->GetOid(gid, internal_oid);
