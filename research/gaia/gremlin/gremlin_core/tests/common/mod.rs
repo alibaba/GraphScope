@@ -19,7 +19,6 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
 pub mod test {
-
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
     use gremlin_core::compiler::GremlinJobCompiler;
@@ -64,12 +63,14 @@ pub mod test {
         requirement: Requirement,
         // is_ordered flag, if true, indicates that the expected_ids is ordered.
         is_ordered: bool,
-        // to test property optimization, with the saved property_names and unsaved prperty_names
+        // to test property optimization, with the saved property_names and unsaved property_names
         expected_properties: Option<(Vec<String>, Vec<String>)>,
         // to test remove tag optimization, with the expected history path length
         expected_path_len: Option<usize>,
         // to test the result of select step
         expected_tag_props: Option<Vec<Vec<(Tag, Vec<(String, Object)>)>>>,
+        // to test early stop, with the expected value of number of results
+        expected_result_num: Option<usize>,
     }
 
     impl TestJobFactory {
@@ -85,6 +86,7 @@ pub mod test {
                 expected_properties: None,
                 expected_path_len: None,
                 expected_tag_props: None,
+                expected_result_num: None,
             }
         }
 
@@ -132,6 +134,12 @@ pub mod test {
             factory
         }
 
+        pub fn with_expect_result_num(expected_result_num: usize) -> Self {
+            let mut factory = TestJobFactory::new();
+            factory.expected_result_num = Some(expected_result_num);
+            factory
+        }
+
         pub fn set_ordered(&mut self, ordered: bool) {
             self.is_ordered = ordered;
         }
@@ -150,11 +158,15 @@ pub mod test {
         property_opt: Option<(Vec<String>, Vec<String>)>,
         expected_path_len: Option<usize>,
         expected_tag_props: Option<Vec<Vec<(Tag, Vec<(String, Object)>)>>>,
+        expected_result_num: Option<usize>,
     }
 
     impl EncodeFunction<Traverser> for TestSinkEncoder {
         fn encode(&self, data: Vec<Traverser>) -> Vec<u8> {
             println!("result to encode {:?}", data);
+            if self.expected_result_num.is_some() {
+                assert_eq!(self.expected_result_num.unwrap(), data.len());
+            }
             let mut id_result = vec![];
             let mut obj_result = vec![];
             let mut path_result = vec![];
@@ -193,7 +205,7 @@ pub mod test {
                                 let mut tag_entries = vec![];
                                 for (tag, one_tag_value) in result_prop.tag_entries.iter() {
                                     let tag_entry: Vec<(String, Object)> = if let Some(element) =
-                                        one_tag_value.graph_element.as_ref()
+                                    one_tag_value.graph_element.as_ref()
                                     {
                                         vec![("".to_string(), element.id().into())]
                                     } else if let Some(value) = one_tag_value.value.as_ref() {
@@ -269,7 +281,7 @@ pub mod test {
             self.inner.broadcast(res)
         }
 
-        fn source(&self, src: &[u8]) -> CompileResult<Box<dyn Iterator<Item = Traverser> + Send>> {
+        fn source(&self, src: &[u8]) -> CompileResult<Box<dyn Iterator<Item=Traverser> + Send>> {
             let mut step = GremlinStepPb::decode(&src[0..])
                 .map_err(|e| format!("protobuf decode failure: {}", e))?;
             if let Some(worker_id) = pegasus::get_current_worker() {
@@ -294,7 +306,7 @@ pub mod test {
         fn flat_map(
             &self, res: &[u8],
         ) -> CompileResult<
-            Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>,
+            Box<dyn FlatMapFunction<Traverser, Traverser, Target=DynIter<Traverser>>>,
         > {
             self.inner.flat_map(res)
         }
@@ -326,14 +338,14 @@ pub mod test {
         fn collection_factory(
             &self, res: &[u8],
         ) -> CompileResult<
-            Box<dyn CollectionFactory<Traverser, Target = Box<dyn Collection<Traverser>>>>,
+            Box<dyn CollectionFactory<Traverser, Target=Box<dyn Collection<Traverser>>>>,
         > {
             self.inner.collection_factory(res)
         }
 
         fn set_factory(
             &self, res: &[u8],
-        ) -> CompileResult<Box<dyn CollectionFactory<Traverser, Target = Box<dyn Set<Traverser>>>>>
+        ) -> CompileResult<Box<dyn CollectionFactory<Traverser, Target=Box<dyn Set<Traverser>>>>>
         {
             self.inner.set_factory(res)
         }
@@ -348,6 +360,7 @@ pub mod test {
                 property_opt: self.expected_properties.clone(),
                 expected_path_len: self.expected_path_len,
                 expected_tag_props: self.expected_tag_props.clone(),
+                expected_result_num: self.expected_result_num,
             }))
         }
     }
