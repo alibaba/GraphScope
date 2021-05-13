@@ -1,0 +1,38 @@
+name: GraphScope GAIA CI
+
+on:
+  # Trigger the workflow on push or pull request, but only for the main branch
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '!research/gaia/**'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '!research/gaia/**'
+
+jobs:
+  gaia-test:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+        fetch-depth: 0
+
+    - name: Install Dependencies
+      run: |
+        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+        echo "source ~/.cargo/env" >> ~/.bashrc
+
+        rustup component add rustfmt
+
+    - name: Build & Test
+      run: |
+        source ~/.bashrc
+
+        cd research/gaia/gremlin/gremlin_core
+        cargo test
