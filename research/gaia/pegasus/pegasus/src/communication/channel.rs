@@ -142,7 +142,7 @@ impl<T: Data> Channel<T> {
                     is_local: false,
                     push_peers: raw.len(),
                     forbid_cancel: !self.allow_cancel,
-                    is_aggregate: false,
+                    is_aggregate: true,
                 };
                 let push = raw.swap_remove(id as usize);
                 let mut target = dfb.worker_id;
