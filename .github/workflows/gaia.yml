@@ -28,6 +28,8 @@ jobs:
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
         echo "source ~/.cargo/env" >> ~/.bashrc
 
+        rustup component add rustfmt
+
     - name: Build & Test
       run: |
         source ~/.bashrc
