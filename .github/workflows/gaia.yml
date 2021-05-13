@@ -17,6 +17,12 @@ jobs:
   gaia-test:
     runs-on: ubuntu-20.04
     steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+        fetch-depth: 0
+
     - name: Install Dependencies
       run: |
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
