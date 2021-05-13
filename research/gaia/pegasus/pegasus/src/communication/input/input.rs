@@ -447,7 +447,9 @@ impl<D: Data> InboundChannel<D> {
             self.state.skip_data_of(tag);
         }
 
-        self.propagate_cancel(tag);
+        if tag.len() <= self.scope_depth {
+            self.propagate_cancel(tag);
+        }
     }
 
     #[inline]
