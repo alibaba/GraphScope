@@ -393,7 +393,7 @@ def __register_graphin_for_graphscope():
     if "graphscope" in sys.modules:
         __graphin_for_graphscope(sys.modules["graphscope"])  # noqa: F821
 
-    hookpoint = get_ipython().user_ns
+    hookpoint = get_ipython().user_ns  # noqa: F821
 
     # added to graphscope extension lists
     if "__graphscope_extensions__" not in hookpoint:
