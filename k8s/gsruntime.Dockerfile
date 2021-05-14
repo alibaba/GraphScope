@@ -267,11 +267,14 @@ RUN cd /tmp && \
     tar zxf hadoop-2.8.4.tar.gz -C /usr/local && \
     rm -rf hadoop-2.8.4.tar.gz
 
+ENV JAVA_HOME /usr/lib/jvm/java
 ENV HADOOP_HOME /usr/local/hadoop-2.8.4
 ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
+ENV HADOOP_COMMON_LIB_NATIVE_DIR $HADOOP_HOME/lib/native
+
 ENV PATH $PATH:$HADOOP_HOME/bin
 
-RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /etc/bash.bashrc'
+RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /etc/bashrc'
 
 # Prepare and set workspace
 RUN mkdir -p /root/maxgraph
