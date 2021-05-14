@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gaia;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.processor.LogicPlanProcessor;
 import com.alibaba.graphscope.gaia.processor.MaxGraphOpProcessor;
+import com.alibaba.graphscope.gaia.processor.TraversalOpProcessor;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
@@ -43,7 +44,8 @@ public class GremlinServiceMain {
         );
         GremlinServer server = new GremlinServer(settings);
         // todo: better way to modify op loader
-        PlanUtils.setFinalStaticField(OpLoader.class, "processors", ImmutableMap.of("", new MaxGraphOpProcessor(), "plan", new LogicPlanProcessor()));
+        PlanUtils.setFinalStaticField(OpLoader.class, "processors",
+                ImmutableMap.of("", new MaxGraphOpProcessor(), "plan", new LogicPlanProcessor(), "traversal", new TraversalOpProcessor()));
         // todo: better way to set global bindings {graph, g}
         Bindings globalBindings = PlanUtils.getGlobalBindings(server.getServerGremlinExecutor().getGremlinExecutor());
         Graph traversalGraph = server.getServerGremlinExecutor().getGraphManager().getGraph("graph");

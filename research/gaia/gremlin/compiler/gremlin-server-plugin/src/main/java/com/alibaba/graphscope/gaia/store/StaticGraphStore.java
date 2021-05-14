@@ -59,6 +59,8 @@ public class StaticGraphStore implements GraphStoreService {
     @Override
     public long getLabelId(String label) {
         Map<String, Integer> vertexTypeMap = (Map<String, Integer>) graphSchema.get(VERTEX_TYPE_MAP);
+//        // todo: for test, remove
+//        label = label.toUpperCase();
         Integer typeId;
         if (vertexTypeMap != null && (typeId = vertexTypeMap.get(label)) != null) {
             return typeId;
