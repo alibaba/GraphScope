@@ -14,67 +14,67 @@ import org.junit.runners.model.RunnerBuilder;
 public class GaiaGremlinTestSuite extends AbstractGremlinSuite {
 
     private static final Class<?>[] allTests = new Class<?>[]{
-//            // branch
- //           RepeatTest.Traversals.class,
-//            UnionTest.Traversals.class,
-//
-//            // filter
-//            CyclicPathTest.Traversals.class,
-//            DedupTest.Traversals.class,
-//            FilterTest.Traversals.class,
-//            HasTest.Traversals.class,
-//            IsTest.Traversals.class,
-//            RangeTest.Traversals.class,
-//            SimplePathTest.Traversals.class,
-//            WhereTest.Traversals.class,
-//
-//            // map
-//            org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest.Traversals.class,
-//            GraphTest.Traversals.class,
-//            OrderTest.Traversals.class,
-//            PathTest.Traversals.class,
-//            PropertiesTest.Traversals.class,
-//            SelectTest.Traversals.class,
-//            VertexTest.Traversals.class,
-//            UnfoldTest.Traversals.class,
-//            ValueMapTest.Traversals.class,
-//
-//            // sideEffect
-//            GroupTest.Traversals.class,
-//            GroupCountTest.Traversals.class,
-             SmallCountTest.Traversals.class
+            // branch
+            RepeatTest.Traversals.class,
+            UnionTest.Traversals.class,
+
+            // filter
+            CyclicPathTest.Traversals.class,
+            DedupTest.Traversals.class,
+            FilterTest.Traversals.class,
+            HasTest.Traversals.class,
+            IsTest.Traversals.class,
+            RangeTest.Traversals.class,
+            SimplePathTest.Traversals.class,
+            WhereTest.Traversals.class,
+
+            // map
+            org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest.Traversals.class,
+            GraphTest.Traversals.class,
+            OrderTest.Traversals.class,
+            PathTest.Traversals.class,
+            PropertiesTest.Traversals.class,
+            SelectTest.Traversals.class,
+            VertexTest.Traversals.class,
+            UnfoldTest.Traversals.class,
+            ValueMapTest.Traversals.class,
+
+            // sideEffect
+            GroupTest.Traversals.class,
+            GroupCountTest.Traversals.class,
+//             SmallCountTest.Traversals.class
     };
 
     private static final Class<?>[] testsToEnforce = new Class<?>[]{
-//            // branch
-//            RepeatTest.Traversals.class,
-//            UnionTest.Traversals.class,
-//
-//            // filter
-//            CyclicPathTest.Traversals.class,
-//            DedupTest.Traversals.class,
-//            FilterTest.Traversals.class,
-//            HasTest.Traversals.class,
-//            IsTest.Traversals.class,
-//            RangeTest.Traversals.class,
-//            SimplePathTest.Traversals.class,
-//            WhereTest.Traversals.class,
-//
-//            // map
-//            org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest.Traversals.class,
-//            GraphTest.Traversals.class,
-//            OrderTest.Traversals.class,
-//            PathTest.Traversals.class,
-//            PropertiesTest.Traversals.class,
-//            SelectTest.Traversals.class,
-//            VertexTest.Traversals.class,
-//            UnfoldTest.Traversals.class,
-//            // ValueMapTest.Traversals.class,
-//
-//            // sideEffect
-//            GroupTest.Traversals.class,
-//            GroupCountTest.Traversals.class,
-             SmallCountTest.Traversals.class
+            // branch
+            RepeatTest.Traversals.class,
+            UnionTest.Traversals.class,
+
+            // filter
+            CyclicPathTest.Traversals.class,
+            DedupTest.Traversals.class,
+            FilterTest.Traversals.class,
+            HasTest.Traversals.class,
+            IsTest.Traversals.class,
+            RangeTest.Traversals.class,
+            SimplePathTest.Traversals.class,
+            WhereTest.Traversals.class,
+
+            // map
+            org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest.Traversals.class,
+            GraphTest.Traversals.class,
+            OrderTest.Traversals.class,
+            PathTest.Traversals.class,
+            PropertiesTest.Traversals.class,
+            SelectTest.Traversals.class,
+            VertexTest.Traversals.class,
+            UnfoldTest.Traversals.class,
+            // ValueMapTest.Traversals.class,
+
+            // sideEffect
+            GroupTest.Traversals.class,
+            GroupCountTest.Traversals.class,
+//             SmallCountTest.Traversals.class
     };
 
     public GaiaGremlinTestSuite(final Class<?> klass, final RunnerBuilder builder) throws InitializationError {

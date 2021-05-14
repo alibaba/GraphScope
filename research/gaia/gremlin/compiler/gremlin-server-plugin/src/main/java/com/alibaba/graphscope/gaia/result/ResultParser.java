@@ -19,6 +19,6 @@ import com.alibaba.graphscope.common.proto.GremlinResult;
 
 import java.util.List;
 
-public interface ResultParser {
+public interface ResultParser<Vertex, Edge, Path> {
     List<Object> parseFrom(GremlinResult.Result resultData);
 }

@@ -12,6 +12,7 @@ import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
 import com.alibaba.graphscope.gaia.result.DefaultResultParser;
 import com.alibaba.graphscope.gaia.result.GremlinResultProcessor;
+import com.alibaba.graphscope.gaia.result.RemoteTraverserResultParser;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
@@ -70,7 +71,7 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
                     AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
                     FileUtils.writeStringToFile(new File("plan.log"), String.format("query-%d", queryId), StandardCharsets.UTF_8, true);
                     PlanUtils.print(jobReqBuilder);
-                    broadcastProcessor.broadcast(jobReqBuilder.build(), ctx, new GremlinResultProcessor(ctx, new DefaultResultParser(traversalBuilder)));
+                    broadcastProcessor.broadcast(jobReqBuilder.build(), ctx, new GremlinResultProcessor(ctx, new RemoteTraverserResultParser(traversalBuilder)));
                     logger.info("query-{} finish", queryId);
                 });
                 return op;
