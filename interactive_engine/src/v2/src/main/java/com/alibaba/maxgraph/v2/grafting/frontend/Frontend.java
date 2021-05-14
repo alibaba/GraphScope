@@ -82,10 +82,11 @@ public class Frontend extends NodeBase {
                 snapshotCache, "schema", false, null);
         ClientService clientService = new ClientService(this.realtimeWriter, snapshotCache, metricsAggregator,
                 storeIngestClients, this.metaService, queryStoreClients, writer);
+        ClientDdlService clientDdlService = new ClientDdlService(schemaWriter, snapshotCache);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
 
         this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
-                metricsCollectService);
+                metricsCollectService, clientDdlService);
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         GraphPartitionManager partitionManager = new RemoteGraphPartitionManager(this.metaService);
 

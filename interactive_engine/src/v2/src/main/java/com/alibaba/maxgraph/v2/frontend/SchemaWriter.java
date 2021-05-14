@@ -1,5 +1,6 @@
 package com.alibaba.maxgraph.v2.frontend;
 
+import com.alibaba.maxgraph.proto.v2.DdlRequestBatchPb;
 import com.alibaba.maxgraph.v2.common.rpc.RoleClients;
 import com.alibaba.maxgraph.v2.common.schema.request.DdlRequestBatch;
 
@@ -12,6 +13,10 @@ public class SchemaWriter {
     }
 
     public long submitBatchDdl(String requestId, String sessionId, DdlRequestBatch ddlRequestBatch) {
-        return this.schemaClients.getClient(0).submitBatchDdl(requestId, sessionId, ddlRequestBatch);
+        return this.submitBatchDdl(requestId, sessionId, ddlRequestBatch.toProto());
+    }
+
+    public long submitBatchDdl(String requestId, String sessionId, DdlRequestBatchPb ddlRequestBatchPb) {
+        return this.schemaClients.getClient(0).submitBatchDdl(requestId, sessionId, ddlRequestBatchPb);
     }
 }

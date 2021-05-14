@@ -1,5 +1,6 @@
 package com.alibaba.maxgraph.v2.frontend;
 
+import com.alibaba.maxgraph.proto.v2.DdlRequestBatchPb;
 import com.alibaba.maxgraph.proto.v2.SchemaGrpc;
 import com.alibaba.maxgraph.proto.v2.SubmitBatchDdlRequest;
 import com.alibaba.maxgraph.proto.v2.SubmitBatchDdlResponse;
@@ -22,11 +23,11 @@ public class SchemaClient extends RpcClient {
         this.stub = stub;
     }
 
-    public long submitBatchDdl(String requestId, String sessionId, DdlRequestBatch ddlRequestBatch) {
+    public long submitBatchDdl(String requestId, String sessionId, DdlRequestBatchPb ddlRequestBatchPb) {
         SubmitBatchDdlRequest request = SubmitBatchDdlRequest.newBuilder()
                 .setRequestId(requestId)
                 .setSessionId(sessionId)
-                .setDdlRequests(ddlRequestBatch.toProto())
+                .setDdlRequests(ddlRequestBatchPb)
                 .build();
         SubmitBatchDdlResponse submitBatchDdlResponse = stub.submitBatchDdl(request);
         if (submitBatchDdlResponse.getSuccess()) {
