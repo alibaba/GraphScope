@@ -261,10 +261,17 @@ RUN yum install -y perl java-1.8.0-openjdk-devel maven && \
     yum clean all && \
     rm -fr /var/cache/yum
 
+# install hadoop
+RUN cd /tmp && \
+    wget https://archive.apache.org/dist/hadoop/core/hadoop-2.8.4/hadoop-2.8.4.tar.gz && \
+    tar zxf hadoop-2.8.4.tar.gz -C /usr/local && \
+    rm -rf hadoop-2.8.4.tar.gz
+
 ENV HADOOP_HOME /usr/local/hadoop-2.8.4
 ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
-ENV CLASSPATH $HADOOP_CONF_DIR:$CLASSPATH
 ENV PATH $PATH:$HADOOP_HOME/bin
+
+RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /etc/bash.bashrc'
 
 # Prepare and set workspace
 RUN mkdir -p /root/maxgraph
