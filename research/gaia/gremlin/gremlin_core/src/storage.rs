@@ -80,13 +80,6 @@ fn _init_modern_graph() -> LargeGraphDB<DefaultId, InternalId> {
     mut_graph.add_vertex(v5, [1, INVALID_LABEL_ID]);
     mut_graph.add_vertex(v6, [0, INVALID_LABEL_ID]);
 
-    mut_graph.add_edge(v1, v2, 0);
-    mut_graph.add_edge(v1, v3, 1);
-    mut_graph.add_edge(v1, v4, 0);
-    mut_graph.add_edge(v4, v3, 1);
-    mut_graph.add_edge(v4, v5, 1);
-    mut_graph.add_edge(v6, v3, 1);
-
     let prop1 = Row::from(vec![json!(1), json!("marko"), json!(29)]);
     let prop2 = Row::from(vec![json!(2), json!("vadas"), json!(27)]);
     let prop3 = Row::from(vec![json!(3), json!("lop"), json!("java")]);
@@ -101,68 +94,90 @@ fn _init_modern_graph() -> LargeGraphDB<DefaultId, InternalId> {
     mut_graph.add_or_update_vertex_properties(v5, prop5).unwrap();
     mut_graph.add_or_update_vertex_properties(v6, prop6).unwrap();
 
+    let prop7 = Row::from(vec![json!(0.5)]);
+    let prop8 = Row::from(vec![json!(0.4)]);
+    let prop9 = Row::from(vec![json!(1.0)]);
+    let prop10 = Row::from(vec![json!(0.4)]);
+    let prop11 = Row::from(vec![json!(1.0)]);
+    let prop12 = Row::from(vec![json!(0.2)]);
+
+    mut_graph.add_edge_with_properties(v1, v2, 0, prop7).unwrap();
+    mut_graph.add_edge_with_properties(v1, v3, 1, prop8).unwrap();
+    mut_graph.add_edge_with_properties(v1, v4, 0, prop9).unwrap();
+    mut_graph.add_edge_with_properties(v4, v3, 1, prop10).unwrap();
+    mut_graph.add_edge_with_properties(v4, v5, 1, prop11).unwrap();
+    mut_graph.add_edge_with_properties(v6, v3, 1, prop12).unwrap();
+
     let modern_graph_schema = r#"
     {
-        "vertex_type_map": {
-            "PERSON": 0,
-            "SOFTWARE": 1
-        },
-        "edge_type_map": {
-            "KNOWS": 0,
-            "CREATED": 1
-        },
-        "vertex_prop": {
-            "PERSON": [
-                [
-                    "id",
-                    "ID"
-                ],
-                [
-                    "name",
-                    "String"
-                ],
-                [
-                    "age",
-                    "Integer"
-                ]
-            ],
-            "SOFTWARE": [
-                [
-                    "id",
-                    "ID"
-                ],
-                [
-                    "name",
-                    "String"
-                ],
-                [
-                    "lang",
-                    "String"
-                ]
-            ]
-        },
-        "edge_prop": {
-            "KNOWS": [
-                [
-                    "start_id",
-                    "ID"
-                ],
-                [
-                    "end_id",
-                    "ID"
-                ]
-            ],
-            "CREATED": [
-                [
-                    "start_id",
-                    "ID"
-                ],
-                [
-                    "end_id",
-                    "ID"
-                ]
-            ]
-        }
+      "vertex_type_map": {
+        "person": 0,
+        "software": 1
+      },
+      "edge_type_map": {
+        "knows": 0,
+        "created": 1
+      },
+      "vertex_prop": {
+        "person": [
+          [
+            "id",
+            "ID"
+          ],
+          [
+            "name",
+            "String"
+          ],
+          [
+            "age",
+            "Integer"
+          ]
+        ],
+        "software": [
+          [
+            "id",
+            "ID"
+          ],
+          [
+            "name",
+            "String"
+          ],
+          [
+            "lang",
+            "String"
+          ]
+        ]
+      },
+      "edge_prop": {
+        "knows": [
+          [
+            "start_id",
+            "ID"
+          ],
+          [
+            "end_id",
+            "ID"
+          ],
+          [
+            "weight",
+            "Double"
+          ]
+        ],
+        "created": [
+          [
+            "start_id",
+            "ID"
+          ],
+          [
+            "end_id",
+            "ID"
+          ],
+          [
+            "weight",
+            "Double"
+          ]
+        ]
+      }
     }
     "#;
     let schema =

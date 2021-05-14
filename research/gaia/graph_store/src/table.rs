@@ -77,6 +77,22 @@ impl From<u64> for Row {
     }
 }
 
+impl From<SimpleType> for Row {
+    /// Create a `Row` with one single `SimpleType`-typed field
+    fn from(item: SimpleType) -> Self {
+        let val = match item {
+            SimpleType::Integer(i) => {
+                json!(i)
+            }
+            SimpleType::Double(d) => {
+                json!(d)
+            }
+        };
+        let data = vec![val];
+        Row { data }
+    }
+}
+
 impl From<Vec<ItemType>> for Row {
     /// Create a `Row` from a vector of items
     fn from(data: Vec<ItemType>) -> Self {
@@ -297,11 +313,17 @@ impl PropertyTableTrait for PropertyTable {
     }
 }
 
-/// A table where each row has only one value of `u64` type, which is very common in edge
+/// A table where each row has only one value of `SimpleType` type, which is very common in edge
 /// data of a graph
 #[derive(Clone, Debug, Serialize, Deserialize)]
+enum SimpleType {
+    Integer(u64),
+    Double(f64),
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SingleValueTable {
-    property: HashMap<usize, u64>,
+    property: HashMap<usize, SimpleType>,
 }
 
 impl PropertyTableTrait for SingleValueTable {
@@ -311,7 +333,10 @@ impl PropertyTableTrait for SingleValueTable {
 
     fn get_row(&self, index: usize) -> GDBResult<RowRef> {
         if let Some(num) = self.property.get(&index) {
-            Ok(RowRef::Single(json!(*num)))
+            match num {
+                SimpleType::Integer(i) => Ok(RowRef::Single(json!(*i))),
+                SimpleType::Double(d) => Ok(RowRef::Single(json!(*d))),
+            }
         } else {
             Ok(RowRef::None)
         }
@@ -324,7 +349,11 @@ impl PropertyTableTrait for SingleValueTable {
         let mut _ret_val = None;
         let item = row.get(0).unwrap();
         if let Some(number) = item.as_u64() {
-            _ret_val = self.property.insert(index, number).map(|num| Row::from(num));
+            _ret_val =
+                self.property.insert(index, SimpleType::Integer(number)).map(|num| Row::from(num));
+        } else if let Some(number) = item.as_f64() {
+            _ret_val =
+                self.property.insert(index, SimpleType::Double(number)).map(|num| Row::from(num));
         } else {
             return GDBResult::Err(GDBError::ParseError);
         }

@@ -1,14 +1,14 @@
 {
   "vertex_type_map": {
-    "PERSON": 0,
-    "SOFTWARE": 1
+    "person": 0,
+    "software": 1
   },
   "edge_type_map": {
-    "KNOWS": 0,
-    "CREATED": 1
+    "knows": 0,
+    "created": 1
   },
   "vertex_prop": {
-    "PERSON": [
+    "person": [
       [
         "id",
         "ID"
@@ -22,7 +22,7 @@
         "Integer"
       ]
     ],
-    "SOFTWARE": [
+    "software": [
       [
         "id",
         "ID"
@@ -38,7 +38,7 @@
     ]
   },
   "edge_prop": {
-    "KNOWS": [
+    "knows": [
       [
         "start_id",
         "ID"
@@ -46,9 +46,13 @@
       [
         "end_id",
         "ID"
+      ],
+      [
+        "weight",
+        "Double"
       ]
     ],
-    "CREATED": [
+    "created": [
       [
         "start_id",
         "ID"
@@ -56,6 +60,10 @@
       [
         "end_id",
         "ID"
+      ],
+      [
+        "weight",
+        "Double"
       ]
     ]
   }

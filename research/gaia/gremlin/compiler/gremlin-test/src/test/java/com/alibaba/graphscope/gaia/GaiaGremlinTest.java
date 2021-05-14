@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.gaia.store;
+package com.alibaba.graphscope.gaia;
 
-import java.util.Set;
+import org.apache.tinkerpop.gremlin.GraphProviderClass;
+import org.junit.runner.RunWith;
 
-public interface GraphStoreService {
-    long getLabelId(String label);
-
-    long getGlobalId(long labelId, long propertyId);
-
-    <P> P getVertexProperty(long id, String key);
-
-    Set<String> getVertexKeys(long id);
-
-    <P> P getEdgeProperty(long id, String key);
-
-    Set<String> getEdgeKeys(long id);
+@RunWith(GaiaGremlinTestSuite.class)
+@GraphProviderClass(provider = RemoteTestGraphProvider.class, graph = RemoteTestGraph.class)
+public class GaiaGremlinTest {
 }

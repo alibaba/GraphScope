@@ -59,7 +59,9 @@ public class QueryTest {
     }
 
     public static Traversal getTestTraversal() {
-        Traversal traversal = CR_12();
+        Traversal traversal = g.V().hasLabel("person");
+                // g.V().in().as("a").select("a").by(__.unfold().values("name").fold());
+                // CR_12();
         MaxGraphOpProcessor.applyStrategy(traversal);
         return traversal;
     }

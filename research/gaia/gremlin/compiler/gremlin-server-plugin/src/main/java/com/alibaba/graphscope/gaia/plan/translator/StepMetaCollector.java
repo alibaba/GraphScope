@@ -333,7 +333,9 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
         }
         if (step instanceof UnfoldStep || step instanceof PhysicalPlanUnfoldStep) {
             if (head.getObject().getClassName() != List.class) {
-                throw new UnsupportedOperationException("unfold has invalid input type " + head.getObject().getClassName());
+                Class invalidClass = head.getObject().getClassName() == null ? head.getObject().getElement().getClass() :
+                        head.getObject().getClassName();
+                throw new UnsupportedOperationException("unfold has invalid input type " + invalidClass);
             }
             return new TraverserElement(head.getObject().getSubs().get(0));
         }
