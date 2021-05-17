@@ -70,7 +70,7 @@ public class FileDiscovery implements NodeDiscovery {
     private Map<Integer, MaxGraphNode> makeRoleNodes(int storeCount, String namePrefix, String role, int port) {
         Map<Integer, MaxGraphNode> nodes = new HashMap<>();
         for (int i = 0; i < storeCount; i++) {
-            nodes.put(i, new MaxGraphNode(role, i, namePrefix + i, port));
+            nodes.put(i, new MaxGraphNode(role, i, namePrefix.replace("{}", String.valueOf(i)), port));
         }
         return nodes;
     }

@@ -16,7 +16,7 @@ import java.util.Map;
 public class ClientTest {
 
     String host = "100.81.128.150";
-    int port = 50389;
+    int port = 45284;
     Client client = new Client(host, port);
 
     @Test
@@ -27,7 +27,7 @@ public class ClientTest {
 
     @Test
     void testCommitData() {
-        long tableId = -4611686018427387815L;
+        long tableId = -4611686018427387871L;
         DataLoadTarget target = DataLoadTarget.newBuilder()
                 .setLabel("person")
                 .build();

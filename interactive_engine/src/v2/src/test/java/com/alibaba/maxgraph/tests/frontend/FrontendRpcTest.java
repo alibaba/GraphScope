@@ -68,7 +68,7 @@ public class FrontendRpcTest {
                 .setDdlSnapshotId(10L).build());
         SchemaClient schemaClient = new SchemaClient(stub);
         long snapshotId = schemaClient.submitBatchDdl("test_req", "test_session",
-                DdlRequestBatch.newBuilder().build());
+                DdlRequestBatch.newBuilder().build().toProto());
         assertEquals(snapshotId, 10L);
     }
 
@@ -81,7 +81,7 @@ public class FrontendRpcTest {
         SchemaWriter schemaWriter = new SchemaWriter(clients);
         schemaWriter.submitBatchDdl("test_req", "test_session", DdlRequestBatch.newBuilder().build());
         verify(client).submitBatchDdl("test_req", "test_session",
-                DdlRequestBatch.newBuilder().build());
+                DdlRequestBatch.newBuilder().build().toProto());
     }
 
 }

@@ -1,5 +1,6 @@
 package com.alibaba.maxgraph.tests.frontend;
 
+import com.alibaba.maxgraph.proto.v2.DdlRequestBatchPb;
 import com.alibaba.maxgraph.v2.common.BatchId;
 import com.alibaba.maxgraph.v2.common.frontend.api.graph.structure.ElementId;
 import com.alibaba.maxgraph.v2.common.frontend.cache.MaxGraphCache;
@@ -86,7 +87,7 @@ public class MaxGraphWriterImplTest {
                 .setEdgeLabelId(new LabelId(2))
                 .build();
 
-        when(schemaWriter.submitBatchDdl(anyString(), eq(sessionId), any()))
+        when(schemaWriter.submitBatchDdl(anyString(), eq(sessionId), (DdlRequestBatchPb) any()))
                 .thenReturn(1L)
                 .thenReturn(9L)
                 .thenReturn(10L)
