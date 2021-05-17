@@ -22,5 +22,5 @@ Information about the frontend package of the widgets.
 
 from ._version import __version__
 
-module_name = "graphscope-jupyter"
+module_name = "@graphscope/graphscope-jupyter"
 module_version = "^%s" % __version__
