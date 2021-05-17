@@ -27,6 +27,9 @@ use std::sync::Arc;
 use itertools::Itertools;
 pub use petgraph::Direction;
 
+/// Edge id is associated with its start/end-vertex's id given by `G`, and an internal index
+/// associated with the start/end vertex.
+pub type EdgeId<G> = (G, usize);
 /// Construct a row with its schema
 #[derive(Clone)]
 pub struct RowWithSchema<'a> {
@@ -152,20 +155,35 @@ pub struct LocalEdge<'a, G: IndexType, I: IndexType> {
     end: G,
     /// The edge label id
     label: LabelId,
-    _edge_id: EdgeIndex<I>,
+    /// Whether this edge has been obtained from `Self::start`
+    from_start: bool,
+    /// The internal edge id associated with either `Self::start` or `Self::end`
+    edge_id: EdgeIndex<I>,
+    /// The properties of the edge if any
     prop_row: Option<RowWithSchema<'a>>,
 }
 
 impl<'a, G: IndexType, I: IndexType> LocalEdge<'a, G, I> {
-    pub fn new(start: G, end: G, label: LabelId, _edge_id: EdgeIndex<I>) -> Self {
-        LocalEdge { start, end, label, _edge_id, prop_row: None }
+    pub fn new(start: G, end: G, label: LabelId, edge_id: EdgeIndex<I>, from_start: bool) -> Self {
+        LocalEdge { start, end, label, edge_id, prop_row: None, from_start }
     }
 
     pub fn with_property(
-        start: G, end: G, label: LabelId, _edge_id: EdgeIndex<I>,
+        start: G, end: G, label: LabelId, edge_id: EdgeIndex<I>, from_start: bool,
         prop_row: Option<RowWithSchema<'a>>,
     ) -> Self {
-        LocalEdge { start, end, label, _edge_id, prop_row }
+        LocalEdge { start, end, label, edge_id, from_start, prop_row }
+    }
+
+    /// An edge is uniquely indiced by its start/end vertex's global id, as well
+    /// as its internal id indiced from this start/end-vertex.
+    /// Whether this is a start/end vertex, is determined by `Self::from_start`
+    pub fn get_edge_id(&self) -> EdgeId<G> {
+        if self.from_start {
+            (self.start, self.edge_id.index())
+        } else {
+            (self.end, self.edge_id.index())
+        }
     }
 
     pub fn get_src_id(&self) -> G {
@@ -174,6 +192,16 @@ impl<'a, G: IndexType, I: IndexType> LocalEdge<'a, G, I> {
 
     pub fn get_dst_id(&self) -> G {
         self.end
+    }
+
+    /// Get the other vertex of this edge.
+    /// If `Self::from_start`, return `Self::end`, otherwise, return `Self::start`
+    pub fn get_other_id(&self) -> G {
+        if self.from_start {
+            self.end
+        } else {
+            self.start
+        }
     }
 
     pub fn get_label(&self) -> LabelId {
@@ -261,6 +289,9 @@ pub trait GlobalStoreTrait<G: IndexType, I: IndexType> {
 
     /// Get the vertex of given global identity
     fn get_vertex(&self, id: G) -> Option<LocalVertex<G>>;
+
+    /// Get the edge of given source vertex id and its internal index
+    fn get_edge(&self, edge_id: EdgeId<G>) -> Option<LocalEdge<G, I>>;
 
     /// Get all vertices of a given labels. If `None` label is given, return all vertices.
     fn get_all_vertices(&self, labels: Option<&Vec<LabelId>>) -> Iter<LocalVertex<G>>;

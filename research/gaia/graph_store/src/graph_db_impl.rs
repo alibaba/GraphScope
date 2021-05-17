@@ -23,7 +23,7 @@ use crate::io::export;
 use crate::schema::{LDBCGraphSchema, Schema};
 use crate::table::*;
 use crate::utils::{Iter, IterList};
-use petgraph::graph::{EdgeReference, IndexType};
+use petgraph::graph::{edge_index, EdgeReference, IndexType};
 use petgraph::prelude::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -211,7 +211,9 @@ where
         }
     }
 
-    fn edge_ref_to_local_edge(&self, edge: EdgeReference<LabelId, I>) -> Option<LocalEdge<G, I>> {
+    fn edge_ref_to_local_edge(
+        &self, edge: EdgeReference<LabelId, I>, from_start: bool,
+    ) -> Option<LocalEdge<G, I>> {
         let src_global_id = self.index_data.get_global_id(edge.source());
         let dst_global_id = self.index_data.get_global_id(edge.target());
 
@@ -224,6 +226,7 @@ where
                     dst_global_id.unwrap(),
                     label,
                     edge_id,
+                    from_start,
                     RowWithSchema::new(Some(property), self.graph_schema.get_edge_schema(label)),
                 ))
             } else {
@@ -232,6 +235,7 @@ where
                     dst_global_id.unwrap(),
                     label,
                     edge.id(),
+                    from_start,
                 ))
             }
         } else {
@@ -321,7 +325,13 @@ where
                             true
                         }
                     })
-                    .map(move |edge| self.edge_ref_to_local_edge(edge).unwrap()),
+                    .map(move |edge| {
+                        if dir == Direction::Outgoing {
+                            self.edge_ref_to_local_edge(edge, true).unwrap()
+                        } else {
+                            self.edge_ref_to_local_edge(edge, false).unwrap()
+                        }
+                    }),
             )
         } else {
             Iter::from_iter(vec![].into_iter())
@@ -339,7 +349,13 @@ where
                     .filter(move |edge| {
                         edge_labels.contains(self.graph.edge_weight(edge.id()).unwrap())
                     })
-                    .map(move |edge| self.edge_ref_to_local_edge(edge).unwrap()),
+                    .map(move |edge| {
+                        if dir == Direction::Outgoing {
+                            self.edge_ref_to_local_edge(edge, true).unwrap()
+                        } else {
+                            self.edge_ref_to_local_edge(edge, false).unwrap()
+                        }
+                    }),
             )
         } else {
             Iter::from_iter(vec![].into_iter())
@@ -394,7 +410,7 @@ where
                 }
             })
             // Can safely unwrap, as the edge must present
-            .map(move |edge| self.edge_ref_to_local_edge(edge).unwrap());
+            .map(move |edge| self.edge_ref_to_local_edge(edge, true).unwrap());
 
         Iter::from_iter(result_iter)
     }
@@ -410,7 +426,7 @@ where
                     false
                 }
             })
-            .map(move |edge| self.edge_ref_to_local_edge(edge).unwrap());
+            .map(move |edge| self.edge_ref_to_local_edge(edge, true).unwrap());
 
         Iter::from_iter(result_iter)
     }
@@ -535,6 +551,36 @@ where
     fn get_vertex(&self, id: G) -> Option<LocalVertex<G>> {
         if let Some(index) = self.index_data.get_internal_id(id) {
             self.index_to_local_vertex(index, true)
+        } else {
+            None
+        }
+    }
+
+    fn get_edge(&self, edge_id: EdgeId<G>) -> Option<LocalEdge<G, I>> {
+        let ei = edge_index::<I>(edge_id.1);
+        if let Some((src, dst)) = self.graph.edge_endpoints(ei.clone()) {
+            let _src_v = self.index_data.get_global_id(src);
+            let _dst_v = self.index_data.get_global_id(dst);
+            let label = *self.graph.edge_weight(ei).unwrap();
+            if _src_v.is_some() && _dst_v.is_some() {
+                if let Some(property) = self.get_all_edge_property(&ei) {
+                    Some(LocalEdge::with_property(
+                        _src_v.unwrap(),
+                        _dst_v.unwrap(),
+                        label,
+                        ei,
+                        true,
+                        RowWithSchema::new(
+                            Some(property),
+                            self.graph_schema.get_edge_schema(label),
+                        ),
+                    ))
+                } else {
+                    Some(LocalEdge::new(_src_v.unwrap(), _dst_v.unwrap(), label, ei, true))
+                }
+            } else {
+                None
+            }
         } else {
             None
         }
@@ -867,7 +913,7 @@ mod test {
 
     #[test]
     fn test_graph_store_update() {
-        let root_dir = "data/simple_data";
+        let root_dir = "data/small_data";
         let mut graphdb: MutableGraphDB<DefaultId, InternalId> =
             GraphDBConfig::default().root_dir(root_dir).number_vertex_labels(20).new();
         assert!(graphdb.add_vertex(PIDS[0], [1, INVALID_LABEL_ID]));
@@ -948,16 +994,18 @@ mod test {
     }
 
     #[test]
-    fn test_graph_query() {
-        let data_dir = "data/large_data";
-        let root_dir = "data/large_data";
+    fn test_get_vertex_edge() {
+        let data_dir = "data/small_data";
+        let root_dir = "data/small_data";
         let schema_file = "data/schema.json";
         let mut loader =
             GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, schema_file, 20, 0, 1);
         // load whole graph
         loader.load().expect("Load graph error!");
         let graphdb = loader.into_graph();
+    }
 
+    fn check_graph(graphdb: &LargeGraphDB) {
         // test get_in_vertices..
         let mut in_vertices: Vec<(DefaultId, LabelId)> = graphdb
             .get_adj_vertices(PIDS[1], None, Direction::Incoming)
@@ -1090,6 +1138,12 @@ mod test {
         // test count_all_edges..
         let all_edge_count = graphdb.count_all_edges(None);
         assert_eq!(18, all_edge_count);
+
+        // test count vertices of certain type
+        assert_eq!(9, graphdb.count_all_vertices(Some(&vec![1])));
+
+        // test count edges of certain type
+        assert_eq!(9, graphdb.count_all_edges(Some(&vec![12])));
     }
 
     fn check_properties<G: IndexType + Send + Sync, I: IndexType + Send + Sync>(
@@ -1119,6 +1173,20 @@ mod test {
     }
 
     #[test]
+    fn test_graph_query() {
+        let data_dir = "data/large_data";
+        let root_dir = "data/large_data";
+        let schema_file = "data/schema.json";
+        let mut loader =
+            GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, schema_file, 20, 0, 1);
+        // load whole graph
+        loader.load().expect("Load graph error!");
+        let graphdb = loader.into_graph();
+
+        check_graph(&graphdb);
+    }
+
+    #[test]
     fn test_serde() {
         let temp = tempdir::TempDir::new("test_serde").expect("Open temp folder error");
         let data_dir = Path::new("data/large_data");
@@ -1137,20 +1205,6 @@ mod test {
             .open::<DefaultId, InternalId, _, _>()
             .expect("Import graph error");
 
-        assert_eq!(9, imported_graph.count_all_vertices(Some(&vec![1])));
-        assert_eq!(9, imported_graph.count_all_edges(Some(&vec![12])));
-
-        // test properties when import graph from binary
-        let vertex = imported_graph.get_vertex(PIDS[0]).unwrap();
-        assert_eq!(vertex.get_id(), PIDS[0]);
-        assert_eq!(
-            vertex.get_label(),
-            [imported_graph.graph_schema.get_vertex_label_id("PERSON").unwrap(), INVALID_LABEL_ID]
-        );
-        check_properties(
-            &imported_graph,
-            &vertex,
-            "111|Mahinda|Perera|male|19891203|20100214153210447|119.235.7.103|Firefox",
-        );
+        check_graph(&imported_graph);
     }
 }
