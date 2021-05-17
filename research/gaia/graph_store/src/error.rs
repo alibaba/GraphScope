@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use dyn_type::CastError;
 use std::any::Any;
 use std::io::Error;
 use std::num::{ParseFloatError, ParseIntError};
@@ -24,9 +25,9 @@ pub enum GDBError {
     ModifyReadOnlyError,
     BincodeError(std::boxed::Box<bincode::ErrorKind>),
     JsonError(serde_json::Error),
-    CborError(serde_cbor::error::Error),
     IOError(std::io::Error),
     DynError(Box<dyn Any + Send>),
+    CastError(CastError),
     DBNotFoundError,
     LruZeroCapacity,
     JsonObjectFieldError,
@@ -65,12 +66,6 @@ impl From<std::num::ParseFloatError> for GDBError {
 impl From<serde_json::Error> for GDBError {
     fn from(error: serde_json::Error) -> Self {
         GDBError::JsonError(error)
-    }
-}
-
-impl From<serde_cbor::error::Error> for GDBError {
-    fn from(error: serde_cbor::error::Error) -> Self {
-        GDBError::CborError(error)
     }
 }
 

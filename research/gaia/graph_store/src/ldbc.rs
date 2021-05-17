@@ -615,7 +615,7 @@ mod test {
     use crate::common::Label;
     use crate::config::JsonConf;
     use crate::parser::DataType;
-    use crate::table::Row;
+    use crate::table::{ItemType, Row};
     use itertools::Itertools;
     use std::collections::HashMap;
 
@@ -635,10 +635,13 @@ mod test {
             // does not store LABEL as properties
             match dt {
                 DataType::String => {
-                    assert_eq!(vertex.get_property(name).unwrap().clone(), expected_results[index])
+                    assert_eq!(
+                        vertex.get_property(name).unwrap().as_str().unwrap(),
+                        expected_results[index]
+                    )
                 }
                 _ => assert_eq!(
-                    vertex.get_property(name).unwrap().clone(),
+                    vertex.get_property(name).unwrap().as_u64().unwrap(),
                     expected_results[index].parse::<u64>().unwrap()
                 ),
             }
@@ -678,9 +681,9 @@ mod test {
         assert_eq!(
             properties.unwrap(),
             Row::from(vec![
-                json!(0),
-                json!("Kam_Air"),
-                json!("http://dbpedia.org/resource/Kam_Air")
+                object!(0),
+                object!("Kam_Air"),
+                object!("http://dbpedia.org/resource/Kam_Air")
             ])
         );
 
@@ -706,7 +709,11 @@ mod test {
         // Not label field will be skipped in the properties
         assert_eq!(
             properties.unwrap(),
-            Row::from(vec![json!(0), json!("India"), json!("http://dbpedia.org/resource/India"),])
+            Row::from(vec![
+                object!(0),
+                object!("India"),
+                object!("http://dbpedia.org/resource/India"),
+            ])
         );
 
         // Test edge parser
@@ -771,15 +778,15 @@ mod test {
 
         let all_properties = graphdb.get_vertex(CHINA_ID).unwrap().clone_all_properties();
 
-        let expected_all_properties: HashMap<String, serde_json::Value> = vec![
-            ("id".to_string(), json!(1)),
-            ("name".to_string(), json!("China")),
-            ("url".to_string(), json!("http://dbpedia.org/resource/China")),
+        let expected_all_properties: HashMap<String, ItemType> = vec![
+            ("id".to_string(), object!(1)),
+            ("name".to_string(), object!("China")),
+            ("url".to_string(), object!("http://dbpedia.org/resource/China")),
         ]
         .into_iter()
         .collect();
 
-        assert_eq!(all_properties.unwrap(), json!(expected_all_properties));
+        assert_eq!(all_properties.unwrap(), expected_all_properties);
 
         // test get_in_vertices..
         let in_vertices: Vec<(DefaultId, Label)> = graphdb

@@ -19,6 +19,8 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
 pub mod test {
+
+    use dyn_type::Object;
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
     use gremlin_core::compiler::GremlinJobCompiler;
@@ -29,7 +31,7 @@ pub mod test {
     use gremlin_core::process::traversal::step::{graph_step_from, ResultProperty};
     use gremlin_core::process::traversal::traverser::{Requirement, Traverser};
     use gremlin_core::structure::{Details, Tag};
-    use gremlin_core::{create_demo_graph, DynIter, Element, Object, Partitioner, ID};
+    use gremlin_core::{create_demo_graph, DynIter, Element, Partitioner, ID};
     use gremlin_core::{GremlinStepPb, Partition};
     use pegasus::api::function::{
         CompareFunction, EncodeFunction, FilterFunction, FlatMapFunction, LeftJoinFunction,
@@ -193,7 +195,7 @@ pub mod test {
                         Object::Primitive(_) | Object::String(_) | Object::Blob(_) => {
                             obj_result.push(o.clone());
                         }
-                        Object::UnknownOwned(x) => {
+                        Object::DynOwned(x) => {
                             if let Some(p) = x.try_downcast_ref::<ResultPath>() {
                                 let mut path = vec![];
                                 for item in p.iter() {
@@ -205,7 +207,7 @@ pub mod test {
                                 let mut tag_entries = vec![];
                                 for (tag, one_tag_value) in result_prop.tag_entries.iter() {
                                     let tag_entry: Vec<(String, Object)> = if let Some(element) =
-                                    one_tag_value.graph_element.as_ref()
+                                        one_tag_value.graph_element.as_ref()
                                     {
                                         vec![("".to_string(), element.id().into())]
                                     } else if let Some(value) = one_tag_value.value.as_ref() {
@@ -246,9 +248,6 @@ pub mod test {
                                 }
                             }
                         }
-                        _ => {
-                            break;
-                        }
                     }
                 }
             }
@@ -281,7 +280,7 @@ pub mod test {
             self.inner.broadcast(res)
         }
 
-        fn source(&self, src: &[u8]) -> CompileResult<Box<dyn Iterator<Item=Traverser> + Send>> {
+        fn source(&self, src: &[u8]) -> CompileResult<Box<dyn Iterator<Item = Traverser> + Send>> {
             let mut step = GremlinStepPb::decode(&src[0..])
                 .map_err(|e| format!("protobuf decode failure: {}", e))?;
             if let Some(worker_id) = pegasus::get_current_worker() {
@@ -306,7 +305,7 @@ pub mod test {
         fn flat_map(
             &self, res: &[u8],
         ) -> CompileResult<
-            Box<dyn FlatMapFunction<Traverser, Traverser, Target=DynIter<Traverser>>>,
+            Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>,
         > {
             self.inner.flat_map(res)
         }
@@ -338,14 +337,14 @@ pub mod test {
         fn collection_factory(
             &self, res: &[u8],
         ) -> CompileResult<
-            Box<dyn CollectionFactory<Traverser, Target=Box<dyn Collection<Traverser>>>>,
+            Box<dyn CollectionFactory<Traverser, Target = Box<dyn Collection<Traverser>>>>,
         > {
             self.inner.collection_factory(res)
         }
 
         fn set_factory(
             &self, res: &[u8],
-        ) -> CompileResult<Box<dyn CollectionFactory<Traverser, Target=Box<dyn Set<Traverser>>>>>
+        ) -> CompileResult<Box<dyn CollectionFactory<Traverser, Target = Box<dyn Set<Traverser>>>>>
         {
             self.inner.set_factory(res)
         }

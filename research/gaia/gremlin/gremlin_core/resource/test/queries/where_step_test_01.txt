@@ -1,1 +1,1 @@
-g.V().as("a").both("KNOWS").where(both("KNOWS").as("a"))
+g.V().as("a").both("knows").where(both("knows").as("a"))

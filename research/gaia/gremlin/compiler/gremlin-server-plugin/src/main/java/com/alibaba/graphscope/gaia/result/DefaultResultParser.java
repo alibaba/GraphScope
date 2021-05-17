@@ -65,7 +65,7 @@ public class DefaultResultParser implements ResultParser {
         return result;
     }
 
-    private List<Long> parseElement(GremlinResult.GraphElement elementPB) {
+    protected Object parseElement(GremlinResult.GraphElement elementPB) {
         List<Long> element = new ArrayList<>();
         if (elementPB.getInnerCase() == GremlinResult.GraphElement.InnerCase.EDGE) {
             element.add(elementPB.getEdge().getSrcId());
@@ -78,7 +78,7 @@ public class DefaultResultParser implements ResultParser {
         return element;
     }
 
-    private List<Object> parsePath(GremlinResult.Path pathPB) {
+    protected Object parsePath(GremlinResult.Path pathPB) {
         List<Object> path = new ArrayList<>();
         pathPB.getPathList().forEach(p -> {
             path.add(parseElement(p));
@@ -86,7 +86,7 @@ public class DefaultResultParser implements ResultParser {
         return path;
     }
 
-    private Object parseTagPropertyValue(GremlinResult.TagEntries tagEntries) {
+    protected Object parseTagPropertyValue(GremlinResult.TagEntries tagEntries) {
         Map<String, Object> result = new HashMap();
         int entriesSize = tagEntries.getEntriesCount();
         for (GremlinResult.TagEntry entry : tagEntries.getEntriesList()) {
@@ -100,7 +100,7 @@ public class DefaultResultParser implements ResultParser {
         }
     }
 
-    private Object parseOneTagValue(GremlinResult.OneTagValue oneTagValue) {
+    protected Object parseOneTagValue(GremlinResult.OneTagValue oneTagValue) {
         if (oneTagValue.getItemCase() == GremlinResult.OneTagValue.ItemCase.ELEMENT) {
             return parseElement(oneTagValue.getElement());
         } else if (oneTagValue.getItemCase() == GremlinResult.OneTagValue.ItemCase.VALUE) {
@@ -112,7 +112,7 @@ public class DefaultResultParser implements ResultParser {
         }
     }
 
-    private Object parsePairElement(GremlinResult.PairElement pairElement) {
+    protected Object parsePairElement(GremlinResult.PairElement pairElement) {
         if (pairElement.getInnerCase() == GremlinResult.PairElement.InnerCase.GRAPH_ELEMENT) {
             return parseElement(pairElement.getGraphElement());
         } else if (pairElement.getInnerCase() == GremlinResult.PairElement.InnerCase.VALUE) {
@@ -134,7 +134,7 @@ public class DefaultResultParser implements ResultParser {
         }
     }
 
-    private Object parseValue(Common.Value value) {
+    protected Object parseValue(Common.Value value) {
         if (value.getItemCase() == Common.Value.ItemCase.BOOLEAN) {
             return value.getBoolean();
         } else if (value.getItemCase() == Common.Value.ItemCase.I32) {
@@ -160,7 +160,7 @@ public class DefaultResultParser implements ResultParser {
         }
     }
 
-    private Map<String, Object> parseValueMap(GremlinResult.ValueMapEntries entries) {
+    protected Map<String, Object> parseValueMap(GremlinResult.ValueMapEntries entries) {
         Map<String, Object> result = new HashMap<>();
         entries.getPropertyList().forEach(p -> result.put(p.getKey(), parseValue(p.getValue())));
         return result;

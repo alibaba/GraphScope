@@ -18,9 +18,9 @@ mod common;
 #[cfg(test)]
 mod test {
     use crate::common::test::*;
+    use dyn_type::Object;
     use gremlin_core::process::traversal::traverser::Requirement;
     use gremlin_core::structure::Tag;
-    use gremlin_core::Object;
 
     // g.V().outE().inV()
     #[test]

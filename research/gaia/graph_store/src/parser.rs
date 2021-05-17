@@ -153,19 +153,19 @@ pub fn parse_properties<'a, Iter: Iterator<Item = &'a str>>(
         // unwrap the property and type
         if let Some((field, ty)) = header_iter.next() {
             if ty == &DataType::String {
-                properties.push(json!(val.to_string()));
+                properties.push(object!(val.to_string()));
             } else if ty == &DataType::Integer {
-                properties.push(json!(val.parse::<i32>()?));
+                properties.push(object!(val.parse::<i32>()?));
             } else if ty == &DataType::Long {
-                properties.push(json!(val.parse::<i64>()?));
+                properties.push(object!(val.parse::<i64>()?));
             } else if ty == &DataType::Double {
-                properties.push(json!(val.parse::<f64>()?));
+                properties.push(object!(val.parse::<f64>()?));
             } else if ty == &DataType::Date {
-                properties.push(json!(parse_datetime(val)?));
+                properties.push(object!(parse_datetime(val)?));
             } else if ty == &DataType::ID {
                 // do not record the starting (ldbc) id and end id of an edge
                 if field != START_ID_FIELD && field != END_ID_FIELD {
-                    properties.push(json!(val.parse::<DefaultId>()?));
+                    properties.push(object!(val.parse::<DefaultId>()?));
                 }
             } else if ty == &DataType::LABEL {
                 // do not further record the label of a vertex

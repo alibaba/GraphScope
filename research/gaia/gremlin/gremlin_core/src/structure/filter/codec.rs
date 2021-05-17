@@ -13,20 +13,20 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::common::object::{CastError, Primitives};
-use crate::generated::common::*;
-use crate::generated::gremlin::*;
+use crate::generated::common as pb_type;
+use crate::generated::gremlin as pb;
 use crate::structure::filter::*;
 use crate::structure::Label;
-use crate::{Element, Object};
-use graph_store::common::INVALID_LABEL_ID;
+use crate::Element;
+use dyn_type::{CastError, Object, Primitives};
+use graph_store::prelude::INVALID_LABEL_ID;
 use pegasus::BuildJobError;
 use prost::{DecodeError, Message};
 use std::convert::TryInto;
 use std::fmt::Display;
 
 pub fn pb_chain_to_filter<E: Element>(
-    pb_chain: &FilterChain,
+    pb_chain: &pb::FilterChain,
 ) -> Result<Option<Filter<E, ElementFilter>>, ParseError> {
     let size = pb_chain.node.len();
     if size == 0 {
@@ -50,10 +50,10 @@ pub fn pb_chain_to_filter<E: Element>(
                     }
                 }
             }
-            let logic_opr: Connect = unsafe { std::mem::transmute(node.next) };
+            let logic_opr: pb::Connect = unsafe { std::mem::transmute(node.next) };
             match logic_opr {
-                Connect::Or => connect = ChainKind::Or,
-                Connect::And => connect = ChainKind::And,
+                pb::Connect::Or => connect = ChainKind::Or,
+                pb::Connect::And => connect = ChainKind::And,
             }
         }
         if chain.is_empty() {
@@ -64,49 +64,70 @@ pub fn pb_chain_to_filter<E: Element>(
     }
 }
 
-fn get_single(node: &FilterNode) -> Option<&FilterExp> {
-    match &node.inner {
-        Some(filter_node::Inner::Single(single)) => Some(single),
+pub fn pb_value_to_object(raw: &pb_type::Value) -> Option<Object> {
+    match &raw.item {
+        Some(pb_type::value::Item::Blob(blob)) => {
+            let mut bytes = vec![0; blob.len()];
+            bytes.copy_from_slice(blob);
+            Some(bytes.into())
+        }
+        Some(pb_type::value::Item::Boolean(item)) => Some((*item).into()),
+        Some(pb_type::value::Item::I32(item)) => Some((*item).into()),
+        Some(pb_type::value::Item::I64(item)) => Some((*item).into()),
+        Some(pb_type::value::Item::F64(item)) => Some((*item).into()),
+        Some(pb_type::value::Item::Str(item)) => Some(item.as_str().into()),
+        Some(pb_type::value::Item::I32Array(_)) => unimplemented!(),
+        Some(pb_type::value::Item::I64Array(_)) => unimplemented!(),
+        Some(pb_type::value::Item::F64Array(_)) => unimplemented!(),
+        Some(pb_type::value::Item::StrArray(_)) => unimplemented!(),
+        Some(pb_type::value::Item::None(_)) => None,
         _ => None,
     }
 }
 
-fn get_chain(node: &FilterNode) -> Option<&Vec<u8>> {
+fn get_single(node: &pb::FilterNode) -> Option<&pb::FilterExp> {
     match &node.inner {
-        Some(filter_node::Inner::Chain(chain)) => Some(chain),
+        Some(pb::filter_node::Inner::Single(single)) => Some(single),
+        _ => None,
+    }
+}
+
+fn get_chain(node: &pb::FilterNode) -> Option<&Vec<u8>> {
+    match &node.inner {
+        Some(pb::filter_node::Inner::Chain(chain)) => Some(chain),
         _ => None,
     }
 }
 
 pub fn parse_node<E: Element>(
-    node: &FilterNode,
+    node: &pb::FilterNode,
 ) -> Result<Option<Filter<E, ElementFilter>>, ParseError> {
     if let Some(single) = get_single(node) {
         assert!(single.left.is_some() && single.right.is_some());
         let right = single.right.as_ref().unwrap();
         let left = single.left.as_ref().unwrap();
-        let cmp: Compare = { unsafe { std::mem::transmute(single.cmp) } };
+        let cmp: pb::Compare = { unsafe { std::mem::transmute(single.cmp) } };
         let f = match cmp {
-            Compare::Eq => eq(left, right)?,
-            Compare::Ne => {
+            pb::Compare::Eq => eq(left, right)?,
+            pb::Compare::Ne => {
                 let mut f = eq(left, right)?;
                 f.reverse();
                 f
             }
-            Compare::Lt => lt(left, right)?,
-            Compare::Le => lte(left, right)?,
-            Compare::Gt => {
+            pb::Compare::Lt => lt(left, right)?,
+            pb::Compare::Le => lte(left, right)?,
+            pb::Compare::Gt => {
                 let mut f = lte(left, right)?;
                 f.reverse();
                 f
             }
-            Compare::Ge => {
+            pb::Compare::Ge => {
                 let mut f = lt(left, right)?;
                 f.reverse();
                 f
             }
-            Compare::Within => with_in(left, right)?,
-            Compare::Without => {
+            pb::Compare::Within => with_in(left, right)?,
+            pb::Compare::Without => {
                 let mut f = with_in(left, right)?;
                 f.reverse();
                 f
@@ -124,10 +145,10 @@ pub fn parse_node<E: Element>(
 }
 
 #[inline]
-fn eq(left: &Key, right: &Value) -> Result<ElementFilter, ParseError> {
-    let right: Option<Object> = right.into();
+fn eq(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, ParseError> {
+    let right: Option<Object> = pb_value_to_object(right);
     match &left.item {
-        Some(key::Item::Name(name)) => {
+        Some(pb_type::key::Item::Name(name)) => {
             if let Some(value) = right {
                 // TODO(longbin) String clone, potentially downgrade performance
                 Ok(has_property(name.clone(), value))
@@ -135,15 +156,15 @@ fn eq(left: &Key, right: &Value) -> Result<ElementFilter, ParseError> {
                 Ok(by_property(name.clone()))
             }
         }
-        Some(key::Item::NameId(_)) => unimplemented!(),
-        Some(key::Item::Id(_)) => {
+        Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
+        Some(pb_type::key::Item::Id(_)) => {
             #[cfg(not(feature = "llong_id"))]
             let r = right.map(|r| r.as_u64()).transpose()?;
             #[cfg(feature = "llong_id")]
             let r = right.map(|r| r.as_u128()).transpose()?;
             Ok(has_id(r))
         }
-        Some(key::Item::Label(_)) => {
+        Some(pb_type::key::Item::Label(_)) => {
             let label = right
                 .map(|r| match r {
                     Object::Primitive(Primitives::Integer(id)) => {
@@ -160,10 +181,10 @@ fn eq(left: &Key, right: &Value) -> Result<ElementFilter, ParseError> {
 }
 
 #[inline]
-fn lt(left: &Key, right: &Value) -> Result<ElementFilter, ParseError> {
+fn lt(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, ParseError> {
     match &left.item {
-        Some(key::Item::Name(name)) => {
-            let right: Option<Object> = right.into();
+        Some(pb_type::key::Item::Name(name)) => {
+            let right: Option<Object> = pb_value_to_object(right);
             if let Some(value) = right {
                 // TODO(longbin) String clone, potentially downgrade performance
                 Ok(has_property_lt(name.clone(), value))
@@ -171,18 +192,20 @@ fn lt(left: &Key, right: &Value) -> Result<ElementFilter, ParseError> {
                 Ok(by_property_lt(name.clone()))
             }
         }
-        Some(key::Item::NameId(_)) => unimplemented!(),
-        Some(key::Item::Id(_)) => unimplemented!("can't compare between element id;"),
-        Some(key::Item::Label(_)) => unimplemented!("can't compare between element label;"),
+        Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
+        Some(pb_type::key::Item::Id(_)) => unimplemented!("can't compare between element id;"),
+        Some(pb_type::key::Item::Label(_)) => {
+            unimplemented!("can't compare between element label;")
+        }
         _ => Err(ParseError::InvalidData),
     }
 }
 
 #[inline]
-fn lte(left: &Key, right: &Value) -> Result<ElementFilter, ParseError> {
+fn lte(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, ParseError> {
     match &left.item {
-        Some(key::Item::Name(name)) => {
-            let right: Option<Object> = right.into();
+        Some(pb_type::key::Item::Name(name)) => {
+            let right: Option<Object> = pb_value_to_object(right);
             if let Some(value) = right {
                 Ok(has_property_le(name.clone(), value))
             } else {
@@ -194,7 +217,7 @@ fn lte(left: &Key, right: &Value) -> Result<ElementFilter, ParseError> {
 }
 
 #[inline]
-fn with_in(_left: &Key, _right: &Value) -> Result<ElementFilter, ParseError> {
+fn with_in(_left: &pb_type::Key, _right: &pb_type::Value) -> Result<ElementFilter, ParseError> {
     unimplemented!()
 }
 

@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::common::object::Object;
 use crate::generated::gremlin as pb;
 use crate::process::traversal::pop::Pop;
 use crate::process::traversal::step::by_key::{ByStepOption, TagKey};
@@ -24,6 +23,7 @@ use crate::process::traversal::step::MapFuncGen;
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::{Details, GraphElement, Tag, Token};
 use crate::{str_to_dyn_error, DynResult, Element, FromPb};
+use dyn_type::Object;
 use pegasus::api::function::*;
 use pegasus::codec::{Encode, WriteExt};
 use std::io;
@@ -98,7 +98,8 @@ impl MapFunction<Traverser, Traverser> for SelectStep {
                             }
                             // select("a").by(label) or select(label)
                             Token::Label => {
-                                tag_value = OneTagValue::new_value(graph_element.label());
+                                tag_value =
+                                    OneTagValue::new_value(graph_element.label().as_object());
                             }
                             // select("a").by("name") or select("name")
                             Token::Property(prop_name) => {
@@ -200,7 +201,7 @@ impl MapFunction<Traverser, Traverser> for SelectStep {
                 Err(str_to_dyn_error("no tag is provided in select, should be unreachable"))?;
             }
         }
-        Ok(Traverser::Object(Object::UnknownOwned(Box::new(result))))
+        Ok(Traverser::Object(Object::DynOwned(Box::new(result))))
     }
 }
 

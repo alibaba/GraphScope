@@ -13,11 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::common::object::BorrowObject;
 use crate::structure::{
     DefaultDetails, Details, Direction, DynDetails, Edge, Label, QueryParams, Statement, Vertex,
 };
-use crate::{register_graph, DynResult, GraphProxy, Object, ID};
+use crate::{register_graph, DynResult, GraphProxy, ID};
+use dyn_type::BorrowObject;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
 use graph_store::ldbc::LDBCVertexParser;
 use graph_store::prelude::{
@@ -26,7 +26,6 @@ use graph_store::prelude::{
 };
 use pegasus::api::function::DynIter;
 use pegasus_common::downcast::*;
-use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::atomic::{AtomicPtr, Ordering};
@@ -80,19 +79,26 @@ fn _init_modern_graph() -> LargeGraphDB<DefaultId, InternalId> {
     mut_graph.add_vertex(v5, [1, INVALID_LABEL_ID]);
     mut_graph.add_vertex(v6, [0, INVALID_LABEL_ID]);
 
-    mut_graph.add_edge(v1, v2, 0);
-    mut_graph.add_edge(v1, v3, 1);
-    mut_graph.add_edge(v1, v4, 0);
-    mut_graph.add_edge(v4, v3, 1);
-    mut_graph.add_edge(v4, v5, 1);
-    mut_graph.add_edge(v6, v3, 1);
+    let prop7 = Row::from(vec![object!(0.5)]);
+    let prop8 = Row::from(vec![object!(0.4)]);
+    let prop9 = Row::from(vec![object!(1.0)]);
+    let prop10 = Row::from(vec![object!(0.4)]);
+    let prop11 = Row::from(vec![object!(1.0)]);
+    let prop12 = Row::from(vec![object!(0.2)]);
 
-    let prop1 = Row::from(vec![json!(1), json!("marko"), json!(29)]);
-    let prop2 = Row::from(vec![json!(2), json!("vadas"), json!(27)]);
-    let prop3 = Row::from(vec![json!(3), json!("lop"), json!("java")]);
-    let prop4 = Row::from(vec![json!(4), json!("josh"), json!(32)]);
-    let prop5 = Row::from(vec![json!(5), json!("ripple"), json!("java")]);
-    let prop6 = Row::from(vec![json!(6), json!("peter"), json!(35)]);
+    mut_graph.add_edge_with_properties(v1, v2, 0, prop7).unwrap();
+    mut_graph.add_edge_with_properties(v1, v3, 1, prop8).unwrap();
+    mut_graph.add_edge_with_properties(v1, v4, 0, prop9).unwrap();
+    mut_graph.add_edge_with_properties(v4, v3, 1, prop10).unwrap();
+    mut_graph.add_edge_with_properties(v4, v5, 1, prop11).unwrap();
+    mut_graph.add_edge_with_properties(v6, v3, 1, prop12).unwrap();
+
+    let prop1 = Row::from(vec![object!(1), object!("marko"), object!(29)]);
+    let prop2 = Row::from(vec![object!(2), object!("vadas"), object!(27)]);
+    let prop3 = Row::from(vec![object!(3), object!("lop"), object!("java")]);
+    let prop4 = Row::from(vec![object!(4), object!("josh"), object!(32)]);
+    let prop5 = Row::from(vec![object!(5), object!("ripple"), object!("java")]);
+    let prop6 = Row::from(vec![object!(6), object!("peter"), object!(35)]);
 
     mut_graph.add_or_update_vertex_properties(v1, prop1).unwrap();
     mut_graph.add_or_update_vertex_properties(v2, prop2).unwrap();
@@ -103,66 +109,74 @@ fn _init_modern_graph() -> LargeGraphDB<DefaultId, InternalId> {
 
     let modern_graph_schema = r#"
     {
-        "vertex_type_map": {
-            "PERSON": 0,
-            "SOFTWARE": 1
-        },
-        "edge_type_map": {
-            "KNOWS": 0,
-            "CREATED": 1
-        },
-        "vertex_prop": {
-            "PERSON": [
-                [
-                    "id",
-                    "ID"
-                ],
-                [
-                    "name",
-                    "String"
-                ],
-                [
-                    "age",
-                    "Integer"
-                ]
-            ],
-            "SOFTWARE": [
-                [
-                    "id",
-                    "ID"
-                ],
-                [
-                    "name",
-                    "String"
-                ],
-                [
-                    "lang",
-                    "String"
-                ]
-            ]
-        },
-        "edge_prop": {
-            "KNOWS": [
-                [
-                    "start_id",
-                    "ID"
-                ],
-                [
-                    "end_id",
-                    "ID"
-                ]
-            ],
-            "CREATED": [
-                [
-                    "start_id",
-                    "ID"
-                ],
-                [
-                    "end_id",
-                    "ID"
-                ]
-            ]
-        }
+      "vertex_type_map": {
+        "person": 0,
+        "software": 1
+      },
+      "edge_type_map": {
+        "knows": 0,
+        "created": 1
+      },
+      "vertex_prop": {
+        "person": [
+          [
+            "id",
+            "ID"
+          ],
+          [
+            "name",
+            "String"
+          ],
+          [
+            "age",
+            "Integer"
+          ]
+        ],
+        "software": [
+          [
+            "id",
+            "ID"
+          ],
+          [
+            "name",
+            "String"
+          ],
+          [
+            "lang",
+            "String"
+          ]
+        ]
+      },
+      "edge_prop": {
+        "knows": [
+          [
+            "start_id",
+            "ID"
+          ],
+          [
+            "end_id",
+            "ID"
+          ],
+          [
+            "weight",
+            "Double"
+          ]
+        ],
+        "created": [
+          [
+            "start_id",
+            "ID"
+          ],
+          [
+            "end_id",
+            "ID"
+          ],
+          [
+            "weight",
+            "Double"
+          ]
+        ]
+      }
     }
     "#;
     let schema =
@@ -304,19 +318,14 @@ fn to_runtime_vertex_with_property(
     if let Some(props) = props {
         if props.is_empty() {
             if let Some(prop_vals) = v.clone_all_properties() {
-                if prop_vals.is_object() {
-                    let prop_val_map = prop_vals.as_object().unwrap();
-                    for (prop, val) in prop_val_map {
-                        properties.insert(prop.clone(), Object::from(val));
-                    }
-                } else {
-                    unreachable!()
-                }
+                properties = prop_vals;
             }
         } else {
             for prop in props {
                 if let Some(val) = v.get_property(prop) {
-                    properties.insert(prop.clone(), Object::from(val));
+                    if let Some(obj) = val.try_to_owned() {
+                        properties.insert(prop.clone(), obj);
+                    }
                 }
             }
         }
@@ -334,10 +343,7 @@ fn to_runtime_edge(
     let label = encode_runtime_e_label(&e);
     let mut properties = HashMap::new();
     if let Some(prop_vals) = e.clone_all_properties() {
-        let prop_val_map = prop_vals.as_object().expect("all properties should be stored in a map");
-        for (prop, val) in prop_val_map {
-            properties.insert(prop.clone(), Object::from(val));
-        }
+        properties = prop_vals;
     }
     Edge::new(
         id,
@@ -384,24 +390,7 @@ impl Details for LazyVertexDetails {
             }
         }
 
-        unsafe { (*ptr).get_property(key) }.and_then(|v| match v {
-            Value::Null => None,
-            Value::Bool(b) => Some((*b).into()),
-            Value::Number(n) => {
-                if let Some(x) = n.as_i64() {
-                    Some(x.into())
-                } else if let Some(x) = n.as_u64() {
-                    Some((x as i64).into())
-                } else if let Some(x) = n.as_f64() {
-                    Some(x.into())
-                } else {
-                    None
-                }
-            }
-            Value::String(s) => Some(BorrowObject::String(s.as_str())),
-            Value::Array(x) => Some(BorrowObject::Unknown(x)),
-            Value::Object(x) => Some(BorrowObject::Unknown(x)),
-        })
+        unsafe { (*ptr).get_property(key) }
     }
 
     fn get_id(&self) -> ID {

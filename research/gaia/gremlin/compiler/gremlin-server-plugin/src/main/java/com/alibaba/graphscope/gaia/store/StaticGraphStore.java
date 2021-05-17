@@ -18,12 +18,13 @@ package com.alibaba.graphscope.gaia.store;
 import com.alibaba.graphscope.gaia.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -33,10 +34,11 @@ public class StaticGraphStore implements GraphStoreService {
     public static final String VERTEX_TYPE_MAP = "vertex_type_map";
     public static final String EDGE_TYPE_MAP = "edge_type_map";
     public static final long INVALID_ID = -1L;
+    public static final StaticGraphStore INSTANCE = new StaticGraphStore("conf/graph.properties");
 
     private Map<String, Object> graphSchema;
     private GlobalIdMaker idMaker;
-    public static final StaticGraphStore INSTANCE = new StaticGraphStore("conf/graph.properties");
+    private Map<String, Map<String, Map<String, Object>>> propertyData;
 
     private StaticGraphStore(String graphConfig) {
         try {
@@ -51,7 +53,12 @@ public class StaticGraphStore implements GraphStoreService {
             this.graphSchema = JsonUtils.fromJson(schemaJson, new TypeReference<Map<String, Object>>() {
             });
             this.idMaker = new GlobalIdMaker(Collections.EMPTY_LIST);
-        } catch (IOException e) {
+            // init properties from file under resources
+            InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("modern.properties.json");
+            String propertiesJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+            this.propertyData = JsonUtils.fromJson(propertiesJson, new TypeReference<Map<String, Map<String, Map<String, Object>>>>() {
+            });
+        } catch (Exception e) {
             throw new RuntimeException("exception is ", e);
         }
     }
@@ -75,5 +82,29 @@ public class StaticGraphStore implements GraphStoreService {
     public long getGlobalId(long labelId, long propertyId) {
         long globalId = idMaker.makeId(Arrays.asList(labelId, propertyId));
         return globalId;
+    }
+
+    @Override
+    public <P> P getVertexProperty(long id, String key) {
+        String idStr = String.valueOf(id);
+        return (P) propertyData.get("vertex_properties").get(idStr).get(key);
+    }
+
+    @Override
+    public Set<String> getVertexKeys(long id) {
+        String idStr = String.valueOf(id);
+        return propertyData.get("vertex_properties").get(idStr).keySet();
+    }
+
+    @Override
+    public <P> P getEdgeProperty(long id, String key) {
+        String idStr = String.valueOf(id);
+        return (P) propertyData.get("edge_properties").get(idStr).get(key);
+    }
+
+    @Override
+    public Set<String> getEdgeKeys(long id) {
+        String idStr = String.valueOf(id);
+        return propertyData.get("edge_properties").get(idStr).keySet();
     }
 }

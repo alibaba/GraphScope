@@ -102,7 +102,7 @@ impl KeyFunction<Traverser> for KeyBy {
                         // by select("a").by(id) or select(id)
                         Token::Id => graph_element.id().into(),
                         // by select("a").by(label) or select(label)
-                        Token::Label => graph_element.label().into(),
+                        Token::Label => graph_element.label().as_object(),
                         // by select("a").by("name") or select("name")
                         Token::Property(prop_name) => graph_element
                             .details()

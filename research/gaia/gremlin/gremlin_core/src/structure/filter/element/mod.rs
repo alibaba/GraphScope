@@ -15,7 +15,7 @@
 
 use crate::structure::element::Label;
 use crate::structure::filter::{BiPredicate, Predicate};
-use crate::{Element, Object, ID};
+use crate::{Element, ID};
 use std::cell::RefCell;
 use std::collections::HashSet;
 
@@ -23,12 +23,12 @@ mod by_id;
 mod by_label;
 mod by_property;
 
-use crate::common::DynType;
 use by_id::*;
 use by_label::*;
 use by_property::*;
+use dyn_type::{DynType, Object};
 
-pub enum ExpectValue<T: DynType + Clone> {
+pub enum ExpectValue<T: DynType> {
     Local(T),
     TLV,
 }
