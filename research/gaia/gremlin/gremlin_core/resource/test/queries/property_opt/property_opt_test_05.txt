@@ -1,1 +1,1 @@
-g.V().hasLabel("PERSON").as("a").order().by("id").values("name").select("a")
+g.V().hasLabel("person").as("a").order().by("id").values("name").select("a")

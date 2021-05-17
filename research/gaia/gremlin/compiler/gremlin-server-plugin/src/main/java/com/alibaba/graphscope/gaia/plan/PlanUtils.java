@@ -181,7 +181,8 @@ public class PlanUtils {
             List<Object> results = new ArrayList<>();
             results.add(Collections.singletonMap("source", printGremlinStep(job.getSource())));
             job.getPlan().getPlan().forEach(k -> results.add(printOpr(k)));
-            logger.info("{}", JsonUtils.toJson(results));
+            // logger.info("{}", JsonUtils.toJson(results));
+            FileUtils.writeStringToFile(new File("plan.log"), JsonUtils.toJson(results), StandardCharsets.UTF_8, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

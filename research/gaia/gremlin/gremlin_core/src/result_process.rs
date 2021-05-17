@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::common::object::Primitives;
 use crate::generated::common as common_pb;
 use crate::generated::protobuf as result_pb;
 use crate::generated::protobuf::OneTagValue;
@@ -24,7 +23,7 @@ use crate::process::traversal::step::result_downcast::{
 use crate::process::traversal::step::ResultProperty;
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::{Edge, GraphElement, Label, Vertex, VertexOrEdge};
-use crate::Object;
+use dyn_type::object::{Object, Primitives};
 
 fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
     result_pb::Vertex {
@@ -129,7 +128,7 @@ fn object_to_pb_value(value: &Object) -> common_pb::Value {
         }
         Object::String(s) => common_pb::value::Item::Str(s.clone()),
         Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
-        Object::UnknownOwned(_u) => {
+        Object::DynOwned(_u) => {
             if let Some(count_val) = try_downcast_count(value) {
                 common_pb::value::Item::I64(count_val as i64)
             } else {
@@ -137,7 +136,6 @@ fn object_to_pb_value(value: &Object) -> common_pb::Value {
                 unimplemented!()
             }
         }
-        Object::UnknownRef(_) => unimplemented!(),
     };
     common_pb::Value { item: Some(item) }
 }
@@ -196,7 +194,7 @@ pub fn result_to_pb(data: Vec<Traverser>) -> result_pb::Result {
                     info!("object result {:?}", o);
                     values_encode.push(object_to_pb_value(o));
                 }
-                Object::UnknownOwned(x) => {
+                Object::DynOwned(x) => {
                     if let Some(p) = x.try_downcast_ref::<ResultPath>() {
                         info!("path: {:?}", p);
                         paths_encode.push(path_to_pb(p));
@@ -215,7 +213,6 @@ pub fn result_to_pb(data: Vec<Traverser>) -> result_pb::Result {
                         info!("other object result {:?}", x);
                     }
                 }
-                _ => unreachable!(),
             }
         } else {
             info!("object result is none!");

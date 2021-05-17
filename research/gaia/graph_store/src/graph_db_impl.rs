@@ -837,7 +837,7 @@ mod test {
     use crate::ldbc::*;
     use crate::parser::DataType;
     use crate::schema::ID_FIELD;
-    use crate::serde_json::Value as JsonValue;
+    use crate::table::ItemType;
     use std::path::Path;
 
     // person ids
@@ -876,8 +876,8 @@ mod test {
         assert!(graphdb.add_vertex(PIDS[2], [1, INVALID_LABEL_ID]));
         assert!(graphdb.add_corner_vertex(PIDS[5], 1));
 
-        let prop = Row::from(vec![json!(15), json!("John")]);
-        let new_prop = Row::from(vec![json!(16), json!("Steve")]);
+        let prop = Row::from(vec![object!(15), object!("John")]);
+        let new_prop = Row::from(vec![object!(16), object!("Steve")]);
 
         // Update the vertex's properties
         assert!(graphdb.add_or_update_vertex_properties(PIDS[0], prop.clone()).unwrap().is_none());
@@ -907,7 +907,7 @@ mod test {
         assert!(!graphdb.add_edge(PIDS[0], PIDS[3], 12));
         assert!(!graphdb.add_edge(PIDS[3], PIDS[0], 12));
 
-        let edge_prop = Row::from(20200202_u64);
+        let edge_prop = Row::from(20200202_i64);
         // add duplicate edge to the db
         assert!(graphdb
             .add_edge_with_properties(PIDS[0], PIDS[1], 12, edge_prop.clone())
@@ -992,33 +992,48 @@ mod test {
         );
 
         // test get_in_edges..
-        let in_edge_neighbor: Vec<(DefaultId, Option<JsonValue>)> = graphdb
+        let in_edge_neighbor: Vec<(DefaultId, Option<ItemType>)> = graphdb
             .get_adj_edges(PIDS[1], Some(&vec![0, 12]), Direction::Incoming)
-            .map(move |item| (item.get_src_id(), item.get_property("creationDate").cloned()))
+            .map(move |item| {
+                (
+                    item.get_src_id(),
+                    item.get_property("creationDate").map(|obj| obj.try_to_owned().unwrap()),
+                )
+            })
             .collect();
         assert_eq!(
-            vec![(PIDS[0], Some(json![20100313073721718_u64])), (CIDS[0], None)],
+            vec![(PIDS[0], Some(object!(20100313073721718_u64))), (CIDS[0], None)],
             in_edge_neighbor
         );
 
-        let in_edge_neighbor_has_creator: Vec<(DefaultId, Option<JsonValue>)> = graphdb
+        let in_edge_neighbor_has_creator: Vec<(DefaultId, Option<ItemType>)> = graphdb
             .get_adj_edges(PIDS[1], Some(&vec![0]), Direction::Incoming)
-            .map(move |item| (item.get_src_id(), item.get_property("creationDate").cloned()))
+            .map(move |item| {
+                (
+                    item.get_src_id(),
+                    item.get_property("creationDate").map(|obj| obj.try_to_owned().unwrap()),
+                )
+            })
             .collect();
         assert_eq!(vec![(CIDS[0], None)], in_edge_neighbor_has_creator);
 
         // test get_out_edges..
-        let mut out_edge_neighbor: Vec<(DefaultId, Option<JsonValue>)> = graphdb
+        let mut out_edge_neighbor: Vec<(DefaultId, Option<ItemType>)> = graphdb
             .get_adj_edges(PIDS[1], Some(&vec![0, 12]), Direction::Outgoing)
-            .map(move |item| (item.get_dst_id(), item.get_property("creationDate").cloned()))
+            .map(move |item| {
+                (
+                    item.get_dst_id(),
+                    item.get_property("creationDate").map(|obj| obj.try_to_owned().unwrap()),
+                )
+            })
             .collect();
         out_edge_neighbor.sort_by_key(|k| k.0);
         assert_eq!(
             vec![
-                (PIDS[3], Some(json![20100804033836982_u64])),
-                (PIDS[6], Some(json![20100202163844119_u64])),
-                (PIDS[7], Some(json![20100331220757321_u64])),
-                (PIDS[8], Some(json![20100724111548162_u64]))
+                (PIDS[3], Some(object![20100804033836982_u64])),
+                (PIDS[6], Some(object![20100202163844119_u64])),
+                (PIDS[7], Some(object![20100331220757321_u64])),
+                (PIDS[8], Some(object![20100724111548162_u64]))
             ],
             out_edge_neighbor
         );
@@ -1026,7 +1041,7 @@ mod test {
         // test get_vertex_properties..
         let vertex = graphdb.get_vertex(PIDS[0]).unwrap();
         let prop = vertex.get_property("locationIP").unwrap();
-        assert_eq!(prop, "119.235.7.103");
+        assert_eq!(prop.as_str().unwrap(), "119.235.7.103");
 
         let vertex_none = graphdb.get_vertex(1000);
         assert_eq!(true, vertex_none.is_none());
@@ -1087,12 +1102,14 @@ mod test {
             if name != "~LABEL" {
                 // does not store LABEL as properties
                 match dt {
-                    DataType::String => assert_eq!(
-                        vertex.get_property(name).unwrap().clone(),
-                        expected_results[index]
-                    ),
+                    DataType::String => {
+                        assert_eq!(
+                            vertex.get_property(name).unwrap().as_str().unwrap(),
+                            expected_results[index]
+                        )
+                    }
                     _ => assert_eq!(
-                        vertex.get_property(name).unwrap().clone(),
+                        vertex.get_property(name).unwrap().as_u64().unwrap(),
                         expected_results[index].parse::<u64>().unwrap()
                     ),
                 }

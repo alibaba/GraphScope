@@ -21,4 +21,6 @@ pub use crate::graph_db::{
 };
 pub use crate::graph_db_impl::{LargeGraphDB, MutableGraphDB};
 pub use crate::schema::{LDBCGraphSchema, Schema};
-pub use crate::table::{PropertyTable, PropertyTableTrait, Row, RowRef, SingleValueTable};
+pub use crate::table::{
+    ItemType, ItemTypeRef, PropertyTable, PropertyTableTrait, Row, RowRef, SingleValueTable,
+};

@@ -14,7 +14,8 @@
 //! limitations under the License.
 
 use crate::structure::property::DynDetails;
-use crate::Object;
+use dyn_type::object::Primitives;
+use dyn_type::Object;
 pub use edge::Edge;
 use graph_store::common::LabelId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -53,6 +54,15 @@ pub fn read_id<R: ReadExt>(reader: &mut R) -> io::Result<ID> {
 pub enum Label {
     Str(String),
     Id(LabelId),
+}
+
+impl Label {
+    pub fn as_object(&self) -> Object {
+        match self {
+            Label::Str(s) => Object::String(s.to_string()),
+            Label::Id(id) => Object::Primitive(Primitives::Integer(*id as i32)),
+        }
+    }
 }
 
 impl Encode for Label {

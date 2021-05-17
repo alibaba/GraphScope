@@ -46,7 +46,7 @@ impl FilterFunction<Traverser> for WhereStep {
             }
             Token::Label => {
                 let label = start.label().clone();
-                crate::structure::reset_tlv_right_value(label);
+                crate::structure::reset_tlv_right_value(label.as_object());
             }
             Token::Property(ref key) => {
                 if let Some(v) = start.details().get_property(key) {

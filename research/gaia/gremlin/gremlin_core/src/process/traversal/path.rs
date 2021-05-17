@@ -14,8 +14,8 @@
 //! limitations under the License.
 
 use crate::structure::{Element, GraphElement, Tag};
-use crate::Object;
 use bit_set::BitSet;
+use dyn_type::Object;
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::downcast::*;
 use pegasus_common::io::{ReadExt, WriteExt};

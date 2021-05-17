@@ -13,9 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::common::object::BorrowObject;
 use crate::structure::element::{read_id, write_id, Label};
-use crate::{Object, ID};
+use crate::ID;
+use dyn_type::{BorrowObject, Object};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use std::collections::HashMap;

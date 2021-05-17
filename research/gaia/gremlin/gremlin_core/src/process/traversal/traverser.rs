@@ -19,8 +19,9 @@ use crate::process::traversal::path::{Path, PathItem, ResultPath};
 use crate::process::traversal::pop::Pop;
 use crate::structure::codec::ParseError;
 use crate::structure::{GraphElement, Tag};
-use crate::{DynIter, Element, FromPb, Object};
+use crate::{DynIter, Element, FromPb};
 use bit_set::BitSet;
+use dyn_type::Object;
 use pegasus::api::function::{FnResult, Partition};
 use pegasus::codec::*;
 use pegasus::Data;
@@ -506,6 +507,6 @@ impl AnyData for Traverser {}
 impl Traverser {
     pub fn with<T: Data + Eq>(raw: T) -> Self {
         let v = ShadeSync { inner: raw };
-        Traverser::Object(Object::UnknownOwned(Box::new(v)))
+        Traverser::Object(Object::DynOwned(Box::new(v)))
     }
 }

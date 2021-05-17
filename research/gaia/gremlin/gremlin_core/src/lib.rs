@@ -28,8 +28,9 @@ extern crate pegasus;
 extern crate pegasus_config;
 #[macro_use]
 extern crate log;
-
 extern crate graph_store;
+#[macro_use]
+extern crate dyn_type;
 
 use crate::process::traversal::traverser::{ShadeSync, Traverser};
 pub use crate::structure::{get_graph, register_graph};
@@ -41,15 +42,12 @@ use prost::Message;
 pub mod process;
 pub mod structure;
 
-pub mod common;
 pub mod compiler;
 mod result_process;
 mod storage;
 
-use crate::common::serde_dyn::register_type;
 use crate::result_process::result_to_pb;
 use crate::structure::filter::codec::ParseError;
-pub use common::object::Object;
 pub use generated::gremlin::GremlinStep as GremlinStepPb;
 use std::io;
 pub use storage::create_demo_graph;
@@ -142,8 +140,8 @@ impl EncodeFunction<Traverser> for TraverserSinkEncoder {
 }
 
 pub fn register_gremlin_types() -> io::Result<()> {
-    register_type::<ShadeSync<(Traverser, Traverser)>>()?;
-    register_type::<ShadeSync<Count<Traverser>>>()?;
-    register_type::<ShadeSync<ToList<Traverser>>>()?;
+    dyn_type::register_type::<ShadeSync<(Traverser, Traverser)>>()?;
+    dyn_type::register_type::<ShadeSync<Count<Traverser>>>()?;
+    dyn_type::register_type::<ShadeSync<ToList<Traverser>>>()?;
     Ok(())
 }

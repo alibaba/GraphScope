@@ -13,21 +13,22 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::error::{GDBError, GDBResult};
+use dyn_type::{BorrowObject, Object};
+use pegasus_common::codec::{Decode, Encode};
+use pegasus_common::io::{ReadExt, WriteExt};
 use serde::de::Error as DeError;
 use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_json::Value as JsonValue;
 use std::collections::HashMap;
-use std::convert::{TryFrom, TryInto};
 use std::path::Path;
 
-use crate::error::{GDBError, GDBResult};
-
 /// A generic datatype for each item in a row
-pub type ItemType = JsonValue;
+pub type ItemType = Object;
+pub type ItemTypeRef<'a> = BorrowObject<'a>;
 
 /// One row of data, as a vector of `ItemType`
-#[derive(Default, Debug, Clone, Eq, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct Row {
     data: Vec<ItemType>,
 }
@@ -41,8 +42,8 @@ impl Row {
         self.data.len()
     }
 
-    pub fn get(&self, index: usize) -> Option<&ItemType> {
-        self.data.get(index)
+    pub fn get(&self, index: usize) -> Option<ItemTypeRef> {
+        self.data.get(index).map(|obj| obj.as_borrow())
     }
 
     pub fn push(&mut self, val: ItemType) {
@@ -53,16 +54,25 @@ impl Row {
 impl From<String> for Row {
     /// Create a `Row` with one single `String`-typed field
     fn from(item: String) -> Self {
-        let val = json!(item);
+        let val = object!(item);
         let data = vec![val];
         Row { data }
     }
 }
 
-impl From<u32> for Row {
-    /// Create a `Row` with one single `u32`-typed field
-    fn from(item: u32) -> Self {
-        let val = json!(item);
+impl From<i32> for Row {
+    /// Create a `Row` with one single `i32`-typed field
+    fn from(item: i32) -> Self {
+        let val = object!(item);
+        let data = vec![val];
+        Row { data }
+    }
+}
+
+impl From<i64> for Row {
+    /// Create a `Row` with one single `u64`-typed field
+    fn from(item: i64) -> Self {
+        let val = object!(item);
         let data = vec![val];
         Row { data }
     }
@@ -71,7 +81,23 @@ impl From<u32> for Row {
 impl From<u64> for Row {
     /// Create a `Row` with one single `u64`-typed field
     fn from(item: u64) -> Self {
-        let val = json!(item);
+        let val = object!(item);
+        let data = vec![val];
+        Row { data }
+    }
+}
+
+impl From<SimpleType> for Row {
+    /// Create a `Row` with one single `SimpleType`-typed field
+    fn from(item: SimpleType) -> Self {
+        let val = match item {
+            SimpleType::Integer(i) => {
+                object!(i)
+            }
+            SimpleType::Double(d) => {
+                object!(d)
+            }
+        };
         let data = vec![val];
         Row { data }
     }
@@ -84,32 +110,15 @@ impl From<Vec<ItemType>> for Row {
     }
 }
 
-/// Serialize a `Row` of data into a byte array
-impl TryInto<Vec<u8>> for Row {
-    type Error = GDBError;
-
-    fn try_into(self) -> GDBResult<Vec<u8>> {
-        let mut raw_data = Vec::with_capacity(self.len());
-
-        for item in self.data.into_iter() {
-            raw_data.push(serde_cbor::to_vec(&item)?);
-        }
-
-        Ok(bincode::serialize(&raw_data)?)
+impl Encode for Row {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        self.data.write_to(writer)
     }
 }
 
-/// Deserialize from a byte array
-impl TryFrom<Vec<u8>> for Row {
-    type Error = GDBError;
-
-    fn try_from(value: Vec<u8>) -> GDBResult<Self> {
-        let raw_data = bincode::deserialize::<Vec<Vec<u8>>>(&value)?;
-        let mut data = Vec::with_capacity(raw_data.len());
-        for item in raw_data.into_iter() {
-            data.push(serde_cbor::from_slice::<ItemType>(&item)?);
-        }
-
+impl Decode for Row {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let data: Vec<ItemType> = Vec::<ItemType>::read_from(reader)?;
         Ok(Self { data })
     }
 }
@@ -119,11 +128,11 @@ impl Serialize for Row {
     where
         S: Serializer,
     {
-        let _data_vec: GDBResult<Vec<u8>> = self.clone().try_into();
-        if let Ok(data_vec) = _data_vec {
-            data_vec.serialize(serializer)
+        let mut bytes = Vec::new();
+        if self.write_to(&mut bytes).is_ok() {
+            bytes.serialize(serializer)
         } else {
-            Result::Err(S::Error::custom("Serialize `JsonValue` into `Vec<u8>` error!"))
+            Result::Err(S::Error::custom("Serialize `ItemType` into `Vec<u8>` error!"))
         }
     }
 }
@@ -133,29 +142,27 @@ impl<'de> Deserialize<'de> for Row {
     where
         D: Deserializer<'de>,
     {
-        let inner = Vec::<u8>::deserialize(deserializer)?;
-        if let Ok(row) = Row::try_from(inner) {
-            Ok(row)
-        } else {
-            Result::Err(D::Error::custom("Deserialize `JsonValue` from `Vec<u8>` error!"))
-        }
+        let vec = Vec::<u8>::deserialize(deserializer)?;
+        let mut bytes = vec.as_slice();
+        Row::read_from(&mut bytes)
+            .map_err(|_| D::Error::custom("Deserialize `ItemType` from `Vec<u8>` error!"))
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum RowRef<'a> {
     Ref(&'a Row),
     Owned(Row),
-    Single(JsonValue),
+    Single(ItemType),
     None,
 }
 
 impl<'a> RowRef<'a> {
-    pub fn get(&self, field_index: usize) -> Option<&ItemType> {
+    pub fn get(&self, field_index: usize) -> Option<ItemTypeRef> {
         match self {
             RowRef::Ref(row) => row.get(field_index),
             RowRef::Owned(row) => row.get(field_index),
-            RowRef::Single(val) => Some(val),
+            RowRef::Single(val) => Some(val.as_borrow()),
             RowRef::None => None,
         }
     }
@@ -297,11 +304,17 @@ impl PropertyTableTrait for PropertyTable {
     }
 }
 
-/// A table where each row has only one value of `u64` type, which is very common in edge
+/// A table where each row has only one value of `SimpleType` type, which is very common in edge
 /// data of a graph
 #[derive(Clone, Debug, Serialize, Deserialize)]
+enum SimpleType {
+    Integer(u64),
+    Double(f64),
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SingleValueTable {
-    property: HashMap<usize, u64>,
+    property: HashMap<usize, SimpleType>,
 }
 
 impl PropertyTableTrait for SingleValueTable {
@@ -311,7 +324,10 @@ impl PropertyTableTrait for SingleValueTable {
 
     fn get_row(&self, index: usize) -> GDBResult<RowRef> {
         if let Some(num) = self.property.get(&index) {
-            Ok(RowRef::Single(json!(*num)))
+            match num {
+                SimpleType::Integer(i) => Ok(RowRef::Single(object!(*i))),
+                SimpleType::Double(d) => Ok(RowRef::Single(object!(*d))),
+            }
         } else {
             Ok(RowRef::None)
         }
@@ -323,8 +339,12 @@ impl PropertyTableTrait for SingleValueTable {
         }
         let mut _ret_val = None;
         let item = row.get(0).unwrap();
-        if let Some(number) = item.as_u64() {
-            _ret_val = self.property.insert(index, number).map(|num| Row::from(num));
+        if let Ok(number) = item.as_u64() {
+            _ret_val =
+                self.property.insert(index, SimpleType::Integer(number)).map(|num| Row::from(num));
+        } else if let Ok(number) = item.as_f64() {
+            _ret_val =
+                self.property.insert(index, SimpleType::Double(number)).map(|num| Row::from(num));
         } else {
             return GDBResult::Err(GDBError::ParseError);
         }

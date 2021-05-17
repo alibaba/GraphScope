@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,6 @@ use crate::common::*;
 use crate::error::GDBResult;
 use crate::parser::DataType;
 use crate::schema::Schema;
-use crate::serde_json::Value as JsonValue;
 use crate::table::*;
 use crate::utils::Iter;
 use petgraph::graph::{EdgeIndex, IndexType};
@@ -56,11 +55,11 @@ impl<'a> RowWithSchema<'a> {
     /// * `key` can be a property name, which can be used to search the index of the field from `Self::header`.
     /// * `key` can also be a number-value, giving the index directly in case that `Self::header` is `None`
     ///
-    /// Return a `JsonValue` indicating the data type and value, and `None` if:
+    /// Return a `BorrowObject` indicating the data type and value, and `None` if:
     /// * `Self::header` is `None` and `key` is not a number value
     /// * The property given by `key` does not exist
     ///
-    pub fn get(&self, key: &str) -> Option<&JsonValue> {
+    pub fn get(&self, key: &str) -> Option<ItemTypeRef> {
         if let Some(header) = &self.header {
             if let Some((_, index)) = header.get(key) {
                 self.row.get(*index)
@@ -77,15 +76,17 @@ impl<'a> RowWithSchema<'a> {
     }
 
     /// Turn into a map of all properties
-    pub fn into_properties(self) -> Option<JsonValue> {
+    pub fn into_properties(self) -> Option<HashMap<String, ItemType>> {
         self.header.and_then(|header| {
             let mut map = HashMap::new();
             for (key, (_, index)) in header.iter().sorted_by(|x, y| x.1 .1.cmp(&y.1 .1)) {
                 if let Some(val) = self.row.get(*index) {
-                    map.insert(key.clone(), val.clone());
+                    if let Some(obj) = val.try_to_owned() {
+                        map.insert(key.clone(), obj);
+                    }
                 }
             }
-            Some(json!(map))
+            Some(map)
         })
     }
 }
@@ -119,11 +120,11 @@ impl<'a, G: IndexType> LocalVertex<'a, G> {
         self.label
     }
 
-    pub fn get_property(&self, key: &str) -> Option<&JsonValue> {
+    pub fn get_property(&self, key: &str) -> Option<ItemTypeRef> {
         self.prop_row.as_ref().and_then(|prop| prop.get(key))
     }
 
-    pub fn clone_all_properties(&self) -> Option<JsonValue> {
+    pub fn clone_all_properties(&self) -> Option<HashMap<String, ItemType>> {
         self.prop_row.as_ref().and_then(|prop| prop.clone().into_properties())
     }
 }
@@ -179,7 +180,7 @@ impl<'a, G: IndexType, I: IndexType> LocalEdge<'a, G, I> {
         self.label
     }
 
-    pub fn get_property(&self, key: &str) -> Option<&JsonValue> {
+    pub fn get_property(&self, key: &str) -> Option<ItemTypeRef> {
         if let Some(prop_row) = &self.prop_row {
             prop_row.get(key)
         } else {
@@ -187,7 +188,7 @@ impl<'a, G: IndexType, I: IndexType> LocalEdge<'a, G, I> {
         }
     }
 
-    pub fn clone_all_properties(&self) -> Option<JsonValue> {
+    pub fn clone_all_properties(&self) -> Option<HashMap<String, ItemType>> {
         self.prop_row.as_ref().and_then(|prop| prop.clone().into_properties())
     }
 }

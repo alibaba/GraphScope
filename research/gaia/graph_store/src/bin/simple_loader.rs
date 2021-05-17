@@ -1,9 +1,7 @@
 use clap::{App, Arg};
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
 use graph_store::ldbc::GraphLoader;
-use graph_store::prelude::{
-    DefaultId, GlobalStoreTrait, GraphDBConfig, InternalId, LargeGraphDB, NAME, VERSION,
-};
+use graph_store::prelude::{DefaultId, GraphDBConfig, InternalId, LargeGraphDB, NAME, VERSION};
 use graph_store::schema::LDBCGraphSchema;
 use std::path::PathBuf;
 

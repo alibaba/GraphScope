@@ -13,16 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::common::object::Object;
 use crate::generated::gremlin as pb;
 use crate::process::traversal::traverser::Traverser;
 use bit_set::BitSet;
+use dyn_type::Object;
 use pegasus::api::function::*;
 
 impl MapFunction<Traverser, Traverser> for pb::PathStep {
     fn exec(&self, input: Traverser) -> FnResult<Traverser> {
         let path = input.take_path();
-        Ok(Traverser::Object(Object::UnknownOwned(Box::new(path))))
+        Ok(Traverser::Object(Object::DynOwned(Box::new(path))))
     }
 }
 

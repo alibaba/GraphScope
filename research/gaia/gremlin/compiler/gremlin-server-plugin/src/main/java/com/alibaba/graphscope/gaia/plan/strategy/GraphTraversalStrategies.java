@@ -20,7 +20,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.EarlyLimitStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.IncidentToAdjacentStrategy;
-import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.RepeatUnrollStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
 
 import java.util.ArrayList;
@@ -44,7 +43,8 @@ public class GraphTraversalStrategies extends DefaultTraversalStrategies {
 
     static {
         strategies = new ArrayList<>();
-        strategies.add(RepeatUnrollStrategy.instance());
+        strategies.add(RemoveUselessStepStrategy.instance());
+        // strategies.add(RepeatUnrollStrategy.instance());
         strategies.add(PathLocalCountStrategy.instance());
         strategies.add(WhereTraversalStrategy.instance());
         strategies.add(SchemaIdMakerStrategy.instance());
@@ -58,7 +58,6 @@ public class GraphTraversalStrategies extends DefaultTraversalStrategies {
         strategies.add(OrderGuaranteeStrategy.instance());
         strategies.add(PhysicalPlanUnfoldStrategy.instance());
         strategies.add(ValueTraversalParentStrategy.instance());
-        strategies.add(RemoveUselessStepStrategy.instance());
     }
 
     @Override
