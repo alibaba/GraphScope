@@ -57,7 +57,8 @@ class DynamicGraphReporter : public grape::Communicator {
     BOOST_LEAF_AUTO(report_type, params.Get<rpc::ReportType>(rpc::REPORT_TYPE));
     switch (report_type) {
     case rpc::NODE_NUM: {
-      return std::to_string(reportNodeNum(fragment));
+      auto ret = std::to_string(reportNodeNum(fragment));
+      return ret;
     }
     case rpc::EDGE_NUM: {
       return std::to_string(reportEdgeNum(fragment));
@@ -135,28 +136,44 @@ class DynamicGraphReporter : public grape::Communicator {
   inline size_t reportNodeNum(std::shared_ptr<fragment_t>& fragment) {
     size_t frag_vnum = 0, total_vnum = 0;
     frag_vnum = fragment->GetInnerVerticesNum();
-    Sum(frag_vnum, total_vnum);
+    if (fragment->full_stored()) {
+      total_vnum = frag_vnum;
+    } else {
+      Sum(frag_vnum, total_vnum);
+    }
     return total_vnum;
   }
 
   inline size_t reportEdgeNum(std::shared_ptr<fragment_t>& fragment) {
     size_t frag_enum = 0, total_enum = 0;
     frag_enum = fragment->GetEdgeNum();
-    Sum(frag_enum, total_enum);
+    if (fragment->full_stored()) {
+      total_enum = frag_enum;
+    } else {
+      Sum(frag_enum, total_enum);
+    }
     return total_enum;
   }
 
   inline size_t reportSelfloopsNum(std::shared_ptr<fragment_t>& fragment) {
     size_t frag_selfloops_num = 0, total_selfloops_num = 0;
     frag_selfloops_num = fragment->selfloops_num();
-    Sum(frag_selfloops_num, total_selfloops_num);
+    if (fragment->full_stored()) {
+      total_selfloops_num = frag_selfloops_num;
+    } else {
+      Sum(frag_selfloops_num, total_selfloops_num);
+    }
     return total_selfloops_num;
   }
 
   bool hasNode(std::shared_ptr<fragment_t>& fragment, const oid_t& node) {
     bool ret = false;
     bool to_send = fragment->HasNode(node);
-    Sum(to_send, ret);
+    if (fragment->full_stored()) {
+      ret = to_send;
+    } else {
+      Sum(to_send, ret);
+    }
     return ret;
   }
 
@@ -164,7 +181,11 @@ class DynamicGraphReporter : public grape::Communicator {
                const oid_t& v) {
     bool ret = false;
     bool to_send = fragment->HasEdge(u, v);
-    Sum(to_send, ret);
+    if (fragment->full_stored()) {
+      ret = to_send;
+    } else {
+      Sum(to_send, ret);
+    }
     return ret;
   }
 
@@ -189,7 +210,11 @@ class DynamicGraphReporter : public grape::Communicator {
     if (fragment->GetInnerVertex(node, v) && fragment->IsAliveInnerVertex(v)) {
       degree = getGraphDegree(fragment, v, type, weight);
     }
-    Sum(degree, sum_degree);
+    if (fragment->full_stored()) {
+      sum_degree = degree;
+    } else {
+      Sum(degree, sum_degree);
+    }
     return sum_degree;
   }
 

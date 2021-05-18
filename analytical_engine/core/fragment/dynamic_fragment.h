@@ -710,7 +710,6 @@ class DynamicFragment {
     directed_ = directed;
     directed ? load_strategy_ = grape::LoadStrategy::kBothOutIn
              : load_strategy_ = grape::LoadStrategy::kOnlyOut;
-
     fid_ = fid;
     fnum_ = vm_ptr_->GetFragmentNum();
     calcFidBitWidth(fnum_, id_mask_, fid_offset_);
@@ -779,10 +778,11 @@ class DynamicFragment {
     InvalidCache();
   }
 
-  void Init(fid_t fid, bool directed) {
+  void Init(fid_t fid, bool directed, bool full_stored = false) {
     std::vector<internal_vertex_t> empty_vertices;
     std::vector<edge_t> empty_edges;
 
+    full_stored_ = full_stored;
     Init(fid, empty_vertices, empty_edges, directed);
   }
 
@@ -949,6 +949,8 @@ class DynamicFragment {
   inline virtual bool directed() const { return directed_; }
 
   inline virtual size_t selfloops_num() const { return selfloops_num_; }
+
+  inline virtual bool full_stored() const { return full_stored_; }
 
   inline virtual const vid_t* GetOuterVerticesGid() const { return &ovgid_[0]; }
 
@@ -2653,6 +2655,7 @@ class DynamicFragment {
   fid_t fid_offset_{};
   fid_t fid_{}, fnum_{};
   bool directed_{};
+  bool full_stored_{};
   grape::LoadStrategy load_strategy_{};
 
   // vertices cache

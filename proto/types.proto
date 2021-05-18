@@ -156,6 +156,8 @@ enum ParamKey {
   NFRAG = 25;
   PARAM = 26;
 
+  FULL_STORED = 27;
+
   APP_SIGNATURE = 40;
   GRAPH_SIGNATURE = 41;
   IS_FROM_VINEYARD_ID = 42;

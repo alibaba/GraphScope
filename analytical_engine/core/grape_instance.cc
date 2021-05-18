@@ -57,15 +57,23 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
     using fragment_t = DynamicFragment;
     using vertex_map_t = typename fragment_t::vertex_map_t;
     BOOST_LEAF_AUTO(directed, params.Get<bool>(rpc::DIRECTED));
+    BOOST_LEAF_AUTO(full_stored, params.Get<bool>(rpc::FULL_STORED));
 
     VLOG(1) << "Loading graph, graph name: " << graph_name
-            << ", graph type: DynamicFragment, directed: " << directed;
+            << ", graph type: DynamicFragment, directed: " << directed
+            << ", full graph stored: " << full_stored;
 
-    auto vm_ptr = std::shared_ptr<vertex_map_t>(new vertex_map_t(comm_spec_));
+    grape::CommSpec comm_spec = comm_spec_;
+    if (full_stored) {
+      comm_spec.set_fnum(1);
+      comm_spec.set_fid(0);
+    }
+
+    auto vm_ptr = std::shared_ptr<vertex_map_t>(new vertex_map_t(comm_spec));
     vm_ptr->Init();
 
     auto fragment = std::make_shared<fragment_t>(vm_ptr);
-    fragment->Init(comm_spec_.fid(), directed);
+    fragment->Init(comm_spec.fid(), directed, full_stored);
 
     rpc::GraphDef graph_def;
 
@@ -237,6 +245,11 @@ bl::result<std::string> GrapeInstance::reportGraph(
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   DynamicGraphReporter reporter(comm_spec_);
+  if (fragment->full_stored()
+      && comm_spec_.worker_id() != grape::kCoordinatorRank) {
+    // fragment stored full graph, only need to report from coordinator worker.
+    return std::string();
+  }
   return reporter.Report(fragment, params);
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
