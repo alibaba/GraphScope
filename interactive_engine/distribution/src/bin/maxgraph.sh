@@ -19,8 +19,7 @@ exec "$JAVA" \
   -Dlog.dir="$LOG_DIR" \
   -Dlog.name="$LOG_NAME" \
   -cp "$MAXGRAPH_CLASSPATH" com.alibaba.maxgraph.v2.MaxGraph \
-  "$@" \
-  <&- &
+  "$@" > "$LOG_DIR"/"$LOG_NAME".out 2>&1 <&- &
 
 retval=$?
 pid=$!
