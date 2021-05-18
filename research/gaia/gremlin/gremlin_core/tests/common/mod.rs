@@ -435,6 +435,7 @@ pub mod test {
         for (src, _dst) in edges {
             // TODO() Use source id for edge id for now
             let eid = to_global_id(src) as ID;
+
             global_ids.push(eid);
         }
         global_ids

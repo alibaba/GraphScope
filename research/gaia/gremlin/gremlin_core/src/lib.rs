@@ -116,7 +116,7 @@ pub struct Partition {
 
 impl Partitioner for Partition {
     fn get_partition(&self, id: &ID, workers: usize) -> u64 {
-        let id_usize = *id as usize;
+        let id_usize = (*id & 0xffffffffffffffff) as usize;
         let magic_num = id_usize / self.num_servers;
         // The partitioning logics is as follows:
         // 1. `R = id - magic_num * num_servers = id % num_servers` routes a given id

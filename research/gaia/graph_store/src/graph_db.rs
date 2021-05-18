@@ -30,6 +30,7 @@ pub use petgraph::Direction;
 /// Edge id is associated with its start/end-vertex's id given by `G`, and an internal index
 /// associated with the start/end vertex.
 pub type EdgeId<G> = (G, usize);
+
 /// Construct a row with its schema
 #[derive(Clone)]
 pub struct RowWithSchema<'a> {
@@ -103,16 +104,16 @@ pub struct LocalVertex<'a, G: IndexType> {
     label: Label,
     /// A property reference maintains a `Row` view of the properties, which is either
     /// a reference or an owned structure, depending on the form of storage.
-    prop_row: Option<RowWithSchema<'a>>,
+    properties: Option<RowWithSchema<'a>>,
 }
 
 impl<'a, G: IndexType> LocalVertex<'a, G> {
     pub fn new(id: G, label: Label) -> Self {
-        LocalVertex { id, label, prop_row: None }
+        LocalVertex { id, label, properties: None }
     }
 
-    pub fn with_property(id: G, label: Label, prop_row: Option<RowWithSchema<'a>>) -> Self {
-        LocalVertex { id, label, prop_row }
+    pub fn with_property(id: G, label: Label, properties: Option<RowWithSchema<'a>>) -> Self {
+        LocalVertex { id, label, properties }
     }
 
     pub fn get_id(&self) -> G {
@@ -124,26 +125,12 @@ impl<'a, G: IndexType> LocalVertex<'a, G> {
     }
 
     pub fn get_property(&self, key: &str) -> Option<ItemTypeRef> {
-        self.prop_row.as_ref().and_then(|prop| prop.get(key))
+        self.properties.as_ref().and_then(|prop| prop.get(key))
     }
 
     pub fn clone_all_properties(&self) -> Option<HashMap<String, ItemType>> {
-        self.prop_row.as_ref().and_then(|prop| prop.clone().into_properties())
+        self.properties.as_ref().and_then(|prop| prop.clone().into_properties())
     }
-}
-
-/// A data structure to maintain a local view of the edge from the query vertex,
-/// which may be the start or the end vertex of this edge, depending on the query.
-#[derive(Debug, Clone)]
-pub struct LocalAdjEdge<'a, G: IndexType, I: IndexType> {
-    /// The other end of the edge, w.r.t. to the query vertex
-    neighbor: G,
-    /// The edge's internal id, not exposed externally
-    _edge_id: EdgeIndex<I>,
-
-    /// A property reference maintains a `Row` view of the properties, which is either
-    /// a reference or an owned structure, depending on the form of storage.
-    prop_row: Option<RowWithSchema<'a>>,
 }
 
 /// A data structure to maintain a local view of the edge.
@@ -160,19 +147,24 @@ pub struct LocalEdge<'a, G: IndexType, I: IndexType> {
     /// The internal edge id associated with either `Self::start` or `Self::end`
     edge_id: EdgeIndex<I>,
     /// The properties of the edge if any
-    prop_row: Option<RowWithSchema<'a>>,
+    properties: Option<RowWithSchema<'a>>,
 }
 
 impl<'a, G: IndexType, I: IndexType> LocalEdge<'a, G, I> {
-    pub fn new(start: G, end: G, label: LabelId, edge_id: EdgeIndex<I>, from_start: bool) -> Self {
-        LocalEdge { start, end, label, edge_id, prop_row: None, from_start }
+    pub fn new(start: G, end: G, label: LabelId, edge_id: EdgeIndex<I>) -> Self {
+        LocalEdge { start, end, label, from_start: true, edge_id, properties: None }
     }
 
-    pub fn with_property(
-        start: G, end: G, label: LabelId, edge_id: EdgeIndex<I>, from_start: bool,
-        prop_row: Option<RowWithSchema<'a>>,
-    ) -> Self {
-        LocalEdge { start, end, label, edge_id, from_start, prop_row }
+    /// Set the properties of this edge
+    pub fn with_properties(mut self, properties: Option<RowWithSchema<'a>>) -> Self {
+        self.properties = properties;
+        self
+    }
+
+    /// Set the `from_start` indicator
+    pub fn with_from_start(mut self, from_start: bool) -> Self {
+        self.from_start = from_start;
+        self
     }
 
     /// An edge is uniquely indiced by its start/end vertex's global id, as well
@@ -209,15 +201,11 @@ impl<'a, G: IndexType, I: IndexType> LocalEdge<'a, G, I> {
     }
 
     pub fn get_property(&self, key: &str) -> Option<ItemTypeRef> {
-        if let Some(prop_row) = &self.prop_row {
-            prop_row.get(key)
-        } else {
-            None
-        }
+        self.properties.as_ref().and_then(|prop| prop.get(key))
     }
 
     pub fn clone_all_properties(&self) -> Option<HashMap<String, ItemType>> {
-        self.prop_row.as_ref().and_then(|prop| prop.clone().into_properties())
+        self.properties.as_ref().and_then(|prop| prop.clone().into_properties())
     }
 }
 

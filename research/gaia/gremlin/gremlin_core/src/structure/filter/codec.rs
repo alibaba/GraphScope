@@ -158,9 +158,6 @@ fn eq(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, Pars
         }
         Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
         Some(pb_type::key::Item::Id(_)) => {
-            #[cfg(not(feature = "llong_id"))]
-            let r = right.map(|r| r.as_u64()).transpose()?;
-            #[cfg(feature = "llong_id")]
             let r = right.map(|r| r.as_u128()).transpose()?;
             Ok(has_id(r))
         }

@@ -220,24 +220,16 @@ where
         if src_global_id.is_some() && dst_global_id.is_some() {
             let edge_id = edge.id();
             let label = *edge.weight();
-            if let Some(property) = self.get_all_edge_property(&edge_id) {
-                Some(LocalEdge::with_property(
-                    src_global_id.unwrap(),
-                    dst_global_id.unwrap(),
-                    label,
-                    edge_id,
-                    from_start,
-                    RowWithSchema::new(Some(property), self.graph_schema.get_edge_schema(label)),
-                ))
-            } else {
-                Some(LocalEdge::new(
-                    src_global_id.unwrap(),
-                    dst_global_id.unwrap(),
-                    label,
-                    edge.id(),
-                    from_start,
-                ))
+            let mut local_edge =
+                LocalEdge::new(src_global_id.unwrap(), dst_global_id.unwrap(), label, edge.id());
+            local_edge = local_edge.with_from_start(from_start);
+            if let Some(properties) = self.get_all_edge_property(&edge_id) {
+                local_edge = local_edge.with_properties(RowWithSchema::new(
+                    Some(properties),
+                    self.graph_schema.get_edge_schema(label),
+                ));
             }
+            Some(local_edge)
         } else {
             None
         }
@@ -563,21 +555,14 @@ where
             let _dst_v = self.index_data.get_global_id(dst);
             let label = *self.graph.edge_weight(ei).unwrap();
             if _src_v.is_some() && _dst_v.is_some() {
-                if let Some(property) = self.get_all_edge_property(&ei) {
-                    Some(LocalEdge::with_property(
-                        _src_v.unwrap(),
-                        _dst_v.unwrap(),
-                        label,
-                        ei,
-                        true,
-                        RowWithSchema::new(
-                            Some(property),
-                            self.graph_schema.get_edge_schema(label),
-                        ),
-                    ))
-                } else {
-                    Some(LocalEdge::new(_src_v.unwrap(), _dst_v.unwrap(), label, ei, true))
+                let mut local_edge = LocalEdge::new(_src_v.unwrap(), _dst_v.unwrap(), label, ei);
+                if let Some(properties) = self.get_all_edge_property(&ei) {
+                    local_edge = local_edge.with_properties(RowWithSchema::new(
+                        Some(properties),
+                        self.graph_schema.get_edge_schema(label),
+                    ));
                 }
+                Some(local_edge)
             } else {
                 None
             }
@@ -994,7 +979,7 @@ mod test {
     }
 
     #[test]
-    fn test_get_vertex_edge() {
+    fn test_get_vertex_edge_by_id() {
         let data_dir = "data/small_data";
         let root_dir = "data/small_data";
         let schema_file = "data/schema.json";
@@ -1003,6 +988,54 @@ mod test {
         // load whole graph
         loader.load().expect("Load graph error!");
         let graphdb = loader.into_graph();
+        let v1_id = LDBCVertexParser::to_global_id(6455, 5);
+        let v2_id = LDBCVertexParser::to_global_id(1, 0);
+        let v1 = graphdb.get_vertex(v1_id).unwrap();
+        let v2 = graphdb.get_vertex(v2_id).unwrap();
+
+        assert_eq!(v1.get_id(), v1_id);
+        assert_eq!(v1.get_label(), [5, 12]);
+        check_properties(
+            &graphdb,
+            &v1,
+            "6455|Tsing_Hua_University|http://dbpedia.org/resource/Tsing_Hua_University",
+        );
+
+        assert_eq!(v2.get_id(), v2_id);
+        assert_eq!(v2.get_label(), [0, 8]);
+        check_properties(&graphdb, &v2, "1|China|http://dbpedia.org/resource/China");
+
+        // e1 = (v1, v2), which can be both referenced from v1 and v2.
+        // As this is the same machine, they must have the same internal id
+        let e1_id = (v1_id, 2);
+        let e1 = graphdb.get_edge(e1_id).unwrap();
+
+        assert_eq!(e1.get_edge_id(), e1_id);
+        assert_eq!(e1.get_src_id(), v1_id);
+        assert_eq!(e1.get_dst_id(), v2_id);
+        assert_eq!(e1.get_label(), 11);
+        assert!(e1.clone_all_properties().unwrap().is_empty());
+
+        let mut edges = graphdb.get_out_edges(v1_id, None);
+        let e1 = loop {
+            if let Some(e) = edges.next() {
+                if e.get_edge_id().1 == 2 {
+                    break e;
+                }
+            }
+        };
+        let mut edges = graphdb.get_in_edges(v2_id, None);
+        let e2 = loop {
+            if let Some(e) = edges.next() {
+                if e.get_edge_id().1 == 2 {
+                    break e;
+                }
+            }
+        };
+        assert_eq!(e1.get_src_id(), e2.get_src_id());
+        assert_eq!(e1.get_dst_id(), e2.get_dst_id());
+        assert_eq!(e1.get_other_id(), v2_id);
+        assert_eq!(e2.get_other_id(), v1_id);
     }
 
     fn check_graph(graphdb: &LargeGraphDB) {
