@@ -245,8 +245,8 @@ bl::result<std::string> GrapeInstance::reportGraph(
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   DynamicGraphReporter reporter(comm_spec_);
-  if (fragment->full_stored()
-      && comm_spec_.worker_id() != grape::kCoordinatorRank) {
+  if (fragment->full_stored() &&
+      comm_spec_.worker_id() != grape::kCoordinatorRank) {
     // fragment stored full graph, only need to report from coordinator worker.
     return std::string();
   }
