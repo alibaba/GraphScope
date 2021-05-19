@@ -46,41 +46,41 @@ class GSConfig(object):
     k8s_image_pull_secrets = []
 
     # coordinator resource configuration
-    k8s_coordinator_cpu = 1.0
-    k8s_coordinator_mem = "4Gi"
+    k8s_coordinator_cpu = 0.5
+    k8s_coordinator_mem = "512Mi"
 
     # etcd resource configuration
-    k8s_etcd_num_pods = 3
-    k8s_etcd_cpu = 0.5
+    k8s_etcd_num_pods = 1
+    k8s_etcd_cpu = 0.2
     k8s_etcd_mem = "128Mi"
 
     # zookeeper resource configuration
-    k8s_zookeeper_cpu = 0.5
-    k8s_zookeeper_mem = "256Mi"
+    k8s_zookeeper_cpu = 0.2
+    k8s_zookeeper_mem = "128Mi"
 
     # GIE graph manager resource configuration
-    k8s_gie_graph_manager_cpu = 1.0
-    k8s_gie_graph_manager_mem = "4Gi"
+    k8s_gie_graph_manager_cpu = 0.2
+    k8s_gie_graph_manager_mem = "256Mi"
 
     # GIE gremlin server resource configuration
-    k8s_gie_gremlin_server_cpu = 1.0
-    k8s_gie_gremlin_server_mem = "1Gi"
+    k8s_gie_gremlin_server_cpu = 0.5
+    k8s_gie_gremlin_server_mem = "512Mi"
 
     # vineyard resource configuration
     k8s_vineyard_daemonset = "none"
-    k8s_vineyard_cpu = 0.5
-    k8s_vineyard_mem = "512Mi"
+    k8s_vineyard_cpu = 0.2
+    k8s_vineyard_mem = "128Mi"
     vineyard_shared_mem = "4Gi"
 
     # engine resource configuration
-    k8s_engine_cpu = 0.5
-    k8s_engine_mem = "4Gi"
+    k8s_engine_cpu = 0.2
+    k8s_engine_mem = "1Gi"
 
     # mars resource configuration
-    mars_worker_cpu = 0.5
-    mars_worker_mem = "4Gi"
-    mars_scheduler_cpu = 0.5
-    mars_scheduler_mem = "2Gi"
+    mars_worker_cpu = 0.2
+    mars_worker_mem = "512Mi"
+    mars_scheduler_cpu = 0.2
+    mars_scheduler_mem = "512Mi"
 
     # launch graphscope with mars
     with_mars = False
