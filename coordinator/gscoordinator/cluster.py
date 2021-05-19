@@ -207,6 +207,7 @@ class KubernetesClusterLauncher(Launcher):
         self._app_api = kube_client.AppsV1Api(self._api_client)
 
         self._saved_locals = locals()
+        self._num_workers = self._saved_locals["num_workers"]
 
         # random for multiple k8s cluster in the same namespace
         self._engine_name = self._engine_name_prefix + self._saved_locals["instance_id"]
@@ -433,7 +434,7 @@ class KubernetesClusterLauncher(Launcher):
         engine_builder = self._gs_engine_builder_cls(
             name=self._engine_name,
             labels=labels,
-            num_workers=self._saved_locals["num_workers"],
+            num_workers=self._num_workers,
             image_pull_policy=self._saved_locals["image_pull_policy"],
         )
         # volume1 is for vineyard ipc socket
@@ -828,10 +829,10 @@ class KubernetesClusterLauncher(Launcher):
                 if rs.metadata.name == self._engine_name:
                     # logger.info(
                     # "Engine pod: {} ready / {} total".format(
-                    # str(rs.status.ready_replicas), self._saved_locals["num_workers"]
+                    # str(rs.status.ready_replicas), self._num_workers
                     # )
                     # )
-                    if rs.status.ready_replicas == self._saved_locals["num_workers"]:
+                    if rs.status.ready_replicas == self._num_workers:
                         # service is ready
                         service_available = True
                         break
@@ -957,9 +958,7 @@ class KubernetesClusterLauncher(Launcher):
 
         # launch engine
         rmcp = ResolveMPICmdPrefix(rsh_agent=True)
-        cmd, mpi_env = rmcp.resolve(
-            self._saved_locals["num_workers"], ",".join(self._pod_name_list)
-        )
+        cmd, mpi_env = rmcp.resolve(self._num_workers, ",".join(self._pod_name_list))
 
         cmd.append(self._analytical_engine_exec)
         cmd.extend(["--host", "0.0.0.0"])
