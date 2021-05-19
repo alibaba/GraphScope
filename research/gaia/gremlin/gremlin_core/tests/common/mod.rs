@@ -30,7 +30,7 @@ pub mod test {
     };
     use gremlin_core::process::traversal::step::{graph_step_from, ResultProperty};
     use gremlin_core::process::traversal::traverser::{Requirement, Traverser};
-    use gremlin_core::structure::{Details, Tag};
+    use gremlin_core::structure::{Details, Tag, VertexOrEdge};
     use gremlin_core::{create_demo_graph, DynIter, Element, Partitioner, ID};
     use gremlin_core::{GremlinStepPb, Partition};
     use pegasus::api::function::{
@@ -188,7 +188,18 @@ pub mod test {
                         // to test remove tag optimization, we assume the last op generates graph_element traverser
                         assert_eq!(expected_path_len, traverser.get_path_len())
                     } else {
-                        id_result.push(element.id() as ID);
+                        match element.get() {
+                            VertexOrEdge::V(v) => {
+                                id_result.push(v.id() as ID);
+                            }
+                            VertexOrEdge::E(e) => {
+                                let g_src = e.src_id;
+                                let g_dst = e.dst_id;
+                                let eid = ((g_dst as ID) << 64) | (g_src as ID);
+                                id_result.push(eid as ID);
+                            }
+                        }
+
                     }
                 } else if let Some(o) = traverser.get_object() {
                     match o {
@@ -429,19 +440,6 @@ pub mod test {
         global_ids
     }
 
-    #[cfg(not(feature = "llong_id"))]
-    pub fn eids_to_global_ids(edges: Vec<(usize, usize)>) -> Vec<ID> {
-        let mut global_ids = vec![];
-        for (src, _dst) in edges {
-            // TODO() Use source id for edge id for now
-            let eid = to_global_id(src) as ID;
-
-            global_ids.push(eid);
-        }
-        global_ids
-    }
-
-    #[cfg(feature = "llong_id")]
     pub fn eids_to_global_ids(edges: Vec<(usize, usize)>) -> Vec<ID> {
         let mut global_ids = vec![];
         for (src, dst) in edges {
