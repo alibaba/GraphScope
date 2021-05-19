@@ -18,7 +18,7 @@ public class FileMetaStore implements MetaStore {
 
     @Override
     public boolean exists(String path) {
-        return Files.exists(new File(path).toPath());
+        return Files.exists(new File(this.workingDir, path).toPath());
     }
 
     @Override
@@ -33,6 +33,6 @@ public class FileMetaStore implements MetaStore {
 
     @Override
     public void delete(String path) throws IOException {
-        Files.delete(new File(path).toPath());
+        Files.delete(new File(this.workingDir, path).toPath());
     }
 }
