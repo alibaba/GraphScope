@@ -53,8 +53,8 @@ public class FileDiscovery implements NodeDiscovery {
             this.allNodes.put(RoleType.FRONTEND, frontendNodes);
 
             int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(this.configs);
-            String ingsetNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(this.configs);
-            Map<Integer, MaxGraphNode> ingestorNodes = makeRoleNodes(ingestorCount, ingsetNamePrefix,
+            String ingestorNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(this.configs);
+            Map<Integer, MaxGraphNode> ingestorNodes = makeRoleNodes(ingestorCount, ingestorNamePrefix,
                     RoleType.INGESTOR.getName(), port);
             this.allNodes.put(RoleType.INGESTOR, ingestorNodes);
 
