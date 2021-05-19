@@ -449,7 +449,7 @@ class KubernetesClusterLauncher(Launcher):
             "--k8s_volumes",
             "'{0}'".format(json.dumps(self._saved_locals["k8s_volumes"])),
             "--timeout_seconds",
-            str(self._saved_locals["k8s_timeout_seconds"]),
+            str(self._saved_locals["timeout_seconds"]),
             "--dangling_timeout_seconds",
             str(self._saved_locals["k8s_dangling_timeout_seconds"]),
             "--waiting_for_delete",
@@ -491,7 +491,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._namespace,
             name=self._coordinator_name,
-            timeout_seconds=self._saved_locals["k8s_timeout_seconds"],
+            timeout_seconds=self._saved_locals["timeout_seconds"],
         ):
             for pod_watcher in self._coordinator_pods_watcher:
                 pod_watcher.stop()
@@ -511,7 +511,7 @@ class KubernetesClusterLauncher(Launcher):
                     api_response.data["ip"], api_response.data["port"]
                 )
             time.sleep(1)
-            if time.time() - start_time > self._saved_locals["k8s_timeout_seconds"]:
+            if time.time() - start_time > self._saved_locals["timeout_seconds"]:
                 raise TimeoutError("Gete coordinator service from configmap timeout")
 
     def _get_coordinator_endpoint(self):
@@ -590,7 +590,7 @@ class KubernetesClusterLauncher(Launcher):
                     api_client=self._api_client,
                     target=target,
                     wait=self._saved_locals["k8s_waiting_for_delete"],
-                    timeout_seconds=self._saved_locals["k8s_timeout_seconds"],
+                    timeout_seconds=self._saved_locals["timeout_seconds"],
                 )
             self._resource_object = []
             if self._delete_namespace:
@@ -614,9 +614,9 @@ class KubernetesClusterLauncher(Launcher):
                             else:
                                 time.sleep(1)
                                 if (
-                                    self._saved_locals["k8s_timeout_seconds"]
+                                    self._saved_locals["timeout_seconds"]
                                     and time.time() - start_time
-                                    > self._saved_locals["k8s_timeout_seconds"]
+                                    > self._saved_locals["timeout_seconds"]
                                 ):
                                     logger.info(
                                         "Deleting namespace %s timeout", self._namespace
