@@ -451,7 +451,7 @@ class KubernetesClusterLauncher(Launcher):
             "--timeout_seconds",
             str(self._saved_locals["timeout_seconds"]),
             "--dangling_timeout_seconds",
-            str(self._saved_locals["k8s_dangling_timeout_seconds"]),
+            str(self._saved_locals["dangling_timeout_seconds"]),
             "--waiting_for_delete",
             str(self._saved_locals["k8s_waiting_for_delete"]),
             "--k8s_delete_namespace",
