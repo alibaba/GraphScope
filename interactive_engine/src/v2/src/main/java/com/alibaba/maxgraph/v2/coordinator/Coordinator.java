@@ -5,12 +5,9 @@ import com.alibaba.maxgraph.v2.common.MetaService;
 import com.alibaba.maxgraph.v2.common.NodeBase;
 import com.alibaba.maxgraph.v2.common.NodeLauncher;
 import com.alibaba.maxgraph.v2.common.config.CommonConfig;
+import com.alibaba.maxgraph.v2.common.discovery.*;
 import com.alibaba.maxgraph.v2.common.rpc.RoleClients;
 import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.discovery.LocalNodeProvider;
-import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.discovery.ZkDiscovery;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.rpc.ChannelManager;
 import com.alibaba.maxgraph.v2.common.rpc.MaxGraphNameResolverFactory;
@@ -41,12 +38,19 @@ public class Coordinator extends NodeBase {
     public Coordinator(Configs configs) {
         super(configs);
         configs = reConfig(configs);
-        this.curator = CuratorUtils.makeCurator(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
-        this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
+        MetaStore metaStore;
+        if (CommonConfig.DISCOVERY_MODE.get(configs).equalsIgnoreCase("file")) {
+            this.discovery = new FileDiscovery(configs);
+            metaStore = new FileMetaStore(configs);
+        } else {
+            this.curator = CuratorUtils.makeCurator(configs);
+            this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
+            metaStore = new ZkMetaStore(configs, this.curator);
+        }
         NameResolver.Factory nameResolverFactory = new MaxGraphNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
-        MetaStore metaStore = new ZkMetaStore(configs, this.curator);
+
         RoleClients<FrontendSnapshotClient> frontendSnapshotClients = new RoleClients<>(this.channelManager,
                 RoleType.FRONTEND, FrontendSnapshotClient::new);
         RoleClients<IngestorSnapshotClient> ingestorSnapshotClients = new RoleClients<>(this.channelManager,
@@ -78,7 +82,9 @@ public class Coordinator extends NodeBase {
 
     @Override
     public void start() {
-        this.curator.start();
+        if (this.curator != null) {
+            this.curator.start();
+        }
         this.graphInitializer.initializeIfNeeded();
         this.metaService.start();
         this.snapshotManager.start();
@@ -104,7 +110,9 @@ public class Coordinator extends NodeBase {
         this.snapshotNotifier.stop();
         this.channelManager.stop();
         this.discovery.stop();
-        this.curator.close();
+        if (this.curator != null) {
+            this.curator.close();
+        }
     }
 
     public static void main(String[] args) throws IOException {
