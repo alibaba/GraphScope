@@ -55,115 +55,7 @@ logger = logging.getLogger("graphscope")
 
 
 class KubernetesClusterLauncher(Launcher):
-    """Class for setting up GraphScope instance on kubernetes cluster.
-
-    Args:
-        api_client: ApiClient
-            An Kubernetes ApiClient object, initialized with the client args.
-
-        namespace: str, optional
-            Kubernetes namespace. Defaults to None.
-
-        service_type: str, optional
-            Type determines how the GraphScope service is exposed.
-
-        num_workers: int
-            Number of workers to launch graphscope engine.
-
-        preemptive: bool, optional
-            Support resource preemption or resource guarantee.
-
-        gs_image: str
-            GraphScope engine image.
-
-        etcd_image: str
-            Etcd image.
-
-        gie_graph_manager_image: str
-            Graph manager image for interactive engine.
-
-        zookeeper_image: str
-            Zookeeper image for interactive engine.
-
-        image_pull_policy: str, optional
-            Kubernetes image pull policy. Defaults to IfNotPresent.
-
-        image_pull_secrets: list of str, optional
-            A list of secret name used to pulling image. Defaults to None.
-
-        etcd_num_pods: int
-            The number of etcd pods.
-
-        etcd_cpu: float
-            Minimum number of CPU cores request for etcd pod.
-
-        etcd_mem: str
-             Minimum number of memory request for etcd pod.
-
-        zookeeper_cpu: float
-            Minimum number of CPU cores request for zookeeper container.
-
-        zookeeper_mem: str:
-            Minimum number of memory request for zookeeper container.
-
-        gie_graph_manager_cpu: float
-            Minimum number of CPU cores request for graph manager container.
-
-        gie_graph_manager_mem: str
-            Minimum number of memory request for graph manager container.
-
-        vineyard_daemonset: str
-            The name of Helm deployment for vineyard DaemonSet.
-
-        vineyard_cpu: float
-            Minimum number of CPU cores request for vineyard container.
-
-        vineyard_mem: str
-            Minimum number of memory request for vineyard container.
-
-        vineyard_shared_mem: str
-            Initial size of vineyard shared memory.
-
-        engine_cpu: float
-            Minimum number of CPU cores request for engine container.
-
-        engine_mem: str
-            Minimum number of memory request for engine container.
-
-        mars_worker_cpu: float:
-            Minimum number of CPU cores request for mars worker container.
-
-        mars_worker_mem: str:
-            Minimum number of memory request for mars worker container.
-
-        mars_scheduler_cpu: float:
-            Minimum number of CPU cores request for mars scheduler container.
-
-        mars_scheduler_mem: str:
-            Minimum number of memory request for mars scheduler container.
-
-        with_mars: bool
-            Launch graphscope with mars.
-
-        coordinator_cpu: float
-            Minimum number of CPU cores request for coordinator pod.
-
-        coordinator_mem: str
-            Minimum number of memory request for coordinator pod.
-
-        volumes: dict
-           A dict of k8s volumes which represents a directory containing data,
-           accessible to the containers in a pod.
-
-        timeout_seconds: int
-            Timeout when setting up graphscope instance on kubernetes cluster.
-
-        dangling_timeout_seconds: int
-            Kill GraphScope instance after seconds of client disconnect.
-
-        waiting_for_delete: bool
-            Waiting for service delete or not.
-    """
+    """Class for setting up GraphScope instance on kubernetes cluster."""
 
     _coordinator_builder_cls = GSCoordinatorBuilder
 
@@ -185,40 +77,40 @@ class KubernetesClusterLauncher(Launcher):
     def __init__(
         self,
         api_client=None,
-        namespace=None,
-        service_type=None,
+        k8s_namespace=None,
+        k8s_service_type=None,
         num_workers=None,
         preemptive=None,
-        gs_image=None,
-        etcd_image=None,
-        gie_graph_manager_image=None,
-        zookeeper_image=None,
-        image_pull_policy=None,
-        image_pull_secrets=None,
-        vineyard_daemonset=None,
-        vineyard_cpu=None,
-        vineyard_mem=None,
+        k8s_gs_image=None,
+        k8s_etcd_image=None,
+        k8s_gie_graph_manager_image=None,
+        k8s_zookeeper_image=None,
+        k8s_image_pull_policy=None,
+        k8s_image_pull_secrets=None,
+        k8s_vineyard_daemonset=None,
+        k8s_vineyard_cpu=None,
+        k8s_vineyard_mem=None,
         vineyard_shared_mem=None,
-        engine_cpu=None,
-        engine_mem=None,
-        coordinator_cpu=None,
-        coordinator_mem=None,
-        etcd_num_pods=None,
-        etcd_cpu=None,
-        etcd_mem=None,
-        zookeeper_cpu=None,
-        zookeeper_mem=None,
-        mars_worker_cpu=None,
-        mars_worker_mem=None,
-        mars_scheduler_cpu=None,
-        mars_scheduler_mem=None,
+        k8s_engine_cpu=None,
+        k8s_engine_mem=None,
+        k8s_coordinator_cpu=None,
+        k8s_coordinator_mem=None,
+        k8s_etcd_num_pods=None,
+        k8s_etcd_cpu=None,
+        k8s_etcd_mem=None,
+        k8s_zookeeper_cpu=None,
+        k8s_zookeeper_mem=None,
+        k8s_mars_worker_cpu=None,
+        k8s_mars_worker_mem=None,
+        k8s_mars_scheduler_cpu=None,
+        k8s_mars_scheduler_mem=None,
         with_mars=None,
-        gie_graph_manager_cpu=None,
-        gie_graph_manager_mem=None,
-        volumes=None,
+        k8s_gie_graph_manager_cpu=None,
+        k8s_gie_graph_manager_mem=None,
+        k8s_volumes=None,
         timeout_seconds=None,
         dangling_timeout_seconds=None,
-        waiting_for_delete=None,
+        k8s_waiting_for_delete=None,
         **kwargs
     ):
         self._api_client = api_client
@@ -226,45 +118,15 @@ class KubernetesClusterLauncher(Launcher):
         self._app_api = kube_client.AppsV1Api(api_client)
         self._rbac_api = kube_client.RbacAuthorizationV1Api(api_client)
 
-        self._namespace = namespace
-        self._service_type = service_type
-        self._gs_image = gs_image
-        self._num_workers = num_workers
-        self._preemptive = preemptive
-        self._etcd_image = etcd_image
-        self._gie_graph_manager_image = gie_graph_manager_image
-        self._zookeeper_image = zookeeper_image
+        self._saved_locals = locals()
 
-        self._image_pull_policy = image_pull_policy
-        self._image_pull_secrets = image_pull_secrets
+        self._namespace = self._saved_locals["k8s_namespace"]
+        self._image_pull_secrets = self._saved_locals["k8s_image_pull_secrets"]
         if self._image_pull_secrets is None:
             self._image_pull_secrets = []
         elif not isinstance(self._image_pull_secrets, list):
             self._image_pull_secrets = [self._image_pull_secrets]
         self._image_pull_secrets_str = ",".join(self._image_pull_secrets)
-
-        self._etcd_num_pods = etcd_num_pods
-        self._etcd_cpu = etcd_cpu
-        self._etcd_mem = etcd_mem
-        self._zookeeper_cpu = zookeeper_cpu
-        self._zookeeper_mem = zookeeper_mem
-        self._gie_graph_manager_cpu = gie_graph_manager_cpu
-        self._gie_graph_manager_mem = gie_graph_manager_mem
-
-        self._vineyard_daemonset = vineyard_daemonset
-        self._vineyard_cpu = vineyard_cpu
-        self._vineyard_mem = vineyard_mem
-        self._vineyard_shared_mem = vineyard_shared_mem
-        self._engine_cpu = engine_cpu
-        self._engine_mem = engine_mem
-
-        self._mars_worker_cpu = mars_worker_cpu
-        self._mars_worker_mem = mars_worker_mem
-        self._mars_scheduler_cpu = mars_scheduler_cpu
-        self._mars_scheduler_mem = mars_scheduler_mem
-        self._with_mars = with_mars
-
-        self._waiting_for_delete = waiting_for_delete
 
         self._instance_id = random_string(6)
         self._role_name = self._role_name_prefix + self._instance_id
@@ -279,20 +141,15 @@ class KubernetesClusterLauncher(Launcher):
         self._coordinator_service_name = (
             self._coordinator_service_name_prefix + self._instance_id
         )
-        self._coordinator_cpu = coordinator_cpu
-        self._coordinator_mem = coordinator_mem
         # environment variable
         self._coordinator_envs = kwargs.pop("coordinator_envs", dict())
 
-        self._volumes = volumes
         if "GS_COORDINATOR_MODULE_NAME" in os.environ:
             self._coordinator_module_name = os.environ["GS_COORDINATOR_MODULE_NAME"]
         else:
             self._coordinator_module_name = "gscoordinator"
 
         self._closed = False
-        self._timeout_seconds = timeout_seconds
-        self._dangling_timeout_seconds = dangling_timeout_seconds
 
         # pods watcher
         self._coordinator_pods_watcher = []
@@ -455,7 +312,7 @@ class KubernetesClusterLauncher(Launcher):
         # create coordinator service
         service_builder = ServiceBuilder(
             self._coordinator_service_name,
-            service_type=self._service_type,
+            service_type=self._saved_locals["k8s_service_type"],
             port=self._random_coordinator_service_port,
             selector=labels,
         )
@@ -472,7 +329,7 @@ class KubernetesClusterLauncher(Launcher):
             name=self._coordinator_name,
             labels=labels,
             replicas=1,
-            image_pull_policy=self._image_pull_policy,
+            image_pull_policy=self._saved_locals["k8s_image_pull_policy"],
         )
         # enable host network
         if "ENABLE_HOST_NETWORK" in os.environ:
@@ -495,10 +352,10 @@ class KubernetesClusterLauncher(Launcher):
             cmd=["/bin/bash"],
             args=self._build_coordinator_cmd(),
             name=self._coordinator_container_name,
-            image=self._gs_image,
-            cpu=self._coordinator_cpu,
-            mem=self._coordinator_mem,
-            preemptive=self._preemptive,
+            image=self._saved_locals["k8s_gs_image"],
+            cpu=self._saved_locals["k8s_coordinator_cpu"],
+            mem=self._saved_locals["k8s_coordinator_mem"],
+            preemptive=self._saved_locals["preemptive"],
             ports=[
                 self._random_coordinator_service_port,
                 self._random_coordinator_placeholder_port,
@@ -526,9 +383,9 @@ class KubernetesClusterLauncher(Launcher):
             "--port",
             str(self._random_coordinator_service_port),
             "--num_workers",
-            str(self._num_workers),
+            str(self._saved_locals["num_workers"]),
             "--preemptive",
-            str(self._preemptive),
+            str(self._saved_locals["preemptive"]),
             "--instance_id",
             self._instance_id,
             "--log_level",
@@ -536,17 +393,17 @@ class KubernetesClusterLauncher(Launcher):
             "--k8s_namespace",
             self._namespace,
             "--k8s_service_type",
-            str(self._service_type),
+            str(self._saved_locals["k8s_service_type"]),
             "--k8s_gs_image",
-            self._gs_image,
+            self._saved_locals["k8s_gs_image"],
             "--k8s_etcd_image",
-            self._etcd_image,
+            self._saved_locals["k8s_etcd_image"],
             "--k8s_gie_graph_manager_image",
-            self._gie_graph_manager_image,
+            self._saved_locals["k8s_gie_graph_manager_image"],
             "--k8s_zookeeper_image",
-            self._zookeeper_image,
+            self._saved_locals["k8s_zookeeper_image"],
             "--k8s_image_pull_policy",
-            self._image_pull_policy,
+            self._saved_locals["k8s_image_pull_policy"],
             "--k8s_image_pull_secrets",
             self._image_pull_secrets_str if self._image_pull_secrets_str else '""',
             "--k8s_coordinator_name",
@@ -554,49 +411,49 @@ class KubernetesClusterLauncher(Launcher):
             "--k8s_coordinator_service_name",
             self._coordinator_service_name,
             "--k8s_etcd_num_pods",
-            str(self._etcd_num_pods),
+            str(self._saved_locals["k8s_etcd_num_pods"]),
             "--k8s_etcd_cpu",
-            str(self._etcd_cpu),
+            str(self._saved_locals["k8s_etcd_cpu"]),
             "--k8s_etcd_mem",
-            self._etcd_mem,
+            self._saved_locals["k8s_etcd_mem"],
             "--k8s_zookeeper_cpu",
-            str(self._zookeeper_cpu),
+            str(self._saved_locals["k8s_zookeeper_cpu"]),
             "--k8s_zookeeper_mem",
-            self._zookeeper_mem,
+            self._saved_locals["k8s_zookeeper_mem"],
             "--k8s_gie_graph_manager_cpu",
-            str(self._gie_graph_manager_cpu),
+            str(self._saved_locals["k8s_gie_graph_manager_cpu"]),
             "--k8s_gie_graph_manager_mem",
-            self._gie_graph_manager_mem,
+            self._saved_locals["k8s_gie_graph_manager_mem"],
             "--k8s_vineyard_daemonset",
-            str(self._vineyard_daemonset),
+            str(self._saved_locals["k8s_vineyard_daemonset"]),
             "--k8s_vineyard_cpu",
-            str(self._vineyard_cpu),
+            str(self._saved_locals["k8s_vineyard_cpu"]),
             "--k8s_vineyard_mem",
-            self._vineyard_mem,
+            self._saved_locals["k8s_vineyard_mem"],
             "--vineyard_shared_mem",
-            self._vineyard_shared_mem,
+            self._saved_locals["vineyard_shared_mem"],
             "--k8s_engine_cpu",
-            str(self._engine_cpu),
+            str(self._saved_locals["k8s_engine_cpu"]),
             "--k8s_engine_mem",
-            self._engine_mem,
+            self._saved_locals["k8s_engine_mem"],
             "--k8s_mars_worker_cpu",
-            str(self._mars_worker_cpu),
+            str(self._saved_locals["k8s_mars_worker_cpu"]),
             "--k8s_mars_worker_mem",
-            self._mars_worker_mem,
+            self._saved_locals["k8s_mars_worker_mem"],
             "--k8s_mars_scheduler_cpu",
-            str(self._mars_scheduler_cpu),
+            str(self._saved_locals["k8s_mars_scheduler_cpu"]),
             "--k8s_mars_scheduler_mem",
-            self._mars_scheduler_mem,
+            self._saved_locals["k8s_mars_scheduler_mem"],
             "--k8s_with_mars",
-            str(self._with_mars),
+            str(self._saved_locals["with_mars"]),
             "--k8s_volumes",
-            "'{0}'".format(json.dumps(self._volumes)),
+            "'{0}'".format(json.dumps(self._saved_locals["k8s_volumes"])),
             "--timeout_seconds",
-            str(self._timeout_seconds),
+            str(self._saved_locals["k8s_timeout_seconds"]),
             "--dangling_timeout_seconds",
-            str(self._dangling_timeout_seconds),
+            str(self._saved_locals["k8s_dangling_timeout_seconds"]),
             "--waiting_for_delete",
-            str(self._waiting_for_delete),
+            str(self._saved_locals["k8s_waiting_for_delete"]),
             "--k8s_delete_namespace",
             str(self._delete_namespace),
         ]
@@ -634,7 +491,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._namespace,
             name=self._coordinator_name,
-            timeout_seconds=self._timeout_seconds,
+            timeout_seconds=self._saved_locals["k8s_timeout_seconds"],
         ):
             for pod_watcher in self._coordinator_pods_watcher:
                 pod_watcher.stop()
@@ -654,11 +511,11 @@ class KubernetesClusterLauncher(Launcher):
                     api_response.data["ip"], api_response.data["port"]
                 )
             time.sleep(1)
-            if time.time() - start_time > self._timeout_seconds:
+            if time.time() - start_time > self._saved_locals["k8s_timeout_seconds"]:
                 raise TimeoutError("Gete coordinator service from configmap timeout")
 
     def _get_coordinator_endpoint(self):
-        if self._service_type is None:
+        if self._saved_locals["k8s_service_type"] is None:
             # try to get endpoint from configmap
             return self._try_to_get_coordinator_service_from_configmap()
 
@@ -667,7 +524,7 @@ class KubernetesClusterLauncher(Launcher):
             api_client=self._api_client,
             namespace=self._namespace,
             name=self._coordinator_service_name,
-            type=self._service_type,
+            type=self._saved_locals["k8s_service_type"],
         )
 
         return endpoints[0]
@@ -732,8 +589,8 @@ class KubernetesClusterLauncher(Launcher):
                 delete_kubernetes_object(
                     api_client=self._api_client,
                     target=target,
-                    wait=self._waiting_for_delete,
-                    timeout_seconds=self._timeout_seconds,
+                    wait=self._saved_locals["k8s_waiting_for_delete"],
+                    timeout_seconds=self._saved_locals["k8s_timeout_seconds"],
                 )
             self._resource_object = []
             if self._delete_namespace:
@@ -745,7 +602,7 @@ class KubernetesClusterLauncher(Launcher):
                     # namespace already deleted.
                     pass
                 else:
-                    if wait or self._waiting_for_delete:
+                    if wait or self._saved_locals["k8s_waiting_for_delete"]:
                         start_time = time.time()
                         while True:
                             try:
@@ -757,8 +614,9 @@ class KubernetesClusterLauncher(Launcher):
                             else:
                                 time.sleep(1)
                                 if (
-                                    self._timeout_seconds
-                                    and time.time() - start_time > self._timeout_seconds
+                                    self._saved_locals["k8s_timeout_seconds"]
+                                    and time.time() - start_time
+                                    > self._saved_locals["k8s_timeout_seconds"]
                                 ):
                                     logger.info(
                                         "Deleting namespace %s timeout", self._namespace
