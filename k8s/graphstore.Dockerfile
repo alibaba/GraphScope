@@ -54,7 +54,10 @@ RUN source ~/.bashrc \
 
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
+COPY --from=builder /opt/graphscope /usr/local/
+COPY --from=builder /root/gs/interactive_engine/distribution/target/maxgraph.tar.gz /tmp/maxgraph.tar.gz
 RUN mkdir -p /home/maxgraph \
+    && tar -zxf /tmp/maxgraph.tar.gz -C /home/maxgraph \
     && export LD_LIBRARY_PATH=$(echo "$LD_LIBRARY_PATH" | sed "s/::/:/g") \
     && wget http://mirrors.ustc.edu.cn/gnu/libc/glibc-2.18.tar.gz \
     && tar -zxf glibc-2.18.tar.gz \
@@ -64,8 +67,6 @@ RUN mkdir -p /home/maxgraph \
     && make -j4 \
     && make install ;
 
-COPY --from=builder /opt/graphscope /usr/local/
-COPY --from=builder /root/gs/interactive_engine/distribution/target/maxgraph.tar.gz /home/maxgraph/maxgraph.tar.gz
 ENV RUST_BACKTRACE=1
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.282.b08-1.el7_9.x86_64/jre
 
