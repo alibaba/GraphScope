@@ -47,12 +47,14 @@ public class GraphInitializer {
     }
 
     private void initializeZkIfNeeded() throws Exception {
-        String zkRoot = ZkConfig.ZK_BASE_PATH.get(configs);
-        Stat stat = this.curator.checkExists().forPath(zkRoot);
-        if (stat != null) {
-            return;
+        if (CommonConfig.DISCOVERY_MODE.get(this.configs).equalsIgnoreCase("zookeeper")) {
+            String zkRoot = ZkConfig.ZK_BASE_PATH.get(configs);
+            Stat stat = this.curator.checkExists().forPath(zkRoot);
+            if (stat != null) {
+                return;
+            }
+            this.curator.create().creatingParentsIfNeeded().forPath(zkRoot);
         }
-        this.curator.create().creatingParentsIfNeeded().forPath(zkRoot);
     }
 
     private void initializeMetaIfNeeded() throws IOException {
