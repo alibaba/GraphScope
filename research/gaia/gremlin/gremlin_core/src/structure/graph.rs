@@ -52,6 +52,10 @@ pub trait GraphProxy: Send + Sync {
         &self, params: &QueryParams<Vertex>,
     ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>>;
 
+    fn scan_edge(
+        &self, params: &QueryParams<Edge>,
+    ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>>;
+
     fn get_vertex(
         &self, ids: &[ID], params: &QueryParams<Vertex>,
     ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>>;

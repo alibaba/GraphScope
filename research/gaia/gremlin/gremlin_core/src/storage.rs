@@ -231,6 +231,23 @@ impl GraphProxy for DemoGraph {
         }
     }
 
+    fn scan_edge(
+        &self, params: &QueryParams<Edge>,
+    ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>> {
+        let label_ids = encode_storage_edge_label(&params.labels);
+        let store = self.store;
+        let result =
+            self.store.get_all_edges(label_ids.as_ref()).map(move |e| to_runtime_edge(e, store));
+
+        if let Some(ref filter) = params.filter {
+            let f = filter.clone();
+            let result = result.filter(move |e| f.test(e).unwrap_or(false));
+            Ok(limit_n!(result, params.limit))
+        } else {
+            Ok(limit_n!(result, params.limit))
+        }
+    }
+
     fn get_vertex(
         &self, ids: &[ID], params: &QueryParams<Vertex>,
     ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>> {

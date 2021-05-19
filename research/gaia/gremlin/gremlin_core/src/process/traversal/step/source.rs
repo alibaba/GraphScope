@@ -14,24 +14,27 @@
 //! limitations under the License.
 
 use crate::generated::gremlin as pb;
+use crate::generated::gremlin::EntityType;
 use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::{Requirement, Traverser};
 use crate::structure::codec::pb_chain_to_filter;
-use crate::structure::{Label, QueryParams, Vertex, ID};
+use crate::structure::{Edge, Label, QueryParams, Vertex, ID};
 use crate::FromPb;
 use bit_set::BitSet;
 use graph_store::common::LabelId;
 use pegasus::BuildJobError;
 use pegasus_common::downcast::*;
 
-/// V(),
+/// V(), E()
 pub struct GraphVertexStep {
     pub symbol: StepSymbol,
-    pub params: QueryParams<Vertex>,
+    pub v_params: QueryParams<Vertex>,
+    pub e_params: QueryParams<Edge>,
     src: Option<Vec<Vec<ID>>>,
     as_tags: BitSet,
     requirement: Requirement,
+    return_type: EntityType,
     // workers per server, for gen_source
     workers: usize,
     server_index: u64,
@@ -40,16 +43,25 @@ pub struct GraphVertexStep {
 impl_as_any!(GraphVertexStep);
 
 impl GraphVertexStep {
-    pub fn new(req: Requirement) -> Self {
+    pub fn new(return_type: EntityType, req: Requirement) -> Self {
+        let symbol = if return_type == EntityType::Vertex { StepSymbol::V } else {
+            StepSymbol::E
+        };
         GraphVertexStep {
-            symbol: StepSymbol::V,
+            symbol,
             src: None,
             as_tags: BitSet::new(),
             requirement: req,
-            params: QueryParams::new(),
+            v_params: QueryParams::new(),
+            e_params: QueryParams::new(),
+            return_type,
             workers: 1,
             server_index: 0,
         }
+    }
+
+    pub fn set_return_type(&mut self, return_type: EntityType) {
+        self.return_type = return_type;
     }
 
     pub fn set_num_workers(&mut self, workers: usize) {
@@ -89,44 +101,56 @@ impl Step for GraphVertexStep {
 impl GraphVertexStep {
     pub fn gen_source(
         self, worker_index: Option<usize>,
-    ) -> Box<dyn Iterator<Item = Traverser> + Send> {
+    ) -> Box<dyn Iterator<Item=Traverser> + Send> {
         let gen_flag =
             if let Some(w_index) = worker_index { w_index % self.workers == 0 } else { true };
-        let source = if let Some(ref seeds) = self.src {
-            // work 0 in current server are going to get_vertex
-            if gen_flag {
-                if let Some(src) = seeds.get(self.server_index as usize) {
-                    if !src.is_empty() {
-                        let graph = crate::get_graph().unwrap();
-                        graph.get_vertex(src, &self.params).unwrap_or(Box::new(std::iter::empty()))
-                    } else {
-                        Box::new(std::iter::empty())
+
+        let graph = crate::get_graph().unwrap();
+        let mut v_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item=Vertex> + Send>;
+        let mut e_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item=Edge> + Send>;
+
+        if self.return_type == EntityType::Vertex {
+            if let Some(ref seeds) = self.src {
+                // work 0 in current server are going to get_vertex
+                if gen_flag {
+                    if let Some(src) = seeds.get(self.server_index as usize) {
+                        if !src.is_empty() {
+                            v_source = graph
+                                .get_vertex(src, &self.v_params)
+                                .unwrap_or(Box::new(std::iter::empty()));
+                        }
                     }
-                } else {
-                    Box::new(std::iter::empty())
                 }
             } else {
-                Box::new(std::iter::empty())
-            }
+                // work 0 in current server are going to scan_vertex
+                if gen_flag {
+                    v_source =
+                        graph.scan_vertex(&self.v_params).unwrap_or(Box::new(std::iter::empty()))
+                }
+            };
         } else {
             // work 0 in current server are going to scan_vertex
             if gen_flag {
-                let graph = crate::get_graph().unwrap();
-                graph.scan_vertex(&self.params).unwrap_or(Box::new(std::iter::empty()))
-            } else {
-                // return an emtpy iterator;
-                Box::new(std::iter::empty())
+                e_source = graph.scan_edge(&self.e_params).unwrap_or(Box::new(std::iter::empty()));
             }
-        };
+        }
 
         if self.requirement.contains(Requirement::PATH)
             || self.requirement.contains(Requirement::LABELED_PATH)
         {
             let tags = self.as_tags;
             let requirement = self.requirement.clone();
-            Box::new(source.map(move |v| Traverser::with_path(v, &tags, requirement)))
+            if self.return_type == EntityType::Vertex {
+                Box::new(v_source.map(move |v| Traverser::with_path(v, &tags, requirement)))
+            } else {
+                Box::new(e_source.map(move |e| Traverser::with_path(e, &tags, requirement)))
+            }
         } else {
-            Box::new(source.map(|v| Traverser::new(v)))
+            if self.return_type == EntityType::Vertex {
+                Box::new(v_source.map(|v| Traverser::new(v)))
+            } else {
+                Box::new(e_source.map(|e| Traverser::new(e)))
+            }
         }
     }
 }
@@ -139,7 +163,8 @@ pub fn graph_step_from(
             pb::gremlin_step::Step::GraphStep(mut opt) => {
                 let requirements_pb = unsafe { std::mem::transmute(opt.traverser_requirements) };
                 let requirements = Requirement::from_pb(requirements_pb)?;
-                let mut step = GraphVertexStep::new(requirements);
+                let return_type = unsafe { std::mem::transmute(opt.return_type) };
+                let mut step = GraphVertexStep::new(return_type, requirements);
                 step.set_tags(gremlin_step.get_tags());
                 let mut ids = vec![];
                 for id in opt.ids {
@@ -149,11 +174,19 @@ pub fn graph_step_from(
                     step.set_src(ids, num_servers);
                 }
                 let labels = std::mem::replace(&mut opt.labels, vec![]);
-                step.params.labels =
-                    labels.into_iter().map(|id| Label::Id(id as LabelId)).collect();
                 if let Some(ref test) = opt.predicates {
-                    if let Some(filter) = pb_chain_to_filter(test)? {
-                        step.params.set_filter(filter);
+                    if return_type == EntityType::Vertex {
+                        step.v_params.labels =
+                            labels.into_iter().map(|id| Label::Id(id as LabelId)).collect();
+                        if let Some(filter) = pb_chain_to_filter(test)? {
+                            step.v_params.set_filter(filter);
+                        }
+                    } else {
+                        step.e_params.labels =
+                            labels.into_iter().map(|id| Label::Id(id as LabelId)).collect();
+                        if let Some(filter) = pb_chain_to_filter(test)? {
+                            step.e_params.set_filter(filter);
+                        }
                     }
                 }
                 return Ok(step);
