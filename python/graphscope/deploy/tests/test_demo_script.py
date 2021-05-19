@@ -33,7 +33,9 @@ from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
-graphscope.set_option(show_log=True)
+graphscope.set_option(
+    show_log=True, k8s_gie_gremlin_server_cpu=1.0, k8s_gie_gremlin_server_mem="4Gi"
+)
 logger = logging.getLogger("graphscope")
 
 
