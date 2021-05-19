@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.store;
 
 import com.alibaba.graphscope.gaia.JsonUtils;
+import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -37,7 +38,7 @@ public class StaticGraphStore implements GraphStoreService {
     public static final StaticGraphStore INSTANCE = new StaticGraphStore("conf/graph.properties");
 
     private Map<String, Object> graphSchema;
-    private GlobalIdMaker idMaker;
+    private IdMaker idMaker;
     private Map<String, Map<String, Map<String, Object>>> propertyData;
 
     private StaticGraphStore(String graphConfig) {
@@ -75,36 +76,62 @@ public class StaticGraphStore implements GraphStoreService {
         if (edgeTypeMap != null && (edgeTypeId = edgeTypeMap.get(label)) != null) {
             return edgeTypeId;
         }
-        return INVALID_ID;
+        throw new RuntimeException("label " + label + " is invalid, please check schema");
     }
 
     @Override
     public long getGlobalId(long labelId, long propertyId) {
-        long globalId = idMaker.makeId(Arrays.asList(labelId, propertyId));
-        return globalId;
+        return (Long) idMaker.getId(Arrays.asList(labelId, propertyId));
     }
 
     @Override
-    public <P> P getVertexProperty(long id, String key) {
+    public <P> Optional<P> getVertexProperty(long id, String key) {
         String idStr = String.valueOf(id);
-        return (P) propertyData.get("vertex_properties").get(idStr).get(key);
+        if (getVertexKeys(id).isEmpty()) return Optional.empty();
+        return Optional.ofNullable((P) propertyData.get("vertex_properties").get(idStr).get(key));
     }
 
     @Override
     public Set<String> getVertexKeys(long id) {
         String idStr = String.valueOf(id);
-        return propertyData.get("vertex_properties").get(idStr).keySet();
+        Map<String, Object> result = propertyData.get("vertex_properties").get(idStr);
+        if (result == null) return Collections.EMPTY_SET;
+        return result.keySet();
     }
 
     @Override
-    public <P> P getEdgeProperty(long id, String key) {
+    public <P> Optional<P> getEdgeProperty(long id, String key) {
         String idStr = String.valueOf(id);
-        return (P) propertyData.get("edge_properties").get(idStr).get(key);
+        if (getEdgeKeys(id).isEmpty()) return Optional.empty();
+        return Optional.ofNullable((P) propertyData.get("edge_properties").get(idStr).get(key));
     }
 
     @Override
     public Set<String> getEdgeKeys(long id) {
         String idStr = String.valueOf(id);
-        return propertyData.get("edge_properties").get(idStr).keySet();
+        Map<String, Object> result = propertyData.get("edge_properties").get(idStr);
+        if (result == null) return Collections.EMPTY_SET;
+        return result.keySet();
+    }
+
+    @Override
+    public String getLabel(long labelId) {
+        Map<String, Integer> vertexTypeMap = (Map<String, Integer>) graphSchema.get(VERTEX_TYPE_MAP);
+        String label = null;
+        for (Map.Entry<String, Integer> e : vertexTypeMap.entrySet()) {
+            if (e.getValue() == labelId) {
+                label = e.getKey();
+            }
+        }
+        Map<String, Integer> edgeTypeMap = (Map<String, Integer>) graphSchema.get(EDGE_TYPE_MAP);
+        for (Map.Entry<String, Integer> e : edgeTypeMap.entrySet()) {
+            if (e.getValue() == labelId) {
+                label = e.getKey();
+            }
+        }
+        if (label == null) {
+            throw new RuntimeException("labelId is invalid " + labelId);
+        }
+        return label;
     }
 }

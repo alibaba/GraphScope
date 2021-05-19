@@ -17,6 +17,7 @@ package com.alibaba.graphscope.gaia.result;
 
 import com.alibaba.graphscope.common.proto.GremlinResult;
 import com.alibaba.graphscope.gaia.plan.translator.builder.ConfigBuilder;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.StaticGraphStore;
 import com.google.common.collect.ImmutableMap;
 import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
@@ -37,6 +38,8 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
         super(builder);
     }
 
+    private final GraphStoreService graphStore = StaticGraphStore.INSTANCE;
+
     @Override
     public List<Object> parseFrom(GremlinResult.Result resultData) {
         List<Object> result = new ArrayList<>();
@@ -55,7 +58,7 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.MAP_RESULT) {
             resultData.getMapResult().getItemList().forEach(e -> {
                 Map entry = Collections.singletonMap(parsePairElement(e.getFirst()), parsePairElement(e.getSecond()));
-                result.add(transform(entry.entrySet().iterator().next()));
+                result.add(transform(entry));
             });
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.VALUE) {
             result.add(transform(parseValue(resultData.getValue())));
@@ -73,12 +76,15 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
     protected Object parseElement(GremlinResult.GraphElement elementPB) {
         if (elementPB.getInnerCase() == GremlinResult.GraphElement.InnerCase.EDGE) {
             GremlinResult.Edge edge = elementPB.getEdge();
-            return new DetachedEdge(edge.getId(), edge.getLabel(), extractProperties(edge),
-                    edge.getSrcId(), edge.getSrcLabel(), edge.getDstId(), edge.getDstLabel());
+            String edgeLabelName = graphStore.getLabel(Long.valueOf(edge.getLabel()));
+            return new DetachedEdge(edge.getId(), edgeLabelName, extractProperties(edge),
+                    edge.getSrcId(), extractVertexLabel(edge.getSrcId()),
+                    edge.getDstId(), extractVertexLabel(edge.getDstId()));
         }
         if (elementPB.getInnerCase() == GremlinResult.GraphElement.InnerCase.VERTEX) {
             GremlinResult.Vertex vertex = elementPB.getVertex();
-            return new DetachedVertex(vertex.getId(), vertex.getLabel(), extractProperties(vertex));
+            String vertexLabelName = graphStore.getLabel(Long.valueOf(vertex.getLabel()));
+            return new DetachedVertex(vertex.getId(), vertexLabelName, extractProperties(vertex));
         }
         throw new RuntimeException("graph element type not set");
     }
@@ -98,22 +104,31 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
 
     private Map<String, Object> extractProperties(GremlinResult.Edge edge) {
         Map<String, Object> result = new HashMap<>();
-        StaticGraphStore graphStore = StaticGraphStore.INSTANCE;
         Set<String> keys = graphStore.getEdgeKeys(edge.getId());
         for (String key : keys) {
-            result.put(key, graphStore.getEdgeProperty(edge.getId(), key));
+            Optional propertyOpt = graphStore.getEdgeProperty(edge.getId(), key);
+            if (propertyOpt.isPresent()) {
+                result.put(key, propertyOpt.get());
+            }
         }
         return result;
     }
 
     private Map<String, Object> extractProperties(GremlinResult.Vertex vertex) {
         Map<String, Object> result = new HashMap<>();
-        StaticGraphStore graphStore = StaticGraphStore.INSTANCE;
         Set<String> keys = graphStore.getVertexKeys(vertex.getId());
         for (String key : keys) {
-            result.put(key, Collections.singletonList(ImmutableMap.of("id", 1L,
-                    "value", graphStore.getVertexProperty(vertex.getId(), key))));
+            Optional propertyOpt = graphStore.getVertexProperty(vertex.getId(), key);
+            if (propertyOpt.isPresent()) {
+                result.put(key, Collections.singletonList(ImmutableMap.of("id", 1L, "value", propertyOpt.get())));
+            }
         }
         return result;
+    }
+
+    private String extractVertexLabel(long vertexId) {
+        // pre 8 bits
+        long labelId = (vertexId >> 56) & 0xff;
+        return graphStore.getLabel(labelId);
     }
 }

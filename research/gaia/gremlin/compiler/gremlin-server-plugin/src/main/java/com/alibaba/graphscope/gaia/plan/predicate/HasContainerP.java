@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class HasContainerP implements PredicateContainer {
     private static final Logger logger = LoggerFactory.getLogger(HasContainerP.class);
@@ -58,15 +59,29 @@ public class HasContainerP implements PredicateContainer {
     public static Gremlin.FilterExp generateFilter(Common.Key key, P predicate, boolean ignoreValue) {
         if (key.getItemCase() == Common.Key.ItemCase.LABEL) {
             if (ignoreValue) {
-                return FilterHelper.INSTANCE.labelPredicate(null, predicate.getBiPredicate());
+                return FilterHelper.INSTANCE.labelPredicate((Number) null, predicate.getBiPredicate());
             } else {
-                return FilterHelper.INSTANCE.labelPredicate(Integer.valueOf((String) predicate.getValue()), predicate.getBiPredicate());
+                if (predicate.getValue() instanceof String) {
+                    return FilterHelper.INSTANCE.labelPredicate(Integer.valueOf((String) predicate.getValue()), predicate.getBiPredicate());
+                } else if (predicate.getValue() instanceof List && ((List) predicate.getValue()).get(0) instanceof String) {
+                    List<String> values = (List<String>) predicate.getValue();
+                    return FilterHelper.INSTANCE.labelPredicate(values.stream().map(k -> Integer.valueOf(k)).collect(Collectors.toList()),
+                            predicate.getBiPredicate());
+                } else {
+                    throw new UnsupportedOperationException("hasLabel value type not support " + predicate.getValue().getClass());
+                }
             }
         } else if (key.getItemCase() == Common.Key.ItemCase.ID) {
             if (ignoreValue) {
-                return FilterHelper.INSTANCE.idPredicate(null, predicate.getBiPredicate());
+                return FilterHelper.INSTANCE.idPredicate((Number) null, predicate.getBiPredicate());
             } else {
-                return FilterHelper.INSTANCE.idPredicate((Number) predicate.getValue(), predicate.getBiPredicate());
+                if (predicate.getValue() instanceof List && ((List) predicate.getValue()).get(0) instanceof Number) {
+                    return FilterHelper.INSTANCE.idPredicate((List<Number>) predicate.getValue(), predicate.getBiPredicate());
+                } else if (predicate.getValue() instanceof Number) {
+                    return FilterHelper.INSTANCE.idPredicate((Number) predicate.getValue(), predicate.getBiPredicate());
+                } else {
+                    throw new UnsupportedOperationException("hasId value type not support " + predicate.getValue().getClass());
+                }
             }
         } else if (key.getItemCase() == Common.Key.ItemCase.NAME) {
             if (ignoreValue) {

@@ -102,7 +102,7 @@ public class LogicPlanGlobalMap {
         stepPlanMap.put(STEP.GraphStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
-                return Gremlin.GraphStep.newBuilder().addAllIds(PlanUtils.intIdsAsLongList(((GraphStep) t).getIds()))
+                return Gremlin.GraphStep.newBuilder().addAllIds(PlanUtils.extractLongIds(((GraphStep) t).getIds()))
                         .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
                         .addTraverserRequirements(Gremlin.TraverserRequirement.PATH)
                         .build();
@@ -112,7 +112,7 @@ public class LogicPlanGlobalMap {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
                 Gremlin.GraphStep.Builder builder = Gremlin.GraphStep.newBuilder()
-                        .addAllIds(PlanUtils.intIdsAsLongList(((MaxGraphStep) t).getIds()))
+                        .addAllIds(PlanUtils.extractLongIds(((MaxGraphStep) t).getIds()))
                         .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
                         .setPredicates(new PredicateTranslator(new HasContainerP((MaxGraphStep) t)).translate())
                         .addTraverserRequirements(Gremlin.TraverserRequirement.valueOf(((MaxGraphStep) t).getTraverserRequirement().name()));
@@ -442,7 +442,7 @@ public class LogicPlanGlobalMap {
                 JobBuilder target = (JobBuilder) stepBuilder.getJobBuilder();
                 P p = ((IsStep) t).getPredicate();
                 target.filter(Gremlin.GremlinStep.newBuilder().setIsStep(
-                        Gremlin.IsStep.newBuilder().setSingle(FilterHelper.INSTANCE.valueComparePredicate((Number) p.getValue(), p.getBiPredicate()))
+                        Gremlin.IsStep.newBuilder().setSingle(FilterHelper.INSTANCE.valueComparePredicate(p.getValue(), p.getBiPredicate()))
                 ).build().toByteString());
             }
         });

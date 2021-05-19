@@ -51,7 +51,7 @@ public class DefaultResultParser implements ResultParser {
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.MAP_RESULT) {
             resultData.getMapResult().getItemList().forEach(e -> {
                 Map entry = Collections.singletonMap(parsePairElement(e.getFirst()), parsePairElement(e.getSecond()));
-                result.add(entry.entrySet().iterator().next());
+                result.add(entry);
             });
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.VALUE) {
             result.add(parseValue(resultData.getValue()));

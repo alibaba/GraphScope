@@ -119,15 +119,20 @@ public final class MaxGraphStep<S, E extends Element> extends GraphStep<S, E> im
 
         if (primaryKeyAsIndex[0] && hasContainer.getKey().equals(T.label.getAccessor())) {
             HasContainer propertyIdContainer = getContainer(originalContainers, "id");
-            long globalId = StaticGraphStore.INSTANCE.getGlobalId(
-                    Long.valueOf((String) hasContainer.getPredicate().getValue()),
-                    ((Number) propertyIdContainer.getPredicate().getValue()).longValue()
-            );
-            if (globalId == StaticGraphStore.INVALID_ID) {
-                logger.error("global id is invalid, check label {} and propertyId {}",
-                        hasContainer.getPredicate().getValue(), propertyIdContainer.getPredicate().getValue());
-            } else {
+            P predicate = hasContainer.getPredicate();
+            if (predicate.getValue() instanceof List && ((List) predicate.getValue()).get(0) instanceof String) {
+                List<String> values = (List<String>) predicate.getValue();
+                values.forEach(k -> {
+                    long globalId = StaticGraphStore.INSTANCE.getGlobalId(Long.valueOf(k),
+                            ((Number) propertyIdContainer.getPredicate().getValue()).longValue());
+                    graphStep.addIds(globalId);
+                });
+            } else if (predicate.getValue() instanceof String) {
+                long globalId = StaticGraphStore.INSTANCE.getGlobalId(Long.valueOf((String) predicate.getValue()),
+                        ((Number) propertyIdContainer.getPredicate().getValue()).longValue());
                 graphStep.addIds(globalId);
+            } else {
+                throw new UnsupportedOperationException("hasLabel value type not support " + predicate.getValue().getClass());
             }
         }
         return true;
@@ -143,7 +148,15 @@ public final class MaxGraphStep<S, E extends Element> extends GraphStep<S, E> im
         if (getContainer(originalContainers, T.id.getAccessor()) != null) {
             return false;
         } else {
-            graphStep.addGraphLabels((String) hasContainer.getPredicate().getValue());
+            P predicate = hasContainer.getPredicate();
+            if (predicate.getValue() instanceof List && ((List) predicate.getValue()).get(0) instanceof String) {
+                List<String> values = (List<String>) predicate.getValue();
+                values.forEach(k -> graphStep.addGraphLabels(k));
+            } else if (predicate.getValue() instanceof String) {
+                graphStep.addGraphLabels((String) predicate.getValue());
+            } else {
+                throw new UnsupportedOperationException("hasLabel value type not support " + predicate.getValue().getClass());
+            }
             return true;
         }
     }

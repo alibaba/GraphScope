@@ -63,6 +63,7 @@ public class GremlinResultProcessor implements ResultProcessor {
                 MaxGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(e.getMessage()), ResponseStatusCode.SERVER_ERROR);
                 // cannot write to this context any more
                 locked = true;
+                throw new RuntimeException(e);
             }
         }
     }

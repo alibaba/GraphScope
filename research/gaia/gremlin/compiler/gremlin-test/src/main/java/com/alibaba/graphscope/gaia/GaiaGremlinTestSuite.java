@@ -66,6 +66,8 @@ public class GaiaGremlinTestSuite extends AbstractGremlinSuite {
             // sideEffect
             GroupTest.Traversals.class,
             GroupCountTest.Traversals.class,
+
+//             SmallTest.Traversals.class,
     };
 
     private static final Class<?>[] testsToEnforce = new Class<?>[]{
@@ -97,6 +99,8 @@ public class GaiaGremlinTestSuite extends AbstractGremlinSuite {
             // sideEffect
             GroupTest.Traversals.class,
             GroupCountTest.Traversals.class,
+
+//             SmallTest.Traversals.class,
     };
 
     public GaiaGremlinTestSuite(final Class<?> klass, final RunnerBuilder builder) throws InitializationError {
