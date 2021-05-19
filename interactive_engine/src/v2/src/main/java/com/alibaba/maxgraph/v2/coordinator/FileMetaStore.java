@@ -13,6 +13,7 @@ public class FileMetaStore implements MetaStore {
 
     public FileMetaStore(Configs configs) {
         this.workingDir = CoordinatorConfig.FILE_META_STORE_PATH.get(configs);
+        new File(this.workingDir).mkdirs();
     }
 
     @Override
