@@ -22,7 +22,7 @@ from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 
 
-def empty_graph_in_engine(graph, directed, full_stored):
+def empty_graph_in_engine(graph, directed, duplicated_load):
     """create empty graph in grape_engine with the graph metadata.
 
     Parameters:
@@ -37,7 +37,7 @@ def empty_graph_in_engine(graph, directed, full_stored):
         sess.session_id,
         graph_type=graph._graph_type,
         directed=directed,
-        full_stored=full_stored,
+        duplicated_load=duplicated_load,
         efile="",
         vfile="",
     )

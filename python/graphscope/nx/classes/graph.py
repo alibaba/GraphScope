@@ -262,7 +262,9 @@ class Graph(object):
         create_empty_in_engine = attr.pop(
             "create_empty_in_engine", True
         )  # a hidden parameter
-        self._full_stored = attr.pop("full_stored", False)
+        self._duplicated_load = attr.pop(
+            "duplicated_load", False
+        )
 
         if self._is_gs_graph(incoming_graph_data):
             self._session_id = incoming_graph_data.session_id
@@ -276,7 +278,7 @@ class Graph(object):
             self._session_id = sess.session_id
 
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
-            graph_def = empty_graph_in_engine(self, self.is_directed(), self._full_stored)
+            graph_def = empty_graph_in_engine(self, self.is_directed(), self._duplicated_load)
             self._key = graph_def.key
 
         # attempt to load graph with data

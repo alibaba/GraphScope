@@ -89,7 +89,7 @@ def create_graph(session_id, graph_type, **kwargs):
         config[types_pb2.E_FILE] = utils.s_to_attr(kwargs["efile"])
         config[types_pb2.V_FILE] = utils.s_to_attr(kwargs["vfile"])
         config[types_pb2.DIRECTED] = utils.b_to_attr(kwargs["directed"])
-        config[types_pb2.FULL_STORED] = utils.b_to_attr(kwargs["full_stored"])
+        config[types_pb2.DUPLICATED_LOAD] = utils.b_to_attr(kwargs["duplicated_load"])
     else:
         raise RuntimeError("Not supported graph type {}".format(graph_type))
 

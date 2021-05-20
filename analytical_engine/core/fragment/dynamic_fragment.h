@@ -778,11 +778,11 @@ class DynamicFragment {
     InvalidCache();
   }
 
-  void Init(fid_t fid, bool directed, bool full_stored = false) {
+  void Init(fid_t fid, bool directed, bool duplicated_load = false) {
     std::vector<internal_vertex_t> empty_vertices;
     std::vector<edge_t> empty_edges;
 
-    full_stored_ = full_stored;
+    duplicated_load_ = duplicated_load;
     Init(fid, empty_vertices, empty_edges, directed);
   }
 
@@ -950,7 +950,7 @@ class DynamicFragment {
 
   inline virtual size_t selfloops_num() const { return selfloops_num_; }
 
-  inline virtual bool full_stored() const { return full_stored_; }
+  inline virtual bool duplicated_load() const { return duplicated_load_; }
 
   inline virtual const vid_t* GetOuterVerticesGid() const { return &ovgid_[0]; }
 
@@ -2655,7 +2655,7 @@ class DynamicFragment {
   fid_t fid_offset_{};
   fid_t fid_{}, fnum_{};
   bool directed_{};
-  bool full_stored_{};
+  bool duplicated_load_{};
   grape::LoadStrategy load_strategy_{};
 
   // vertices cache

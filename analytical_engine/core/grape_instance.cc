@@ -57,14 +57,14 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
     using fragment_t = DynamicFragment;
     using vertex_map_t = typename fragment_t::vertex_map_t;
     BOOST_LEAF_AUTO(directed, params.Get<bool>(rpc::DIRECTED));
-    BOOST_LEAF_AUTO(full_stored, params.Get<bool>(rpc::FULL_STORED));
+    BOOST_LEAF_AUTO(duplicated_load, params.Get<bool>(rpc::DUPLICATED_LOAD));
 
     VLOG(1) << "Loading graph, graph name: " << graph_name
             << ", graph type: DynamicFragment, directed: " << directed
-            << ", full graph stored: " << full_stored;
+            << ", full graph stored: " << duplicated_load;
 
     grape::CommSpec comm_spec = comm_spec_;
-    if (full_stored) {
+    if (duplicated_load) {
       comm_spec.set_fnum(1);
       comm_spec.set_fid(0);
     }
@@ -73,7 +73,7 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
     vm_ptr->Init();
 
     auto fragment = std::make_shared<fragment_t>(vm_ptr);
-    fragment->Init(comm_spec.fid(), directed, full_stored);
+    fragment->Init(comm_spec.fid(), directed, duplicated_load);
 
     rpc::GraphDef graph_def;
 
