@@ -168,12 +168,16 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method = "g_EX7X_hasXlabelXknowsX",
         reason = "g.E() return vertices")
 
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_VX4X_hasXage_gt_30X",
-        reason = "bug return empty")
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_VX4X_hasXage_gt_30X",
+//        reason = "bug return empty")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_VX1X_hasXname_markoX",
+//        reason = "bug return empty")
 
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_VX1X_hasXname_markoX",
+        method = "g_E_hasXlabelXknowsX",
         reason = "bug return empty")
 
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
