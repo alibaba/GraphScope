@@ -624,16 +624,16 @@ class ReplicaSetBuilder(object):
 class GSEngineBuilder(ReplicaSetBuilder):
     """Builder for graphscope analytical engine."""
 
-    _vineyard_requests_cpu = 0.5
-    _vineyard_requests_mem = "512Mi"
+    _vineyard_requests_cpu = 0.2
+    _vineyard_requests_mem = "128Mi"
 
-    _engine_requests_cpu = 0.5
-    _engine_requests_mem = "4Gi"
+    _engine_requests_cpu = 0.2
+    _engine_requests_mem = "1Gi"
 
-    _mars_worker_requests_cpu = 0.5
-    _mars_worker_requests_mem = "4Gi"
-    _mars_scheduler_requests_cpu = 0.5
-    _mars_scheduler_requests_mem = "2Gi"
+    _mars_worker_requests_cpu = 0.2
+    _mars_worker_requests_mem = "512Mi"
+    _mars_scheduler_requests_cpu = 0.2
+    _mars_scheduler_requests_mem = "512Mi"
 
     def __init__(self, name, labels, num_workers, image_pull_policy):
         self._name = name
@@ -950,7 +950,7 @@ class PodBuilder(object):
 class GSEtcdBuilder(object):
     """Builder for graphscope etcd."""
 
-    _requests_cpu = 0.5
+    _requests_cpu = 0.2
     _requests_mem = "128Mi"
 
     def __init__(
@@ -1118,11 +1118,11 @@ class GSEtcdBuilder(object):
 class GSGraphManagerBuilder(DeploymentBuilder):
     """Builder for graphscope interactive graph manager."""
 
-    _manager_requests_cpu = 1.0
-    _manager_requests_mem = "4Gi"
+    _manager_requests_cpu = 0.2
+    _manager_requests_mem = "256Mi"
 
-    _zookeeper_requests_cpu = 0.5
-    _zookeeper_requests_mem = "256Mi"
+    _zookeeper_requests_cpu = 0.2
+    _zookeeper_requests_mem = "128Mi"
 
     def __init__(self, name, labels, image_pull_policy, replicas=1):
         self._name = name
@@ -1236,8 +1236,8 @@ class GSGraphManagerBuilder(DeploymentBuilder):
 class GSCoordinatorBuilder(DeploymentBuilder):
     """Builder for graphscope coordinator."""
 
-    _requests_cpu = 1.0
-    _requests_mem = "4Gi"
+    _requests_cpu = 0.5
+    _requests_mem = "512Mi"
 
     def __init__(self, name, labels, image_pull_policy, replicas=1):
         self._name = name
