@@ -49,31 +49,33 @@ import javax.script.Bindings;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PlanUtils {
     private static final Logger logger = LoggerFactory.getLogger(PlanUtils.class);
     public static final String DIRECTION_OTHER = "OTHER";
 
-    public static List<Long> extractLongIds(Object[] ids) {
-        List<Long> longList = new ArrayList<>();
+    public static List<ByteString> extractIds(Object[] ids) {
+        List<BigInteger> resultIds = new ArrayList<>();
         for (Object id : ids) {
-            if (id instanceof Long) {
-                longList.add(((Long) id));
-            } else if (id instanceof Integer) {
-                longList.add(((Integer) id).longValue());
+            if (id instanceof Long || id instanceof Integer) {
+                resultIds.add(new BigInteger(String.valueOf(id)));
+            } else if (id instanceof BigInteger) {
+                resultIds.add((BigInteger) id);
             } else if (id instanceof ReferenceVertex) {
-                longList.add((Long) ((ReferenceVertex) id).id());
+                resultIds.add(new BigInteger(String.valueOf(((ReferenceVertex) id).id())));
             } else if (id instanceof ReferenceEdge) {
-                longList.add((Long) ((ReferenceEdge) id).id());
+                resultIds.add(new BigInteger(String.valueOf(((ReferenceEdge) id).id())));
             } else if (id instanceof String) {
-                longList.add(Long.valueOf((String) id));
+                resultIds.add(new BigInteger((String) id));
             } else {
                 throw new RuntimeException("invalid id type " + id.getClass());
             }
         }
-        return longList;
+        return resultIds.stream().map(k -> ByteString.copyFrom(k.toByteArray())).collect(Collectors.toList());
     }
 
     public static PegasusClient.JobConfig getDefaultConfig(long queryId) {

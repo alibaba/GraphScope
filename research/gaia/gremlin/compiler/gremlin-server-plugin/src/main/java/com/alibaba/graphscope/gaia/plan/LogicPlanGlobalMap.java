@@ -102,7 +102,7 @@ public class LogicPlanGlobalMap {
         stepPlanMap.put(STEP.GraphStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
-                return Gremlin.GraphStep.newBuilder().addAllIds(PlanUtils.extractLongIds(((GraphStep) t).getIds()))
+                return Gremlin.GraphStep.newBuilder().addAllIds(PlanUtils.extractIds(((GraphStep) t).getIds()))
                         .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
                         .addTraverserRequirements(Gremlin.TraverserRequirement.PATH)
                         .build();
@@ -112,7 +112,7 @@ public class LogicPlanGlobalMap {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
                 Gremlin.GraphStep.Builder builder = Gremlin.GraphStep.newBuilder()
-                        .addAllIds(PlanUtils.extractLongIds(((MaxGraphStep) t).getIds()))
+                        .addAllIds(PlanUtils.extractIds(((MaxGraphStep) t).getIds()))
                         .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
                         .setPredicates(new PredicateTranslator(new HasContainerP((MaxGraphStep) t)).translate())
                         .addTraverserRequirements(Gremlin.TraverserRequirement.valueOf(((MaxGraphStep) t).getTraverserRequirement().name()));

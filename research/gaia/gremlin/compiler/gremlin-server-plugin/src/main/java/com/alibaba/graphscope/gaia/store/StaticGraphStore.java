@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -85,14 +86,14 @@ public class StaticGraphStore implements GraphStoreService {
     }
 
     @Override
-    public <P> Optional<P> getVertexProperty(long id, String key) {
+    public <P> Optional<P> getVertexProperty(BigInteger id, String key) {
         String idStr = String.valueOf(id);
         if (getVertexKeys(id).isEmpty()) return Optional.empty();
         return Optional.ofNullable((P) propertyData.get("vertex_properties").get(idStr).get(key));
     }
 
     @Override
-    public Set<String> getVertexKeys(long id) {
+    public Set<String> getVertexKeys(BigInteger id) {
         String idStr = String.valueOf(id);
         Map<String, Object> result = propertyData.get("vertex_properties").get(idStr);
         if (result == null) return Collections.EMPTY_SET;
@@ -100,14 +101,14 @@ public class StaticGraphStore implements GraphStoreService {
     }
 
     @Override
-    public <P> Optional<P> getEdgeProperty(long id, String key) {
+    public <P> Optional<P> getEdgeProperty(BigInteger id, String key) {
         String idStr = String.valueOf(id);
         if (getEdgeKeys(id).isEmpty()) return Optional.empty();
         return Optional.ofNullable((P) propertyData.get("edge_properties").get(idStr).get(key));
     }
 
     @Override
-    public Set<String> getEdgeKeys(long id) {
+    public Set<String> getEdgeKeys(BigInteger id) {
         String idStr = String.valueOf(id);
         Map<String, Object> result = propertyData.get("edge_properties").get(idStr);
         if (result == null) return Collections.EMPTY_SET;

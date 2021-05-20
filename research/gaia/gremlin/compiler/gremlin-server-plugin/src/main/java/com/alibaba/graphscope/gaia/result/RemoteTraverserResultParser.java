@@ -29,6 +29,7 @@ import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.*;
 
 public class RemoteTraverserResultParser extends DefaultResultParser {
@@ -77,7 +78,7 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
         if (elementPB.getInnerCase() == GremlinResult.GraphElement.InnerCase.EDGE) {
             GremlinResult.Edge edge = elementPB.getEdge();
             String edgeLabelName = graphStore.getLabel(Long.valueOf(edge.getLabel()));
-            return new DetachedEdge(edge.getId(), edgeLabelName, extractProperties(edge),
+            return new DetachedEdge(extractEdgeId(edge), edgeLabelName, extractProperties(edge),
                     edge.getSrcId(), extractVertexLabel(edge.getSrcId()),
                     edge.getDstId(), extractVertexLabel(edge.getDstId()));
         }
@@ -104,9 +105,9 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
 
     private Map<String, Object> extractProperties(GremlinResult.Edge edge) {
         Map<String, Object> result = new HashMap<>();
-        Set<String> keys = graphStore.getEdgeKeys(edge.getId());
+        Set<String> keys = graphStore.getEdgeKeys(extractEdgeId(edge));
         for (String key : keys) {
-            Optional propertyOpt = graphStore.getEdgeProperty(edge.getId(), key);
+            Optional propertyOpt = graphStore.getEdgeProperty(extractEdgeId(edge), key);
             if (propertyOpt.isPresent()) {
                 result.put(key, propertyOpt.get());
             }
@@ -116,9 +117,9 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
 
     private Map<String, Object> extractProperties(GremlinResult.Vertex vertex) {
         Map<String, Object> result = new HashMap<>();
-        Set<String> keys = graphStore.getVertexKeys(vertex.getId());
+        Set<String> keys = graphStore.getVertexKeys(extractVertexId(vertex));
         for (String key : keys) {
-            Optional propertyOpt = graphStore.getVertexProperty(vertex.getId(), key);
+            Optional propertyOpt = graphStore.getVertexProperty(extractVertexId(vertex), key);
             if (propertyOpt.isPresent()) {
                 result.put(key, Collections.singletonList(ImmutableMap.of("id", 1L, "value", propertyOpt.get())));
             }
@@ -130,5 +131,13 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
         // pre 8 bits
         long labelId = (vertexId >> 56) & 0xff;
         return graphStore.getLabel(labelId);
+    }
+
+    private BigInteger extractEdgeId(GremlinResult.Edge edge) {
+        return new BigInteger(edge.getId().toByteArray());
+    }
+
+    private BigInteger extractVertexId(GremlinResult.Vertex vertex) {
+        return new BigInteger(String.valueOf(vertex.getId()));
     }
 }
