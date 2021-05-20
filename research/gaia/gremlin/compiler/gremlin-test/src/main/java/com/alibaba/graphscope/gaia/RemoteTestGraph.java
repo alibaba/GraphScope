@@ -165,28 +165,85 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         reason = "[bug3] count returns nothing when the result is 0")
 
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_EX7X_hasXlabelXknowsX",
-        reason = "[bug1] g.E() return vertices from pegasus")
+        method = "g_E_hasLabelXuses_traversesX",
+        reason = "crew graph is not ready")
 
 //@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
 //        method = "g_VX4X_hasXage_gt_30X",
-//        reason = "bug return empty")
+//        reason = "[bug2] g.V(id).has(...) returns nothing")
 //
 //@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
 //        method = "g_VX1X_hasXname_markoX",
+//        reason = "[bug2] g.V(id).has(...) returns nothing")
+
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_EX7X_hasXlabelXknowsX",
+//        reason = "[bug1] g.E() return vertices from pegasus")
+
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_E_hasXlabelXknowsX",
 //        reason = "bug return empty")
 
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_VX4X_hasXage_gt_30X",
-        reason = "[bug2] g.V(id).has(...) returns nothing")
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+//        method = "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_asXfakeX_inV_hasXname_joshX_selectXhereX",
+//        reason = "[bug4] edge returning result invalid")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_VX2X_inE",
+//        reason = "[bug4] edge returning result invalid")
 
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_VX1X_hasXname_markoX",
-        reason = "[bug2] g.V(id).has(...) returns nothing")
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_EX11X_outV_outE_hasXid_10X",
+//        reason = "not support edge global id")
+//
 
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_E_hasXlabelXknowsX",
-        reason = "bug return empty")
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+//        method = "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX",
+//        reason = "[bug4] edge returning result invalid")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_VX1X_outE",
+//        reason = "[bug4] edge returning result invalid")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_EXe11X",
+//        reason = "[bug1] g.E() return vertices from pegasus")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_EX11X",
+//        reason = "[bug1] g.E() return vertices from pegasus")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_E",
+//        reason = "[bug1] g.E() return vertices from pegasus")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+//        method = "g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX",
+//        reason = "[bug4] edge returning result invalid")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_VX4X_bothEXcreatedX",
+//        reason = "[bug4] edge returning result invalid")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+//        method = "g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX",
+//        reason = "[bug4] edge returning result invalid")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_VX4X_bothE",
+//        reason = "[bug4] edge returning result invalid")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_EXlistXe7_e11XX",
+//        reason = "[bug1] g.E() return vertices from pegasus")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_EX11AsStringX",
+//        reason = "[bug1] g.E() return vertices from pegasus")
+//
+//@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_EXe7_e11X",
+//        reason = "[bug1] g.E() return vertices from pegasus")
 
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
         method = "g_V_hasIdXwithinXemptyXX_count",
@@ -196,14 +253,6 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method = "g_V_hasXnoX_count",
         reason = "[bug3] count returns nothing when the result is 0")
 
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        method = "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_asXfakeX_inV_hasXname_joshX_selectXhereX",
-        reason = "[bug4] edge returning result invalid")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_VX2X_inE",
-        reason = "[bug4] edge returning result invalid")
-
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
         method = "g_V_group_byXbothE_countX_byXgroup_byXlabelXX",
         reason = "not support nested group by, group().by().by(__.group().by(...))")
@@ -211,63 +260,6 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupCountTest",
         method = "g_V_hasXnoX_groupCount",
         reason = "[bug5] groupCount() returns nothing when the result is []")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_EX11X_outV_outE_hasXid_10X",
-        reason = "not support edge global id")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_E_hasLabelXuses_traversesX",
-        reason = "[bug1] g.E() return vertices from pegasus")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        method = "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX",
-        reason = "[bug4] edge returning result invalid")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_VX1X_outE",
-        reason = "[bug4] edge returning result invalid")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_EXe11X",
-        reason = "[bug1] g.E() return vertices from pegasus")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_EX11X",
-        reason = "[bug1] g.E() return vertices from pegasus")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_E",
-        reason = "[bug1] g.E() return vertices from pegasus")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        method = "g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX",
-        reason = "[bug4] edge returning result invalid")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_VX4X_bothEXcreatedX",
-        reason = "[bug4] edge returning result invalid")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        method = "g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX",
-        reason = "[bug4] edge returning result invalid")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_VX4X_bothE",
-        reason = "[bug4] edge returning result invalid")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_EXlistXe7_e11XX",
-        reason = "[bug1] g.E() return vertices from pegasus")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_EX11AsStringX",
-        reason = "[bug1] g.E() return vertices from pegasus")
-
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_EXe7_e11X",
-        reason = "[bug1] g.E() return vertices from pegasus")
-
 
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.PathTest",
         method = "g_VX1X_name_path",
