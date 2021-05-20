@@ -79,6 +79,8 @@ public class ExecutorService implements Cloneable {
                 .put("graph.port", String.valueOf(StoreConfig.EXECUTOR_GRAPH_PORT.get(configs)))
                 .put("query.port", String.valueOf(StoreConfig.EXECUTOR_QUERY_PORT.get(configs)))
                 .put("engine.port", String.valueOf(StoreConfig.EXECUTOR_ENGINE_PORT.get(configs)))
+                .put("worker.per.process", String.valueOf(workerPerProcess))
+                .put("worker.num", String.valueOf(nodeCount))
                 .build();
         byte[] configBytes = executorConfig.toProto().toByteArray();
 
