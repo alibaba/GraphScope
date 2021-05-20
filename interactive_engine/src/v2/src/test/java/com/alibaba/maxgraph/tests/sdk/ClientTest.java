@@ -51,17 +51,17 @@ public class ClientTest {
     @Test
     void testAddData() {
         Map<String, String> properties = new HashMap<>();
-        properties.put("firstname", "alice");
+        properties.put("firstName", "alice");
         properties.put("id", "12345");
         client.addVertex("person", properties);
         properties = new HashMap<>();
-        properties.put("firstname", "bob");
+        properties.put("firstName", "bob");
         properties.put("id", "88888");
         client.addVertex("person", properties);
 
         for (int i = 0; i < 100; i++) {
             properties = new HashMap<>();
-            properties.put("firstname", "test" + i);
+            properties.put("firstName", "test" + i);
             properties.put("id", "" + i);
             client.addVertex("person", properties);
         }
