@@ -15,6 +15,7 @@
 
 use crate::structure::{
     DefaultDetails, Details, Direction, DynDetails, Edge, Label, QueryParams, Statement, Vertex,
+    ID_BITS,
 };
 use crate::{register_graph, DynResult, GraphProxy, ID};
 use dyn_type::BorrowObject;
@@ -486,9 +487,12 @@ fn encode_runtime_v_id(v: &LocalVertex<DefaultId>) -> ID {
     v.get_id() as ID
 }
 
+pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
+
+/// Edge's ID is encoded by the source vertex's `ID`, and its internal index
 fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
     let ei = e.get_edge_id();
-    ((ei.1 as ID) << 64) | (ei.0 as ID)
+    ((ei.1 as ID) << ID_SHIFT_BITS) | (ei.0 as ID)
 }
 
 fn encode_store_e_id(e: &ID) -> EdgeId<DefaultId> {

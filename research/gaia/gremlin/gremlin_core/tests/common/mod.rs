@@ -199,7 +199,6 @@ pub mod test {
                                 id_result.push(eid as ID);
                             }
                         }
-
                     }
                 } else if let Some(o) = traverser.get_object() {
                     match o {
