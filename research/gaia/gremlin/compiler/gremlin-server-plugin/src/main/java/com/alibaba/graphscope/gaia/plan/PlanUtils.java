@@ -52,30 +52,27 @@ import java.lang.reflect.Modifier;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class PlanUtils {
     private static final Logger logger = LoggerFactory.getLogger(PlanUtils.class);
     public static final String DIRECTION_OTHER = "OTHER";
 
-    public static List<ByteString> extractIds(Object[] ids) {
-        List<BigInteger> resultIds = new ArrayList<>();
+    public static List<String> extractIds(Object[] ids) {
+        List<String> resultIds = new ArrayList<>();
         for (Object id : ids) {
-            if (id instanceof Long || id instanceof Integer) {
-                resultIds.add(new BigInteger(String.valueOf(id)));
-            } else if (id instanceof BigInteger) {
-                resultIds.add((BigInteger) id);
+            if (id instanceof Long || id instanceof Integer || id instanceof BigInteger) {
+                resultIds.add(String.valueOf(id));
             } else if (id instanceof ReferenceVertex) {
-                resultIds.add(new BigInteger(String.valueOf(((ReferenceVertex) id).id())));
+                resultIds.add(String.valueOf(((ReferenceVertex) id).id()));
             } else if (id instanceof ReferenceEdge) {
-                resultIds.add(new BigInteger(String.valueOf(((ReferenceEdge) id).id())));
+                resultIds.add(String.valueOf(((ReferenceEdge) id).id()));
             } else if (id instanceof String) {
-                resultIds.add(new BigInteger((String) id));
+                resultIds.add((String) id);
             } else {
                 throw new RuntimeException("invalid id type " + id.getClass());
             }
         }
-        return resultIds.stream().map(k -> ByteString.copyFrom(k.toByteArray())).collect(Collectors.toList());
+        return resultIds;
     }
 
     public static PegasusClient.JobConfig getDefaultConfig(long queryId) {

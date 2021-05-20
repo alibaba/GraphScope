@@ -134,7 +134,7 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
     }
 
     private BigInteger extractEdgeId(GremlinResult.Edge edge) {
-        return new BigInteger(edge.getId().toByteArray());
+        return new BigInteger(edge.getId());
     }
 
     private BigInteger extractVertexId(GremlinResult.Vertex vertex) {
