@@ -139,7 +139,7 @@ public class Client implements Closeable {
         String json = new String(Files.readAllBytes(jsonFile), StandardCharsets.UTF_8);
         LoadJsonSchemaResponse response = this.stub.loadJsonSchema(LoadJsonSchemaRequest.newBuilder()
                 .setSchemaJson(json).build());
-        return GraphDef.parseProto(response.getGraphDef()).toString();
+        return response.getGraphDef().toString();
     }
 
     @Override

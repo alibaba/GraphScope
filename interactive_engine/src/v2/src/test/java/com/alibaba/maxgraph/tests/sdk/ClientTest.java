@@ -1,6 +1,7 @@
 package com.alibaba.maxgraph.tests.sdk;
 
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema;
+import com.alibaba.maxgraph.v2.common.schema.GraphDef;
 import com.alibaba.maxgraph.v2.sdk.Client;
 import com.alibaba.maxgraph.v2.sdk.DataLoadTarget;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,7 @@ public class ClientTest {
     @Test
     void testGetSchema() {
         GraphSchema schema = client.getSchema();
-        schema.toString();
+        System.out.println(((GraphDef) schema).toProto().toString());
     }
 
     @Test
