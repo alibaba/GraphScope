@@ -41,7 +41,7 @@ impl ExecutorServer {
     pub fn new(graph_config: Arc<GraphConfig>) -> GraphResult<Self> {
         let node_id = graph_config.get_storage_option("node.idx").unwrap().parse::<usize>().unwrap();
         let store_config = Arc::new(StoreConfig::init_from_config(graph_config.get_storage_options()));
-        info!("store config created");
+        info!("store config created {:?}",store_config);
         Ok(ExecutorServer {
             graph_config,
             store_config,
@@ -92,6 +92,7 @@ impl ExecutorServer {
     pub fn start_rpc(&self) -> (u16, u16) {
         let task_partition_manager = Arc::new(RwLock::new(Some(self.build_task_partition_manager())));
         let signal = Arc::new(AtomicBool::new(false));
+        // TODO: initiate remote_store_service_manager?
         let remote_store_service_manager = Arc::new(RwLock::new(Some(RemoteStoreServiceManager::empty())));
         let query_manager = QueryManager::new();
         let pegasus_runtime = self.engine_server_manager.as_ref().unwrap().get_server();

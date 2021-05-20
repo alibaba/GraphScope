@@ -298,6 +298,10 @@ impl StoreConfig {
         args.push(store_options.get("query.port").unwrap().to_owned());
         args.push("--engine-port".to_owned());
         args.push(store_options.get("engine.port").unwrap().to_owned());
+        args.push("--timely-worker-per-process".to_owned());
+        args.push(store_options.get("worker.per.process").unwrap().to_owned());
+        args.push("--worker-num".to_owned());
+        args.push(store_options.get("worker.num").unwrap().to_owned());
         StoreConfig::from_iter(args.into_iter())
     }
 
