@@ -25,7 +25,7 @@ use bit_set::BitSet;
 use graph_store::common::LabelId;
 use pegasus::BuildJobError;
 use pegasus_common::downcast::*;
-use pegasus_common::codec::AsBytes;
+use prost::alloc::str::FromStr;
 
 /// V(), E()
 pub struct GraphVertexStep {
@@ -130,7 +130,6 @@ impl GraphVertexStep {
                 }
             };
         } else {
-            // work 0 in current server are going to scan_edges
             if let Some(ref seeds) = self.src {
                 // work 0 in current server are going to get_edge
                 if gen_flag {
@@ -143,6 +142,7 @@ impl GraphVertexStep {
                     }
                 }
             } else {
+                // work 0 in current server are going to scan_edges
                 if gen_flag {
                     e_source = graph.scan_edge(&self.e_params).unwrap_or(Box::new(std::iter::empty()));
                 }
@@ -182,8 +182,8 @@ pub fn graph_step_from(
                 step.set_tags(gremlin_step.get_tags());
                 let mut ids = vec![];
                 for id in opt.ids {
-                    let id = ID::from_bytes(id.as_ref());
-                    ids.push(*id);
+                    let id = ID::from_str(&id).unwrap();
+                    ids.push(id);
                 }
                 if !ids.is_empty() {
                     step.set_src(ids, num_servers);
