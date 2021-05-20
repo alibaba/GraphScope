@@ -25,6 +25,7 @@ use bit_set::BitSet;
 use graph_store::common::LabelId;
 use pegasus::BuildJobError;
 use pegasus_common::downcast::*;
+use pegasus_common::codec::AsBytes;
 
 /// V(), E()
 pub struct GraphVertexStep {
@@ -180,9 +181,9 @@ pub fn graph_step_from(
                 let mut step = GraphVertexStep::new(return_type, requirements);
                 step.set_tags(gremlin_step.get_tags());
                 let mut ids = vec![];
-                // TODO: process edge_id in pb
                 for id in opt.ids {
-                    ids.push(id as ID);
+                    let id = ID::from_bytes(id.as_ref());
+                    ids.push(*id);
                 }
                 if !ids.is_empty() {
                     step.set_src(ids, num_servers);
