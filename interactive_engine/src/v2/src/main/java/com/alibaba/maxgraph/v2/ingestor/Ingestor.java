@@ -35,7 +35,6 @@ public class Ingestor extends NodeBase {
     public Ingestor(Configs configs) {
         super(configs);
         configs = reConfig(configs);
-        this.curator = CuratorUtils.makeCurator(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
         if (CommonConfig.DISCOVERY_MODE.get(configs).equalsIgnoreCase("file")) {
             this.discovery = new FileDiscovery(configs);
