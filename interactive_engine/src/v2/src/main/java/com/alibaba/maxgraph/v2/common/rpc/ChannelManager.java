@@ -44,44 +44,46 @@ public class ChannelManager {
             int count = Integer.valueOf(
                     this.configs.get(String.format(CommonConfig.NODE_COUNT_FORMAT, role.getName()), "0"));
             if (CommonConfig.DISCOVERY_MODE.get(configs).equalsIgnoreCase("file")) {
-                String uriTemplate;
+                String hostTemplate;
+                int port;
                 switch (role) {
                     case FRONTEND:
-                        uriTemplate = String.format("%s:%s", DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(configs),
-                                CommonConfig.RPC_PORT.get(configs));
+                        hostTemplate = DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(configs);
+                        port = CommonConfig.RPC_PORT.get(configs);
                         break;
                     case INGESTOR:
-                        uriTemplate = String.format("%s:%s", DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(configs),
-                                CommonConfig.RPC_PORT.get(configs));
+                        hostTemplate = DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(configs);
+                        port = CommonConfig.RPC_PORT.get(configs);
                         break;
                     case COORDINATOR:
-                        uriTemplate = String.format("%s:%s", DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs),
-                                CommonConfig.RPC_PORT.get(configs));
+                        hostTemplate = DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs);
+                        port = CommonConfig.RPC_PORT.get(configs);
                         break;
                     case STORE:
-                        uriTemplate = String.format("%s:%s", DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs),
-                                CommonConfig.RPC_PORT.get(configs));
+                        hostTemplate = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
+                        port = CommonConfig.RPC_PORT.get(configs);
                         break;
                     case EXECUTOR_GRAPH:
                     case EXECUTOR_MANAGE:
-                        uriTemplate = String.format("%s:%s", DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs),
-                                StoreConfig.EXECUTOR_GRAPH_PORT.get(configs));
+                        hostTemplate = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
+                        port = StoreConfig.EXECUTOR_GRAPH_PORT.get(configs);
                         break;
                     case EXECUTOR_QUERY:
-                        uriTemplate = String.format("%s:%s", DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs),
-                                StoreConfig.EXECUTOR_QUERY_PORT.get(configs));
+                        hostTemplate = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
+                        port = StoreConfig.EXECUTOR_QUERY_PORT.get(configs);
                         break;
                     case EXECUTOR_ENGINE:
-                        uriTemplate = String.format("%s:%s", DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs),
-                                StoreConfig.EXECUTOR_ENGINE_PORT.get(configs));
+                        hostTemplate = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
+                        port = StoreConfig.EXECUTOR_ENGINE_PORT.get(configs);
                         break;
                     default:
                         throw new IllegalArgumentException("invalid role [" + role + "]");
                 }
                 for (int i = 0; i < count; i++) {
-                    logger.debug("create channel to role [" + role.getName() + "] #[" + i + "]");
-                    String uri = uriTemplate.replace("{}", String.valueOf(i));
-                    ManagedChannel channel = ManagedChannelBuilder.forTarget(uri)
+                    String host = hostTemplate.replace("{}", String.valueOf(i));
+                    logger.info("create channel to role [" + role.getName() + "] #[" + i + "]. host [" + host +
+                            "], port [" + port + "]");
+                    ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port)
                             .maxInboundMessageSize(this.rpcMaxBytes)
                             .usePlaintext()
                             .build();
