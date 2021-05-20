@@ -66,7 +66,7 @@ public class ClientTest {
             client.addVertex("person", properties);
         }
 
-        client.addEdge("person_knows_person",
+        client.addEdge("knows",
                 "person",
                 "person",
                 Collections.singletonMap("id", "12345"),
