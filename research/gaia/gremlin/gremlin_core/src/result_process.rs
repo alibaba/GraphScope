@@ -24,7 +24,6 @@ use crate::process::traversal::step::ResultProperty;
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::{Edge, GraphElement, Label, Vertex, VertexOrEdge};
 use dyn_type::object::{Object, Primitives};
-use dyn_type::DynType;
 
 fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
     result_pb::Vertex {
@@ -43,7 +42,7 @@ fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
 }
 fn edge_to_pb(e: &Edge) -> result_pb::Edge {
     result_pb::Edge {
-        id: e.id.to_bytes().unwrap(),
+        id: e.id.to_string(),
         label: if let Some(label) = e.label.clone() {
             match label {
                 Label::Str(s) => s,
