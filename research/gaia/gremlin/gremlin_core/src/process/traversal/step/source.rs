@@ -129,9 +129,22 @@ impl GraphVertexStep {
                 }
             };
         } else {
-            // work 0 in current server are going to scan_vertex
-            if gen_flag {
-                e_source = graph.scan_edge(&self.e_params).unwrap_or(Box::new(std::iter::empty()));
+            // work 0 in current server are going to scan_edges
+            if let Some(ref seeds) = self.src {
+                // work 0 in current server are going to get_edge
+                if gen_flag {
+                    if let Some(src) = seeds.get(self.server_index as usize) {
+                        if !src.is_empty() {
+                            e_source = graph
+                                .get_edge(src, &self.e_params)
+                                .unwrap_or(Box::new(std::iter::empty()));
+                        }
+                    }
+                }
+            } else {
+                if gen_flag {
+                    e_source = graph.scan_edge(&self.e_params).unwrap_or(Box::new(std::iter::empty()));
+                }
             }
         }
 
@@ -167,6 +180,7 @@ pub fn graph_step_from(
                 let mut step = GraphVertexStep::new(return_type, requirements);
                 step.set_tags(gremlin_step.get_tags());
                 let mut ids = vec![];
+                // TODO: process edge_id in pb
                 for id in opt.ids {
                     ids.push(id as ID);
                 }

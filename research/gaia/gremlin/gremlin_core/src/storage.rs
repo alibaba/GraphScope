@@ -20,10 +20,7 @@ use crate::{register_graph, DynResult, GraphProxy, ID};
 use dyn_type::BorrowObject;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
 use graph_store::ldbc::LDBCVertexParser;
-use graph_store::prelude::{
-    DefaultId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId, LDBCGraphSchema,
-    LabelId, LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
-};
+use graph_store::prelude::{DefaultId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId, LDBCGraphSchema, LabelId, LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID, EdgeId};
 use pegasus::api::function::DynIter;
 use pegasus_common::downcast::*;
 use std::collections::HashMap;
@@ -212,7 +209,7 @@ macro_rules! filter_limit_ok {
 impl GraphProxy for DemoGraph {
     fn scan_vertex(
         &self, params: &QueryParams<Vertex>,
-    ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+    ) -> DynResult<Box<dyn Iterator<Item=Vertex> + Send>> {
         let label_ids = encode_storage_vertex_label(&params.labels);
         let store = self.store;
         let result = self.store.get_all_vertices(label_ids.as_ref()).map(move |v| {
@@ -233,7 +230,7 @@ impl GraphProxy for DemoGraph {
 
     fn scan_edge(
         &self, params: &QueryParams<Edge>,
-    ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>> {
+    ) -> DynResult<Box<dyn Iterator<Item=Edge> + Send>> {
         let label_ids = encode_storage_edge_label(&params.labels);
         let store = self.store;
         let result =
@@ -250,7 +247,7 @@ impl GraphProxy for DemoGraph {
 
     fn get_vertex(
         &self, ids: &[ID], params: &QueryParams<Vertex>,
-    ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+    ) -> DynResult<Box<dyn Iterator<Item=Vertex> + Send>> {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
             if let Some(local_vertex) = self.store.get_vertex(*id as DefaultId) {
@@ -261,6 +258,27 @@ impl GraphProxy for DemoGraph {
                     }
                 } else {
                     result.push(v);
+                }
+            }
+        }
+
+        DynResult::Ok(Box::new(result.into_iter()))
+    }
+
+    fn get_edge(
+        &self, ids: &[ID], params: &QueryParams<Edge>,
+    ) -> DynResult<Box<dyn Iterator<Item=Edge> + Send>> {
+        let mut result = Vec::with_capacity(ids.len());
+        for id in ids {
+            let eid = encode_store_e_id(id);
+            if let Some(local_edge) = self.store.get_edge(eid) {
+                let e = to_runtime_edge(local_edge, self.store);
+                if let Some(ref filter) = params.filter {
+                    if filter.test(&e).unwrap_or(false) {
+                        result.push(e);
+                    }
+                } else {
+                    result.push(e);
                 }
             }
         }
@@ -282,8 +300,8 @@ impl GraphProxy for DemoGraph {
                 Direction::In => graph.get_in_vertices(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_vertices(v as DefaultId, edge_label_ids.as_ref()),
             }
-            // TODO: change to to_runtime_vertex_with_property
-            .map(move |v| to_runtime_vertex(v, graph));
+                // TODO: change to to_runtime_vertex_with_property
+                .map(move |v| to_runtime_vertex(v, graph));
             Ok(filter_limit_ok!(iter, filter, limit))
         });
         Ok(stmt)
@@ -302,7 +320,7 @@ impl GraphProxy for DemoGraph {
                 Direction::In => graph.get_in_edges(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_edges(v as DefaultId, edge_label_ids.as_ref()),
             }
-            .map(move |e| to_runtime_edge(e, graph));
+                .map(move |e| to_runtime_edge(e, graph));
             Ok(filter_limit_ok!(iter, filter, limit))
         });
         Ok(stmt)
@@ -466,6 +484,12 @@ fn encode_runtime_v_id(v: &LocalVertex<DefaultId>) -> ID {
 fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
     let ei = e.get_edge_id();
     ((ei.1 as ID) << 64) | (ei.0 as ID)
+}
+
+fn encode_store_e_id(e: &ID) -> EdgeId<DefaultId> {
+    let index = (e >> 64) as usize;
+    let start_id = (e << 64 >> 64) as usize;
+    (start_id, index)
 }
 
 fn encode_runtime_v_label(v: &LocalVertex<DefaultId>) -> Option<Label> {
