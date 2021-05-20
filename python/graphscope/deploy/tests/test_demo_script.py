@@ -33,7 +33,9 @@ from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 
-graphscope.set_option(show_log=True)
+graphscope.set_option(
+    show_log=True, k8s_gie_gremlin_server_cpu=1.0, k8s_gie_gremlin_server_mem="4Gi"
+)
 logger = logging.getLogger("graphscope")
 
 
@@ -70,6 +72,11 @@ def gs_session():
         k8s_engine_mem="4Gi",
         k8s_etcd_cpu=2,
         k8s_etcd_mem="256Mi",
+        k8s_etcd_num_pods=3,
+        k8s_zookeeper_cpu=0.5,
+        k8s_zookeeper_mem="256Mi",
+        k8s_gie_graph_manager_cpu=1,
+        k8s_gie_graph_manager_mem="4Gi",
         vineyard_shared_mem="4Gi",
         k8s_volumes=get_k8s_volumes(),
     )
@@ -92,6 +99,11 @@ def gs_session_distributed():
         k8s_engine_mem="4Gi",
         k8s_etcd_cpu=4,
         k8s_etcd_mem="256Mi",
+        k8s_etcd_num_pods=3,
+        k8s_zookeeper_cpu=0.5,
+        k8s_zookeeper_mem="256Mi",
+        k8s_gie_graph_manager_cpu=1,
+        k8s_gie_graph_manager_mem="4Gi",
         vineyard_shared_mem="4Gi",
         k8s_volumes=get_k8s_volumes(),
     )

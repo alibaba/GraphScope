@@ -44,20 +44,7 @@ logger = logging.getLogger("graphscope")
 
 
 class HostsClusterLauncher(Launcher):
-    """Class for setting up GraphScope instance on hosts cluster
-
-    Args:
-        hosts (list):
-            List of hostname of workers.
-        port (int, optional):
-            Used to launch coordinator, or random valid port when Param missing.
-        num_workers (int):
-            Number of workers to launch graphscope engine.
-        vineyard_socket (str, optional):
-            Socket path to connect to vineyard or a random socket will be created if param missing
-        timeout_seconds (int, optional):
-            Wait util reached timeout.
-    """
+    """Class for setting up GraphScope instance on hosts cluster"""
 
     def __init__(
         self,
@@ -67,6 +54,7 @@ class HostsClusterLauncher(Launcher):
         vineyard_socket=None,
         timeout_seconds=None,
         vineyard_shared_mem=None,
+        **kwargs
     ):
         self._hosts = hosts
         self._port = port
