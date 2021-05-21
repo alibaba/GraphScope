@@ -489,6 +489,11 @@ fn encode_runtime_v_id(v: &LocalVertex<DefaultId>) -> ID {
 
 pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
 
+/// Given the encoding of an edge, the `ID_MASK` is used to get the lower half part of an edge, which is
+/// the src_id. As an edge is indiced by its src_id, one can use edge_id & ID_MASK to route to the
+/// machine of the edge.
+pub const ID_MASK: ID = ((1 as ID) << (ID_SHIFT_BITS as ID)) - (1 as ID);
+
 /// Edge's ID is encoded by the source vertex's `ID`, and its internal index
 fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
     let ei = e.get_edge_id();
@@ -496,8 +501,8 @@ fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
 }
 
 fn encode_store_e_id(e: &ID) -> EdgeId<DefaultId> {
-    let index = (e >> 64) as usize;
-    let start_id = (e << 64 >> 64) as usize;
+    let index = (*e >> ID_SHIFT_BITS) as usize;
+    let start_id = (*e & ID_MASK) as DefaultId;
     (start_id, index)
 }
 

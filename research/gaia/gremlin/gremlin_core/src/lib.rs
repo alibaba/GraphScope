@@ -50,7 +50,7 @@ use crate::result_process::result_to_pb;
 use crate::structure::filter::codec::ParseError;
 pub use generated::gremlin::GremlinStep as GremlinStepPb;
 use std::io;
-pub use storage::{create_demo_graph, ID_SHIFT_BITS};
+pub use storage::{create_demo_graph, ID_MASK, ID_SHIFT_BITS};
 
 #[cfg(feature = "proto_inplace")]
 mod generated {
@@ -113,11 +113,6 @@ pub trait Partitioner: Send + Sync + 'static {
 pub struct Partition {
     pub num_servers: usize,
 }
-
-/// Given the encoding of an edge, the `ID_MASK` is used to get the lower half part of an edge, which is
-/// the src_id. As an edge is indiced by its src_id, one can use edge_id & ID_MASK to route to the
-/// machine of the edge.
-pub const ID_MASK: ID = ((1 as ID) << (ID_SHIFT_BITS as ID)) - (1 as ID);
 
 impl Partitioner for Partition {
     fn get_partition(&self, id: &ID, workers: usize) -> u64 {
