@@ -50,10 +50,9 @@ jobs:
     - name: Cpp Format And Lint Check
       run: |
         # install clang-format
-        if [ ! -f /usr/bin/clang-format ]; then
-            curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
-            chmod +x /usr/bin/clang-format
-        fi
+        curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
+        chmod +x /usr/bin/clang-format
+
         # run clang-format
         cd analytical_engine/
         find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.h" | xargs clang-format -i --style=file

@@ -15,10 +15,8 @@ jobs:
     - name: Cpp Format and Lint Check
       run: |
         # install clang-format
-        if [ ! -f /usr/bin/clang-format ]; then
-            sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
-            sudo chmod +x /usr/bin/clang-format
-        fi
+        sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
+        sudo chmod +x /usr/bin/clang-format
 
         # run format
         cd analytical_engine/
