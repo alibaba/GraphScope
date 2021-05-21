@@ -63,17 +63,21 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
             << ", graph type: DynamicFragment, directed: " << directed
             << ", duplicated load: " << duplicated_load;
 
-    grape::CommSpec comm_spec = comm_spec_;
+    auto vm_ptr = std::shared_ptr<vertex_map_t>(new vertex_map_t(comm_spec_));
     if (duplicated_load) {
-      comm_spec.set_fnum(1);
-      comm_spec.set_fid(0);
+      vm_ptr->Init(1);
+      LOG(INFO) << "vm fnum=" << vm_ptr->GetFragmentNum();
+    } else {
+      vm_ptr->Init();
+      LOG(INFO) << "vm fnum=" << vm_ptr->GetFragmentNum();
     }
 
-    auto vm_ptr = std::shared_ptr<vertex_map_t>(new vertex_map_t(comm_spec));
-    vm_ptr->Init();
-
     auto fragment = std::make_shared<fragment_t>(vm_ptr);
-    fragment->Init(comm_spec.fid(), directed, duplicated_load);
+    if (duplicated_load) {
+      fragment->Init(0, directed, duplicated_load);
+    } else {
+      fragment->Init(comm_spec_.fid(), directed, duplicated_load);
+    }
 
     rpc::GraphDef graph_def;
 

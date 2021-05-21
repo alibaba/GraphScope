@@ -51,7 +51,7 @@
 #include "core/error.h"
 #include "core/io/dynamic_line_parser.h"
 #include "core/utils/mpi_utils.h"
-#include "core/vertex_map/global_vertex_map.h"
+#include "core/vertex_map/dynamic_fragment_vertex_map.h"
 #include "proto/types.pb.h"
 
 namespace gs {
@@ -684,7 +684,7 @@ class DynamicFragment {
   using internal_vertex_t = grape::internal::Vertex<vid_t, vdata_t>;
   using const_adj_list_t = dynamic_fragment_impl::ConstAdjList<edata_t>;
   using adj_list_t = dynamic_fragment_impl::AdjList<edata_t>;
-  using vertex_map_t = grape::GlobalVertexMap<oid_t, vid_t>;
+  using vertex_map_t = DynamicFragmentVertexMap<oid_t, vid_t>;
   using partitioner_t = vineyard::HashPartitioner<oid_t>;
   using vertex_range_t = grape::VertexVector<vid_t>;
   template <typename DATA_T>
