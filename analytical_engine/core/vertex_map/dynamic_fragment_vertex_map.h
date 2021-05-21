@@ -30,17 +30,14 @@ namespace gs {
  */
 template <typename OID_T, typename VID_T>
 class DynamicFragmentVertexMap : public grape::GlobalVertexMap<OID_T, VID_T> {
-
   using Base = grape::GlobalVertexMap<OID_T, VID_T>;
 
  public:
-  explicit DynamicFragmentVertexMap(const grape::CommSpec& comm_spec) :
-      Base(comm_spec), duplicated_load_(false) {}
+  explicit DynamicFragmentVertexMap(const grape::CommSpec& comm_spec)
+      : Base(comm_spec), duplicated_load_(false) {}
   ~DynamicFragmentVertexMap() = default;
 
-  void Init() override {
-    Base::Init();
-  }
+  void Init() override { Base::Init(); }
 
   void Init(fid_t fnum) override {
     Base::Init(fnum);
@@ -59,6 +56,5 @@ class DynamicFragmentVertexMap : public grape::GlobalVertexMap<OID_T, VID_T> {
 };
 
 }  // namespace gs
-
 
 #endif  // ANALYTICAL_ENGINE_CORE_VERTEX_MAP_DYNAMIC_FRAGMENT_VERTEX_MAP_H_
