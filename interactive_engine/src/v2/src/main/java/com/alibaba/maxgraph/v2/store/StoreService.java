@@ -165,6 +165,7 @@ public class StoreService {
         for (Map.Entry<Integer, OperationBatch> e : partitionToBatch.entrySet()) {
             int partitionId = e.getKey();
             OperationBatch batch = e.getValue();
+            logger.debug("writeStore partition [" + partitionId + "]");
             this.writeExecutor.execute(() -> {
                 try {
                     if (partitionId != -1) {
