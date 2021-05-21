@@ -114,11 +114,17 @@ class TestGraph(_TestGraph):
         self.graphs_equal(H, G)
 
     def test_subgraph(self):
-        # subgraph now is fallback with networkx, not view
+        # subgraph now is true subgraph, not view
         G = self.K3
         self.add_attributes(G)
         H = G.subgraph([0, 1, 2, 5])
         self.graphs_equal(H, G)
+
+        H = G.subgraph([0])
+        assert H.adj == {0: {}}
+        H = G.subgraph([])
+        assert H.adj == {}
+        assert G.adj != {}
 
     def test_node_type(self):
         G = self.Graph()
@@ -132,13 +138,14 @@ class TestGraph(_TestGraph):
         assert G[True][False]["weight"] == True
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestEdgeSubgraph(_TestEdgeSubgraph):
     def setup_method(self):
         # Create a path graph on five nodes.
         G = nx.path_graph(5)
         # Add some node, edge, and graph attributes.
         for i in range(5):
-            G.nodes[i]["name"] = "node{}".format(i)
+            G.nodes[i]["name"] = f"node{i}"
         G.edges[0, 1]["name"] = "edge01"
         G.edges[3, 4]["name"] = "edge34"
         G.graph["name"] = "graph"
@@ -146,18 +153,34 @@ class TestEdgeSubgraph(_TestEdgeSubgraph):
         self.G = G
         self.H = G.edge_subgraph([(0, 1), (3, 4)])
 
-    @pytest.mark.skip(reason="edge_subgraph now is fallback with networkx, not view")
-    def test_node_attr_dict(self):
-        pass
+    def test_correct_edges(self):
+        """Tests that the subgraph has the correct edges."""
+        assert [(1, 0, "edge01"), (4, 3, "edge34")] == sorted(self.H.edges(data="name"))
 
-    @pytest.mark.skip(reason="edge_subgraph now is fallback with networkx, not view")
-    def test_edge_attr_dict(self):
-        pass
-
-    @pytest.mark.skip(reason="edge_subgraph now is fallback with networkx, not view")
-    def test_graph_attr_dict(self):
-        pass
-
-    @pytest.mark.skip(reason="edge_subgraph now is fallback with networkx, not view")
     def test_remove_node(self):
-        pass
+        """Tests that removing a node in the original graph does not
+
+        affect the nodes of the subgraph, is a true subgraph.
+
+        """
+        self.G.remove_node(0)
+        assert [0, 1, 3, 4] == sorted(self.H.nodes())
+
+    def test_node_attr_dict(self):
+        for v in self.H:
+            assert self.G.nodes[v] == self.H.nodes[v]
+        self.G.nodes[0]["name"] = "foo"
+        assert self.G.nodes[0] != self.H.nodes[0]
+        self.H.nodes[1]["name"] = "bar"
+        assert self.G.nodes[1] != self.H.nodes[1]
+
+    def test_edge_attr_dict(self):
+        for u, v in self.H.edges():
+            assert self.G.edges[u, v] == self.H.edges[u, v]
+        self.G.edges[0, 1]["name"] = "foo"
+        assert self.G.edges[0, 1]["name"] != self.H.edges[0, 1]["name"]
+        self.H.edges[3, 4]["name"] = "bar"
+        assert self.G.edges[3, 4]["name"] != self.H.edges[3, 4]["name"]
+
+    def test_graph_attr_dict(self):
+        assert self.G.graph == self.H.graph

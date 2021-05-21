@@ -90,6 +90,8 @@ enum OperationType {
   TO_DIRECTED = 17;  // return graph, generate directed graph from undirected graph
   TO_UNDIRECTED = 18;  // return graph, generate undirected graph from directed graph
   CLEAR_EDGES = 19;  // clear edges
+  VIEW_GRAPH = 20;
+  INDUCE_SUBGRAPH = 21;  // clear edges
 
   // data
   CONTEXT_TO_NUMPY = 50;
@@ -179,6 +181,7 @@ enum ParamKey {
   NODES = 207;
   EDGES = 208;
   COPY_TYPE = 209;
+  VIEW_TYPE = 210;
 
   ARROW_PROPERTY_DEFINITION = 300;
   PROTOCOL = 301;

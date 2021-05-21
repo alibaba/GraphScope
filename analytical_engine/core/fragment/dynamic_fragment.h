@@ -60,6 +60,8 @@ using grape::Array;
 using grape::CommSpec;
 using grape::OutArchive;
 
+class DynamicFragmentView;
+
 namespace dynamic_fragment_impl {
 /**
  * @brief This is the counterpart of VertexArray. VertexArray requires a range
@@ -815,6 +817,67 @@ class DynamicFragment {
     InvalidCache();
   }
 
+  // induce a subgraph that contains the induced_vertices and the edges between
+  // those vertices or a edge subgraph that contains the induced_edges and the
+  // nodes incident to induced_edges.
+  void InduceSubgraph(
+      std::shared_ptr<DynamicFragment> origin,
+      const std::unordered_set<oid_t>& induced_vertices,
+      const std::vector<std::pair<oid_t, oid_t>>& induced_edges) {
+    // copy base elements
+    directed_ = origin->directed();
+    directed() ? load_strategy_ = grape::LoadStrategy::kBothOutIn
+               : load_strategy_ = grape::LoadStrategy::kOnlyOut;
+    fid_ = origin->fid();
+    fnum_ = vm_ptr_->GetFragmentNum();
+    calcFidBitWidth(fnum_, id_mask_, fid_offset_);
+
+    ivnum_ = vm_ptr_->GetInnerVertexSize(fid_);
+    ovnum_ = 0;
+    oenum_ = 0;
+    ienum_ = 0;
+
+    inner_ie_pos_.clear();
+    inner_oe_pos_.clear();
+    inner_ie_pos_.resize(ivnum_, -1);
+    inner_oe_pos_.resize(ivnum_, -1);
+    inner_vertex_alive_.resize(ivnum_, false);
+
+    vdata_.clear();
+    vdata_.resize(ivnum_);
+
+    // induce active edges
+    std::vector<edge_t> edges;
+    if (induced_edges.empty()) {
+      induceFromVertices(origin, induced_vertices, edges);
+    } else {
+      induceFromEdges(origin, induced_edges, edges);
+    }
+
+    {
+      // find out outer vertices and calculate outer vertices num
+      std::vector<vid_t> outer_vertices =
+          getOuterVerticesAndInvalidEdges(edges, load_strategy_);
+
+      grape::DistinctSort(outer_vertices);
+
+      ovgid_.resize(outer_vertices.size());
+      memcpy(&ovgid_[0], &outer_vertices[0],
+             outer_vertices.size() * sizeof(vid_t));
+      for (auto gid : ovgid_) {
+        ovg2i_.emplace(gid, ovnum_);
+        ++ovnum_;
+      }
+    }
+
+    tvnum_ = ivnum_ + ovnum_;
+    alive_ovnum_ = ovnum_;
+    outer_vertex_alive_.resize(ovnum_, true);
+
+    AddEdges(edges, load_strategy_);
+    initOuterVerticesOfFragment();
+  }
+
   void ClearEdges() {
     // clear outer vertices.
     ovgid_.clear();
@@ -843,7 +906,8 @@ class DynamicFragment {
   template <typename IOADAPTOR_T>
   void Deserialize(const std::string& prefix, const fid_t fid) {}
 
-  void PrepareToRunApp(grape::MessageStrategy strategy, bool need_split_edges) {
+  virtual void PrepareToRunApp(grape::MessageStrategy strategy,
+                               bool need_split_edges) {
     message_strategy_ = strategy;
     if (strategy == grape::MessageStrategy::kAlongEdgeToOuterVertex ||
         strategy == grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex ||
@@ -857,25 +921,29 @@ class DynamicFragment {
     }
   }
 
-  inline fid_t fid() const { return fid_; }
+  inline virtual fid_t fid() const { return fid_; }
 
-  inline fid_t fnum() const { return fnum_; }
+  inline virtual fid_t fnum() const { return fnum_; }
 
-  inline vid_t id_mask() const { return id_mask_; }
+  inline virtual vid_t id_mask() const { return id_mask_; }
 
-  inline int fid_offset() const { return fid_offset_; }
+  inline virtual int fid_offset() const { return fid_offset_; }
 
-  inline bool directed() const { return directed_; }
+  inline virtual bool directed() const { return directed_; }
 
-  inline const vid_t* GetOuterVerticesGid() const { return &ovgid_[0]; }
+  inline virtual const vid_t* GetOuterVerticesGid() const { return &ovgid_[0]; }
 
-  inline size_t GetEdgeNum() const { return ienum_ + oenum_; }
+  inline virtual size_t GetEdgeNum() const { return ienum_ + oenum_; }
 
-  inline vid_t GetVerticesNum() const { return alive_ivnum_ + alive_ovnum_; }
+  inline virtual vid_t GetVerticesNum() const {
+    return alive_ivnum_ + alive_ovnum_;
+  }
 
-  size_t GetTotalVerticesNum() const { return vm_ptr_->GetTotalVertexSize(); }
+  virtual size_t GetTotalVerticesNum() const {
+    return vm_ptr_->GetTotalVertexSize();
+  }
 
-  inline vertex_range_t InnerVertices() const {
+  inline virtual vertex_range_t InnerVertices() const {
     auto inner_vertices = grape::VertexRange<vid_t>(0, ivnum_);
     auto& mutable_vertices =
         const_cast<DynamicFragment*>(this)->alive_inner_vertices_;
@@ -894,7 +962,7 @@ class DynamicFragment {
     return vertex_range_t(mutable_vertices.second);
   }
 
-  inline vertex_range_t OuterVertices() const {
+  inline virtual vertex_range_t OuterVertices() const {
     auto outer_vertices = grape::VertexRange<vid_t>(ivnum_, tvnum_);
     auto& mutable_vertices =
         const_cast<DynamicFragment*>(this)->alive_outer_vertices_;
@@ -913,7 +981,7 @@ class DynamicFragment {
     return vertex_range_t(mutable_vertices.second);
   }
 
-  inline vertex_range_t Vertices() const {
+  inline virtual vertex_range_t Vertices() const {
     auto vertices = grape::VertexRange<vid_t>(0, tvnum_);
     auto& mutable_vertices =
         const_cast<DynamicFragment*>(this)->alive_vertices_;
@@ -932,7 +1000,7 @@ class DynamicFragment {
     return vertex_range_t(mutable_vertices.second);
   }
 
-  inline bool GetVertex(const oid_t& oid, vertex_t& v) const {
+  inline virtual bool GetVertex(const oid_t& oid, vertex_t& v) const {
     vid_t gid;
     if (vm_ptr_->GetGid(oid, gid)) {
       return ((gid >> fid_offset_) == fid_) ? InnerVertexGid2Vertex(gid, v)
@@ -942,72 +1010,72 @@ class DynamicFragment {
     }
   }
 
-  inline oid_t GetId(const vertex_t& v) const {
+  inline virtual oid_t GetId(const vertex_t& v) const {
     return IsInnerVertex(v) ? GetInnerVertexId(v) : GetOuterVertexId(v);
   }
 
-  inline fid_t GetFragId(const vertex_t& u) const {
+  inline virtual fid_t GetFragId(const vertex_t& u) const {
     return IsInnerVertex(u)
                ? fid_
                : (fid_t)(ovgid_[u.GetValue() - ivnum_] >> fid_offset_);
   }
 
-  inline const vdata_t& GetData(const vertex_t& v) const {
+  inline virtual const vdata_t& GetData(const vertex_t& v) const {
     assert(IsInnerVertex(v));
     return vdata_[v.GetValue()];
   }
 
-  inline void SetData(const vertex_t& v, const vdata_t& val) {
+  inline virtual void SetData(const vertex_t& v, const vdata_t& val) {
     assert(IsInnerVertex(v));
     vdata_[v.GetValue()] = val;
   }
 
-  inline bool HasChild(const vertex_t& v) const {
+  inline virtual bool HasChild(const vertex_t& v) const {
     assert(IsInnerVertex(v));
     auto pos = inner_oe_pos_[v.GetValue()];
     return pos != -1 && !inner_edge_space_[pos].empty();
   }
 
-  inline bool HasParent(const vertex_t& v) const {
+  inline virtual bool HasParent(const vertex_t& v) const {
     assert(IsInnerVertex(v));
     auto pos = inner_ie_pos_[v.GetValue()];
     return pos != -1 && !inner_edge_space_[pos].empty();
   }
 
-  inline int GetLocalOutDegree(const vertex_t& v) const {
+  inline virtual int GetLocalOutDegree(const vertex_t& v) const {
     assert(IsInnerVertex(v));
     auto pos = inner_oe_pos_[v.GetValue()];
     return pos == -1 ? 0 : inner_edge_space_[pos].size();
   }
 
-  inline int GetLocalInDegree(const vertex_t& v) const {
+  inline virtual int GetLocalInDegree(const vertex_t& v) const {
     assert(IsInnerVertex(v));
     auto pos = inner_ie_pos_[v.GetValue()];
     return pos == -1 ? 0 : inner_edge_space_[pos].size();
   }
 
-  inline bool Gid2Vertex(const vid_t& gid, vertex_t& v) const {
+  inline virtual bool Gid2Vertex(const vid_t& gid, vertex_t& v) const {
     return ((gid >> fid_offset_) == fid_) ? InnerVertexGid2Vertex(gid, v)
                                           : OuterVertexGid2Vertex(gid, v);
   }
 
-  inline vid_t Vertex2Gid(const vertex_t& v) const {
+  inline virtual vid_t Vertex2Gid(const vertex_t& v) const {
     return IsInnerVertex(v) ? GetInnerVertexGid(v) : GetOuterVertexGid(v);
   }
 
-  inline vid_t GetInnerVerticesNum() const { return alive_ivnum_; }
+  inline virtual vid_t GetInnerVerticesNum() const { return alive_ivnum_; }
 
-  inline vid_t GetOuterVerticesNum() const { return alive_ovnum_; }
+  inline virtual vid_t GetOuterVerticesNum() const { return alive_ovnum_; }
 
-  inline bool IsInnerVertex(const vertex_t& v) const {
+  inline virtual bool IsInnerVertex(const vertex_t& v) const {
     return (v.GetValue() < ivnum_);
   }
 
-  inline bool IsOuterVertex(const vertex_t& v) const {
+  inline virtual bool IsOuterVertex(const vertex_t& v) const {
     return v.GetValue() < tvnum_ && v.GetValue() >= ivnum_;
   }
 
-  inline bool GetInnerVertex(const oid_t& oid, vertex_t& v) const {
+  inline virtual bool GetInnerVertex(const oid_t& oid, vertex_t& v) const {
     vid_t gid;
     if (vm_ptr_->GetGid(oid, gid)) {
       if ((gid >> fid_offset_) == fid_ && isAlive(gid & id_mask_)) {
@@ -1018,7 +1086,7 @@ class DynamicFragment {
     return false;
   }
 
-  inline bool GetOuterVertex(const oid_t& oid, vertex_t& v) const {
+  inline virtual bool GetOuterVertex(const oid_t& oid, vertex_t& v) const {
     vid_t gid;
     if (vm_ptr_->GetGid(oid, gid)) {
       return OuterVertexGid2Vertex(gid, v);
@@ -1027,14 +1095,14 @@ class DynamicFragment {
     }
   }
 
-  inline oid_t GetInnerVertexId(const vertex_t& v) const {
+  inline virtual oid_t GetInnerVertexId(const vertex_t& v) const {
     assert(isAlive(v.GetValue()));
     oid_t internal_oid;
     vm_ptr_->GetOid(fid_, v.GetValue(), internal_oid);
     return internal_oid;
   }
 
-  inline oid_t GetOuterVertexId(const vertex_t& v) const {
+  inline virtual oid_t GetOuterVertexId(const vertex_t& v) const {
     assert(isAlive(v.GetValue()));
     vid_t gid = ovgid_[v.GetValue() - ivnum_];
     oid_t internal_oid;
@@ -1042,13 +1110,13 @@ class DynamicFragment {
     return internal_oid;
   }
 
-  inline oid_t Gid2Oid(const vid_t& gid) const {
+  inline virtual oid_t Gid2Oid(const vid_t& gid) const {
     oid_t internal_oid;
     vm_ptr_->GetOid(gid, internal_oid);
     return internal_oid;
   }
 
-  inline bool Oid2Gid(const oid_t& oid, vid_t& gid) const {
+  inline virtual bool Oid2Gid(const oid_t& oid, vid_t& gid) const {
     return vm_ptr_->GetGid(oid, gid);
   }
 
@@ -1071,7 +1139,8 @@ class DynamicFragment {
     }
   }
 
-  inline bool InnerVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
+  inline virtual bool InnerVertexGid2Vertex(const vid_t& gid,
+                                            vertex_t& v) const {
     vid_t lid = gid & id_mask_;
     if (lid < ivnum_ && isAlive(lid)) {
       assert(isAlive(lid));
@@ -1081,7 +1150,8 @@ class DynamicFragment {
     return false;
   }
 
-  inline bool OuterVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
+  inline virtual bool OuterVertexGid2Vertex(const vid_t& gid,
+                                            vertex_t& v) const {
     auto iter = ovg2i_.find(gid);
     if (iter != ovg2i_.end()) {
       assert(isAlive(ivnum_ + iter->second));
@@ -1092,11 +1162,11 @@ class DynamicFragment {
     }
   }
 
-  inline vid_t GetOuterVertexGid(const vertex_t& v) const {
+  inline virtual vid_t GetOuterVertexGid(const vertex_t& v) const {
     return ovgid_[v.GetValue() - ivnum_];
   }
 
-  inline vid_t GetInnerVertexGid(const vertex_t& v) const {
+  inline virtual vid_t GetInnerVertexGid(const vertex_t& v) const {
     return (v.GetValue() | ((vid_t) fid_ << fid_offset_));
   }
 
@@ -1111,7 +1181,7 @@ class DynamicFragment {
    * @attention This method is only available when application set message
    * strategy as kAlongIncomingEdgeToOuterVertex.
    */
-  inline grape::DestList IEDests(const vertex_t& v) const {
+  inline virtual grape::DestList IEDests(const vertex_t& v) const {
     assert(!idoffset_.empty());
     assert(IsInnerVertex(v));
     return {idoffset_[v.GetValue()], idoffset_[v.GetValue() + 1]};
@@ -1127,7 +1197,7 @@ class DynamicFragment {
    * @attention This method is only available when application set message
    * strategy as kAlongOutgoingedge_toOuterVertex.
    */
-  inline grape::DestList OEDests(const vertex_t& v) const {
+  inline virtual grape::DestList OEDests(const vertex_t& v) const {
     assert(!odoffset_.empty());
     assert(IsInnerVertex(v));
     return {odoffset_[v.GetValue()], odoffset_[v.GetValue() + 1]};
@@ -1143,7 +1213,7 @@ class DynamicFragment {
    * @attention This method is only available when application set message
    * strategy as kAlongedge_toOuterVertex.
    */
-  inline grape::DestList IOEDests(const vertex_t& v) const {
+  inline virtual grape::DestList IOEDests(const vertex_t& v) const {
     assert(!iodoffset_.empty());
     assert(IsInnerVertex(v));
     return {iodoffset_[v.GetValue()], iodoffset_[v.GetValue() + 1]};
@@ -1159,7 +1229,7 @@ class DynamicFragment {
    *
    * @attention Only inner vertex is available.
    */
-  inline adj_list_t GetIncomingAdjList(const vertex_t& v) {
+  inline virtual adj_list_t GetIncomingAdjList(const vertex_t& v) {
     auto ie_pos = inner_ie_pos_[v.GetValue()];
     if (ie_pos == -1) {
       return adj_list_t();
@@ -1237,7 +1307,7 @@ class DynamicFragment {
    *
    * @attention Only inner vertex is available.
    */
-  inline adj_list_t GetOutgoingAdjList(const vertex_t& v) {
+  inline virtual adj_list_t GetOutgoingAdjList(const vertex_t& v) {
     auto oe_pos = inner_oe_pos_[v.GetValue()];
     if (oe_pos == -1) {
       return adj_list_t();
@@ -1319,12 +1389,12 @@ class DynamicFragment {
     }
   }
 
-  inline bool HasNode(const oid_t& node) const {
+  inline virtual bool HasNode(const oid_t& node) const {
     vid_t gid;
     return vm_ptr_->GetGid(fid_, node, gid) && isAlive(gid & id_mask_);
   }
 
-  inline bool HasEdge(const oid_t& u, const oid_t& v) {
+  inline virtual bool HasEdge(const oid_t& u, const oid_t& v) {
     vid_t uid, vid;
     if (Oid2Gid(u, uid) && Oid2Gid(v, vid)) {
       vid_t ulid, vlid;
@@ -1337,12 +1407,22 @@ class DynamicFragment {
             return true;
           }
         }
+      } else if ((vid >> fid_offset_) == fid_ && Gid2Lid(uid, ulid) &&
+                 Gid2Lid(vid, vlid) && isAlive(vlid)) {
+        int32_t pos;
+        directed() ? pos = inner_ie_pos_[vlid] : pos = inner_oe_pos_[vlid];
+        if (pos != -1) {
+          auto& es = inner_edge_space_[pos];
+          if (es.find(ulid) != es.end()) {
+            return true;
+          }
+        }
       }
     }
     return false;
   }
 
-  inline bool GetVertexData(const oid_t& oid, std::string& ret) const {
+  inline virtual bool GetVertexData(const oid_t& oid, std::string& ret) const {
     vertex_t v;
     if (GetInnerVertex(oid, v) && IsAliveInnerVertex(v)) {
       ret = folly::toJson(GetData(v));
@@ -1351,7 +1431,8 @@ class DynamicFragment {
     return false;
   }
 
-  inline bool GetEdgeData(const oid_t& u, const oid_t& v, std::string& ret) {
+  inline virtual bool GetEdgeData(const oid_t& u, const oid_t& v,
+                                  std::string& ret) {
     vid_t uid, vid;
     if (Oid2Gid(u, uid) && Oid2Gid(v, vid)) {
       vid_t ulid, vlid;
@@ -1362,6 +1443,36 @@ class DynamicFragment {
           auto& oe = inner_edge_space_[pos];
           if (oe.find(vlid) != oe.end()) {
             ret = folly::toJson(oe[vlid].data());
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  inline bool GetEdgeData(const oid_t& u, const oid_t& v, edata_t& data) {
+    vid_t uid, vid;
+    if (Oid2Gid(u, uid) && Oid2Gid(v, vid)) {
+      vid_t ulid, vlid;
+      if ((uid >> fid_offset_) == fid_ && Gid2Lid(uid, ulid) &&
+          Gid2Lid(vid, vlid) && isAlive(ulid)) {
+        auto pos = inner_oe_pos_[ulid];
+        if (pos != -1) {
+          auto& oe = inner_edge_space_[pos];
+          if (oe.find(vlid) != oe.end()) {
+            data = oe[vlid].data();
+            return true;
+          }
+        }
+      } else if ((vid >> fid_offset_) == fid_ && Gid2Lid(uid, ulid) &&
+                 Gid2Lid(vid, vlid) && isAlive(vlid)) {
+        int32_t pos;
+        directed() ? pos = inner_ie_pos_[vlid] : pos = inner_oe_pos_[vlid];
+        if (pos != -1) {
+          auto& es = inner_edge_space_[pos];
+          if (es.find(ulid) != es.end()) {
+            data = es[ulid].data();
             return true;
           }
         }
@@ -1616,7 +1727,7 @@ class DynamicFragment {
     return all_oids;
   }
 
-  bl::result<folly::dynamic::Type> GetOidType(
+  virtual bl::result<folly::dynamic::Type> GetOidType(
       const grape::CommSpec& comm_spec) const {
     auto oid_type = folly::dynamic::Type::NULLT;
     auto all_oids = GetAllOids(comm_spec);
@@ -1646,21 +1757,39 @@ class DynamicFragment {
 
   std::shared_ptr<vertex_map_t> GetVertexMap() { return vm_ptr_; }
 
-  inline bool IsAliveVertex(const vertex_t& v) const {
+  inline virtual bool IsAliveVertex(const vertex_t& v) const {
     return IsInnerVertex(v) ? IsAliveInnerVertex(v) : IsAliveOuterVertex(v);
   }
 
-  inline bool IsAliveInnerVertex(const vertex_t& v) const {
+  inline virtual bool IsAliveInnerVertex(const vertex_t& v) const {
     assert(IsInnerVertex(v));
     return inner_vertex_alive_[v.GetValue()];
   }
 
-  inline bool IsAliveOuterVertex(const vertex_t& v) const {
+  inline virtual bool IsAliveOuterVertex(const vertex_t& v) const {
     assert(IsOuterVertex(v));
     return outer_vertex_alive_[v.GetValue() - ivnum_];
   }
 
  private:
+  inline virtual vid_t ivnum() { return ivnum_; }
+
+  inline virtual Array<vdata_t, grape::Allocator<vdata_t>>& vdata() {
+    return vdata_;
+  }
+
+  inline virtual Array<int32_t, grape::Allocator<int32_t>>& inner_ie_pos() {
+    return inner_ie_pos_;
+  }
+
+  inline virtual Array<int32_t, grape::Allocator<int32_t>>& inner_oe_pos() {
+    return inner_oe_pos_;
+  }
+
+  virtual dynamic_fragment_impl::NbrMapSpace<edata_t>& inner_edge_space() {
+    return inner_edge_space_;
+  }
+
   inline bool isAlive(vid_t lid) const {
     if (lid < ivnum_) {
       return inner_vertex_alive_[lid];
@@ -2336,6 +2465,94 @@ class DynamicFragment {
     }
   }
 
+  // induce subgraph from induced_nodes
+  void induceFromVertices(std::shared_ptr<DynamicFragment>& origin,
+                          const std::unordered_set<oid_t>& induced_vertices,
+                          std::vector<edge_t>& edges) {
+    vertex_t vertex;
+    vid_t gid, dst_gid;
+    for (auto& oid : induced_vertices) {
+      if (origin->GetVertex(oid, vertex) && origin->IsInnerVertex(vertex)) {
+        // store the vertex data
+        CHECK(vm_ptr_->GetGid(fid_, oid, gid));
+        vdata_[(gid & id_mask_)] = origin->GetData(vertex);
+        inner_vertex_alive_[(gid & id_mask_)] = true;
+
+        for (auto& e : origin->GetOutgoingAdjList(vertex)) {
+          auto dst_oid = origin->GetId(e.get_neighbor());
+          if (induced_vertices.find(dst_oid) != induced_vertices.end()) {
+            CHECK(Oid2Gid(dst_oid, dst_gid));
+            edges.emplace_back(gid, dst_gid, e.get_data());
+          }
+        }
+        if (directed()) {
+          // filter the cross-fragment incoming edges
+          for (auto& e : origin->GetIncomingAdjList(vertex)) {
+            if (origin->IsOuterVertex(e.get_neighbor())) {
+              auto dst_oid = origin->GetId(e.get_neighbor());
+              if (induced_vertices.find(dst_oid) != induced_vertices.end()) {
+                CHECK(Oid2Gid(dst_oid, dst_gid));
+                edges.emplace_back(dst_gid, gid, e.get_data());
+              }
+            }
+          }
+        }
+      }
+    }
+    // since we filtering alive vertex in vertex map construct, alive_ivnum
+    // equal to ivnum
+    alive_ivnum_ = ivnum_;
+  }
+
+  // induce edge_subgraph from induced_edges
+  void induceFromEdges(
+      std::shared_ptr<DynamicFragment>& origin,
+      const std::vector<std::pair<oid_t, oid_t>>& induced_edges,
+      std::vector<edge_t>& edges) {
+    vertex_t vertex;
+    vid_t gid, dst_gid;
+    edata_t edata;
+    for (auto& e : induced_edges) {
+      const auto& src_oid = e.first;
+      const auto& dst_oid = e.second;
+      if (origin->HasEdge(src_oid, dst_oid)) {
+        if (vm_ptr_->GetGid(fid_, src_oid, gid)) {
+          // src is inner vertex
+          CHECK(origin->GetVertex(src_oid, vertex));
+          vdata_[(gid & id_mask_)] = origin->GetData(vertex);
+          inner_vertex_alive_[(gid & id_mask_)] = true;
+          CHECK(vm_ptr_->GetGid(dst_oid, dst_gid));
+          CHECK(origin->GetEdgeData(src_oid, dst_oid, edata));
+          edges.emplace_back(gid, dst_gid, edata);
+          if ((dst_gid >> fid_offset_) == fid_ && gid != dst_gid) {
+            // dst is inner vertex too
+            CHECK(origin->GetVertex(dst_oid, vertex));
+            vdata_[(dst_gid & id_mask_)] = origin->GetData(vertex);
+            inner_vertex_alive_[(dst_gid & id_mask_)] = true;
+            if (!directed_) {
+              edges.emplace_back(dst_gid, gid, edata);
+            }
+          }
+        } else if (vm_ptr_->GetGid(fid_, dst_oid, dst_gid)) {
+          // dst is inner vertex but src is outer vertex
+          CHECK(origin->GetVertex(dst_oid, vertex));
+          vdata_[(dst_gid & id_mask_)] = origin->GetData(vertex);
+          inner_vertex_alive_[(dst_gid & id_mask_)] = true;
+          CHECK(vm_ptr_->GetGid(src_oid, gid));
+          origin->GetEdgeData(src_oid, dst_oid, edata);
+          directed() ? edges.emplace_back(gid, dst_gid, edata)
+                     : edges.emplace_back(dst_gid, gid, edata);
+        }
+      }
+    }
+    // init alive_ivnum with inner_vertex_alive_ array
+    for (size_t i = 0; i < ivnum_; ++i) {
+      if (inner_vertex_alive_[i]) {
+        ++alive_ivnum_;
+      }
+    }
+  }
+
   inline const char* getTypeName(folly::dynamic::Type type) const {
     switch (type) {
     case folly::dynamic::Type::INT64:
@@ -2417,6 +2634,8 @@ class DynamicFragment {
 
   template <typename _VDATA_T, typename _EDATA_T>
   friend class DynamicProjectedFragment;
+
+  friend class DynamicFragmentView;
 };
 }  // namespace gs
 

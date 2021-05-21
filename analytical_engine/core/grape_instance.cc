@@ -14,6 +14,7 @@
  */
 
 #include <memory>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -637,7 +638,6 @@ bl::result<rpc::GraphDef> GrapeInstance::toUnDirected(
     const rpc::GSParams& params) {
 #ifdef EXPERIMENTAL_ON
   BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
-  // BOOST_LEAF_AUTO(copy_type, params.Get<std::string>(rpc::COPY_TYPE));
 
   BOOST_LEAF_AUTO(src_wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
@@ -652,6 +652,52 @@ bl::result<rpc::GraphDef> GrapeInstance::toUnDirected(
                   "GS is compiled without folly");
 #endif  // EXPERIMENTAL_ON
 }
+
+#ifdef EXPERIMENTAL_ON
+bl::result<rpc::GraphDef> GrapeInstance::induceSubGraph(
+    const rpc::GSParams& params,
+    const std::unordered_set<typename DynamicFragment::oid_t>& induced_vertices,
+    const std::vector<std::pair<typename DynamicFragment::oid_t,
+                                typename DynamicFragment::oid_t>>&
+        induced_edges) {
+  BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
+
+  BOOST_LEAF_AUTO(src_wrapper,
+                  object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
+  std::string sub_graph_name = "graph_" + generateId();
+
+  VLOG(1) << "Inducing subgraph from " << src_graph_name
+          << ", graph name: " << sub_graph_name;
+
+  auto fragment =
+      std::static_pointer_cast<DynamicFragment>(src_wrapper->fragment());
+
+  auto sub_vm_ptr =
+      std::make_shared<typename DynamicFragment::vertex_map_t>(comm_spec_);
+  sub_vm_ptr->Init();
+  typename DynamicFragment::partitioner_t partitioner;
+  partitioner.Init(fragment->fnum());
+  typename DynamicFragment::vid_t gid;
+  for (auto& v : induced_vertices) {
+    auto fid = partitioner.GetPartitionId(v);
+    if (fid == fragment->fid() && fragment->HasNode(v)) {
+      sub_vm_ptr->AddVertex(fid, v, gid);
+    }
+  }
+  sub_vm_ptr->Construct();
+
+  auto sub_graph_def = src_wrapper->graph_def();
+  sub_graph_def.set_key(sub_graph_name);
+  auto sub_frag = std::make_shared<DynamicFragment>(sub_vm_ptr);
+  sub_frag->InduceSubgraph(fragment, induced_vertices, induced_edges);
+
+  auto wrapper = std::make_shared<FragmentWrapper<DynamicFragment>>(
+      sub_graph_name, sub_graph_def, sub_frag);
+
+  BOOST_LEAF_CHECK(object_manager_.PutObject(wrapper));
+  return wrapper->graph_def();
+}
+#endif  // EXPERIMENTAL_ON
 
 bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
 #ifdef EXPERIMENTAL_ON
@@ -674,6 +720,29 @@ bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
                   "GS is compiled without folly");
 #endif  // EXPERIMENTAL_ON
   return {};
+}
+
+bl::result<rpc::GraphDef> GrapeInstance::createGraphView(
+    const rpc::GSParams& params) {
+#ifdef EXPERIMENTAL_ON
+  std::string view_id = "graph_view_" + generateId();
+  BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
+  BOOST_LEAF_AUTO(view_type, params.Get<std::string>(rpc::VIEW_TYPE));
+
+  VLOG(1) << "Get graph view, dst graph name: " << view_id
+          << ", view type: " << view_type;
+
+  BOOST_LEAF_AUTO(wrapper,
+                  object_manager_.GetObject<IFragmentWrapper>(graph_name));
+  BOOST_LEAF_AUTO(view_wrapper,
+                  wrapper->CreateGraphView(comm_spec_, view_id, view_type));
+  BOOST_LEAF_CHECK(object_manager_.PutObject(view_wrapper));
+
+  return view_wrapper->graph_def();
+#else
+  RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
+                  "GS is compiled without folly");
+#endif  // EXPERIMENTAL_ON
 }
 
 bl::result<rpc::GraphDef> GrapeInstance::addLabelsToGraph(
@@ -878,9 +947,59 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
 #endif
     break;
   }
+  case rpc::INDUCE_SUBGRAPH: {
+#ifdef EXPERIMENTAL_ON
+    std::unordered_set<DynamicFragment::oid_t> induced_vertices;
+    std::vector<std::pair<DynamicFragment::oid_t, DynamicFragment::oid_t>>
+        induced_edges;
+    auto line_parser_ptr = std::make_unique<DynamicLineParser>();
+    if (params.HasKey(rpc::NODES)) {
+      // induce subgraph from nodes.
+      int size = cmd.params.at(rpc::NODES).list().s_size();
+      induced_vertices.reserve(size);
+      DynamicFragment::oid_t oid;
+      DynamicFragment::vdata_t vdata;
+      for (int i = 0; i < size; ++i) {
+        line_parser_ptr->LineParserForVFile(
+            cmd.params.at(rpc::NODES).list().s(i), oid, vdata);
+        induced_vertices.insert(oid);
+      }
+    } else if (params.HasKey(rpc::EDGES)) {
+      // induce subgraph from edges.
+      int size = cmd.params.at(rpc::EDGES).list().s_size();
+      induced_edges.reserve(size);
+      DynamicFragment::oid_t u_oid, v_oid;
+      DynamicFragment::edata_t edata;
+      for (int i = 0; i < size; ++i) {
+        line_parser_ptr->LineParserForEFile(
+            cmd.params.at(rpc::EDGES).list().s(i), u_oid, v_oid, edata);
+        induced_vertices.insert(u_oid);
+        induced_vertices.insert(v_oid);
+        induced_edges.emplace_back(u_oid, v_oid);
+      }
+    }
+    BOOST_LEAF_AUTO(graph_def,
+                    induceSubGraph(params, induced_vertices, induced_edges));
+    r->set_graph_def(graph_def);
+#else
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "GS is built with experimental off");
+#endif
+    break;
+  }
   case rpc::CLEAR_EDGES: {
 #ifdef EXPERIMENTAL_ON
     BOOST_LEAF_CHECK(clearEdges(params));
+#else
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "GS is built with experimental off");
+#endif
+    break;
+  }
+  case rpc::VIEW_GRAPH: {
+#ifdef EXPERIMENTAL_ON
+    BOOST_LEAF_AUTO(graph_def, createGraphView(params));
+    r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GS is built with experimental off");
