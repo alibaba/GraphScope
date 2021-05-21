@@ -92,13 +92,11 @@ RUN cd /tmp && \
 
 # boost v1.73.0
 RUN cd /tmp && \
-    wget https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.tar.gz && \
-    tar zxvf boost_1_73_0.tar.gz && \
-    cd boost_1_73_0 && \
+    git clone -b boost-1.73.0 --recursive https://github.com/boostorg/boost.git && \
+    cd ./boost && \
     ./bootstrap.sh && \
-    ./b2 install link=shared runtime-link=shared variant=release threading=multi || true && \
-    cd /tmp && \
-    rm -fr /tmp/boost_1_73_0 /tmp/boost_1_73_0.tar.gz
+    ./b2 headers && \
+    rm -fr /tmp/boost-1.73.0
 
 # gflags v2.2.2
 RUN cd /tmp && \
@@ -257,7 +255,7 @@ RUN cd /tmp && \
 # GIE RUNTIME
 
 # Install java and maven
-RUN yum install -y perl java-1.8.0-openjdk-devel && \
+RUN yum install -y perl java-1.8.0-openjdk-devel maven && \
     yum clean all && \
     rm -fr /var/cache/yum
 
@@ -267,27 +265,7 @@ ENV CLASSPATH $HADOOP_CONF_DIR:$CLASSPATH
 ENV PATH $PATH:$HADOOP_HOME/bin
 
 # Prepare and set workspace
-RUN mkdir -p /root/maxgraph \
-    && mkdir -p /tmp/maven /usr/share/maven/ref \
-    && curl -fsSL -o /tmp/apache-maven.tar.gz https://apache.osuosl.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz \
-    && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
-    && rm -f /tmp/apache-maven.tar.gz \
-    && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
-    && export LD_LIBRARY_PATH=$(echo "$LD_LIBRARY_PATH" | sed "s/::/:/g") \
-    && wget http://mirrors.ustc.edu.cn/gnu/libc/glibc-2.18.tar.gz \
-    && tar -zxf glibc-2.18.tar.gz \
-    && cd glibc-2.18 \
-    && mkdir build && cd build \
-    && ../configure --prefix=/usr \
-    && make -j4 \
-    && make install \
-    && wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
-    curl -sf -L https://static.rust-lang.org/rustup.sh | \
-        sh -s -- -y --profile minimal --default-toolchain 1.48.0 && \
-    echo "source ~/.cargo/env" >> ~/.bashrc
-
-ENV PATH=${PATH}:/usr/local/go/bin
+RUN mkdir -p /root/maxgraph
 
 # patchelf for wheel packaging
 RUN cd /tmp && \
@@ -305,6 +283,3 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
 
 # for programming output
 ENV LC_ALL=C
-ENV RUST_BACKTRACE=1
-ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.282.b08-1.el7_9.x86_64/jre
-

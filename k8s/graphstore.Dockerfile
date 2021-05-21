@@ -29,8 +29,7 @@ FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
 COPY --from=builder /opt/graphscope /usr/local/
 COPY --from=builder /root/gs/interactive_engine/distribution/target/maxgraph.tar.gz /tmp/maxgraph.tar.gz
-RUN mkdir -p /home/maxgraph \
-    && tar -zxf /tmp/maxgraph.tar.gz -C /home/maxgraph ;
+RUN mkdir -p /home/maxgraph 
 
 WORKDIR /home/maxgraph/
 
