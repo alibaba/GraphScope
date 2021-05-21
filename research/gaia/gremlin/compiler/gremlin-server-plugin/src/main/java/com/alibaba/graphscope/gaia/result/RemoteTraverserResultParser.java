@@ -17,19 +17,14 @@ package com.alibaba.graphscope.gaia.result;
 
 import com.alibaba.graphscope.common.proto.GremlinResult;
 import com.alibaba.graphscope.gaia.plan.translator.builder.ConfigBuilder;
-import com.alibaba.graphscope.gaia.store.GraphStoreService;
-import com.alibaba.graphscope.gaia.store.StaticGraphStore;
 import com.google.common.collect.ImmutableMap;
 import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
 import org.apache.tinkerpop.gremlin.process.remote.traversal.RemoteTraverser;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.MutablePath;
-import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
-import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.util.*;
 
 public class RemoteTraverserResultParser extends DefaultResultParser {
@@ -38,8 +33,6 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
     public RemoteTraverserResultParser(ConfigBuilder builder) {
         super(builder);
     }
-
-    private final GraphStoreService graphStore = StaticGraphStore.INSTANCE;
 
     @Override
     public List<Object> parseFrom(GremlinResult.Result resultData) {
@@ -74,23 +67,6 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
     }
 
     @Override
-    protected Object parseElement(GremlinResult.GraphElement elementPB) {
-        if (elementPB.getInnerCase() == GremlinResult.GraphElement.InnerCase.EDGE) {
-            GremlinResult.Edge edge = elementPB.getEdge();
-            String edgeLabelName = graphStore.getLabel(Long.valueOf(edge.getLabel()));
-            return new DetachedEdge(extractEdgeId(edge), edgeLabelName, extractProperties(edge),
-                    edge.getSrcId(), extractVertexLabel(edge.getSrcId()),
-                    edge.getDstId(), extractVertexLabel(edge.getDstId()));
-        }
-        if (elementPB.getInnerCase() == GremlinResult.GraphElement.InnerCase.VERTEX) {
-            GremlinResult.Vertex vertex = elementPB.getVertex();
-            String vertexLabelName = graphStore.getLabel(Long.valueOf(vertex.getLabel()));
-            return new DetachedVertex(vertex.getId(), vertexLabelName, extractProperties(vertex));
-        }
-        throw new RuntimeException("graph element type not set");
-    }
-
-    @Override
     protected Path parsePath(GremlinResult.Path pathPB) {
         Path path = MutablePath.make();
         pathPB.getPathList().forEach(p -> {
@@ -103,7 +79,8 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
         return new DefaultRemoteTraverser(object, 1);
     }
 
-    private Map<String, Object> extractProperties(GremlinResult.Edge edge) {
+    @Override
+    protected Map<String, Object> extractProperties(GremlinResult.Edge edge) {
         Map<String, Object> result = new HashMap<>();
         Set<String> keys = graphStore.getEdgeKeys(extractEdgeId(edge));
         for (String key : keys) {
@@ -115,7 +92,8 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
         return result;
     }
 
-    private Map<String, Object> extractProperties(GremlinResult.Vertex vertex) {
+    @Override
+    protected Map<String, Object> extractProperties(GremlinResult.Vertex vertex) {
         Map<String, Object> result = new HashMap<>();
         Set<String> keys = graphStore.getVertexKeys(extractVertexId(vertex));
         for (String key : keys) {
@@ -125,19 +103,5 @@ public class RemoteTraverserResultParser extends DefaultResultParser {
             }
         }
         return result;
-    }
-
-    private String extractVertexLabel(long vertexId) {
-        // pre 8 bits
-        long labelId = (vertexId >> 56) & 0xff;
-        return graphStore.getLabel(labelId);
-    }
-
-    private BigInteger extractEdgeId(GremlinResult.Edge edge) {
-        return new BigInteger(edge.getId());
-    }
-
-    private BigInteger extractVertexId(GremlinResult.Vertex vertex) {
-        return new BigInteger(String.valueOf(vertex.getId()));
     }
 }

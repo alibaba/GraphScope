@@ -20,14 +20,20 @@ import com.alibaba.graphscope.common.proto.GremlinResult;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.translator.builder.ConfigBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
+import com.alibaba.graphscope.gaia.store.StaticGraphStore;
+import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
+import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.util.*;
 
 public class DefaultResultParser implements ResultParser {
     private static final Logger logger = LoggerFactory.getLogger(DefaultResultParser.class);
     private TagIdMaker tagIdMaker;
+    protected final GraphStoreService graphStore = StaticGraphStore.INSTANCE;
 
     public DefaultResultParser(ConfigBuilder builder) {
         this.tagIdMaker = (TagIdMaker) builder.getConfig(PlanConfig.TAG_ID_MAKER);
@@ -66,16 +72,33 @@ public class DefaultResultParser implements ResultParser {
     }
 
     protected Object parseElement(GremlinResult.GraphElement elementPB) {
-        List<Long> element = new ArrayList<>();
         if (elementPB.getInnerCase() == GremlinResult.GraphElement.InnerCase.EDGE) {
-            element.add(elementPB.getEdge().getSrcId());
-            element.add(elementPB.getEdge().getDstId());
-        } else if (elementPB.getInnerCase() == GremlinResult.GraphElement.InnerCase.VERTEX) {
-            element.add(elementPB.getVertex().getId());
-        } else {
-            logger.error("graph element type not set");
+            GremlinResult.Edge edge = elementPB.getEdge();
+            String edgeLabelName = graphStore.getLabel(Long.valueOf(edge.getLabel()));
+            return new DetachedEdge(extractEdgeId(edge), edgeLabelName, extractProperties(edge),
+                    edge.getSrcId(), extractVertexLabel(edge.getSrcId()),
+                    edge.getDstId(), extractVertexLabel(edge.getDstId()));
         }
-        return element;
+        if (elementPB.getInnerCase() == GremlinResult.GraphElement.InnerCase.VERTEX) {
+            GremlinResult.Vertex vertex = elementPB.getVertex();
+            String vertexLabelName = graphStore.getLabel(Long.valueOf(vertex.getLabel()));
+            return new DetachedVertex(vertex.getId(), vertexLabelName, extractProperties(vertex));
+        }
+        throw new RuntimeException("graph element type not set");
+    }
+
+    protected String extractVertexLabel(long vertexId) {
+        // pre 8 bits
+        long labelId = (vertexId >> 56) & 0xff;
+        return graphStore.getLabel(labelId);
+    }
+
+    protected BigInteger extractEdgeId(GremlinResult.Edge edge) {
+        return new BigInteger(edge.getId());
+    }
+
+    protected BigInteger extractVertexId(GremlinResult.Vertex vertex) {
+        return new BigInteger(String.valueOf(vertex.getId()));
     }
 
     protected Object parsePath(GremlinResult.Path pathPB) {
@@ -164,5 +187,13 @@ public class DefaultResultParser implements ResultParser {
         Map<String, Object> result = new HashMap<>();
         entries.getPropertyList().forEach(p -> result.put(p.getKey(), parseValue(p.getValue())));
         return result;
+    }
+
+    protected Map<String, Object> extractProperties(GremlinResult.Edge edge) {
+        return Collections.EMPTY_MAP;
+    }
+
+    protected Map<String, Object> extractProperties(GremlinResult.Vertex vertex) {
+        return Collections.EMPTY_MAP;
     }
 }
