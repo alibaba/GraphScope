@@ -61,7 +61,7 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
 
     VLOG(1) << "Loading graph, graph name: " << graph_name
             << ", graph type: DynamicFragment, directed: " << directed
-            << ", full graph stored: " << duplicated_load;
+            << ", duplicated load: " << duplicated_load;
 
     grape::CommSpec comm_spec = comm_spec_;
     if (duplicated_load) {
@@ -245,9 +245,10 @@ bl::result<std::string> GrapeInstance::reportGraph(
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   DynamicGraphReporter reporter(comm_spec_);
-  if (fragment->full_stored() &&
+  if (fragment->duplicated_load() &&
       comm_spec_.worker_id() != grape::kCoordinatorRank) {
-    // fragment stored full graph, only need to report from coordinator worker.
+    // fragment duplicated load full graph, only need to report
+    // from coordinator worker.
     return std::string();
   }
   return reporter.Report(fragment, params);
