@@ -107,8 +107,9 @@ enum TraverserRequirement {
 }
 
 message GraphStep {
-  // To filter vertices based on a id list
-  repeated int64 ids = 1;
+  // To filter vertices or edges based on a id list
+  // edge consists of 128 bits
+  repeated string ids = 1;
   // To filter vertices based on a label list
   repeated int32 labels = 2;
   // The entity type, either vertex or edge, for g.V() or g.E()

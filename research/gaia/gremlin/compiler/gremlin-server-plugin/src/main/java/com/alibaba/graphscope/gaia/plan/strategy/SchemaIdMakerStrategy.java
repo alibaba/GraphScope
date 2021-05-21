@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
     private static final Logger logger = LoggerFactory.getLogger(SchemaIdMakerStrategy.class);
@@ -57,13 +58,19 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                 List<HasContainer> containers = ((HasContainerHolder) step).getHasContainers();
                 for (HasContainer container : containers) {
                     if (container.getKey().equals(T.label.getAccessor())) {
-                        P<String> predicate = (P<String>) container.getPredicate();
-                        long labelId = StaticGraphStore.INSTANCE.getLabelId(predicate.getValue());
-                        if (labelId == StaticGraphStore.INVALID_ID) {
-                            logger.error("label id is invalid, check label {} exists", predicate.getValue());
-                            return;
+                        P predicate = container.getPredicate();
+                        if (predicate.getValue() instanceof List && ((List) predicate.getValue()).get(0) instanceof String) {
+                            List<String> values = (List<String>) predicate.getValue();
+                            predicate.setValue(values.stream().map(k -> {
+                                long labelId = StaticGraphStore.INSTANCE.getLabelId(k);
+                                return String.valueOf(labelId);
+                            }).collect(Collectors.toList()));
+                        } else if (predicate.getValue() instanceof String) {
+                            long labelId = StaticGraphStore.INSTANCE.getLabelId((String) predicate.getValue());
+                            predicate.setValue(String.valueOf(labelId));
+                        } else {
+                            throw new UnsupportedOperationException("hasLabel value type not support " + predicate.getValue().getClass());
                         }
-                        predicate.setValue(String.valueOf(labelId));
                         converted.add(step);
                     }
                 }
@@ -71,10 +78,6 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                 String[] edgeLabels = ((VertexStep) step).getEdgeLabels();
                 for (int j = 0; j < edgeLabels.length; ++j) {
                     long labelId = StaticGraphStore.INSTANCE.getLabelId(edgeLabels[j]);
-                    if (labelId == StaticGraphStore.INVALID_ID) {
-                        logger.error("label id is invalid, check label {} exists", edgeLabels[j]);
-                        return;
-                    }
                     edgeLabels[j] = String.valueOf(labelId);
                     converted.add(step);
                 }

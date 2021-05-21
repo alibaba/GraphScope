@@ -15,14 +15,16 @@
 
 use crate::structure::{
     DefaultDetails, Details, Direction, DynDetails, Edge, Label, QueryParams, Statement, Vertex,
+    ID_BITS,
 };
 use crate::{register_graph, DynResult, GraphProxy, ID};
 use dyn_type::BorrowObject;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
 use graph_store::ldbc::LDBCVertexParser;
 use graph_store::prelude::{
-    DefaultId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId, LDBCGraphSchema,
-    LabelId, LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
+    DefaultId, EdgeId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId,
+    LDBCGraphSchema, LabelId, LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row,
+    INVALID_LABEL_ID,
 };
 use pegasus::api::function::DynIter;
 use pegasus_common::downcast::*;
@@ -231,19 +233,61 @@ impl GraphProxy for DemoGraph {
         }
     }
 
+    fn scan_edge(
+        &self, params: &QueryParams<Edge>,
+    ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>> {
+        let label_ids = encode_storage_edge_label(&params.labels);
+        let store = self.store;
+        let result =
+            self.store.get_all_edges(label_ids.as_ref()).map(move |e| to_runtime_edge(e, store));
+
+        if let Some(ref filter) = params.filter {
+            let f = filter.clone();
+            let result = result.filter(move |e| f.test(e).unwrap_or(false));
+            Ok(limit_n!(result, params.limit))
+        } else {
+            Ok(limit_n!(result, params.limit))
+        }
+    }
+
     fn get_vertex(
         &self, ids: &[ID], params: &QueryParams<Vertex>,
     ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
             if let Some(local_vertex) = self.store.get_vertex(*id as DefaultId) {
-                let v = to_runtime_vertex_with_property(local_vertex, params.props.as_ref());
+                let v = if let Some(props) = params.props.as_ref() {
+                    to_runtime_vertex_with_property(local_vertex, props)
+                } else {
+                    to_runtime_vertex(local_vertex, self.store)
+                };
                 if let Some(ref filter) = params.filter {
                     if filter.test(&v).unwrap_or(false) {
                         result.push(v);
                     }
                 } else {
                     result.push(v);
+                }
+            }
+        }
+
+        DynResult::Ok(Box::new(result.into_iter()))
+    }
+
+    fn get_edge(
+        &self, ids: &[ID], params: &QueryParams<Edge>,
+    ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>> {
+        let mut result = Vec::with_capacity(ids.len());
+        for id in ids {
+            let eid = encode_store_e_id(id);
+            if let Some(local_edge) = self.store.get_edge(eid) {
+                let e = to_runtime_edge(local_edge, self.store);
+                if let Some(ref filter) = params.filter {
+                    if filter.test(&e).unwrap_or(false) {
+                        result.push(e);
+                    }
+                } else {
+                    result.push(e);
                 }
             }
         }
@@ -309,27 +353,24 @@ fn to_runtime_vertex(
     Vertex::new(id, label, details)
 }
 
-fn to_runtime_vertex_with_property(
-    v: LocalVertex<DefaultId>, props: Option<&Vec<String>>,
-) -> Vertex {
+fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<String>) -> Vertex {
     let id = encode_runtime_v_id(&v);
     let label = encode_runtime_v_label(&v);
     let mut properties = HashMap::new();
-    if let Some(props) = props {
-        if props.is_empty() {
-            if let Some(prop_vals) = v.clone_all_properties() {
-                properties = prop_vals;
-            }
-        } else {
-            for prop in props {
-                if let Some(val) = v.get_property(prop) {
-                    if let Some(obj) = val.try_to_owned() {
-                        properties.insert(prop.clone(), obj);
-                    }
+    if props.is_empty() {
+        if let Some(prop_vals) = v.clone_all_properties() {
+            properties = prop_vals;
+        }
+    } else {
+        for prop in props {
+            if let Some(val) = v.get_property(prop) {
+                if let Some(obj) = val.try_to_owned() {
+                    properties.insert(prop.clone(), obj);
                 }
             }
         }
     }
+
     let details = DefaultDetails::new_with_prop(id, label.clone().unwrap(), properties);
     Vertex::new(id, label, details)
 }
@@ -446,15 +487,23 @@ fn encode_runtime_v_id(v: &LocalVertex<DefaultId>) -> ID {
     v.get_id() as ID
 }
 
-#[cfg(not(feature = "llong_id"))]
+pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
+
+/// Given the encoding of an edge, the `ID_MASK` is used to get the lower half part of an edge, which is
+/// the src_id. As an edge is indiced by its src_id, one can use edge_id & ID_MASK to route to the
+/// machine of the edge.
+pub const ID_MASK: ID = ((1 as ID) << (ID_SHIFT_BITS as ID)) - (1 as ID);
+
+/// Edge's ID is encoded by the source vertex's `ID`, and its internal index
 fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
-    // TODO(longbin) Use source id for edge id for now
-    e.get_src_id() as ID
+    let ei = e.get_edge_id();
+    ((ei.1 as ID) << ID_SHIFT_BITS) | (ei.0 as ID)
 }
 
-#[cfg(feature = "llong_id")]
-fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
-    ((e.get_dst_id() as ID) << 64) | (e.get_src_id() as ID)
+pub fn encode_store_e_id(e: &ID) -> EdgeId<DefaultId> {
+    let index = (*e >> ID_SHIFT_BITS) as usize;
+    let start_id = (*e & ID_MASK) as DefaultId;
+    (start_id, index)
 }
 
 fn encode_runtime_v_label(v: &LocalVertex<DefaultId>) -> Option<Label> {

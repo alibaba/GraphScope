@@ -50,7 +50,7 @@ use crate::result_process::result_to_pb;
 use crate::structure::filter::codec::ParseError;
 pub use generated::gremlin::GremlinStep as GremlinStepPb;
 use std::io;
-pub use storage::create_demo_graph;
+pub use storage::{create_demo_graph, ID_MASK, ID_SHIFT_BITS};
 
 #[cfg(feature = "proto_inplace")]
 mod generated {
@@ -116,7 +116,7 @@ pub struct Partition {
 
 impl Partitioner for Partition {
     fn get_partition(&self, id: &ID, workers: usize) -> u64 {
-        let id_usize = *id as usize;
+        let id_usize = (*id & (ID_MASK)) as usize;
         let magic_num = id_usize / self.num_servers;
         // The partitioning logics is as follows:
         // 1. `R = id - magic_num * num_servers = id % num_servers` routes a given id

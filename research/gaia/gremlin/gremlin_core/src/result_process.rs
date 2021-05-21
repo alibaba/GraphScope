@@ -42,7 +42,7 @@ fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
 }
 fn edge_to_pb(e: &Edge) -> result_pb::Edge {
     result_pb::Edge {
-        id: e.id as i64,
+        id: e.id.to_string(),
         label: if let Some(label) = e.label.clone() {
             match label {
                 Label::Str(s) => s,

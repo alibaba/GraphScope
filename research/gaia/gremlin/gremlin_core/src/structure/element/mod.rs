@@ -24,28 +24,15 @@ use std::io;
 use std::ops::{Deref, DerefMut};
 pub use vertex::Vertex;
 
-#[cfg(not(feature = "llong_id"))]
-pub type ID = u64;
-
-#[cfg(not(feature = "llong_id"))]
-pub fn write_id<W: WriteExt>(id: ID, writer: &mut W) -> io::Result<()> {
-    writer.write_u64(id)
-}
-
-#[cfg(not(feature = "llong_id"))]
-pub fn read_id<R: ReadExt>(reader: &mut R) -> io::Result<ID> {
-    reader.read_u64()
-}
-
-#[cfg(feature = "llong_id")]
+/// The type of either vertex or edge id
 pub type ID = u128;
 
-#[cfg(feature = "llong_id")]
+/// The number of bits in an `ID`
+pub const ID_BITS: usize = std::mem::size_of::<ID>() * 8;
+
 pub fn write_id<W: WriteExt>(id: ID, writer: &mut W) -> io::Result<()> {
     writer.write_u128(id)
 }
-
-#[cfg(feature = "llong_id")]
 pub fn read_id<R: ReadExt>(reader: &mut R) -> io::Result<ID> {
     reader.read_u128()
 }

@@ -39,6 +39,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceEdge;
+import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceVertex;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +49,7 @@ import javax.script.Bindings;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -54,18 +57,22 @@ public class PlanUtils {
     private static final Logger logger = LoggerFactory.getLogger(PlanUtils.class);
     public static final String DIRECTION_OTHER = "OTHER";
 
-    public static List<Long> intIdsAsLongList(Object[] ids) {
-        List<Long> longList = new ArrayList<>();
+    public static List<String> extractIds(Object[] ids) {
+        List<String> resultIds = new ArrayList<>();
         for (Object id : ids) {
-            if (id instanceof Long) {
-                longList.add(((Long) id));
-            } else if (id instanceof Integer) {
-                longList.add(((Integer) id).longValue());
+            if (id instanceof Long || id instanceof Integer || id instanceof BigInteger) {
+                resultIds.add(String.valueOf(id));
+            } else if (id instanceof ReferenceVertex) {
+                resultIds.add(String.valueOf(((ReferenceVertex) id).id()));
+            } else if (id instanceof ReferenceEdge) {
+                resultIds.add(String.valueOf(((ReferenceEdge) id).id()));
+            } else if (id instanceof String) {
+                resultIds.add((String) id);
             } else {
                 throw new RuntimeException("invalid id type " + id.getClass());
             }
         }
-        return longList;
+        return resultIds;
     }
 
     public static PegasusClient.JobConfig getDefaultConfig(long queryId) {

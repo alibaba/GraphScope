@@ -10,13 +10,13 @@ import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.plan.translator.TraversalTranslator;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
-import com.alibaba.graphscope.gaia.result.DefaultResultParser;
 import com.alibaba.graphscope.gaia.result.GremlinResultProcessor;
 import com.alibaba.graphscope.gaia.result.RemoteTraverserResultParser;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
+import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import javax.script.SimpleBindings;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +58,7 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
         final SimpleBindings b = new SimpleBindings();
         final Map<String, String> aliases = (Map<String, String>) message.optionalArgs(Tokens.ARGS_ALIASES).get();
         final String traversalSourceName = aliases.entrySet().iterator().next().getValue();
+        logger.info("tokens ops is {}", message.getOp());
         switch (message.getOp()) {
             case Tokens.OPS_BYTECODE:
                 op = (context -> {
@@ -75,8 +77,13 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
                     logger.info("query-{} finish", queryId);
                 });
                 return op;
+            case Tokens.OPS_KEYS:
+                MaxGraphOpProcessor.writeResultList(ctx, Collections.EMPTY_LIST, ResponseStatusCode.SUCCESS);
+                return null;
             default:
-                throw new UnsupportedOperationException();
+                String errorMsg = "not support " + message.getOp();
+                MaxGraphOpProcessor.writeResultList(ctx, Collections.singletonList(errorMsg), ResponseStatusCode.REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS);
+                return null;
         }
     }
 

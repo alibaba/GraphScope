@@ -15,23 +15,27 @@
  */
 package com.alibaba.graphscope.gaia.store;
 
+import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 
-public class GlobalIdMaker {
-    public static final Pair<Long, Long> propertyIdRange = Pair.of(0L, Long.MAX_VALUE - 256L);
+public class GlobalIdMaker implements IdMaker<Long, List<Long>> {
+    public static final Pair<Long, Long> propertyIdRange = Pair.of(0L, 0x00ffffffffffffffL);
     public static final Pair<Long, Long> labelIdRange = Pair.of(0L, 255L);
 
     public GlobalIdMaker(List<Long> format) {
         // todo: dynamic generate id with format, such as [56L, 8L]
     }
 
-    public long makeId(List<Long> ids) {
+    public Long getId(List<Long> ids) {
         long labelId = ids.get(0);
         long propertyId = ids.get(1);
-        if (!isWithinRange(labelId, labelIdRange) || !isWithinRange(propertyId, propertyIdRange)) {
-            return StaticGraphStore.INVALID_ID;
+        if (!isWithinRange(labelId, labelIdRange)) {
+            throw new RuntimeException("label id " + labelId + " out of range");
+        }
+        if (!isWithinRange(propertyId, propertyIdRange)) {
+            throw new RuntimeException("property id " + propertyId + " out of range");
         }
         return ((labelId << 56) | propertyId);
     }

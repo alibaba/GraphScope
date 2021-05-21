@@ -32,7 +32,7 @@ message Vertex {
 }
 
 message Edge {
-  int64 id = 1;
+  string id = 1;
   string label = 2;
   int64 src_id = 3;
   string src_label = 4;
