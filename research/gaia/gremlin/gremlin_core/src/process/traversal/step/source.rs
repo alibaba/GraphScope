@@ -45,9 +45,7 @@ impl_as_any!(GraphVertexStep);
 
 impl GraphVertexStep {
     pub fn new(return_type: EntityType, req: Requirement) -> Self {
-        let symbol = if return_type == EntityType::Vertex { StepSymbol::V } else {
-            StepSymbol::E
-        };
+        let symbol = if return_type == EntityType::Vertex { StepSymbol::V } else { StepSymbol::E };
         GraphVertexStep {
             symbol,
             src: None,
@@ -102,13 +100,13 @@ impl Step for GraphVertexStep {
 impl GraphVertexStep {
     pub fn gen_source(
         self, worker_index: Option<usize>,
-    ) -> Box<dyn Iterator<Item=Traverser> + Send> {
+    ) -> Box<dyn Iterator<Item = Traverser> + Send> {
         let gen_flag =
             if let Some(w_index) = worker_index { w_index % self.workers == 0 } else { true };
 
         let graph = crate::get_graph().unwrap();
-        let mut v_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item=Vertex> + Send>;
-        let mut e_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item=Edge> + Send>;
+        let mut v_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Vertex> + Send>;
+        let mut e_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Edge> + Send>;
 
         if self.return_type == EntityType::Vertex {
             if let Some(ref seeds) = self.src {
@@ -144,7 +142,8 @@ impl GraphVertexStep {
             } else {
                 // work 0 in current server are going to scan_edges
                 if gen_flag {
-                    e_source = graph.scan_edge(&self.e_params).unwrap_or(Box::new(std::iter::empty()));
+                    e_source =
+                        graph.scan_edge(&self.e_params).unwrap_or(Box::new(std::iter::empty()));
                 }
             }
         }

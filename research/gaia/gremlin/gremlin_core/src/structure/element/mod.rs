@@ -24,8 +24,11 @@ use std::io;
 use std::ops::{Deref, DerefMut};
 pub use vertex::Vertex;
 
-
+/// The type of either vertex or edge id
 pub type ID = u128;
+
+/// The number of bits in an `ID`
+pub const ID_BITS: usize = std::mem::size_of::<ID>() * 8;
 
 pub fn write_id<W: WriteExt>(id: ID, writer: &mut W) -> io::Result<()> {
     writer.write_u128(id)
