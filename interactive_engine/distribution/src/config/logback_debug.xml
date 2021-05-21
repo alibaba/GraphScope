@@ -17,8 +17,9 @@
     <logger name="org.apache.zookeeper" level="ERROR" />
     <logger name="org.apache.kafka" level="ERROR" />
     <logger name="kafka" level="ERROR" />
+    <logger name="com.alibaba.maxgraph" level="DEBUG" />
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="FILE" />
     </root>
 </configuration>
