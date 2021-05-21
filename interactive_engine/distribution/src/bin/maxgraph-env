@@ -38,6 +38,10 @@ if [ -z "$MAXGRAPH_CONF_DIR" ]; then
     MAXGRAPH_CONF_DIR="$MAXGRAPH_HOME/conf"
 fi
 
+if [ -z "$MAXGRAPH_LOGBACK_FILE" ]; then
+    MAXGRAPH_LOGBACK_FILE="$MAXGRAPH_CONF_DIR/logback.xml"
+fi
+
 if [ -z "$MAXGRAPH_CONF_FILE" ]; then
     echo "must set $MAXGRAPH_CONF_FILE" >&2
     exit 1

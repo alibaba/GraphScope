@@ -14,7 +14,7 @@ MAXGRAPH_JAVA_OPTS="-server $JVM_OPTIONS $MAXGRAPH_JAVA_OPTS"
 
 exec "$JAVA" \
   $MAXGRAPH_JAVA_OPTS \
-  -Dlogback.configurationFile="$MAXGRAPH_CONF_DIR/logback.xml" \
+  -Dlogback.configurationFile="$MAXGRAPH_LOGBACK_FILE" \
   -Dconfig.file="$MAXGRAPH_CONF_FILE" \
   -Dlog.dir="$LOG_DIR" \
   -Dlog.name="$LOG_NAME" \
