@@ -18,6 +18,7 @@ use crate::generated::gremlin::EntityType;
 use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::{Requirement, Traverser};
+use crate::storage::encode_store_e_id;
 use crate::structure::codec::pb_chain_to_filter;
 use crate::structure::{Edge, Label, QueryParams, Vertex, ID};
 use crate::FromPb;
@@ -71,13 +72,19 @@ impl GraphVertexStep {
         self.server_index = index;
     }
 
-    pub fn set_src(&mut self, ids: Vec<ID>, server_num: usize) {
+    pub fn set_src(&mut self, ids: Vec<ID>, server_num: usize, entity_type: EntityType) {
         let mut partition = Vec::with_capacity(server_num);
         for _ in 0..server_num {
             partition.push(vec![]);
         }
         for id in ids {
-            let idx = (id % server_num as ID) as usize;
+            let src_id = if entity_type == EntityType::Vertex {
+                id
+            } else {
+                let eid = encode_store_e_id(&id);
+                eid.0 as u128
+            };
+            let idx = (src_id % server_num as ID) as usize;
             partition[idx].push(id);
         }
         self.src = Some(partition);
@@ -185,7 +192,7 @@ pub fn graph_step_from(
                     ids.push(id);
                 }
                 if !ids.is_empty() {
-                    step.set_src(ids, num_servers);
+                    step.set_src(ids, num_servers, return_type);
                 }
                 let labels = std::mem::replace(&mut opt.labels, vec![]);
                 if let Some(ref test) = opt.predicates {
