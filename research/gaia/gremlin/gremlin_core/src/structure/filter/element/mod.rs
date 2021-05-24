@@ -28,6 +28,13 @@ use by_label::*;
 use by_property::*;
 use dyn_type::{DynType, Object};
 
+/// The 'type' of TLV, which indicates that the expected value is left or right
+/// By default, we assume the expected value is the right value
+#[derive(Debug, Clone)]
+pub enum TlvType {
+    LeftValue,
+    RightValue,
+}
 pub enum ExpectValue<T: DynType> {
     Local(T),
     TLV,
@@ -55,6 +62,7 @@ impl<T: DynType + Clone> From<Option<T>> for ExpectValue<T> {
 
 thread_local! {
     static RIGHT_VALUE : RefCell<Option<Object>> = RefCell::new(None);
+    static TLV_TYPE: RefCell<TlvType> = RefCell::new(TlvType::RightValue);
 }
 
 pub fn reset_tlv_right_value<T: Into<Object>>(value: T) {
@@ -62,6 +70,22 @@ pub fn reset_tlv_right_value<T: Into<Object>>(value: T) {
     RIGHT_VALUE.with(|tlv| {
         *tlv.borrow_mut() = Some(value);
     })
+}
+
+pub fn reset_tlv_left_value<T: Into<Object>>(value: T) {
+    let value = value.into();
+    TLV_TYPE.with(|tlv_type| *tlv_type.borrow_mut() = TlvType::LeftValue);
+    RIGHT_VALUE.with(|tlv| {
+        *tlv.borrow_mut() = Some(value);
+    })
+}
+
+pub fn get_tlv_type() -> TlvType {
+    let mut tlv_type = TlvType::RightValue;
+    TLV_TYPE.with(|t_type| {
+        tlv_type = t_type.borrow().clone();
+    });
+    tlv_type
 }
 
 pub fn clear_tlv_right_value() {
@@ -76,7 +100,10 @@ pub fn compare_to_tlv<T: DynType + Clone, P: BiPredicate<T, T>>(
         let right = tlv.borrow();
         if let Some(v) = right.as_ref() {
             match v.get() {
-                Ok(t) => cmp.test(&*t, value),
+                Ok(t) => match get_tlv_type() {
+                    TlvType::LeftValue => cmp.test(value, &*t),
+                    TlvType::RightValue => cmp.test(&*t, value),
+                },
                 Err(e) => {
                     warn!("cast compare left value failure: {}", e);
                     None

@@ -19,7 +19,7 @@ use crate::structure::codec::{pb_value_to_object, ParseError};
 use crate::structure::filter::compare::{Compare, EqCmp, OrdCmp};
 use crate::structure::filter::BiPredicate;
 use crate::structure::filter::Predicate;
-use crate::structure::{with_tlv, ExpectValue, Reverse};
+use crate::structure::{get_tlv_type, with_tlv, ExpectValue, Reverse, TlvType};
 use crate::FromPb;
 use dyn_type::Object;
 
@@ -39,7 +39,14 @@ impl Predicate<Traverser> for ValueFilter {
         if let Some(left) = entry.get_object() {
             match self.expect {
                 ExpectValue::Local(ref v) => self.cmp.test(&left, &v),
-                ExpectValue::TLV => with_tlv(|obj| self.cmp.test(&left, &obj).unwrap_or(false)),
+                ExpectValue::TLV => match get_tlv_type() {
+                    TlvType::LeftValue => {
+                        with_tlv(|obj| self.cmp.test(&obj, &left).unwrap_or(false))
+                    }
+                    TlvType::RightValue => {
+                        with_tlv(|obj| self.cmp.test(&left, &obj).unwrap_or(false))
+                    }
+                },
             }
         } else {
             None

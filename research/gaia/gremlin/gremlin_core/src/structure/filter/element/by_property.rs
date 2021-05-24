@@ -16,7 +16,9 @@
 use crate::structure::filter::compare::{Compare, EqCmp, OrdCmp};
 use crate::structure::filter::element::{ExpectValue, Reverse};
 use crate::structure::filter::Predicate;
-use crate::structure::{with_tlv, BiPredicate, Details, DynDetails, Element};
+use crate::structure::{
+    get_tlv_type, with_tlv, BiPredicate, Details, DynDetails, Element, TlvType,
+};
 use dyn_type::Object;
 
 pub struct HasProperty {
@@ -31,9 +33,14 @@ impl<E: Element> Predicate<E> for HasProperty {
         if let Some(left) = details.get_property(self.key.as_str()) {
             match self.expect {
                 ExpectValue::Local(ref v) => self.cmp.test(&left, &v.as_borrow()),
-                ExpectValue::TLV => {
-                    with_tlv(|obj| self.cmp.test(&left, &obj.as_borrow()).unwrap_or(false))
-                }
+                ExpectValue::TLV => match get_tlv_type() {
+                    TlvType::LeftValue => {
+                        with_tlv(|obj| self.cmp.test(&obj.as_borrow(), &left).unwrap_or(false))
+                    }
+                    TlvType::RightValue => {
+                        with_tlv(|obj| self.cmp.test(&left, &obj.as_borrow()).unwrap_or(false))
+                    }
+                },
             }
         } else {
             None
