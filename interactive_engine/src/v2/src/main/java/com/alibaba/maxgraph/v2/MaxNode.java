@@ -35,7 +35,7 @@ public class MaxNode extends NodeBase {
 
         int frontendCount = 1;
         int ingestorCount = 2;
-        int storeCount = 1;
+        int storeCount = 2;
         int partitionCount = 4;
 
         Configs baseConfigs = Configs.newBuilder(configs)

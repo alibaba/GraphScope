@@ -19,50 +19,50 @@ public class FileDiscovery implements NodeDiscovery {
 
     public FileDiscovery(Configs configs) {
         this.configs = configs;
+        int storeCount = CommonConfig.STORE_NODE_COUNT.get(this.configs);
+        String storeNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(this.configs);
+        int port = CommonConfig.RPC_PORT.get(this.configs);
+        Map<Integer, MaxGraphNode> storeNodes = makeRoleNodes(storeCount, storeNamePrefix, RoleType.STORE.getName(),
+                port);
+        this.allNodes.put(RoleType.STORE, storeNodes);
+
+        int graphPort = StoreConfig.EXECUTOR_GRAPH_PORT.get(this.configs);
+        Map<Integer, MaxGraphNode> graphNodes = makeRoleNodes(storeCount, storeNamePrefix,
+                RoleType.EXECUTOR_GRAPH.getName(), graphPort);
+        this.allNodes.put(RoleType.EXECUTOR_GRAPH, graphNodes);
+
+        int queryPort = StoreConfig.EXECUTOR_QUERY_PORT.get(this.configs);
+        Map<Integer, MaxGraphNode> queryNodes = makeRoleNodes(storeCount, storeNamePrefix,
+                RoleType.EXECUTOR_QUERY.getName(), queryPort);
+        this.allNodes.put(RoleType.EXECUTOR_QUERY, queryNodes);
+
+        int enginePort = StoreConfig.EXECUTOR_ENGINE_PORT.get(this.configs);
+        Map<Integer, MaxGraphNode> engineNodes = makeRoleNodes(storeCount, storeNamePrefix,
+                RoleType.EXECUTOR_ENGINE.getName(), enginePort);
+        this.allNodes.put(RoleType.EXECUTOR_ENGINE, engineNodes);
+
+        int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(this.configs);
+        String frontendNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(this.configs);
+        Map<Integer, MaxGraphNode> frontendNodes = makeRoleNodes(frontendCount, frontendNamePrefix,
+                RoleType.FRONTEND.getName(), port);
+        this.allNodes.put(RoleType.FRONTEND, frontendNodes);
+
+        int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(this.configs);
+        String ingestorNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(this.configs);
+        Map<Integer, MaxGraphNode> ingestorNodes = makeRoleNodes(ingestorCount, ingestorNamePrefix,
+                RoleType.INGESTOR.getName(), port);
+        this.allNodes.put(RoleType.INGESTOR, ingestorNodes);
+
+        int coordinatorCount = CommonConfig.COORDINATOR_NODE_COUNT.get(this.configs);
+        String coordinatorNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(this.configs);
+        Map<Integer, MaxGraphNode> coordinatorNodes = makeRoleNodes(coordinatorCount, coordinatorNamePrefix,
+                RoleType.COORDINATOR.getName(), port);
+        this.allNodes.put(RoleType.COORDINATOR, coordinatorNodes);
     }
 
     @Override
     public void start() {
         if (!started) {
-            int storeCount = CommonConfig.STORE_NODE_COUNT.get(this.configs);
-            String storeNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(this.configs);
-            int port = CommonConfig.RPC_PORT.get(this.configs);
-            Map<Integer, MaxGraphNode> storeNodes = makeRoleNodes(storeCount, storeNamePrefix, RoleType.STORE.getName(),
-                    port);
-            this.allNodes.put(RoleType.STORE, storeNodes);
-
-            int graphPort = StoreConfig.EXECUTOR_GRAPH_PORT.get(this.configs);
-            Map<Integer, MaxGraphNode> graphNodes = makeRoleNodes(storeCount, storeNamePrefix,
-                    RoleType.EXECUTOR_GRAPH.getName(), graphPort);
-            this.allNodes.put(RoleType.EXECUTOR_GRAPH, graphNodes);
-
-            int queryPort = StoreConfig.EXECUTOR_QUERY_PORT.get(this.configs);
-            Map<Integer, MaxGraphNode> queryNodes = makeRoleNodes(storeCount, storeNamePrefix,
-                    RoleType.EXECUTOR_QUERY.getName(), queryPort);
-            this.allNodes.put(RoleType.EXECUTOR_QUERY, queryNodes);
-
-            int enginePort = StoreConfig.EXECUTOR_ENGINE_PORT.get(this.configs);
-            Map<Integer, MaxGraphNode> engineNodes = makeRoleNodes(storeCount, storeNamePrefix,
-                    RoleType.EXECUTOR_ENGINE.getName(), enginePort);
-            this.allNodes.put(RoleType.EXECUTOR_ENGINE, engineNodes);
-
-            int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(this.configs);
-            String frontendNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(this.configs);
-            Map<Integer, MaxGraphNode> frontendNodes = makeRoleNodes(frontendCount, frontendNamePrefix,
-                    RoleType.FRONTEND.getName(), port);
-            this.allNodes.put(RoleType.FRONTEND, frontendNodes);
-
-            int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(this.configs);
-            String ingestorNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(this.configs);
-            Map<Integer, MaxGraphNode> ingestorNodes = makeRoleNodes(ingestorCount, ingestorNamePrefix,
-                    RoleType.INGESTOR.getName(), port);
-            this.allNodes.put(RoleType.INGESTOR, ingestorNodes);
-
-            int coordinatorCount = CommonConfig.COORDINATOR_NODE_COUNT.get(this.configs);
-            String coordinatorNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(this.configs);
-            Map<Integer, MaxGraphNode> coordinatorNodes = makeRoleNodes(coordinatorCount, coordinatorNamePrefix,
-                    RoleType.COORDINATOR.getName(), port);
-            this.allNodes.put(RoleType.COORDINATOR, coordinatorNodes);
             this.started = true;
         }
     }
@@ -77,7 +77,6 @@ public class FileDiscovery implements NodeDiscovery {
 
     @Override
     public void stop() {
-        this.allNodes.clear();
         this.started = false;
     }
 
