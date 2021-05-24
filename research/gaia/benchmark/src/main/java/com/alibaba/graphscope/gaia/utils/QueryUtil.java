@@ -21,15 +21,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QueryUtil {
-    public static List<LdbcQuery> initQueryList(Configuration configuration) throws Exception {
+    public static List<CommonQuery> initQueryList(Configuration configuration) throws Exception {
         String queryDir = configuration.getString(Configuration.QUERY_DIR);
         String parameterDir = configuration.getString(Configuration.PARAMETER_DIR);
-        List<LdbcQuery> queryList = new ArrayList<>();
+        List<CommonQuery> queryList = new ArrayList<>();
 
+        // for ldbc queries
         for(int index = 1; index <= 100; index++) {
-            String enableQuery = String.format("ldbc.snb.interactive.LdbcQuery%d_enable", index);
-            String queryFileName = String.format("interactive-complex-%d.gremlin", index);
-            String parameterFileName = String.format("interactive_%d_param.txt", index);
+            String enableQuery = String.format("ldbc_query_%d.enable", index);
+            String queryFileName = String.format("ldbc_query_%d.gremlin", index);
+            String parameterFileName = String.format("ldbc_query_%d.param", index);
             if(configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
                 String parameterFilePath = String.format("%s/%s", parameterDir, parameterFileName);
@@ -44,48 +45,80 @@ public class QueryUtil {
                     queryList.add(new LdbcQuery4(queryName, queryFilePath, parameterFilePath));
                 } else if (index == 5) {
                     queryList.add(new LdbcQuery5(queryName, queryFilePath, parameterFilePath));
-                } else if (index == 6) {
-                    queryList.add(new LdbcQuery6(queryName, queryFilePath, parameterFilePath));
                 } else if (index == 7) {
                     queryList.add(new LdbcQuery7(queryName, queryFilePath, parameterFilePath));
-                } else if (index == 8) {
-                    queryList.add(new LdbcQuery8(queryName, queryFilePath, parameterFilePath));
                 } else if (index == 9) {
                     queryList.add(new LdbcQuery9(queryName, queryFilePath, parameterFilePath));
-                } else if (index == 11) {
-                    queryList.add(new LdbcQuery11(queryName, queryFilePath, parameterFilePath));
                 } else if (index == 12) {
                     queryList.add(new LdbcQuery12(queryName, queryFilePath, parameterFilePath));
                 } else {
-                    queryList.add(new LdbcQuery(queryName, queryFilePath, parameterFilePath));
+                    queryList.add(new CommonQuery(queryName, queryFilePath, parameterFilePath));
                 }
             }
         }
 
         // for k hop
         for(int index = 1; index < 5; index++) {
-            String enableQuery = String.format("ldbc.snb.interactive.%dhop_enable", index);
-            String queryFileName = String.format("%d-hop.gremlin", index);
-            String parameterFileName = String.format("%d_hop_param.txt", index);
+            String enableQuery = String.format("%d_hop_query.enable", index);
+            String queryFileName = String.format("%d_hop_query.gremlin", index);
+            String parameterFileName = String.format("%d_hop_query.param", index);
 
             if(configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
                 String parameterFilePath = String.format("%s/%s", parameterDir, parameterFileName);
-                String queryName = String.format("%d-hop", index);
+                String queryName = String.format("%d_HOP_QUERY", index);
 
-                queryList.add(new HopQuery(queryName, queryFilePath, parameterFilePath));
+                queryList.add(new CommonQuery(queryName, queryFilePath, parameterFilePath));
             }
         }
 
+        // for benchmarking early-stop queries
+        String enableEsQuery = "early_stop_query.enable";
+        String esQueryFileName = "early_stop_query.gremlin";
+        String esParameterFileName = "early_stop_query.param";
+        if(configuration.getBoolean(enableEsQuery, false)) {
+            String queryFilePath = String.format("%s/%s", queryDir, esQueryFileName);
+            String parameterFilePath = String.format("%s/%s", parameterDir, esParameterFileName);
+            String queryName = "EARLY_STOP_QUERY";
+            queryList.add(new CommonQuery(queryName, queryFilePath, parameterFilePath));
+        }
+
+        // for benchmarking subtask queries
+        String enableSubtaskQuery = "subtask_query.enable";
+        String subtaskQueryFileName = "subtask_query.gremlin";
+        String subtaskParameterFileName = "subtask_query.param";
+        if(configuration.getBoolean(enableSubtaskQuery, false)) {
+            String queryFilePath = String.format("%s/%s", queryDir, subtaskQueryFileName);
+            String parameterFilePath = String.format("%s/%s", parameterDir, subtaskParameterFileName);
+            String queryName = "SUBTASK_QUERY";
+            queryList.add(new SubtaskQuery(queryName, queryFilePath, parameterFilePath));
+        }
+
+        // custom queries without parameter
         for(int index = 1; index < 100; index++) {
-            String enableQuery = String.format("ldbc.snb.interactive.query_%d_without_parameter_enable", index);
-            String queryFileName = String.format("query_%d_without_parameter.gremlin", index);
+            String enableQuery = String.format("custom_constant_query_%d.enable", index);
+            String queryFileName = String.format("custom_constant_query_%d.gremlin", index);
 
             if(configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
-                String queryName = String.format("query_%d_without_parameter", index);
+                String queryName = String.format("CUSTOM_QUERY_%d_WITHOUT_PARAMETER", index);
 
                 queryList.add(new QueryWithoutParameter(queryName, queryFilePath));
+            }
+        }
+
+        // custom queries
+        for(int index = 1; index < 100; index++) {
+            String enableQuery = String.format("custom_query_%d.enable", index);
+            String queryFileName = String.format("custom_query_%d.gremlin", index);
+            String parameterFileName = String.format("custom_query_%d.param", index);
+
+            if(configuration.getBoolean(enableQuery, false)) {
+                String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
+                String parameterFilePath = String.format("%s/%s", parameterDir, parameterFileName);
+                String queryName = String.format("CUSTOM_QUERY_%d", index);
+
+                queryList.add(new CommonQuery(queryName, queryFilePath, parameterFilePath));
             }
         }
 

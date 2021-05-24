@@ -31,15 +31,4 @@ public class LdbcQuery1 extends AbstractLdbcWithSubQuery {
                 ((Map) result.getObject()).get("a").toString());
     }
 
-    @Override
-    String generateGremlinQuery(HashMap<String, String> singleParameter,
-                                String gremlinQueryPattern) {
-        for (String parameter : singleParameter.keySet()) {
-            gremlinQueryPattern = gremlinQueryPattern.replace(
-                    getParameterPrefix() + parameter + getParameterPostfix(),
-                    singleParameter.get(parameter)
-            );
-        }
-        return gremlinQueryPattern;
-    }
 }

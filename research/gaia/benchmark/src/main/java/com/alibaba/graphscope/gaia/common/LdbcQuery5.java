@@ -17,7 +17,7 @@ package com.alibaba.graphscope.gaia.common;
 
 import java.util.HashMap;
 
-public class LdbcQuery5 extends LdbcQuery {
+public class LdbcQuery5 extends CommonQuery {
     public LdbcQuery5(String queryName, String queryFile, String parameterFile) throws Exception {
         super(queryName, queryFile, parameterFile);
     }

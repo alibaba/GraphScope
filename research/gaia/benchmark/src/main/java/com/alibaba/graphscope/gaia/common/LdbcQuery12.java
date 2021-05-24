@@ -31,16 +31,4 @@ public class LdbcQuery12 extends AbstractLdbcWithSubQuery {
         return String.format("g.V(%s).in('HASCREATOR').hasLabel('COMMENT').out('REPLYOF').hasLabel('POST').out('HASTAG').as('tag').out('HASTYPE').has('name',eq('%s')).select('tag').values('name').dedup()", ((Map.Entry) result.getObject()).getKey().toString(), tagClassName);
     }
 
-    @Override
-    String generateGremlinQuery(HashMap<String, String> singleParameter,
-                                String gremlinQueryPattern) {
-        for (String parameter : singleParameter.keySet()) {
-            gremlinQueryPattern = gremlinQueryPattern.replace(
-                    getParameterPrefix() + parameter + getParameterPostfix(),
-                    singleParameter.get(parameter)
-            );
-        }
-        return gremlinQueryPattern;
-    }
-
 }

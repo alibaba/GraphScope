@@ -31,17 +31,4 @@ public class LdbcQuery7 extends AbstractLdbcWithSubQuery {
         long friendId = (long) ((Map) ((Map) result.getObject()).get("liker")).get("id");
         return String.format("g.V().hasLabel('PERSON').has('id',%s).both('KNOWS').hasLabel('PERSON').has('id', %d)", personId, friendId);
     }
-
-    @Override
-    String generateGremlinQuery(HashMap<String, String> singleParameter,
-                                String gremlinQueryPattern) {
-        for (String parameter : singleParameter.keySet()) {
-            gremlinQueryPattern = gremlinQueryPattern.replace(
-                    getParameterPrefix() + parameter + getParameterPostfix(),
-                    singleParameter.get(parameter)
-            );
-        }
-        return gremlinQueryPattern;
-    }
-
 }
