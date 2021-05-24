@@ -57,8 +57,7 @@ class DynamicGraphReporter : public grape::Communicator {
     BOOST_LEAF_AUTO(report_type, params.Get<rpc::ReportType>(rpc::REPORT_TYPE));
     switch (report_type) {
     case rpc::NODE_NUM: {
-      auto ret = std::to_string(reportNodeNum(fragment));
-      return ret;
+      return std::to_string(reportNodeNum(fragment));
     }
     case rpc::EDGE_NUM: {
       return std::to_string(reportEdgeNum(fragment));
