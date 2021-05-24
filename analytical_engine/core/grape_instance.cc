@@ -64,20 +64,12 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
             << ", duplicated load: " << duplicated_load;
 
     auto vm_ptr = std::shared_ptr<vertex_map_t>(new vertex_map_t(comm_spec_));
-    if (duplicated_load) {
-      // init vertex map with fnum = 1.
-      vm_ptr->Init(1);
-    } else {
-      vm_ptr->Init();
-    }
+    vm_ptr->Init(duplicated_load);
 
+    fid_t fid;
     auto fragment = std::make_shared<fragment_t>(vm_ptr);
-    if (duplicated_load) {
-      // fid = 0
-      fragment->Init(0, directed, duplicated_load);
-    } else {
-      fragment->Init(comm_spec_.fid(), directed, duplicated_load);
-    }
+    duplicated_load ? fid = 0 : fid = comm_spec_.fid();
+    fragment->Init(fid, directed, duplicated_load);
 
     rpc::GraphDef graph_def;
 
@@ -694,7 +686,7 @@ bl::result<rpc::GraphDef> GrapeInstance::induceSubGraph(
 
   auto sub_vm_ptr =
       std::make_shared<typename DynamicFragment::vertex_map_t>(comm_spec_);
-  sub_vm_ptr->Init();
+  sub_vm_ptr->Init(false);
   typename DynamicFragment::partitioner_t partitioner;
   partitioner.Init(fragment->fnum());
   typename DynamicFragment::vid_t gid;
@@ -734,7 +726,7 @@ bl::result<void> GrapeInstance::clearGraph(const rpc::GSParams& params) {
 
   auto vm_ptr = std::shared_ptr<DynamicFragment::vertex_map_t>(
       new DynamicFragment::vertex_map_t(comm_spec_));
-  vm_ptr->Init();
+  vm_ptr->Init(false);
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   fragment->ClearGraph(vm_ptr);

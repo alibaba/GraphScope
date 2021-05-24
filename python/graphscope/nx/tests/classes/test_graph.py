@@ -136,6 +136,19 @@ class TestGraph(_TestGraph):
         assert G["n"][3.14]["weight"] == 3.14
         assert G[True][False]["weight"] == True
 
+    def test_duplcated_load_graph(self):
+        G = self.Graph(duplicated_load=True)
+        nodes = [(0, 1), 3, "n", 3.14, True, False]
+        edges = [((0, 1), 3, 1), ("n", 3.14, 3.14), (True, False, True)]
+        G.add_nodes_from(nodes)
+        G.add_weighted_edges_from(edges)
+        assert G.number_of_nodes() == 6
+        assert G.number_of_edges() == 3
+        assert list(G.nodes) == [(0, 1), 3, "n", 3.14, True, False]
+        assert G[(0, 1)][3]["weight"] == 1
+        assert G["n"][3.14]["weight"] == 3.14
+        assert G[True][False]["weight"] == True
+
     def test_selfloops(self):
         G = self.Graph()
         G.add_edge(0, 0)

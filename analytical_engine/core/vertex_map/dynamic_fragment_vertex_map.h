@@ -37,11 +37,14 @@ class DynamicFragmentVertexMap : public grape::GlobalVertexMap<OID_T, VID_T> {
       : Base(comm_spec), duplicated_load_(false) {}
   ~DynamicFragmentVertexMap() = default;
 
-  void Init() override { Base::Init(); }
-
-  void Init(fid_t fnum) override {
-    Base::Init(fnum);
-    duplicated_load_ = true;
+  void Init(bool duplicated_load) {
+    duplicated_load_ = duplicated_load;
+    if (duplicated_load) {
+      // init with fnum = 1.
+      Base::Init(1);
+    } else {
+      Base::Init();
+    }
   }
 
   void Construct() override {
