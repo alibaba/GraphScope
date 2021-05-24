@@ -171,6 +171,7 @@ impl Operator {
             if FiredState::Active == self.core.on_receive(tag, &self.inputs, &self.outputs)? {
                 let active = Active::default();
                 self.actives.insert(tag.clone(), active);
+                self.outputs.iter().for_each(|o| o.retain(tag));
             }
             Ok(())
         }
