@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.plan.strategy;
 
 import com.alibaba.graphscope.gaia.store.StaticGraphStore;
+import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -28,9 +29,7 @@ import org.apache.tinkerpop.gremlin.structure.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
@@ -47,13 +46,8 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
     @Override
     public void apply(Traversal.Admin<?, ?> traversal) {
         List<Step> steps = traversal.getSteps();
-        // point to the same object after RepeatUnroll, avoid this
-        Set<Step> converted = new HashSet<>();
         for (int i = 0; i < steps.size(); ++i) {
             Step step = steps.get(i);
-            if (converted.contains(step)) {
-                continue;
-            }
             if (step instanceof HasContainerHolder) {
                 List<HasContainer> containers = ((HasContainerHolder) step).getHasContainers();
                 for (HasContainer container : containers) {
@@ -62,24 +56,35 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                         if (predicate.getValue() instanceof List && ((List) predicate.getValue()).get(0) instanceof String) {
                             List<String> values = (List<String>) predicate.getValue();
                             predicate.setValue(values.stream().map(k -> {
-                                long labelId = StaticGraphStore.INSTANCE.getLabelId(k);
-                                return String.valueOf(labelId);
+                                if (StringUtils.isNumeric(k)) {
+                                    return k;
+                                } else {
+                                    long labelId = StaticGraphStore.INSTANCE.getLabelId(k);
+                                    return String.valueOf(labelId);
+                                }
                             }).collect(Collectors.toList()));
                         } else if (predicate.getValue() instanceof String) {
-                            long labelId = StaticGraphStore.INSTANCE.getLabelId((String) predicate.getValue());
-                            predicate.setValue(String.valueOf(labelId));
+                            String value = (String) predicate.getValue();
+                            if (StringUtils.isNumeric(value)) {
+                                predicate.setValue(value);
+                            } else {
+                                long labelId = StaticGraphStore.INSTANCE.getLabelId(value);
+                                predicate.setValue(String.valueOf(labelId));
+                            }
                         } else {
                             throw new UnsupportedOperationException("hasLabel value type not support " + predicate.getValue().getClass());
                         }
-                        converted.add(step);
                     }
                 }
             } else if (step instanceof VertexStep) {
                 String[] edgeLabels = ((VertexStep) step).getEdgeLabels();
                 for (int j = 0; j < edgeLabels.length; ++j) {
-                    long labelId = StaticGraphStore.INSTANCE.getLabelId(edgeLabels[j]);
-                    edgeLabels[j] = String.valueOf(labelId);
-                    converted.add(step);
+                    if (StringUtils.isNumeric(edgeLabels[j])) {
+                        // do nothing
+                    } else {
+                        long labelId = StaticGraphStore.INSTANCE.getLabelId(edgeLabels[j]);
+                        edgeLabels[j] = String.valueOf(labelId);
+                    }
                 }
             }
         }
