@@ -17,14 +17,15 @@ package com.alibaba.graphscope.gaia.common;
 
 import java.util.HashMap;
 
-public class LdbcQuery6 extends LdbcQuery {
-    public LdbcQuery6(String queryName, String queryFile, String parameterFile) throws Exception {
+public class SubtaskQuery extends CommonQuery {
+    public SubtaskQuery(String queryName, String queryFile, String parameterFile) throws Exception {
         super(queryName, queryFile, parameterFile);
     }
 
     @Override
     String generateGremlinQuery(HashMap<String, String> singleParameter,
                                 String gremlinQueryPattern) {
+
         for (String parameter : singleParameter.keySet()) {
             gremlinQueryPattern = gremlinQueryPattern.replace(
                     getParameterPrefix() + parameter + getParameterPostfix(),
@@ -33,4 +34,5 @@ public class LdbcQuery6 extends LdbcQuery {
         }
         return gremlinQueryPattern;
     }
+
 }

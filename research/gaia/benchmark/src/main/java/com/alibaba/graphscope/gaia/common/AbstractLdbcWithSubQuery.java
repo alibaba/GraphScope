@@ -22,7 +22,7 @@ import org.apache.tinkerpop.gremlin.driver.ResultSet;
 
 import java.util.HashMap;
 
-public abstract class AbstractLdbcWithSubQuery extends LdbcQuery {
+public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
     
     public AbstractLdbcWithSubQuery(String queryName, String queryFile, String parameterFile) throws Exception {
         super(queryName, queryFile, parameterFile);

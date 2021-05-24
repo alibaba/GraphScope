@@ -27,17 +27,17 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class LdbcQuery {
+public class CommonQuery {
     String queryName;
     String queryPattern;
     private ArrayList<HashMap<String, String>> parameters;
 
-    public LdbcQuery(String queryName, String queryFile) throws Exception {
+    public CommonQuery(String queryName, String queryFile) throws Exception {
         this.queryName = queryName;
         this.queryPattern = getGremlinQueryPattern(queryFile);
     }
 
-    public LdbcQuery(String queryName, String queryFile, String parameterFile) throws Exception {
+    public CommonQuery(String queryName, String queryFile, String parameterFile) throws Exception {
         this.queryName = queryName;
         this.queryPattern = getGremlinQueryPattern(queryFile);
         this.parameters = getParameters(parameterFile);
@@ -83,27 +83,13 @@ public class LdbcQuery {
 
     String generateGremlinQuery(HashMap<String, String> singleParameter,
                                 String gremlinQueryPattern) {
-        String[] subStrSet = gremlinQueryPattern.split("\\$");
-
-        if (subStrSet.length != singleParameter.size() + 1) {
-            String errMsg = "Illegal parameter and query, caused by the number of parameter is not suitable of query";
-            System.out.println(errMsg);
-            throw new RuntimeException("Illegal parameter and query, caused by the number of parameter is not suitable of query");
+        for (String parameter : singleParameter.keySet()) {
+            gremlinQueryPattern = gremlinQueryPattern.replace(
+                    getParameterPrefix() + parameter + getParameterPostfix(),
+                    singleParameter.get(parameter)
+            );
         }
-
-        String gremlinQuery = subStrSet[0];
-
-        for (int i = 1; i < subStrSet.length; i++) {
-            String subStr = subStrSet[i];
-            for (int j = 0; j < subStr.length(); j++) {
-                if (!Character.isLetterOrDigit(subStr.charAt(j))) {
-                    gremlinQuery = String.format("%s%s%s", gremlinQuery, singleParameter.get(i - 1), subStr.substring(j));
-                    break;
-                }
-            }
-        }
-
-        return gremlinQuery;
+        return gremlinQueryPattern;
     }
 
     Pair<Integer, String> processResult(ResultSet resultSet) {
