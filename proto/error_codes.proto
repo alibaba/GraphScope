@@ -64,6 +64,13 @@ enum Code {
   // Errors raised by learning engine
   LEARNING_ENGINE_INTERNAL_ERROR = 32;
 
+  // Errors raised by coordinator
+  COORDINATOR_INTERNAL_ERROR = 33;
+
+  // Errors raised by analytical engine
+  // Results of workers not consistent 
+  WORKER_RESULTS_INCONSISTENT_ERROR = 41;
+
   // Unknown error.
   UNKNOWN_ERROR = 101;
 

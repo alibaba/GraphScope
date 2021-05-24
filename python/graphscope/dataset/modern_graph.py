@@ -36,37 +36,100 @@ def load_modern_graph(sess, prefix, directed=True):
     Returns:
         :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
     """
-    graph = sess.g(directed=directed)
-    graph = (
-        graph.add_vertices(
-            Loader(os.path.join(prefix, "person.csv"), delimiter="|"),
-            "person",
-            ["name", ("age", "int")],
-            "id",
-        )
-        .add_vertices(
-            Loader(os.path.join(prefix, "software.csv"), delimiter="|"),
-            "software",
-            ["name", "lang"],
-            "id",
-        )
-        .add_edges(
-            Loader(os.path.join(prefix, "knows.csv"), delimiter="|"),
-            "knows",
-            ["weight"],
-            src_label="person",
-            dst_label="person",
-            src_field="src_id",
-            dst_field="dst_id",
-        )
-        .add_edges(
-            Loader(os.path.join(prefix, "created.csv"), delimiter="|"),
-            "created",
-            ["weight"],
-            src_label="person",
-            dst_label="software",
-            src_field="src_id",
-            dst_field="dst_id",
-        )
+    graph = sess.load_from(
+        edges={
+            "knows": (
+                Loader(
+                    os.path.join(prefix, "knows.csv"),
+                    header_row=True,
+                    delimiter="|",
+                ),
+                ["weight"],
+                ("src_id", "person"),
+                ("dst_id", "person"),
+            ),
+            "created": (
+                Loader(
+                    os.path.join(prefix, "created.csv"),
+                    header_row=True,
+                    delimiter="|",
+                ),
+                ["weight"],
+                ("src_id", "person"),
+                ("dst_id", "software"),
+            ),
+        },
+        vertices={
+            "person": (
+                Loader(
+                    os.path.join(prefix, "person.csv"),
+                    header_row=True,
+                    delimiter="|",
+                ),
+                ["name", ("age", "int")],
+                "id",
+            ),
+            "software": (
+                Loader(
+                    os.path.join(prefix, "software.csv"),
+                    header_row=True,
+                    delimiter="|",
+                ),
+                ["name", "lang"],
+                "id",
+            ),
+        },
+        directed=directed,
+        generate_eid=True,
     )
     return graph
+
+
+# def load_modern_graph(sess, prefix, directed=True):
+# """Load modern graph.
+# Modern graph consist 6 vertices and 6 edges, useful to test the basic
+# functionalities.
+
+# Args:
+# sess (:class:`graphscope.Session`): Load graph within the session.
+# prefix (str): Data directory.
+# directed (bool, optional): Determine to load a directed or undirected graph.
+# Defaults to True.
+
+# Returns:
+# :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
+# """
+# graph = sess.g(directed=directed)
+# graph = (
+# graph.add_vertices(
+# Loader(os.path.join(prefix, "person.csv"), delimiter="|"),
+# "person",
+# ["name", ("age", "int")],
+# "id",
+# )
+# .add_vertices(
+# Loader(os.path.join(prefix, "software.csv"), delimiter="|"),
+# "software",
+# ["name", "lang"],
+# "id",
+# )
+# .add_edges(
+# Loader(os.path.join(prefix, "knows.csv"), delimiter="|"),
+# "knows",
+# ["weight"],
+# src_label="person",
+# dst_label="person",
+# src_field="src_id",
+# dst_field="dst_id",
+# )
+# .add_edges(
+# Loader(os.path.join(prefix, "created.csv"), delimiter="|"),
+# "created",
+# ["weight"],
+# src_label="person",
+# dst_label="software",
+# src_field="src_id",
+# dst_field="dst_id",
+# )
+# )
+# return graph

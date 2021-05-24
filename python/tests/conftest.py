@@ -137,36 +137,230 @@ def twitter_e_1_1_1():
 
 @pytest.fixture(scope="module")
 def arrow_property_graph(graphscope_session):
-    g = graphscope_session.g(generate_eid=False)
-    g = g.add_vertices(f"{new_property_dir}/twitter_v_0", "v0")
-    g = g.add_vertices(f"{new_property_dir}/twitter_v_1", "v1")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_0", "e0", ["weight"], "v0", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_0", "e0", ["weight"], "v0", "v1")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_0", "e0", ["weight"], "v1", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_0", "e0", ["weight"], "v1", "v1")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_1", "e1", ["weight"], "v0", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_1", "e1", ["weight"], "v0", "v1")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_1", "e1", ["weight"], "v1", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_1", "e1", ["weight"], "v1", "v1")
-
+    g = graphscope_session.load_from(
+        edges={
+            "e0": [
+                (
+                    Loader(
+                        "{}/twitter_e_0_0_0".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v0"),
+                    ("dst", "v0"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_0_1_0".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v0"),
+                    ("dst", "v1"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_1_0_0".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v1"),
+                    ("dst", "v0"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_1_1_0".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v1"),
+                    ("dst", "v1"),
+                ),
+            ],
+            "e1": [
+                (
+                    Loader(
+                        "{}/twitter_e_0_0_1".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v0"),
+                    ("dst", "v0"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_0_1_1".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v0"),
+                    ("dst", "v1"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_1_0_1".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v1"),
+                    ("dst", "v0"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_1_1_1".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v1"),
+                    ("dst", "v1"),
+                ),
+            ],
+        },
+        vertices={
+            "v0": Loader("{}/twitter_v_0".format(new_property_dir), header_row=True),
+            "v1": Loader("{}/twitter_v_1".format(new_property_dir), header_row=True),
+        },
+        generate_eid=False,
+    )
     yield g
     g.unload()
 
 
 @pytest.fixture(scope="module")
 def arrow_property_graph_only_from_efile(graphscope_session):
-    g = graphscope_session.g(generate_eid=False)
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_0", "e0", ["weight"], "v0", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_0", "e0", ["weight"], "v0", "v1")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_0", "e0", ["weight"], "v1", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_0", "e0", ["weight"], "v1", "v1")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_1", "e1", ["weight"], "v0", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_1", "e1", ["weight"], "v0", "v1")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_1", "e1", ["weight"], "v1", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_1", "e1", ["weight"], "v1", "v1")
-
+    g = graphscope_session.load_from(
+        edges={
+            "e0": [
+                (
+                    Loader(
+                        "{}/twitter_e_0_0_0".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v0"),
+                    ("dst", "v0"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_0_1_0".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v0"),
+                    ("dst", "v1"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_1_0_0".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v1"),
+                    ("dst", "v0"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_1_1_0".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v1"),
+                    ("dst", "v1"),
+                ),
+            ],
+            "e1": [
+                (
+                    Loader(
+                        "{}/twitter_e_0_0_1".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v0"),
+                    ("dst", "v0"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_0_1_1".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v0"),
+                    ("dst", "v1"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_1_0_1".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v1"),
+                    ("dst", "v0"),
+                ),
+                (
+                    Loader(
+                        "{}/twitter_e_1_1_1".format(new_property_dir),
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                    ["weight"],
+                    ("src", "v1"),
+                    ("dst", "v1"),
+                ),
+            ],
+        },
+        generate_eid=False,
+    )
     yield g
     g.unload()
+
+
+# @pytest.fixture(scope="module")
+# def arrow_property_graph(graphscope_session):
+# g = graphscope_session.g(generate_eid=False)
+# g = g.add_vertices(f"{new_property_dir}/twitter_v_0", "v0")
+# g = g.add_vertices(f"{new_property_dir}/twitter_v_1", "v1")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_0", "e0", ["weight"], "v0", "v0")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_0", "e0", ["weight"], "v0", "v1")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_0", "e0", ["weight"], "v1", "v0")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_0", "e0", ["weight"], "v1", "v1")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_1", "e1", ["weight"], "v0", "v0")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_1", "e1", ["weight"], "v0", "v1")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_1", "e1", ["weight"], "v1", "v0")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_1", "e1", ["weight"], "v1", "v1")
+
+# yield g
+# g.unload()
+
+
+# @pytest.fixture(scope="module")
+# def arrow_property_graph_only_from_efile(graphscope_session):
+# g = graphscope_session.g(generate_eid=False)
+# g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_0", "e0", ["weight"], "v0", "v0")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_0", "e0", ["weight"], "v0", "v1")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_0", "e0", ["weight"], "v1", "v0")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_0", "e0", ["weight"], "v1", "v1")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_1", "e1", ["weight"], "v0", "v0")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_1", "e1", ["weight"], "v0", "v1")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_1", "e1", ["weight"], "v1", "v0")
+# g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_1", "e1", ["weight"], "v1", "v1")
+
+# yield g
+# g.unload()
 
 
 @pytest.fixture(scope="module")

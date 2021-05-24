@@ -29,6 +29,7 @@ from graphscope import property_bfs
 from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.framework.app import AppAssets
+from graphscope.framework.errors import CoordinatorInternalError
 
 
 def test_simple_context_to_numpy(simple_context):
@@ -156,13 +157,13 @@ def test_lpa(arrow_property_graph_lpa):
 
 
 def test_error_on_selector(property_context):
-    with pytest.raises(KeyError, match="non_exist_label"):
+    with pytest.raises(CoordinatorInternalError, match="non_exist_label"):
         out = property_context.to_numpy("v:non_exist_label.id")
-    with pytest.raises(KeyError, match="non_exist_prop"):
+    with pytest.raises(CoordinatorInternalError, match="non_exist_prop"):
         out = property_context.to_numpy("v:v0.non_exist_prop")
     with pytest.raises(RuntimeError, match="selector cannot be None"):
         out = property_context.to_numpy(selector=None)
-    with pytest.raises(ValueError, match="not enough values to unpack"):
+    with pytest.raises(CoordinatorInternalError, match="not enough values to unpack"):
         out = property_context.to_numpy("xxx")
-    with pytest.raises(SyntaxError, match="Invalid selector"):
+    with pytest.raises(CoordinatorInternalError, match="Invalid selector"):
         out = property_context.to_numpy("xxx:a.b")

@@ -35,7 +35,6 @@ import "proto/types.proto";
 message AttrValue {
   enum NullValue { NULL_VALUE = 0; }
 
-
   message ListValue {
     repeated bytes s = 2;                         // "list(string)"
     repeated int64 i = 3 [ packed = true ];       // "list(int)"
@@ -59,6 +58,9 @@ message AttrValue {
     ListValue list = 10;    // any "list(...)"
 
     NameAttrList func = 11;
+
+    // for lazy mode, inferred from the context of dag
+    PlaceHolder place_holder = 21;
   }
 }
 

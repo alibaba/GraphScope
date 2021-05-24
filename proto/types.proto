@@ -62,17 +62,20 @@ enum Direction {
 enum OutputType {
   GRAPH = 0;
   APP = 1;
-  RESULTS = 2;
-  TENSOR = 3;
-  DATAFRAME = 4;
-  VINEYARD_TENSOR = 5;
-  VINEYARD_DATAFRAME = 6;
+  BOUND_APP = 2;
+  RESULTS = 3;
+  TENSOR = 4;
+  DATAFRAME = 5;
+  VINEYARD_TENSOR = 6;
+  VINEYARD_DATAFRAME = 7;
+  NULL_OUTPUT = 101;
 };
 
 enum OperationType {
   // command
   CREATE_GRAPH = 0;  // return output_type = graph
-  CREATE_APP = 2;    // return app
+  BIND_APP = 1;      // return app
+  CREATE_APP = 2;    // do nothing
   MODIFY_VERTICES = 3;  // return graph
   MODIFY_EDGES = 4;     // return graph
   RUN_APP = 5;       // return result
@@ -93,6 +96,11 @@ enum OperationType {
   CLEAR_GRAPH = 20;  // clear graph
   VIEW_GRAPH = 21;  // create graph view
   INDUCE_SUBGRAPH = 22;  // induce subgraph
+
+  CREATE_INTERACTIVE_QUERY = 31;  // interactive query
+  SUBGRAPH = 32;  // subgraph in interactive query
+
+  CREATE_LEARNING = 41;  // learning graph
 
   // data
   CONTEXT_TO_NUMPY = 50;
@@ -151,12 +159,20 @@ enum ParamKey {
   PARAM = 26;
 
   DISTRIBUTED = 27;
+  SCHEMA_PATH = 31;
+  GIE_GREMLIN_SERVER_CPU = 32;
+  GIE_GREMLIN_SERVER_MEM = 33;
+  GIE_GREMLIN_ENGINE_PARAMS = 34;
 
   APP_SIGNATURE = 40;
   GRAPH_SIGNATURE = 41;
   IS_FROM_VINEYARD_ID = 42;
   VINEYARD_ID = 43;
   VINEYARD_NAME = 44;
+
+  // project
+  VERTEX_COLLECTIONS = 51;
+  EDGE_COLLECTIONS = 52;
 
   APP_NAME = 100;
   APP_ALGO = 101;
@@ -231,3 +247,5 @@ enum ReportType {
   NODES_BY_LOC = 18;
   SELFLOOPS_NUM = 19;
 }
+
+message PlaceHolder {}

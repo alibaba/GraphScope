@@ -20,6 +20,8 @@ import hashlib
 import json
 import logging
 import threading
+from abc import ABCMeta
+from abc import abstractmethod
 from copy import deepcopy
 from typing import List
 from typing import Mapping
@@ -31,6 +33,7 @@ from graphscope.config import GSConfig as gs_config
 from graphscope.framework import dag_utils
 from graphscope.framework import graph_utils
 from graphscope.framework import utils
+from graphscope.framework.dag import DAGNode
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.graph_utils import EdgeLabel
@@ -44,7 +47,431 @@ from graphscope.proto import types_pb2
 logger = logging.getLogger("graphscope")
 
 
-class Graph(object):
+class GraphInterface(metaclass=ABCMeta):
+    """Base Class to derive GraphDAGNode and Graph"""
+
+    def __init__(self):
+        self._session = None
+
+    @abstractmethod
+    def add_column(self, results, selector):
+        raise NotImplementedError
+
+    @abstractmethod
+    def add_vertices(self, vertices, label="_", properties=None, vid_field=0):
+        raise NotImplementedError
+
+    @abstractmethod
+    def add_edges(
+        self,
+        edges,
+        label="_",
+        properties=None,
+        src_label=None,
+        dst_label=None,
+        src_field=0,
+        dst_field=1,
+    ):
+        raise NotImplementedError
+
+    @abstractmethod
+    def unload(self):
+        raise NotImplementedError
+
+    def to_numpy(self, selector, vertex_range=None):
+        raise NotImplementedError
+
+    def to_dataframe(self, selector, vertex_range=None):
+        raise NotImplementedError
+
+    def save_to(self, path, **kwargs):
+        raise NotImplementedError
+
+    def load_from(cls, path, sess, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def project(self, vertices, edges):
+        raise NotImplementedError
+
+    def _from_vineyard(self, vineyard_object):
+        """Load a graph from a already existed vineyard graph.
+
+        Args:
+            vineyard_object (:class:`vineyard.Object`, :class:`vineyard.ObjectID`
+            or :class:`vineyard.ObjectName`): vineyard object,
+            which represents a graph.
+
+        Returns: :class:`Operation`
+        """
+        if isinstance(vineyard_object, vineyard.Object):
+            return self._construct_op_from_vineyard_id(vineyard_object.id)
+        if isinstance(vineyard_object, vineyard.ObjectID):
+            return self._construct_op_from_vineyard_id(vineyard_object)
+        if isinstance(vineyard_object, vineyard.ObjectName):
+            return self._construct_op_from_vineyard_name(vineyard_object)
+
+    def _construct_op_from_vineyard_id(self, vineyard_id):
+        assert self._session is not None
+        config = {}
+        config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(True)
+        config[types_pb2.VINEYARD_ID] = utils.i_to_attr(int(vineyard_id))
+        # FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard
+        #
+        # the metadata should be retrived from vineyard
+        config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
+        config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
+        return dag_utils.create_graph(
+            self.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
+        )
+
+    def _construct_op_from_vineyard_name(self, vineyard_name):
+        assert self._session is not None
+        config = {}
+        config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(True)
+        config[types_pb2.VINEYARD_NAME] = utils.s_to_attr(str(vineyard_name))
+        # FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard
+        #
+        # the metadata should be retrived from vineyard
+        config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
+        config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
+        return dag_utils.create_graph(
+            self.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
+        )
+
+    def _construct_op_of_empty_graph(self):
+        config = {}
+        config[types_pb2.ARROW_PROPERTY_DEFINITION] = attr_value_pb2.AttrValue()
+        config[types_pb2.DIRECTED] = utils.b_to_attr(self._directed)
+        config[types_pb2.GENERATE_EID] = utils.b_to_attr(self._generate_eid)
+        config[types_pb2.OID_TYPE] = utils.s_to_attr(self._oid_type)
+        config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
+        config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(False)
+        return dag_utils.create_graph(
+            self.session_id, raph_def_pb2.ARROW_PROPERTY, inputs=None, attrs=config
+        )
+
+
+class GraphDAGNode(DAGNode, GraphInterface):
+    """Graph node in a DAG."""
+
+    def __init__(
+        self,
+        session,
+        incoming_data=None,
+        oid_type="int64",
+        directed=True,
+        generate_eid=True,
+    ):
+        """Construct a :class:`GraphDAGNode` object.
+
+        Args:
+            session (:class:`Session`): A graphscope session instance.
+            incoming_data: Graph can be initialized through various type of sources,
+                which can be one of:
+
+                    - :class:`Operation`
+                    - :class:`nx.Graph`
+                    - :class:`Graph`
+                    - :class:`vineyard.Object`, :class:`vineyard.ObjectId` or :class:`vineyard.ObjectName`
+            oid_type: (str, optional): Type of vertex original id. Defaults to "int64".
+            directed: (bool, optional): Directed graph or not. Defaults to True.
+            generate_eid: (bool, optional): Generate id for each edge when setted True. Defaults to True.
+        """
+
+        super().__init__()
+        self._session = session
+        oid_type = utils.normalize_data_type_str(oid_type)
+        if oid_type not in ("int64_t", "std::string"):
+            raise ValueError("oid_type can only be int64_t or string.")
+        self._oid_type = oid_type
+        self._directed = directed
+        self._generate_eid = generate_eid
+        self._graph_type = graph_def_pb2.ARROW_PROPERTY
+        # list of pair <parent_op_key, VertexLabel/EdgeLabel>
+        self._unsealed_vertices_and_edges = list()
+        # check for newly added vertices and edges.
+        self._v_labels = list()
+        self._e_labels = list()
+        self._e_relationships = list()
+        self._base_graph = None
+        # add op to dag
+        self._resolve_op(incoming_data)
+        self._session.dag.add_op(self._op)
+
+    def __del__(self):
+        # TODO think about the DAGNode has been run.
+        pass
+
+    @property
+    def v_labels(self):
+        return self._v_labels
+
+    @v_labels.setter
+    def v_labels(self, value):
+        self._v_labels = value
+
+    @property
+    def e_labels(self):
+        return self._e_labels
+
+    @e_labels.setter
+    def e_labels(self, value):
+        self._e_labels = value
+
+    @property
+    def e_relationships(self):
+        return self._e_relationships
+
+    @e_relationships.setter
+    def e_relationships(self, value):
+        self._e_relationships = value
+
+    @property
+    def graph_type(self):
+        """The type of the graph object.
+
+        Returns:
+            type (`types_pb2.GraphType`): the type of the graph.
+        """
+        return self._graph_type
+
+    def _resolve_op(self, incoming_data):
+        # Don't import the :code:`NXGraph` in top-level statements to improve the
+        # performance of :code:`import graphscope`.
+        from graphscope import nx
+
+        if incoming_data is None:
+            # create dag node of empty graph
+            self._op = self._construct_op_of_empty_graph()
+        elif isinstance(incoming_data, Operation):
+            self._op = incoming_data
+            if self._op.type == types_pb2.PROJECT_TO_SIMPLE:
+                self._graph_type = graph_def_pb2.ARROW_PROJECTED
+        elif isinstance(incoming_data, nx.Graph):
+            self._op = self._from_nx_graph(incoming_data)
+        elif isinstance(incoming_data, Graph):
+            self._op = dag_utils.copy_graph(incoming_data)
+            self._graph_type = incoming_data.graph_type
+        elif isinstance(incoming_data, GraphDAGNode):
+            if incoming_data.session_id != self.session_id:
+                raise RuntimeError("{0} not in the same session.".formar(incoming_data))
+            raise NotImplementedError
+        elif isinstance(
+            incoming_data, (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
+        ):
+            self._op = self._from_vineyard(incoming_data)
+        else:
+            raise RuntimeError("Not supported incoming data.")
+
+    def add_vertices(self, vertices, label="_", properties=None, vid_field=0):
+        if label in self._v_labels:
+            raise ValueError(f"Label {label} already existed in graph.")
+        if not self._v_labels and self._e_labels:
+            raise ValueError("Cannot manually add vertices after inferred vertices.")
+        unsealed_vertices_and_edges = deepcopy(self._unsealed_vertices_and_edges)
+        vertex_label = VertexLabel(
+            label=label,
+            loader=vertices,
+            properties=properties,
+            vid_field=vid_field,
+            session_id=self._session.session_id,
+        )
+        unsealed_vertices_and_edges.append((self.op.key, vertex_label))
+        v_labels = deepcopy(self._v_labels)
+        v_labels.append(label)
+        # construct op
+        config = graph_utils.assemble_op_config(
+            [vertex_label], [], self._oid_type, self._directed, self._generate_eid
+        )
+        op = dag_utils.add_labels_to_graph(self, attrs=config)
+        # construct dag node
+        graph_dag_node = GraphDAGNode(
+            self._session, op, self._oid_type, self._directed, self._generate_eid
+        )
+        graph_dag_node._v_labels = v_labels
+        graph_dag_node._e_labels = self._e_labels
+        graph_dag_node._e_relationships = self._e_relationships
+        graph_dag_node._unsealed_vertices_and_edges = unsealed_vertices_and_edges
+        graph_dag_node._base_graph = self
+        return graph_dag_node
+
+    def add_edges(
+        self,
+        edges,
+        label="_",
+        properties=None,
+        src_label=None,
+        dst_label=None,
+        src_field=0,
+        dst_field=1,
+    ):
+        if src_label is None and dst_label is None:
+            check_argument(
+                len(self._v_labels) <= 1,
+                "Ambiguous vertex label, please specify the src_label and dst_label.",
+            )
+            if len(self._v_labels) == 1:
+                src_label = dst_label = self._v_labels[0]
+            else:
+                src_label = dst_label = "_"
+
+        if src_label is None or dst_label is None:
+            raise ValueError(
+                "src and dst label must be both specified or either unspecified."
+            )
+
+        if self._v_labels:
+            if src_label not in self._v_labels or dst_label not in self._v_labels:
+                raise ValueError("src label or dst_label not existed in graph.")
+        else:
+            # We can infer all vertices label in the graph constructing stage.
+            pass
+
+        check_argument(
+            src_field != dst_field, "src and dst field cannot refer to the same field"
+        )
+
+        if self.evaluated:
+            if label in self._e_labels:
+                raise ValueError(f"Label  {label} already existed in graph")
+
+        unsealed_vertices = list()
+        unsealed_edges = list()
+
+        e_labels = deepcopy(self._e_labels)
+        relations = deepcopy(self._e_relationships)
+
+        parent = self
+        if label in self.e_labels:
+            # aggregate op with the same edge label
+            fork = False
+            unsealed_vertices_and_edges = list()
+            for parent_op_key, unsealed_v_or_e in self._unsealed_vertices_and_edges:
+                if (
+                    isinstance(unsealed_v_or_e, EdgeLabel)
+                    and unsealed_v_or_e.label == label
+                ):
+                    parent = self._backtrack_graph_dag_node_by_op_key(parent_op_key)
+                    cur_label = unsealed_v_or_e
+                    cur_label.add_sub_label(
+                        EdgeSubLabel(
+                            edges,
+                            properties,
+                            src_label,
+                            dst_label,
+                            src_field,
+                            dst_field,
+                        )
+                    )
+                    fork = True
+                else:
+                    unsealed_vertices_and_edges.append((parent_op_key, unsealed_v_or_e))
+                    if fork:
+                        if isinstance(unsealed_v_or_e, VertexLabel):
+                            unsealed_vertices.append(unsealed_v_or_e)
+                        else:
+                            unsealed_edges.append(unsealed_v_or_e)
+            unsealed_edges.append(cur_label)
+            unsealed_vertices_and_edges.append((parent.op.key, cur_label))
+        else:
+            unsealed_vertices_and_edges = deepcopy(self._unsealed_vertices_and_edges)
+            e_labels.append(label)
+            relations.append([(src_label, dst_label)])
+            cur_label = EdgeLabel(label, self._session.session_id)
+            cur_label.add_sub_label(
+                EdgeSubLabel(
+                    edges, properties, src_label, dst_label, src_field, dst_field
+                )
+            )
+            unsealed_edges.append(cur_label)
+            unsealed_vertices_and_edges.append((parent.op.key, cur_label))
+        # construct op
+        config = graph_utils.assemble_op_config(
+            unsealed_vertices,
+            unsealed_edges,
+            self._oid_type,
+            self._directed,
+            self._generate_eid,
+        )
+        op = dag_utils.add_labels_to_graph(parent, attrs=config)
+        # construct dag node
+        graph_dag_node = GraphDAGNode(
+            self._session, op, self._oid_type, self._directed, self._generate_eid
+        )
+        graph_dag_node._v_labels = self._v_labels
+        graph_dag_node._e_labels = e_labels
+        graph_dag_node._e_relationships = relations
+        graph_dag_node._unsealed_vertices_and_edges = unsealed_vertices_and_edges
+        graph_dag_node._base_graph = parent
+        return graph_dag_node
+
+    def _from_nx_graph(self, incoming_graph):
+        """Create a gs graph from a nx graph.
+        Args:
+            incoming_graph (:class:`nx.graph`): A nx graph that contains graph data.
+
+        Returns:
+            that will be used to construct a gs.Graph
+
+        Raises:
+            TypeError: Raise Error if graph type not match.
+
+        Examples:
+            >>> nx_g = nx.path_graph(10)
+            >>> gs_g = gs.Graph(nx_g)
+        """
+        if hasattr(incoming_graph, "_graph"):
+            msg = "graph view can not convert to gs graph"
+            raise TypeError(msg)
+        return dag_utils.dynamic_to_arrow(incoming_graph)
+
+    def _backtrack_graph_dag_node_by_op_key(self, key):
+        if self.op.key == key:
+            return self
+        graph_dag_node = self._base_graph
+        while graph_dag_node is not None:
+            if graph_dag_node.op.key == key:
+                return graph_dag_node
+            graph_dag_node = graph_dag_node._base_graph
+
+    def add_column(self, results, selector):
+        check_argument(
+            isinstance(selector, Mapping), "selector of add column must be a dict"
+        )
+        selector = json.dumps(selector)
+        op = dag_utils.add_column(self, results, selector)
+        graph_dag_node = GraphDAGNode(self._session, op)
+        graph_dag_node._base_graph = self
+        return graph_dag_node
+
+    def unload(self):
+        raise RuntimeError("Cannot unload a dag node graph")
+
+    def project(
+        self,
+        vertices: Mapping[str, Union[List[str], None]],
+        edges: Mapping[str, Union[List[str], None]],
+    ):
+        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
+        op = dag_utils.project_arrow_property_graph(
+            self, json.dumps(vertices), json.dumps(edges)
+        )
+        # construct dag node
+        graph_dag_node = GraphDAGNode(self._session, op)
+        graph_dag_node._base_graph = self
+        return graph_dag_node
+
+    def _project_to_simple(self):
+        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
+        op = dag_utils.project_arrow_property_graph_to_simple(self)
+        # construct dag node
+        graph_dag_node = GraphDAGNode(self._session, op)
+        graph_dag_node._base_graph = self
+        return graph_dag_node
+
+
+class Graph(GraphInterface):
     """A class for representing metadata of a graph in the GraphScope.
 
     A :class:`Graph` object holds the metadata of a graph, such as key, schema, and the graph is directed or not.
@@ -70,76 +497,25 @@ class Graph(object):
 
     def __init__(
         self,
-        session,
-        incoming_data=None,
-        oid_type="int64",
-        directed=True,
-        generate_eid=True,
+        graph_node,
     ):
-        """Construct a :class:`Graph` object.
+        """Construct a :class:`Graph` object."""
 
-        Args:
-            session_id (str): Session id of the session the graph is created in.
-            incoming_data: Graph can be initialized through various type of sources,
-                which can be one of:
-
-                    - :class:`Operation`
-                    - :class:`nx.Graph`
-                    - :class:`Graph`
-                    - :class:`vineyard.Object`, :class:`vineyard.ObjectId` or :class:`vineyard.ObjectName`
-        """
+        self._graph_node = graph_node
+        self._session = self._graph_node.session
+        # copy and set op evaluated
+        self._graph_node.op = deepcopy(self._graph_node.op)
+        self._graph_node.evaluated = True
+        self._session.dag.add_op(self._graph_node.op)
 
         self._key = None
-        self._graph_type = graph_def_pb2.ARROW_PROPERTY
         self._vineyard_id = 0
         self._schema = GraphSchema()
-        self._session = session
         self._detached = False
 
         self._interactive_instance_launching_thread = None
         self._interactive_instance_list = []
         self._learning_instance_list = []
-
-        # Hold uncompleted operation for lazy evaluation
-        self._pending_op = None
-        # Hold a reference to base graph of modify operation,
-        # to avoid being garbage collected
-        self._base_graph = None
-
-        oid_type = utils.normalize_data_type_str(oid_type)
-        if oid_type not in ("int64_t", "std::string"):
-            raise ValueError("oid_type can only be int64_t or string.")
-        self._oid_type = oid_type
-        self._directed = directed
-        self._generate_eid = generate_eid
-
-        self._unsealed_vertices = {}
-        self._unsealed_edges = {}
-        # Used to isplay schema without load into vineyard,
-        # and do sanity checking for newly added vertices and edges.
-        self._v_labels = []
-        self._e_labels = []
-        self._e_relationships = []
-
-        if incoming_data is not None:
-            # Don't import the :code:`NXGraph` in top-level statements to improve the
-            # performance of :code:`import graphscope`.
-            from graphscope import nx
-
-            if isinstance(incoming_data, Operation):
-                self._pending_op = incoming_data
-                if self._pending_op.type == types_pb2.PROJECT_TO_SIMPLE:
-                    self._graph_type = graph_def_pb2.ARROW_PROJECTED
-            elif isinstance(incoming_data, nx.Graph):
-                self._pending_op = self._from_nx_graph(incoming_data)
-            elif isinstance(incoming_data, Graph):
-                self._pending_op = self._copy_from(incoming_data)
-            elif isinstance(
-                incoming_data, (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
-            ):
-                self._pending_op = self._from_vineyard(incoming_data)
-            else:
-                raise RuntimeError("Not supported incoming data.")
 
     def __del__(self):
         # cleanly ignore all exceptions, cause session may already closed / destroyed.
@@ -168,11 +544,13 @@ class Graph(object):
             # Unexpect and suppress all exceptions here.
             pass
 
-    def _from_graph_def(self, graph_def):
+    def update_from_graph_def(self, graph_def):
         check_argument(
-            self._graph_type == graph_def.graph_type, "Graph type doesn't match."
+            self._graph_node.graph_type == graph_def.graph_type,
+            "Graph type doesn't match {} versus {}".format(
+                self._graph_node.graph_type, graph_def.graph_type
+            ),
         )
-
         self._key = graph_def.key
         self._directed = graph_def.directed
         vy_info = graph_def_pb2.VineyardInfoPb()
@@ -186,48 +564,25 @@ class Graph(object):
         self._v_labels = self._schema.vertex_labels
         self._e_labels = self._schema.edge_labels
         self._e_relationships = self._schema.edge_relationships
+        # init saved_signature (must be after init schema)
+        self._saved_signature = self.signature
+        # create gremlin server pod asynchronously
+        if self._session.eager() and gs_config.initializing_interactive_engine:
+            self._interactive_instance_launching_thread = threading.Thread(
+                target=self._launch_interactive_instance_impl, args=()
+            )
+            self._interactive_instance_launching_thread.start()
 
-    def _ensure_loaded(self):
-        if self._key is not None and self._pending_op is None:
-            return
-        # Unloaded
-        if self._session is None:
-            raise RuntimeError("The graph is not loaded")
-        # Empty graph
-        if self._key is None and self._pending_op is None:
-            self._pending_op = self._construct_op({}, {}, False)
-        # Try to load
-        if self._pending_op is not None:
-            # Create a graph from scratch.
-            graph_def = self._pending_op.eval()
-            self._from_graph_def(graph_def)
-            self._pending_op = None
-            self._base_graph = None
-            self._unsealed_vertices.clear()
-            self._unsealed_edges.clear()
-            # init saved_signature (must be after init schema)
-            self._saved_signature = self.signature
-            # create gremlin server pod asynchronously
-            if gs_config.initializing_interactive_engine:
-                self._interactive_instance_launching_thread = threading.Thread(
-                    target=self._launch_interactive_instance_impl, args=()
-                )
-                self._interactive_instance_launching_thread.start()
+    def __getattr__(self, name):
+        if hasattr(self._graph_node, name):
+            return getattr(self._graph_node, name)
+        else:
+            raise AttributeError("{0} not found.".format(name))
 
     @property
     def key(self):
         """The key of the corresponding graph in engine."""
-        self._ensure_loaded()
         return self._key
-
-    @property
-    def graph_type(self):
-        """The type of the graph object.
-
-        Returns:
-            type (`types_pb2.GraphType`): the type of the graph.
-        """
-        return self._graph_type
 
     @property
     def schema(self):
@@ -236,7 +591,6 @@ class Graph(object):
         Returns:
             :class:`GraphSchema`: the schema of the graph
         """
-        self._ensure_loaded()
         return self._schema
 
     @property
@@ -246,20 +600,16 @@ class Graph(object):
         Returns:
             str: The path contains the schema. for interactive engine.
         """
-        self._ensure_loaded()
         return self._schema_path
 
     @property
     def signature(self):
-        self._ensure_loaded()
         return hashlib.sha256(
             "{}.{}".format(self._schema.signature(), self._key).encode("utf-8")
         ).hexdigest()
 
     @property
     def template_str(self):
-        self._ensure_loaded()
-
         # transform str/string to std::string
         oid_type = utils.normalize_data_type_str(self._oid_type)
         vid_type = self._schema.vid_type
@@ -282,7 +632,6 @@ class Graph(object):
         Returns:
             str: return vineyard id of this graph
         """
-        self._ensure_loaded()
         return self._vineyard_id
 
     @property
@@ -303,10 +652,6 @@ class Graph(object):
         self._detached = True
 
     def loaded(self):
-        try:
-            self._ensure_loaded()
-        except RuntimeError:
-            return False
         return self._key is not None
 
     def __str__(self):
@@ -332,14 +677,8 @@ class Graph(object):
 
         if self._key is None:
             self._session = None
-            self._pending_op = None
             return
 
-        if self._pending_op is not None:
-            self._key = None
-            self._session = None
-            self._pending_op = None
-            return
         # close interactive instances first
         try:
             if (
@@ -365,57 +704,9 @@ class Graph(object):
             op.eval()
         self._key = None
         self._session = None
-        self._pending_op = None
 
     def _project_to_simple(self):
-        self._ensure_loaded()
-        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
-        check_argument(
-            self.schema.vertex_label_num == 1,
-            "Cannot project to simple, vertex label number is not one.",
-        )
-        check_argument(
-            self.schema.edge_label_num == 1,
-            "Cannot project to simple, edge label number is not one.",
-        )
-        # Check relation v_label -> e_label <- v_label exists.
-        v_label = self.schema.vertex_labels[0]
-        e_label = self.schema.edge_labels[0]
-        relation = (v_label, v_label)
-        check_argument(
-            relation in self._schema.get_relationships(e_label),
-            f"Cannot project to simple, Graph doesn't contain such relationship: {v_label} -> {e_label} <- {v_label}.",
-        )
-        v_props = self.schema.get_vertex_properties(v_label)
-        e_props = self.schema.get_edge_properties(e_label)
-        check_argument(len(v_props) <= 1)
-        check_argument(len(e_props) <= 1)
-
-        v_label_id = self.schema.get_vertex_label_id(v_label)
-        e_label_id = self.schema.get_edge_label_id(e_label)
-        v_prop_id, vdata_type = (
-            (v_props[0].id, v_props[0].type) if v_props else (-1, None)
-        )
-        e_prop_id, edata_type = (
-            (e_props[0].id, e_props[0].type) if e_props else (-1, None)
-        )
-        oid_type = self._schema.oid_type
-        vid_type = self._schema.vid_type
-
-        op = dag_utils.project_arrow_property_graph_to_simple(
-            self,
-            v_label_id,
-            v_prop_id,
-            e_label_id,
-            e_prop_id,
-            vdata_type,
-            edata_type,
-            oid_type,
-            vid_type,
-        )
-        graph = Graph(self._session, op)
-        graph._base_graph = self
-        return graph
+        return self._session._wrapper(self._graph_node._project_to_simple())
 
     def add_column(self, results, selector):
         """Add the results as a column to the graph. Modification rules are given by the selector.
@@ -427,23 +718,7 @@ class Graph(object):
         Returns:
             :class:`Graph`: A new `Graph` with new columns.
         """
-        self._ensure_loaded()
-        check_argument(
-            isinstance(selector, Mapping), "selector of add column must be a dict"
-        )
-        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
-        self._check_unmodified()
-        selector = {
-            key: results._transform_selector(value) for key, value in selector.items()
-        }
-        selector = json.dumps(selector)
-        op = dag_utils.add_column(self, results, selector)
-        graph = Graph(self._session, op)
-        graph._base_graph = self
-        # We trigger the load manually here to let the error raises in
-        # this specific method (if any)
-        graph._ensure_loaded()
-        return graph
+        return self._session._wrapper(self._graph_node.add_column(results, selector))
 
     def to_numpy(self, selector, vertex_range=None):
         """Select some elements of the graph and output to numpy.
@@ -455,13 +730,14 @@ class Graph(object):
             `numpy.ndarray`
         """
         check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
-        self._ensure_loaded()
         self._check_unmodified()
-        selector = utils.transform_labeled_vertex_property_data_selector(self, selector)
+        selector = utils.transform_labeled_vertex_property_data_selector(
+            self.schema, selector
+        )
         vertex_range = utils.transform_vertex_range(vertex_range)
         op = dag_utils.graph_to_numpy(self, selector, vertex_range)
         ret = op.eval()
-        return utils.decode_numpy(ret)
+        return ret
 
     def to_dataframe(self, selector, vertex_range=None):
         """Select some elements of the graph and output as a pandas.DataFrame
@@ -474,14 +750,15 @@ class Graph(object):
             `pandas.DataFrame`
         """
         check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
-        self._ensure_loaded()
         self._check_unmodified()
         check_argument(
             isinstance(selector, Mapping),
             "selector of to_vineyard_dataframe must be a dict",
         )
         selector = {
-            key: utils.transform_labeled_vertex_property_data_selector(self, value)
+            key: utils.transform_labeled_vertex_property_data_selector(
+                self.schema, value
+            )
             for key, value in selector.items()
         }
         selector = json.dumps(selector)
@@ -489,93 +766,14 @@ class Graph(object):
 
         op = dag_utils.graph_to_dataframe(self, selector, vertex_range)
         ret = op.eval()
-        return utils.decode_dataframe(ret)
+        return ret
 
     def is_directed(self):
-        self._ensure_loaded()
         return self._directed
 
     def _check_unmodified(self):
-        self._ensure_loaded()
         check_argument(
             self.signature == self._saved_signature, "Graph has been modified!"
-        )
-
-    def _from_nx_graph(self, incoming_graph):
-        """Create a gs graph from a nx graph.
-        Args:
-            incoming_graph (:class:`nx.graph`): A nx graph that contains graph data.
-
-        Returns:
-            that will be used to construct a gs.Graph
-
-        Raises:
-            TypeError: Raise Error if graph type not match.
-
-        Examples:
-            >>> nx_g = nx.path_graph(10)
-            >>> gs_g = gs.Graph(nx_g)
-        """
-        if hasattr(incoming_graph, "_graph"):
-            msg = "graph view can not convert to gs graph"
-            raise TypeError(msg)
-        return dag_utils.dynamic_to_arrow(incoming_graph)
-
-    def _copy_from(self, incoming_graph):
-        """Copy a graph.
-
-        Args:
-            incoming_graph (:class:`Graph`): Source graph to be copied from
-
-        Returns:
-            :class:`Graph`: An identical graph, but with a new vineyard id.
-        """
-        check_argument(incoming_graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
-        check_argument(incoming_graph.loaded())
-        return dag_utils.copy_graph(incoming_graph)
-
-    def _from_vineyard(self, vineyard_object):
-        """Load a graph from a already existed vineyard graph.
-
-        Args:
-            vineyard_object (:class:`vineyard.Object`, :class:`vineyard.ObjectID`
-                            or :class:`vineyard.ObjectName`): vineyard object,
-                            which represents a graph.
-
-        Returns:
-            A graph_def.
-        """
-        if isinstance(vineyard_object, vineyard.Object):
-            return self._from_vineyard_id(vineyard_object.id)
-        if isinstance(vineyard_object, vineyard.ObjectID):
-            return self._from_vineyard_id(vineyard_object)
-        if isinstance(vineyard_object, vineyard.ObjectName):
-            return self._from_vineyard_name(vineyard_object)
-
-    def _from_vineyard_id(self, vineyard_id):
-        config = {}
-        config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(True)
-        config[types_pb2.VINEYARD_ID] = utils.i_to_attr(int(vineyard_id))
-        # FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard
-        #
-        # the metadata should be retrived from vineyard
-        config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
-        config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
-        return dag_utils.create_graph(
-            self.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
-        )
-
-    def _from_vineyard_name(self, vineyard_name):
-        config = {}
-        config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(True)
-        config[types_pb2.VINEYARD_NAME] = utils.s_to_attr(str(vineyard_name))
-        # FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard
-        #
-        # the metadata should be retrived from vineyard
-        config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
-        config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
-        return dag_utils.create_graph(
-            self.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
         )
 
     def _attach_interactive_instance(self, instance):
@@ -607,7 +805,6 @@ class Graph(object):
         import vineyard
         import vineyard.io
 
-        self._ensure_loaded()
         sess = self._session
         deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
         conf = sess.info["engine_config"]
@@ -670,95 +867,13 @@ class Graph(object):
             deployment=deployment,
             hosts=hosts,
         )
-        return cls(sess, vineyard.ObjectID(graph_id))
-
-    def _construct_op(self, vertices, edges, is_from_existed_graph):
-        config = graph_utils.assemble_op_config(
-            vertices.values(),
-            edges.values(),
-            self._oid_type,
-            self._directed,
-            self._generate_eid,
-        )
-        if is_from_existed_graph:
-            op = dag_utils.add_labels_to_graph(self, attrs=config)
-        else:
-            op = dag_utils.create_graph(
-                self.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
-            )
-        return op
-
-    def _construct_graph(self, vertices, edges, v_labels, e_labels, e_relations):
-        """Construct graph.
-           1. Construct a graph from scratch.
-              If the vertices and edges is empty, return a empty graph.
-           2. Construct a graph from existed builded graph.
-              If the vertices and edges is empty, return a copied graph.
-
-        Args:
-            vertices (dict[str, VertexLabel]): VertexLabels
-            edges (dict[str, EdgeLabel]): EdgeLabels
-            v_labels (list[str]): Names of vertex labels
-            e_labels (list[str]): Names of edge labels
-            e_relations (list[list[str]]): Relationships of edges
-
-        Returns:
-            Graph: Constructed new graph. not yet evaluated.
-        """
-
-        is_from_existed_graph = self._key is not None
-        # edge case.
-        if not vertices and not edges:
-            if is_from_existed_graph:
-                # Rely on `self._key`
-                return Graph(self._session, self)
-            else:
-                return Graph(
-                    self._session,
-                    None,
-                    self._oid_type,
-                    self._directed,
-                    self._generate_eid,
-                )
-
-        op = self._construct_op(vertices, edges, is_from_existed_graph)
-
-        graph = Graph(
-            self._session, op, self._oid_type, self._directed, self._generate_eid
-        )
-        graph._unsealed_vertices = vertices
-        graph._unsealed_edges = edges
-        graph._v_labels = v_labels
-        graph._e_labels = e_labels
-        graph._e_relationships = e_relations
-        # propage info about whether is a loaded graph.
-        graph._key = self._key
-        if is_from_existed_graph:
-            graph._base_graph = self._base_graph or self
-        return graph
+        return sess._wrapper(GraphDAGNode(sess, vineyard.ObjectID(graph_id)))
 
     def add_vertices(self, vertices, label="_", properties=None, vid_field=0):
-        if label in self._v_labels:
-            raise ValueError(f"Label {label} already existed in graph.")
-        if not self._v_labels and self._e_labels:
-            raise ValueError("Cannot manually add vertices after inferred vertices.")
-        unsealed_vertices = deepcopy(self._unsealed_vertices)
-        unsealed_vertices[label] = VertexLabel(
-            label=label,
-            loader=vertices,
-            properties=properties,
-            vid_field=vid_field,
-            session_id=self._session.session_id,
-        )
-        v_labels = deepcopy(self._v_labels)
-        v_labels.append(label)
-
-        return self._construct_graph(
-            unsealed_vertices,
-            self._unsealed_edges,
-            v_labels,
-            self._e_labels,
-            self._e_relationships,
+        if not self.loaded():
+            raise RuntimeError("The graph is not loaded")
+        return self._session._wrapper(
+            self._graph_node.add_vertices(vertices, label, properties, vid_field)
         )
 
     def add_edges(
@@ -803,58 +918,12 @@ class Graph(object):
         Returns:
             Graph: A new graph with edge added, not yet evaluated.
         """
-        if src_label is None and dst_label is None:
-            check_argument(
-                len(self._v_labels) <= 1,
-                "Ambiguous vertex label, please specify the src_label and dst_label.",
+        if not self.loaded():
+            raise RuntimeError("The graph is not loaded")
+        return self._session._wrapper(
+            self._graph_node.add_edges(
+                edges, label, properties, src_label, dst_label, src_field, dst_field
             )
-            if len(self._v_labels) == 1:
-                src_label = dst_label = self._v_labels[0]
-            else:
-                src_label = dst_label = "_"
-
-        if src_label is None or dst_label is None:
-            raise ValueError(
-                "src and dst label must be both specified or either unspecified."
-            )
-
-        if self._v_labels:
-            if src_label not in self._v_labels or dst_label not in self._v_labels:
-                raise ValueError("src label or dst_label not existed in graph.")
-        else:
-            # We can infer all vertices label in the graph constructing stage.
-            pass
-
-        check_argument(
-            src_field != dst_field, "src and dst field cannot refer to the same field"
-        )
-
-        is_from_existed_graph = self._key is not None
-
-        if is_from_existed_graph:
-            if label in self._e_labels and label not in self._unsealed_edges:
-                raise ValueError("Cannot add new relation to existed graph.")
-
-        unsealed_edges = deepcopy(self._unsealed_edges)
-        e_labels = deepcopy(self._e_labels)
-        relations = deepcopy(self._e_relationships)
-        if label in unsealed_edges:
-            assert label in self._e_labels
-            label_idx = self._e_labels.index(label)
-            # Will check conflict in `add_sub_label`
-            relations[label_idx].append((src_label, dst_label))
-            cur_label = unsealed_edges[label]
-        else:
-            e_labels.append(label)
-            relations.append([(src_label, dst_label)])
-            cur_label = EdgeLabel(label, self._session.session_id)
-        cur_label.add_sub_label(
-            EdgeSubLabel(edges, properties, src_label, dst_label, src_field, dst_field)
-        )
-        unsealed_edges[label] = cur_label
-
-        return self._construct_graph(
-            self._unsealed_vertices, unsealed_edges, self._v_labels, e_labels, relations
         )
 
     def project(
@@ -862,58 +931,6 @@ class Graph(object):
         vertices: Mapping[str, Union[List[str], None]],
         edges: Mapping[str, Union[List[str], None]],
     ):
-        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
-
-        def get_all_v_props_id(label) -> List[int]:
-            props = self.schema.get_vertex_properties(label)
-            return [
-                self.schema.get_vertex_property_id(label, prop.name) for prop in props
-            ]
-
-        def get_all_e_props_id(label) -> List[int]:
-            props = self.schema.get_edge_properties(label)
-            return [
-                self.schema.get_edge_property_id(label, prop.name) for prop in props
-            ]
-
-        vertex_collections = {}
-        edge_collections = {}
-
-        for label, props in vertices.items():
-            label_id = self.schema.get_vertex_label_id(label)
-            if props is None:
-                vertex_collections[label_id] = get_all_v_props_id(label)
-            else:
-                vertex_collections[label_id] = sorted(
-                    [self.schema.get_vertex_property_id(label, prop) for prop in props]
-                )
-        for label, props in edges.items():
-            # find whether exist a valid relation
-            relations = self.schema.get_relationships(label)
-            valid = False
-            for src, dst in relations:
-                if src in vertices and dst in vertices:
-                    valid = True
-                    break
-            if not valid:
-                raise ValueError(
-                    "Cannot find a valid relation in given vertices and edges"
-                )
-
-            label_id = self.schema.get_edge_label_id(label)
-            if props is None:
-                edge_collections[label_id] = get_all_e_props_id(label)
-            else:
-                edge_collections[label_id] = sorted(
-                    [self.schema.get_edge_property_id(label, prop) for prop in props]
-                )
-
-        vertex_collections = dict(sorted(vertex_collections.items()))
-        edge_collections = dict(sorted(edge_collections.items()))
-
-        op = dag_utils.project_arrow_property_graph(
-            self, vertex_collections, edge_collections
-        )
-        graph = Graph(self._session, op)
-        graph._base_graph = self
-        return graph
+        if not self.loaded():
+            raise RuntimeError("The graph is not loaded")
+        return self._session._wrapper(self._graph_node.project(vertices, edges))
