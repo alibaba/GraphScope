@@ -65,15 +65,15 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
 
     auto vm_ptr = std::shared_ptr<vertex_map_t>(new vertex_map_t(comm_spec_));
     if (duplicated_load) {
+      // init vertex map with fnum = 1.
       vm_ptr->Init(1);
-      LOG(INFO) << "vm fnum=" << vm_ptr->GetFragmentNum();
     } else {
       vm_ptr->Init();
-      LOG(INFO) << "vm fnum=" << vm_ptr->GetFragmentNum();
     }
 
     auto fragment = std::make_shared<fragment_t>(vm_ptr);
     if (duplicated_load) {
+      // fid = 0
       fragment->Init(0, directed, duplicated_load);
     } else {
       fragment->Init(comm_spec_.fid(), directed, duplicated_load);
