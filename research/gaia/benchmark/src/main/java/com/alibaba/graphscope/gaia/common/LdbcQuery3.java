@@ -43,14 +43,14 @@ public class LdbcQuery3 extends AbstractLdbcWithSubQuery {
 
     @Override
     String buildSubQuery(Result result, HashMap<String, String> singleParameter) {
-        Map.Entry<Vertex, Long> entry = (Map.Entry) result.getObject();
+        Map<Vertex, Long> map = (Map) result.getObject();
         singleParameter.put("startDate",  transformDate(singleParameter.get("startDate")));
         String startDate = singleParameter.get("startDate");
         String endDate = getEndDate(startDate, singleParameter.get("durationDays"));
         String countryY = singleParameter.get("countryYName");
 
         return String.format("g.V(%s).in('HASCREATOR').has('creationDate',inside(%s,%s)).filter(__.out('ISLOCATEDIN').has('name',eq('%s'))).count()",
-                entry.getKey().toString(),
+                map.entrySet().iterator().next().getKey().id().toString(),
                 startDate,
                 endDate,
                 countryY);

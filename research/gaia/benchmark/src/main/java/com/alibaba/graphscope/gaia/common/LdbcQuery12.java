@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.common;
 
 import org.apache.tinkerpop.gremlin.driver.Result;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +29,8 @@ public class LdbcQuery12 extends AbstractLdbcWithSubQuery {
     @Override
     String buildSubQuery(Result result, HashMap<String, String> singleParameter) {
         String tagClassName = singleParameter.get("tagClassName");
-        return String.format("g.V(%s).in('HASCREATOR').hasLabel('COMMENT').out('REPLYOF').hasLabel('POST').out('HASTAG').as('tag').out('HASTYPE').has('name',eq('%s')).select('tag').values('name').dedup()", ((Map.Entry) result.getObject()).getKey().toString(), tagClassName);
+        Map<Vertex, Long> map = ((Map) result.getObject());
+        return String.format("g.V(%s).in('HASCREATOR').hasLabel('COMMENT').out('REPLYOF').hasLabel('POST').out('HASTAG').as('tag').out('HASTYPE').has('name',eq('%s')).select('tag').values('name').dedup()", map.entrySet().iterator().next().getKey().id().toString(), tagClassName);
     }
 
 }
