@@ -131,7 +131,7 @@ class ArrowToDynamicConverter {
     auto dst_vm_ptr = std::make_shared<vertex_map_t>(comm_spec_);
 
     CHECK(src_vm_ptr->fnum() == comm_spec_.fnum());
-    dst_vm_ptr->Init();
+    dst_vm_ptr->Init(false);
 
     vineyard::IdParser<vid_t> id_parser;
 
