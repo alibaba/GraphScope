@@ -93,11 +93,12 @@ RUN cd /tmp && \
 # boost v1.73.0
 RUN cd /tmp && \
     wget https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.gz && \
-    tar zxvf boost_1_73_0.tar.gz && \
+    tar zxf boost_1_73_0.tar.gz && \
     cd boost_1_73_0 && \
     ./bootstrap.sh && \
-    ./b2 headers && \
-    rm -fr /tmp/boost-1.73.0
+    ./b2 install link=shared runtime-link=shared variant=release threading=multi || true && \
+    cd /tmp && \
+    rm -fr /tmp/boost_1_73_0 /tmp/boost_1_73_0.tar.gz
 
 # gflags v2.2.2
 RUN cd /tmp && \
