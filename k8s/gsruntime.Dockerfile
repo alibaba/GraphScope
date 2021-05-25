@@ -92,7 +92,7 @@ RUN cd /tmp && \
 
 # boost v1.73.0
 RUN cd /tmp && \
-    wget https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.tar.gz && \
+    wget https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.gz && \
     tar zxvf boost_1_73_0.tar.gz && \
     cd boost_1_73_0 && \
     ./bootstrap.sh && \
