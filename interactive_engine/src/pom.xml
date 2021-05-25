@@ -25,6 +25,7 @@
         <module>instance-manager</module>
         <module>v2</module>
         <module>data_load_tools</module>
+        <module>executor</module>
     </modules>
 
     <profiles>
@@ -35,7 +36,6 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>executor</module>
                 <module>common/rust</module>
             </modules>
         </profile>
@@ -43,7 +43,6 @@
         <profile>
             <id>maxgraph-release</id>
             <modules>
-                <module>executor</module>
                 <module>common/rust</module>
             </modules>
             <properties>
