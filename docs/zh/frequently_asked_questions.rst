@@ -13,7 +13,7 @@
 *2. GraphScope是否强依赖Kubernetes?*
 
     GraphScope不强依赖Kubernetes，同时也支持在 `本地环境环境下部署 <https://graphscope.io/docs/deployment.html#deployment-on-local>`_
-    然而，由于Graphscope依赖众多第三方的库和项目，为了节省你的时间，我们建议基于我们提供的镜像构建并运行GraphScope，如果你没有一个运行的Kubernetes集群，可以使用官方提供的 `kind <https://kind.sigs.k8s.io/>`_ 来快速搭建一个集群。
+    然而，由于Graphscope依赖众多第三方的库和项目，为了节省你的时间，我们建议基于我们提供的镜像构建并运行GraphScope，如果你没有一个运行的Kubernetes集群，可以使用官方提供的 `kind <https://kind.sigs.k8s.io/>`_ 在本地快速搭建一个虚拟集群。
 
 
 *3. 如何如查看GraphScope的运行时信息？*
@@ -36,7 +36,7 @@
 
 *5. GraphScope是图数据库嘛？*
 
-    GraphScope并不是一个图数据库，其无法提供图上的一些事物性操作。相反，GraphScope使用“immutable”的分布式内存存储以支持快速的图查询和图分析操作。
+    GraphScope并不是一个图数据库，其无法提供图上的一些事物性操作。GraphScope 将图分布式地载入内存作为不可变数据，来支持对该图的查询和分析操作。
 
 
 *6. GraphScope在Gremlin上的支持性如何？*
@@ -53,4 +53,4 @@
 
 *8. 其他问题*
 
-    您可以通过 `issue的方式 <https://github.com/alibaba/GraphScope/issues/new/choose>`_ 或 `在讨论区 <https://github.com/alibaba/GraphScope/discussions>`_ 提出你的问题，同时，您也可以使用 `Slack <http://slack.graphscope.io>`_ 或 `DingTalk <#>`_ 与我们联系。
+    您可以通过 `issue的方式 <https://github.com/alibaba/GraphScope/issues/new/choose>`_ 或 `在讨论区 <https://github.com/alibaba/GraphScope/discussions>`_ 提出你的问题，同时，您也可以使用 `Slack <http://slack.graphscope.io>`_ 或 `DingTalk <https://h5.dingtalk.com/circle/healthCheckin.html?dtaction=os&corpId=ding82073ee2a22b2f86748126f6422b5d02&109d1=d3892&cbdbhh=qwertyuiop>`_ 与我们联系。

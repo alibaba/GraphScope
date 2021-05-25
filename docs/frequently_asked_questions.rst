@@ -61,4 +61,4 @@ Below are some questions which are frequently by our end users. If the following
 
 *I do have many other questions...*
 
-    Please feel free to contact us. You may reach us by `submitting an issue(prefered) <https://github.com/alibaba/GraphScope/issues/new/choose>`_, ask questions in `Discussions <https://github.com/alibaba/GraphScope/discussions>`_, or drop a message in `Slack <http://slack.graphscope.io>`_ or `DingTalk <#>`_. We are happy to answer your questions responsively.
+    Please feel free to contact us. You may reach us by `submitting an issue(prefered) <https://github.com/alibaba/GraphScope/issues/new/choose>`_, ask questions in `Discussions <https://github.com/alibaba/GraphScope/discussions>`_, or drop a message in `Slack <http://slack.graphscope.io>`_ or `DingTalk <https://h5.dingtalk.com/circle/healthCheckin.html?dtaction=os&corpId=ding82073ee2a22b2f86748126f6422b5d02&109d1=d3892&cbdbhh=qwertyuiop>`_. We are happy to answer your questions responsively.
