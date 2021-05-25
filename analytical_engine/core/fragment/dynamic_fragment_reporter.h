@@ -135,44 +135,28 @@ class DynamicGraphReporter : public grape::Communicator {
   inline size_t reportNodeNum(std::shared_ptr<fragment_t>& fragment) {
     size_t frag_vnum = 0, total_vnum = 0;
     frag_vnum = fragment->GetInnerVerticesNum();
-    if (fragment->duplicated_load()) {
-      total_vnum = frag_vnum;
-    } else {
-      Sum(frag_vnum, total_vnum);
-    }
+    Sum(frag_vnum, total_vnum);
     return total_vnum;
   }
 
   inline size_t reportEdgeNum(std::shared_ptr<fragment_t>& fragment) {
     size_t frag_enum = 0, total_enum = 0;
     frag_enum = fragment->GetEdgeNum();
-    if (fragment->duplicated_load()) {
-      total_enum = frag_enum;
-    } else {
-      Sum(frag_enum, total_enum);
-    }
+    Sum(frag_enum, total_enum);
     return total_enum;
   }
 
   inline size_t reportSelfloopsNum(std::shared_ptr<fragment_t>& fragment) {
     size_t frag_selfloops_num = 0, total_selfloops_num = 0;
     frag_selfloops_num = fragment->selfloops_num();
-    if (fragment->duplicated_load()) {
-      total_selfloops_num = frag_selfloops_num;
-    } else {
-      Sum(frag_selfloops_num, total_selfloops_num);
-    }
+    Sum(frag_selfloops_num, total_selfloops_num);
     return total_selfloops_num;
   }
 
   bool hasNode(std::shared_ptr<fragment_t>& fragment, const oid_t& node) {
     bool ret = false;
     bool to_send = fragment->HasNode(node);
-    if (fragment->duplicated_load()) {
-      ret = to_send;
-    } else {
-      Sum(to_send, ret);
-    }
+    Sum(to_send, ret);
     return ret;
   }
 
@@ -180,11 +164,7 @@ class DynamicGraphReporter : public grape::Communicator {
                const oid_t& v) {
     bool ret = false;
     bool to_send = fragment->HasEdge(u, v);
-    if (fragment->duplicated_load()) {
-      ret = to_send;
-    } else {
-      Sum(to_send, ret);
-    }
+    Sum(to_send, ret);
     return ret;
   }
 
@@ -209,11 +189,7 @@ class DynamicGraphReporter : public grape::Communicator {
     if (fragment->GetInnerVertex(node, v) && fragment->IsAliveInnerVertex(v)) {
       degree = getGraphDegree(fragment, v, type, weight);
     }
-    if (fragment->duplicated_load()) {
-      sum_degree = degree;
-    } else {
-      Sum(degree, sum_degree);
-    }
+    Sum(degree, sum_degree);
     return sum_degree;
   }
 

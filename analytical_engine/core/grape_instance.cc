@@ -57,19 +57,17 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
     using fragment_t = DynamicFragment;
     using vertex_map_t = typename fragment_t::vertex_map_t;
     BOOST_LEAF_AUTO(directed, params.Get<bool>(rpc::DIRECTED));
-    BOOST_LEAF_AUTO(duplicated_load, params.Get<bool>(rpc::DUPLICATED_LOAD));
+    BOOST_LEAF_AUTO(distributed, params.Get<bool>(rpc::DISTRIBUTED));
 
     VLOG(1) << "Loading graph, graph name: " << graph_name
             << ", graph type: DynamicFragment, directed: " << directed
-            << ", duplicated load: " << duplicated_load;
+            << ", distributed: " << distributed;
 
     auto vm_ptr = std::shared_ptr<vertex_map_t>(new vertex_map_t(comm_spec_));
-    vm_ptr->Init(duplicated_load);
+    vm_ptr->Init();
 
-    fid_t fid;
     auto fragment = std::make_shared<fragment_t>(vm_ptr);
-    duplicated_load ? fid = 0 : fid = comm_spec_.fid();
-    fragment->Init(fid, directed, duplicated_load);
+    fragment->Init(comm_spec_.fid(), directed, distributed);
 
     rpc::GraphDef graph_def;
 
@@ -241,12 +239,6 @@ bl::result<std::string> GrapeInstance::reportGraph(
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   DynamicGraphReporter reporter(comm_spec_);
-  if (fragment->duplicated_load() &&
-      comm_spec_.worker_id() != grape::kCoordinatorRank) {
-    // fragment duplicated load full graph, only need to report
-    // from coordinator worker.
-    return std::string();
-  }
   return reporter.Report(fragment, params);
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,

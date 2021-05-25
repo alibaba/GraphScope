@@ -520,7 +520,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     auto ori_vm_ptr = fragment_->GetVertexMap();
     auto new_vm_ptr =
         std::make_shared<typename fragment_t::vertex_map_t>(comm_spec);
-    new_vm_ptr->Init(false);
+    new_vm_ptr->Init();
     std::vector<std::thread> copy_vm_threads(comm_spec.fnum());
     for (size_t fid = 0; fid < comm_spec.fnum(); ++fid) {
       copy_vm_threads[fid] = std::thread(
@@ -558,7 +558,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     auto ori_vm_ptr = fragment_->GetVertexMap();
     auto new_vm_ptr =
         std::make_shared<typename fragment_t::vertex_map_t>(comm_spec);
-    new_vm_ptr->Init(false);
+    new_vm_ptr->Init();
     std::vector<std::thread> copy_vm_threads(comm_spec.fnum());
     for (size_t fid = 0; fid < comm_spec.fnum(); ++fid) {
       copy_vm_threads[fid] = std::thread(
@@ -596,7 +596,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     auto ori_vm_ptr = fragment_->GetVertexMap();
     auto new_vm_ptr =
         std::make_shared<typename fragment_t::vertex_map_t>(comm_spec);
-    new_vm_ptr->Init(false);
+    new_vm_ptr->Init();
     std::vector<std::thread> copy_vm_threads(comm_spec.fnum());
     for (size_t fid = 0; fid < comm_spec.fnum(); ++fid) {
       copy_vm_threads[fid] = std::thread(
