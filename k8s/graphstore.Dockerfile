@@ -27,6 +27,7 @@ RUN source ~/.bashrc \
 
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
+COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
 COPY --from=builder /opt/graphscope /usr/local/
 COPY --from=builder /root/gs/interactive_engine/distribution/target/maxgraph.tar.gz /tmp/maxgraph.tar.gz
 RUN mkdir -p /home/maxgraph \

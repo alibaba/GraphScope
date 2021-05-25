@@ -31,8 +31,8 @@ import java.util.Map;
 
 public class ClientTest {
 
-    String host = "100.81.128.150";
-    int port = 45284;
+    String host = "localhost";
+    int port = 55555;
     Client client = new Client(host, port);
 
     @Test
