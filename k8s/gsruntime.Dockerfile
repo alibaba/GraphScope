@@ -315,5 +315,4 @@ ENV LC_ALL=C
 
 ENV PATH=${PATH}:/usr/local/go/bin
 ENV RUST_BACKTRACE=1
-ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.282.b08-1.el7_9.x86_64/jre
 
