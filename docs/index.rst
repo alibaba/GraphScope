@@ -29,6 +29,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    interactive_engine
    analytics_engine
    learning_engine
+   frequently_asked_questions
    developer_guide
 
 .. toctree::
