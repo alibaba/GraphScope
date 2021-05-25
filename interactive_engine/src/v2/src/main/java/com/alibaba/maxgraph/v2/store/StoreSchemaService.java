@@ -24,7 +24,6 @@ public class StoreSchemaService extends StoreSchemaGrpc.StoreSchemaImplBase {
     public void fetchSchema(FetchSchemaRequest request, StreamObserver<FetchSchemaResponse> responseObserver) {
         try {
             GraphDefPb graphDefBlob = this.storeService.getGraphDefBlob();
-            logger.info("hx: fetched schema [" + GraphDef.parseProto(graphDefBlob).toString() + "]");
             responseObserver.onNext(FetchSchemaResponse.newBuilder().setGraphDef(graphDefBlob).build());
             responseObserver.onCompleted();
         } catch (IOException e) {

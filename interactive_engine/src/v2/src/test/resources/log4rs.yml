@@ -8,7 +8,7 @@ appenders:
 root:
   level: info
   appenders:
-    - none
+    - stdout
 
 #loggers:
 #  maxgraph-query::server::network:

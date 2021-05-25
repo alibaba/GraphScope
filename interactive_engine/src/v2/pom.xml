@@ -170,7 +170,7 @@
                                 <include>**/GremlinStandardTest.java</include>
                             </includes>
                             <argLine>
-                                -Djna.library.path=${project.parent.basedir}/src/executor/target/debug
+                                -Djna.library.path=${project.parent.basedir}/executor/target/debug
                             </argLine>
                             <environmentVariables>
                                 <RUST_BACKTRACE>1</RUST_BACKTRACE>
@@ -195,7 +195,7 @@
                 <version>${maven.surefire.version}</version>
                 <configuration>
                     <argLine>
-                        -Djna.library.path=${project.parent.basedir}/src/executor/target/debug
+                        -Djna.library.path=${project.parent.basedir}/executor/target/debug
                     </argLine>
                     <environmentVariables>
                         <RUST_BACKTRACE>1</RUST_BACKTRACE>

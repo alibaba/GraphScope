@@ -107,6 +107,11 @@ public class Client implements Closeable {
         return GraphDef.parseProto(response.getGraphDef());
     }
 
+    public GraphSchema dropSchema() {
+        DropSchemaResponse response = this.stub.dropSchema(DropSchemaRequest.newBuilder().build());
+        return GraphDef.parseProto(response.getGraphDef());
+    }
+
     public GraphSchema prepareDataLoad(List<DataLoadTarget> targets) {
         PrepareDataLoadRequest.Builder builder = PrepareDataLoadRequest.newBuilder();
         for (DataLoadTarget target : targets) {

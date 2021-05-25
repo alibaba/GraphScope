@@ -25,7 +25,7 @@ public class RemoteTestGraphProvider extends AbstractGraphProvider {
         return new HashMap<String, Object>() {
             {
                 put(Graph.GRAPH, RemoteTestGraph.class.getName());
-                put("remote.graph.host", "graphbench");
+                put("remote.graph.host", "localhost");
                 put("remote.graph.port", 12312);
             }
         };

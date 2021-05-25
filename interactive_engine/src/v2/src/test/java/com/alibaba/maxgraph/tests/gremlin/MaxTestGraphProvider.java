@@ -48,6 +48,8 @@ public class MaxTestGraphProvider extends AbstractGraphProvider {
             throw new MaxGraphException(e);
         }
         super.loadGraphData(graph, loadGraphWith, testClass, testName);
+        logger.info("vertex value map list: " + graph.traversal().V().valueMap().toList());
+        logger.info("edge value map list: " + graph.traversal().E().valueMap().toList());
     }
 
     @Override

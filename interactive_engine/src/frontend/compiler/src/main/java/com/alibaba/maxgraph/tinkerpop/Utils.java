@@ -40,6 +40,19 @@ public final class Utils {
         return kv;
     }
 
+    public static Map<Object, Object> convertToRawMap(final Object... keyValues) {
+        if (keyValues.length % 2 != 0) {
+            throw new RuntimeException("keyValues length is " + keyValues.length + ", and can't convert.");
+        }
+
+        Map<Object, Object> kv = new HashMap<>(keyValues.length >> 1);
+        for (int i = 0; i < keyValues.length; i+=2) {
+            kv.put(keyValues[i], keyValues[i + 1]);
+        }
+
+        return kv;
+    }
+
     /**
      * Set private field with given value
      *

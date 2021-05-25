@@ -114,7 +114,6 @@ fn do_write_batch<G: GraphStorage>(graph: &G, snapshot_id: SnapshotId, buf: &[u8
         return Ok(false);
     }
     for op in operations {
-        info!("hx do_write_batch {:?}", op.get_opType());
         match op.get_opType() {
             OpTypePb::MARKER => {},
             // Data

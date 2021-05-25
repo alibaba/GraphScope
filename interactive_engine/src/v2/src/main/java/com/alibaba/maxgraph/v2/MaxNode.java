@@ -61,6 +61,7 @@ public class MaxNode extends NodeBase {
             Configs frontendConfigs = Configs.newBuilder(baseConfigs)
                     .put(CommonConfig.ROLE_NAME.getKey(), RoleType.FRONTEND.getName())
                     .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
+                    .put(CommonConfig.RPC_PORT.getKey(), "55555")
                     .build();
             this.frontends.add(new Frontend(frontendConfigs));
         }

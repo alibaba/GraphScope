@@ -13,6 +13,7 @@ import com.alibaba.maxgraph.v2.common.discovery.MaxGraphNode;
 import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
 import com.alibaba.maxgraph.v2.common.discovery.RoleType;
 import com.alibaba.maxgraph.v2.common.frontend.api.graph.GraphPartitionManager;
+import com.alibaba.maxgraph.v2.common.frontend.api.graph.MaxGraphWriter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,26 +26,30 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.*;
 
-public class ReadOnlyGraph implements MaxGraph, NodeDiscovery.Listener {
-    private static final Logger logger = LoggerFactory.getLogger(ReadOnlyGraph.class);
+public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
+    private static final Logger logger = LoggerFactory.getLogger(MaxGraphImpl.class);
 
     private SchemaFetcher schemaFetcher;
     private GraphPartitionManager partitionManager;
+    private MaxGraphWriter graphWriter;
 
     private Map<Integer, RemoteProxy> proxys = new ConcurrentHashMap<>();
 
-    public ReadOnlyGraph(NodeDiscovery discovery, SchemaFetcher schemaFetcher, GraphPartitionManager partitionManager) {
+    public MaxGraphImpl(NodeDiscovery discovery, SchemaFetcher schemaFetcher, GraphPartitionManager partitionManager,
+                        MaxGraphWriter graphWriter) {
         this.schemaFetcher = schemaFetcher;
         this.partitionManager = partitionManager;
+        this.graphWriter = graphWriter;
         discovery.addListener(this);
     }
 
     @Override
     public void nodesJoin(RoleType role, Map<Integer, MaxGraphNode> nodes) {
-        if (role == RoleType.EXECUTOR_ENGINE) {
+        if (role == RoleType.EXECUTOR_GRAPH) {
             nodes.forEach((id, node) -> {
                 this.proxys.put(id,
                         new RemoteProxy(node.getHost(), node.getPort(), 120L, this.schemaFetcher, this));
@@ -54,7 +59,7 @@ public class ReadOnlyGraph implements MaxGraph, NodeDiscovery.Listener {
 
     @Override
     public void nodesLeft(RoleType role, Map<Integer, MaxGraphNode> nodes) {
-        if (role == RoleType.EXECUTOR_ENGINE) {
+        if (role == RoleType.EXECUTOR_GRAPH) {
             nodes.keySet().forEach(k -> {
                 RemoteProxy remove = this.proxys.remove(k);
                 if (remove != null) {
@@ -70,7 +75,7 @@ public class ReadOnlyGraph implements MaxGraph, NodeDiscovery.Listener {
 
     @Override
     public void refresh() throws Exception {
-
+        graphWriter.commit().get(30, TimeUnit.SECONDS);
     }
 
     @Override
@@ -111,7 +116,8 @@ public class ReadOnlyGraph implements MaxGraph, NodeDiscovery.Listener {
 
     @Override
     public Vertex addVertex(String label, Map<String, Object> properties) {
-        throw new UnsupportedOperationException();
+        graphWriter.insertVertex(label, properties);
+        return null;
     }
 
     @Override
@@ -176,7 +182,12 @@ public class ReadOnlyGraph implements MaxGraph, NodeDiscovery.Listener {
 
     @Override
     public Edge addEdge(String label, Vertex src, Vertex dst, Map<String, Object> properties) {
-        throw new UnsupportedOperationException();
+        graphWriter.insertEdge(
+                new com.alibaba.maxgraph.v2.common.frontend.result.CompositeId(src.id.id(), src.id.typeId()),
+                new com.alibaba.maxgraph.v2.common.frontend.result.CompositeId(dst.id.id(), dst.id.typeId()),
+                label,
+                properties);
+        return null;
     }
 
     @Override
@@ -208,6 +219,7 @@ public class ReadOnlyGraph implements MaxGraph, NodeDiscovery.Listener {
     public void close() throws IOException {
 
     }
+
 
 
 }

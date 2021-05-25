@@ -1,9 +1,7 @@
 package com.alibaba.maxgraph.v2.grafting.frontend;
 
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
-import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.compiler.dfs.DefaultGraphDfs;
-import com.alibaba.maxgraph.compiler.schema.JsonFileSchemaFetcher;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.v2.common.DefaultMetaService;
 import com.alibaba.maxgraph.v2.common.MetaService;
@@ -16,6 +14,7 @@ import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
 import com.alibaba.maxgraph.v2.common.frontend.api.graph.GraphPartitionManager;
 import com.alibaba.maxgraph.v2.common.frontend.api.graph.MaxGraphWriter;
+import com.alibaba.maxgraph.v2.common.frontend.cache.MaxGraphCache;
 import com.alibaba.maxgraph.v2.common.frontend.remote.RemoteGraphPartitionManager;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsAggregator;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectClient;
@@ -29,8 +28,6 @@ import com.alibaba.maxgraph.v2.common.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.v2.common.util.CuratorUtils;
 import com.alibaba.maxgraph.v2.frontend.*;
 import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
-import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
-import com.alibaba.maxgraph.v2.frontend.context.GraphWriterContext;
 import io.grpc.NameResolver;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -89,14 +86,14 @@ public class Frontend extends NodeBase {
                 metricsCollectService, clientDdlService);
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         GraphPartitionManager partitionManager = new RemoteGraphPartitionManager(this.metaService);
-
-
         WrappedSchemaFetcher wrappedSchemaFetcher = new WrappedSchemaFetcher(snapshotCache, metaService);
-        ReadOnlyGraph readOnlyGraph = new ReadOnlyGraph(this.discovery, wrappedSchemaFetcher, partitionManager);
-        TinkerMaxGraph graph = new TinkerMaxGraph(new InstanceConfig(configs.getInnerProperties()), readOnlyGraph,
+
+        MaxGraphWriter graphWriter = new MaxGraphWriterImpl(realtimeWriter, null, null,
+                snapshotCache, "data", false, new MaxGraphCache());
+        MaxGraphImpl maxGraphImpl = new MaxGraphImpl(this.discovery, wrappedSchemaFetcher, partitionManager,
+                graphWriter);
+        TinkerMaxGraph graph = new TinkerMaxGraph(new InstanceConfig(configs.getInnerProperties()), maxGraphImpl,
                 new DefaultGraphDfs());
-        GraphWriterContext graphWriterContext = new GraphWriterContext(realtimeWriter, schemaWriter, new DdlExecutors(),
-                snapshotCache, true);
         this.maxGraphServer = new ReadOnlyMaxGraphServer(configs, graph, wrappedSchemaFetcher,
                 new DiscoveryAddressFetcher(this.discovery));
     }
