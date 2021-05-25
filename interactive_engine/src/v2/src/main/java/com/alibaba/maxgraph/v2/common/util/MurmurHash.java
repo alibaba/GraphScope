@@ -1,3 +1,24 @@
+/**
+ * This file is referred and derived from project tnm/murmurhash-java
+ *
+ *   https://github.com/tnm/murmurhash-java/blob/master/src/main/java/ie/ucd/murmur/MurmurHash.java
+ *
+ * which has the following copyright header for open sourcing:
+ *
+ * murmur hash 2.0.
+ *
+ * The murmur hash is a relatively fast hash function from
+ * http://murmurhash.googlepages.com/ for platforms with efficient
+ * multiplication.
+ *
+ * This is a re-implementation of the original C code plus some
+ * additional features.
+ *
+ * Public domain.
+ *
+ * @author Viliam Holub
+ * @version 1.0.2
+ */
 package com.alibaba.maxgraph.v2.common.util;
 
 import com.google.common.base.Charsets;
