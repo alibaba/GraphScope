@@ -2567,6 +2567,9 @@ class DynamicFragment {
             }
           }
         } else {
+          if (!this->distributed()) {
+            continue;
+          }
           auto dst_lid = gid_to_lid(e.dst());
           auto src_lid = gid_to_lid(e.src());
           auto ie_pos = outer_ie_pos_[id_mask_ - dst_lid];
@@ -2593,6 +2596,9 @@ class DynamicFragment {
             }
           }
         } else {
+          if (!this->distributed()) {
+            continue;
+          }
           auto src_lid = gid_to_lid(e.src());
           auto dst_lid = gid_to_lid(e.dst());
           auto oe_pos = outer_oe_pos_[id_mask_ - src_lid];
@@ -2611,7 +2617,6 @@ class DynamicFragment {
           auto dst_lid = iv_gid_to_lid(e.dst());
           auto ie_pos = inner_ie_pos_[dst_lid];
           auto oe_pos = inner_oe_pos_[src_lid];
-
           if (oe_pos != -1) {
             auto remove_num = edge_space_.remove_edge(oe_pos, dst_lid);
             oenum_ -= remove_num;
@@ -2619,11 +2624,9 @@ class DynamicFragment {
               deleteSelfLoop(src_lid);
             }
           }
-
           if (ie_pos != -1) {
             ienum_ -= edge_space_.remove_edge(ie_pos, src_lid);
           }
-
         } else if (is_iv_gid(e.src())) {
           auto src_lid = iv_gid_to_lid(e.src());
           auto dst_lid = gid_to_lid(e.dst());
