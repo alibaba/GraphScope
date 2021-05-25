@@ -13,9 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::generated::gremlin as pb;
 use crate::process::traversal::step::util::result_downcast::try_downcast_list;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::{FlatMapGen, Step};
 use crate::process::traversal::traverser::Traverser;
 use crate::{str_to_dyn_error, DynResult};
 use pegasus::api::function::{DynIter, FlatMapFunction};
@@ -23,17 +22,8 @@ use pegasus::api::function::{DynIter, FlatMapFunction};
 /// This unfold step is used in group().by().by(sub_traversal)
 /// When we process by(sub_traversal) on the result of group().by(), which is a pair of (traverser, Vec<Traverser>),
 /// We need to get_values which is a list, and unfold it first
-pub struct UnfoldStep {}
 
-struct UnfoldFunc {}
-
-impl Step for UnfoldStep {
-    fn get_symbol(&self) -> StepSymbol {
-        StepSymbol::Unfold
-    }
-}
-
-impl FlatMapFunction<Traverser, Traverser> for UnfoldFunc {
+impl FlatMapFunction<Traverser, Traverser> for pb::UnfoldStep {
     type Target = DynIter<Traverser>;
 
     fn exec(&self, input: Traverser) -> DynResult<DynIter<Traverser>> {
@@ -46,14 +36,5 @@ impl FlatMapFunction<Traverser, Traverser> for UnfoldFunc {
         .into_iter()
         .map(|trav| Ok(trav));
         Ok(Box::new(list_traverser))
-    }
-}
-
-impl FlatMapGen for UnfoldStep {
-    fn gen(
-        &self,
-    ) -> DynResult<Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>>
-    {
-        Ok(Box::new(UnfoldFunc {}))
     }
 }

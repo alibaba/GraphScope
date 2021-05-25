@@ -13,40 +13,41 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::generated::gremlin as pb;
 use crate::process::traversal::step::util::StepSymbol;
 
 #[enum_dispatch]
 pub trait Step: 'static {
     fn get_symbol(&self) -> StepSymbol;
 
-    fn add_tag(&mut self, _label: Tag) {
+    fn get_tags(&self) -> BitSet {
         unreachable!()
     }
 
-    fn tags_as_slice(&self) -> &[Tag] {
-        &[]
-    }
-
-    fn get_tags(&self) -> BitSet {
-        let mut labels = BitSet::with_capacity(INIT_TAG_NUM);
-        for l in self.tags_as_slice() {
-            labels.insert(l.clone() as usize);
-        }
-        labels
+    fn get_remove_tags(&self) -> BitSet {
+        unreachable!()
     }
 }
 
-pub trait RemoveTag: Step {
-    /// To remove a given tag
-    fn remove_tag(&mut self, label: Tag);
+impl Step for pb::GremlinStep {
+    fn get_symbol(&self) -> StepSymbol {
+        // TODO: return StepSymbol according to different gremlin step
+        unimplemented!()
+    }
 
-    /// Get the slice of tags to be removed
-    fn get_remove_tags_as_slice(&self) -> &[Tag];
+    fn get_tags(&self) -> BitSet {
+        let mut tags = BitSet::with_capacity(INIT_TAG_NUM);
+        for step_tag in &self.tags {
+            let tag = Tag::from_pb(step_tag.clone()).unwrap();
+            tags.insert(tag as usize);
+        }
+        tags
+    }
 
-    /// Turn the tags to remove into a `BitSet`
     fn get_remove_tags(&self) -> BitSet {
         let mut tags = BitSet::with_capacity(INIT_TAG_NUM);
-        for &tag in self.get_remove_tags_as_slice() {
+        for step_tag in &self.remove_tags {
+            let tag = Tag::from_pb(step_tag.clone()).unwrap();
             tags.insert(tag as usize);
         }
         tags
@@ -67,24 +68,18 @@ mod sub_traversal;
 mod util;
 
 use crate::structure::{Tag, INIT_TAG_NUM};
+use crate::FromPb;
 use bit_set::BitSet;
-pub use dedup::{CollectionFactoryGen, DedupStep};
-pub use filter::{FilterFuncGen, FilterStep, HasStep, WherePredicateStep};
-pub use flat_map::{EdgeStep, FlatMapGen, FlatMapStep, VertexStep};
-pub use fold::{FoldFunctionGen, FoldStep};
-pub use group_by::{GroupFunctionGen, GroupStep};
+pub use dedup::CollectionFactoryGen;
+pub use filter::FilterFuncGen;
+pub use flat_map::FlatMapFuncGen;
+pub use fold::FoldFunctionGen;
+pub use group_by::GroupFunctionGen;
+pub use map::MapFuncGen;
 pub use map::ResultProperty;
-pub use map::{MapFuncGen, MapStep};
-pub use order_by::{CompareFunctionGen, OrderStep};
+pub use order_by::CompareFunctionGen;
 pub use sink::SinkFuncGen;
 pub use source::graph_step_from;
 pub use source::GraphVertexStep;
-pub use sub_traversal::{BySubJoin, GroupBySubJoin, HasAnyJoin, JoinFuncGen};
+pub use sub_traversal::{BySubJoin, GroupBySubJoin, HasAnyJoin, JoinFuncGen, SelectBySubJoin};
 pub use util::result_downcast;
-
-#[enum_dispatch(Step)]
-pub enum GremlinStep {
-    Map(MapStep),
-    FlatMap(FlatMapStep),
-    Filter(FilterStep),
-}

@@ -15,12 +15,13 @@
 
 use crate::generated::gremlin as pb;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::codec::ParseError;
+use crate::structure::codec::{pb_value_to_object, ParseError};
 use crate::structure::filter::compare::{Compare, EqCmp, OrdCmp};
 use crate::structure::filter::BiPredicate;
 use crate::structure::filter::Predicate;
 use crate::structure::{with_tlv, ExpectValue, Reverse};
-use crate::{FromPb, Object};
+use crate::FromPb;
+use dyn_type::Object;
 
 pub struct ValueFilter {
     pub cmp: Compare,
@@ -78,7 +79,7 @@ impl FromPb<pb::FilterValueExp> for ValueFilter {
         Self: Sized,
     {
         let cmp_pb: pb::Compare = { unsafe { std::mem::transmute(filter.cmp) } };
-        let right_value = (&filter.right.ok_or("right value is not set")?).into();
+        let right_value = pb_value_to_object(&filter.right.ok_or("right value is not set")?);
         let value_filter = match cmp_pb {
             pb::Compare::Eq => ValueFilter::eq(right_value),
             pb::Compare::Ne => ValueFilter::neq(right_value),

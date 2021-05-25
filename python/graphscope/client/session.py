@@ -34,8 +34,10 @@ import warnings
 from queue import Empty as EmptyQueue
 
 try:
+    from kubernetes import client as kube_client
     from kubernetes import config as kube_config
 except ImportError:
+    kube_client = None
     kube_config = None
 
 import graphscope
@@ -753,49 +755,18 @@ class Session(object):
                 or self._config_params["k8s_gs_image"] is None
             ):
                 raise K8sError("None image found.")
-            api_client = kube_config.new_client_from_config(
-                **self._config_params["k8s_client_config"]
-            )
+            if isinstance(
+                self._config_params["k8s_client_config"],
+                kube_client.api_client.ApiClient,
+            ):
+                api_client = self._config_params["k8s_client_config"]
+            else:
+                api_client = kube_config.new_client_from_config(
+                    **self._config_params["k8s_client_config"]
+                )
             self._launcher = KubernetesClusterLauncher(
                 api_client=api_client,
-                namespace=self._config_params["k8s_namespace"],
-                service_type=self._config_params["k8s_service_type"],
-                num_workers=self._config_params["num_workers"],
-                gs_image=self._config_params["k8s_gs_image"],
-                preemptive=self._config_params["preemptive"],
-                etcd_image=self._config_params["k8s_etcd_image"],
-                gie_graph_manager_image=self._config_params[
-                    "k8s_gie_graph_manager_image"
-                ],
-                zookeeper_image=self._config_params["k8s_zookeeper_image"],
-                image_pull_policy=self._config_params["k8s_image_pull_policy"],
-                image_pull_secrets=self._config_params["k8s_image_pull_secrets"],
-                vineyard_daemonset=self._config_params["k8s_vineyard_daemonset"],
-                vineyard_cpu=self._config_params["k8s_vineyard_cpu"],
-                vineyard_mem=self._config_params["k8s_vineyard_mem"],
-                vineyard_shared_mem=self._config_params["vineyard_shared_mem"],
-                etcd_num_pods=self._config_params["k8s_etcd_num_pods"],
-                etcd_cpu=self._config_params["k8s_etcd_cpu"],
-                etcd_mem=self._config_params["k8s_etcd_mem"],
-                zookeeper_cpu=self._config_params["k8s_zookeeper_cpu"],
-                zookeeper_mem=self._config_params["k8s_zookeeper_mem"],
-                gie_graph_manager_cpu=self._config_params["k8s_gie_graph_manager_cpu"],
-                gie_graph_manager_mem=self._config_params["k8s_gie_graph_manager_mem"],
-                engine_cpu=self._config_params["k8s_engine_cpu"],
-                engine_mem=self._config_params["k8s_engine_mem"],
-                mars_worker_cpu=self._config_params["k8s_mars_worker_cpu"],
-                mars_worker_mem=self._config_params["k8s_mars_worker_mem"],
-                mars_scheduler_cpu=self._config_params["k8s_mars_scheduler_cpu"],
-                mars_scheduler_mem=self._config_params["k8s_mars_scheduler_mem"],
-                with_mars=self._config_params["with_mars"],
-                coordinator_cpu=float(self._config_params["k8s_coordinator_cpu"]),
-                coordinator_mem=self._config_params["k8s_coordinator_mem"],
-                volumes=self._config_params["k8s_volumes"],
-                waiting_for_delete=self._config_params["k8s_waiting_for_delete"],
-                timeout_seconds=self._config_params["timeout_seconds"],
-                dangling_timeout_seconds=self._config_params[
-                    "dangling_timeout_seconds"
-                ],
+                **self._config_params,
             )
         elif (
             self._cluster_type == types_pb2.HOSTS
@@ -805,12 +776,7 @@ class Session(object):
         ):
             # lanuch coordinator with hosts
             self._launcher = HostsClusterLauncher(
-                hosts=self._config_params["hosts"],
-                port=self._config_params["port"],
-                num_workers=self._config_params["num_workers"],
-                vineyard_socket=self._config_params["vineyard_socket"],
-                timeout_seconds=self._config_params["timeout_seconds"],
-                vineyard_shared_mem=self._config_params["vineyard_shared_mem"],
+                **self._config_params,
             )
         else:
             raise RuntimeError("Session initialize failed.")

@@ -78,8 +78,8 @@ public abstract class GremlinStepResource implements StepResource {
         } else if (stepResurce instanceof Gremlin.SelectStep) {
             builder.setSelectStep((Gremlin.SelectStep) stepResurce);
             target.map(builder.build().toByteString());
-        } else if (stepResurce instanceof Gremlin.ValuesStep) {
-            builder.setValuesStep((Gremlin.ValuesStep) stepResurce);
+        } else if (stepResurce instanceof Gremlin.PropertiesStep) {
+            builder.setPropertiesStep((Gremlin.PropertiesStep) stepResurce);
             target.flatMap(builder.build().toByteString());
         } else if (stepResurce instanceof Gremlin.PathLocalCountStep) {
             builder.setPathLocalCountStep((Gremlin.PathLocalCountStep) stepResurce);

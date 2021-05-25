@@ -16,7 +16,7 @@
 #ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_REPORTER_H_
 #define ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_REPORTER_H_
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 
 #include <map>
 #include <memory>
@@ -61,6 +61,9 @@ class DynamicGraphReporter : public grape::Communicator {
     }
     case rpc::EDGE_NUM: {
       return std::to_string(reportEdgeNum(fragment));
+    }
+    case rpc::SELFLOOPS_NUM: {
+      return std::to_string(reportSelfloopsNum(fragment));
     }
     case rpc::HAS_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
@@ -141,6 +144,13 @@ class DynamicGraphReporter : public grape::Communicator {
     frag_enum = fragment->GetEdgeNum();
     Sum(frag_enum, total_enum);
     return total_enum;
+  }
+
+  inline size_t reportSelfloopsNum(std::shared_ptr<fragment_t>& fragment) {
+    size_t frag_selfloops_num = 0, total_selfloops_num = 0;
+    frag_selfloops_num = fragment->selfloops_num();
+    Sum(frag_selfloops_num, total_selfloops_num);
+    return total_selfloops_num;
   }
 
   bool hasNode(std::shared_ptr<fragment_t>& fragment, const oid_t& node) {
@@ -365,5 +375,5 @@ class DynamicGraphReporter : public grape::Communicator {
 };
 }  // namespace gs
 
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
 #endif  // ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_REPORTER_H_

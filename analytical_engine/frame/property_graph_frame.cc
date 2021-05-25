@@ -128,7 +128,7 @@ void ToArrowFragment(
     std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
     const std::string& dst_graph_name,
     gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
   using oid_t = typename _GRAPH_TYPE::oid_t;
   using vid_t = typename _GRAPH_TYPE::vid_t;
   static_assert(std::is_same<vid_t, gs::DynamicFragment::vid_t>::value,
@@ -138,7 +138,7 @@ void ToArrowFragment(
 
   wrapper_out = gs::bl::try_handle_some(
       [&]() -> gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>> {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
         if (wrapper_in->graph_def().graph_type() != gs::rpc::DYNAMIC_PROPERTY) {
           RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                           "Source fragment it not DynamicFragment.");
@@ -194,7 +194,7 @@ void ToDynamicFragment(
     gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
   wrapper_out = gs::bl::try_handle_some(
       [&]() -> gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>> {
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
         if (wrapper_in->graph_def().graph_type() != gs::rpc::ARROW_PROPERTY) {
           RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                           "Source fragment it not ArrowFragment.");

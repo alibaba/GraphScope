@@ -170,7 +170,7 @@ def load_from(
 
     # Don't import the :code:`nx` in top-level statments to improve the
     # performance of :code:`import graphscope`.
-    from graphscope.experimental import nx
+    from graphscope import nx
 
     sess = get_default_session()
     if sess is None:

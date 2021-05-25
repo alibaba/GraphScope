@@ -1,6 +1,6 @@
 {
-  "name": "graphscope-jupyter",
-  "version": "0.3.0",
+  "name": "@graphscope/graphscope-jupyter",
+  "version": "0.4.1",
   "description": "A GraphScope Jupyter Extension, including Graphin Widget, etc.",
   "keywords": [
     "jupyter",
@@ -22,15 +22,12 @@
     "url": "https://github.com/antvis/G6/issues"
   },
   "license": "BSD-3-Clause",
-  "author": {
-    "name": "baizn",
-    "email": "576375879@qq.com"
-  },
+  "author": "baizn <576375879@qq.com>",
   "main": "src/index.ts",
   "types": "./lib/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/antvis/G6"
+    "url": "git+https://github.com/antvis/G6.git"
   },
   "scripts": {
     "build": "npm run build:lib && npm run build:nbextension",
@@ -113,5 +110,9 @@
   },
   "prettier": {
     "singleQuote": true
+  },
+  "directories": {
+    "doc": "docs",
+    "lib": "lib"
   }
 }

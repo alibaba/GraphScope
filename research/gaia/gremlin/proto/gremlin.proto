@@ -79,7 +79,7 @@ message GremlinStep {
     GroupByStep group_by_step = 13;
     SelectOneStepWithoutBy select_one_without_by = 14;
     PathLocalCountStep  path_local_count_step = 15;
-    ValuesStep values_step = 16;
+    PropertiesStep properties_step = 16;
     EdgeVertexStep edge_vertex_step = 17;
     DedupStep dedup_step = 18;
     UnfoldStep unfold_step = 19;
@@ -107,8 +107,9 @@ enum TraverserRequirement {
 }
 
 message GraphStep {
-  // To filter vertices based on a id list
-  repeated int64 ids = 1;
+  // To filter vertices or edges based on a id list
+  // edge consists of 128 bits
+  repeated string ids = 1;
   // To filter vertices based on a label list
   repeated int32 labels = 2;
   // The entity type, either vertex or edge, for g.V() or g.E()
@@ -180,15 +181,19 @@ message IdentityStep {
 }
 
 message WhereJoiner {}
-// for group and order by
+// for e.g., order().by(out().out().count())
 message ByJoiner {}
+// for e.g., group().by().by(out().out().count())
 message GroupValueJoiner {}
+// for e.g., select("a").by(out().out().count())
+message SelectBySubJoin {}
 
 message SubTaskJoiner {
     oneof inner {
         WhereJoiner where_joiner = 1;
         ByJoiner by_joiner = 2;
         GroupValueJoiner group_value_joiner = 3;
+        SelectBySubJoin select_by_joiner = 4;
     }
 }
 
@@ -273,7 +278,7 @@ message GroupByUnfold {
 
 message PathLocalCountStep{}
 
-message ValuesStep {
+message PropertiesStep {
   repeated string properties = 1;
 }
 

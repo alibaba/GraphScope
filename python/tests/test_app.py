@@ -55,7 +55,7 @@ def test_create_app():
 
 
 @pytest.mark.skipif(
-    os.environ.get("EXPERIMENTAL_ON") != "ON", reason="dynamic graph is in experimental"
+    os.environ.get("NETWORKX") != "ON", reason="dynamic graph is in NETWORKX ON"
 )
 def test_compatible_with_dynamic_graph(dynamic_property_graph):
     # bfs
@@ -88,7 +88,7 @@ def test_errors_on_create_app(arrow_property_graph, arrow_project_graph):
 
 
 @pytest.mark.skipif(
-    os.environ.get("EXPERIMENTAL_ON") != "ON", reason="dynamic graph is in experimental"
+    os.environ.get("NETWORKX") != "ON", reason="dynamic graph is in NETWORKX ON"
 )
 def test_errors_on_create_app_with_dynamic(dynamic_project_graph):
     with pytest.raises(graphscope.CompilationError):

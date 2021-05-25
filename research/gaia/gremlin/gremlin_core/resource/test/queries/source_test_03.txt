@@ -1,1 +1,1 @@
-g.V().hasLabel("PERSON").has("id",1)
+g.V().hasLabel("person").has("id",1)

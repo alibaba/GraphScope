@@ -13,41 +13,48 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::common::object::Object;
+use crate::generated::gremlin as pb;
 use crate::process::traversal::pop::Pop;
 use crate::process::traversal::step::by_key::{ByStepOption, TagKey};
 use crate::process::traversal::step::util::result_downcast::{
     try_downcast_group_count_value, try_downcast_group_key, try_downcast_group_value,
 };
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::{MapFuncGen, Step};
+use crate::process::traversal::step::MapFuncGen;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::{Details, Tag, Token};
-use crate::{str_to_dyn_error, DynResult, Element};
+use crate::structure::{Details, GraphElement, Tag, Token};
+use crate::{str_to_dyn_error, DynResult, Element, FromPb};
+use dyn_type::Object;
 use pegasus::api::function::*;
 use pegasus::codec::{Encode, WriteExt};
-use std::collections::HashMap;
 use std::io;
 
-pub struct GetPropertyStep {
-    tag_keys: Vec<TagKey>,
-    pop: Pop,
-}
-
-impl GetPropertyStep {
-    pub fn new(tag_keys: Vec<TagKey>, pop: Pop) -> Self {
-        GetPropertyStep { tag_keys, pop }
-    }
-}
-
-pub struct GetPropertyFunc {
+struct SelectStep {
     tag_keys: Vec<TagKey>,
     pop: Pop,
 }
 
 #[derive(Clone, Debug)]
 pub struct ResultProperty {
-    pub properties: HashMap<Tag, Vec<(String, Object)>>,
+    pub tag_entries: Vec<(Tag, OneTagValue)>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct OneTagValue {
+    pub graph_element: Option<GraphElement>,
+    pub value: Option<Object>,
+    pub properties: Option<Vec<(String, Object)>>,
+}
+
+impl OneTagValue {
+    fn new_element<E: Into<GraphElement>>(e: E) -> Self {
+        OneTagValue { graph_element: Some(e.into()), value: None, properties: None }
+    }
+    fn new_value<T: Into<Object>>(o: T) -> Self {
+        OneTagValue { graph_element: None, value: Some(o.into()), properties: None }
+    }
+    fn new_props(props: Vec<(String, Object)>) -> Self {
+        OneTagValue { graph_element: None, value: None, properties: Some(props) }
+    }
 }
 
 // TODO(yyy)
@@ -59,25 +66,18 @@ impl Encode for ResultProperty {
 
 impl ResultProperty {
     pub fn new() -> Self {
-        ResultProperty { properties: HashMap::new() }
+        ResultProperty { tag_entries: vec![] }
     }
 }
 
-impl Step for GetPropertyStep {
-    fn get_symbol(&self) -> StepSymbol {
-        StepSymbol::Select
-    }
-}
-
-// TODO: modify output
-impl MapFunction<Traverser, Traverser> for GetPropertyFunc {
+impl MapFunction<Traverser, Traverser> for SelectStep {
     fn exec(&self, input: Traverser) -> FnResult<Traverser> {
         let tag_keys = self.tag_keys.clone();
         let pop = self.pop;
         let mut result = ResultProperty::new();
         for tag_key in tag_keys.iter() {
             let (tag, by_key) = (tag_key.tag.as_ref(), tag_key.by_key.as_ref());
-            let mut properties: Vec<(String, Object)> = vec![];
+            let mut tag_value = OneTagValue::default();
             if let Some(key) = by_key {
                 match key {
                     // select("a").by(id/label/prop), where "a" should be a graph_element
@@ -94,23 +94,22 @@ impl MapFunction<Traverser, Traverser> for GetPropertyFunc {
                         match token {
                             // select("a").by(id) or select(id)
                             Token::Id => {
-                                properties.push(("id".to_string(), graph_element.id().into()));
+                                tag_value = OneTagValue::new_value(graph_element.id());
                             }
                             // select("a").by(label) or select(label)
                             Token::Label => {
-                                properties
-                                    .push(("label".to_string(), graph_element.label().into()));
+                                tag_value =
+                                    OneTagValue::new_value(graph_element.label().as_object());
                             }
                             // select("a").by("name") or select("name")
                             Token::Property(prop_name) => {
                                 let prop_value = graph_element.details().get_property(prop_name);
                                 if let Some(prop_value) = prop_value {
-                                    properties.push((
-                                        prop_name.clone(),
+                                    tag_value = OneTagValue::new_value(
                                         prop_value.try_to_owned().ok_or(str_to_dyn_error(
                                             "Can't get owned property value in select step",
                                         ))?,
-                                    ));
+                                    );
                                 }
                             }
                         }
@@ -126,10 +125,11 @@ impl MapFunction<Traverser, Traverser> for GetPropertyFunc {
                                 "Select tag {:?} as element error!",
                                 tag
                             )))?;
+                        let mut props = vec![];
                         for prop_name in prop_names {
                             let prop_value = graph_element.details().get_property(prop_name);
                             if let Some(prop_value) = prop_value {
-                                properties.push((
+                                props.push((
                                     prop_name.clone(),
                                     prop_value.try_to_owned().ok_or(str_to_dyn_error(
                                         "Can't get owned property value",
@@ -137,6 +137,7 @@ impl MapFunction<Traverser, Traverser> for GetPropertyFunc {
                                 ));
                             }
                         }
+                        tag_value = OneTagValue::new_props(props);
                     }
                     // "a" should be a pair of (k,v), or head should attach with a pair of (k,v)
                     // TODO: support more group key/value types
@@ -154,7 +155,7 @@ impl MapFunction<Traverser, Traverser> for GetPropertyFunc {
                                 map_object
                             )),
                         )?;
-                        return Ok(get_keys_trav);
+                        return Ok(get_keys_trav.clone());
                     }
                     ByStepOption::OptGroupValues(_) => {
                         let map_object = if let Some(tag) = tag {
@@ -167,7 +168,7 @@ impl MapFunction<Traverser, Traverser> for GetPropertyFunc {
                         if let Some(count_value) = try_downcast_group_count_value(map_object) {
                             return Ok(Traverser::Object(count_value.into()));
                         } else if let Some(traverser_value) = try_downcast_group_value(map_object) {
-                            return Ok(traverser_value);
+                            return Ok(traverser_value.clone());
                         } else {
                             Err(str_to_dyn_error(&format!(
                                 "downcast group value failed in select step {:?}",
@@ -184,9 +185,9 @@ impl MapFunction<Traverser, Traverser> for GetPropertyFunc {
                 // For the case of select("a") where "a" is a graph element, use SelectOneStep instead
                 if let Some(tag) = tag {
                     if let Some(object) = input.select_pop_as_value(pop, tag) {
-                        properties.push(("computed_value".to_string(), object.clone()));
+                        tag_value = OneTagValue::new_value(object.clone());
                     } else if let Some(element) = input.select_pop_as_element(pop, tag) {
-                        properties.push(("graph_element".to_string(), element.id().into()));
+                        tag_value = OneTagValue::new_element(element.clone());
                     } else {
                         Err(str_to_dyn_error(&format!("Select tag {:?} error in select!", tag)))?
                     }
@@ -195,18 +196,25 @@ impl MapFunction<Traverser, Traverser> for GetPropertyFunc {
                 }
             }
             if tag.is_some() {
-                result.properties.insert(tag.unwrap().clone(), properties);
+                result.tag_entries.push((tag.unwrap().clone(), tag_value));
             } else {
-                result.properties.insert(0, properties);
+                Err(str_to_dyn_error("no tag is provided in select, should be unreachable"))?;
             }
         }
-        Ok(Traverser::Object(Object::UnknownOwned(Box::new(result))))
+        Ok(Traverser::Object(Object::DynOwned(Box::new(result))))
     }
 }
 
-impl MapFuncGen for GetPropertyStep {
-    fn gen(&self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>> {
-        for tag_key in self.tag_keys.iter() {
+impl MapFuncGen for pb::SelectStep {
+    fn gen_map(self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>> {
+        let pop_pb = unsafe { std::mem::transmute(self.pop) };
+        let pop = Pop::from_pb(pop_pb)?;
+        let mut tag_keys = vec![];
+        let tag_keys_pb = self.select_keys;
+        for tag_key_pb in tag_keys_pb {
+            tag_keys.push(TagKey::from_pb(tag_key_pb)?);
+        }
+        for tag_key in tag_keys.iter() {
             let (tag, key) = (tag_key.tag.as_ref(), tag_key.by_key.as_ref());
             if let Some(key) = key {
                 match key {
@@ -231,7 +239,7 @@ impl MapFuncGen for GetPropertyStep {
                                 "Have not support select(keys/values).by(id/label/prop) in select step yet",
                             ))?;
                         }
-                        if self.tag_keys.len() > 1 {
+                        if tag_keys.len() > 1 {
                             Err(str_to_dyn_error("Do not support multiple TagKeys when Key is OptGroupKeys/OptGroupValues in select step"))?;
                         }
                     }
@@ -245,6 +253,7 @@ impl MapFuncGen for GetPropertyStep {
                 }
             }
         }
-        Ok(Box::new(GetPropertyFunc { tag_keys: self.tag_keys.clone(), pop: self.pop }))
+
+        Ok(Box::new(SelectStep { tag_keys, pop }))
     }
 }

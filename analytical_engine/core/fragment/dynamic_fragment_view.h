@@ -16,7 +16,7 @@
 #ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_VIEW_H_
 #define ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_VIEW_H_
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 
 #include <memory>
 #include <string>
@@ -69,6 +69,8 @@ class DynamicFragmentView : public DynamicFragment {
   inline vid_t id_mask() const { return fragment_->id_mask(); }
 
   inline int fid_offset() const { return fragment_->fid_offset(); }
+
+  inline size_t selfloops_num() const { return fragment_->selfloops_num(); }
 
   inline bool directed() const {
     switch (view_type_) {
@@ -318,5 +320,5 @@ class DynamicFragmentView : public DynamicFragment {
 };
 
 }  // namespace gs
-#endif  // EXPERIMENTAL_ON
+#endif  // NETWORKX
 #endif  // ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_VIEW_H_

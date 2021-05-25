@@ -18,6 +18,8 @@ package com.alibaba.graphscope.gaia.processor;
 import com.alibaba.graphscope.gaia.GlobalEngineConf;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
+import com.alibaba.graphscope.gaia.result.DefaultResultParser;
+import com.alibaba.graphscope.gaia.result.GremlinResultProcessor;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
 import com.alibaba.graphscope.gaia.broadcast.RpcBroadcastProcessor;
@@ -73,13 +75,13 @@ public class MaxGraphOpProcessor extends AbstractGraphOpProcessor {
                 .withResult(o -> {
                     if (o != null && o instanceof Traversal) {
                         long queryId = (long) queryIdMaker.getId(o);
-                        AbstractBuilder jobReqBuilder = new TraversalTranslator((new TraversalBuilder((Traversal.Admin) o))
+                        TraversalBuilder traversalBuilder = new TraversalBuilder((Traversal.Admin) o)
                                 .addConfig(PlanConfig.QUERY_ID, queryId)
                                 .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) o))
-                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId)))
-                                .translate();
+                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId));
+                        AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
                         PlanUtils.print(jobReqBuilder);
-                        broadcastProcessor.broadcast(jobReqBuilder.build(), ctx);
+                        broadcastProcessor.broadcast(jobReqBuilder.build(), ctx, new GremlinResultProcessor(ctx, new DefaultResultParser(traversalBuilder)));
                     } else {
                         List<Object> results = new ArrayList<>();
                         if (o != null) {

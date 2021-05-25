@@ -14,13 +14,11 @@
 //! limitations under the License.
 
 use crate::process::traversal::step::*;
-use crate::process::traversal::step::{
-    BySubJoin, FilterStep, FlatMapStep, GroupStep, HasAnyJoin, MapStep, OrderStep,
-};
+use crate::process::traversal::step::{BySubJoin, HasAnyJoin};
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::Element;
+use crate::Partitioner;
 use crate::{generated as pb, TraverserSinkEncoder};
-use crate::{FromPb, Partitioner};
 use pegasus::api::function::*;
 use pegasus::BuildJobError;
 use pegasus_common::collections::{Collection, CollectionFactory, Set};
@@ -30,16 +28,16 @@ use std::sync::Arc;
 
 pub struct GremlinJobCompiler {
     partitioner: Arc<dyn Partitioner>,
-    num_servers: u32,
+    num_servers: usize,
     server_index: u64,
 }
 
 impl GremlinJobCompiler {
-    pub fn new<D: Partitioner>(partitioner: D, num_servers: u32, server_index: u64) -> Self {
+    pub fn new<D: Partitioner>(partitioner: D, num_servers: usize, server_index: u64) -> Self {
         GremlinJobCompiler { partitioner: Arc::new(partitioner), num_servers, server_index }
     }
 
-    pub fn get_num_servers(&self) -> u32 {
+    pub fn get_num_servers(&self) -> usize {
         self.num_servers
     }
 
@@ -52,7 +50,7 @@ impl JobCompiler<Traverser> for GremlinJobCompiler {
     fn shuffle(&self, _: &[u8]) -> CompileResult<Box<dyn RouteFunction<Traverser>>> {
         let p = self.partitioner.clone();
         if let Some(worker_id) = pegasus::get_current_worker() {
-            let num_workers = worker_id.peers / self.num_servers;
+            let num_workers = worker_id.peers as usize / self.num_servers;
             Ok(box_route!(move |t: &Traverser| -> u64 {
                 if let Some(e) = t.get_element() {
                     p.get_partition(&e.id(), num_workers)
@@ -72,11 +70,11 @@ impl JobCompiler<Traverser> for GremlinJobCompiler {
     fn source(&self, src: &[u8]) -> CompileResult<Box<dyn Iterator<Item = Traverser> + Send>> {
         let mut step = decode::<pb::gremlin::GremlinStep>(src)?;
         if let Some(worker_id) = pegasus::get_current_worker() {
-            let num_workers = worker_id.peers / self.num_servers;
+            let num_workers = worker_id.peers as usize / self.num_servers;
             let mut step = graph_step_from(&mut step, self.num_servers)?;
             step.set_num_workers(num_workers);
             step.set_server_index(self.server_index);
-            Ok(step.gen_source(Some(worker_id.index)))
+            Ok(step.gen_source(Some(worker_id.index as usize)))
         } else {
             let mut step = graph_step_from(&mut step, self.num_servers)?;
             step.set_server_index(self.server_index);
@@ -85,21 +83,21 @@ impl JobCompiler<Traverser> for GremlinJobCompiler {
     }
 
     fn map(&self, res: &[u8]) -> CompileResult<Box<dyn MapFunction<Traverser, Traverser>>> {
-        let step = MapStep::from_pb(decode::<pb::gremlin::GremlinStep>(res)?)?;
-        step.gen().map_err(|err| BuildJobError::from(err.to_string()))
+        let step = decode::<pb::gremlin::GremlinStep>(res)?;
+        step.gen_map().map_err(|err| BuildJobError::from(err.to_string()))
     }
 
     fn flat_map(
         &self, res: &[u8],
     ) -> CompileResult<Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>>
     {
-        let step = FlatMapStep::from_pb(decode::<pb::gremlin::GremlinStep>(res)?)?;
-        step.gen().map_err(|err| BuildJobError::from(err.to_string()))
+        let step = decode::<pb::gremlin::GremlinStep>(res)?;
+        step.gen_flat_map().map_err(|err| BuildJobError::from(err.to_string()))
     }
 
     fn filter(&self, res: &[u8]) -> CompileResult<Box<dyn FilterFunction<Traverser>>> {
-        let step = FilterStep::from_pb(decode::<pb::gremlin::GremlinStep>(res)?)?;
-        step.gen().map_err(|err| BuildJobError::from(err.to_string()))
+        let step = decode::<pb::gremlin::GremlinStep>(res)?;
+        step.gen_filter().map_err(|err| BuildJobError::from(err.to_string()))
     }
 
     fn left_join(&self, res: &[u8]) -> CompileResult<Box<dyn LeftJoinFunction<Traverser>>> {
@@ -110,27 +108,30 @@ impl JobCompiler<Traverser> for GremlinJobCompiler {
             Some(pb::gremlin::sub_task_joiner::Inner::GroupValueJoiner(_)) => {
                 Ok(Box::new(GroupBySubJoin))
             }
+            Some(pb::gremlin::sub_task_joiner::Inner::SelectByJoiner(_)) => {
+                Ok(Box::new(SelectBySubJoin))
+            }
             None => Err("join information not found;")?,
         }
     }
 
     fn compare(&self, res: &[u8]) -> CompileResult<Box<dyn CompareFunction<Traverser>>> {
-        let step = OrderStep::from_pb(decode::<pb::gremlin::GremlinStep>(res)?)?;
-        step.gen().map_err(|err| BuildJobError::from(err.to_string()))
+        let step = decode::<pb::gremlin::GremlinStep>(res)?;
+        step.gen_cmp().map_err(|err| BuildJobError::from(err.to_string()))
     }
 
     fn group(
         &self, map_factory: &[u8], _unfold: &[u8], _: &[u8],
     ) -> CompileResult<Box<dyn GroupFunction<Traverser>>> {
-        let step = GroupStep::from_pb(decode::<pb::gremlin::GremlinStep>(map_factory)?)?;
-        step.gen().map_err(|err| BuildJobError::from(err.to_string()))
+        let step = decode::<pb::gremlin::GremlinStep>(map_factory)?;
+        step.gen_group().map_err(|err| BuildJobError::from(err.to_string()))
     }
 
     fn fold(
         &self, _: &[u8], unfold: &[u8], _sink: &[u8],
     ) -> CompileResult<Box<dyn FoldFunction<Traverser>>> {
-        let step = FoldStep::from_pb(decode::<pb::gremlin::GremlinStep>(unfold)?)?;
-        step.gen().map_err(|err| BuildJobError::from(err.to_string()))
+        let step = decode::<pb::gremlin::GremlinStep>(unfold)?;
+        step.gen_fold().map_err(|err| BuildJobError::from(err.to_string()))
     }
 
     fn collection_factory(
@@ -145,8 +146,8 @@ impl JobCompiler<Traverser> for GremlinJobCompiler {
         &self, res: &[u8],
     ) -> CompileResult<Box<dyn CollectionFactory<Traverser, Target = Box<dyn Set<Traverser>>>>>
     {
-        let step = DedupStep::from_pb(decode::<pb::gremlin::GremlinStep>(res)?)?;
-        step.gen().map_err(|err| BuildJobError::from(err.to_string()))
+        let step = decode::<pb::gremlin::GremlinStep>(res)?;
+        step.gen_collection().map_err(|err| BuildJobError::from(err.to_string()))
     }
 
     fn sink(&self, _: &[u8]) -> CompileResult<Box<dyn EncodeFunction<Traverser>>> {

@@ -88,6 +88,24 @@ function install_dependencies() {
     sudo apt update
     sudo apt install -y libarrow-dev=1.0.1-1 libarrow-python-dev=1.0.1-1
 
+    # intall fmt, required by folly
+    wget https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz -P /tmp
+    tar xf /tmp/7.0.3.tar.gz -C /tmp/
+    pushd /tmp/fmt-7.0.3
+    mkdir build && cd build
+    cmake .. -DBUILD_SHARED_LIBS=ON
+    make install -j
+    popd
+
+    # install folly
+    wget https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz -P /tmp
+    tar xf /tmp/v2020.10.19.00.tar.gz -C /tmp/
+    pushd /tmp/folly-2020.10.19.00
+    mkdir _build && cd _build
+    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
+    make install -j
+    popd
+
     # install zookeeper
     wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz -P /tmp
     tar xf /tmp/zookeeper-3.4.14.tar.gz -C /tmp/
@@ -101,7 +119,8 @@ function install_dependencies() {
 
     # clean
     rm -fr /tmp/apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb
-    rm -fr /tmp/zookeeper-3.4.14.tar.gz /tmp/zookeeper-3.4.14 /tmp/go1.15.5.linux-amd64.tar.gz
+    rm -fr /tmp/zookeeper-3.4.14.tar.gz /tmp/zookeeper-3.4.14 /tmp/go1.15.5.linux-amd64.tar.gz /tmp/7.0.3.tar.gz /tmp/v2020.10.19.00.tar.gz
+    rm -fr /tmp/fmt-7.0.3 /tmp/folly-2020.10.19.00
 
     # install python packages for vineyard codegen
     pip3 install -U pip --user

@@ -17,8 +17,10 @@ pub use crate::common::{DefaultId, InternalId, Label, LabelId, INVALID_LABEL_ID,
 pub use crate::config::GraphDBConfig;
 pub use crate::error::{GDBError, GDBResult};
 pub use crate::graph_db::{
-    Direction, GlobalStoreTrait, GlobalStoreUpdate, LocalAdjEdge, LocalEdge, LocalVertex,
+    Direction, EdgeId, GlobalStoreTrait, GlobalStoreUpdate, LocalEdge, LocalVertex,
 };
 pub use crate::graph_db_impl::{LargeGraphDB, MutableGraphDB};
 pub use crate::schema::{LDBCGraphSchema, Schema};
-pub use crate::table::{PropertyTable, PropertyTableTrait, Row, RowRef, SingleValueTable};
+pub use crate::table::{
+    ItemType, ItemTypeRef, PropertyTable, PropertyTableTrait, Row, RowRef, SingleValueTable,
+};

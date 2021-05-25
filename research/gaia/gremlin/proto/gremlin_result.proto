@@ -32,7 +32,7 @@ message Vertex {
 }
 
 message Edge {
-  int64 id = 1;
+  string id = 1;
   string label = 2;
   int64 src_id = 3;
   string src_label = 4;
@@ -60,22 +60,32 @@ message GraphElementArray {
   repeated GraphElement item = 1;
 }
 
-// TODO: no need to carry Property key each time
-// e.g., a: [name:[marko],age:[29]]
-message TagProperty {
-  int32 tag = 1;
-  repeated Property props = 2;
+message ValueMapEntries {
+    repeated Property property = 1;
 }
 
-// e.g., [a:[name:[marko],age:[29]],b:[name:[josh],age:[29]]]
-message TagProperties {
-  repeated TagProperty item = 1;
+message OneTagValue {
+    oneof item {
+        // select("a")
+        GraphElement element = 1;
+        // select("a").by("name") or select("a").by(values("name"))
+        common.Value value = 2;
+        // select("a").by(valueMap("name", "age"))
+        ValueMapEntries properties = 3;
+    }
 }
 
-// e.g., [a:[name:[marko],age:[29]],b:[name:[lop]]]
-//       [a:[name:[marko],age:[29]],b:[name:[vadas],age:[27]]]
-message TagPropertiesArray {
-  repeated TagProperties item = 1;
+message TagEntry {
+    int32 tag = 1;
+    OneTagValue value = 2;
+}
+
+message TagEntries {
+    repeated TagEntry entries = 1;
+}
+
+message TagEntriesArray {
+    repeated TagEntries item = 1;
 }
 
 message ValueArray {
@@ -111,7 +121,7 @@ message Result {
     // result of g.V() etc.
     GraphElementArray elements = 2;
     // result of select(tag).by(key)
-    TagPropertiesArray tag_properties = 3;
+    TagEntriesArray tag_entries = 3;
     // result of group()
     MapArray map_result = 4;
     // result of fold(), e.g., count()

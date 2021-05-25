@@ -192,13 +192,10 @@ class Loader(object):
         # If protocol is not set, use 'file' as default
         if not self.protocol:
             self.protocol = "file"
-        check_argument(
-            self.protocol in ("file", "hdfs", "hive", "oss", "s3", "vineyard")
-        )
-        if self.protocol == "file":
-            self.source = source
-        else:
+        if self.protocol in ("hdfs", "hive", "oss", "s3", "vineyard"):
             self.process_vineyard(source)
+        else:
+            self.source = source
 
     def process_numpy(self, source: Sequence[np.ndarray]):
         self.protocol = "numpy"

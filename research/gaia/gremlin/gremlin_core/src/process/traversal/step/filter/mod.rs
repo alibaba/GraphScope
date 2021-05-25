@@ -14,111 +14,32 @@
 //! limitations under the License.
 
 use crate::generated::gremlin as pb;
-use crate::process::traversal::step::filter::is::IsStep;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::codec::ParseError;
-use crate::structure::filter::codec::pb_chain_to_filter;
-use crate::structure::{
-    with_tag, without_tag, Filter, IsSimple, Tag, Token, TraverserFilter, ValueFilter,
-};
-use crate::DynResult;
-use crate::FromPb;
-use bit_set::BitSet;
-pub use has::HasStep;
+use crate::{str_to_dyn_error, DynResult};
 use pegasus::api::function::FilterFunction;
-use pegasus_common::downcast::*;
-pub use where_predicate::WherePredicateStep;
 
 mod has;
-mod is;
 mod where_predicate;
 
 #[enum_dispatch]
 pub trait FilterFuncGen {
-    fn gen(&self) -> DynResult<Box<dyn FilterFunction<Traverser>>>;
+    fn gen_filter(self) -> DynResult<Box<dyn FilterFunction<Traverser>>>;
 }
 
-#[enum_dispatch(FilterFuncGen, Step)]
-pub enum FilterStep {
-    Has(HasStep),
-    WhereP(WherePredicateStep),
-    Is(IsStep),
-}
-
-impl_as_any!(FilterStep);
-
-impl FromPb<pb::GremlinStep> for FilterStep {
-    fn from_pb(mut raw: pb::GremlinStep) -> Result<Self, ParseError>
-    where
-        Self: Sized,
-    {
-        if let Some(opt) = raw.step.take() {
-            match opt {
-                pb::gremlin_step::Step::HasStep(mut opt) => {
-                    let filter = if let Some(test) = opt.predicates.take() {
-                        if let Some(test) = pb_chain_to_filter(&test)? {
-                            without_tag(test)
-                        } else {
-                            Filter::new()
-                        }
-                    } else {
-                        Filter::new()
-                    };
-                    let mut step = HasStep::new(filter);
-                    for tag in raw.tags {
-                        step.add_tag(Tag::from_pb(tag)?);
-                    }
-                    Ok(FilterStep::Has(step))
+impl FilterFuncGen for pb::GremlinStep {
+    fn gen_filter(self) -> DynResult<Box<dyn FilterFunction<Traverser>>> {
+        if let Some(step) = self.step {
+            match step {
+                pb::gremlin_step::Step::HasStep(has_step) => has_step.gen_filter(),
+                pb::gremlin_step::Step::WhereStep(where_step) => where_step.gen_filter(),
+                pb::gremlin_step::Step::PathFilterStep(path_filter_step) => {
+                    path_filter_step.gen_filter()
                 }
-                pb::gremlin_step::Step::WhereStep(mut opt) => {
-                    let start_key = if opt.start_tag.is_none() {
-                        None
-                    } else {
-                        Some(Tag::from_pb(opt.start_tag.unwrap())?)
-                    };
-                    let start_token_pb = opt.start_token.take().ok_or("start token is none")?;
-                    let start_token = Token::from_pb(start_token_pb)?;
-                    let tags_pb = std::mem::replace(&mut opt.tags, vec![]);
-                    let mut select_tags = vec![];
-                    for tag_pb in tags_pb {
-                        select_tags.push(Tag::from_pb(tag_pb)?);
-                    }
-                    let filter = if let Some(test) = opt.predicates {
-                        if let Some(filter) = pb_chain_to_filter(&test)? {
-                            let mut iter = select_tags.into_iter();
-                            with_tag(&mut iter, filter)
-                        } else {
-                            Filter::new()
-                        }
-                    } else {
-                        Filter::new()
-                    };
-                    let mut step = WherePredicateStep::new(start_key, start_token, filter);
-                    for tag in raw.tags {
-                        step.add_tag(Tag::from_pb(tag)?);
-                    }
-                    Ok(FilterStep::WhereP(step))
-                }
-                pb::gremlin_step::Step::PathFilterStep(opt) => {
-                    let filter = if opt.hint == 0 {
-                        TraverserFilter::HasCycle(IsSimple::Simple)
-                    } else {
-                        TraverserFilter::HasCycle(IsSimple::Cyclic)
-                    };
-                    Ok(FilterStep::Has(HasStep::new(Filter::with(filter))))
-                }
-                pb::gremlin_step::Step::IsStep(opt) => {
-                    let value_filter_pb = opt.single.ok_or("filter is not set in is step")?;
-                    let value_filter = ValueFilter::from_pb(value_filter_pb)?;
-                    let traverser_filter = TraverserFilter::IsValue(value_filter);
-                    Ok(FilterStep::Is(IsStep::new(Filter::with(traverser_filter))))
-                }
-                _ => Err(ParseError::InvalidData),
+                pb::gremlin_step::Step::IsStep(is_step) => is_step.gen_filter(),
+                _ => Err(str_to_dyn_error("pb GremlinStep is not a Filter Step")),
             }
         } else {
-            Err(ParseError::InvalidData)
+            Err(str_to_dyn_error("pb GremlinStep does not have a step"))
         }
     }
 }

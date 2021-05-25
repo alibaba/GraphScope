@@ -549,6 +549,16 @@ impl Object {
         }
     }
 
+    pub fn as_u64(&self) -> Result<u64, CastError> {
+        match self {
+            Object::Primitive(p) => p.as_u64(),
+            Object::String(_) => Err(CastError::new::<u64>(RawType::String)),
+            Object::Blob(v) => Err(CastError::new::<u64>(RawType::Blob(v.len()))),
+            Object::UnknownOwned(x) => try_downcast!(x, u64),
+            Object::UnknownRef(x) => try_downcast!(x, u64),
+        }
+    }
+
     pub fn as_i128(&self) -> Result<i128, CastError> {
         match self {
             Object::Primitive(p) => p.as_i128(),

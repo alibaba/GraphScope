@@ -1,0 +1,1 @@
+g.V($vertexId).out().as('a').select('a').by(out().count())

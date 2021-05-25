@@ -59,8 +59,6 @@ from gscoordinator.object_manager import ObjectManager
 from gscoordinator.utils import compile_app
 from gscoordinator.utils import compile_graph_frame
 from gscoordinator.utils import create_single_op_dag
-from gscoordinator.utils import distribute_lib_on_k8s
-from gscoordinator.utils import distribute_lib_via_hosts
 from gscoordinator.utils import dump_string
 from gscoordinator.utils import get_app_sha256
 from gscoordinator.utils import get_graph_sha256
@@ -84,7 +82,6 @@ GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
 
 ENGINE_CONTAINER = "engine"
 VINEYARD_CONTAINER = "vineyard"
-MAXGRAPH_MANAGER_HOST = "http://%s.%s.svc.cluster.local:8080"
 
 logger = logging.getLogger("graphscope")
 
@@ -129,9 +126,6 @@ class CoordinatorServiceServicer(
         if self._launcher_type == types_pb2.K8S:
             self._pods_list = self._launcher.get_pods_list()
             self._k8s_namespace = self._launcher.get_namespace()
-            self._gie_graph_manager_service_name = (
-                self._launcher.get_gie_graph_manager_service_name()
-            )
         else:
             self._pods_list = []  # locally launched
             self._k8s_namespace = ""
@@ -478,10 +472,7 @@ class CoordinatorServiceServicer(
         }
 
         if self._launcher_type == types_pb2.K8S:
-            manager_host = MAXGRAPH_MANAGER_HOST % (
-                self._gie_graph_manager_service_name,
-                self._k8s_namespace,
-            )
+            post_url = "{0}/instance/create".format(self._launcher.get_manager_host())
             params.update(
                 {
                     "schemaJson": schema_json,
@@ -492,7 +483,6 @@ class CoordinatorServiceServicer(
                     "gremlinServerMem": gremlin_server_mem,
                 }
             )
-            post_url = "%s/instance/create" % manager_host
             engine_params = [
                 "{}:{}".format(key, value)
                 for key, value in request.engine_params.items()
@@ -547,10 +537,7 @@ class CoordinatorServiceServicer(
     def CloseInteractiveInstance(self, request, context):
         object_id = request.object_id
         if self._launcher_type == types_pb2.K8S:
-            manager_host = MAXGRAPH_MANAGER_HOST % (
-                self._gie_graph_manager_service_name,
-                self._k8s_namespace,
-            )
+            manager_host = self._launcher.get_manager_host()
             pod_name_list = ",".join(self._pods_list)
             close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
                 manager_host,
@@ -710,7 +697,7 @@ class CoordinatorServiceServicer(
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
         if self._analytical_engine_config is None:
-            # fetch experimental_on compile option from engine
+            # fetch NETWORKX compile option from engine
             self._analytical_engine_config = self._get_engine_config()
         space = self._builtin_workspace
         if types_pb2.GAR in op.attr:
@@ -718,10 +705,7 @@ class CoordinatorServiceServicer(
         app_lib_path = compile_func(
             space, lib_name, op.attr, self._analytical_engine_config
         )
-        if self._launcher_type == types_pb2.K8S:
-            distribute_lib_on_k8s(",".join(self._pods_list), app_lib_path)
-        else:
-            distribute_lib_via_hosts(self._launcher.hosts, app_lib_path)
+        self._launcher.distribute_file(app_lib_path)
         return app_lib_path
 
 

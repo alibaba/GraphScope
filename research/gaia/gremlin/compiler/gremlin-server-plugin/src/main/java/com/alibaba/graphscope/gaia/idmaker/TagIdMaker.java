@@ -18,6 +18,8 @@ package com.alibaba.graphscope.gaia.idmaker;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 
 // per query
 public class TagIdMaker implements IdMaker<Integer, String> {
+    private static final Logger logger = LoggerFactory.getLogger(TagIdMaker.class);
     private Map<String, Integer> tagIds = new HashMap<>();
     // one byte
     public static final int VALID_BITS = 0x0ff;
@@ -55,11 +58,6 @@ public class TagIdMaker implements IdMaker<Integer, String> {
         return tagName.startsWith(HIDDEN_TAG_PREFIX);
     }
 
-    public List<Byte> getHiddenTags() {
-        // tag with id is greater than magic
-        throw new UnsupportedOperationException();
-    }
-
     private Set<String> getTags(Traversal.Admin admin) {
         Set<String> tags = new HashSet<>();
         List<Step> steps = admin.getSteps();
@@ -78,5 +76,15 @@ public class TagIdMaker implements IdMaker<Integer, String> {
             }
         }
         return tags;
+    }
+
+    public String getTagById(int id) {
+        for (Map.Entry<String, Integer> entry : tagIds.entrySet()) {
+            if (entry.getValue() == id) {
+                return entry.getKey();
+            }
+        }
+        logger.error("id {} not exist, return empty string", id);
+        return "";
     }
 }

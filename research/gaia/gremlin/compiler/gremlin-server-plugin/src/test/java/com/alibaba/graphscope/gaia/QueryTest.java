@@ -25,7 +25,6 @@ import com.alibaba.graphscope.gaia.plan.translator.TraversalTranslator;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Scope;
@@ -37,8 +36,6 @@ import org.apache.tinkerpop.gremlin.structure.util.empty.EmptyGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class QueryTest {
@@ -48,7 +45,7 @@ public class QueryTest {
     public static void main(String[] args) throws Exception {
         // read default engine conf
         GlobalEngineConf.setDefaultSysConf(JsonUtils.fromJson(
-                FileUtils.readFileToString(new File("conf/gaia.args.json"), StandardCharsets.UTF_8), new TypeReference<Map<String, Object>>() {
+                PlanUtils.readJsonFromFile("conf/gaia.args.json"), new TypeReference<Map<String, Object>>() {
                 })
         );
         IdMaker queryIdMaker = new IncrementalQueryIdMaker();
@@ -62,7 +59,9 @@ public class QueryTest {
     }
 
     public static Traversal getTestTraversal() {
-        Traversal traversal = CR_12();
+        Traversal traversal = g.V().hasLabel("person");
+                // g.V().in().as("a").select("a").by(__.unfold().values("name").fold());
+                // CR_12();
         MaxGraphOpProcessor.applyStrategy(traversal);
         return traversal;
     }

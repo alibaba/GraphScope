@@ -110,7 +110,7 @@ pub const PARTITION_PREFIX: &'static str = "partition_";
 #[derive(Clone, Debug)]
 pub struct GraphDBConfig {
     /// The root directory in which the encoded data (and their directories are maintained)
-    root_dir: PathBuf,
+    pub root_dir: PathBuf,
     /// The path to the schema file of the graph DB
     schema_file: PathBuf,
     /// The initial number of vertices, used only for building graphs via `MutableGraphDB`
@@ -281,8 +281,7 @@ impl GraphDBConfig {
         }
     }
 
-    /// Get schema of the graph database
-    pub fn schema<P: AsRef<Path>>(&self, schema_path: P) -> GDBResult<LDBCGraphSchema> {
-        Ok(LDBCGraphSchema::from_json_file(schema_path)?)
+    pub fn schema(&self) -> GDBResult<LDBCGraphSchema> {
+        Ok(LDBCGraphSchema::from_json_file(&self.schema_file)?)
     }
 }

@@ -15,8 +15,22 @@
  */
 package com.alibaba.graphscope.gaia.store;
 
+import java.math.BigInteger;
+import java.util.Optional;
+import java.util.Set;
+
 public interface GraphStoreService {
     long getLabelId(String label);
 
+    String getLabel(long labelId);
+
     long getGlobalId(long labelId, long propertyId);
+
+    <P> Optional<P> getVertexProperty(BigInteger id, String key);
+
+    Set<String> getVertexKeys(BigInteger id);
+
+    <P> Optional<P> getEdgeProperty(BigInteger id, String key);
+
+    Set<String> getEdgeKeys(BigInteger id);
 }

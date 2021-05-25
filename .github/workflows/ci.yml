@@ -10,6 +10,7 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
+      - 'research/**'
       - 'scripts/**'
       - 'tutorials/**'
   pull_request:
@@ -20,6 +21,7 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
+      - 'research/**'
       - 'scripts/**'
       - 'tutorials/**'
 
@@ -30,12 +32,12 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.15
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.1
       options:
         --shm-size 4096m
     strategy:
       matrix:
-        experimental: [ON, OFF]
+        networkx: [ON, OFF]
 
     steps:
     - name: Install Dependencies
@@ -48,10 +50,9 @@ jobs:
     - name: Cpp Format And Lint Check
       run: |
         # install clang-format
-        if [ ! -f /usr/bin/clang-format ]; then
-            curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
-            chmod +x /usr/bin/clang-format
-        fi
+        curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
+        chmod +x /usr/bin/clang-format
+
         # run clang-format
         cd analytical_engine/
         find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.h" | xargs clang-format -i --style=file
@@ -84,6 +85,8 @@ jobs:
       run: |
         echo "Checking formatting for $GITHUB_REPOSITORY"
         pip3 install black==20.8b1 flake8==3.8.4 isort==5.5.4
+        export LC_ALL=en_US.utf8
+        export LANG=en_US.utf8
         pushd python
         python3 -m isort --check --diff .
         python3 -m black --check --diff .
@@ -105,7 +108,7 @@ jobs:
         cd build
         cmake .. -DCMAKE_PREFIX_PATH=/opt/graphscope \
                  -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
-                 -DEXPERIMENTAL_ON=${{ matrix.experimental }}
+                 -DNETWORKX=${{ matrix.networkx }}
         make -j`nproc`
         make install
         cd ${GITHUB_WORKSPACE}
@@ -123,7 +126,7 @@ jobs:
         ../test/app_tests.sh --test_dir ${GITHUB_WORKSPACE}/gstest
 
     - name: Upload Artifact
-      if: matrix.experimental == 'ON'
+      if: matrix.networkx == 'ON'
       uses: actions/upload-artifact@v2
       with:
         name: gae-${{ github.sha }}
@@ -135,7 +138,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.15
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.1
     steps:
     - name: Install Dependencies
       run: |
@@ -175,7 +178,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.1.15
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.1
     steps:
     - name: Install Dependencies
       run: |
@@ -276,7 +279,7 @@ jobs:
         --shm-size 4096m
     strategy:
       matrix:
-        experimental: [ON, OFF]
+        networkx: [ON, OFF]
     steps:
     - name: Install Dependencies
       run: |
@@ -305,8 +308,12 @@ jobs:
         pushd python && python3 setup.py build_proto && popd
         pushd coordinator && python3 setup.py build_builtin && popd
 
+    - name: Setup tmate session debug
+      if: false
+      uses: mxschmitt/action-tmate@v2
+
     - name: App Test with Expr Off
-      if: matrix.experimental == 'OFF'
+      if: matrix.networkx == 'OFF'
       run: |
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/dev/shm/default.etcd &
@@ -319,23 +326,23 @@ jobs:
         pkill -TERM etcd || true
 
     - name: Upload Coverage
-      if: matrix.experimental == 'OFF'
+      if: matrix.networkx == 'OFF'
       uses: codecov/codecov-action@v1
       with:
         file: ./python/coverage.xml
         fail_ci_if_error: true
 
     - name: App Test with Expr On
-      if: matrix.experimental == 'ON'
+      if: matrix.networkx == 'ON'
       run: |
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/dev/shm/default.etcd &
 
         export GS_TEST_DIR='/root/gstest'
-        python3 -m pytest --exitfirst -s -v python/graphscope/experimental/nx/tests/classes
-        python3 -m pytest --exitfirst -s -v python/graphscope/experimental/nx/tests/test_nx.py
-        python3 -m pytest --exitfirst -s -v python/graphscope/experimental/nx/tests/algorithms/builtin \
-                                            python/graphscope/experimental/nx/tests/test_utils.py
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/classes
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/test_nx.py
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/algorithms/builtin \
+                                            python/graphscope/nx/tests/test_utils.py
 
         pkill -TERM etcd || true
 

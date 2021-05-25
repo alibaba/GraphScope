@@ -336,7 +336,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     }
     gather_archives(*arc, comm_spec, old_size);
 
-    return arc;
+    return std::move(arc);
   }
 
   bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
@@ -400,7 +400,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
 
       gather_archives(*arc, comm_spec, old_size);
     }
-    return arc;
+    return std::move(arc);
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
@@ -487,7 +487,7 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
   std::shared_ptr<fragment_t> fragment_;
 };
 
-#ifdef EXPERIMENTAL_ON
+#ifdef NETWORKX
 /**
  * @brief A specialized FragmentWrapper for DynamicFragment.
  * @tparam OID_T OID type

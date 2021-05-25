@@ -30,8 +30,8 @@ ensure_python(">=3.4")
 # Get our version
 version = get_version(pjoin(package_name, "_version.py"))
 
-nb_path = pjoin(HERE, name, "nbextension", "static")
-lab_path = pjoin(HERE, name, "labextension")
+nb_path = pjoin(HERE, package_name, "nbextension", "static")
+lab_path = pjoin(HERE, package_name, "labextension")
 
 # Representative files that should exist after a successful build
 jstargets = [

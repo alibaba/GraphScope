@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,11 +54,13 @@ pub enum Filter<T, P: Predicate<T>> {
     Chain(Chain<T, P>),
 }
 
-impl<T, P: Predicate<T>> Filter<T, P> {
-    pub fn new() -> Self {
+impl<T, P: Predicate<T>> Default for Filter<T, P> {
+    fn default() -> Self {
         Filter::Ph(std::marker::PhantomData)
     }
+}
 
+impl<T, P: Predicate<T>> Filter<T, P> {
     pub fn with(p: P) -> Self {
         Filter::Simple(p)
     }
@@ -137,6 +139,7 @@ impl<T, P: Predicate<T>> Filter<T, P> {
 }
 
 unsafe impl<T, P: Predicate<T> + Send> Send for Filter<T, P> {}
+
 unsafe impl<T, P: Predicate<T> + Sync> Sync for Filter<T, P> {}
 
 impl<T, P: Predicate<T>> From<P> for Filter<T, P> {
@@ -148,7 +151,7 @@ impl<T, P: Predicate<T>> From<P> for Filter<T, P> {
 pub type TraverserFilterChain = Filter<Traverser, traverser::TraverserFilter>;
 
 pub fn without_tag(filter: Filter<GraphElement, ElementFilter>) -> TraverserFilterChain {
-    let mut tf = Filter::<Traverser, traverser::TraverserFilter>::new();
+    let mut tf = Filter::<Traverser, traverser::TraverserFilter>::default();
     let mut connect = ChainKind::Or;
     match filter {
         Filter::Ph(_) => {}
@@ -184,7 +187,7 @@ pub fn without_tag(filter: Filter<GraphElement, ElementFilter>) -> TraverserFilt
 pub fn with_tag(
     tags: &mut dyn Iterator<Item = Tag>, filter: Filter<GraphElement, ElementFilter>,
 ) -> TraverserFilterChain {
-    let mut tf = Filter::<Traverser, traverser::TraverserFilter>::new();
+    let mut tf = Filter::<Traverser, traverser::TraverserFilter>::default();
     let mut connect = ChainKind::Or;
     match filter {
         Filter::Ph(_) => {}
@@ -290,7 +293,7 @@ impl<T, P: Predicate<T>> Chain<T, P> {
             Filter::Chain(mut chain) => {
                 let len = chain.list.len();
                 if len == 0 {
-                    self.list.push(ChainNode::new(Filter::new()));
+                    self.list.push(ChainNode::new(Filter::default()));
                 } else if len == 1 {
                     let next = chain.list.swap_remove(0);
                     self.list.push(next);

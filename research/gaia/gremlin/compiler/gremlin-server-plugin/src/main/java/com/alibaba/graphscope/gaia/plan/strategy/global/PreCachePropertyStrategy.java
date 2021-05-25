@@ -15,8 +15,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.RepeatStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectOneStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
@@ -54,12 +52,20 @@ public class PreCachePropertyStrategy implements GlobalTraversalStrategy {
                 .addConfig(MetaConfig.ELEMENT_PROPERTIES, new PropertiesMapMeta());
     }
 
-    // add after as step insead of before select step
+    // add after as step instead of before select step
     protected void transformPropertiesMeta(PropertiesMapMeta propertiesMapMeta) {
         for (GraphElement element : propertiesMapMeta.getAllObjects()) {
             StepPropertiesMeta meta = propertiesMapMeta.get(element).get();
-            if (meta.getStep() instanceof SelectOneStep || meta.getStep() instanceof SelectStep) {
-                StepId asStep = propertiesMapMeta.getAsStep(element);
+            StepId firstUsed = meta.getStepId();
+            StepId asStep = propertiesMapMeta.getAsStep(element);
+            StepId orderStep = propertiesMapMeta.getOrderStepId(element);
+            // pre cache property before order step to guarantee order
+            if (orderStep != null && firstUsed.getTraversalId().equals(orderStep.getTraversalId()) && firstUsed.getStepId() > orderStep.getStepId()
+                    && (asStep == null || orderStep.getTraversalId().equals(asStep.getTraversalId()) && asStep.getStepId() >= orderStep.getStepId())) {
+                meta.setStepId(new StepId(orderStep.getTraversalId(), orderStep.getStepId()));
+            } else if (asStep == null || firstUsed.getTraversalId().equals(asStep.getTraversalId()) && firstUsed.getStepId() <= asStep.getStepId()) {
+                // do nothing
+            } else {
                 meta.setStepId(new StepId(asStep.getTraversalId(), asStep.getStepId() + 1));
             }
         }

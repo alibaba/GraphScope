@@ -30,7 +30,7 @@ mod test {
         run_test(test_job_factory, pb_request);
     }
 
-    // g.V(v1)
+    // g.V(1)
     #[test]
     fn source_test_02() {
         initialize();
@@ -49,6 +49,50 @@ mod test {
         expected.sort();
         let test_job_factory = TestJobFactory::with_expect_ids(expected);
         let pb_request = read_pb_request(gen_path("source_test_03")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
+    }
+
+    // g.E()
+    #[test]
+    fn source_test_04() {
+        initialize();
+        let mut expected = eids_to_global_ids(vec![(1, 2), (1, 4), (1, 3), (4, 5), (4, 3), (6, 3)]);
+        expected.sort();
+        let test_job_factory = TestJobFactory::with_expect_ids(expected);
+        let pb_request = read_pb_request(gen_path("source_test_04")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
+    }
+
+    // g.E().hasLabel("knows")
+    #[test]
+    fn source_test_05() {
+        initialize();
+        let mut expected = eids_to_global_ids(vec![(1, 2), (1, 4)]);
+        expected.sort();
+        let test_job_factory = TestJobFactory::with_expect_ids(expected);
+        let pb_request = read_pb_request(gen_path("source_test_05")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
+    }
+
+    // g.E().hasLabel("knows").has("weight",gt(0.5))
+    #[test]
+    fn source_test_06() {
+        initialize();
+        let mut expected = eids_to_global_ids(vec![(1, 4)]);
+        expected.sort();
+        let test_job_factory = TestJobFactory::with_expect_ids(expected);
+        let pb_request = read_pb_request(gen_path("source_test_06")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
+    }
+
+    // g.E(1)
+    #[test]
+    fn source_test_07() {
+        initialize();
+        let mut expected = eids_to_global_ids(vec![(1, 2)]);
+        expected.sort();
+        let test_job_factory = TestJobFactory::with_expect_ids(expected);
+        let pb_request = read_pb_request(gen_path("source_test_07")).expect("read pb failed");
         run_test(test_job_factory, pb_request);
     }
 }

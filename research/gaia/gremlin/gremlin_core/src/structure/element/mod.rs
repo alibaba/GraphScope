@@ -14,7 +14,8 @@
 //! limitations under the License.
 
 use crate::structure::property::DynDetails;
-use crate::Object;
+use dyn_type::object::Primitives;
+use dyn_type::Object;
 pub use edge::Edge;
 use graph_store::common::LabelId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -23,12 +24,32 @@ use std::io;
 use std::ops::{Deref, DerefMut};
 pub use vertex::Vertex;
 
+/// The type of either vertex or edge id
 pub type ID = u128;
+
+/// The number of bits in an `ID`
+pub const ID_BITS: usize = std::mem::size_of::<ID>() * 8;
+
+pub fn write_id<W: WriteExt>(id: ID, writer: &mut W) -> io::Result<()> {
+    writer.write_u128(id)
+}
+pub fn read_id<R: ReadExt>(reader: &mut R) -> io::Result<ID> {
+    reader.read_u128()
+}
 
 #[derive(Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub enum Label {
     Str(String),
     Id(LabelId),
+}
+
+impl Label {
+    pub fn as_object(&self) -> Object {
+        match self {
+            Label::Str(s) => Object::String(s.to_string()),
+            Label::Id(id) => Object::Primitive(Primitives::Integer(*id as i32)),
+        }
+    }
 }
 
 impl Encode for Label {
@@ -132,7 +153,7 @@ pub struct GraphElement {
 }
 
 impl Element for GraphElement {
-    fn id(&self) -> u128 {
+    fn id(&self) -> ID {
         self.element.id()
     }
 

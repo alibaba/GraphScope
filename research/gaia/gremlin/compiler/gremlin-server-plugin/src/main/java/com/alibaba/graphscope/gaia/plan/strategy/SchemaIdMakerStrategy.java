@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.plan.strategy;
 
 import com.alibaba.graphscope.gaia.store.StaticGraphStore;
+import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -29,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
     private static final Logger logger = LoggerFactory.getLogger(SchemaIdMakerStrategy.class);
@@ -50,24 +52,39 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                 List<HasContainer> containers = ((HasContainerHolder) step).getHasContainers();
                 for (HasContainer container : containers) {
                     if (container.getKey().equals(T.label.getAccessor())) {
-                        P<String> predicate = (P<String>) container.getPredicate();
-                        long labelId = StaticGraphStore.INSTANCE.getLabelId(predicate.getValue());
-                        if (labelId == StaticGraphStore.INVALID_ID) {
-                            logger.error("label id is invalid, check label {} exists", predicate.getValue());
-                            return;
+                        P predicate = container.getPredicate();
+                        if (predicate.getValue() instanceof List && ((List) predicate.getValue()).get(0) instanceof String) {
+                            List<String> values = (List<String>) predicate.getValue();
+                            predicate.setValue(values.stream().map(k -> {
+                                if (StringUtils.isNumeric(k)) {
+                                    return k;
+                                } else {
+                                    long labelId = StaticGraphStore.INSTANCE.getLabelId(k);
+                                    return String.valueOf(labelId);
+                                }
+                            }).collect(Collectors.toList()));
+                        } else if (predicate.getValue() instanceof String) {
+                            String value = (String) predicate.getValue();
+                            if (StringUtils.isNumeric(value)) {
+                                predicate.setValue(value);
+                            } else {
+                                long labelId = StaticGraphStore.INSTANCE.getLabelId(value);
+                                predicate.setValue(String.valueOf(labelId));
+                            }
+                        } else {
+                            throw new UnsupportedOperationException("hasLabel value type not support " + predicate.getValue().getClass());
                         }
-                        predicate.setValue(String.valueOf(labelId));
                     }
                 }
             } else if (step instanceof VertexStep) {
                 String[] edgeLabels = ((VertexStep) step).getEdgeLabels();
                 for (int j = 0; j < edgeLabels.length; ++j) {
-                    long labelId = StaticGraphStore.INSTANCE.getLabelId(edgeLabels[j]);
-                    if (labelId == StaticGraphStore.INVALID_ID) {
-                        logger.error("label id is invalid, check label {} exists", edgeLabels[j]);
-                        return;
+                    if (StringUtils.isNumeric(edgeLabels[j])) {
+                        // do nothing
+                    } else {
+                        long labelId = StaticGraphStore.INSTANCE.getLabelId(edgeLabels[j]);
+                        edgeLabels[j] = String.valueOf(labelId);
                     }
-                    edgeLabels[j] = String.valueOf(labelId);
                 }
             }
         }

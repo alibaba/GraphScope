@@ -40,7 +40,7 @@ public class StepTranslator extends AttributeTranslator<StepBuilder, Void> {
             if (constructorOpt.isPresent()) {
                 constructorOpt.get().attachResource(stepBuilder);
             } else {
-                logger.error("step resource {} not exist", step.getClass());
+                throw new UnsupportedOperationException("compiler not support StepResource of step " + step.getClass());
             }
             return null;
         };

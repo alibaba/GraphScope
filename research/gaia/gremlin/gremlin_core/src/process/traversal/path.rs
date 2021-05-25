@@ -14,8 +14,8 @@
 //! limitations under the License.
 
 use crate::structure::{Element, GraphElement, Tag};
-use crate::Object;
 use bit_set::BitSet;
+use dyn_type::Object;
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::downcast::*;
 use pegasus_common::io::{ReadExt, WriteExt};
@@ -217,25 +217,27 @@ impl Path {
         self.extend(labels);
     }
 
-    pub fn remove_tag(&mut self, labels_to_remove: &BitSet, _is_label_path: bool) {
-        let mut labels = self.tags.borrow_mut();
-        let history_len = self.history.len();
-        for s in labels_to_remove {
-            if let Some(&path_idx) = labels.get(s) {
-                if let Some(item_to_remove) = self.history.get_mut(path_idx) {
-                    // Mean it is the last item (head) to remove
-                    if path_idx == history_len - 1 {
-                        // The head must be stored for further traversal
-                        self.head = PathHead::Item(item_to_remove.clone());
+    pub fn remove_tag(&mut self, labels_to_remove: &BitSet) {
+        if !labels_to_remove.is_empty() {
+            let mut labels = self.tags.borrow_mut();
+            let history_len = self.history.len();
+            for s in labels_to_remove {
+                if let Some(&path_idx) = labels.get(s) {
+                    if let Some(item_to_remove) = self.history.get_mut(path_idx) {
+                        // Mean it is the last item (head) to remove
+                        if path_idx == history_len - 1 {
+                            // The head must be stored for further traversal
+                            self.head = PathHead::Item(item_to_remove.clone());
+                        }
+                        // Do not actually remove the item, but set it as a placeholder of `PathItem::Empty`
+                        *item_to_remove = PathItem::Empty;
+                        labels.remove(s);
+                    } else {
+                        error!(
+                            "Try to remove {} that is out of bound of the path history: {}",
+                            path_idx, history_len
+                        )
                     }
-                    // Do not actually remove the item, but set it as a placeholder of `PathItem::Empty`
-                    *item_to_remove = PathItem::Empty;
-                    labels.remove(s);
-                } else {
-                    error!(
-                        "Try to remove {} that is out of bound of the path history: {}",
-                        path_idx, history_len
-                    )
                 }
             }
         }
@@ -367,15 +369,15 @@ impl Deref for ResultPath {
 
 impl_as_any!(ResultPath);
 
-// TODO(yyy)
 impl Encode for ResultPath {
-    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
-        unimplemented!()
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        self.elements.write_to(writer)
     }
 }
 
 impl Decode for ResultPath {
-    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
-        unimplemented!()
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let elements = <Vec<PathItem>>::read_from(reader)?;
+        Ok(ResultPath { elements })
     }
 }

@@ -15,27 +15,17 @@
 
 use crate::generated::common as common_pb;
 use crate::generated::protobuf as pb_result;
-use crate::process::traversal::step::fold::FoldFunctionGen;
-use crate::process::traversal::step::util::StepSymbol;
-use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
-use crate::{str_to_dyn_error, DynResult};
+use crate::str_to_dyn_error;
 use pegasus::api::accum::{AccumFactory, Accumulator};
 use pegasus::api::function::{DynIter, EncodeFunction, FlatMapFunction, FnResult};
 use pegasus_common::downcast::AsAny;
 use pegasus_server::factory::{CompileResult, FoldFunction};
 use prost::Message;
 
-pub struct CommonFoldStep {}
-struct FoldFunc {}
+pub struct FoldFunc {}
 struct FoldUnfold {}
 struct FoldSink {}
-
-impl Step for CommonFoldStep {
-    fn get_symbol(&self) -> StepSymbol {
-        StepSymbol::Unfold
-    }
-}
 
 type DynFoldUnfold = Box<
     dyn FlatMapFunction<Box<dyn Accumulator<Traverser>>, Traverser, Target = DynIter<Traverser>>,
@@ -95,11 +85,5 @@ impl EncodeFunction<Box<dyn Accumulator<Traverser>>> for FoldSink {
             }
         }
         vec![]
-    }
-}
-
-impl FoldFunctionGen for CommonFoldStep {
-    fn gen(&self) -> DynResult<Box<dyn FoldFunction<Traverser>>> {
-        Ok(Box::new(FoldFunc {}))
     }
 }

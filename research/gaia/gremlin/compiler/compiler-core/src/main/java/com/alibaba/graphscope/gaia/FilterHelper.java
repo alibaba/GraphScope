@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.proto.Gremlin;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
@@ -75,6 +76,19 @@ public class FilterHelper {
         }
     }
 
+    public Gremlin.FilterExp idPredicate(final List<Number> ids, final BiPredicate predicate) {
+        Gremlin.Compare compare = convertFromBiPredicate(predicate);
+        if (ids == null || ids.isEmpty()) {
+            return hasId(compare, EncodeValue.fromNull());
+        } else if (ids.get(0) instanceof Long) {
+            return hasId(compare, EncodeValue.fromLongArray(ids.stream().map(k -> (Long) k).collect(Collectors.toList())));
+        } else if (ids.get(0) instanceof Number) {
+            return hasId(compare, EncodeValue.fromIntArray(ids.stream().map(k -> (Integer) k).collect(Collectors.toList())));
+        } else {
+            throw new UnsupportedOperationException("number type not supported " + ids.get(0).getClass());
+        }
+    }
+
     public static Gremlin.Compare convertFromBiPredicate(final BiPredicate predicate) {
         if (predicate == Compare.eq) {
             return Gremlin.Compare.EQ;
@@ -110,6 +124,19 @@ public class FilterHelper {
         }
     }
 
+    public Gremlin.FilterExp labelPredicate(final List<Number> labelIds, final BiPredicate predicate) {
+        Gremlin.Compare compare = convertFromBiPredicate(predicate);
+        if (labelIds == null || labelIds.isEmpty()) {
+            return hasLabel(compare, EncodeValue.fromNull());
+        } else if (labelIds.get(0) instanceof Integer) {
+            return hasLabel(compare, EncodeValue.fromIntArray(labelIds.stream().map(k -> (Integer) k).collect(Collectors.toList())));
+        } else if (labelIds.get(0) instanceof Long) {
+            return hasLabel(compare, EncodeValue.fromLongArray(labelIds.stream().map(k -> (Long) k).collect(Collectors.toList())));
+        } else {
+            throw new UnsupportedOperationException("number type not supported " + labelIds.get(0).getClass());
+        }
+    }
+
     public Gremlin.FilterExp propertyPredicate(final String name, final Number value, final BiPredicate predicate) {
         Gremlin.Compare compare = convertFromBiPredicate(predicate);
         if (value == null) {
@@ -118,6 +145,8 @@ public class FilterHelper {
             return hasProperty(name, compare, EncodeValue.fromLong(value.longValue()));
         } else if (value instanceof Integer) {
             return hasProperty(name, compare, EncodeValue.fromInt(value.intValue()));
+        } else if (value instanceof Double || value instanceof Float || value instanceof BigDecimal) {
+            return hasProperty(name, compare, EncodeValue.fromDouble(value.doubleValue()));
         } else {
             throw new UnsupportedOperationException("number type not supported " + value.getClass());
         }
@@ -133,6 +162,8 @@ public class FilterHelper {
             return hasProperty(name, compare, EncodeValue.fromIntArray(value.stream().map(k -> (Integer) k).collect(Collectors.toList())));
         } else if (value.get(0) instanceof Long) {
             return hasProperty(name, compare, EncodeValue.fromLongArray(value.stream().map(k -> (Long) k).collect(Collectors.toList())));
+        } else if (value.get(0) instanceof Double || value.get(0) instanceof Float) {
+            return hasProperty(name, compare, EncodeValue.fromDoubleArray(value.stream().map(k -> Double.valueOf(((Number) value).doubleValue())).collect(Collectors.toList())));
         } else {
             throw new UnsupportedOperationException("cannot support other list value type " + value.get(0).getClass());
         }
@@ -148,14 +179,18 @@ public class FilterHelper {
         return Gremlin.FilterChain.newBuilder().addNode(0, Gremlin.FilterNode.newBuilder().setSingle(simple)).build();
     }
 
-    public Gremlin.FilterValueExp valueComparePredicate(final Number id, final BiPredicate predicate) {
+    public Gremlin.FilterValueExp valueComparePredicate(final Object value, final BiPredicate predicate) {
         Gremlin.Compare compare = convertFromBiPredicate(predicate);
-        if (id instanceof Long) {
-            return Gremlin.FilterValueExp.newBuilder().setCmp(compare).setRight(EncodeValue.fromLong(id.longValue())).build();
-        } else if (id instanceof Integer) {
-            return Gremlin.FilterValueExp.newBuilder().setCmp(compare).setRight(EncodeValue.fromInt(id.intValue())).build();
+        if (value instanceof Long) {
+            return Gremlin.FilterValueExp.newBuilder().setCmp(compare).setRight(EncodeValue.fromLong(((Number) value).longValue())).build();
+        } else if (value instanceof Integer) {
+            return Gremlin.FilterValueExp.newBuilder().setCmp(compare).setRight(EncodeValue.fromInt(((Number) value).intValue())).build();
+        } else if (value instanceof Double || value instanceof Float || value instanceof BigDecimal) {
+            return Gremlin.FilterValueExp.newBuilder().setCmp(compare).setRight(EncodeValue.fromDouble(((Number) value).doubleValue())).build();
+        } else if (value instanceof String) {
+            return Gremlin.FilterValueExp.newBuilder().setCmp(compare).setRight(EncodeValue.fromString((String) value)).build();
         } else {
-            throw new UnsupportedOperationException("number type not supported " + id.getClass());
+            throw new UnsupportedOperationException("number type not supported " + value.getClass());
         }
     }
 }

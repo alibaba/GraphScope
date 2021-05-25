@@ -13,9 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::common::object::Primitives;
 use crate::generated::common as common_pb;
 use crate::generated::protobuf as result_pb;
+use crate::generated::protobuf::OneTagValue;
 use crate::process::traversal::path::{PathItem, ResultPath};
 use crate::process::traversal::step::result_downcast::{
     try_downcast_count, try_downcast_list, try_downcast_pair,
@@ -23,7 +23,7 @@ use crate::process::traversal::step::result_downcast::{
 use crate::process::traversal::step::ResultProperty;
 use crate::process::traversal::traverser::Traverser;
 use crate::structure::{Edge, GraphElement, Label, Vertex, VertexOrEdge};
-use crate::Object;
+use dyn_type::object::{Object, Primitives};
 
 fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
     result_pb::Vertex {
@@ -42,7 +42,7 @@ fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
 }
 fn edge_to_pb(e: &Edge) -> result_pb::Edge {
     result_pb::Edge {
-        id: e.id as i64,
+        id: e.id.to_string(),
         label: if let Some(label) = e.label.clone() {
             match label {
                 Label::Str(s) => s,
@@ -82,19 +82,35 @@ fn path_to_pb(path: &ResultPath) -> result_pb::Path {
     result_pb::Path { path: path_pb }
 }
 
-fn property_to_pb(result_property: &ResultProperty) -> result_pb::TagProperties {
-    let mut tag_props_pb = vec![];
-    for (tag, props_key_value) in result_property.properties.iter() {
-        let mut props_pb = vec![];
-        for (key, value) in props_key_value {
+fn property_to_pb(result_property: &ResultProperty) -> result_pb::TagEntries {
+    let mut tag_entries = vec![];
+    for (tag, one_tag_value) in result_property.tag_entries.iter() {
+        let one_tag_value_pb = if let Some(element) = one_tag_value.graph_element.as_ref() {
+            let pb_element = element_to_pb(element);
+            OneTagValue { item: Some(result_pb::one_tag_value::Item::Element(pb_element)) }
+        } else if let Some(value) = one_tag_value.value.as_ref() {
             let pb_value = object_to_pb_value(value);
-            let property = result_pb::Property { key: key.to_string(), value: Some(pb_value) };
-            props_pb.push(property);
-        }
-        let tag_property = result_pb::TagProperty { tag: tag.clone() as i32, props: props_pb };
-        tag_props_pb.push(tag_property);
+            OneTagValue { item: Some(result_pb::one_tag_value::Item::Value(pb_value)) }
+        } else if let Some(value_map) = one_tag_value.properties.as_ref() {
+            let mut props_pb = vec![];
+            for (prop_name, prop_val) in value_map {
+                let pb_value = object_to_pb_value(prop_val);
+                let property =
+                    result_pb::Property { key: prop_name.to_string(), value: Some(pb_value) };
+                props_pb.push(property);
+            }
+            OneTagValue {
+                item: Some(result_pb::one_tag_value::Item::Properties(
+                    result_pb::ValueMapEntries { property: props_pb },
+                )),
+            }
+        } else {
+            OneTagValue { item: None }
+        };
+        let tag_entry = result_pb::TagEntry { tag: *tag as i32, value: Some(one_tag_value_pb) };
+        tag_entries.push(tag_entry);
     }
-    result_pb::TagProperties { item: tag_props_pb }
+    result_pb::TagEntries { entries: tag_entries }
 }
 
 fn object_to_pb_value(value: &Object) -> common_pb::Value {
@@ -112,7 +128,7 @@ fn object_to_pb_value(value: &Object) -> common_pb::Value {
         }
         Object::String(s) => common_pb::value::Item::Str(s.clone()),
         Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
-        Object::UnknownOwned(_u) => {
+        Object::DynOwned(_u) => {
             if let Some(count_val) = try_downcast_count(value) {
                 common_pb::value::Item::I64(count_val as i64)
             } else {
@@ -120,7 +136,6 @@ fn object_to_pb_value(value: &Object) -> common_pb::Value {
                 unimplemented!()
             }
         }
-        Object::UnknownRef(_) => unimplemented!(),
     };
     common_pb::Value { item: Some(item) }
 }
@@ -179,7 +194,7 @@ pub fn result_to_pb(data: Vec<Traverser>) -> result_pb::Result {
                     info!("object result {:?}", o);
                     values_encode.push(object_to_pb_value(o));
                 }
-                Object::UnknownOwned(x) => {
+                Object::DynOwned(x) => {
                     if let Some(p) = x.try_downcast_ref::<ResultPath>() {
                         info!("path: {:?}", p);
                         paths_encode.push(path_to_pb(p));
@@ -198,7 +213,6 @@ pub fn result_to_pb(data: Vec<Traverser>) -> result_pb::Result {
                         info!("other object result {:?}", x);
                     }
                 }
-                _ => unreachable!(),
             }
         } else {
             info!("object result is none!");
@@ -211,8 +225,8 @@ pub fn result_to_pb(data: Vec<Traverser>) -> result_pb::Result {
         let paths = result_pb::PathArray { item: paths_encode };
         result_pb::Result { inner: Some(result_pb::result::Inner::Paths(paths)) }
     } else if !properties_encode.is_empty() {
-        let properties = result_pb::TagPropertiesArray { item: properties_encode };
-        result_pb::Result { inner: Some(result_pb::result::Inner::TagProperties(properties)) }
+        let properties = result_pb::TagEntriesArray { item: properties_encode };
+        result_pb::Result { inner: Some(result_pb::result::Inner::TagEntries(properties)) }
     } else if !pairs_encode.is_empty() {
         let map = result_pb::MapArray { item: pairs_encode };
         result_pb::Result { inner: Some(result_pb::result::Inner::MapResult(map)) }

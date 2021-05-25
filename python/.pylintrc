@@ -16,7 +16,7 @@ ignore=CVS
 # regex matches against base names, not paths.
 ignore-patterns=.*_pb2,
                 .*_pb2_grpc,
-                graphscope/experimental/.*
+                graphscope/nx/.*
                 jupyter/graphscope/node_modules/.*
 
 # Python code to execute, usually for sys.path manipulation such as

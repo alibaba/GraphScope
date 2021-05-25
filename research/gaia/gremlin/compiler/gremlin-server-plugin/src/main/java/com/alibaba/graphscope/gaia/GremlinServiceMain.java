@@ -18,9 +18,9 @@ package com.alibaba.graphscope.gaia;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.processor.LogicPlanProcessor;
 import com.alibaba.graphscope.gaia.processor.MaxGraphOpProcessor;
+import com.alibaba.graphscope.gaia.processor.TraversalOpProcessor;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
-import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.op.OpLoader;
@@ -29,8 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class GremlinServiceMain {
@@ -41,12 +39,13 @@ public class GremlinServiceMain {
         Settings settings = load();
         // read default engine conf
         GlobalEngineConf.setDefaultSysConf(JsonUtils.fromJson(
-                FileUtils.readFileToString(new File("conf/gaia.args.json"), StandardCharsets.UTF_8), new TypeReference<Map<String, Object>>() {
+                PlanUtils.readJsonFromFile("conf/gaia.args.json"), new TypeReference<Map<String, Object>>() {
                 })
         );
         GremlinServer server = new GremlinServer(settings);
         // todo: better way to modify op loader
-        PlanUtils.setFinalStaticField(OpLoader.class, "processors", ImmutableMap.of("", new MaxGraphOpProcessor(), "plan", new LogicPlanProcessor()));
+        PlanUtils.setFinalStaticField(OpLoader.class, "processors",
+                ImmutableMap.of("", new MaxGraphOpProcessor(), "plan", new LogicPlanProcessor(), "traversal", new TraversalOpProcessor()));
         // todo: better way to set global bindings {graph, g}
         Bindings globalBindings = PlanUtils.getGlobalBindings(server.getServerGremlinExecutor().getGremlinExecutor());
         Graph traversalGraph = server.getServerGremlinExecutor().getGraphManager().getGraph("graph");

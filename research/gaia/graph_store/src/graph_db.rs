@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,6 @@ use crate::common::*;
 use crate::error::GDBResult;
 use crate::parser::DataType;
 use crate::schema::Schema;
-use crate::serde_json::Value as JsonValue;
 use crate::table::*;
 use crate::utils::Iter;
 use petgraph::graph::{EdgeIndex, IndexType};
@@ -27,6 +26,10 @@ use std::sync::Arc;
 
 use itertools::Itertools;
 pub use petgraph::Direction;
+
+/// Edge id is associated with its start/end-vertex's id given by `G`, and an internal index
+/// associated with the start/end vertex.
+pub type EdgeId<G> = (G, usize);
 
 /// Construct a row with its schema
 #[derive(Clone)]
@@ -56,11 +59,11 @@ impl<'a> RowWithSchema<'a> {
     /// * `key` can be a property name, which can be used to search the index of the field from `Self::header`.
     /// * `key` can also be a number-value, giving the index directly in case that `Self::header` is `None`
     ///
-    /// Return a `JsonValue` indicating the data type and value, and `None` if:
+    /// Return a `BorrowObject` indicating the data type and value, and `None` if:
     /// * `Self::header` is `None` and `key` is not a number value
     /// * The property given by `key` does not exist
     ///
-    pub fn get(&self, key: &str) -> Option<&JsonValue> {
+    pub fn get(&self, key: &str) -> Option<ItemTypeRef> {
         if let Some(header) = &self.header {
             if let Some((_, index)) = header.get(key) {
                 self.row.get(*index)
@@ -77,15 +80,17 @@ impl<'a> RowWithSchema<'a> {
     }
 
     /// Turn into a map of all properties
-    pub fn into_properties(self) -> Option<JsonValue> {
+    pub fn into_properties(self) -> Option<HashMap<String, ItemType>> {
         self.header.and_then(|header| {
             let mut map = HashMap::new();
             for (key, (_, index)) in header.iter().sorted_by(|x, y| x.1 .1.cmp(&y.1 .1)) {
                 if let Some(val) = self.row.get(*index) {
-                    map.insert(key.clone(), val.clone());
+                    if let Some(obj) = val.try_to_owned() {
+                        map.insert(key.clone(), obj);
+                    }
                 }
             }
-            Some(json!(map))
+            Some(map)
         })
     }
 }
@@ -99,16 +104,16 @@ pub struct LocalVertex<'a, G: IndexType> {
     label: Label,
     /// A property reference maintains a `Row` view of the properties, which is either
     /// a reference or an owned structure, depending on the form of storage.
-    prop_row: Option<RowWithSchema<'a>>,
+    properties: Option<RowWithSchema<'a>>,
 }
 
 impl<'a, G: IndexType> LocalVertex<'a, G> {
     pub fn new(id: G, label: Label) -> Self {
-        LocalVertex { id, label, prop_row: None }
+        LocalVertex { id, label, properties: None }
     }
 
-    pub fn with_property(id: G, label: Label, prop_row: Option<RowWithSchema<'a>>) -> Self {
-        LocalVertex { id, label, prop_row }
+    pub fn with_property(id: G, label: Label, properties: Option<RowWithSchema<'a>>) -> Self {
+        LocalVertex { id, label, properties }
     }
 
     pub fn get_id(&self) -> G {
@@ -119,27 +124,13 @@ impl<'a, G: IndexType> LocalVertex<'a, G> {
         self.label
     }
 
-    pub fn get_property(&self, key: &str) -> Option<&JsonValue> {
-        self.prop_row.as_ref().and_then(|prop| prop.get(key))
+    pub fn get_property(&self, key: &str) -> Option<ItemTypeRef> {
+        self.properties.as_ref().and_then(|prop| prop.get(key))
     }
 
-    pub fn clone_all_properties(&self) -> Option<JsonValue> {
-        self.prop_row.as_ref().and_then(|prop| prop.clone().into_properties())
+    pub fn clone_all_properties(&self) -> Option<HashMap<String, ItemType>> {
+        self.properties.as_ref().and_then(|prop| prop.clone().into_properties())
     }
-}
-
-/// A data structure to maintain a local view of the edge from the query vertex,
-/// which may be the start or the end vertex of this edge, depending on the query.
-#[derive(Debug, Clone)]
-pub struct LocalAdjEdge<'a, G: IndexType, I: IndexType> {
-    /// The other end of the edge, w.r.t. to the query vertex
-    neighbor: G,
-    /// The edge's internal id, not exposed externally
-    _edge_id: EdgeIndex<I>,
-
-    /// A property reference maintains a `Row` view of the properties, which is either
-    /// a reference or an owned structure, depending on the form of storage.
-    prop_row: Option<RowWithSchema<'a>>,
 }
 
 /// A data structure to maintain a local view of the edge.
@@ -151,20 +142,40 @@ pub struct LocalEdge<'a, G: IndexType, I: IndexType> {
     end: G,
     /// The edge label id
     label: LabelId,
-    _edge_id: EdgeIndex<I>,
-    prop_row: Option<RowWithSchema<'a>>,
+    /// Whether this edge has been obtained from `Self::start`
+    from_start: bool,
+    /// The internal edge id associated with either `Self::start` or `Self::end`
+    edge_id: EdgeIndex<I>,
+    /// The properties of the edge if any
+    properties: Option<RowWithSchema<'a>>,
 }
 
 impl<'a, G: IndexType, I: IndexType> LocalEdge<'a, G, I> {
-    pub fn new(start: G, end: G, label: LabelId, _edge_id: EdgeIndex<I>) -> Self {
-        LocalEdge { start, end, label, _edge_id, prop_row: None }
+    pub fn new(start: G, end: G, label: LabelId, edge_id: EdgeIndex<I>) -> Self {
+        LocalEdge { start, end, label, from_start: true, edge_id, properties: None }
     }
 
-    pub fn with_property(
-        start: G, end: G, label: LabelId, _edge_id: EdgeIndex<I>,
-        prop_row: Option<RowWithSchema<'a>>,
-    ) -> Self {
-        LocalEdge { start, end, label, _edge_id, prop_row }
+    /// Set the properties of this edge
+    pub fn with_properties(mut self, properties: Option<RowWithSchema<'a>>) -> Self {
+        self.properties = properties;
+        self
+    }
+
+    /// Set the `from_start` indicator
+    pub fn with_from_start(mut self, from_start: bool) -> Self {
+        self.from_start = from_start;
+        self
+    }
+
+    /// An edge is uniquely indiced by its start/end vertex's global id, as well
+    /// as its internal id indiced from this start/end-vertex.
+    /// Whether this is a start/end vertex, is determined by `Self::from_start`
+    pub fn get_edge_id(&self) -> EdgeId<G> {
+        if self.from_start {
+            (self.start, self.edge_id.index())
+        } else {
+            (self.end, self.edge_id.index())
+        }
     }
 
     pub fn get_src_id(&self) -> G {
@@ -175,20 +186,26 @@ impl<'a, G: IndexType, I: IndexType> LocalEdge<'a, G, I> {
         self.end
     }
 
+    /// Get the other vertex of this edge.
+    /// If `Self::from_start`, return `Self::end`, otherwise, return `Self::start`
+    pub fn get_other_id(&self) -> G {
+        if self.from_start {
+            self.end
+        } else {
+            self.start
+        }
+    }
+
     pub fn get_label(&self) -> LabelId {
         self.label
     }
 
-    pub fn get_property(&self, key: &str) -> Option<&JsonValue> {
-        if let Some(prop_row) = &self.prop_row {
-            prop_row.get(key)
-        } else {
-            None
-        }
+    pub fn get_property(&self, key: &str) -> Option<ItemTypeRef> {
+        self.properties.as_ref().and_then(|prop| prop.get(key))
     }
 
-    pub fn clone_all_properties(&self) -> Option<JsonValue> {
-        self.prop_row.as_ref().and_then(|prop| prop.clone().into_properties())
+    pub fn clone_all_properties(&self) -> Option<HashMap<String, ItemType>> {
+        self.properties.as_ref().and_then(|prop| prop.clone().into_properties())
     }
 }
 
@@ -260,6 +277,9 @@ pub trait GlobalStoreTrait<G: IndexType, I: IndexType> {
 
     /// Get the vertex of given global identity
     fn get_vertex(&self, id: G) -> Option<LocalVertex<G>>;
+
+    /// Get the edge of given source vertex id and its internal index
+    fn get_edge(&self, edge_id: EdgeId<G>) -> Option<LocalEdge<G, I>>;
 
     /// Get all vertices of a given labels. If `None` label is given, return all vertices.
     fn get_all_vertices(&self, labels: Option<&Vec<LabelId>>) -> Iter<LocalVertex<G>>;

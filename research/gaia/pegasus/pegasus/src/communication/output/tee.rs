@@ -61,30 +61,39 @@ impl<D: Data> ChannelPush<D> {
 
     #[inline]
     fn check_skip(&mut self, msg: &DataSet<D>) -> bool {
-        if !self.skips.is_empty() && self.skips.contains(&msg.tag) {
-            self.skip_st += msg.len();
-            if crate::worker_id::is_in_trace() {
-                debug_worker!(
-                    "cancel output {} data of scope {:?} in ch: {}",
-                    msg.len(),
-                    msg.tag,
-                    self.index
-                );
+        if !self.skips.is_empty() {
+            for tag in &self.skips {
+                if tag.is_parent_of(&msg.tag) || tag.eq(&msg.tag) {
+                    self.skip_st += msg.len();
+                    if crate::worker_id::is_in_trace() {
+                        debug_worker!(
+                            "cancel output {} data of scope {:?} in ch: {}",
+                            msg.len(),
+                            msg.tag,
+                            self.index
+                        );
+                    }
+                    return true;
+                }
             }
-            true
+            false
         } else if !self.parent_skips.is_empty()
-            && self.parent_skips.contains(&msg.tag.to_parent_uncheck())
         {
-            self.skip_st += msg.len();
-            if crate::worker_id::is_in_trace() {
-                debug_worker!(
-                    "cancel output {} data of scope {:?} in ch: {}",
-                    msg.len(),
-                    msg.tag,
-                    self.index
-                );
+            for tag in &self.parent_skips {
+                if tag.is_parent_of(&msg.tag) || tag.eq(&msg.tag) {
+                    self.skip_st += msg.len();
+                    if crate::worker_id::is_in_trace() {
+                        debug_worker!(
+                            "cancel output {} data of scope {:?} in ch: {}",
+                            msg.len(),
+                            msg.tag,
+                            self.index
+                        );
+                    }
+                    return true;
+                }
             }
-            true
+            false
         } else {
             false
         }
@@ -94,7 +103,7 @@ impl<D: Data> ChannelPush<D> {
     pub fn skip(&mut self, tag: &Tag) {
         if tag.len() == self.scope_depth {
             self.skips.insert(tag.clone());
-        } else if tag.len() + 1 == self.scope_depth {
+        } else if tag.len() < self.scope_depth {
             self.parent_skips.insert(tag.clone());
         }
     }
@@ -103,7 +112,7 @@ impl<D: Data> ChannelPush<D> {
     pub fn remove_skip(&mut self, tag: &Tag) {
         if tag.len() == self.scope_depth {
             self.skips.remove(tag);
-        } else if tag.len() + 1 == self.scope_depth {
+        } else if tag.len() < self.scope_depth {
             self.parent_skips.remove(tag);
         }
     }
@@ -122,12 +131,8 @@ impl<D: Data> ChannelPush<D> {
                 false
             }
         } else {
-            if let Some(parent) = tag.to_parent() {
-                if !self.parent_skips.is_empty() {
-                    self.parent_skips.contains(&parent)
-                } else {
-                    false
-                }
+            if !self.parent_skips.is_empty() {
+                true
             } else {
                 false
             }

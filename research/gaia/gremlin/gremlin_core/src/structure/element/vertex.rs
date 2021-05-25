@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::structure::element::{Element, Label, ID};
+use crate::structure::element::{read_id, write_id, Element, Label, ID};
 use crate::structure::property::DynDetails;
 use crate::structure::Details;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -27,7 +27,7 @@ pub struct Vertex {
 }
 
 impl Vertex {
-    pub fn new<D: Details + 'static>(id: u128, label: Option<Label>, details: D) -> Self {
+    pub fn new<D: Details + 'static>(id: ID, label: Option<Label>, details: D) -> Self {
         Vertex { id, label, details: DynDetails::new(details) }
     }
 }
@@ -52,7 +52,7 @@ impl Element for Vertex {
 
 impl Encode for Vertex {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u128(self.id)?;
+        write_id(self.id, writer)?;
         self.label.write_to(writer)?;
         self.details.write_to(writer)?;
         Ok(())
@@ -61,7 +61,7 @@ impl Encode for Vertex {
 
 impl Decode for Vertex {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let id = <u128>::read_from(reader)?;
+        let id = read_id(reader)?;
         let label = <Option<Label>>::read_from(reader)?;
         let details = <DynDetails>::read_from(reader)?;
         Ok(Vertex { id, label, details })

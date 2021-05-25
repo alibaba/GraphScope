@@ -306,10 +306,17 @@ class ArrowFragmentAppender {
                                                         buffer->size());
 
     std::shared_ptr<arrow::csv::TableReader> reader;
+#if defined(ARROW_VERSION) && ARROW_VERSION >= 4000000
+    ARROW_OK_ASSIGN_OR_RAISE(
+        reader, arrow::csv::TableReader::Make(
+                    arrow::io::IOContext(pool), input, read_options,
+                    parse_options, arrow::csv::ConvertOptions::Defaults()));
+#else
     ARROW_OK_ASSIGN_OR_RAISE(
         reader,
         arrow::csv::TableReader::Make(pool, input, read_options, parse_options,
                                       arrow::csv::ConvertOptions::Defaults()));
+#endif
 
     std::shared_ptr<arrow::Table> table;
     ARROW_OK_ASSIGN_OR_RAISE(table, reader->Read());

@@ -28,6 +28,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
@@ -38,31 +39,40 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceEdge;
+import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceVertex;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class PlanUtils {
     private static final Logger logger = LoggerFactory.getLogger(PlanUtils.class);
     public static final String DIRECTION_OTHER = "OTHER";
 
-    public static List<Long> intIdsAsLongList(Object[] ids) {
-        List<Long> longList = new ArrayList<>();
+    public static List<String> extractIds(Object[] ids) {
+        List<String> resultIds = new ArrayList<>();
         for (Object id : ids) {
-            if (id instanceof Long) {
-                longList.add(((Long) id));
-            } else if (id instanceof Integer) {
-                longList.add(((Integer) id).longValue());
+            if (id instanceof Long || id instanceof Integer || id instanceof BigInteger) {
+                resultIds.add(String.valueOf(id));
+            } else if (id instanceof ReferenceVertex) {
+                resultIds.add(String.valueOf(((ReferenceVertex) id).id()));
+            } else if (id instanceof ReferenceEdge) {
+                resultIds.add(String.valueOf(((ReferenceEdge) id).id()));
+            } else if (id instanceof String) {
+                resultIds.add((String) id);
             } else {
                 throw new RuntimeException("invalid id type " + id.getClass());
             }
         }
-        return longList;
+        return resultIds;
     }
 
     public static PegasusClient.JobConfig getDefaultConfig(long queryId) {
@@ -178,7 +188,8 @@ public class PlanUtils {
             List<Object> results = new ArrayList<>();
             results.add(Collections.singletonMap("source", printGremlinStep(job.getSource())));
             job.getPlan().getPlan().forEach(k -> results.add(printOpr(k)));
-            logger.info("{}", JsonUtils.toJson(results));
+            // logger.info("{}", JsonUtils.toJson(results));
+            FileUtils.writeStringToFile(new File("plan.log"), JsonUtils.toJson(results), StandardCharsets.UTF_8, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -337,6 +348,8 @@ public class PlanUtils {
             return Gremlin.SubTaskJoiner.newBuilder().setByJoiner(Gremlin.ByJoiner.newBuilder()).build();
         } else if (type == BySubTaskStep.JoinerType.GroupValueBy) {
             return Gremlin.SubTaskJoiner.newBuilder().setGroupValueJoiner(Gremlin.GroupValueJoiner.newBuilder()).build();
+        } else if (type == BySubTaskStep.JoinerType.Select) {
+            return Gremlin.SubTaskJoiner.newBuilder().setSelectByJoiner(Gremlin.SelectBySubJoin.newBuilder()).build();
         } else {
             throw new UnsupportedOperationException("cannot support other by joiner type " + type);
         }
@@ -344,5 +357,13 @@ public class PlanUtils {
 
     public static IdMaker getTagIdMaker(Configuration conf) {
         return (IdMaker) conf.getProperty(PlanConfig.TAG_ID_MAKER);
+    }
+
+    public static String readJsonFromFile(String fileName) {
+        try {
+            return FileUtils.readFileToString(new File(fileName), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

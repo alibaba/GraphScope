@@ -19,8 +19,9 @@ use crate::process::traversal::path::{Path, PathItem, ResultPath};
 use crate::process::traversal::pop::Pop;
 use crate::structure::codec::ParseError;
 use crate::structure::{GraphElement, Tag};
-use crate::{DynIter, Element, FromPb, Object};
+use crate::{DynIter, Element, FromPb};
 use bit_set::BitSet;
+use dyn_type::Object;
 use pegasus::api::function::{FnResult, Partition};
 use pegasus::codec::*;
 use pegasus::Data;
@@ -166,23 +167,13 @@ impl Traverser {
         }
     }
 
-    pub fn modify_head<E: Into<GraphElement>>(&mut self, e: E, tags: &BitSet) {
-        match self {
-            Traverser::Path(p) | Traverser::LabeledPath(p) => {
-                p.modify_head_with(e, tags);
-            }
-            Traverser::NoPath(ori) => *ori = e.into(),
-            Traverser::Object(_) => unimplemented!(),
-        }
-    }
-
     pub fn remove_tags(&mut self, tags: &BitSet) {
         match self {
             Traverser::Path(p) => {
                 debug!("Remove tags {:?} in Path {:?}, but why?", tags, p);
-                p.remove_tag(tags, false)
+                p.remove_tag(tags)
             }
-            Traverser::LabeledPath(p) => p.remove_tag(tags, true),
+            Traverser::LabeledPath(p) => p.remove_tag(tags),
             Traverser::NoPath(e) => {
                 debug!("Try remove tags {:?} in NoPath {:?}, but will not", tags, e)
             }
@@ -516,6 +507,6 @@ impl AnyData for Traverser {}
 impl Traverser {
     pub fn with<T: Data + Eq>(raw: T) -> Self {
         let v = ShadeSync { inner: raw };
-        Traverser::Object(Object::UnknownOwned(Box::new(v)))
+        Traverser::Object(Object::DynOwned(Box::new(v)))
     }
 }

@@ -92,8 +92,9 @@ RUN cd /tmp && \
 
 # boost v1.73.0
 RUN cd /tmp && \
-    git clone -b boost-1.73.0 --recursive https://github.com/boostorg/boost.git && \
-    cd ./boost && \
+    wget https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.gz && \
+    tar zxvf boost_1_73_0.tar.gz && \
+    cd boost_1_73_0 && \
     ./bootstrap.sh && \
     ./b2 headers && \
     rm -fr /tmp/boost-1.73.0
@@ -259,10 +260,20 @@ RUN yum install -y perl java-1.8.0-openjdk-devel && \
     yum clean all && \
     rm -fr /var/cache/yum
 
+# install hadoop
+RUN cd /tmp && \
+    wget https://archive.apache.org/dist/hadoop/core/hadoop-2.8.4/hadoop-2.8.4.tar.gz && \
+    tar zxf hadoop-2.8.4.tar.gz -C /usr/local && \
+    rm -rf hadoop-2.8.4.tar.gz
+
+ENV JAVA_HOME /usr/lib/jvm/java
 ENV HADOOP_HOME /usr/local/hadoop-2.8.4
 ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
-ENV CLASSPATH $HADOOP_CONF_DIR:$CLASSPATH
+ENV HADOOP_COMMON_LIB_NATIVE_DIR $HADOOP_HOME/lib/native
+
 ENV PATH $PATH:$HADOOP_HOME/bin
+
+RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /etc/bashrc'
 
 # Prepare and set workspace
 RUN mkdir -p /root/maxgraph \

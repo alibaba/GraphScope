@@ -145,7 +145,7 @@ fn test_subtask_fork_count_join() {
             let subtask = p.fork_subtask(|stream| {
                 stream
                     .flat_map_with_fn(Pipeline, |item| {
-                        let size = (item + 1) as usize;
+                        let size = (item + 4000) as usize;
                         Ok(vec![item; size].into_iter().map(|x| Ok(x)))
                     })?
                     .count(Range::Local)
@@ -168,7 +168,7 @@ fn test_subtask_fork_count_join() {
     std::mem::drop(tx);
     while let Ok(r) = rx.recv() {
         for (i, count) in r {
-            assert_eq!(i + 1, count as u32);
+            assert_eq!(i + 4000, count as u32);
         }
     }
     pegasus::shutdown_all();

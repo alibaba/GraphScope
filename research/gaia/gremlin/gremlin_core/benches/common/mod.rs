@@ -16,6 +16,7 @@
 
 #[cfg(test)]
 #[allow(dead_code)]
+#[allow(unused_imports)]
 pub mod benchmark {
 
     lazy_static! {
@@ -33,7 +34,7 @@ pub mod benchmark {
     use gremlin_core::process::traversal::traverser::{Requirement, Traverser};
     use gremlin_core::GremlinStepPb;
     pub use gremlin_core::ID;
-    use gremlin_core::{create_demo_graph, DynIter, Partitioner};
+    use gremlin_core::{create_demo_graph, DynIter, Partition, Partitioner};
     use pegasus::api::function::{
         CompareFunction, EncodeFunction, FilterFunction, FlatMapFunction, LeftJoinFunction,
         MapFunction, MultiRouteFunction, RouteFunction,
@@ -81,7 +82,7 @@ pub mod benchmark {
     impl BenchJobFactory {
         pub fn new(substitute_src_ids: Vec<ID>, requirement: Requirement) -> Self {
             BenchJobFactory {
-                inner: GremlinJobCompiler::new(TestPartition, 1, 0),
+                inner: GremlinJobCompiler::new(Partition { num_servers: 1 }, 1, 0),
                 substitute_src_ids,
                 requirement,
             }
@@ -102,13 +103,13 @@ pub mod benchmark {
                 .map_err(|e| format!("protobuf decode failure: {}", e))?;
             let num_servers = self.inner.get_num_servers();
             if let Some(worker_id) = pegasus::get_current_worker() {
-                let num_workers = worker_id.peers / num_servers;
+                let num_workers = worker_id.peers as usize / num_servers;
                 let mut step = graph_step_from(&mut gremlin_step, num_servers)?;
                 step.set_num_workers(num_workers);
                 step.set_server_index(0);
                 step.set_src(self.substitute_src_ids.clone(), num_servers);
                 step.set_requirement(self.requirement);
-                Ok(step.gen_source(Some(worker_id.index)))
+                Ok(step.gen_source(Some(worker_id.index as usize)))
             } else {
                 let mut step = graph_step_from(&mut gremlin_step, num_servers)?;
                 step.set_server_index(0);
@@ -203,16 +204,8 @@ pub mod benchmark {
         }
     }
 
-    pub struct TestPartition;
-
-    impl Partitioner for TestPartition {
-        fn get_partition(&self, _: &u128, _: u32) -> u64 {
-            0
-        }
-    }
-
     #[derive(Clone)]
-    pub struct TestOutputStruct;
+    struct TestOutputStruct;
 
     impl Output for TestOutputStruct {
         fn send(&self, res: JobResponse) {

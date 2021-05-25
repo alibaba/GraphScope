@@ -13,9 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::common::object::BorrowObject;
-use crate::structure::element::Label;
-use crate::{Object, ID};
+use crate::structure::element::{read_id, write_id, Label};
+use crate::ID;
+use dyn_type::{BorrowObject, Object};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use std::collections::HashMap;
@@ -145,7 +145,7 @@ impl Details for DefaultDetails {
 
 impl Encode for DefaultDetails {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u128(self.id)?;
+        write_id(self.id, writer)?;
         self.label.write_to(writer)?;
         writer.write_u64(self.inner.len() as u64)?;
         for (k, v) in &self.inner {
@@ -158,7 +158,7 @@ impl Encode for DefaultDetails {
 
 impl Decode for DefaultDetails {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let id = reader.read_u128()?;
+        let id = read_id(reader)?;
         let label = <Label>::read_from(reader)?;
         let len = reader.read_u64()?;
         let mut map = HashMap::with_capacity(len as usize);

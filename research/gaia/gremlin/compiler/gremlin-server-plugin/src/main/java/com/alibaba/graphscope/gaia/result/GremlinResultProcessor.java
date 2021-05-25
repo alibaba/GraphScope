@@ -19,6 +19,7 @@ import com.alibaba.graphscope.common.proto.GremlinResult;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.alibaba.graphscope.gaia.processor.MaxGraphOpProcessor;
+import com.google.protobuf.ByteString;
 import io.grpc.Status;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.server.Context;
@@ -34,9 +35,11 @@ public class GremlinResultProcessor implements ResultProcessor {
     private Context writeResult;
     private List<Object> resultCollectors = new ArrayList<>();
     private boolean locked = false;
+    private ResultParser resultParser;
 
-    public GremlinResultProcessor(Context writeResult) {
+    public GremlinResultProcessor(Context writeResult, ResultParser resultParser) {
         this.writeResult = writeResult;
+        this.resultParser = resultParser;
     }
 
     @Override
@@ -47,16 +50,20 @@ public class GremlinResultProcessor implements ResultProcessor {
                     logger.debug("start to process response");
                     if (response.getResultCase() == PegasusClient.JobResponse.ResultCase.DATA) {
                         GremlinResult.Result resultData = GremlinResult.Result.parseFrom(response.getData());
+                        if (resultData.toByteString().equals(ByteString.EMPTY)) {
+                            logger.info("data is empty");
+                        }
                         logger.debug("data is {}", resultData);
-                        resultCollectors.addAll(ResultParser.parseFrom(resultData));
+                        resultCollectors.addAll(resultParser.parseFrom(resultData));
                     } else if (response.getResultCase() == PegasusClient.JobResponse.ResultCase.ERR) {
-                        logger.error("error is {}", response.getErr());
+                        logger.debug("error is {}", response.getErr());
                     }
                 }
             } catch (Exception e) {
                 MaxGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(e.getMessage()), ResponseStatusCode.SERVER_ERROR);
                 // cannot write to this context any more
                 locked = true;
+                throw new RuntimeException(e);
             }
         }
     }

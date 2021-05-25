@@ -59,7 +59,7 @@ public class PathHistoryMeta implements Meta<String, TraverserElement> {
     public PathHistoryMeta fork() {
         PathHistoryMeta newOne = new PathHistoryMeta();
         for (String tag : getAllObjects()) {
-            newOne.add(tag, new TraverserElement(get(tag).get().getObject()));
+            newOne.add(tag, get(tag).get().fork());
         }
         return newOne;
     }

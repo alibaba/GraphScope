@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::structure::element::{Element, Label, ID};
+use crate::structure::element::{read_id, write_id, Element, Label, ID};
 use crate::structure::property::DynDetails;
 use crate::structure::Details;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -49,9 +49,7 @@ impl Element for Edge {
 }
 
 impl Edge {
-    pub fn new(
-        id: u128, label: Option<Label>, src: u128, dst: u128, properties: DynDetails,
-    ) -> Self {
+    pub fn new(id: ID, label: Option<Label>, src: ID, dst: ID, properties: DynDetails) -> Self {
         Edge { id, label, src_id: src, dst_id: dst, src_label: None, dst_label: None, properties }
     }
 
@@ -66,9 +64,9 @@ impl Edge {
 
 impl Encode for Edge {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u128(self.id)?;
-        writer.write_u128(self.src_id)?;
-        writer.write_u128(self.dst_id)?;
+        write_id(self.id, writer)?;
+        write_id(self.src_id, writer)?;
+        write_id(self.dst_id, writer)?;
         self.label.write_to(writer)?;
         self.src_label.write_to(writer)?;
         self.dst_label.write_to(writer)?;
@@ -79,9 +77,9 @@ impl Encode for Edge {
 
 impl Decode for Edge {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let id = <u128>::read_from(reader)?;
-        let src_id = <u128>::read_from(reader)?;
-        let dst_id = <u128>::read_from(reader)?;
+        let id = read_id(reader)?;
+        let src_id = read_id(reader)?;
+        let dst_id = read_id(reader)?;
         let label = <Option<Label>>::read_from(reader)?;
         let src_label = <Option<Label>>::read_from(reader)?;
         let dst_label = <Option<Label>>::read_from(reader)?;

@@ -53,6 +53,7 @@ from graphscope.deploy.kubernetes.resource_builder import resolve_volume_builder
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
+from graphscope.deploy.kubernetes.utils import try_to_resolve_api_client
 from graphscope.proto import types_pb2
 
 from gscoordinator.io_utils import PipeWatcher
@@ -159,6 +160,8 @@ class KubernetesClusterLauncher(Launcher):
     _mars_scheduler_port = 7103  # fixed
     _mars_worker_port = 7104  # fixed
 
+    _MAXGRAPH_MANAGER_HOST = "http://%s.%s.svc.cluster.local:8080"
+
     def __init__(
         self,
         namespace=None,
@@ -199,74 +202,37 @@ class KubernetesClusterLauncher(Launcher):
         delete_namespace=None,
         **kwargs
     ):
-        try:
-            kube_config.load_incluster_config()
-        except:  # noqa: E722
-            kube_config.load_kube_config()
-        self._api_client = kube_client.ApiClient()
+        self._api_client = try_to_resolve_api_client()
         self._core_api = kube_client.CoreV1Api(self._api_client)
         self._app_api = kube_client.AppsV1Api(self._api_client)
 
-        self._instance_id = instance_id
+        self._saved_locals = locals()
+        self._num_workers = self._saved_locals["num_workers"]
 
         # random for multiple k8s cluster in the same namespace
-        self._engine_name = self._engine_name_prefix + self._instance_id
-        self._etcd_name = self._etcd_name_prefix + self._instance_id
-        self._etcd_service_name = self._etcd_service_name_prefix + self._instance_id
-        self._mars_scheduler_name = self._mars_scheduler_name_prefix + self._instance_id
-
-        self._gie_graph_manager_name = (
-            self._gie_graph_manager_name_prefix + self._instance_id
+        self._engine_name = self._engine_name_prefix + self._saved_locals["instance_id"]
+        self._etcd_name = self._etcd_name_prefix + self._saved_locals["instance_id"]
+        self._etcd_service_name = (
+            self._etcd_service_name_prefix + self._saved_locals["instance_id"]
+        )
+        self._mars_scheduler_name = (
+            self._mars_scheduler_name_prefix + self._saved_locals["instance_id"]
         )
 
-        self._namespace = namespace
-        self._service_type = service_type
-        self._num_workers = num_workers
-        self._preemptive = preemptive
+        self._gie_graph_manager_name = (
+            self._gie_graph_manager_name_prefix + self._saved_locals["instance_id"]
+        )
 
         self._coordinator_name = coordinator_name
         self._coordinator_service_name = coordinator_service_name
 
         self._resource_object = ResourceManager(self._api_client)
 
-        # engine container info
-        self._gs_image = gs_image
-        self._engine_cpu = engine_cpu
-        self._engine_mem = engine_mem
-
-        # vineyard container info
-        self._vineyard_daemonset = vineyard_daemonset
-        self._vineyard_cpu = vineyard_cpu
-        self._vineyard_mem = vineyard_mem
-        self._vineyard_shared_mem = vineyard_shared_mem
-
         # etcd pod info
-        self._etcd_image = etcd_image
-        self._etcd_num_pods = max(1, etcd_num_pods)
-        self._etcd_cpu = etcd_cpu
-        self._etcd_mem = etcd_mem
-
-        # zookeeper pod info
-        self._zookeeper_image = zookeeper_image
-        self._zookeeper_cpu = zookeeper_cpu
-        self._zookeeper_mem = zookeeper_mem
-
-        # interactive engine graph manager info
-        self._gie_graph_manager_image = gie_graph_manager_image
-        self._gie_graph_manager_cpu = gie_graph_manager_cpu
-        self._gie_graph_manager_mem = gie_graph_manager_mem
-
-        # mars
-        self._mars_worker_cpu = mars_worker_cpu
-        self._mars_worker_mem = mars_worker_mem
-        self._mars_scheduler_cpu = mars_scheduler_cpu
-        self._mars_scheduler_mem = mars_scheduler_mem
-        self._with_mars = with_mars
-
-        self._image_pull_policy = image_pull_policy
+        self._etcd_num_pods = max(1, self._saved_locals["etcd_num_pods"])
+        self._etcd_endpoint = None
 
         # image pull secrets
-        self._etcd_endpoint = None
         if image_pull_secrets is not None:
             self._image_pull_secrets = image_pull_secrets.split(",")
         else:
@@ -285,9 +251,6 @@ class KubernetesClusterLauncher(Launcher):
 
         self._closed = False
         self._glog_level = parse_as_glog_level(log_level)
-        self._timeout_seconds = timeout_seconds
-        self._waiting_for_delete = waiting_for_delete
-        self._delete_namespace = delete_namespace
 
         self._analytical_engine_process = None
 
@@ -298,15 +261,20 @@ class KubernetesClusterLauncher(Launcher):
 
         # component service name
         self._gie_graph_manager_service_name = (
-            self._gie_graph_manager_service_name_prefix + self._instance_id
+            self._gie_graph_manager_service_name_prefix
+            + self._saved_locals["instance_id"]
         )
-        if self._exists_vineyard_daemonset(self._vineyard_daemonset):
-            self._vineyard_service_name = self._vineyard_daemonset + "-rpc"
+        if self._exists_vineyard_daemonset(self._saved_locals["vineyard_daemonset"]):
+            self._vineyard_service_name = (
+                self._saved_locals["vineyard_daemonset"] + "-rpc"
+            )
         else:
             self._vineyard_service_name = (
-                self._vineyard_service_name_prefix + self._instance_id
+                self._vineyard_service_name_prefix + self._saved_locals["instance_id"]
             )
-        self._mars_service_name = self._mars_service_name_prefix + self._instance_id
+        self._mars_service_name = (
+            self._mars_service_name_prefix + self._saved_locals["instance_id"]
+        )
 
     def __del__(self):
         self.stop()
@@ -327,17 +295,47 @@ class KubernetesClusterLauncher(Launcher):
         return self._pod_name_list
 
     def waiting_for_delete(self):
-        return self._waiting_for_delete
+        return self._saved_locals["waiting_for_delete"]
 
     def get_namespace(self):
-        return self._namespace
+        return self._saved_locals["namespace"]
 
     def get_gie_graph_manager_service_name(self):
         return self._gie_graph_manager_service_name
 
+    def get_manager_host(self):
+        return "http://{0}".format(self._get_graph_manager_service_endpoint())
+
     @property
     def preemptive(self):
-        return self._preemptive
+        return self._saved_locals["preemptive"]
+
+    def distribute_file(self, path):
+        dir = os.path.dirname(path)
+        for pod in self._pod_name_list:
+            subprocess.check_call(
+                [
+                    "kubectl",
+                    "exec",
+                    pod,
+                    "-c",
+                    "engine",
+                    "--",
+                    "mkdir",
+                    "-p",
+                    dir,
+                ]
+            )
+            subprocess.check_call(
+                [
+                    "kubectl",
+                    "cp",
+                    path,
+                    "{}:{}".format(pod, path),
+                    "-c",
+                    "engine",
+                ]
+            )
 
     def _create_mars_scheduler(self):
         logger.info("Launching mars scheduler pod for GraphScope ...")
@@ -347,15 +345,18 @@ class KubernetesClusterLauncher(Launcher):
             name=self._mars_scheduler_name,
             labels=labels,
             num_workers=1,
-            image_pull_policy=self._image_pull_policy,
+            image_pull_policy=self._saved_locals["image_pull_policy"],
         )
         # volume1 is for vineyard ipc socket
-        if self._exists_vineyard_daemonset(self._vineyard_daemonset):
+        if self._exists_vineyard_daemonset(self._saved_locals["vineyard_daemonset"]):
             vineyard_socket_volume_type = "hostPath"
             vineyard_socket_volume_fields = {
                 "type": "Directory",
                 "path": "/var/run/vineyard-%s-%s"
-                % (self._namespace, self._vineyard_daemonset),
+                % (
+                    self._saved_locals["namespace"],
+                    self._saved_locals["vineyard_daemonset"],
+                ),
             }
         else:
             vineyard_socket_volume_type = "emptyDir"
@@ -389,30 +390,32 @@ class KubernetesClusterLauncher(Launcher):
         )
 
         # add vineyard container
-        if not self._exists_vineyard_daemonset(self._vineyard_daemonset):
+        if not self._exists_vineyard_daemonset(
+            self._saved_locals["vineyard_daemonset"]
+        ):
             port = self._random_etcd_listen_client_service_port
             etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
             for i in range(self._etcd_num_pods):
                 etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
             scheduler_builder.add_vineyard_container(
                 name=self._vineyard_container_name,
-                image=self._gs_image,
-                cpu=self._vineyard_cpu,
-                mem=self._vineyard_mem,
-                shared_mem=self._vineyard_shared_mem,
-                preemptive=self._preemptive,
+                image=self._saved_locals["gs_image"],
+                cpu=self._saved_locals["vineyard_cpu"],
+                mem=self._saved_locals["vineyard_mem"],
+                shared_mem=self._saved_locals["vineyard_shared_mem"],
+                preemptive=self._saved_locals["preemptive"],
                 etcd_endpoints=etcd_endpoints,
                 port=self._vineyard_service_port,
             )
 
         # add mars scheduler container
-        if self._with_mars:
+        if self._saved_locals["with_mars"]:
             scheduler_builder.add_mars_scheduler_container(
                 name=self._mars_scheduler_container_name,
-                image=self._gs_image,
-                cpu=self._mars_scheduler_cpu,
-                mem=self._mars_scheduler_mem,
-                preemptive=self._preemptive,
+                image=self._saved_locals["gs_image"],
+                cpu=self._saved_locals["mars_scheduler_cpu"],
+                mem=self._saved_locals["mars_scheduler_mem"],
+                preemptive=self._saved_locals["preemptive"],
                 port=self._mars_scheduler_port,
             )
         for name in self._image_pull_secrets:
@@ -420,7 +423,7 @@ class KubernetesClusterLauncher(Launcher):
 
         self._resource_object.append(
             self._app_api.create_namespaced_replica_set(
-                self._namespace, scheduler_builder.build()
+                self._saved_locals["namespace"], scheduler_builder.build()
             )
         )
 
@@ -432,16 +435,19 @@ class KubernetesClusterLauncher(Launcher):
             name=self._engine_name,
             labels=labels,
             num_workers=self._num_workers,
-            image_pull_policy=self._image_pull_policy,
+            image_pull_policy=self._saved_locals["image_pull_policy"],
         )
         # volume1 is for vineyard ipc socket
         # MaxGraph: /home/maxgraph/data/vineyard
-        if self._exists_vineyard_daemonset(self._vineyard_daemonset):
+        if self._exists_vineyard_daemonset(self._saved_locals["vineyard_daemonset"]):
             vineyard_socket_volume_type = "hostPath"
             vineyard_socket_volume_fields = {
                 "type": "Directory",
                 "path": "/var/run/vineyard-%s-%s"
-                % (self._namespace, self._vineyard_daemonset),
+                % (
+                    self._saved_locals["namespace"],
+                    self._saved_locals["vineyard_daemonset"],
+                ),
             }
         else:
             vineyard_socket_volume_type = "emptyDir"
@@ -483,38 +489,41 @@ class KubernetesClusterLauncher(Launcher):
 
         # add engine container
         engine_builder.add_engine_container(
+            cmd=["tail", "-f", "/dev/null"],
             name=self._engine_container_name,
-            image=self._gs_image,
-            cpu=self._engine_cpu,
-            mem=self._engine_mem,
-            preemptive=self._preemptive,
+            image=self._saved_locals["gs_image"],
+            cpu=self._saved_locals["engine_cpu"],
+            mem=self._saved_locals["engine_mem"],
+            preemptive=self._saved_locals["preemptive"],
         )
 
         # add vineyard container
-        if not self._exists_vineyard_daemonset(self._vineyard_daemonset):
+        if not self._exists_vineyard_daemonset(
+            self._saved_locals["vineyard_daemonset"]
+        ):
             port = self._random_etcd_listen_client_service_port
             etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
             for i in range(self._etcd_num_pods):
                 etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
             engine_builder.add_vineyard_container(
                 name=self._vineyard_container_name,
-                image=self._gs_image,
-                cpu=self._vineyard_cpu,
-                mem=self._vineyard_mem,
-                shared_mem=self._vineyard_shared_mem,
-                preemptive=self._preemptive,
+                image=self._saved_locals["gs_image"],
+                cpu=self._saved_locals["vineyard_cpu"],
+                mem=self._saved_locals["vineyard_mem"],
+                shared_mem=self._saved_locals["vineyard_shared_mem"],
+                preemptive=self._saved_locals["preemptive"],
                 etcd_endpoints=etcd_endpoints,
                 port=self._vineyard_service_port,
             )
 
         # add mars worker container
-        if self._with_mars:
+        if self._saved_locals["with_mars"]:
             engine_builder.add_mars_worker_container(
                 name=self._mars_worker_container_name,
-                image=self._gs_image,
-                cpu=self._mars_worker_cpu,
-                mem=self._mars_worker_mem,
-                preemptive=self._preemptive,
+                image=self._saved_locals["gs_image"],
+                cpu=self._saved_locals["mars_worker_cpu"],
+                mem=self._saved_locals["mars_worker_mem"],
+                preemptive=self._saved_locals["preemptive"],
                 port=self._mars_worker_port,
                 scheduler_endpoint="%s:%s"
                 % (self._mars_service_name, self._mars_scheduler_port),
@@ -524,7 +533,7 @@ class KubernetesClusterLauncher(Launcher):
 
         self._resource_object.append(
             self._app_api.create_namespaced_replica_set(
-                self._namespace, engine_builder.build()
+                self._saved_locals["namespace"], engine_builder.build()
             )
         )
 
@@ -540,7 +549,7 @@ class KubernetesClusterLauncher(Launcher):
         )
         self._resource_object.append(
             self._core_api.create_namespaced_service(
-                self._namespace, service_builder.build()
+                self._saved_locals["namespace"], service_builder.build()
             )
         )
 
@@ -551,12 +560,12 @@ class KubernetesClusterLauncher(Launcher):
             name_prefix=self._etcd_name,
             container_name=self._etcd_container_name,
             service_name=self._etcd_service_name,
-            image=self._etcd_image,
-            cpu=self._etcd_cpu,
-            mem=self._etcd_mem,
-            preemptive=self._preemptive,
+            image=self._saved_locals["etcd_image"],
+            cpu=self._saved_locals["etcd_cpu"],
+            mem=self._saved_locals["etcd_mem"],
+            preemptive=self._saved_locals["preemptive"],
             labels=labels,
-            image_pull_policy=self._image_pull_policy,
+            image_pull_policy=self._saved_locals["image_pull_policy"],
             num_pods=self._etcd_num_pods,
             restart_policy="Always",
             image_pull_secrets=self._image_pull_secrets,
@@ -567,24 +576,28 @@ class KubernetesClusterLauncher(Launcher):
         pods, services = etcd_builder.build()
         for svc in services:
             self._resource_object.append(
-                self._core_api.create_namespaced_service(self._namespace, svc.build())
+                self._core_api.create_namespaced_service(
+                    self._saved_locals["namespace"], svc.build()
+                )
             )
         for pod in pods:
             self._resource_object.append(
-                self._core_api.create_namespaced_pod(self._namespace, pod.build())
+                self._core_api.create_namespaced_pod(
+                    self._saved_locals["namespace"], pod.build()
+                )
             )
 
     def _create_mars_service(self):
         labels = {"name": self._mars_scheduler_name}
         service_builder = ServiceBuilder(
             self._mars_service_name,
-            service_type=self._service_type,
+            service_type=self._saved_locals["service_type"],
             port=self._mars_scheduler_port,
             selector=labels,
         )
         self._resource_object.append(
             self._core_api.create_namespaced_service(
-                self._namespace, service_builder.build()
+                self._saved_locals["namespace"], service_builder.build()
             )
         )
 
@@ -592,13 +605,13 @@ class KubernetesClusterLauncher(Launcher):
         labels = {"name": self._engine_name}  # vineyard in engine pod
         service_builder = ServiceBuilder(
             self._vineyard_service_name,
-            service_type=self._service_type,
+            service_type=self._saved_locals["service_type"],
             port=self._vineyard_service_port,
             selector=labels,
         )
         self._resource_object.append(
             self._core_api.create_namespaced_service(
-                self._namespace, service_builder.build()
+                self._saved_locals["namespace"], service_builder.build()
             )
         )
 
@@ -606,9 +619,9 @@ class KubernetesClusterLauncher(Launcher):
         # Always len(endpoints) >= 1
         endpoints = get_service_endpoints(
             api_client=self._api_client,
-            namespace=self._namespace,
+            namespace=self._saved_locals["namespace"],
             name=self._vineyard_service_name,
-            type=self._service_type,
+            type=self._saved_locals["service_type"],
         )
         return endpoints[0]
 
@@ -616,9 +629,9 @@ class KubernetesClusterLauncher(Launcher):
         # Always len(endpoints) >= 1
         endpoints = get_service_endpoints(
             api_client=self._api_client,
-            namespace=self._namespace,
+            namespace=self._saved_locals["namespace"],
             name=self._mars_service_name,
-            type=self._service_type,
+            type=self._saved_locals["service_type"],
         )
         return endpoints[0]
 
@@ -627,22 +640,24 @@ class KubernetesClusterLauncher(Launcher):
         labels = {"name": self._engine_name}
         service_builder = ServiceBuilder(
             self._gle_service_name_prefix + str(object_id),
-            service_type=self._service_type,
+            service_type=self._saved_locals["service_type"],
             port=list(range(start_port, start_port + num_workers)),
             selector=labels,
             external_traffic_policy="Local",
         )
         targets.append(
             self._core_api.create_namespaced_service(
-                self._namespace, service_builder.build()
+                self._saved_locals["namespace"], service_builder.build()
             )
         )
         self._graphlearn_services[object_id] = targets
         self._resource_object.extend(targets)
 
     def _parse_graphlearn_service_endpoint(self, object_id):
-        if self._service_type == "NodePort":
-            services = self._core_api.list_namespaced_service(self._namespace)
+        if self._saved_locals["service_type"] == "NodePort":
+            services = self._core_api.list_namespaced_service(
+                self._saved_locals["namespace"]
+            )
             for svc in services.items:
                 if svc.metadata.name == self._gle_service_name_prefix + str(object_id):
                     endpoints = []
@@ -655,12 +670,12 @@ class KubernetesClusterLauncher(Launcher):
                         )
                     endpoints.sort(key=lambda ep: ep[1])
                     return [ep[0] for ep in endpoints]
-        elif self._service_type == "LoadBalancer":
+        elif self._saved_locals["service_type"] == "LoadBalancer":
             endpoints = get_service_endpoints(
                 api_client=self._api_client,
-                namespace=self._namespace,
+                namespace=self._saved_locals["namespace"],
                 name=self._gle_service_name_prefix + str(object_id),
-                type=self._service_type,
+                type=self._saved_locals["service_type"],
             )
             return endpoints
         raise RuntimeError("Get graphlearn service endpoint failed.")
@@ -676,7 +691,7 @@ class KubernetesClusterLauncher(Launcher):
         )
         self._resource_object.append(
             self._core_api.create_namespaced_service(
-                self._namespace, service_builder.build()
+                self._saved_locals["namespace"], service_builder.build()
             )
         )
 
@@ -687,42 +702,44 @@ class KubernetesClusterLauncher(Launcher):
             name=self._gie_graph_manager_name,
             labels=labels,
             replicas=1,
-            image_pull_policy=self._image_pull_policy,
+            image_pull_policy=self._saved_locals["image_pull_policy"],
         )
         for name in self._image_pull_secrets:
             graph_manager_builder.add_image_pull_secret(name)
 
         envs = {
-            "GREMLIN_IMAGE": self._gie_graph_manager_image,
-            "ENGINE_NAMESPACE": self._namespace,
-            "COORDINATOR_IMAGE": self._gie_graph_manager_image,
-            "GREMLIN_EXPOSE": self._service_type,
+            "GREMLIN_IMAGE": self._saved_locals["gie_graph_manager_image"],
+            "ENGINE_NAMESPACE": self._saved_locals["namespace"],
+            "COORDINATOR_IMAGE": self._saved_locals["gie_graph_manager_image"],
+            "GREMLIN_EXPOSE": self._saved_locals["service_type"],
         }
         graph_manager_builder.add_simple_envs(envs)
 
         # add manager container
         graph_manager_builder.add_manager_container(
+            cmd=["/bin/bash", "-c", "--"],
+            args=["/home/maxgraph/manager-entrypoint.sh"],
             name=self._gie_manager_container_name,
-            image=self._gie_graph_manager_image,
-            cpu=self._gie_graph_manager_cpu,
-            mem=self._gie_graph_manager_mem,
-            preemptive=self._preemptive,
-            port=self._interactive_engine_manager_port,
+            image=self._saved_locals["gie_graph_manager_image"],
+            cpu=self._saved_locals["gie_graph_manager_cpu"],
+            mem=self._saved_locals["gie_graph_manager_mem"],
+            preemptive=self._saved_locals["preemptive"],
+            ports=self._interactive_engine_manager_port,
         )
 
         # add zookeeper container
         graph_manager_builder.add_zookeeper_container(
             name=self._gie_zookeeper_container_name,
-            image=self._zookeeper_image,
-            cpu=self._zookeeper_cpu,
-            mem=self._zookeeper_mem,
-            preemptive=self._preemptive,
-            port=self._zookeeper_port,
+            image=self._saved_locals["zookeeper_image"],
+            cpu=self._saved_locals["zookeeper_cpu"],
+            mem=self._saved_locals["zookeeper_mem"],
+            preemptive=self._saved_locals["preemptive"],
+            ports=self._zookeeper_port,
         )
 
         self._resource_object.append(
             self._app_api.create_namespaced_deployment(
-                self._namespace, graph_manager_builder.build()
+                self._saved_locals["namespace"], graph_manager_builder.build()
             )
         )
 
@@ -730,7 +747,9 @@ class KubernetesClusterLauncher(Launcher):
         start_time = time.time()
         event_messages = []
         while True:
-            deployments = self._app_api.list_namespaced_deployment(self._namespace)
+            deployments = self._app_api.list_namespaced_deployment(
+                self._saved_locals["namespace"]
+            )
             service_available = False
             for deployment in deployments.items:
                 if deployment.metadata.name == self._gie_graph_manager_name:
@@ -746,7 +765,8 @@ class KubernetesClusterLauncher(Launcher):
                     selector = selector[:-1]
 
                     pods = self._core_api.list_namespaced_pod(
-                        namespace=self._namespace, label_selector=selector
+                        namespace=self._saved_locals["namespace"],
+                        label_selector=selector,
                     )
 
                     for pod in pods.items:
@@ -754,7 +774,7 @@ class KubernetesClusterLauncher(Launcher):
                         field_selector = "involvedObject.name=" + pod_name
                         stream = kube_watch.Watch().stream(
                             self._core_api.list_namespaced_event,
-                            self._namespace,
+                            self._saved_locals["namespace"],
                             field_selector=field_selector,
                             timeout_seconds=1,
                         )
@@ -769,8 +789,8 @@ class KubernetesClusterLauncher(Launcher):
             if service_available:
                 break
             if (
-                self._timeout_seconds
-                and self._timeout_seconds + start_time < time.time()
+                self._saved_locals["timeout_seconds"]
+                and self._saved_locals["timeout_seconds"] + start_time < time.time()
             ):
                 raise TimeoutError("Waiting GIE graph manager start timeout.")
             time.sleep(2)
@@ -786,13 +806,15 @@ class KubernetesClusterLauncher(Launcher):
         self._etcd_endpoint = self._get_etcd_service_endpoint()
         logger.info("Etcd is ready, endpoint is {}".format(self._etcd_endpoint))
 
-        if self._with_mars:
+        if self._saved_locals["with_mars"]:
             # scheduler used by mars
             self._create_mars_scheduler()
             self._create_mars_service()
 
         self._create_engine_replicaset()
-        if not self._exists_vineyard_daemonset(self._vineyard_daemonset):
+        if not self._exists_vineyard_daemonset(
+            self._saved_locals["vineyard_daemonset"]
+        ):
             self._create_vineyard_service()
 
     def _waiting_for_services_ready(self):
@@ -800,7 +822,7 @@ class KubernetesClusterLauncher(Launcher):
         event_messages = []
         while True:
             replicasets = self._app_api.list_namespaced_replica_set(
-                namespace=self._namespace
+                namespace=self._saved_locals["namespace"]
             )
             service_available = False
             for rs in replicasets.items:
@@ -822,7 +844,8 @@ class KubernetesClusterLauncher(Launcher):
                     selector = selector[:-1]
 
                     pods = self._core_api.list_namespaced_pod(
-                        namespace=self._namespace, label_selector=selector
+                        namespace=self._saved_locals["namespace"],
+                        label_selector=selector,
                     )
 
                     for pod in pods.items:
@@ -830,7 +853,7 @@ class KubernetesClusterLauncher(Launcher):
                         field_selector = "involvedObject.name=" + pod_name
                         stream = kube_watch.Watch().stream(
                             self._core_api.list_namespaced_event,
-                            self._namespace,
+                            self._saved_locals["namespace"],
                             field_selector=field_selector,
                             timeout_seconds=1,
                         )
@@ -845,8 +868,8 @@ class KubernetesClusterLauncher(Launcher):
             if service_available:
                 break
             if (
-                self._timeout_seconds
-                and self._timeout_seconds + start_time < time.time()
+                self._saved_locals["timeout_seconds"]
+                and self._saved_locals["timeout_seconds"] + start_time < time.time()
             ):
                 raise TimeoutError("GraphScope Engines launching timeout.")
             time.sleep(2)
@@ -855,7 +878,7 @@ class KubernetesClusterLauncher(Launcher):
         self._pod_ip_list = []
         self._pod_host_ip_list = []
         pods = self._core_api.list_namespaced_pod(
-            namespace=self._namespace,
+            namespace=self._saved_locals["namespace"],
             label_selector="name=%s" % self._engine_name,
         )
         for pod in pods.items:
@@ -871,15 +894,15 @@ class KubernetesClusterLauncher(Launcher):
         # get vineyard service endpoint
         self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
         logger.debug("vineyard rpc runs on %s", self._vineyard_service_endpoint)
-        if self._with_mars:
+        if self._saved_locals["with_mars"]:
             self._mars_service_endpoint = self._get_mars_scheduler_service_endpoint()
             logger.debug("mars scheduler runs on %s", self._mars_service_endpoint)
         logger.info("GraphScope engines pod is ready.")
 
     def _dump_resource_object(self):
         resource = {}
-        if self._delete_namespace:
-            resource[self._namespace] = "Namespace"
+        if self._saved_locals["delete_namespace"]:
+            resource[self._saved_locals["namespace"]] = "Namespace"
         else:
             # coordinator info
             resource[self._coordinator_name] = "Deployment"
@@ -891,8 +914,18 @@ class KubernetesClusterLauncher(Launcher):
         # Always len(endpoints) >= 1
         endpoints = get_service_endpoints(
             api_client=self._api_client,
-            namespace=self._namespace,
+            namespace=self._saved_locals["namespace"],
             name=self._etcd_service_name,
+            type="ClusterIP",
+        )
+        return endpoints[0]
+
+    def _get_graph_manager_service_endpoint(self):
+        # Always len(endpoints) >= 1
+        endpoints = get_service_endpoints(
+            api_client=self._api_client,
+            namespace=self._saved_locals["namespace"],
+            name=self._gie_graph_manager_service_name,
             type="ClusterIP",
         )
         return endpoints[0]
@@ -914,7 +947,7 @@ class KubernetesClusterLauncher(Launcher):
                 [
                     "kubectl",
                     "-n",
-                    self._namespace,
+                    self._saved_locals["namespace"],
                     "cp",
                     "/tmp/kube_hosts",
                     "{}:/etc/hosts_of_nodes".format(pod),
@@ -958,17 +991,19 @@ class KubernetesClusterLauncher(Launcher):
     def _delete_dangling_coordinator(self):
         # delete service
         self._core_api.delete_namespaced_service(
-            name=self._coordinator_service_name, namespace=self._namespace
+            name=self._coordinator_service_name,
+            namespace=self._saved_locals["namespace"],
         )
         self._app_api.delete_namespaced_deployment(
-            name=self._coordinator_name, namespace=self._namespace
+            name=self._coordinator_name, namespace=self._saved_locals["namespace"]
         )
-        if self._waiting_for_delete:
+        if self._saved_locals["waiting_for_delete"]:
             start_time = time.time()
             while True:
                 try:
                     self._app_api.read_namespaced_deployment(
-                        name=self._coordinator_name, namespace=self._namespace
+                        name=self._coordinator_name,
+                        namespace=self._saved_locals["namespace"],
                     )
                 except K8SApiException as ex:
                     if ex.status != 404:
@@ -980,7 +1015,7 @@ class KubernetesClusterLauncher(Launcher):
                     break
                 else:
                     time.sleep(1)
-                    if time.time() - start_time > self._timeout_seconds:
+                    if time.time() - start_time > self._saved_locals["timeout_seconds"]:
                         logger.error(
                             "Deleting dangling coordinator {} timeout".format(
                                 self._coordinator_name
@@ -992,7 +1027,9 @@ class KubernetesClusterLauncher(Launcher):
         if not release:
             return False
         try:
-            self._app_api.read_namespaced_daemon_set(release, self._namespace)
+            self._app_api.read_namespaced_daemon_set(
+                release, self._saved_locals["namespace"]
+            )
         except K8SApiException:
             return False
         else:
@@ -1009,7 +1046,7 @@ class KubernetesClusterLauncher(Launcher):
             logger.info(
                 "Vineyard service endpoint: {}".format(self._vineyard_service_endpoint)
             )
-            if self._with_mars:
+            if self._saved_locals["with_mars"]:
                 logger.info(
                     "Mars service endpoint: {}".format(self._mars_service_endpoint)
                 )
@@ -1030,36 +1067,41 @@ class KubernetesClusterLauncher(Launcher):
                 delete_kubernetes_object(
                     api_client=self._api_client,
                     target=target,
-                    wait=self._waiting_for_delete,
-                    timeout_seconds=self._timeout_seconds,
+                    wait=self._saved_locals["waiting_for_delete"],
+                    timeout_seconds=self._saved_locals["timeout_seconds"],
                 )
             self._resource_object = []
 
             if is_dangling:
                 logger.info("Dangling coordinator detected, clean up soon.")
                 # delete everything inside namespace of graphscope instance
-                if self._delete_namespace:
+                if self._saved_locals["delete_namespace"]:
                     # delete namespace created by graphscope
-                    self._core_api.delete_namespace(self._namespace)
-                    if self._waiting_for_delete:
+                    self._core_api.delete_namespace(self._saved_locals["namespace"])
+                    if self._saved_locals["waiting_for_delete"]:
                         start_time = time.time()
                         while True:
                             try:
-                                self._core_api.read_namespace(self._namespace)
+                                self._core_api.read_namespace(
+                                    self._saved_locals["namespace"]
+                                )
                             except K8SApiException as ex:
                                 if ex.status != 404:
                                     logger.error(
                                         "Deleting dangling namespace {} failed: {}".format(
-                                            self._namespace, str(ex)
+                                            self._saved_locals["namespace"], str(ex)
                                         )
                                     )
                                 break
                             else:
                                 time.sleep(1)
-                                if time.time() - start_time > self._timeout_seconds:
+                                if (
+                                    time.time() - start_time
+                                    > self._saved_locals["timeout_seconds"]
+                                ):
                                     logger.error(
                                         "Deleting namespace %s timeout"
-                                        % self._namespace
+                                        % self._saved_locals["namespace"]
                                     )
                 else:
                     # delete coordinator deployment and service
@@ -1100,7 +1142,7 @@ class KubernetesClusterLauncher(Launcher):
             cmd = [
                 "kubectl",
                 "-n",
-                self._namespace,
+                self._saved_locals["namespace"],
                 "exec",
                 "-it",
                 "-c",
@@ -1137,8 +1179,8 @@ class KubernetesClusterLauncher(Launcher):
                 delete_kubernetes_object(
                     api_client=self._api_client,
                     target=target,
-                    wait=self._waiting_for_delete,
-                    timeout_seconds=self._timeout_seconds,
+                    wait=self._saved_locals["waiting_for_delete"],
+                    timeout_seconds=self._saved_locals["timeout_seconds"],
                 )
             except Exception as e:
                 logger.error(

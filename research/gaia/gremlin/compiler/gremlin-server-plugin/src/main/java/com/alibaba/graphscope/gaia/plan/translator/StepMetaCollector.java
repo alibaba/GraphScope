@@ -15,7 +15,10 @@
  */
 package com.alibaba.graphscope.gaia.plan.translator;
 
+import com.alibaba.graphscope.gaia.plan.LogicPlanGlobalMap;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
+import com.alibaba.graphscope.gaia.plan.meta.object.StepMetaRequiredInfo;
+import com.alibaba.graphscope.gaia.plan.extractor.PropertyExtractor;
 import com.alibaba.graphscope.gaia.plan.extractor.PropertyExtractorFactory;
 import com.alibaba.graphscope.gaia.plan.meta.*;
 import com.alibaba.graphscope.gaia.plan.meta.object.*;
@@ -53,11 +56,8 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
         return (StepMetaBuilder t) -> {
             Step step = t.getStep();
             TraversalId metaId = t.getMetaId();
-            Step traversalIdStep = step;
-            if (metaId.depth() != traversalDepth(step)) {
-                // g.V().as("a").order().by(select("a"))
-                traversalIdStep = step.getTraversal().getParent().asStep();
-            }
+            // g.V().as("a").order().by(select("a")) or g.V().as("a").order().by(select("a").by(values("id")))
+            Step traversalIdStep = getStepOfTraversalId(metaId, step);
             StepId stepId = new StepId(metaId, TraversalHelper.stepIndex(traversalIdStep, traversalIdStep.getTraversal()));
             TraverserElement next = nextTraverser(t, stepId);
             // maintain traversal lifetime
@@ -158,6 +158,20 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
                 } else if (step instanceof PropertyMapStep) {
                     elementProperties.add(head.getObject().getElement(),
                             new StepPropertiesMeta(PropertyExtractorFactory.ValueMap.extractProperties(step), stepId, traversalIdStep));
+                } else {
+                    LogicPlanGlobalMap.STEP stepType = LogicPlanGlobalMap.stepType(step);
+                    Optional<StepMetaRequiredInfo> metaInfoOpt = LogicPlanGlobalMap.getStepMetaRequiredInfo(stepType);
+                    if (metaInfoOpt.isPresent()) {
+                        Optional<PropertyExtractor> extractorOpt = metaInfoOpt.get().getExtractor();
+                        if (extractorOpt.isPresent()) {
+                            elementProperties.add(head.getObject().getElement(),
+                                    new StepPropertiesMeta(extractorOpt.get().extractProperties(step), stepId, traversalIdStep));
+                        }
+                    }
+                }
+                // to guarantee order after order by
+                if (step instanceof OrderGlobalStep || step instanceof OrderGlobalLimitStep) {
+                    elementProperties.addOrderStepId(head.getObject().getElement(), stepId);
                 }
             }
             return next;
@@ -165,7 +179,10 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
     }
 
     protected boolean needPathStep(Step step) {
-        return step instanceof PathStep || step instanceof PathFilterStep || step instanceof PathLocalCountStep;
+        LogicPlanGlobalMap.STEP stepType = LogicPlanGlobalMap.stepType(step);
+        Optional<StepMetaRequiredInfo> metaInfoOpt = LogicPlanGlobalMap.getStepMetaRequiredInfo(stepType);
+        return step instanceof PathStep || step instanceof PathFilterStep || step instanceof PathLocalCountStep ||
+                metaInfoOpt.isPresent() && metaInfoOpt.get().isNeedPathHistory();
     }
 
     protected TraverserElement nextTraverser(StepMetaBuilder metaBuilder, StepId stepId) {
@@ -316,7 +333,9 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
         }
         if (step instanceof UnfoldStep || step instanceof PhysicalPlanUnfoldStep) {
             if (head.getObject().getClassName() != List.class) {
-                throw new UnsupportedOperationException("unfold has invalid input type " + head.getObject().getClassName());
+                Class invalidClass = head.getObject().getClassName() == null ? head.getObject().getElement().getClass() :
+                        head.getObject().getClassName();
+                throw new UnsupportedOperationException("unfold has invalid input type " + invalidClass);
             }
             return new TraverserElement(head.getObject().getSubs().get(0));
         }
@@ -326,6 +345,11 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
         if (step instanceof IsStep) {
             return head;
         }
+        LogicPlanGlobalMap.STEP stepType = LogicPlanGlobalMap.stepType(step);
+        Optional<StepMetaRequiredInfo> metaInfoOpt = LogicPlanGlobalMap.getStepMetaRequiredInfo(stepType);
+        if (metaInfoOpt.isPresent()) {
+            return metaInfoOpt.get().getTraverserMapFunc().apply(new StepTraverserElement(step, head));
+        }
         throw new UnsupportedOperationException("step not supported " + step.getClass());
     }
 
@@ -334,13 +358,30 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
         return new TraversalMetaCollector(new TraversalMetaBuilder(sub, head, subId).setConf(conf));
     }
 
-    protected int traversalDepth(Step step) {
+    public static int traversalDepth(Traversal.Admin admin) {
         int depth = 0;
-        Step p = step;
-        while (!(p.getTraversal().getParent() instanceof EmptyStep)) {
+        Step p = admin.getParent().asStep();
+        while (!(p instanceof EmptyStep)) {
             p = p.getTraversal().getParent().asStep();
             ++depth;
         }
         return depth;
+    }
+
+    public static Step getStepOfTraversalId(TraversalId parent, Step step) {
+        Step p = step;
+        while (traversalDepth(p.getTraversal()) != parent.depth()) {
+            p = p.getTraversal().getParent().asStep();
+        }
+        return p;
+    }
+
+    public static Step getParentOfTraversalId(TraversalId parent, Traversal.Admin admin) {
+        Step p = EmptyStep.instance();
+        while (traversalDepth(admin) != parent.depth()) {
+            p = admin.getParent().asStep();
+            admin = p.getTraversal();
+        }
+        return p;
     }
 }

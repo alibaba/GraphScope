@@ -134,7 +134,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         workspace (str): working dir.
         library_name (str): name of library
         attr (`AttrValue`): All information needed to compile an app.
-        engine_config (dict): for options of experimental_on
+        engine_config (dict): for options of NETWORKX
 
     Returns:
         str: Path of the built library.
@@ -172,7 +172,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     cmake_commands = [
         "cmake",
         ".",
-        "-DEXPERIMENTAL_ON=" + engine_config["experimental"],
+        "-DNETWORKX=" + engine_config["networkx"],
     ]
     if app_type != "cpp_pie":
         if app_type == "cython_pregel":
@@ -252,7 +252,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         workspace (str): Working dir.
         library_name (str): name of library
         attr (`AttrValue`): All information needed to compile a graph library.
-        engine_config (dict): for options of experimental_on
+        engine_config (dict): for options of NETWORKX
 
     Raises:
         ValueError: When graph_type is not supported.
@@ -275,7 +275,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     cmake_commands = [
         "cmake",
         ".",
-        "-DEXPERIMENTAL_ON=" + engine_config["experimental"],
+        "-DNETWORKX=" + engine_config["networkx"],
     ]
     if graph_type == types_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]
@@ -450,42 +450,6 @@ def _codegen_graph_info(attr):
             attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
         )
     return graph_header, graph_fqn
-
-
-def distribute_lib_on_k8s(hosts: str, lib_path: str):
-    dir = os.path.dirname(lib_path)
-    for pod in hosts.split(","):
-        subprocess.check_call(
-            [
-                "kubectl",
-                "exec",
-                pod,
-                "-c",
-                "engine",
-                "--",
-                "mkdir",
-                "-p",
-                dir,
-            ]
-        )
-        subprocess.check_call(
-            [
-                "kubectl",
-                "cp",
-                lib_path,
-                "{}:{}".format(pod, lib_path),
-                "-c",
-                "engine",
-            ]
-        )
-
-
-def distribute_lib_via_hosts(hosts: str, lib_path: str):
-    dir = os.path.dirname(lib_path)
-    for host in hosts.split(","):
-        if host not in ("localhost", "127.0.0.1"):
-            subprocess.check_call(["ssh", host, "mkdir -p {}".format(dir)])
-            subprocess.check_call(["scp", lib_path, "{}:{}".format(host, lib_path)])
 
 
 def create_single_op_dag(op_type, config=None):

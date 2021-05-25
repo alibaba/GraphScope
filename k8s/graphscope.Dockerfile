@@ -4,14 +4,14 @@
 # the result image includes all runtime stuffs of graphscope, with analytical engine,
 # learning engine and interactive engine installed.
 
-ARG BASE_VERSION=v0.1.15
+ARG BASE_VERSION=v0.2.1
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 ARG CI=true
 ENV CI=$CI
 
-ARG EXPERIMENTAL_ON=ON
-ENV EXPERIMENTAL_ON=$EXPERIMENTAL_ON
+ARG NETWORKX=ON
+ENV NETWORKX=$NETWORKX
 
 ARG profile=release
 ENV profile=$profile
@@ -40,7 +40,7 @@ RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/
     cd build && \
     cmake .. -DCMAKE_PREFIX_PATH=/opt/graphscope \
              -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
-             -DEXPERIMENTAL_ON=$EXPERIMENTAL_ON && \
+             -DNETWORKX=$NETWORKX && \
     make gsa_cpplint && \
     make -j`nproc` && \
     make install && \

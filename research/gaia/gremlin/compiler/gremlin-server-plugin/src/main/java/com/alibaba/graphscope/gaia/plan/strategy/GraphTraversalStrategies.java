@@ -32,6 +32,7 @@ public class GraphTraversalStrategies extends DefaultTraversalStrategies {
     private static GraphTraversalStrategies INSTANCE = new GraphTraversalStrategies();
 
     public static int PROPERTY_SHUFFLE_PRIORITY = 7;
+    public static int ORDER_GUARANTEE_PRIORITY = 11;
 
     private GraphTraversalStrategies() {
     }
@@ -42,7 +43,8 @@ public class GraphTraversalStrategies extends DefaultTraversalStrategies {
 
     static {
         strategies = new ArrayList<>();
-        strategies.add(RemoveEndStepStrategy.instance());
+        strategies.add(RemoveUselessStepStrategy.instance());
+        // strategies.add(RepeatUnrollStrategy.instance());
         strategies.add(PathLocalCountStrategy.instance());
         strategies.add(WhereTraversalStrategy.instance());
         strategies.add(SchemaIdMakerStrategy.instance());

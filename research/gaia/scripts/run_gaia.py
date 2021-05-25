@@ -51,7 +51,7 @@ TMP_FOLDER = "tmp4p1wlx9p"
 parser = argparse.ArgumentParser()
 # Note that we need to create temporary folder on each machine
 tmp_dir = os.path.join(tempfile.gettempdir(), TMP_FOLDER)
-parser.add_argument("-o", "--opt", choices=["clean_up", "build_store", "start_rpc"], required=True, help="Running options")
+parser.add_argument("-o", "--opt", choices=["clean_up", "par_loader", "start_rpc"], required=True, help="Running options")
 parser.add_argument("-d", "--raw_data_dir", help="The directory of the raw data, \
         HDFS folder if starting with \"hdfs://\"")
 parser.add_argument("-g", "--graph_dir", help="The directory of the graph store")
@@ -64,7 +64,7 @@ parser.add_argument("-w", "--workers", default=1, type=int, help="The number of 
 parser.add_argument("-N", "--num_machines", default=0,type=int, help="The number of machines used")
 parser.add_argument("-t", "--tmp_dir", default=tmp_dir, help="The tmp directory to maintain intermediate data")
 parser.add_argument("-P", "--port", help="The port for RPC connection")
-parser.add_argument("-D", "--download_raw", type=str2bool, nargs='?', const=True, default=False,
+parser.add_argument("-D", "--download", type=str2bool, nargs='?', const=True, default=False,
                     help="Whether to download raw file")
 # parser.add_argument("-C", "--clean", type=str2bool, nargs='?', const=True, default=False, help="Clean the process")
 
@@ -110,7 +110,7 @@ def download_from_hdfs():
     """
     Download given files from HDFS to local hosts
     """
-    program = os.path.join(os.getcwd(), "bin", "download_raw")
+    program = os.path.join(os.getcwd(), "bin", "downloader")
     pool = []
     env = "RUST_LOG=Info"
     if args.host_file is not None:
@@ -130,9 +130,9 @@ def download_from_hdfs():
         os.system(cmd)
 
 
-def build_store():
+def par_loader():
     """
-    Build the graph store from the raw data
+    Parallelize loading the graph store from the raw data
     """
     # Check the required arguments for building storage
     if args.raw_data_dir is None or args.graph_dir is None or args.schema_file is None:
@@ -141,7 +141,7 @@ def build_store():
         exit(1)
 
     graph_name = extract_file_name(args.graph_dir)[1]
-    log_dir = os.path.join(os.getcwd(), "logs", "build_store", "%s_w%d_m%d" % (graph_name, args.workers, num_machines))
+    log_dir = os.path.join(os.getcwd(), "logs", "par_loader", "%s_w%d_m%d" % (graph_name, args.workers, num_machines))
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
@@ -152,12 +152,12 @@ def build_store():
             print("Must specify -A or --hadoop_home")
             parser.print_help()
             exit(1)
-        if args.download_raw:
+        if args.download:
             download_from_hdfs()
         # After downloading data to local
         local_dir = tmp_dir
 
-    program = os.path.join(os.getcwd(), "bin", "build_store")
+    program = os.path.join(os.getcwd(), "bin", "par_loader")
     pool = []
     env = "RUST_LOG=Info"
     if args.host_file is not None:
@@ -232,13 +232,13 @@ if __name__ == '__main__':
     if args.opt == "clean_up":
         if args.host_file is not None:
             print("Require **Root** for cleaning up...")
-            clean_up("download_raw", hosts, num_machines)
-            clean_up("build_store", hosts, num_machines)
+            clean_up("downloader", hosts, num_machines)
+            clean_up("par_loader", hosts, num_machines)
             clean_up("start_rpc_server", hosts, num_machines)
             exit(1)
-    elif args.opt == "build_store":
+    elif args.opt == "par_loader":
         prepare_files()
-        build_store()
+        par_loader()
         exit(1)
     elif args.opt == "start_rpc":
         start_rpc()
