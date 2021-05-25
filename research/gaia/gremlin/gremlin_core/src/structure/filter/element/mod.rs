@@ -144,6 +144,7 @@ pub enum ElementFilter {
     HasLabel(HasLabel),
     ContainsLabel(ContainsLabel),
     HasProperty(HasProperty),
+    ContainsProperty(ContainsProperty),
 }
 
 impl<E: Element> Predicate<E> for ElementFilter {
@@ -155,6 +156,7 @@ impl<E: Element> Predicate<E> for ElementFilter {
             ElementFilter::ContainsLabel(f) => f.test(entry),
             ElementFilter::HasProperty(f) => f.test(entry),
             ElementFilter::PassBy(v) => Some(*v),
+            ElementFilter::ContainsProperty(f) => f.test(entry),
         }
     }
 }
@@ -193,6 +195,10 @@ pub fn has_property_gt<O: Into<Object>>(key: String, value: O) -> ElementFilter 
 
 pub fn has_property_ge<O: Into<Object>>(key: String, value: O) -> ElementFilter {
     ElementFilter::HasProperty(HasProperty::ge(key, Some(value.into())))
+}
+
+pub fn contains_property(key: String, value: HashSet<Object>) -> ElementFilter {
+    ElementFilter::ContainsProperty(ContainsProperty::with_in(key, value))
 }
 
 pub fn by() -> ElementFilter {

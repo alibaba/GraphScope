@@ -22,6 +22,7 @@ use dyn_type::{CastError, Object, Primitives};
 use graph_store::prelude::INVALID_LABEL_ID;
 use pegasus::BuildJobError;
 use prost::{DecodeError, Message};
+use std::collections::HashSet;
 use std::convert::TryInto;
 use std::fmt::Display;
 
@@ -80,6 +81,47 @@ pub fn pb_value_to_object(raw: &pb_type::Value) -> Option<Object> {
         Some(pb_type::value::Item::I64Array(_)) => unimplemented!(),
         Some(pb_type::value::Item::F64Array(_)) => unimplemented!(),
         Some(pb_type::value::Item::StrArray(_)) => unimplemented!(),
+        Some(pb_type::value::Item::None(_)) => None,
+        _ => None,
+    }
+}
+
+pub fn pb_value_to_array_object(raw: &pb_type::Value) -> Option<HashSet<Object>> {
+    match &raw.item {
+        Some(pb_type::value::Item::Blob(_))
+        | Some(pb_type::value::Item::Boolean(_))
+        | Some(pb_type::value::Item::I32(_))
+        | Some(pb_type::value::Item::I64(_))
+        | Some(pb_type::value::Item::F64(_))
+        | Some(pb_type::value::Item::Str(_)) => unimplemented!(),
+        Some(pb_type::value::Item::I32Array(array)) => {
+            let mut set = HashSet::with_capacity(array.item.len());
+            for item in &array.item {
+                set.insert((*item).into());
+            }
+            Some(set)
+        }
+        Some(pb_type::value::Item::I64Array(array)) => {
+            let mut set = HashSet::with_capacity(array.item.len());
+            for item in &array.item {
+                set.insert((*item).into());
+            }
+            Some(set)
+        }
+        Some(pb_type::value::Item::F64Array(array)) => {
+            let mut set = HashSet::with_capacity(array.item.len());
+            for item in &array.item {
+                set.insert((*item).into());
+            }
+            Some(set)
+        }
+        Some(pb_type::value::Item::StrArray(array)) => {
+            let mut set = HashSet::with_capacity(array.item.len());
+            for item in &array.item {
+                set.insert(item.as_str().into());
+            }
+            Some(set)
+        }
         Some(pb_type::value::Item::None(_)) => None,
         _ => None,
     }
@@ -214,8 +256,48 @@ fn lte(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, Par
 }
 
 #[inline]
-fn with_in(_left: &pb_type::Key, _right: &pb_type::Value) -> Result<ElementFilter, ParseError> {
-    unimplemented!()
+fn with_in(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, ParseError> {
+    let right = pb_value_to_array_object(right);
+    match &left.item {
+        Some(pb_type::key::Item::Name(name)) => {
+            if let Some(right) = right {
+                Ok(contains_property(name.clone(), right))
+            } else {
+                unimplemented!()
+            }
+        }
+        Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
+        Some(pb_type::key::Item::Id(_)) => {
+            if let Some(right) = right {
+                let mut right_ids = HashSet::new();
+                for obj in right {
+                    right_ids.insert(obj.as_u128().unwrap());
+                }
+                Ok(contains_id(right_ids))
+            } else {
+                unimplemented!()
+            }
+        }
+        Some(pb_type::key::Item::Label(_)) => {
+            if let Some(right) = right {
+                let mut right_label_ids = HashSet::new();
+                for obj in right {
+                    let label_id = match obj {
+                        Object::Primitive(Primitives::Integer(id)) => {
+                            Label::Id(id.try_into().unwrap_or(INVALID_LABEL_ID))
+                        }
+                        Object::String(str) => Label::Str(str),
+                        _ => Label::Id(INVALID_LABEL_ID),
+                    };
+                    right_label_ids.insert(label_id);
+                }
+                Ok(contains_label(right_label_ids))
+            } else {
+                unimplemented!()
+            }
+        }
+        None => unimplemented!(),
+    }
 }
 
 #[derive(Debug)]

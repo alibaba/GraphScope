@@ -14,12 +14,14 @@
 //! limitations under the License.
 
 use crate::structure::filter::compare::{Compare, EqCmp, OrdCmp};
+use crate::structure::filter::contains::Contains;
 use crate::structure::filter::element::{ExpectValue, Reverse};
 use crate::structure::filter::Predicate;
 use crate::structure::{
     get_tlv_type, with_tlv, BiPredicate, Details, DynDetails, Element, TlvType,
 };
 use dyn_type::Object;
+use std::collections::HashSet;
 
 pub struct HasProperty {
     pub key: String,
@@ -73,5 +75,38 @@ impl HasProperty {
 impl Reverse for HasProperty {
     fn reverse(&mut self) {
         self.cmp.reverse();
+    }
+}
+
+pub struct ContainsProperty {
+    pub key: String,
+    pub cmp: Contains,
+    pub expect: HashSet<Object>,
+}
+
+impl ContainsProperty {
+    pub fn with_in(key: String, expect: HashSet<Object>) -> Self {
+        ContainsProperty { key, cmp: Contains::Within, expect }
+    }
+
+    pub fn with_out(key: String, expect: HashSet<Object>) -> Self {
+        ContainsProperty { key, cmp: Contains::Without, expect }
+    }
+}
+
+impl<E: Element> Predicate<E> for ContainsProperty {
+    fn test(&self, entry: &E) -> Option<bool> {
+        let details: &DynDetails = entry.details();
+        if let Some(left) = details.get_property(self.key.as_str()) {
+            self.cmp.test(&left.try_to_owned().unwrap(), &self.expect)
+        } else {
+            None
+        }
+    }
+}
+
+impl Reverse for ContainsProperty {
+    fn reverse(&mut self) {
+        self.cmp.reverse()
     }
 }
