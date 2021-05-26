@@ -15,7 +15,7 @@
 
 #[macro_use]
 extern crate lazy_static;
-extern crate pegasus;
+extern crate pegasus_common;
 
 extern crate dyn_clonable;
 

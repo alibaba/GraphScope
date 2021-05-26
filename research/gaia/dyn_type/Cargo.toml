@@ -7,4 +7,4 @@ edition = "2018"
 dyn-clonable = "0.9.0"
 itertools = "0.9"
 lazy_static = "1.3.0"
-pegasus = { path = "../pegasus/pegasus" }
+pegasus_common = { path = "../pegasus/common" }
