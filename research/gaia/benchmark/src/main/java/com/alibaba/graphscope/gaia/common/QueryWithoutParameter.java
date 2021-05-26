@@ -15,13 +15,9 @@
  */
 package com.alibaba.graphscope.gaia.common;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.tinkerpop.gremlin.driver.Client;
-import org.apache.tinkerpop.gremlin.driver.ResultSet;
-
 import java.util.HashMap;
 
-public class QueryWithoutParameter extends LdbcQuery {
+public class QueryWithoutParameter extends CommonQuery {
 
     public QueryWithoutParameter(String queryName, String queryFile) throws Exception {
         super(queryName, queryFile);
@@ -38,39 +34,4 @@ public class QueryWithoutParameter extends LdbcQuery {
         return new HashMap<String, String>();
     }
 
-    @Override
-    public void processGremlinQuery(Client client,
-                                    HashMap<String, String> singleParameter,
-                                    boolean printResult,
-                                    boolean printQuery) {
-
-        try {
-            String gremlinQuery = generateGremlinQuery(singleParameter, queryPattern);
-
-            long startTime = System.currentTimeMillis();
-            ResultSet resultSet = client.submit(gremlinQuery);
-            Pair<Integer, String> result = processResult(resultSet);
-            long endTime = System.currentTimeMillis();
-            long executeTime = endTime - startTime;
-            if (printQuery) {
-                String printInfo = String.format("QueryName[%s], Parameter[%s], ResultCount[%d], ExecuteTimeMS[%d].",
-                        queryName,
-                        singleParameter.toString(),
-                        result.getLeft(),
-                        executeTime);
-                if (printResult) {
-                    printInfo = String.format("%s Result: { %s }",
-                            printInfo,
-                            result.getRight());
-                }
-                System.out.println(printInfo);
-            }
-        } catch (Exception e) {
-            System.out.println(String.format("Timeout or failed: QueryName[%s], Parameter[%s].",
-                    queryName,
-                    singleParameter.toString()));
-            e.printStackTrace();
-        }
-
-    }
 }
