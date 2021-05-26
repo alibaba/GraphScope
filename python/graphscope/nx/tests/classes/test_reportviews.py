@@ -52,11 +52,11 @@ class TestNodeView(_TestNodeView):
         cls.nv = cls.G.nodes  # NodeView(G)
 
     def test_str(self):
-        #NB: only pass on num_workers=2
+        # NB: only pass on num_workers=2
         assert str(self.nv) == "[0, 2, 4, 6, 8, 1, 3, 5, 7]"
 
     def test_repr(self):
-        #NB: only pass on num_workers=2
+        # NB: only pass on num_workers=2
         assert repr(self.nv) == "NodeView((0, 2, 4, 6, 8, 1, 3, 5, 7))"
 
     def test_iter(self):
@@ -91,8 +91,11 @@ class TestNodeDataView(_TestNodeDataView):
         pass
 
     def test_str(self):
-        #NB: only pass on num_workers=2
-        assert str(self.ndv) == '[(0, {}), (2, {}), (4, {}), (6, {}), (8, {}), (1, {}), (3, {}), (5, {}), (7, {})]'
+        # NB: only pass on num_workers=2
+        assert (
+            str(self.ndv)
+            == "[(0, {}), (2, {}), (4, {}), (6, {}), (8, {}), (1, {}), (3, {}), (5, {}), (7, {})]"
+        )
 
     def test_repr(self):
         expected = "NodeDataView((0, 2, 4, 6, 8, 1, 3, 5, 7))"
@@ -339,7 +342,7 @@ class TestInEdgeView(_TestInEdgeView):
         for u, v in ev:
             pass
         iev = iter(ev)
-        assert next(iev) == (1, 2) # NB: only assert pass when num_workers=2
+        assert next(iev) == (1, 2)  # NB: only assert pass when num_workers=2
         assert iter(ev) != ev
         assert iter(iev) == iev
 
