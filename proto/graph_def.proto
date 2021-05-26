@@ -14,12 +14,12 @@
 //
 
 syntax = "proto3";
-package gs.rpc;
+package gs.rpc.graph;
 
 import "google/protobuf/any.proto";
 
 enum GraphTypePb {
-    UNKNOWN = 0;
+    UNKNOWN_TYPE = 0;
     IMMUTABLE_EDGECUT = 1;
     DYNAMIC_PROPERTY = 2;
     DYNAMIC_PROJECTED = 3;
@@ -52,7 +52,7 @@ message GraphDefPb {
     repeated EdgeKindPb edge_kinds = 6;
     map<string, int32> property_name_to_id = 7;
     // current extension supported: 
-    //   - MaxGraphInfoPb 
+    //   - MaxGraphInfoPb
     //   - VineyardInfoPb
     google.protobuf.Any extension = 8;
 }

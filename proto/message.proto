@@ -101,7 +101,7 @@ message RunStepResponse {
 
   // If the op create a graph or modify a graph, return the meta data of the
   // graph.
-  GraphDef graph_def = 31;
+  gs.rpc.graph.GraphDefPb graph_def = 31;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

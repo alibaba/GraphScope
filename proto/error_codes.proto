@@ -65,7 +65,7 @@ enum Code {
   LEARNING_ENGINE_INTERNAL_ERROR = 32;
 
   // Unknown error.
-  UNKNOWN = 101;
+  UNKNOWN_ERROR = 101;
 
   // Fatal error.
   // Means the service is not recoverable.
