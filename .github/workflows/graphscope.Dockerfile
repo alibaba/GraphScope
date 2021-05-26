@@ -1,13 +1,13 @@
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
-ARG profile=debug
+ARG profile=release
 
 COPY ./opt/graphscope/ /usr/local/
 RUN cd /usr/local/dist/ && pip3 install ./*.whl
 
 RUN mkdir -p /home/maxgraph
 ENV VINEYARD_IPC_SOCKET /home/maxgraph/data/vineyard/vineyard.sock
-COPY ./interactive_engine/src/executor/target/debug/executor /home/maxgraph/executor
+COPY ./interactive_engine/src/executor/target/release/executor /home/maxgraph/executor
 
 COPY ./interactive_engine/src/executor/store/log4rs.yml /home/maxgraph/log4rs.yml
 RUN mkdir -p /home/maxgraph/native

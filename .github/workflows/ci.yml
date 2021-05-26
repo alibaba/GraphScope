@@ -163,7 +163,7 @@ jobs:
         cd interactive_engine/src/executor
         ./exec.sh cargo build --all 
         cd ${GITHUB_WORKSPACE}
-        tar -cf gie.tar interactive_engine/src/executor/target/debug/executor \
+        tar -cf gie.tar interactive_engine/src/executor/target/release/executor \
                         interactive_engine/src/executor/store/log4rs.yml \
                         interactive_engine/deploy/docker/dockerfile
 
@@ -439,8 +439,6 @@ jobs:
 
   gie-test:
     runs-on: self-hosted
-    env:
-      profile: debug
     needs: [build-gae, build-gie, build-gle, build-manager]
     steps:
     - name: Clean up
