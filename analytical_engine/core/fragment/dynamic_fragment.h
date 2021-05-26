@@ -1613,7 +1613,7 @@ class DynamicFragment {
         if (v_fid == fid_ ||
             (modify_type == rpc::NX_DEL_NODES &&
              ovg2i_.find(gid) != ovg2i_.end()) ||
-             !this->distributed()) {
+            !this->distributed()) {
           vertices.emplace_back(gid, v_data);
         }
       }
