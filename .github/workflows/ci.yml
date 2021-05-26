@@ -161,7 +161,7 @@ jobs:
         source ~/.bashrc
 
         cd interactive_engine/src/executor
-        ./exec.sh cargo build --all 
+        ./exec.sh cargo build --all --release
         cd ${GITHUB_WORKSPACE}
         tar -cf gie.tar interactive_engine/src/executor/target/release/executor \
                         interactive_engine/src/executor/store/log4rs.yml \
