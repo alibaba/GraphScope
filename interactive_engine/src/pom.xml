@@ -24,7 +24,6 @@
         <module>assembly</module>
         <module>instance-manager</module>
         <module>v2</module>
-        <module>data_load_tools</module>
         <module>executor</module>
     </modules>
 
