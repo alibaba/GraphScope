@@ -86,44 +86,39 @@ pub fn pb_value_to_object(raw: &pb_type::Value) -> Option<Object> {
     }
 }
 
-pub fn pb_value_to_array_object(raw: &pb_type::Value) -> Option<HashSet<Object>> {
+pub fn pb_value_to_array_object(
+    raw: &pb_type::Value,
+) -> Result<Option<HashSet<Object>>, ParseError> {
     match &raw.item {
-        Some(pb_type::value::Item::Blob(_))
-        | Some(pb_type::value::Item::Boolean(_))
-        | Some(pb_type::value::Item::I32(_))
-        | Some(pb_type::value::Item::I64(_))
-        | Some(pb_type::value::Item::F64(_))
-        | Some(pb_type::value::Item::Str(_)) => unimplemented!(),
         Some(pb_type::value::Item::I32Array(array)) => {
             let mut set = HashSet::with_capacity(array.item.len());
             for item in &array.item {
                 set.insert((*item).into());
             }
-            Some(set)
+            Ok(Some(set))
         }
         Some(pb_type::value::Item::I64Array(array)) => {
             let mut set = HashSet::with_capacity(array.item.len());
             for item in &array.item {
                 set.insert((*item).into());
             }
-            Some(set)
+            Ok(Some(set))
         }
         Some(pb_type::value::Item::F64Array(array)) => {
             let mut set = HashSet::with_capacity(array.item.len());
             for item in &array.item {
                 set.insert((*item).into());
             }
-            Some(set)
+            Ok(Some(set))
         }
         Some(pb_type::value::Item::StrArray(array)) => {
             let mut set = HashSet::with_capacity(array.item.len());
             for item in &array.item {
                 set.insert(item.as_str().into());
             }
-            Some(set)
+            Ok(Some(set))
         }
-        Some(pb_type::value::Item::None(_)) => None,
-        _ => None,
+        _ => Err(ParseError::InvalidData),
     }
 }
 
@@ -232,9 +227,8 @@ fn lt(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, Pars
             }
         }
         Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
-        Some(pb_type::key::Item::Id(_)) => unimplemented!("can't compare between element id;"),
-        Some(pb_type::key::Item::Label(_)) => {
-            unimplemented!("can't compare between element label;")
+        Some(pb_type::key::Item::Id(_)) | Some(pb_type::key::Item::Label(_)) => {
+            Err(ParseError::OtherErr("Can only compare for property values;".to_string()))
         }
         _ => Err(ParseError::InvalidData),
     }
@@ -251,19 +245,23 @@ fn lte(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, Par
                 Ok(by_property_le(name.clone()))
             }
         }
-        _ => unimplemented!(),
+        Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
+        Some(pb_type::key::Item::Id(_)) | Some(pb_type::key::Item::Label(_)) => {
+            Err(ParseError::OtherErr("Can only compare for property values;".to_string()))
+        }
+        _ => Err(ParseError::InvalidData),
     }
 }
 
 #[inline]
 fn with_in(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, ParseError> {
-    let right = pb_value_to_array_object(right);
+    let right = pb_value_to_array_object(right)?;
     match &left.item {
         Some(pb_type::key::Item::Name(name)) => {
             if let Some(right) = right {
                 Ok(contains_property(name.clone(), right))
             } else {
-                unimplemented!()
+                Err(ParseError::InvalidData)
             }
         }
         Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
@@ -275,7 +273,7 @@ fn with_in(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter,
                 }
                 Ok(contains_id(right_ids))
             } else {
-                unimplemented!()
+                Err(ParseError::InvalidData)
             }
         }
         Some(pb_type::key::Item::Label(_)) => {
@@ -293,10 +291,10 @@ fn with_in(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter,
                 }
                 Ok(contains_label(right_label_ids))
             } else {
-                unimplemented!()
+                Err(ParseError::InvalidData)
             }
         }
-        None => unimplemented!(),
+        None => Err(ParseError::InvalidData),
     }
 }
 
