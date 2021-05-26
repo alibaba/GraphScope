@@ -25,29 +25,32 @@ service ClientDdl {
 message BatchSubmitRequest {
   int32 format_version = 1;
   bool simple_response = 2;
-  repeated oneof ddl_request {
-      CreateVertexTypeRequest create_vertex_type_request = 3;
-      CreateEdgeTypeRequest create_edge_type_request = 4;
-      AddEdgeKindRequest add_edge_kind_request = 5;
-      RemoveEdgeKindRequest remove_edge_kind_request = 6;
-      DropVertexTypeRequest drop_vertex_type_request = 7;
-      DropEdgeTypeRequest drop_edge_type_request = 8;
+  message DDLRequest {
+    oneof value {
+      CreateVertexTypeRequest create_vertex_type_request = 1;
+      CreateEdgeTypeRequest create_edge_type_request = 2;
+      AddEdgeKindRequest add_edge_kind_request = 3;
+      RemoveEdgeKindRequest remove_edge_kind_request = 4;
+      DropVertexTypeRequest drop_vertex_type_request = 5;
+      DropEdgeTypeRequest drop_edge_type_request = 6;
+    }
   }
+  repeated DDLRequest value = 3;
 }
 
 message BatchSubmitResponse {
   int32 format_version = 1;
   // If `simple_response` of BatchSubmitRequest is set to True, 
   // only `version` and `key` fields will be filled
-  GraphDefPb graph_def = 2;
+  gs.rpc.graph.GraphDefPb graph_def = 2;
 }
 
 message CreateVertexTypeRequest {
-    TypeDefPb type_def = 1;
+    gs.rpc.graph.TypeDefPb type_def = 1;
 }
 
 message CreateEdgeTypeRequest {
-    TypeDefPb type_def = 1;
+    gs.rpc.graph.TypeDefPb type_def = 1;
 }
 
 message AddEdgeKindRequest {
@@ -75,6 +78,6 @@ message GetGraphDefRequest {
 }
 
 message GetGraphDefResponse {
-    GraphDefPb graph_def = 1;
+    gs.rpc.graph.GraphDefPb graph_def = 1;
 }
 

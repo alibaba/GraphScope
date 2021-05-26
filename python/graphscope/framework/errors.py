@@ -151,7 +151,7 @@ _gs_error_types = {
     error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR: AnalyticalEngineInternalError,
     error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR: InteractiveEngineInternalError,
     error_codes_pb2.LEARNING_ENGINE_INTERNAL_ERROR: LearningEngineInternalError,
-    error_codes_pb2.UNKNOWN: UnknownError,
+    error_codes_pb2.UNKNOWN_ERROR: UnknownError,
     error_codes_pb2.FATAL_ERROR: FatalError,
 }
 
