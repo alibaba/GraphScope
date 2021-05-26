@@ -25,6 +25,7 @@
         <module>instance-manager</module>
         <module>v2</module>
         <module>executor</module>
+        <module>data_load_tools</module>
     </modules>
 
     <profiles>
