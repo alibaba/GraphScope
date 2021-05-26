@@ -215,7 +215,7 @@ class DiGraph(Graph):
         create_empty_in_engine = attr.pop(
             "create_empty_in_engine", True
         )  # a hidden parameter
-        self._distributed = attr.pop("dist", False)
+        self._distributed = attr.pop("dist", True)
 
         if self._is_gs_graph(incoming_graph_data):
             self._session_id = incoming_graph_data.session_id
