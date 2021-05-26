@@ -439,6 +439,8 @@ jobs:
 
   gie-test:
     runs-on: self-hosted
+    env:
+      profile: debug
     needs: [build-gae, build-gie, build-gle, build-manager]
     steps:
     - name: Clean up
