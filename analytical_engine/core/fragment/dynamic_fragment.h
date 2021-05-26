@@ -771,6 +771,7 @@ class DynamicFragment {
                 const std::string& copy_type = "identical") {
     directed_ = other->directed_;
     load_strategy_ = other->load_strategy_;
+    distributed_ = other->distributed();
 
     copyVertices(other);
     copyEdges(other, copy_type);
@@ -782,10 +783,11 @@ class DynamicFragment {
   // generate directed graph from orignal undirected graph.
   void ToDirectedFrom(std::shared_ptr<DynamicFragment> origin) {
     // original graph must be undirected.
-    assert(!origin->directed());
+    CHECK(!origin->directed());
 
     directed_ = true;
     load_strategy_ = grape::LoadStrategy::kBothOutIn;
+    distributed_ = origin->distributed();
     copyVertices(origin);
     toDirectedEdges(origin);
     mirrors_of_frag_.resize(fnum_);
@@ -799,6 +801,7 @@ class DynamicFragment {
 
     directed_ = false;
     load_strategy_ = grape::LoadStrategy::kOnlyOut;
+    distributed_ = origin->distributed();
     copyVertices(origin);
     toUnDirectedEdges(origin);
     mirrors_of_frag_.resize(fnum_);
@@ -808,6 +811,7 @@ class DynamicFragment {
   // induce a subgraph that contains the induced_vertices and the edges between
   // those vertices or a edge subgraph that contains the induced_edges and the
   // nodes incident to induced_edges.
+  // TODO(weibin): induce from not distributed way.
   void InduceSubgraph(
       std::shared_ptr<DynamicFragment> origin,
       const std::unordered_set<oid_t>& induced_vertices,
@@ -816,6 +820,7 @@ class DynamicFragment {
     directed_ = origin->directed();
     directed() ? load_strategy_ = grape::LoadStrategy::kBothOutIn
                : load_strategy_ = grape::LoadStrategy::kOnlyOut;
+    distributed_ = origin->distributed();
     fid_ = origin->fid();
     fnum_ = vm_ptr_->GetFragmentNum();
     calcFidBitWidth(fnum_, id_mask_, fid_offset_);
@@ -884,6 +889,10 @@ class DynamicFragment {
     edge_space_.Clear();
     inner_ie_pos_.resize(ivnum_, -1);
     inner_oe_pos_.resize(ivnum_, -1);
+    if (distributed()) {
+      outer_ie_pos_.clear();
+      outer_oe_pos_.clear();
+    }
     edge_space_.Clear();
     selfloops_vertices_.clear();
 
@@ -1234,7 +1243,12 @@ class DynamicFragment {
    * @attention Only inner vertex is available.
    */
   inline virtual adj_list_t GetIncomingAdjList(const vertex_t& v) {
-    auto ie_pos = inner_ie_pos_[v.GetValue()];
+    int32_t ie_pos;
+    if (!distributed() && IsOuterVertex(v)) {
+      ie_pos = outer_ie_pos_[v.GetValue() - ivnum_];
+    } else {
+      ie_pos = inner_ie_pos_[v.GetValue()];
+    }
     if (ie_pos == -1) {
       return adj_list_t();
     }
@@ -1251,12 +1265,16 @@ class DynamicFragment {
    * @attention Only inner vertex is available.
    */
   inline const_adj_list_t GetIncomingAdjList(const vertex_t& v) const {
-    auto ie_pos = inner_ie_pos_[v.GetValue()];
+    int32_t ie_pos;
+    if (!distributed() && IsOuterVertex(v)) {
+      ie_pos = outer_ie_pos_[v.GetValue() - ivnum_];
+    } else {
+      ie_pos = inner_ie_pos_[v.GetValue()];
+    }
     if (ie_pos == -1) {
       return const_adj_list_t();
     }
-    return const_adj_list_t(id_mask_, ivnum_,
-                            edge_space_[ie_pos].cbegin(),
+    return const_adj_list_t(id_mask_, ivnum_, edge_space_[ie_pos].cbegin(),
                             edge_space_[ie_pos].cend());
   }
 
@@ -1265,8 +1283,7 @@ class DynamicFragment {
     if (ie_pos == -1) {
       return adj_list_t();
     }
-    return adj_list_t(id_mask_, ivnum_,
-                      edge_space_.InnerNbr(ie_pos).begin(),
+    return adj_list_t(id_mask_, ivnum_, edge_space_.InnerNbr(ie_pos).begin(),
                       edge_space_.InnerNbr(ie_pos).end());
   }
 
@@ -1286,8 +1303,7 @@ class DynamicFragment {
     if (ie_pos == -1) {
       return adj_list_t();
     }
-    return adj_list_t(id_mask_, ivnum_,
-                      edge_space_.OuterNbr(ie_pos).begin(),
+    return adj_list_t(id_mask_, ivnum_, edge_space_.OuterNbr(ie_pos).begin(),
                       edge_space_.OuterNbr(ie_pos).end());
   }
 
@@ -1312,7 +1328,13 @@ class DynamicFragment {
    * @attention Only inner vertex is available.
    */
   inline virtual adj_list_t GetOutgoingAdjList(const vertex_t& v) {
-    auto oe_pos = inner_oe_pos_[v.GetValue()];
+    int32_t oe_pos;
+    if (!distributed() && IsOuterVertex(v)) {
+      oe_pos = outer_oe_pos_[v.GetValue() - ivnum_];
+    } else {
+      oe_pos = inner_oe_pos_[v.GetValue()];
+    }
+
     if (oe_pos == -1) {
       return adj_list_t();
     }
@@ -1329,12 +1351,16 @@ class DynamicFragment {
    * @attention Only inner vertex is available.
    */
   inline const_adj_list_t GetOutgoingAdjList(const vertex_t& v) const {
-    auto oe_pos = inner_oe_pos_[v.GetValue()];
+    int32_t oe_pos;
+    if (!distributed() && IsOuterVertex(v)) {
+      oe_pos = outer_oe_pos_[v.GetValue() - ivnum_];
+    } else {
+      oe_pos = inner_oe_pos_[v.GetValue()];
+    }
     if (oe_pos == -1) {
       return const_adj_list_t();
     }
-    return const_adj_list_t(id_mask_, ivnum_,
-                            edge_space_[oe_pos].cbegin(),
+    return const_adj_list_t(id_mask_, ivnum_, edge_space_[oe_pos].cbegin(),
                             edge_space_[oe_pos].cend());
   }
 
@@ -1343,8 +1369,7 @@ class DynamicFragment {
     if (oe_pos == -1) {
       return adj_list_t();
     }
-    return adj_list_t(id_mask_, ivnum_,
-                      edge_space_.InnerNbr(oe_pos).begin(),
+    return adj_list_t(id_mask_, ivnum_, edge_space_.InnerNbr(oe_pos).begin(),
                       edge_space_.InnerNbr(oe_pos).end());
   }
 
@@ -1364,8 +1389,7 @@ class DynamicFragment {
     if (oe_pos == -1) {
       return adj_list_t();
     }
-    return adj_list_t(id_mask_, ivnum_,
-                      edge_space_.OuterNbr(oe_pos).begin(),
+    return adj_list_t(id_mask_, ivnum_, edge_space_.OuterNbr(oe_pos).begin(),
                       edge_space_.OuterNbr(oe_pos).end());
   }
 
@@ -1586,9 +1610,10 @@ class DynamicFragment {
             continue;
           }
         }
-        if (v_fid == fid_ || (modify_type == rpc::NX_DEL_NODES &&
-                              ovg2i_.find(gid) != ovg2i_.end()) ||
-            !this->distributed()) {
+        if (v_fid == fid_ ||
+            (modify_type == rpc::NX_DEL_NODES &&
+             ovg2i_.find(gid) != ovg2i_.end()) ||
+             !this->distributed()) {
           vertices.emplace_back(gid, v_data);
         }
       }
@@ -1779,6 +1804,8 @@ class DynamicFragment {
  private:
   inline virtual vid_t ivnum() { return ivnum_; }
 
+  inline virtual vid_t tvnum() { return tvnum_; }
+
   inline virtual Array<vdata_t, grape::Allocator<vdata_t>>& vdata() {
     return ivdata_;
   }
@@ -1789,6 +1816,14 @@ class DynamicFragment {
 
   inline virtual Array<int32_t, grape::Allocator<int32_t>>& inner_oe_pos() {
     return inner_oe_pos_;
+  }
+
+  inline virtual Array<int32_t, grape::Allocator<int32_t>>& outer_ie_pos() {
+    return outer_ie_pos_;
+  }
+
+  inline virtual Array<int32_t, grape::Allocator<int32_t>>& outer_oe_pos() {
+    return outer_oe_pos_;
   }
 
   virtual dynamic_fragment_impl::NbrMapSpace<edata_t>& inner_edge_space() {
@@ -1881,7 +1916,7 @@ class DynamicFragment {
       addEdges(edges);
     } else {
       outer_ie_pos_.resize(ovnum_, -1);
-      outer_ie_pos_.resize(ovnum_, -1);
+      outer_oe_pos_.resize(ovnum_, -1);
       addEdgesDuplicated(edges);
     }
     // initOuterVerticesOfFragment();
@@ -2232,6 +2267,9 @@ class DynamicFragment {
         if (is_iv_gid(e.dst())) {
           if (addInnerIncomingEdge(gid_to_lid(e.src()), gid_to_lid(e.dst()),
                                    e.edata())) {
+            if (e.src() == e.dst()) {
+              addSelfLoop(e.src());
+            }
             ++ienum_;
           }
         } else {
@@ -2245,7 +2283,10 @@ class DynamicFragment {
       for (auto& e : edges) {
         if (is_iv_gid(e.src())) {
           if (addInnerOutgoingEdge(gid_to_lid(e.src()), gid_to_lid(e.dst()),
-              e.edata())) {
+                                   e.edata())) {
+            if (e.src() == e.dst()) {
+              addSelfLoop(e.src());
+            }
             ++oenum_;
           }
         } else {
@@ -2259,7 +2300,10 @@ class DynamicFragment {
       for (auto& e : edges) {
         if (is_iv_gid(e.src())) {
           if (addInnerOutgoingEdge(gid_to_lid(e.src()), gid_to_lid(e.dst()),
-              e.edata())) {
+                                   e.edata())) {
+            if (e.src() == e.dst()) {
+              addSelfLoop(e.src());
+            }
             ++oenum_;
           }
         } else {
@@ -2697,10 +2741,12 @@ class DynamicFragment {
     memcpy(&outer_vertex_alive_[0], &(other->outer_vertex_alive_[0]),
            other->outer_vertex_alive_.size() * sizeof(bool));
 
+    /*
     outer_vertices_of_frag_.resize(fnum_);
     for (size_t i = 0; i < fnum_; ++i) {
       outer_vertices_of_frag_[i] = other->outer_vertices_of_frag_[i];
     }
+    */
   }
 
   void copyEdges(std::shared_ptr<DynamicFragment>& other,
@@ -2715,16 +2761,32 @@ class DynamicFragment {
       inner_oe_pos_.resize(other->inner_ie_pos_.size());
       memcpy(&inner_oe_pos_[0], &(other->inner_ie_pos_[0]),
              other->inner_ie_pos_.size() * sizeof(int32_t));
+      if (!distributed()) {
+        outer_ie_pos_.resize(other->outer_oe_pos_.size());
+        memcpy(&outer_ie_pos_[0], &(other->outer_oe_pos_[0]),
+               other->outer_oe_pos_.size() * sizeof(int32_t));
+        outer_oe_pos_.resize(other->outer_ie_pos_.size());
+        memcpy(&outer_oe_pos_[0], &(other->outer_ie_pos_[0]),
+               other->outer_ie_pos_.size() * sizeof(int32_t));
+      }
     } else {
       ienum_ = other->ienum_;
       oenum_ = other->oenum_;
       inner_ie_pos_.resize(other->inner_ie_pos_.size());
       memcpy(&inner_ie_pos_[0], &(other->inner_ie_pos_[0]),
              other->inner_ie_pos_.size() * sizeof(int32_t));
-
       inner_oe_pos_.resize(other->inner_oe_pos_.size());
       memcpy(&inner_oe_pos_[0], &(other->inner_oe_pos_[0]),
              other->inner_oe_pos_.size() * sizeof(int32_t));
+
+      if (!distributed()) {
+        outer_ie_pos_.resize(other->outer_ie_pos_.size());
+        memcpy(&outer_ie_pos_[0], &(other->outer_ie_pos_[0]),
+               other->outer_ie_pos_.size() * sizeof(int32_t));
+        outer_oe_pos_.resize(other->outer_oe_pos_.size());
+        memcpy(&outer_oe_pos_[0], &(other->outer_oe_pos_[0]),
+               other->outer_oe_pos_.size() * sizeof(int32_t));
+      }
     }
 
     edge_space_.copy(other->edge_space_);
