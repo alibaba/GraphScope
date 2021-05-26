@@ -26,7 +26,7 @@ mod test {
         let expected = 1;
         let test_job_factory = TestJobFactory::with_expect_result_num(expected);
         let pb_request = read_pb_request(gen_path("early_stop_test_01")).expect("read pb failed");
-        run_test(test_job_factory, pb_request);
+        run_test_with_worker_num(test_job_factory, pb_request, 2);
     }
 
     #[test]
@@ -35,6 +35,6 @@ mod test {
         let expected = 1;
         let test_job_factory = TestJobFactory::with_expect_result_num(expected);
         let pb_request = read_pb_request(gen_path("early_stop_test_02")).expect("read pb failed");
-        run_test(test_job_factory, pb_request);
+        run_test_with_worker_num(test_job_factory, pb_request, 2);
     }
 }
