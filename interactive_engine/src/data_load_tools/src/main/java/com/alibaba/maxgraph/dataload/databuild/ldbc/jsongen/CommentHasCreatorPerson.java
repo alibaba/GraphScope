@@ -13,11 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.maxgraph.dataload;
+package com.alibaba.maxgraph.dataload.databuild.ldbc.jsongen;
 
-public class LoadTool {
+public class CommentHasCreatorPerson extends EdgeInfo {
+    String label = "hasCreator";
+    String srcLabel = "comment";
+    String dstLabel = "person";
 
-    public static void main(String[] args) {
+    public String getLabel() {
+        return label;
+    }
 
+    public String getSrcLabel() {
+        return srcLabel;
+    }
+
+    public String getDstLabel() {
+        return dstLabel;
+    }
+
+    @Override
+    String[] getPropertyNames() {
+        return new String[0];
     }
 }
