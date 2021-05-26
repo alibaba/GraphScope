@@ -15,13 +15,11 @@
  */
 package com.alibaba.graphscope.gaia.plan.strategy;
 
-import org.apache.tinkerpop.gremlin.process.traversal.P;
-import org.apache.tinkerpop.gremlin.process.traversal.Step;
-import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
-import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
+import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.TraversalFilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectOneStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.AbstractTraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
@@ -70,7 +68,8 @@ public class WhereTraversalStrategy extends AbstractTraversalStrategy<TraversalS
             WhereTraversalStep.WhereStartStep startStep = (WhereTraversalStep.WhereStartStep) step;
             newTraversal.removeStep(startStep);
             if (!startStep.getScopeKeys().isEmpty()) {
-                // todo: replace head with select operator
+                String tag = (String) startStep.getScopeKeys().iterator().next();
+                newTraversal.addStep(0, new SelectOneStep<>(newTraversal, Pop.last, tag));
             }
         }
         step = traversal.getEndStep();
@@ -80,7 +79,6 @@ public class WhereTraversalStrategy extends AbstractTraversalStrategy<TraversalS
             if (!lastStep.getScopeKeys().isEmpty()) {
                 String tag = lastStep.getScopeKeys().iterator().next();
                 newTraversal.addStep(new WherePredicateStep(newTraversal, Optional.ofNullable(null), P.eq(tag)));
-                return newTraversal;
             }
         }
         return newTraversal;
