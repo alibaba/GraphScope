@@ -326,16 +326,16 @@ mod test {
         assert_eq!(chain.len(), 0);
         assert!(!chain.is_dirty());
         let mut a = fronts[0..3].to_vec();
-        a.sort_by(|t1, t2| t1.as_slice().cmp(&t2.as_slice()));
+        a.sort_by(|t1, t2| t1.current_uncheck().cmp(&t2.current_uncheck()));
         assert_eq!(a, vec![tag![0, 0], tag![0, 1], tag![0, 2]]);
         let mut b = fronts[3..].to_vec();
-        b.sort_by(|t1, t2| t1.as_slice().cmp(&t2.as_slice()));
+        b.sort_by(|t1, t2| t1.current_uncheck().cmp(&t2.current_uncheck()));
         assert_eq!(b, vec![tag!(0), tag!(1)]);
     }
 
     #[test]
     fn test_block() {
-        let root = crate::tag::ROOT.clone();
+        let root = Tag::Root;
         let mut chain = TagAntiChainSet::new();
         chain.push(tag!(0));
         chain.push(tag![0, 0]);
@@ -369,7 +369,7 @@ mod test {
 
     #[test]
     fn test_block_anyway() {
-        let root = crate::tag::ROOT.clone();
+        let root = Tag::Root;
         let mut chain = TagAntiChainSet::new();
         let guard = chain.block_anyway(&tag![0, 1], 1024);
         chain.push(tag!(0));
@@ -394,7 +394,7 @@ mod test {
 
     #[test]
     fn test_block_anyway_2() {
-        let root = crate::tag::ROOT.clone();
+        let root = Tag::Root;
         let mut chain = TagAntiChainSet::new();
 
         let guard = chain.block_anyway(&tag![0, 1], 1024);
@@ -428,7 +428,7 @@ mod test {
 
     #[test]
     fn test_block_anyway_3() {
-        let root = crate::tag::ROOT.clone();
+        let root = Tag::Root;
         let mut chain = TagAntiChainSet::new();
         let guard = chain.block_anyway(&tag![0, 0, 1], 1024);
         guard.decr(1024);

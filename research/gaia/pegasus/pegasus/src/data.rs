@@ -31,7 +31,7 @@ pub struct DataSet<T> {
 impl<D> DataSet<D> {
     #[inline]
     pub fn empty() -> Self {
-        DataSet { tag: crate::tag::ROOT.clone(), data: Vec::new(), recycle_hook: None }
+        DataSet { tag: Tag::Root, data: Vec::new(), recycle_hook: None }
     }
 
     pub fn new<T: Into<Tag>>(tag: T, data: Vec<D>) -> Self {

@@ -162,7 +162,7 @@ impl<D: Data> OutputHandle<D> {
                 OutputDelta::Advance => {
                     for mut end in self.end_scopes.take_fronts().drain(..) {
                         if end.len() == self.scope_depth {
-                            end.advance_unchecked();
+                            end = end.advance();
                         }
                         // trace!("[worker_{:?}] close scope {:?} on port {:?}", self.tee.worker, end, self.port);
                         ends.push(end);
@@ -208,9 +208,7 @@ impl<D: Data> OutputHandle<D> {
         match self.delta {
             OutputDelta::None => tag.clone(),
             OutputDelta::Advance => {
-                let mut tag = tag.clone();
-                tag.advance_unchecked();
-                tag
+                tag.advance()
             }
             OutputDelta::ToParent(n) => {
                 let mut tag = tag.clone();

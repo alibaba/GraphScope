@@ -56,7 +56,7 @@ impl<'a, D: Data> OutputSession<'a, D> {
         if let Some(cur) = self.tag.current() {
             if cur != to {
                 self.flush(false)?;
-                self.tag.advance_to(to).ok();
+                self.tag = self.tag.advance_to(to);
             }
         }
         Ok(())
