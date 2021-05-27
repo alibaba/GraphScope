@@ -135,7 +135,7 @@ class TestGraph(_TestGraph):
         nlist = list(G.nodes)
         assert len(nlist) == 6
         for n in nlist:
-            assert n in [False, (0, 1), 3, 'n', 3.14, True]
+            assert n in [False, (0, 1), 3, "n", 3.14, True]
         assert G[(0, 1)][3]["weight"] == 1
         assert G["n"][3.14]["weight"] == 3.14
         assert G[True][False]["weight"] == True
