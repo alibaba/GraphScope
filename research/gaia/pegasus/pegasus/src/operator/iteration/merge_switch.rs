@@ -225,21 +225,25 @@ impl<D: Data> OperatorCore for MergeSwitch<D> {
         if n.port == 0 {
             // because of static enter, the enter operator won't give sub-scope end signal, so notifications
             // from this input port are all from parent scope;
-            assert!(n.tag.len() < self.scope_depth);
-            for output in outputs.iter() {
-                output.retain(&n.tag);
-            }
-
-            self.un_complete.retain(|un_cpe| {
-                if n.tag.is_parent_of(un_cpe) {
-                    for output in outputs.iter() {
-                        output.scope_end(un_cpe.clone());
-                    }
-                    false
-                } else {
-                    true
+            // assert!(n.tag.len() < self.scope_depth);
+            if n.tag.len() < self.scope_depth {
+                for output in outputs.iter() {
+                    output.retain(&n.tag);
                 }
-            });
+
+                self.un_complete.retain(|un_cpe| {
+                    if n.tag.is_parent_of(un_cpe) {
+                        for output in outputs.iter() {
+                            output.scope_end(un_cpe.clone());
+                        }
+                        false
+                    } else {
+                        true
+                    }
+                });
+            } else {
+                self.un_complete.remove(&n.tag);
+            }
         } else if n.port == 1 {
             if n.tag.len() == self.scope_depth {
                 // End notifications of each iteration;
