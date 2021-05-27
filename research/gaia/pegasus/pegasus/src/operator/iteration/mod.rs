@@ -138,9 +138,8 @@ impl CancelGuard for FeedbackCancelGuard {
             if signal.tag.len() < self.scope_depth {
                 self.pop.push(signal.take());
             } else if signal.tag.len() == self.scope_depth {
-                let mut tag = signal.take();
-                tag.retreat().unwrap();
-                self.pop.push(tag);
+                let tag = signal.take();
+                self.pop.push(tag.retreat());
             }
         }
         &mut self.pop

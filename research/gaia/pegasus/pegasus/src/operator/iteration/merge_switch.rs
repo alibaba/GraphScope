@@ -125,12 +125,13 @@ impl<D: Data> OperatorCore for MergeSwitch<D> {
         let mut output_leave = new_output_session::<D>(&outputs[0], tag);
         let mut output_loop = new_output_session::<D>(&outputs[1], tag);
 
-        let (p, round) = tag.split().expect("unwrap tag split result failure;");
+        let p = tag.to_parent_uncheck();
+        let round = tag.current_uncheck();
         let depth = self.scope_depth;
         assert_eq!(tag.len(), depth);
         let mut has_data_into_iter = false;
         if round == 0 && !self.extern_exhaust {
-            debug_worker!("{} enter iteration;", p);
+            debug_worker!("{:?} enter iteration;", p);
             if !self.in_loops.contains_key(&p) {
                 self.in_loops.insert(p.clone(), LoopTracker::new(self.peers));
                 self.parent_scopes.insert(p.clone(), false);
@@ -247,7 +248,8 @@ impl<D: Data> OperatorCore for MergeSwitch<D> {
         } else if n.port == 1 {
             if n.tag.len() == self.scope_depth {
                 // End notifications of each iteration;
-                let (p, round) = n.tag.split().expect("invalid tag in iteration;");
+                let p = n.tag.to_parent_uncheck();
+                let round = n.tag.current_uncheck();
                 if round == self.condition.max_iters {
                     if self.in_loops.remove(&p).is_some() {
                         outputs[0].drop_retain(&p);
