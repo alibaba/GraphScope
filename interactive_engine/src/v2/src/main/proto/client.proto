@@ -118,7 +118,6 @@ message PrepareDataLoadRequest {
 
 message PrepareDataLoadResponse {
   GraphDefPb graphDef = 1;
-  int64 table_id_start = 2;
 }
 
 message CommitDataLoadRequest {

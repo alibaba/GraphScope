@@ -15,13 +15,17 @@
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
+import com.alibaba.maxgraph.v2.common.frontend.api.schema.EdgeType;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema;
+import com.alibaba.maxgraph.v2.common.frontend.api.schema.SchemaElement;
 import com.alibaba.maxgraph.v2.common.schema.GraphSchemaMapper;
 import com.alibaba.maxgraph.v2.sdk.Client;
 import com.alibaba.maxgraph.v2.sdk.DataLoadTarget;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -35,9 +39,6 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class OfflineBuild {
@@ -46,8 +47,7 @@ public class OfflineBuild {
     public static final String PARTITION_NUM = "partition.num";
     public static final String INPUT_PATH = "input.path";
     public static final String OUTPUT_PATH = "output.path";
-    public static final String SCHEMA_FILE = "schema.file";
-    public static final String GRAPH_URL = "graph.url";
+    public static final String GRAPH_ENDPOINT = "graph.endpoint";
     public static final String SCHEMA_JSON = "schema.json";
     public static final String SEPARATOR = "separator";
     public static final String COLUMN_MAPPING_CONFIG = "column.mapping.config";
@@ -65,31 +65,23 @@ public class OfflineBuild {
         int partitionNum = Integer.parseInt(properties.getProperty(PARTITION_NUM));
         String inputPath = properties.getProperty(INPUT_PATH);
         String outputPath = properties.getProperty(OUTPUT_PATH);
-        String schemaFile = properties.getProperty(SCHEMA_FILE, "");
         String columnMappingConfigStr = properties.getProperty(COLUMN_MAPPING_CONFIG);
-        String schemaJson;
-        GraphSchema schema;
+        String graphEndpoint = properties.getProperty(GRAPH_ENDPOINT);
+        Client client = new Client(graphEndpoint, "");
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, FileColumnMapping> columnMappingConfig = objectMapper.readValue(columnMappingConfigStr,
                 new TypeReference<Map<String, FileColumnMapping>>() {});
 
-        if (schemaFile.isEmpty()) {
-            String graphUrl = properties.getProperty(GRAPH_URL);
-            Client client = new Client(graphUrl, "");
-            List<DataLoadTarget> targets = new ArrayList<>();
-            for (FileColumnMapping fileColumnMapping : columnMappingConfig.values()) {
-                targets.add(DataLoadTarget.newBuilder()
-                        .setLabel(fileColumnMapping.getLabel())
-                        .setSrcLabel(fileColumnMapping.getSrcLabel())
-                        .setDstLabel(fileColumnMapping.getDstLabel())
-                        .build());
-            }
-            schema = client.prepareDataLoad(targets);
-            schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
-        } else {
-            schemaJson = new String(Files.readAllBytes(Paths.get(schemaFile)), StandardCharsets.UTF_8);
-            schema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
+        List<DataLoadTarget> targets = new ArrayList<>();
+        for (FileColumnMapping fileColumnMapping : columnMappingConfig.values()) {
+            targets.add(DataLoadTarget.newBuilder()
+                    .setLabel(fileColumnMapping.getLabel())
+                    .setSrcLabel(fileColumnMapping.getSrcLabel())
+                    .setDstLabel(fileColumnMapping.getDstLabel())
+                    .build());
         }
+        GraphSchema schema = client.prepareDataLoad(targets);
+        String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
 
         Map<String, ColumnMappingInfo> columnMappingInfos = new HashMap<>();
         columnMappingConfig.forEach((fileName, fileColumnMapping) -> {
@@ -119,10 +111,28 @@ public class OfflineBuild {
         LazyOutputFormat.setOutputFormatClass(job, SstOutputFormat.class);
         FileInputFormat.addInputPath(job, new Path(inputPath));
         FileInputFormat.setInputDirRecursive(job, true);
-        FileOutputFormat.setOutputPath(job, new Path(outputPath));
-        int status = job.waitForCompletion(true) ? 0 : 1;
-        System.out.println(mappings);
-        System.exit(status);
+        Path outputDir = new Path(outputPath);
+        FileOutputFormat.setOutputPath(job, outputDir);
+        if (!job.waitForCompletion(true)) {
+            System.exit(1);
+        }
+        FileSystem fs = outputDir.getFileSystem(job.getConfiguration());
+        String dataPath = fs.makeQualified(outputDir).toString();
+
+        Map<String, String> outputMeta = new HashMap<>();
+        outputMeta.put("endpoint", graphEndpoint);
+        outputMeta.put("schema", schemaJson);
+        outputMeta.put("mappings", mappings);
+        outputMeta.put("datapath", dataPath);
+
+        FSDataOutputStream os = fs.create(new Path(outputDir, "META"));
+        os.writeUTF(objectMapper.writeValueAsString(outputMeta));
+        os.flush();
+        os.close();
+
+        client.ingestData(dataPath);
+
+
     }
 
 }
