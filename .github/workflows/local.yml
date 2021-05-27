@@ -54,7 +54,7 @@ jobs:
         sudo apt install -y libarrow-dev=1.0.1-1 libarrow-python-dev=1.0.1-1
 
         # install zookeeper
-        wget https://archive.apache.org/dist/zookeeper/zookeeper-3.6.2/apache-zookeeper-3.6.2.tar.gz
+        wget https://archive.apache.org/dist/zookeeper/zookeeper-3.6.2/apache-zookeeper-3.6.2-bin.tar.gz
         tar xf apache-zookeeper-3.6.2.tar.gz -C /tmp/
         cp /tmp/apache-zookeeper-3.6.2/conf/zoo_sample.cfg /tmp/apache-zookeeper-3.6.2/conf/zoo.cfg
         sudo ln -s /tmp/apache-zookeeper-3.6.2 /usr/local/zookeeper

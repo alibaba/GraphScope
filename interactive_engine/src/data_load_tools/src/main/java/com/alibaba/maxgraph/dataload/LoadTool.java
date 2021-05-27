@@ -18,7 +18,7 @@ public class LoadTool {
                 .longOpt("dir")
                 .hasArg()
                 .argName("HDFS_PATH")
-                .desc("data directory of HDFS")
+                .desc("data directory of HDFS. e.g., hdfs://127.0.0.1:8000/build_output")
                 .build());
         options.addOption(Option.builder("h")
                 .longOpt("help")
@@ -28,7 +28,7 @@ public class LoadTool {
         CommandLine commandLine = parser.parse(options, args);
         String command = commandLine.getOptionValue("command");
         String dir = commandLine.getOptionValue("dir");
-        if (commandLine.hasOption("help")) {
+        if (commandLine.hasOption("help") || command == null) {
             printHelp(options);
         } else if (command.equalsIgnoreCase("ingest")) {
             new IngestDataCommand(dir).run();
