@@ -18,12 +18,12 @@ Below are some questions which are frequently by our end users. If the following
 *2. Is Kubernetes an enssential to run GraphScope?*
 
     No. GraphScope supports `build and run on local <https://graphscope.io/docs/deployment.html#deployment-on-local>`_ in a single machine. 
-    However, GraphScope depends on many third-party libraries and projects. To make our life easier, we suggest you build and run GraphScope on k8s with our provided dev-image and release-image. If you don't have an k8s managed cluster, you may use tools like `kind <https://kind.sigs.k8s.io/>`_ to setup a local cluster to use the images.
+    However, GraphScope depends on many third-party libraries and projects. To make our life easier, we suggest you build and run GraphScope on k8s with our provided dev-image and release-image. If you don't have a kubernetes cluster, you may use tools like `kind <https://kind.sigs.k8s.io/>`_ to setup a local cluster to use the images for trying graphscope.
 
 
 *3. How to debug or get detailed information when run GraphScope?*
 
-    By default, GraphScope is mostly running in a silent mode following the style of Python.
+    By default, GraphScope is usually running in a silent mode following the convention of Python applications.
     To enable verbose logging, turn on it by this:
 
     .. code:: python
@@ -52,11 +52,11 @@ Below are some questions which are frequently by our end users. If the following
 
 *7. The system seems get stuck, what are the possible reasons?*
 
-    If GraphScope seems get stuck, the possible reasons:
+    If GraphScope seems to get stuck, the possible cause might be:
 
     - In the session launching stage, the most cases are waiting for pods ready. The time consuming may be caused by a poor network connection during pulling image, or caused by the resources cannot meet the need to launch a session.
     - In the graph loading stage, it is time consuming to load and build a large graph.
-    - In the analysis stage with a UDF/built-in algorithm, it takes time to compile/distribute the algorithm over the loaded graph.
+    - When running a user-defined or built-in analytical algorithm, it takes time to compile/distribute the algorithm over the loaded graph.
 
 
 *I do have many other questions...*
