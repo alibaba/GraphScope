@@ -153,7 +153,7 @@ jobs:
         export CMAKE_PREFIX_PATH=/opt/graphscope
         export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
-        source ~/.bashrc
+        source /root/.bashrc
 
         cd interactive_engine/src/executor
         ./exec.sh cargo build --all --release
