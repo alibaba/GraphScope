@@ -253,7 +253,7 @@ class ArrowToDynamicConverter {
 
     auto dynamic_frag = std::make_shared<dst_fragment_t>(dst_vm);
     dynamic_frag->Init(src_frag->fid(), processed_vertices, processed_edges,
-                       src_frag->directed(), true);
+                       src_frag->directed());
     return dynamic_frag;
   }
 

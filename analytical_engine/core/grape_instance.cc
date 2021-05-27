@@ -67,7 +67,8 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
     vm_ptr->Init();
 
     auto fragment = std::make_shared<fragment_t>(vm_ptr);
-    fragment->Init(comm_spec_.fid(), directed, distributed);
+    bool duplicated = !distributed;
+    fragment->Init(comm_spec_.fid(), directed, duplicated);
 
     rpc::GraphDef graph_def;
 

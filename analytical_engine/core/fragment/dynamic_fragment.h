@@ -51,7 +51,7 @@
 #include "core/error.h"
 #include "core/io/dynamic_line_parser.h"
 #include "core/utils/mpi_utils.h"
-#include "core/vertex_map/dynamic_fragment_vertex_map.h"
+#include "core/vertex_map/global_vertex_map.h"
 #include "proto/types.pb.h"
 
 namespace gs {
@@ -671,6 +671,12 @@ class NbrMapSpace {
 /**
  * @brief A mutable non-labeled fragment. The data attached with vertex or edge
  * are represented by folly::dynamic.
+ *
+ * DynamicFragment support two type of graph storage. When duplicated is false,
+ * the storage is like other Fragments that every fragment holds part of graph.
+ * When duplicated is true, every fragment holds the whole graph which
+ * duplicated in workers (the storage is designed for APSP-like algorithms and
+ * default in networkx).
  */
 class DynamicFragment {
  public:
@@ -706,11 +712,12 @@ class DynamicFragment {
   virtual ~DynamicFragment() = default;
 
   void Init(fid_t fid, std::vector<internal_vertex_t>& vertices,
-            std::vector<edge_t>& edges, bool directed, bool distributed) {
+            std::vector<edge_t>& edges, bool directed,
+            bool duplicated=false) {
     directed_ = directed;
     directed ? load_strategy_ = grape::LoadStrategy::kBothOutIn
              : load_strategy_ = grape::LoadStrategy::kOnlyOut;
-    distributed_ = distributed;
+    duplicated_ = duplicated;
     fid_ = fid;
     fnum_ = vm_ptr_->GetFragmentNum();
     calcFidBitWidth(fnum_, id_mask_, fid_offset_);
@@ -724,11 +731,8 @@ class DynamicFragment {
     ovgid_.clear();
     selfloops_vertices_.clear();
 
-    if (distributed) {
-      initVertices(vertices, edges);
-    } else {
-      initVerticesDuplicated(vertices, edges);
-    }
+    duplicated ? initVerticesDuplicated(vertices, edges)
+               : initVertices(vertices, edges);
 
     tvnum_ = ivnum_ + ovnum_;
     alive_ivnum_ = ivnum_;
@@ -743,35 +747,34 @@ class DynamicFragment {
     inner_oe_pos_.resize(ivnum_, -1);
 
     edge_space_.Clear();
-    if (distributed) {
-      addEdges(edges);
-    } else {
+    if (duplicated) {
       outer_ie_pos_.clear();
       outer_oe_pos_.clear();
       outer_ie_pos_.resize(ovnum_, -1);
       outer_oe_pos_.resize(ovnum_, -1);
       addEdgesDuplicated(edges);
+    } else {
+      addEdges(edges);
     }
 
     // initOuterVerticesOfFragment();
-
     mirrors_of_frag_.clear();
     mirrors_of_frag_.resize(fnum_);
     invalidCache();
   }
 
-  void Init(fid_t fid, bool directed, bool distributed) {
+  void Init(fid_t fid, bool directed, bool duplicated) {
     std::vector<internal_vertex_t> empty_vertices;
     std::vector<edge_t> empty_edges;
 
-    Init(fid, empty_vertices, empty_edges, directed, distributed);
+    Init(fid, empty_vertices, empty_edges, directed, duplicated);
   }
 
   void CopyFrom(std::shared_ptr<DynamicFragment> other,
                 const std::string& copy_type = "identical") {
     directed_ = other->directed_;
     load_strategy_ = other->load_strategy_;
-    distributed_ = other->distributed();
+    duplicated_ = other->duplicated();
 
     copyVertices(other);
     copyEdges(other, copy_type);
@@ -787,7 +790,7 @@ class DynamicFragment {
 
     directed_ = true;
     load_strategy_ = grape::LoadStrategy::kBothOutIn;
-    distributed_ = origin->distributed();
+    duplicated_ = origin->duplicated();
     copyVertices(origin);
     toDirectedEdges(origin);
     mirrors_of_frag_.resize(fnum_);
@@ -801,7 +804,7 @@ class DynamicFragment {
 
     directed_ = false;
     load_strategy_ = grape::LoadStrategy::kOnlyOut;
-    distributed_ = origin->distributed();
+    duplicated_ = origin->duplicated();
     copyVertices(origin);
     toUnDirectedEdges(origin);
     mirrors_of_frag_.resize(fnum_);
@@ -811,7 +814,7 @@ class DynamicFragment {
   // induce a subgraph that contains the induced_vertices and the edges between
   // those vertices or a edge subgraph that contains the induced_edges and the
   // nodes incident to induced_edges.
-  // TODO(weibin): induce from not distributed way.
+  // TODO(weibin): induce from not duplicated way.
   void InduceSubgraph(
       std::shared_ptr<DynamicFragment> origin,
       const std::unordered_set<oid_t>& induced_vertices,
@@ -820,7 +823,7 @@ class DynamicFragment {
     directed_ = origin->directed();
     directed() ? load_strategy_ = grape::LoadStrategy::kBothOutIn
                : load_strategy_ = grape::LoadStrategy::kOnlyOut;
-    distributed_ = origin->distributed();
+    duplicated_ = origin->duplicated();
     fid_ = origin->fid();
     fnum_ = vm_ptr_->GetFragmentNum();
     calcFidBitWidth(fnum_, id_mask_, fid_offset_);
@@ -874,7 +877,7 @@ class DynamicFragment {
   void ClearGraph(std::shared_ptr<vertex_map_t> vm_ptr) {
     vm_ptr_.reset();
     vm_ptr_ = vm_ptr;
-    Init(fid_, directed_, distributed_);
+    Init(fid_, directed_, duplicated_);
   }
 
   void ClearEdges() {
@@ -889,11 +892,10 @@ class DynamicFragment {
     edge_space_.Clear();
     inner_ie_pos_.resize(ivnum_, -1);
     inner_oe_pos_.resize(ivnum_, -1);
-    if (distributed()) {
+    if (duplicated()) {
       outer_ie_pos_.clear();
       outer_oe_pos_.clear();
     }
-    edge_space_.Clear();
     selfloops_vertices_.clear();
 
     ovnum_ = 0;
@@ -940,7 +942,7 @@ class DynamicFragment {
 
   inline virtual size_t selfloops_num() const { return selfloops_num_; }
 
-  inline virtual bool distributed() const { return distributed_; }
+  inline virtual bool duplicated() const { return duplicated_; }
 
   inline virtual const vid_t* GetOuterVerticesGid() const { return &ovgid_[0]; }
 
@@ -1244,7 +1246,7 @@ class DynamicFragment {
    */
   inline virtual adj_list_t GetIncomingAdjList(const vertex_t& v) {
     int32_t ie_pos;
-    if (!distributed() && IsOuterVertex(v)) {
+    if (duplicated() && IsOuterVertex(v)) {
       ie_pos = outer_ie_pos_[v.GetValue() - ivnum_];
     } else {
       ie_pos = inner_ie_pos_[v.GetValue()];
@@ -1266,7 +1268,7 @@ class DynamicFragment {
    */
   inline const_adj_list_t GetIncomingAdjList(const vertex_t& v) const {
     int32_t ie_pos;
-    if (!distributed() && IsOuterVertex(v)) {
+    if (duplicated() && IsOuterVertex(v)) {
       ie_pos = outer_ie_pos_[v.GetValue() - ivnum_];
     } else {
       ie_pos = inner_ie_pos_[v.GetValue()];
@@ -1329,7 +1331,7 @@ class DynamicFragment {
    */
   inline virtual adj_list_t GetOutgoingAdjList(const vertex_t& v) {
     int32_t oe_pos;
-    if (!distributed() && IsOuterVertex(v)) {
+    if (duplicated() && IsOuterVertex(v)) {
       oe_pos = outer_oe_pos_[v.GetValue() - ivnum_];
     } else {
       oe_pos = inner_oe_pos_[v.GetValue()];
@@ -1352,7 +1354,7 @@ class DynamicFragment {
    */
   inline const_adj_list_t GetOutgoingAdjList(const vertex_t& v) const {
     int32_t oe_pos;
-    if (!distributed() && IsOuterVertex(v)) {
+    if (duplicated() && IsOuterVertex(v)) {
       oe_pos = outer_oe_pos_[v.GetValue() - ivnum_];
     } else {
       oe_pos = inner_oe_pos_[v.GetValue()];
@@ -1540,10 +1542,10 @@ class DynamicFragment {
         if (modify_type == rpc::NX_ADD_EDGES) {
           vm_ptr_->AddVertex(src_fid, src, src_gid);
           vm_ptr_->AddVertex(dst_fid, dst, dst_gid);
-          if (src_fid == fid_ || !this->distributed()) {
+          if (src_fid == fid_ || duplicated()) {
             vertices.emplace_back(src_gid, fake_data);
           }
-          if (dst_fid == fid_ || !this->distributed()) {
+          if (dst_fid == fid_ || duplicated()) {
             vertices.emplace_back(dst_gid, fake_data);
           }
         } else {
@@ -1552,7 +1554,7 @@ class DynamicFragment {
             continue;
           }
         }
-        if (src_fid == fid_ || dst_fid == fid_ || !this->distributed()) {
+        if (src_fid == fid_ || dst_fid == fid_ || duplicated()) {
           edges.emplace_back(src_gid, dst_gid, e_data);
           if (!directed_ && src_gid != dst_gid) {
             edges.emplace_back(dst_gid, src_gid, e_data);
@@ -1613,7 +1615,7 @@ class DynamicFragment {
         if (v_fid == fid_ ||
             (modify_type == rpc::NX_DEL_NODES &&
              ovg2i_.find(gid) != ovg2i_.end()) ||
-            !this->distributed()) {
+            duplicated()) {
           vertices.emplace_back(gid, v_data);
         }
       }
@@ -1901,26 +1903,21 @@ class DynamicFragment {
 
   void Insert(std::vector<internal_vertex_t>& vertices,
               std::vector<edge_t>& edges) {
-    if (this->distributed()) {
-      addVertices(vertices, edges);
-    } else {
-      addVerticesDuplicated(vertices, edges);
-    }
-
+    duplicated() ? addVerticesDuplicated(vertices, edges)
+                 : addVertices(vertices, edges);
     inner_ie_pos_.resize(ivnum_, -1);
     inner_oe_pos_.resize(ivnum_, -1);
     inner_vertex_alive_.resize(ivnum_, true);
     outer_vertex_alive_.resize(ovnum_, true);
 
-    if (this->distributed()) {
-      addEdges(edges);
-    } else {
+    if (duplicated()) {
       outer_ie_pos_.resize(ovnum_, -1);
       outer_oe_pos_.resize(ovnum_, -1);
       addEdgesDuplicated(edges);
+    } else {
+      addEdges(edges);
     }
     // initOuterVerticesOfFragment();
-
     initMessageDestination(message_strategy_);
   }
 
@@ -2519,7 +2516,7 @@ class DynamicFragment {
           outer_vertex_alive_[iter->second] = false;
           to_remove_lid_set.insert(ov_gid_to_lid(v.vid()));
           alive_ovnum_--;
-          if (!this->distributed()) {
+          if (duplicated()) {
             if (load_strategy_ == grape::LoadStrategy::kOnlyIn ||
                 load_strategy_ == grape::LoadStrategy::kBothOutIn) {
               auto ie_pos = outer_ie_pos_[iter->second];
@@ -2567,7 +2564,7 @@ class DynamicFragment {
         }
       }
     }
-    if (!this->distributed()) {
+    if (duplicated()) {
       auto outer_vertices = grape::VertexRange<vid_t>(0, ovnum_);
       for (auto v : outer_vertices) {
         auto ov_index = v.GetValue();
@@ -2613,7 +2610,7 @@ class DynamicFragment {
             }
           }
         } else {
-          if (this->distributed()) {
+          if (!duplicated()) {
             continue;
           }
           auto dst_lid = gid_to_lid(e.dst());
@@ -2642,7 +2639,7 @@ class DynamicFragment {
             }
           }
         } else {
-          if (this->distributed()) {
+          if (!duplicated()) {
             continue;
           }
           auto src_lid = gid_to_lid(e.src());
@@ -2681,7 +2678,7 @@ class DynamicFragment {
             oenum_ -= edge_space_.remove_edge(oe_pos, dst_lid);
           }
 
-          if (!this->distributed()) {
+          if (duplicated()) {
             auto ie_pos = outer_ie_pos_[id_mask_ - dst_lid];
             if (ie_pos != -1) {
               edge_space_.remove_edge(ie_pos, src_lid);
@@ -2695,14 +2692,14 @@ class DynamicFragment {
             ienum_ -= edge_space_.remove_edge(ie_pos, src_lid);
           }
 
-          if (!this->distributed()) {
+          if (duplicated()) {
             auto oe_pos = outer_oe_pos_[id_mask_ - src_lid];
             if (oe_pos != -1) {
               edge_space_.remove_edge(oe_pos, dst_lid);
             }
           }
         } else {
-          if (distributed()) {
+          if (!duplicated()) {
             continue;
           }
           auto src_lid = gid_to_lid(e.src());
@@ -2787,7 +2784,7 @@ class DynamicFragment {
       inner_oe_pos_.resize(other->inner_ie_pos_.size());
       memcpy(&inner_oe_pos_[0], &(other->inner_ie_pos_[0]),
              other->inner_ie_pos_.size() * sizeof(int32_t));
-      if (!distributed()) {
+      if (duplicated()) {
         outer_ie_pos_.resize(other->outer_oe_pos_.size());
         memcpy(&outer_ie_pos_[0], &(other->outer_oe_pos_[0]),
                other->outer_oe_pos_.size() * sizeof(int32_t));
@@ -2805,7 +2802,7 @@ class DynamicFragment {
       memcpy(&inner_oe_pos_[0], &(other->inner_oe_pos_[0]),
              other->inner_oe_pos_.size() * sizeof(int32_t));
 
-      if (!distributed()) {
+      if (duplicated()) {
         outer_ie_pos_.resize(other->outer_ie_pos_.size());
         memcpy(&outer_ie_pos_[0], &(other->outer_ie_pos_[0]),
                other->outer_ie_pos_.size() * sizeof(int32_t));
@@ -2983,7 +2980,7 @@ class DynamicFragment {
   fid_t fid_offset_{};
   fid_t fid_{}, fnum_{};
   bool directed_{};
-  bool distributed_{};
+  bool duplicated_{};
   grape::LoadStrategy load_strategy_{};
 
   // vertices cache

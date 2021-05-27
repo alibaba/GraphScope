@@ -575,7 +575,7 @@ class DynamicProjectedFragment {
 
   inline projected_adj_linked_list_t GetOutgoingAdjList(const vertex_t& v) {
     int32_t oe_pos;
-    if (!fragment_->distributed() && fragment_->IsOuterVertex(v)) {
+    if (fragment_->duplicated() && fragment_->IsOuterVertex(v)) {
       oe_pos = fragment_->outer_oe_pos()[v.GetValue() - fragment_->ivnum()];
     } else {
       oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
@@ -592,7 +592,7 @@ class DynamicProjectedFragment {
   inline const_projected_adj_linked_list_t GetOutgoingAdjList(
       const vertex_t& v) const {
     int32_t oe_pos;
-    if (!fragment_->distributed() && fragment_->IsOuterVertex(v)) {
+    if (fragment_->duplicated() && fragment_->IsOuterVertex(v)) {
       oe_pos = fragment_->outer_oe_pos()[v.GetValue() - fragment_->ivnum()];
     } else {
       oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
