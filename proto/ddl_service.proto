@@ -17,6 +17,9 @@ package gs.rpc.ddl_service.v1;
 
 import "proto/graph_def.proto";
 
+option java_package = "com.alibaba.graphscope.proto.ddl";
+option java_multiple_files = true;
+
 service ClientDdl {
   rpc batchSubmit(BatchSubmitRequest) returns(BatchSubmitResponse);
   rpc getGraphDef(GetGraphDefRequest) returns(GetGraphDefResponse);

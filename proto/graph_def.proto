@@ -18,6 +18,9 @@ package gs.rpc.graph;
 
 import "google/protobuf/any.proto";
 
+option java_package = "com.alibaba.graphscope.proto.ddl";
+option java_multiple_files = true;
+
 enum GraphTypePb {
     UNKNOWN_TYPE = 0;
     IMMUTABLE_EDGECUT = 1;
