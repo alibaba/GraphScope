@@ -129,7 +129,7 @@ public class MixedOpProcessor extends AbstractMixedOpProcessor {
         this.queryCallbackManager = queryCallbackManager;
 
         this.graphName = instanceConfig.getGraphName();
-        this.serverId = instanceConfig.getServerId();
+        this.serverId = instanceConfig.getInt("node.idx", -1);
     }
 
     @Override

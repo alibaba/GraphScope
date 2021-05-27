@@ -38,7 +38,7 @@ use maxgraph_common::proto::hb::*;
 use maxgraph_runtime::server::manager::*;
 use maxgraph_runtime::server::query_manager::*;
 use maxgraph_common::util::log4rs::init_log4rs;
-use maxgraph_store::config::{StoreConfig};
+use maxgraph_store::config::{StoreConfig, VINEYARD_GRAPH};
 use maxgraph_store::api::prelude::*;
 use protobuf::Message;
 use maxgraph_common::util;
@@ -59,6 +59,8 @@ use maxgraph_runtime::store::remote_store_service::RemoteStoreServiceManager;
 use maxgraph_store::api::graph_partition::{GraphPartitionManager};
 use maxgraph_runtime::store::ffi::{GlobalVertex, GlobalVertexIter, FFIEdge, GlobalEdgeIter};
 use maxgraph_server::StoreContext;
+use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
+use maxgraph_runtime::store::v2::create_global_graph;
 
 fn main() {
     if let Some(_) = env::args().find(|arg| arg == "--show-build-info") {
@@ -81,20 +83,30 @@ fn main() {
 
     let worker_num = store_config.timely_worker_per_process;
     let store_config = Arc::new(store_config);
-    if cfg!(target_os = "linux") {
-        info!("Start executor with vineyard graph object id {:?}", store_config.vineyard_graph_id);
-        use maxgraph_runtime::store::ffi::FFIGraphStore;
-        let ffi_store = FFIGraphStore::new(store_config.vineyard_graph_id, worker_num as i32);
-        let partition_manager = ffi_store.get_partition_manager();
-        run_main(store_config, Arc::new(ffi_store), Arc::new(partition_manager));
+    let process_num = store_config.worker_num as i32;
+    if store_config.graph_type.to_lowercase().eq(VINEYARD_GRAPH) {
+        if cfg!(target_os = "linux") {
+            info!("Start executor with vineyard graph object id {:?}", store_config.vineyard_graph_id);
+            use maxgraph_runtime::store::ffi::FFIGraphStore;
+            let ffi_store = FFIGraphStore::new(store_config.vineyard_graph_id, worker_num as i32);
+            let partition_manager = ffi_store.get_partition_manager();
+            run_main(store_config, Arc::new(ffi_store), Arc::new(partition_manager));
+        } else {
+            unimplemented!("Mac not support vineyard graph")
+        }
     } else {
-        unimplemented!("Mac not support vineyard graph")
+        let graph = Arc::new(create_global_graph(&store_config, &partitions));
+        run_main(store_config, graph.clone(), graph.clone());
     }
 }
 
-fn run_main(store_config: Arc<StoreConfig>,
-            vineyard_graph: Arc<GlobalGraphQuery<V=GlobalVertex, E=FFIEdge, VI=GlobalVertexIter, EI=GlobalEdgeIter>>,
-            partition_manager: Arc<GraphPartitionManager>) {
+fn run_main<V, VI, E, EI>(store_config: Arc<StoreConfig>,
+            graph: Arc<GlobalGraphQuery<V=V, E=E, VI=VI, EI=EI>>,
+            partition_manager: Arc<GraphPartitionManager>)
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static {
     let process_partition_list = partition_manager.get_process_partition_list();
     let runtime_info = Arc::new(Mutex::new(RuntimeInfo::new(store_config.timely_worker_per_process,
                                                             process_partition_list)));
@@ -133,14 +145,20 @@ fn run_main(store_config: Arc<StoreConfig>,
     };
 
     ctrl_service = PegasusCtrlService::new_service(query_manager.clone(), pegasus_runtime.clone());
-    async_maxgraph_service = PegasusAsyncService::new_service(store_config.clone(), pegasus_runtime.clone(), query_manager.clone(), remote_store_service_manager, lambda_service_client, signal, vineyard_graph.clone(), partition_manager.clone(), task_partition_manager.clone());
-
+    async_maxgraph_service = PegasusAsyncService::new_service(store_config.clone(),
+                                                              pegasus_runtime.clone(),
+                                                              query_manager.clone(),
+                                                              remote_store_service_manager,
+                                                              lambda_service_client,
+                                                              signal,
+                                                              graph.clone(),
+                                                              partition_manager.clone(),
+                                                              task_partition_manager);
     maxgraph_service = PegasusService::new_service(store_config.clone(), query_manager.clone());
-
     let ctrl_and_async_server = start_ctrl_and_async_service(0, ctrl_service, async_maxgraph_service).expect("Start ctrl and async service error.");
     info!("async maxgraph service and control service bind to: {:?}", ctrl_and_async_server.bind_addrs());
     let ctrl_and_async_service_port = ctrl_and_async_server.bind_addrs()[0].1;
-    let store_context = StoreContext::new(vineyard_graph, partition_manager);
+    let store_context = StoreContext::new(graph, partition_manager);
     start_rpc_service(runtime_info_clone, store_config, maxgraph_service, ctrl_and_async_service_port, hb_resp_sender, store_context);
     thread::sleep(Duration::from_secs(u64::max_value()));
     ::std::mem::drop(ctrl_and_async_server)

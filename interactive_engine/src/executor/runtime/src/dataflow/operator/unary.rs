@@ -26,11 +26,15 @@ use maxgraph_common::proto::query_flow::*;
 use dataflow::operator::unarystep::limitstop::GlobalStopFilterOperator;
 use dataflow::manager::lambda::LambdaType;
 
-pub fn build_unary_operator<F>(unary: &query_flow::UnaryOperator,
+pub fn build_unary_operator<V, VI, E, EI, F>(unary: &query_flow::UnaryOperator,
                                              query_id: &str,
                                              script: &str,
-                                             context: &RuntimeContext<F>) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+                                             context: &RuntimeContext<V, VI, E, EI, F>) -> Option<Box<UnaryOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let input_id = unary.get_input_operator_id();
     let stream_index = unary.get_input_stream_index();
     let shuffle_type = unary.get_input_shuffle();
@@ -52,15 +56,19 @@ pub fn build_unary_operator<F>(unary: &query_flow::UnaryOperator,
     }
 }
 
-pub fn build_unary_operator_node<F>(base: &OperatorBase,
+pub fn build_unary_operator_node<V, VI, E, EI, F>(base: &OperatorBase,
                                                   query_id: &str,
                                                   script: &str,
-                                                  context: Option<&RuntimeContext<F>>,
+                                                  context: Option<&RuntimeContext<V, VI, E, EI, F>>,
                                                   input_id: i32,
                                                   stream_index: i32,
                                                   shuffle_type: &InputEdgeShuffle,
                                                   operator_type: OperatorType) -> Option<Box<UnaryOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     match operator_type {
         query_flow::OperatorType::UNARY_CHAIN => {
             return build_unary_chain_operator(input_id,

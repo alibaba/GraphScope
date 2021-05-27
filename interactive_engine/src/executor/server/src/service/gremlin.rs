@@ -129,6 +129,68 @@ impl<V, VI, E, EI> GremlinService for GremlinRpcService<V, VI, E, EI>
         ctx.spawn(f);
     }
 
+    fn get_vertexs(&mut self, ctx: RpcContext, req: VertexRequest, sink: ServerStreamingSink<VertexResponse>) {
+        _debug!("get_vertexs: {:?}", req);
+        let now = Instant::now();
+
+        let graph = self.store.get_graph();
+        let partition_manager = self.store.get_partition_manager();
+        let si = SnapshotId::max_value() - 1;
+        let mut partition_label_vertex_list = Vec::new();
+        let mut res = Vec::with_capacity(req.ids.len());
+        for id in req.get_ids() {
+            assign_vertex_label_partition(Some(id.get_typeId() as u32),
+                                          id.get_id(),
+                                          partition_manager.get_partition_id(id.get_id()) as u32,
+                                          &mut partition_label_vertex_list);
+        }
+        let mut vertex_list = graph.get_vertex_properties(si, partition_label_vertex_list, None);
+        while let Some(v) = vertex_list.next() {
+            res.push(v);
+        }
+
+        if !req.get_orderKey().is_empty() {
+            let p_name = req.get_orderKey();
+            let p_id = self.store.get_graph().get_schema(SnapshotId::max_value() - 1).unwrap().get_prop_id(p_name).unwrap().clone();
+            res.sort_by(|a, b| {
+                let a_p = a.get_property(p_id);
+                let b_p = b.get_property(p_id);
+                let order = a_p.partial_cmp(&b_p).unwrap();
+                if req.get_order() {
+                    order
+                } else {
+                    order.reverse()
+                }
+            })
+        }
+        let mut res_len = res.len();
+        if req.get_limit() > 0 {
+            res_len = min(req.get_limit() as usize, res.len());
+        }
+        let mut response = Vec::with_capacity(res_len);
+
+        let mut count = 0;
+        for v in res {
+            let mut v_id = PB_VertexId::new();
+            v_id.set_id(v.get_id());
+            v_id.set_typeId(v.get_label_id() as i32);
+            let mut r = VertexResponse::new();
+            r.set_id(v_id);
+            r.set_pros(properties_to_bytes(v.get_properties()));
+            response.push((r, WriteFlags::default()));
+            count += 1;
+            if count >= res_len {
+                break;
+            }
+        }
+
+        let f = sink.send_all(stream::iter_ok::<_, grpcio::Error>(response))
+            .map(|_| {})
+            .map_err(|e| println!("failed to query: {:?}", e));
+        ctx.spawn(f);
+        println!("get vertexs cost {:?}", now.elapsed());
+    }
+
     fn get_limit_edges(&mut self, ctx: RpcContext, req: LimitEdgeRequest, sink: ServerStreamingSink<LimitEdgesReponse>) {
         _debug!("get_limit_edges: {:?}", req);
         let query_req = req.get_req();
@@ -226,68 +288,6 @@ impl<V, VI, E, EI> GremlinService for GremlinRpcService<V, VI, E, EI>
             .map(|_| {})
             .map_err(|e| println!("failed to query: {:?}", e));
         ctx.spawn(f);
-    }
-
-    fn get_vertexs(&mut self, ctx: RpcContext, req: VertexRequest, sink: ServerStreamingSink<VertexResponse>) {
-        _debug!("get_vertexs: {:?}", req);
-        let now = Instant::now();
-
-        let graph = self.store.get_graph();
-        let partition_manager = self.store.get_partition_manager();
-        let si = SnapshotId::max_value() - 1;
-        let mut partition_label_vertex_list = Vec::new();
-        let mut res = Vec::with_capacity(req.ids.len());
-        for id in req.get_ids() {
-            assign_vertex_label_partition(Some(id.get_typeId() as u32),
-                                          id.get_id(),
-                                          partition_manager.get_partition_id(id.get_id()) as u32,
-                                          &mut partition_label_vertex_list);
-        }
-        let mut vertex_list = graph.get_vertex_properties(si, partition_label_vertex_list, None);
-        while let Some(v) = vertex_list.next() {
-            res.push(v);
-        }
-
-        if !req.get_orderKey().is_empty() {
-            let p_name = req.get_orderKey();
-            let p_id = self.store.get_graph().get_schema(SnapshotId::max_value() - 1).unwrap().get_prop_id(p_name).unwrap().clone();
-            res.sort_by(|a, b| {
-                let a_p = a.get_property(p_id);
-                let b_p = b.get_property(p_id);
-                let order = a_p.partial_cmp(&b_p).unwrap();
-                if req.get_order() {
-                    order
-                } else {
-                    order.reverse()
-                }
-            })
-        }
-        let mut res_len = res.len();
-        if req.get_limit() > 0 {
-            res_len = min(req.get_limit() as usize, res.len());
-        }
-        let mut response = Vec::with_capacity(res_len);
-
-        let mut count = 0;
-        for v in res {
-            let mut v_id = PB_VertexId::new();
-            v_id.set_id(v.get_id());
-            v_id.set_typeId(v.get_label_id() as i32);
-            let mut r = VertexResponse::new();
-            r.set_id(v_id);
-            r.set_pros(properties_to_bytes(v.get_properties()));
-            response.push((r, WriteFlags::default()));
-            count += 1;
-            if count >= res_len {
-                break;
-            }
-        }
-
-        let f = sink.send_all(stream::iter_ok::<_, grpcio::Error>(response))
-            .map(|_| {})
-            .map_err(|e| println!("failed to query: {:?}", e));
-        ctx.spawn(f);
-        println!("get vertexs cost {:?}", now.elapsed());
     }
 
     fn scan(&mut self, ctx: RpcContext, req: VertexScanRequest, sink: ServerStreamingSink<VertexResponse>) {

@@ -52,3 +52,12 @@ default.etcd/
 
 # outer build directory
 build/
+
+interactive_engine/src/common/rust/common/src/proto/*
+!interactive_engine/src/common/rust/common/src/proto/mod.rs
+**/generated/
+
+interactive_engine/src/executor/store/src/db/proto/*
+!interactive_engine/src/executor/store/src/db/proto/mod.rs
+interactive_engine/src/data_load_tools/dependency-reduced-pom.xml
+

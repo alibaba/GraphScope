@@ -43,6 +43,7 @@ import com.google.common.base.Stopwatch;
 import com.google.protobuf.ByteString;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
+import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
@@ -102,7 +103,7 @@ public class MixedTraversalOpProcessor extends AbstractMixedTraversalOpProcessor
         this.queryCallbackManager = queryCallbackManager;
 
         this.graphName = instanceConfig.getGraphName();
-        this.serverId = instanceConfig.getServerId();
+        this.serverId = instanceConfig.getInt("node.idx", -1);
     }
 
     @Override
@@ -167,8 +168,20 @@ public class MixedTraversalOpProcessor extends AbstractMixedTraversalOpProcessor
                     .orElse(this.resultIterationBatchSize);
             nettyVertexRpcProcessor = new NettyTraverserVertexProcessor(context,
                     resultIterationBatchSize, false);
-            queryFlowManager = (object instanceof GraphTraversal.Admin) ? planOptimizer.build(GraphTraversal.class.cast(traversal)) :
-                    planOptimizer.build(DfsTraversal.class.cast(object));
+            try {
+                queryFlowManager = (object instanceof GraphTraversal.Admin) ? planOptimizer.build(GraphTraversal.class.cast(traversal)) :
+                        planOptimizer.build(DfsTraversal.class.cast(object));
+            } catch (IllegalArgumentException iae) {
+                if (iae.getMessage().contains("MaxGraphIoStep")) {
+                    logger.info("do maxgraph io step");
+                    while (traversal.hasNext()) {
+                        logger.info("maxgraph io hasNext");
+                    }
+                    nettyVertexRpcProcessor.finish(ResponseStatusCode.SUCCESS);
+                    return 0L;
+                }
+                throw iae;
+            }
 
             try {
                 boolean isLambdaExisted = TraversalHelper.anyStepRecursively(s -> s instanceof LambdaHolder, (Traversal.Admin<?, ?>) traversal);

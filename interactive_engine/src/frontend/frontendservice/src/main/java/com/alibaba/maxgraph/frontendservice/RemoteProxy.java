@@ -21,6 +21,7 @@ import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.iterator.IteratorList;
 import com.alibaba.maxgraph.iterator.function.EdgeResponseFunction;
 import com.alibaba.maxgraph.iterator.function.VertexResponseFunction;
+import com.alibaba.maxgraph.proto.GremlinServiceGrpc;
 import com.alibaba.maxgraph.proto.StoreApi;
 import com.alibaba.maxgraph.proto.StoreServiceGrpc;
 import com.alibaba.maxgraph.sdkcommon.graph.ElementId;
@@ -157,14 +158,13 @@ public class RemoteProxy implements Closeable {
             return new ArrayList<Vertex>().iterator();
         }
         List<Iterator<VertexResponse>> resList = Lists.newArrayList();
-        for (int labelId : labelIdList) {
-            StoreApi.ScanRequest.Builder req = StoreApi.ScanRequest.newBuilder();
-            req.setSnapshotId(pair.getRight())
-                    .setOffset(0)
-                    .setLimit(Integer.MAX_VALUE)
-                    .setTypeId(labelId);
-            resList.add(stub.withDeadlineAfter(timeout, TimeUnit.SECONDS).scan(req.build()));
-        }
+        VertexScanRequest vertexScanRequest = VertexScanRequest.newBuilder()
+                .setTypeId(-1)
+                .setOrder(false)
+                .build();
+        Iterator<VertexResponse> scanResult = GremlinServiceGrpc.newBlockingStub(this.channel)
+                .withDeadlineAfter(timeout, TimeUnit.SECONDS).scan(vertexScanRequest);
+        resList.add(scanResult);
         return new IteratorList<>(resList, new VertexResponseFunction(pair.getLeft(), this.graph));
     }
 
