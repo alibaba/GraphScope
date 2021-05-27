@@ -290,12 +290,7 @@ RUN mkdir -p /root/maxgraph \
     && mkdir build && cd build \
     && ../configure --prefix=/usr \
     && make -j4 \
-    && make install \
-    && wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
-    curl -sf -L https://static.rust-lang.org/rustup.sh | \
-        sh -s -- -y --profile minimal --default-toolchain 1.48.0 && \
-    echo "source ~/.cargo/env" >> ~/.bashrc
+    && make install 
 
 # patchelf for wheel packaging
 RUN cd /tmp && \

@@ -13,7 +13,12 @@ ENV profile=$profile
 COPY . /root/gs
 COPY ./interactive_engine/deploy/docker/dockerfile/maven.settings.xml /root/.m2/settings.xml
 
-RUN source ~/.bashrc \
+RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
+    curl -sf -L https://static.rust-lang.org/rustup.sh | \
+        sh -s -- -y --profile minimal --default-toolchain 1.48.0 && \
+    echo "source ~/.cargo/env" >> ~/.bashrc \
+    && source ~/.bashrc \
     && echo "build with profile: $profile" \
     && cd /root/gs/interactive_engine \
     && export CMAKE_PREFIX_PATH=/opt/graphscope \
