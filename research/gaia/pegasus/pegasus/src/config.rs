@@ -111,7 +111,7 @@ impl Default for JobConf {
             batch_size: 1024,
             output_capacity: 64,
             memory_limit: !0u32,
-            plan_print: false,
+            plan_print: true,
             servers: vec![],
             trace_enable: false,
         }

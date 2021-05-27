@@ -14,8 +14,6 @@
 //! limitations under the License.
 
 pub use anti_chain::{BlockGuard, TagAntiChainSet};
-pub use tree::TagTree;
 
 mod anti_chain;
 mod map;
-mod tree;

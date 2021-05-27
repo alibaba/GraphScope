@@ -31,6 +31,7 @@ use std::sync::{Arc, Mutex};
 mod config;
 mod graph;
 pub mod preclude;
+#[macro_use]
 mod tag;
 #[macro_use]
 mod worker_id;
