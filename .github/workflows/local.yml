@@ -55,9 +55,9 @@ jobs:
 
         # install zookeeper
         wget https://archive.apache.org/dist/zookeeper/zookeeper-3.6.2/apache-zookeeper-3.6.2-bin.tar.gz
-        tar xf apache-zookeeper-3.6.2.tar.gz -C /tmp/
-        cp /tmp/apache-zookeeper-3.6.2/conf/zoo_sample.cfg /tmp/apache-zookeeper-3.6.2/conf/zoo.cfg
-        sudo ln -s /tmp/apache-zookeeper-3.6.2 /usr/local/zookeeper
+        tar xf apache-zookeeper-3.6.2-bin.tar.gz -C /tmp/
+        cp /tmp/apache-zookeeper-3.6.2-bin/conf/zoo_sample.cfg /tmp/apache-zookeeper-3.6.2-bin/conf/zoo.cfg
+        sudo ln -s /tmp/apache-zookeeper-3.6.2-bin /usr/local/zookeeper
 
         # rust
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
