@@ -713,7 +713,7 @@ class DynamicFragment {
 
   void Init(fid_t fid, std::vector<internal_vertex_t>& vertices,
             std::vector<edge_t>& edges, bool directed,
-            bool duplicated=false) {
+            bool duplicated = false) {
     directed_ = directed;
     directed ? load_strategy_ = grape::LoadStrategy::kBothOutIn
              : load_strategy_ = grape::LoadStrategy::kOnlyOut;
