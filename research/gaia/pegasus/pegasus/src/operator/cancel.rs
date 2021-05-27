@@ -54,8 +54,7 @@ impl CancelGuard for DefaultCancelGuard {
                 let cancel = match outputs[signal.port].output_delta() {
                     OutputDelta::None => Some(signal.tag.clone()),
                     OutputDelta::Advance => {
-                        let mut tag = signal.tag.clone();
-                        tag.retreat().map(|_| tag).ok()
+                        Some(signal.tag.retreat())
                     }
                     OutputDelta::ToChild => None,
                     OutputDelta::ToParent(_) => Some(signal.tag.clone()),

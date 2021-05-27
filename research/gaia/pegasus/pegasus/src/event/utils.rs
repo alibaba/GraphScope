@@ -152,7 +152,7 @@ impl CountDownLatchTree {
     pub fn new(guard: usize) -> Self {
         CountDownLatchTree {
             guard,
-            root: CountDownLatchNode::new(guard, crate::tag::ROOT.clone()),
+            root: CountDownLatchNode::new(guard, Tag::Root),
             leaf: RefCell::new(HashMap::new()),
             count_downed: RefCell::new(vec![]),
         }
