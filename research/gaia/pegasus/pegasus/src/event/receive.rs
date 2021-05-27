@@ -274,10 +274,10 @@ impl ChannelRxState {
                 for notification in count_down.drain(..) {
                     if notification.is_root() {
                         self.is_source_exhaust.set(true);
-                        debug_worker!("get root end notification in ch: {};", self.index);
+                        debug_worker!("receive root end notification in ch: {};", self.index);
                     } else {
                         trace_worker!(
-                            "get end notification of {:?} in ch: {};",
+                            "receive end notification of {:?} in ch: {};",
                             notification,
                             self.index
                         );
