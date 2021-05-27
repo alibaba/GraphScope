@@ -1928,7 +1928,9 @@ class DynamicFragment {
               std::vector<edge_t>& edges) {
     for (auto& v : vertices) {
       // the vertex exist
-      ivdata_[(v.vid() & id_mask_)] = v.vdata();
+      if (is_iv_gid(v.vid())) {
+        ivdata_[(v.vid() & id_mask_)] = v.vdata();
+      }
     }
 
     switch (load_strategy_) {
@@ -2700,7 +2702,19 @@ class DynamicFragment {
             }
           }
         } else {
-          CHECK(false);
+          if (distributed()) {
+            continue;
+          }
+          auto src_lid = gid_to_lid(e.src());
+          auto dst_lid = gid_to_lid(e.dst());
+          auto ie_pos = outer_ie_pos_[id_mask_ - dst_lid];
+          auto oe_pos = outer_oe_pos_[id_mask_ - src_lid];
+          if (ie_pos != -1) {
+            edge_space_.remove_edge(ie_pos, src_lid);
+          }
+          if (oe_pos != -1) {
+            edge_space_.remove_edge(oe_pos, dst_lid);
+          }
         }
       }
       break;

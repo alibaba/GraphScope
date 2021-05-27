@@ -132,7 +132,10 @@ class TestGraph(_TestGraph):
         edges = [((0, 1), 3, 1), ("n", 3.14, 3.14), (True, False, True)]
         G.add_nodes_from(nodes)
         G.add_weighted_edges_from(edges)
-        assert list(G.nodes) == ["n", False, (0, 1), 3, 3.14, True]
+        nlist = list(G.nodes)
+        assert len(nlist) == 6
+        for n in nlist:
+            assert n in [False, (0, 1), 3, 'n', 3.14, True]
         assert G[(0, 1)][3]["weight"] == 1
         assert G["n"][3.14]["weight"] == 3.14
         assert G[True][False]["weight"] == True

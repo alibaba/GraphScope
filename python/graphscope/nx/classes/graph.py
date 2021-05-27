@@ -262,7 +262,7 @@ class Graph(object):
         create_empty_in_engine = attr.pop(
             "create_empty_in_engine", True
         )  # a hidden parameter
-        self._distributed = attr.pop("dist", True)
+        self._distributed = attr.pop("dist", False)
 
         if self._is_gs_graph(incoming_graph_data):
             self._session_id = incoming_graph_data.session_id
