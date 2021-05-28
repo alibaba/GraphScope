@@ -215,7 +215,7 @@ class LocalLauncher(Launcher):
             universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
+            stdout=sys.stdout,
             stderr=sys.stderr,
             bufsize=1,
         )
