@@ -87,6 +87,8 @@ class DynamicFragmentView : public DynamicFragment {
     return fragment_->directed();
   }
 
+  inline bool duplicated() const { return fragment_->duplicated(); }
+
   inline const vid_t* GetOuterVerticesGid() const {
     return fragment_->GetOuterVerticesGid();
   }

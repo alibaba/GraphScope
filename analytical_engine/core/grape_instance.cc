@@ -57,15 +57,18 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
     using fragment_t = DynamicFragment;
     using vertex_map_t = typename fragment_t::vertex_map_t;
     BOOST_LEAF_AUTO(directed, params.Get<bool>(rpc::DIRECTED));
+    BOOST_LEAF_AUTO(distributed, params.Get<bool>(rpc::DISTRIBUTED));
 
     VLOG(1) << "Loading graph, graph name: " << graph_name
-            << ", graph type: DynamicFragment, directed: " << directed;
+            << ", graph type: DynamicFragment, directed: " << directed
+            << ", distributed: " << distributed;
 
     auto vm_ptr = std::shared_ptr<vertex_map_t>(new vertex_map_t(comm_spec_));
     vm_ptr->Init();
 
     auto fragment = std::make_shared<fragment_t>(vm_ptr);
-    fragment->Init(comm_spec_.fid(), directed);
+    bool duplicated = !distributed;
+    fragment->Init(comm_spec_.fid(), directed, duplicated);
 
     rpc::GraphDef graph_def;
 

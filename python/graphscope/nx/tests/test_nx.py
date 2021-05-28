@@ -161,12 +161,12 @@ class TestGraphTransformation(object):
 
     # nx to gs
     def test_empty_nx_to_gs(self):
-        empty_nx_g = self.NXGraph()
+        empty_nx_g = self.NXGraph(dist=True)
         gs_g = g(empty_nx_g)
         self.assert_convert_success(gs_g, empty_nx_g)
 
     def test_only_contains_nodes_nx_to_gs(self):
-        nx_g = self.NXGraph()
+        nx_g = self.NXGraph(dist=True)
         nx_g.add_nodes_from(range(100), type="node")
         gs_g = g(nx_g)
         self.assert_convert_success(gs_g, nx_g)
@@ -177,7 +177,7 @@ class TestGraphTransformation(object):
         self.assert_convert_success(gs_g, nx_g)
 
     def test_int_node_nx_to_gs(self):
-        nx_g = self.NXGraph()
+        nx_g = self.NXGraph(dist=True)
         nx_g.add_nodes_from(range(10), foo="star")
         nx_g.add_edges_from(
             [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9)],
@@ -203,7 +203,7 @@ class TestGraphTransformation(object):
             (0, 2, {"ep1": 1, "ep2": "e", "ep3": 3.14}),
             (1, 2, {"ep1": 1, "ep2": "e", "ep3": 3.14}),
         ]
-        nx_g = self.NXGraph()
+        nx_g = self.NXGraph(dist=True)
         nx_g.update(edges, nodes)
         gs_g = g(nx_g)
         self.assert_convert_success(gs_g, nx_g)
@@ -228,7 +228,7 @@ class TestGraphTransformation(object):
         self.assert_convert_success(gs_g4, nx_g4)
 
     def test_nx_to_gs_after_modify(self):
-        nx_g = self.NXGraph()
+        nx_g = self.NXGraph(dist=True)
         nodes = [
             (0, {"vp1": 1, "vp2": "v", "vp3": 3.14}),
             (1, {"vp1": 1, "vp2": "v", "vp3": 3.14}),
@@ -265,7 +265,7 @@ class TestGraphTransformation(object):
         self.assert_convert_success(gs_g, nx_g)
 
     def test_nx_to_gs_remove_nodes(self):
-        nx_g = self.NXGraph()
+        nx_g = self.NXGraph(dist=True)
         nx_g.add_nodes_from(range(10))  # all nodes are int
         gs_g = g(nx_g)
         self.assert_convert_success(gs_g, nx_g)  # success
@@ -282,13 +282,13 @@ class TestGraphTransformation(object):
         self.assert_convert_success(gs_g, nx_g)  # success
 
     def test_error_on_view_to_gs(self):
-        nx_g = self.NXGraph()
+        nx_g = self.NXGraph(dist=True)
         nx_g._graph = None  # graph view always has a _graph attribute
         with pytest.raises(TypeError, match="graph view can not convert to gs graph"):
             gs_g = g(nx_g)
 
     def test_error_on_mixing_node_nx_to_gs(self):
-        nx_g = self.NXGraph()
+        nx_g = self.NXGraph(dist=True)
         nx_g.add_node(0, weight=1.23)
         nx_g.add_node("zakky", foo="node")
         with pytest.raises(
@@ -299,24 +299,24 @@ class TestGraphTransformation(object):
 
     # gs to nx
     def test_empty_gs_to_nx(self):
-        empty_nx = self.NXGraph()
+        empty_nx = self.NXGraph(dist=True)
         empty_gs_graph = g(empty_nx)
-        nx_g = self.NXGraph(empty_gs_graph)
+        nx_g = self.NXGraph(empty_gs_graph, dist=True)
         self.assert_convert_success(empty_gs_graph, nx_g)
 
     def test_single_label_gs_to_nx(self):
         g = self.single_label_g
-        nx_g = self.NXGraph(g)
+        nx_g = self.NXGraph(g, dist=True)
         self.assert_convert_success(g, nx_g)
 
     def test_multi_label_gs_to_nx(self):
         g = self.multi_label_g
-        nx_g = self.NXGraph(g)
+        nx_g = self.NXGraph(g, dist=True)
         self.assert_convert_success(g, nx_g)
 
     def test_str_oid_gs_to_nx(self):
         g = self.str_oid_g
-        nx_g = self.NXGraph(g)
+        nx_g = self.NXGraph(g, dist=True)
         self.assert_convert_success(g, nx_g)
 
     def test_error_on_wrong_nx_type(self):
