@@ -672,11 +672,13 @@ class NbrMapSpace {
  * @brief A mutable non-labeled fragment. The data attached with vertex or edge
  * are represented by folly::dynamic.
  *
- * DynamicFragment support two type of graph storage. When duplicated is false,
- * the storage is like other Fragments that every fragment holds part of graph.
- * When duplicated is true, every fragment holds the whole graph which
- * duplicated in workers (the storage is designed for APSP-like algorithms and
- * default in networkx).
+ * DynamicFragment support two type of graph storage mode.
+ *
+ * distributed mode: the storage is like other Fragments that every fragment
+ *                   holds a part of graph.
+ * duplicated mode: every fragment holds the whole graph which duplicated in
+ *                  workers (the mode is designed for APSP-like algorithms
+ *                  and default in networkx).
  */
 class DynamicFragment {
  public:
@@ -814,7 +816,6 @@ class DynamicFragment {
   // induce a subgraph that contains the induced_vertices and the edges between
   // those vertices or a edge subgraph that contains the induced_edges and the
   // nodes incident to induced_edges.
-  // TODO(weibin): induce from not duplicated way.
   void InduceSubgraph(
       std::shared_ptr<DynamicFragment> origin,
       const std::unordered_set<oid_t>& induced_vertices,
@@ -842,36 +843,10 @@ class DynamicFragment {
     ivdata_.clear();
     ivdata_.resize(ivnum_);
 
-    // induce active edges
-    std::vector<edge_t> edges;
-    if (induced_edges.empty()) {
-      induceFromVertices(origin, induced_vertices, edges);
-    } else {
-      induceFromEdges(origin, induced_edges, edges);
-    }
-
-    {
-      // find out outer vertices and calculate outer vertices num
-      std::vector<vid_t> outer_vertices =
-          getOuterVerticesAndInvalidEdges(edges, load_strategy_);
-
-      grape::DistinctSort(outer_vertices);
-
-      ovgid_.resize(outer_vertices.size());
-      memcpy(&ovgid_[0], &outer_vertices[0],
-             outer_vertices.size() * sizeof(vid_t));
-      for (auto gid : ovgid_) {
-        ovg2i_.emplace(gid, ovnum_);
-        ++ovnum_;
-      }
-    }
-
+    duplicated_ ? induceDuplicated(origin, induced_vertices, induced_edges)
+                : induceDist(origin, induced_vertices, induced_edges);
     tvnum_ = ivnum_ + ovnum_;
     alive_ovnum_ = ovnum_;
-    outer_vertex_alive_.resize(ovnum_, true);
-
-    addEdges(edges);
-    initOuterVerticesOfFragment();
   }
 
   void ClearGraph(std::shared_ptr<vertex_map_t> vm_ptr) {
@@ -881,10 +856,6 @@ class DynamicFragment {
   }
 
   void ClearEdges() {
-    // clear outer vertices.
-    ovgid_.clear();
-    ovg2i_.clear();
-    outer_vertex_alive_.clear();
     // clear edges.
     inner_ie_pos_.clear();
     inner_oe_pos_.clear();
@@ -892,15 +863,22 @@ class DynamicFragment {
     edge_space_.Clear();
     inner_ie_pos_.resize(ivnum_, -1);
     inner_oe_pos_.resize(ivnum_, -1);
-    if (duplicated()) {
-      outer_ie_pos_.clear();
-      outer_oe_pos_.clear();
-    }
     selfloops_vertices_.clear();
 
-    ovnum_ = 0;
-    tvnum_ = ivnum_;
-    alive_ovnum_ = 0;
+    if (duplicated()) {
+      // duplicated mode no need to clear outer vertices.
+      outer_ie_pos_.clear();
+      outer_oe_pos_.clear();
+    } else {
+      // clear outer vertices.
+      ovgid_.clear();
+      ovg2i_.clear();
+      outer_vertex_alive_.clear();
+      ovnum_ = 0;
+      tvnum_ = ivnum_;
+      alive_ovnum_ = 0;
+    }
+
     oenum_ = 0;
     ienum_ = 0;
     selfloops_num_ = 0;
@@ -2830,6 +2808,18 @@ class DynamicFragment {
         inner_ie_pos_[i] = origin->inner_oe_pos_[i] + old_edge_space_size;
       }
     }
+
+    if (duplicated_) {
+      outer_oe_pos_.resize(origin->outer_oe_pos_.size());
+      memcpy(&outer_oe_pos_[0], &(origin->outer_oe_pos_[0]),
+             origin->outer_oe_pos_.size() * sizeof(int32_t));
+      outer_ie_pos_.resize(origin->outer_oe_pos_.size(), -1);
+      for (size_t i = 0; i < origin->outer_oe_pos_.size(); ++i) {
+        if (origin->outer_oe_pos_[i] != -1) {
+          outer_ie_pos_[i] = origin->outer_oe_pos_[i] + old_edge_space_size;
+        }
+      }
+    }
   }
 
   void toUnDirectedEdges(std::shared_ptr<DynamicFragment>& origin) {
@@ -2854,6 +2844,97 @@ class DynamicFragment {
         }
       }
     }
+
+    if (duplicated_) {
+      // process the outer vertices edges.
+      outer_oe_pos_.resize(origin->outer_oe_pos_.size());
+      memcpy(&outer_oe_pos_[0], &(origin->outer_oe_pos_[0]),
+             origin->outer_oe_pos_.size() * sizeof(int32_t));
+      outer_ie_pos_.resize(ovnum_, -1);
+
+      auto outer_vertices = grape::VertexRange<vid_t>(0, ovnum_);
+      for (auto v : outer_vertices) {
+        auto ov_index = v.GetValue();
+        auto ie_pos = origin->outer_ie_pos_[ov_index];
+        if (ie_pos == -1) {
+          continue;
+        }
+        for (auto& e : origin->edge_space_[ie_pos]) {
+          addOuterOutgoingEdge(id_mask_ - ov_index, e.first, e.second.data());
+        }
+      }
+    }
+  }
+
+  void induceDist(
+      std::shared_ptr<DynamicFragment> origin,
+      const std::unordered_set<oid_t>& induced_vertices,
+      const std::vector<std::pair<oid_t, oid_t>>& induced_edges) {
+    // induce active edges
+    std::vector<edge_t> edges;
+    if (induced_edges.empty()) {
+      induceFromVertices(origin, induced_vertices, edges);
+    } else {
+      induceFromEdges(origin, induced_edges, edges);
+    }
+
+    {
+      // find out outer vertices and calculate outer vertices num
+      std::vector<vid_t> outer_vertices =
+          getOuterVerticesAndInvalidEdges(edges, load_strategy_);
+
+      grape::DistinctSort(outer_vertices);
+
+      ovgid_.resize(outer_vertices.size());
+      memcpy(&ovgid_[0], &outer_vertices[0],
+             outer_vertices.size() * sizeof(vid_t));
+      for (auto gid : ovgid_) {
+        ovg2i_.emplace(gid, ovnum_);
+        ++ovnum_;
+      }
+      outer_vertex_alive_.resize(ovnum_, true);
+    }
+
+    addEdges(edges);
+  }
+
+  void induceDuplicated(
+      std::shared_ptr<DynamicFragment> origin,
+      const std::unordered_set<oid_t>& induced_vertices,
+      const std::vector<std::pair<oid_t, oid_t>>& induced_edges) {
+    {
+      // process outer vertices
+      vertex_t vertex;
+      vid_t gid;
+      std::vector<vid_t> outer_vertices;
+      for (auto &oid : induced_vertices) {
+        if (origin->GetVertex(oid, vertex) && origin->IsOuterVertex(vertex)) {
+          CHECK(vm_ptr_->GetGid(oid, gid));
+          outer_vertices.push_back(gid);
+          ovg2i_.emplace(gid, ovnum_);
+          ++ovnum_;
+        }
+      }
+      ovgid_.resize(outer_vertices.size());
+      memcpy(&ovgid_[0], &outer_vertices[0],
+             outer_vertices.size() * sizeof(vid_t));
+    }
+
+    outer_ie_pos_.clear();
+    outer_oe_pos_.clear();
+    outer_ie_pos_.resize(ovnum_, -1);
+    outer_oe_pos_.resize(ovnum_, -1);
+    outer_vertex_alive_.resize(ovnum_, true);
+
+    // induce active edges
+    std::vector<edge_t> edges;
+    if (induced_edges.empty()) {
+      induceFromVertices(origin, induced_vertices, edges);
+    } else {
+      induceFromEdges(origin, induced_edges, edges);
+    }
+
+    addEdgesDuplicated(edges);
   }
 
   // induce subgraph from induced_nodes
@@ -2863,12 +2944,20 @@ class DynamicFragment {
     vertex_t vertex;
     vid_t gid, dst_gid;
     for (auto& oid : induced_vertices) {
-      if (origin->GetVertex(oid, vertex) && origin->IsInnerVertex(vertex)) {
-        // store the vertex data
-        CHECK(vm_ptr_->GetGid(fid_, oid, gid));
-        auto lid = iv_gid_to_lid(gid);
-        ivdata_[lid] = origin->GetData(vertex);
-        inner_vertex_alive_[lid] = true;
+      if (origin->GetVertex(oid, vertex)) {
+        if (origin->IsInnerVertex(vertex)) {
+          // store the vertex data
+          CHECK(vm_ptr_->GetGid(fid_, oid, gid));
+          auto lid = iv_gid_to_lid(gid);
+          ivdata_[lid] = origin->GetData(vertex);
+          inner_vertex_alive_[lid] = true;
+        } else {
+          if (duplicated_) {
+            CHECK(vm_ptr_->GetGid(oid, gid));
+          } else {
+            continue;  // distributed mode ignore outer vertex.
+          }
+        }
 
         for (auto& e : origin->GetOutgoingAdjList(vertex)) {
           auto dst_oid = origin->GetId(e.get_neighbor());
@@ -2877,7 +2966,7 @@ class DynamicFragment {
             edges.emplace_back(gid, dst_gid, e.get_data());
           }
         }
-        if (directed()) {
+        if (directed() && !duplicated()) {
           // filter the cross-fragment incoming edges
           for (auto& e : origin->GetIncomingAdjList(vertex)) {
             if (origin->IsOuterVertex(e.get_neighbor())) {
