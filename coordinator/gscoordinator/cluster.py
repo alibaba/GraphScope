@@ -1062,6 +1062,7 @@ class KubernetesClusterLauncher(Launcher):
         return True
 
     def stop(self, is_dangling=False):
+        return
         if not self._closed:
             for target in self._resource_object:
                 delete_kubernetes_object(
