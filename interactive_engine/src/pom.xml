@@ -23,9 +23,7 @@
         <module>frontend</module>
         <module>assembly</module>
         <module>instance-manager</module>
-        <module>v2</module>
         <module>executor</module>
-        <module>data_load_tools</module>
     </modules>
 
     <profiles>
@@ -58,6 +56,13 @@
             <modules>
                 <module>common/java</module>
                 <module>frontend</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>v2</id>
+            <modules>
+                <module>v2</module>
+                <module>data_load_tools</module>
             </modules>
         </profile>
     </profiles>
