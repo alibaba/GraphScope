@@ -2866,10 +2866,9 @@ class DynamicFragment {
     }
   }
 
-  void induceDist(
-      std::shared_ptr<DynamicFragment> origin,
-      const std::unordered_set<oid_t>& induced_vertices,
-      const std::vector<std::pair<oid_t, oid_t>>& induced_edges) {
+  void induceDist(std::shared_ptr<DynamicFragment> origin,
+                  const std::unordered_set<oid_t>& induced_vertices,
+                  const std::vector<std::pair<oid_t, oid_t>>& induced_edges) {
     // induce active edges
     std::vector<edge_t> edges;
     if (induced_edges.empty()) {
@@ -2907,7 +2906,7 @@ class DynamicFragment {
       vertex_t vertex;
       vid_t gid;
       std::vector<vid_t> outer_vertices;
-      for (auto &oid : induced_vertices) {
+      for (auto& oid : induced_vertices) {
         if (origin->GetVertex(oid, vertex) && origin->IsOuterVertex(vertex)) {
           CHECK(vm_ptr_->GetGid(oid, gid));
           outer_vertices.push_back(gid);
