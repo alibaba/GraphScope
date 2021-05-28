@@ -2094,6 +2094,7 @@ class DynamicFragment {
     memcpy(&ovgid_[ovnum_], &new_outer_vertices[0],
            sizeof(vid_t) * new_outer_vertices.size());
 
+    // alive_ivnum_ and alive_ovnum_ need to update before ivnum_ and _ovnum
     alive_ivnum_ += new_ivnum_ - ivnum_;
     alive_ovnum_ += new_ovnum - ovnum_;
     ivnum_ = new_ivnum_;
@@ -2137,7 +2138,8 @@ class DynamicFragment {
     ovgid_.resize(new_ovnum);
     memcpy(&ovgid_[ovnum_], &new_outer_vertices[0],
            sizeof(vid_t) * new_outer_vertices.size());
-    alive_ovnum_ = new_ovnum - ovnum_;
+    // alive_ivnum_ and alive_ovnum_ need to update before ivnum_ and _ovnum
+    alive_ovnum_ += new_ovnum - ovnum_;
     ovnum_ = new_ovnum;
     tvnum_ = ivnum_ + ovnum_;
   }
