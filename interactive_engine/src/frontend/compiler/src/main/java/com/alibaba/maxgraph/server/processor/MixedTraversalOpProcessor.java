@@ -103,7 +103,11 @@ public class MixedTraversalOpProcessor extends AbstractMixedTraversalOpProcessor
         this.queryCallbackManager = queryCallbackManager;
 
         this.graphName = instanceConfig.getGraphName();
-        this.serverId = instanceConfig.getInt("node.idx", -1);
+        int serverId = instanceConfig.getInt("node.idx", -1);
+        if (serverId == -1) {
+            serverId = instanceConfig.getServerId();
+        }
+        this.serverId = serverId;
     }
 
     @Override
