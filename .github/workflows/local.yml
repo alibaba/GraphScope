@@ -110,7 +110,7 @@ jobs:
         make install WITH_LEARNING_ENGINE=ON
 
     - name: DEBUG
-      if: true
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Run Local Test
