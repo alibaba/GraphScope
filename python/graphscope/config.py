@@ -32,7 +32,7 @@ class GSConfig(object):
     k8s_namespace = None
 
     # image
-    k8s_zookeeper_image = "zookeeper:3.6.2"
+    k8s_zookeeper_image = "zookeeper:3.4.14"
     k8s_etcd_image = "quay.io/coreos/etcd:v3.4.13"
     k8s_gs_image = "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{0}".format(
         __version__

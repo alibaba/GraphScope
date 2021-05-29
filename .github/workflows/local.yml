@@ -54,10 +54,15 @@ jobs:
         sudo apt install -y libarrow-dev=1.0.1-1 libarrow-python-dev=1.0.1-1
 
         # install zookeeper
-        wget https://archive.apache.org/dist/zookeeper/zookeeper-3.6.2/apache-zookeeper-3.6.2-bin.tar.gz
-        tar xf apache-zookeeper-3.6.2-bin.tar.gz -C /tmp/
-        cp /tmp/apache-zookeeper-3.6.2-bin/conf/zoo_sample.cfg /tmp/apache-zookeeper-3.6.2-bin/conf/zoo.cfg
-        sudo ln -s /tmp/apache-zookeeper-3.6.2-bin /usr/local/zookeeper
+        #wget https://archive.apache.org/dist/zookeeper/zookeeper-3.6.2/apache-zookeeper-3.6.2-bin.tar.gz
+        #tar xf apache-zookeeper-3.6.2-bin.tar.gz -C /tmp/
+        #cp /tmp/apache-zookeeper-3.6.2-bin/conf/zoo_sample.cfg /tmp/apache-zookeeper-3.6.2-bin/conf/zoo.cfg
+        #sudo ln -s /tmp/apache-zookeeper-3.6.2-bin /usr/local/zookeeper
+
+        wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz
+        tar xf zookeeper-3.4.14.tar.gz -C /tmp/
+        cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
+        sudo ln -s /tmp/zookeeper-3.4.14 /usr/local/zookeeper
 
         # rust
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
