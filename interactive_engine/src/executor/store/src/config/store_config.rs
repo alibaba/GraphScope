@@ -145,7 +145,7 @@ pub struct StoreConfig {
     #[structopt(long = "pegasus-thread-pool-size", default_value = "24")]
     pub pegasus_thread_pool_size: u32,
 
-    #[structopt(long = "graph-type", default_value="default")]
+    #[structopt(long = "graph-type", default_value="vineyard")]
     pub graph_type: String,
 
     #[structopt(long = "graph-vineyard-object-id", default_value = "0")]
