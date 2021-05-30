@@ -572,7 +572,6 @@ class KubernetesClusterLauncher(Launcher):
             ) from e
 
     def stop(self, wait=False):
-        return
         """Stop graphscope instance on kubernetes cluster.
 
         Args:
