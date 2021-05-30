@@ -125,12 +125,13 @@ impl<D: Data> OperatorCore for MergeSwitch<D> {
         let mut output_leave = new_output_session::<D>(&outputs[0], tag);
         let mut output_loop = new_output_session::<D>(&outputs[1], tag);
 
-        let (p, round) = tag.split().expect("unwrap tag split result failure;");
+        let p = tag.to_parent_uncheck();
+        let round = tag.current_uncheck();
         let depth = self.scope_depth;
         assert_eq!(tag.len(), depth);
         let mut has_data_into_iter = false;
         if round == 0 && !self.extern_exhaust {
-            debug_worker!("{} enter iteration;", p);
+            debug_worker!("{:?} enter iteration;", p);
             if !self.in_loops.contains_key(&p) {
                 self.in_loops.insert(p.clone(), LoopTracker::new(self.peers));
                 self.parent_scopes.insert(p.clone(), false);
@@ -225,25 +226,30 @@ impl<D: Data> OperatorCore for MergeSwitch<D> {
         if n.port == 0 {
             // because of static enter, the enter operator won't give sub-scope end signal, so notifications
             // from this input port are all from parent scope;
-            assert!(n.tag.len() < self.scope_depth);
-            for output in outputs.iter() {
-                output.retain(&n.tag);
-            }
-
-            self.un_complete.retain(|un_cpe| {
-                if n.tag.is_parent_of(un_cpe) {
-                    for output in outputs.iter() {
-                        output.scope_end(un_cpe.clone());
-                    }
-                    false
-                } else {
-                    true
+            // assert!(n.tag.len() < self.scope_depth);
+            if n.tag.len() < self.scope_depth {
+                for output in outputs.iter() {
+                    output.retain(&n.tag);
                 }
-            });
+
+                self.un_complete.retain(|un_cpe| {
+                    if n.tag.is_parent_of(un_cpe) {
+                        for output in outputs.iter() {
+                            output.scope_end(un_cpe.clone());
+                        }
+                        false
+                    } else {
+                        true
+                    }
+                });
+            } else {
+                self.un_complete.remove(&n.tag);
+            }
         } else if n.port == 1 {
             if n.tag.len() == self.scope_depth {
                 // End notifications of each iteration;
-                let (p, round) = n.tag.split().expect("invalid tag in iteration;");
+                let p = n.tag.to_parent_uncheck();
+                let round = n.tag.current_uncheck();
                 if round == self.condition.max_iters {
                     if self.in_loops.remove(&p).is_some() {
                         outputs[0].drop_retain(&p);

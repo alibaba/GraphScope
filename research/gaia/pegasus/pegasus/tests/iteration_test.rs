@@ -14,10 +14,7 @@
 //! limitations under the License.
 
 use pegasus::api::function::*;
-use pegasus::api::{
-    complete, Exchange, Iteration, LoopCondition, Map, Multiplexing, NonBlockReceiver, ResultSet,
-    Sink,
-};
+use pegasus::api::{complete, Exchange, Iteration, LoopCondition, Map, Multiplexing, NonBlockReceiver, ResultSet, Sink, Filter, Range, Limit};
 use pegasus::communication::Pipeline;
 use pegasus::filter;
 use pegasus::{Configuration, JobConf};
@@ -192,5 +189,56 @@ fn ping_pong_test_03() {
     }
 
     assert_eq!(count, vec![1023, 1024, 1025]);
+    pegasus::shutdown_all();
+}
+
+#[test]
+fn flat_map_iteration_test() {
+    pegasus_common::logs::init_log();
+    pegasus::startup(Configuration::singleton()).ok();
+    let conf = JobConf::new(61, "ping_pong_test_02", 2);
+    let (tx, rx) = crossbeam_channel::unbounded();
+    let _guard = pegasus::run(conf, |worker| {
+        let tx = tx.clone();
+        let index = worker.id.index;
+        worker.dataflow(move |builder| {
+            let source = if index == 0 {
+                builder.input_from_iter(0..10u32)
+            } else {
+                builder.input_from_iter(0..0)
+            }?;
+
+            source
+                .exchange_with_fn(|item: &u32| *item as u64)?
+                .iterate(2, |start| {
+                    start
+                        .exchange_with_fn(|item: &u32| *item as u64)?
+                        .flat_map_with_fn(Pipeline, |item| {
+                            Ok((item..4000 + item).map(|x| Ok(x)))
+                        })?
+                        .filter_with_fn(|item| Ok(*item < 100))?
+                        .limit(Range::Global, 10)
+                })?
+                .sink_by(|_| {
+                    move |_, result| {
+                        if let ResultSet::Data(data) = result {
+                            tx.send(data).unwrap();
+                        }
+                    }
+                })?;
+            Ok(())
+        })
+    })
+        .expect("submit job failure");
+
+    std::mem::drop(tx);
+    let mut count = 0;
+    while let Ok(data) = rx.recv() {
+        count += data.len();
+        for d in data {
+            assert!(d < 100);
+        }
+    }
+    assert_eq!(count, 10);
     pegasus::shutdown_all();
 }

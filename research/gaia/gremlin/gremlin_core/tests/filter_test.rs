@@ -86,6 +86,28 @@ mod test {
         run_test(test_job_factory, pb_request);
     }
 
+    // g.V().has("age", P.without(27))
+    #[test]
+    fn has_step_test_07() {
+        initialize();
+        let mut expected = to_global_ids(vec![1, 4, 6]);
+        expected.sort();
+        let test_job_factory = TestJobFactory::with_expect_ids(expected);
+        let pb_request = read_pb_request(gen_path("has_step_test_07")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
+    }
+
+    // g.V().has("age", P.within(27))
+    #[test]
+    fn has_step_test_08() {
+        initialize();
+        let mut expected = to_global_ids(vec![2]);
+        expected.sort();
+        let test_job_factory = TestJobFactory::with_expect_ids(expected);
+        let pb_request = read_pb_request(gen_path("has_step_test_08")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
+    }
+
     // g.V().as("a").both("KNOWS").where(both("KNOWS").as("a"))
     #[test]
     fn where_step_test_01() {
@@ -95,6 +117,30 @@ mod test {
         let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
         test_job_factory.set_requirement(Requirement::LABELED_PATH);
         let pb_request = read_pb_request(gen_path("where_step_test_01")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
+    }
+
+    // g.V().as("a").out("created").where(__.as("a").values("name").is("josh")).in("created")
+    #[test]
+    fn where_step_test_02() {
+        initialize();
+        let mut expected = to_global_ids(vec![1, 4, 4, 6]);
+        expected.sort();
+        let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
+        test_job_factory.set_requirement(Requirement::LABELED_PATH);
+        let pb_request = read_pb_request(gen_path("where_step_test_02")).expect("read pb failed");
+        run_test(test_job_factory, pb_request);
+    }
+
+    // g.V().as("a").out("created").in("created").as("b").where("a", P.gt("b")).by("age")
+    #[test]
+    fn where_step_test_03() {
+        initialize();
+        let mut expected = to_global_ids(vec![1, 1, 4]);
+        expected.sort();
+        let mut test_job_factory = TestJobFactory::with_expect_ids(expected);
+        test_job_factory.set_requirement(Requirement::LABELED_PATH);
+        let pb_request = read_pb_request(gen_path("where_step_test_03")).expect("read pb failed");
         run_test(test_job_factory, pb_request);
     }
 

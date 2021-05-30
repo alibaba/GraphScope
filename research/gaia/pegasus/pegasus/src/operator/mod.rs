@@ -151,11 +151,11 @@ impl Operator {
             if FiredState::Idle == self.core.on_active(tag, &self.outputs)? {
                 active.state = FiredState::Idle;
                 for p in active.notified_ports.drain(..) {
-                    self.outputs.iter().for_each(|o| o.drop_retain(tag));
                     let notification = Notification::new(p, tag.clone());
                     trace_worker!("fire operator {:?} on notify {:?};", self.meta, notification);
-                    self.core.on_notify(notification, &self.outputs)?
+                    self.core.on_notify(notification, &self.outputs)?;
                 }
+                self.outputs.iter().for_each(|o| o.drop_retain(tag));
             }
         }
         actives.retain(|_, v| v.state == FiredState::Active);
@@ -183,9 +183,9 @@ impl Operator {
                 self.outputs.iter().for_each(|o| o.scope_end(n.clone()));
                 if let Some(active) = self.actives.get_mut(&n) {
                     active.notified_ports.push(port);
-                    self.outputs.iter().for_each(|o| o.retain(&n));
+                    // self.outputs.iter().for_each(|o| o.retain(&n));
                 } else if self.meta.notifiable {
-                    let n = Notification::new(port, n);
+                    let n = Notification::new(port, n.clone());
                     trace_worker!("fire operator {:?} on notify {:?};", self.meta, n);
                     self.core.on_notify(n, &self.outputs)?;
                 }
