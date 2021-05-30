@@ -273,7 +273,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
       options:
         --shm-size 4096m
     strategy:
