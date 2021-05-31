@@ -43,8 +43,7 @@ if [ -z "$MAXGRAPH_LOGBACK_FILE" ]; then
 fi
 
 if [ -z "$MAXGRAPH_CONF_FILE" ]; then
-    echo "must set $MAXGRAPH_CONF_FILE" >&2
-    exit 1
+    MAXGRAPH_CONF_FILE="$MAXGRAPH_CONF_DIR/maxgraph.config"
 fi
 
 if [ -z "$LOG_DIR" ]; then
