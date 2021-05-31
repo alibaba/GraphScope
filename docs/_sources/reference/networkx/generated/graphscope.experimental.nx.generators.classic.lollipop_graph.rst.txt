@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.generators.classic.lollipop\_graph
-=============================================================
-
-.. currentmodule:: graphscope.experimental.nx.generators.classic
-
-.. autofunction:: lollipop_graph

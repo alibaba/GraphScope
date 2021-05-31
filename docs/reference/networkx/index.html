@@ -9,7 +9,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>NetworkX-style API(Preview) &mdash; GraphScope  documentation</title>
+  <title>NetworkX-style API &mdash; GraphScope  documentation</title>
   
 
   
@@ -97,6 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
 </ul>
 <p><span class="caption-text">Reference</span></p>
@@ -111,14 +112,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../cython_sdk.html">Cython SDK API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../learning.html">Graph Learning</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">NetworkX-style API(Preview)</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">NetworkX-style API</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="builtin.html">Builtin algorithms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="functions.html">Functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generators.html">Graph generators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="convert.html">Converting to and from other data formats</a></li>
-<li class="toctree-l3"><a class="reference internal" href="relabel.html">Relabeling nodes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="io.html">Reading and writing graphs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="io.html">Reading graphs</a></li>
 </ul>
 </li>
 </ul>
@@ -171,7 +170,7 @@
         
           <li><a href="../python_index.html">Python API Reference</a> &raquo;</li>
         
-      <li>NetworkX-style API(Preview)</li>
+      <li>NetworkX-style API</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -190,16 +189,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="networkx-style-api-preview">
-<span id="networkx"></span><h1>NetworkX-style API(Preview)<a class="headerlink" href="#networkx-style-api-preview" title="Permalink to this headline">¶</a></h1>
+  <section id="networkx-style-api">
+<span id="networkx"></span><h1>NetworkX-style API<a class="headerlink" href="#networkx-style-api" title="Permalink to this headline">¶</a></h1>
 <blockquote>
 <div><div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="graphs.html">Graph types</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="graphs.html#graph">Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="graphs.html#digraph">DiGraph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="graphs.html#edge-list">Edge List</a></li>
-<li class="toctree-l2"><a class="reference internal" href="graphs.html#adjacency-list">Adjacency List</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graphs.html#transformation">transformation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="builtin.html">Builtin algorithms</a></li>
@@ -213,13 +211,11 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="generators.html">Graph generators</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="generators.html#module-graphscope.experimental.nx.generators.classic">Classic</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generators.html#module-graphscope.experimental.nx.generators.social">Social Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generators.html#module-graphscope.nx.generators.classic">Classic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generators.html#module-graphscope.nx.generators.social">Social Networks</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="convert.html">Converting to and from other data formats</a></li>
-<li class="toctree-l1"><a class="reference internal" href="relabel.html">Relabeling nodes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="io.html">Reading and writing graphs</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="io.html">Reading graphs</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="io.html#edge-list">Edge List</a></li>
 <li class="toctree-l2"><a class="reference internal" href="io.html#adjacency-list">Adjacency List</a></li>
 </ul>
@@ -314,6 +310,26 @@
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.0/index.html">v0.4.0</a></dd>
               
             
 

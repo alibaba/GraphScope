@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.DiGraph.order
-========================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: DiGraph.order

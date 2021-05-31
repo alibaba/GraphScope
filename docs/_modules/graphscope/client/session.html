@@ -94,6 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
 </ul>
 <p><span class="caption-text">Reference</span></p>
@@ -199,8 +200,10 @@
 <span class="kn">from</span> <span class="nn">queue</span> <span class="k">import</span> <span class="n">Empty</span> <span class="k">as</span> <span class="n">EmptyQueue</span>
 
 <span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">kubernetes</span> <span class="k">import</span> <span class="n">client</span> <span class="k">as</span> <span class="n">kube_client</span>
     <span class="kn">from</span> <span class="nn">kubernetes</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">kube_config</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">kube_client</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">kube_config</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="kn">import</span> <span class="nn">graphscope</span>
@@ -918,49 +921,18 @@
                 <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gs_image&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
             <span class="p">):</span>
                 <span class="k">raise</span> <span class="n">K8sError</span><span class="p">(</span><span class="s2">&quot;None image found.&quot;</span><span class="p">)</span>
-            <span class="n">api_client</span> <span class="o">=</span> <span class="n">kube_config</span><span class="o">.</span><span class="n">new_client_from_config</span><span class="p">(</span>
-                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">],</span>
+                <span class="n">kube_client</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">ApiClient</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="n">api_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">api_client</span> <span class="o">=</span> <span class="n">kube_config</span><span class="o">.</span><span class="n">new_client_from_config</span><span class="p">(</span>
+                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
+                <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="o">=</span> <span class="n">KubernetesClusterLauncher</span><span class="p">(</span>
                 <span class="n">api_client</span><span class="o">=</span><span class="n">api_client</span><span class="p">,</span>
-                <span class="n">namespace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_namespace&quot;</span><span class="p">],</span>
-                <span class="n">service_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_service_type&quot;</span><span class="p">],</span>
-                <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">],</span>
-                <span class="n">gs_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gs_image&quot;</span><span class="p">],</span>
-                <span class="n">preemptive</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;preemptive&quot;</span><span class="p">],</span>
-                <span class="n">etcd_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_image&quot;</span><span class="p">],</span>
-                <span class="n">gie_graph_manager_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span>
-                    <span class="s2">&quot;k8s_gie_graph_manager_image&quot;</span>
-                <span class="p">],</span>
-                <span class="n">zookeeper_image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_zookeeper_image&quot;</span><span class="p">],</span>
-                <span class="n">image_pull_policy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_image_pull_policy&quot;</span><span class="p">],</span>
-                <span class="n">image_pull_secrets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_image_pull_secrets&quot;</span><span class="p">],</span>
-                <span class="n">vineyard_daemonset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_daemonset&quot;</span><span class="p">],</span>
-                <span class="n">vineyard_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_cpu&quot;</span><span class="p">],</span>
-                <span class="n">vineyard_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_vineyard_mem&quot;</span><span class="p">],</span>
-                <span class="n">vineyard_shared_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_shared_mem&quot;</span><span class="p">],</span>
-                <span class="n">etcd_num_pods</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_num_pods&quot;</span><span class="p">],</span>
-                <span class="n">etcd_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_cpu&quot;</span><span class="p">],</span>
-                <span class="n">etcd_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_etcd_mem&quot;</span><span class="p">],</span>
-                <span class="n">zookeeper_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_zookeeper_cpu&quot;</span><span class="p">],</span>
-                <span class="n">zookeeper_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_zookeeper_mem&quot;</span><span class="p">],</span>
-                <span class="n">gie_graph_manager_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gie_graph_manager_cpu&quot;</span><span class="p">],</span>
-                <span class="n">gie_graph_manager_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_gie_graph_manager_mem&quot;</span><span class="p">],</span>
-                <span class="n">engine_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_engine_cpu&quot;</span><span class="p">],</span>
-                <span class="n">engine_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_engine_mem&quot;</span><span class="p">],</span>
-                <span class="n">mars_worker_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_worker_cpu&quot;</span><span class="p">],</span>
-                <span class="n">mars_worker_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_worker_mem&quot;</span><span class="p">],</span>
-                <span class="n">mars_scheduler_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_scheduler_cpu&quot;</span><span class="p">],</span>
-                <span class="n">mars_scheduler_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_mars_scheduler_mem&quot;</span><span class="p">],</span>
-                <span class="n">with_mars</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;with_mars&quot;</span><span class="p">],</span>
-                <span class="n">coordinator_cpu</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_coordinator_cpu&quot;</span><span class="p">]),</span>
-                <span class="n">coordinator_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_coordinator_mem&quot;</span><span class="p">],</span>
-                <span class="n">volumes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_volumes&quot;</span><span class="p">],</span>
-                <span class="n">waiting_for_delete</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_waiting_for_delete&quot;</span><span class="p">],</span>
-                <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;timeout_seconds&quot;</span><span class="p">],</span>
-                <span class="n">dangling_timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span>
-                    <span class="s2">&quot;dangling_timeout_seconds&quot;</span>
-                <span class="p">],</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span>
@@ -970,12 +942,7 @@
         <span class="p">):</span>
             <span class="c1"># lanuch coordinator with hosts</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span> <span class="o">=</span> <span class="n">HostsClusterLauncher</span><span class="p">(</span>
-                <span class="n">hosts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;hosts&quot;</span><span class="p">],</span>
-                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">],</span>
-                <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;num_workers&quot;</span><span class="p">],</span>
-                <span class="n">vineyard_socket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">],</span>
-                <span class="n">timeout_seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;timeout_seconds&quot;</span><span class="p">],</span>
-                <span class="n">vineyard_shared_mem</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_shared_mem&quot;</span><span class="p">],</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Session initialize failed.&quot;</span><span class="p">)</span>
@@ -1547,6 +1514,26 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.0/index.html">v0.4.0</a></dd>
               
             
 

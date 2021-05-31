@@ -4,7 +4,7 @@
 Functions
 *********
 
-.. automodule:: graphscope.experimental.nx.classes.function
+.. automodule:: graphscope.nx.classes.function
 
 Graph
 -----
@@ -24,10 +24,7 @@ Graph
    add_path
    add_cycle
    subgraph
-   subgraph_view
    induced_subgraph
-   restricted_view
-   reverse_view
    edge_subgraph
 
 
@@ -70,10 +67,6 @@ Attributes
 
    is_weighted
    is_negatively_weighted
-   set_node_attributes
-   get_node_attributes
-   set_edge_attributes
-   get_edge_attributes
 
 
 Freezing graph structure

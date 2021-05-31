@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Towards a Swiss Army Knife for a Continuous Life Cycle of Big Graph Analytics</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2021-05-29">29 May 2021</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2021-05-29">29 May 2021</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Towards a Swiss Army Knife for a Continuous Life Cycle of Big Graph Analytics</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/knife.png" alt="knife" />
+In this post, we will present a high-level road-map of the GraphScope project with highlighting new exciting features coming in the v0.5 release.</p>
+
+<h3 id="how-it-all-gets-started">How It All Gets Started</h3>
+
+<p>To begin with, let us reflect on why we start this project. Due to huge diversity of graph data, scenarios, and algorithms, agility is key to the success of a big graph infrastructure, which boils down firstly to the ease of programming and interoperability. GraphScope generalizes previous execution environments such as <a href="https://giraph.apache.org/">Giraph</a> and <a href="https://spark.apache.org/graphx/">GraphX</a> in two ways: by providing a single-machine programming abstraction in Python that supports familiar notations for a variety of graph operations (<a href="https://tinkerpop.apache.org/">Gremlin</a>, <a href="https://networkx.org/">NetworkX</a>, <a href="https://github.com/alibaba/graph-learn">Graph Neural Networks</a>, etc.) while hiding the system complexity from the programmer; and by bridging with other, existing big data infrastructure through <a href="https://github.com/v6d-io/v6d">Vineyard</a> which provides efficient in-memory data transfer with high-level data structures as interface, as shown in Figure 1.</p>
+
+<p><img src="/blog/assets/images/system-stack.png" alt="system-stack.png" /></p>
+<ul>
+  <li>Figure 1: The GraphScope system stack, and how it interacts with the <a href="https://pydata.org/">PyData</a> ecosystem.</li>
+</ul>
+
+<h3 id="a-vision-on-big-graph-infrastructure">A Vision on Big Graph Infrastructure</h3>
+
+<p>In addition, we believe big graph infrastructure must be developed for a continuous life cycle. As illustrated in Figure 2, the centered box of “interactive analysis and testing” represents the current version of GraphScope, which facilitates the design of new (or specific) graph algorithms for each particular task in an exploratory manner. As such a process is highly experimental in nature, GraphScope makes it easy to construct and load large graphs on demand and to efficiently perform a wide range of graph computations.</p>
+
+<p><img src="/blog/assets/images/lifecycle.png" alt="lifecycle.png" /></p>
+<ul>
+  <li>Figure 2: A continuous life cycle of big graph analytics.</li>
+</ul>
+
+<p>Once such a design is achieved and selected, it will typically be <em>deployed in production</em> for processing real dynamic graphs to generate insights in a continuous manner. The left and right box in Figure 2 show two representative processing paradigms for such a deployment: the real-time streaming and the batch-oriented processing, respectively, at two ends of the latency spectrum. In the real-time streaming, ideally, each update to the graph model has to be reflected in the output within a couple of seconds, and therefore the system optimizes for low latency and high availability. In the batch-oriented processing where the latency requirement is much relaxed, it is often more efficient to perform computation periodically (such as every one hour or day) to allow sophisticated optimizations for throughput.</p>
+
+<h3 id="graphscope-v05">GraphScope v0.5</h3>
+
+<p>As the first step towards the ease of deployment in production, we are introducing two new features in the coming release of GraphScope v0.5, including <em>a persistent graph store</em> to enable a “service mode” for real-time graph computation, and <em>lazy evaluation</em> of GraphScope programs–an execution strategy which delays the execution of a GraphScope program until later when needed for efficiency. We briefly introduce them below and will provide more details in the Release Note soon.</p>
+
+<h4 id="persistent-graph-store">Persistent Graph Store</h4>
+
+<p>In addition to Vineyard, the in-memory columnar graph store currently supported in GraphScope, we will introduce a new disk-based row-oriented multi-versioned persistent graph store. While Vineyard focuses on great support for in-memory whole graph analytics workload, the new persistent graph store is geared towards better supporting for running continuous graph data management service that frequently updates the graph and answers traversal queries.</p>
+
+<p>The store is a distributed graph store built on top of the popular RocksDB key value store. It adopts row-oriented design to support frequent small updates to the graph. Each row is tagged with a snapshot ID as its version. A query reads most recent version of rows relative to the snapshot ID when it starts and hence not blocked by writes. For writes we take a compromise between consistency and higher throughput (in a similar design to Kineograph [1]). In our design writes in the same session can be grouped and executed atomically as a unit and the persistent store assigns a snapshot ID (which is a low-resolution timestamp of current time) to each group and executes groups of writes by the order of their snapshot IDs and by a deterministic (though arbitrary) order for groups of writes that occur in the same snapshot ID. It provides high write throughput while still with some degree of order and isolation though it provides less consistency than strict snapshot isolation common in database. We hope our design choice provides an interesting trade-off for practical usage.</p>
+
+<p>Initially, the new persistent store is provided as a separate option from Vineyard. Going foward we hope to evole them into an integrated hybrid graph store suitable for all kinds of workloads.</p>
+
+<h4 id="lazy-evaluation">Lazy Evaluation</h4>
+<p>As an important performance optimization technique, lazy evaluation has been widely applied by many big data processing systems like <a href="https://www.tensorflow.org/">TensorFlow</a>. We will introduce the support of lazy evaluation into the coming GraphScope v0.5, which provides three-fold benefits compared with eager evaluation. First, in the lazy evaluation, a job is expressed logically in a directed acyclic graph (DAG) where different nodes represent different operators of the overall job and edges represent the data dependencies between operators. When evaluating the operator (i.e., a vertex in the DAG), GraphScope looks back to check all the nodes that are required for this requested node. Only those nodes are evaluated in the appropriate order. Thus, a node in the DAG is evaluated only when needed; only if it is needed. Second, with the DAG in place, it can avoid repeatedly evaluating the same operator, blindly, regardless whether the operator can be memorized. Third, it allows to combine multiple operators (e.g., adding an edge to a graph) into a single batch-oriented operator (e.g., aggregating multiple edges into a batch and adding the batch to a graph), which is more efficient in GraphScope.</p>
+
+<p>In GraphScope, developers can easily switch between lazy-mode and eager-mode by just setting the value of <code class="language-plaintext highlighter-rouge">mode</code> as <code class="language-plaintext highlighter-rouge">lazy</code> or <code class="language-plaintext highlighter-rouge">eager</code> when creating a session <code class="language-plaintext highlighter-rouge">graphscope.session(mode='lazy'or 'eager')</code>. Typically, developers can choose the eager-mode in the development stage, as it can ease the debugging of applications, while switch to the lazy-mode in the deployment stage for better performance.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>A tool or infrastructure built for a continuous life cycle of big graph applications requires to do much more than the ease of deployment, but also to help testing and diagnosis of real-world graph applications, and to allow a data-driven approach for continuous evolution of an on-line service or periodic pipeline. Even so, the new features coming in the GraphScope v0.5 release take us one step closer to that vision. Please give it a try and let us know what you think! Really appreciated.</p>
+
+<h3 id="references">References</h3>
+
+<p>[1] Raymond Cheng, Ji Hong, Aapo Kyrola, Youshan Miao, Xuetian Weng, Ming Wu, Fan Yang, Lidong Zhou, Feng Zhao, and Enhong Chen. 2012. Kineograph: Taking the Pulse of A Fast-changing and Connected World. In EuroSys ‘12. (<a href="https://www.cl.cam.ac.uk/~ey204/teaching/ACS/R212_2013_2014/papers/cheng_eurosys_2012.pdf">pdf</a>)</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Towards a Swiss Army Knife for a Continuous Life Cycle of Big Graph Analytics&amp;url=https://graphscope.io/tech/2021/05/29/Towards-a-Swiss-Army-Knife-for-a-Continuous-Life-Cycle-of-Big-Graph-Analytics.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2021/05/29/Towards-a-Swiss-Army-Knife-for-a-Continuous-Life-Cycle-of-Big-Graph-Analytics.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2021/05/29/Towards-a-Swiss-Army-Knife-for-a-Continuous-Life-Cycle-of-Big-Graph-Analytics.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2021 &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+</body>
+</html>

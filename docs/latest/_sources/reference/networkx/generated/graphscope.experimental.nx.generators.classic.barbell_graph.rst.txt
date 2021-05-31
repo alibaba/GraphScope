@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.generators.classic.barbell\_graph
-============================================================
-
-.. currentmodule:: graphscope.experimental.nx.generators.classic
-
-.. autofunction:: barbell_graph

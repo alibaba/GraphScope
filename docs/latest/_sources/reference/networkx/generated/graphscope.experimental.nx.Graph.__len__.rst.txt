@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.Graph.\_\_len\_\_
-============================================
-
-.. currentmodule:: graphscope.experimental.nx
-
-.. automethod:: Graph.__len__

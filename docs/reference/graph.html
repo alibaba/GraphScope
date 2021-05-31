@@ -97,6 +97,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
 </ul>
 <p><span class="caption-text">Reference</span></p>
@@ -116,7 +117,7 @@
 <li class="toctree-l2"><a class="reference internal" href="cython_sdk.html">Cython SDK API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="learning.html">Graph Learning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="networkx/index.html">NetworkX-style API(Preview)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="networkx/index.html">NetworkX-style API</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="analytical_engine_index.html">Analytical Engine API Reference</a></li>
@@ -195,7 +196,7 @@
 <em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.graph.</code><code class="sig-name descname">Graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session</span></em>, <em class="sig-param"><span class="n">incoming_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">oid_type</span><span class="o">=</span><span class="default_value">'int64'</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">generate_eid</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class for representing metadata of a graph in the GraphScope.</p>
 <p>A <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a> object holds the metadata of a graph, such as key, schema, and the graph is directed or not.</p>
-<p>It is worth noting that the graph is stored by the backend such as Analytical Engine, Vineyard.
+<p>It is worth noticing that the graph is stored by the backend such as Analytical Engine, Vineyard.
 In other words, the graph object holds nothing but metadata.</p>
 <p>The following example demonstrates its usage:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
@@ -717,6 +718,26 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
               
             
 

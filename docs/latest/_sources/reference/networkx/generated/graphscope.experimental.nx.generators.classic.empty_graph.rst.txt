@@ -1,6 +1,0 @@
-﻿graphscope.experimental.nx.generators.classic.empty\_graph
-==========================================================
-
-.. currentmodule:: graphscope.experimental.nx.generators.classic
-
-.. autofunction:: empty_graph
