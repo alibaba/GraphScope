@@ -2,7 +2,7 @@
 # libgrape-lite, vineyard, as well as necessary IO dependencies (e.g., hdfs, oss)
 # in the image
 
-ARG BASE_VERSION=debug
+ARG BASE_VERSION=latest
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:$BASE_VERSION
 
 RUN cd /tmp && \

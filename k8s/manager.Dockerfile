@@ -1,6 +1,6 @@
 # # # # # # # # # # # # # # # # # # # # # #
 # COMPILE
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug AS builder
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest AS builder
 
 # copy maxgraph code to container
 ADD . /root/maxgraph/
@@ -12,7 +12,7 @@ RUN cd /root/maxgraph/ && \
 
 # # # # # # # # # # # # # # # # # # # # # #
 # RUNTIME: manager 
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug AS manager
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest AS manager
 RUN mkdir -p /home/maxgraph
 # copy binary from builder
 COPY --from=builder /root/maxgraph/src/assembly/target/0.0.1-SNAPSHOT.tar.gz /home/maxgraph/

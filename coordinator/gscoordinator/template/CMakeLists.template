@@ -73,10 +73,12 @@ endif()
 include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
 
 # find Arrow--------------------------------------------------------------------
-if(GRAPHSCOPE_ANALYTICAL_HOME)
-    include("${ANALYTICAL_ENGINE_HOME}/lib/cmake/FindArrow.cmake")
-else()
-    include("${ANALYTICAL_ENGINE_HOME}/cmake/FindArrow.cmake")
+if(NOT Arrow_FOUND)
+    if(GRAPHSCOPE_ANALYTICAL_HOME)
+        include("${ANALYTICAL_ENGINE_HOME}/lib/cmake/FindArrow.cmake")
+    else()
+        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindArrow.cmake")
+    endif()
 endif()
 
 # find Libunwind----------------------------------------------------------------

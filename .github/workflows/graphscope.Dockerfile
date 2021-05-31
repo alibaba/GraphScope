@@ -1,4 +1,4 @@
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
 ARG profile=release
 
