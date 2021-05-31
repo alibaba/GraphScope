@@ -354,9 +354,7 @@ def test_error_on_parameters_not_correct(arrow_project_graph):
         pagerank(arrow_project_graph, "delta=0.85", 10)
     with pytest.raises(ValueError, match=r"invalid literal for int\(\) with base 10"):
         pagerank(arrow_project_graph, 0.85, "max_round=10")
-    with pytest.raises(
-        TypeError, match="takes from 1 to 3 positional arguments but 6 were given"
-    ):
+    with pytest.raises(TypeError):
         pagerank(arrow_project_graph, 0.85, 10, 100, 1000, 10000)
 
 
