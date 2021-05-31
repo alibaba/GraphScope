@@ -16,6 +16,7 @@
 #
 
 import pytest
+import numpy as np
 from networkx.classes.tests.test_graph import TestEdgeSubgraph as _TestEdgeSubgraph
 from networkx.classes.tests.test_graph import TestGraph as _TestGraph
 from networkx.testing.utils import assert_graphs_equal
@@ -238,6 +239,70 @@ class TestGraph(_TestGraph):
         # No inputs -> exception
         with pytest.raises(nx.NetworkXError):
             nx.Graph().update()
+
+    def test_duplicated_modification(self):
+        G = nx.complete_graph(5, using=self.Graph)
+        ret_frame = nx.closeness_centrality(G)
+        assert np.allclose(
+            ret_frame.sort_values(by=["node"]).to_numpy(),
+            [[0.0, 1.000], [1.0, 1.000], [2.0, 1.000], [3.0, 1.000], [4.0, 1.000]]
+        )
+
+        # test add node
+        G.add_node(5)
+        ret_frame2 = nx.closeness_centrality(G)
+        assert np.allclose(
+            ret_frame2.sort_values(by=["node"]).to_numpy(),
+            [[0.0, 0.8], [1.0, 0.8], [2.0, 0.8], [3.0, 0.8], [4.0, 0.8], [5.0, 0.0]]
+        )
+        # test add edge
+        G.add_edge(4, 5)
+        ret_frame3 = nx.closeness_centrality(G)
+        assert np.allclose(
+            ret_frame3.sort_values(by=["node"]).to_numpy(),
+            [[0.0, 0.8], [1.0, 0.8], [2.0, 0.8], [3.0, 0.8], [4.0, 0.8], [5.0, 0.0]]
+        )
+        # test remove edge
+        G.remove_edge(4, 5)
+        ret_frame4 = nx.closeness_centrality(G)
+        assert np.allclose(
+            ret_frame4.sort_values(by=["node"]).to_numpy(),
+            [[0.0, 0.8], [1.0, 0.8], [2.0, 0.8], [3.0, 0.8], [4.0, 0.8], [5.0, 0.0]]
+        )
+        # test remove node
+        G.remove_node(5)
+        ret_frame5 = nx.closeness_centrality(G)
+        assert np.allclose(
+            ret_frame5.sort_values(by=["node"]).to_numpy(),
+            [[0.0, 1.000], [1.0, 1.000], [2.0, 1.000], [3.0, 1.000], [4.0, 1.000]]
+        )
+        # test update
+        for e in G.edges:
+            G.edges[e]["weight"] = 2
+        ret_frame6 = nx.closeness_centrality(G, weight="weight")
+        assert np.allclose(
+            ret_frame6.sort_values(by=["node"]).to_numpy(),
+            [[0.0, 0.5], [1.0, 0.5], [2.0, 0.5], [3.0, 0.5], [4.0, 0.5]]
+        )
+        # test copy
+        G2 = G.copy()
+        ret_frame7 = nx.closeness_centrality(G2)
+        assert np.allclose(
+            ret_frame7.sort_values(by=["node"]).to_numpy(),
+            [[0.0, 1.000], [1.0, 1.000], [2.0, 1.000], [3.0, 1.000], [4.0, 1.000]]
+        )
+        # test reverse
+        if G.is_directd():
+            rG = G.reverse()
+            ret_frame8 = nx.closeness_centrality(rG)
+        # to_directed/to_undirected
+        if G.is_directed():
+            udG = G.to_undirected()
+        else:
+            dG = G.to_directd()
+        # sub_graph
+        sG = G.subgraph([0, 1, 2])
+        sG2 = G.edge_subgraph([(0, 1), (1, 2), (2, 3)])
 
 
 @pytest.mark.usefixtures("graphscope_session")

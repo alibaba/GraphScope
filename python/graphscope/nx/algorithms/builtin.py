@@ -491,6 +491,19 @@ def bfs_successors(G, source, depth_limit=None):
     return AppAssets(algo="bfs_generic")(G, source, depth_limit, format="successors")
 
 
+@project_to_simple
+def all_pairs_dijkstra_path_length(G, weight=None):
+    use_weight = (True if weight else False)
+    return AppAssets(algo="all_pair_dijkstra_path_length")(G, use_weight)
+
+
+@project_to_simple
+def closeness_centrality(G, weight=None, wf_improved=True):
+    use_weight = (True if weight else False)
+    ctx = AppAssets(algo="closeness_centrality")(G, use_weight, wf_improved)
+    return ctx.to_dataframe({"node": "v.id", "result": "r"})
+
+
 @patch_docstring(nxa.bfs_tree)
 def bfs_tree(G, source, reverse=False, depth_limit=None):
     """Returns an oriented tree constructed from of a breadth-first-search
