@@ -17,14 +17,12 @@ use crate::structure::filter::compare::{Compare, EqCmp, OrdCmp};
 use crate::structure::filter::contains::Contains;
 use crate::structure::filter::element::{ExpectValue, Reverse};
 use crate::structure::filter::Predicate;
-use crate::structure::{
-    get_tlv_type, with_tlv, BiPredicate, Details, DynDetails, Element, TlvType,
-};
+use crate::structure::{ get_tlv_type, TlvType,with_tlv, BiPredicate, Details, DynDetails, Element, PropKey};
 use dyn_type::Object;
 use std::collections::HashSet;
 
 pub struct HasProperty {
-    pub key: String,
+    pub key: PropKey,
     pub cmp: Compare,
     pub expect: ExpectValue<Object>,
 }
@@ -32,7 +30,7 @@ pub struct HasProperty {
 impl<E: Element> Predicate<E> for HasProperty {
     fn test(&self, entry: &E) -> Option<bool> {
         let details: &DynDetails = entry.details();
-        if let Some(left) = details.get_property(self.key.as_str()) {
+        if let Some(left) = details.get_property(&self.key) {
             match self.expect {
                 ExpectValue::Local(ref v) => self.cmp.test(&left, &v.as_borrow()),
                 ExpectValue::TLV => match get_tlv_type() {
@@ -51,23 +49,23 @@ impl<E: Element> Predicate<E> for HasProperty {
 }
 
 impl HasProperty {
-    pub fn eq(key: String, expect: Option<Object>) -> Self {
+    pub fn eq(key: PropKey, expect: Option<Object>) -> Self {
         HasProperty { key, cmp: Compare::Eq(EqCmp::Eq), expect: expect.into() }
     }
 
-    pub fn lt(key: String, expect: Option<Object>) -> Self {
+    pub fn lt(key: PropKey, expect: Option<Object>) -> Self {
         HasProperty { key, cmp: Compare::Ord(OrdCmp::Less), expect: expect.into() }
     }
 
-    pub fn le(key: String, expect: Option<Object>) -> Self {
+    pub fn le(key: PropKey, expect: Option<Object>) -> Self {
         HasProperty { key, cmp: Compare::Ord(OrdCmp::LessEq), expect: expect.into() }
     }
 
-    pub fn gt(key: String, expect: Option<Object>) -> Self {
+    pub fn gt(key: PropKey, expect: Option<Object>) -> Self {
         HasProperty { key, cmp: Compare::Ord(OrdCmp::Greater), expect: expect.into() }
     }
 
-    pub fn ge(key: String, expect: Option<Object>) -> Self {
+    pub fn ge(key: PropKey, expect: Option<Object>) -> Self {
         HasProperty { key, cmp: Compare::Ord(OrdCmp::GreaterEq), expect: expect.into() }
     }
 }

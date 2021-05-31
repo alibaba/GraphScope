@@ -23,6 +23,7 @@ mod by_id;
 mod by_label;
 mod by_property;
 
+use crate::structure::PropKey;
 use by_id::*;
 use by_label::*;
 use by_property::*;
@@ -177,23 +178,23 @@ pub fn contains_label(labels: HashSet<Label>) -> ElementFilter {
     ElementFilter::ContainsLabel(ContainsLabel::with_in(labels))
 }
 
-pub fn has_property<O: Into<Object>>(key: String, value: O) -> ElementFilter {
+pub fn has_property<O: Into<Object>>(key: PropKey, value: O) -> ElementFilter {
     ElementFilter::HasProperty(HasProperty::eq(key, Some(value.into())))
 }
 
-pub fn has_property_lt<O: Into<Object>>(key: String, value: O) -> ElementFilter {
+pub fn has_property_lt<O: Into<Object>>(key: PropKey, value: O) -> ElementFilter {
     ElementFilter::HasProperty(HasProperty::lt(key, Some(value.into())))
 }
 
-pub fn has_property_le<O: Into<Object>>(key: String, value: O) -> ElementFilter {
+pub fn has_property_le<O: Into<Object>>(key: PropKey, value: O) -> ElementFilter {
     ElementFilter::HasProperty(HasProperty::le(key, Some(value.into())))
 }
 
-pub fn has_property_gt<O: Into<Object>>(key: String, value: O) -> ElementFilter {
+pub fn has_property_gt<O: Into<Object>>(key: PropKey, value: O) -> ElementFilter {
     ElementFilter::HasProperty(HasProperty::gt(key, Some(value.into())))
 }
 
-pub fn has_property_ge<O: Into<Object>>(key: String, value: O) -> ElementFilter {
+pub fn has_property_ge<O: Into<Object>>(key: PropKey, value: O) -> ElementFilter {
     ElementFilter::HasProperty(HasProperty::ge(key, Some(value.into())))
 }
 
@@ -209,14 +210,14 @@ pub fn by_label() -> ElementFilter {
     has_label(None)
 }
 
-pub fn by_property(key: String) -> ElementFilter {
+pub fn by_property(key: PropKey) -> ElementFilter {
     ElementFilter::HasProperty(HasProperty::eq(key, None))
 }
 
-pub fn by_property_lt(key: String) -> ElementFilter {
+pub fn by_property_lt(key: PropKey) -> ElementFilter {
     ElementFilter::HasProperty(HasProperty::lt(key, None))
 }
 
-pub fn by_property_le(key: String) -> ElementFilter {
+pub fn by_property_le(key: PropKey) -> ElementFilter {
     ElementFilter::HasProperty(HasProperty::le(key, None))
 }

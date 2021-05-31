@@ -22,7 +22,7 @@ use crate::process::traversal::step::result_downcast::{
 };
 use crate::process::traversal::step::ResultProperty;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::{Edge, GraphElement, Label, Vertex, VertexOrEdge};
+use crate::structure::{Edge, GraphElement, Label, PropKey, Vertex, VertexOrEdge};
 use dyn_type::object::{Object, Primitives};
 
 fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
@@ -95,8 +95,16 @@ fn property_to_pb(result_property: &ResultProperty) -> result_pb::TagEntries {
             let mut props_pb = vec![];
             for (prop_name, prop_val) in value_map {
                 let pb_value = object_to_pb_value(prop_val);
-                let property =
-                    result_pb::Property { key: prop_name.to_string(), value: Some(pb_value) };
+                // TODO: should be prop_name or prop_id
+                let property = match prop_name {
+                    PropKey::Str(prop_name) => {
+                        result_pb::Property { key: prop_name.to_string(), value: Some(pb_value) }
+                    }
+                    PropKey::Id(prop_id) => {
+                        result_pb::Property { key: (*prop_id).to_string(), value: Some(pb_value) }
+                    }
+                };
+
                 props_pb.push(property);
             }
             OneTagValue {

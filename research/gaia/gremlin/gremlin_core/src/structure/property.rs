@@ -23,15 +23,70 @@ use std::io;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
+pub type PropId = u32;
+
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum Token {
     Id,
     Label,
-    Property(String),
+    Property(PropKey),
+}
+
+#[derive(Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
+pub enum PropKey {
+    Str(String),
+    Id(PropId),
+}
+
+impl From<String> for PropKey {
+    fn from(prop_name: String) -> Self {
+        PropKey::Str(prop_name)
+    }
+}
+
+impl From<&String> for PropKey {
+    fn from(prop_name: &String) -> Self {
+        PropKey::Str(prop_name.clone())
+    }
+}
+
+impl From<i32> for PropKey {
+    fn from(prop_id: i32) -> Self {
+        PropKey::Id(prop_id as PropId)
+    }
+}
+
+impl Encode for PropKey {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        match self {
+            PropKey::Str(s) => {
+                writer.write_u8(1)?;
+                s.write_to(writer)?;
+            }
+            PropKey::Id(i) => {
+                writer.write_u8(2)?;
+                writer.write_u32(*i)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for PropKey {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let kind = <u8>::read_from(reader)?;
+        if kind == 1 {
+            let prop_key = <String>::read_from(reader)?;
+            Ok(PropKey::Str(prop_key))
+        } else {
+            let prop_key = <PropId>::read_from(reader)?;
+            Ok(PropKey::Id(prop_key))
+        }
+    }
 }
 
 pub trait Details: Send + Sync + AsAny {
-    fn get_property(&self, key: &str) -> Option<BorrowObject>;
+    fn get_property(&self, key: &PropKey) -> Option<BorrowObject>;
 
     fn get_id(&self) -> ID;
 
@@ -52,7 +107,7 @@ impl DynDetails {
 impl_as_any!(DynDetails);
 
 impl Details for DynDetails {
-    fn get_property(&self, key: &str) -> Option<BorrowObject> {
+    fn get_property(&self, key: &PropKey) -> Option<BorrowObject> {
         self.inner.get_property(key)
     }
 
@@ -99,7 +154,7 @@ impl Decode for DynDetails {
 pub struct DefaultDetails {
     id: ID,
     label: Label,
-    inner: HashMap<String, Object>,
+    inner: HashMap<PropKey, Object>,
 }
 
 #[allow(dead_code)]
@@ -108,7 +163,7 @@ impl DefaultDetails {
         DefaultDetails { id, label, inner: HashMap::new() }
     }
 
-    pub fn new_with_prop(id: ID, label: Label, properties: HashMap<String, Object>) -> Self {
+    pub fn new_with_prop(id: ID, label: Label, properties: HashMap<PropKey, Object>) -> Self {
         DefaultDetails { id, label, inner: properties }
     }
 }
@@ -116,7 +171,7 @@ impl DefaultDetails {
 impl_as_any!(DefaultDetails);
 
 impl Deref for DefaultDetails {
-    type Target = HashMap<String, Object>;
+    type Target = HashMap<PropKey, Object>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
@@ -130,7 +185,7 @@ impl DerefMut for DefaultDetails {
 }
 
 impl Details for DefaultDetails {
-    fn get_property(&self, key: &str) -> Option<BorrowObject> {
+    fn get_property(&self, key: &PropKey) -> Option<BorrowObject> {
         self.inner.get(key).map(|o| o.as_borrow())
     }
 
@@ -163,7 +218,7 @@ impl Decode for DefaultDetails {
         let len = reader.read_u64()?;
         let mut map = HashMap::with_capacity(len as usize);
         for _i in 0..len {
-            let k = <String>::read_from(reader)?;
+            let k = <PropKey>::read_from(reader)?;
             let v = <Object>::read_from(reader)?;
             map.insert(k, v);
         }

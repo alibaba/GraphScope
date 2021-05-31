@@ -14,13 +14,13 @@
 //! limitations under the License.
 
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::Details;
+use crate::structure::{Details, PropKey};
 use crate::{str_to_dyn_error, DynIter, DynResult, Element};
 use bit_set::BitSet;
 use pegasus::api::function::FlatMapFunction;
 
 pub struct PropertiesStep {
-    pub props: Vec<String>,
+    pub props: Vec<PropKey>,
     pub tags: BitSet,
 }
 
