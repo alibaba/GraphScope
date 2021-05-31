@@ -84,7 +84,11 @@ use store::task_partition_manager::TaskPartitionManager;
 use std::collections::HashMap;
 
 
-pub struct AsyncMaxGraphServiceImpl {
+pub struct AsyncMaxGraphServiceImpl<V, VI, E, EI>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static {
     store_config: Arc<StoreConfig>,
     pegasus_server: Arc<Option<Pegasus>>,
     query_manager: QueryManager,
@@ -94,12 +98,16 @@ pub struct AsyncMaxGraphServiceImpl {
     remote_store_service_manager_core: Arc<RemoteStoreServiceManager>,
     lambda_service_client: Option<Arc<LambdaServiceClient>>,
     signal: Arc<AtomicBool>,
-    vineyard_graph: Arc<GlobalGraphQuery<V=GlobalVertex, E=FFIEdge, VI=GlobalVertexIter, EI=GlobalEdgeIter>>,
+    graph: Arc<GlobalGraphQuery<V=V, E=E, VI=VI, EI=EI>>,
     partition_manager: Arc<GraphPartitionManager>,
     task_partition_manager: Arc<RwLock<Option<TaskPartitionManager>>>,
 }
 
-impl AsyncMaxGraphServiceImpl {
+impl<V, VI, E, EI> AsyncMaxGraphServiceImpl<V, VI, E, EI>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static {
     pub fn new_service(
         store_config: Arc<StoreConfig>,
         pegasus_server: Arc<Option<Pegasus>>,
@@ -107,7 +115,7 @@ impl AsyncMaxGraphServiceImpl {
         remote_store_service_manager: Arc<RwLock<Option<RemoteStoreServiceManager>>>,
         lambda_service_client: Option<Arc<LambdaServiceClient>>,
         signal: Arc<AtomicBool>,
-        vineyard_graph: Arc<GlobalGraphQuery<V=GlobalVertex, E=FFIEdge, VI=GlobalVertexIter, EI=GlobalEdgeIter>>,
+        graph: Arc<GlobalGraphQuery<V=V, E=E, VI=VI, EI=EI>>,
         partition_manager: Arc<GraphPartitionManager>,
         task_partition_manager: Arc<RwLock<Option<TaskPartitionManager>>>,
     ) -> ::grpcio::Service {
@@ -126,7 +134,7 @@ impl AsyncMaxGraphServiceImpl {
             remote_store_service_manager_core: Arc::new(RemoteStoreServiceManager::empty()),
             lambda_service_client,
             signal,
-            vineyard_graph,
+            graph,
             partition_manager,
             task_partition_manager,
         };
@@ -140,7 +148,7 @@ impl AsyncMaxGraphServiceImpl {
                       req: QueryFlow,
                       sender: UnboundedSender<Vec<Vec<u8>>>,
                       timeout_ms: Arc<AtomicUsize>,
-                      vineyard_graph: Arc<GlobalGraphQuery<V=GlobalVertex, E=FFIEdge, VI=GlobalVertexIter, EI=GlobalEdgeIter>>,
+                      graph: Arc<GlobalGraphQuery<V=V, VI=VI, E=E, EI=EI>>,
                       partition_manager: Arc<GraphPartitionManager>,
                       task_partition_manager: Arc<RwLock<Option<TaskPartitionManager>>>) -> Result<Vec<Worker>, String> {
         let task_id = generate_task_id(req.query_id.clone());
@@ -155,7 +163,7 @@ impl AsyncMaxGraphServiceImpl {
             info!("query flow: {:?}", &req);
         }
         let exec_local_flag = req.get_exec_local_flag();
-        let schema = vineyard_graph.as_ref().get_schema(si).unwrap();
+        let schema = graph.as_ref().get_schema(si).unwrap();
 
         let mut workers = pegasus.create_workers(task_id, thread_count, process_count).unwrap();
 
@@ -202,7 +210,7 @@ impl AsyncMaxGraphServiceImpl {
                                               worker_partition_ids,
                                               remote_store_service_manager.clone(),
                                               partition_manager.clone(),
-                                              vineyard_graph.clone());
+                                              graph.clone());
 
             let process_router = Arc::new(build_process_router(partition_manager.clone(),
                                                                partition_task_list.clone(),
@@ -244,7 +252,11 @@ impl AsyncMaxGraphServiceImpl {
     }
 }
 
-impl Clone for AsyncMaxGraphServiceImpl {
+impl<V, VI, E, EI> Clone for AsyncMaxGraphServiceImpl<V, VI, E, EI>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static {
     fn clone(&self) -> Self {
         AsyncMaxGraphServiceImpl {
             store_config: self.store_config.clone(),
@@ -256,14 +268,18 @@ impl Clone for AsyncMaxGraphServiceImpl {
             remote_store_service_manager_core: self.remote_store_service_manager_core.clone(),
             lambda_service_client: self.lambda_service_client.clone(),
             signal: self.signal.clone(),
-            vineyard_graph: self.vineyard_graph.clone(),
+            graph: self.graph.clone(),
             partition_manager: self.partition_manager.clone(),
             task_partition_manager: self.task_partition_manager.clone(),
         }
     }
 }
 
-impl AsyncMaxGraphService for AsyncMaxGraphServiceImpl {
+impl<V, VI, E, EI> AsyncMaxGraphService for AsyncMaxGraphServiceImpl<V, VI, E, EI>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static {
     fn async_query(&mut self, ctx: RpcContext, _req: QueryFlow, sink: ServerStreamingSink<QueryResponse>) {
         let resp = error_response("unimplemented".to_owned());
         sink.sink_all(&ctx, resp);
@@ -332,7 +348,16 @@ impl AsyncMaxGraphService for AsyncMaxGraphServiceImpl {
         let is_execute_success_clone_2 = is_execute_success.clone();
 
         let (sender, receiver) = unbounded();
-        let worker_result = AsyncMaxGraphServiceImpl::create_workers(store_config_clone, remote_store_service_manager, lambda_service_client, pegasus_clone.clone(), req, sender, timeout_ms.clone(), self.vineyard_graph.clone(), self.partition_manager.clone(), self.task_partition_manager.clone());
+        let worker_result = AsyncMaxGraphServiceImpl::create_workers(store_config_clone,
+                                                                     remote_store_service_manager,
+                                                                     lambda_service_client,
+                                                                     pegasus_clone.clone(),
+                                                                     req,
+                                                                     sender,
+                                                                     timeout_ms.clone(),
+                                                                     self.graph.clone(),
+                                                                     self.partition_manager.clone(),
+                                                                     self.task_partition_manager.clone());
         if let Err(err_msg) = worker_result {
             sink.sink_all(&ctx, error_response(err_msg));
             return;

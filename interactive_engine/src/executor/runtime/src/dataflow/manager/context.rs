@@ -53,8 +53,12 @@ impl EarlyStopState {
     }
 }
 
-pub struct RuntimeContext<F>
-    where F: Fn(&i64) -> u64 + Send + Sync + 'static {
+pub struct RuntimeContext<V, VI, E, EI, F>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + Send + Sync + 'static {
     query_id: String,
     partition_ids: Arc<Vec<PartitionId>>,
     schema: Arc<dyn Schema>,
@@ -71,11 +75,15 @@ pub struct RuntimeContext<F>
     lambda_manager: Arc<LambdaManager>,
     partition_manager: Arc<GraphPartitionManager>,
     // vineyard graph id
-    vineyard_graph: Arc<GlobalGraphQuery<V=GlobalVertex, VI=GlobalVertexIter, E=FFIEdge, EI=GlobalEdgeIter>>,
+    graph: Arc<GlobalGraphQuery<V=V, VI=VI, E=E, EI=EI>>,
 }
 
-impl<F> RuntimeContext<F>
-    where F: Fn(&i64) -> u64 + Send + Sync + 'static {
+impl<V, VI, E, EI, F> RuntimeContext<V, VI, E, EI, F>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + Send + Sync + 'static {
     pub fn new(query_id: String,
                schema: Arc<dyn Schema>,
                route: Arc<F>,
@@ -89,7 +97,7 @@ impl<F> RuntimeContext<F>
                remote_store_service: Arc<RemoteStoreServiceManager>,
                partition_manager: Arc<GraphPartitionManager>,
                // vineyard graph
-               vineyard_graph: Arc<GlobalGraphQuery<V=GlobalVertex, VI=GlobalVertexIter, E=FFIEdge, EI=GlobalEdgeIter>>,
+               graph: Arc<GlobalGraphQuery<V=V, VI=VI, E=E, EI=EI>>,
     ) -> Self {
         RuntimeContext {
             query_id,
@@ -107,7 +115,7 @@ impl<F> RuntimeContext<F>
             exec_local_flag,
             lambda_manager,
             partition_manager,
-            vineyard_graph,
+            graph,
         }
     }
 
@@ -163,9 +171,8 @@ impl<F> RuntimeContext<F>
         self.lambda_manager.clone()
     }
 
-
-    pub fn get_vineyard_store(&self) -> &Arc<GlobalGraphQuery<V=GlobalVertex, VI=GlobalVertexIter, E=FFIEdge, EI=GlobalEdgeIter>> {
-        &self.vineyard_graph
+    pub fn get_store(&self) -> &Arc<GlobalGraphQuery<V=V, VI=VI, E=E, EI=EI>> {
+        &self.graph
     }
 
     pub fn get_graph_partition_manager(&self) -> &Arc<GraphPartitionManager> {

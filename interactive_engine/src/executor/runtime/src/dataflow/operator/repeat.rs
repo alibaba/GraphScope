@@ -22,9 +22,13 @@ use dataflow::manager::context::RuntimeContext;
 
 use protobuf::parse_from_bytes;
 
-pub fn build_loop_operator<F>(unary: &query_flow::UnaryOperator,
-                                            _context: &RuntimeContext<F>) -> Option<LoopOperator>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+pub fn build_loop_operator<V, VI, E, EI, F>(unary: &query_flow::UnaryOperator,
+                                            _context: &RuntimeContext<V, VI, E, EI, F>) -> Option<LoopOperator>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let base = unary.get_base();
     let repeat_argument = parse_from_bytes::<query_flow::RepeatArgumentProto>(
         base.get_argument().get_payload())

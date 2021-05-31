@@ -40,11 +40,15 @@ use std::sync::Arc;
 use dataflow::operator::sourcestep::vineyard::VineyardBuilderOperator;
 
 
-pub fn build_source_operator<F>(source: &query_flow::SourceOperator,
+pub fn build_source_operator<V, VI, E, EI, F>(source: &query_flow::SourceOperator,
                                 query_id: &str,
                                 script: &str,
-                                context: &RuntimeContext<F>) -> Option<Box<SourceOperator>>
-    where F: Fn(&i64) -> u64 + 'static + Send + Sync {
+                                context: &RuntimeContext<V, VI, E, EI, F>) -> Option<Box<SourceOperator>>
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static,
+          F: Fn(&i64) -> u64 + 'static + Send + Sync {
     let exec_local_flag = context.get_exec_local_flag();
     let partition_manager = context.get_graph_partition_manager();
     let worker_index = context.get_index();
@@ -59,13 +63,13 @@ pub fn build_source_operator<F>(source: &query_flow::SourceOperator,
                                        script,
                                        context,
                                        task_context,
-                                       context.get_vineyard_store().clone());
+                                       context.get_store().clone());
 }
 
 fn build_graph_source_operator<VV, VVI, EE, EEI, F>(source: &query_flow::SourceOperator,
                                                     query_id: &str,
                                                     script: &str,
-                                                    context: &RuntimeContext<F>,
+                                                    context: &RuntimeContext<VV, VVI, EE, EEI, F>,
                                                     task_context: TaskContext,
                                                     global_graph: Arc<GlobalGraphQuery<V=VV, VI=VVI, E=EE, EI=EEI>>) -> Option<Box<SourceOperator>>
     where VV: 'static + Vertex,

@@ -18,6 +18,7 @@ ENV profile=$profile
 
 COPY ./k8s/kube_ssh /opt/graphscope/bin/kube_ssh
 COPY ./k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
+COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
 COPY . /root/gs
 
 # build & install graph-learn library
@@ -95,7 +96,7 @@ RUN source ~/.bashrc \
 
 # # # # # # # # # # # # # # # # # # # # # #
 # generate final runtime image
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
 
 ARG profile=release
 

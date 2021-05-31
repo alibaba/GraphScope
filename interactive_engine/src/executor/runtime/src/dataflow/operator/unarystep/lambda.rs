@@ -48,15 +48,19 @@ pub struct LambdaOperator<F>
 
 impl<F> LambdaOperator<F>
     where F: Fn(&i64) -> u64 + 'static + Send + Sync {
-    pub fn new(base: &OperatorBase,
+    pub fn new<V, VI, E, EI>(base: &OperatorBase,
                input_id: i32,
                stream_index: i32,
                shuffle_type: StreamShuffleType<F>,
                shuffle_flag: bool,
-               context: &RuntimeContext<F>,
+               context: &RuntimeContext<V, VI, E, EI, F>,
                lambda_manager: Arc<LambdaManager>,
                lambda_index: String,
-               lambda_type: LambdaType) -> Self {
+               lambda_type: LambdaType) -> Self
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static {
 
         LambdaOperator{
             id: base.get_id(),

@@ -20,11 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.common.cluster.MaxGraphConfiguration;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
+import com.alibaba.maxgraph.compiler.dfs.DefaultGraphDfs;
 import com.alibaba.maxgraph.sdkcommon.graph.CancelDataflow;
 import com.alibaba.maxgraph.sdkcommon.graph.CompositeId;
 import com.alibaba.maxgraph.sdkcommon.graph.ElementId;
@@ -43,6 +45,7 @@ import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
@@ -57,6 +60,8 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.util.AbstractThreadLocalTransaction;
+import org.apache.tinkerpop.gremlin.structure.util.TransactionException;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -90,6 +95,31 @@ public class TinkerMaxGraph implements Graph, WrappedGraph<MaxGraph> {
     public Vertex addVertex(Object... keyValues) {
         Pair<String, Map<String, Object>> pair = parseVertexProperties(keyValues);
         return new MxVertex(graph.addVertex(pair.getLeft(), pair.getRight()), this);
+    }
+
+    public void addVertexAsync(Object... keyValues) {
+        Map<Object, Object> keyValueMap = Utils.convertToRawMap(keyValues);
+        String label = (String) keyValueMap.remove(T.label);
+        if (null == label) {
+            label = Vertex.DEFAULT_LABEL;
+        }
+        Map<String, Object> properties = Maps.newHashMap();
+        for (Map.Entry<Object, Object> entry : keyValueMap.entrySet()) {
+            properties.put(entry.getKey().toString(), entry.getValue());
+        }
+        graph.addVertex(label, properties);
+    }
+
+    public void addEdgeAsync(Vertex src, Vertex dst, String label, Object... keyValues) {
+        Map<Object, Object> keyValueMap = Utils.convertToRawMap(keyValues);
+        Map<String, Object> properties = Maps.newHashMap();
+        for (Map.Entry<Object, Object> entry : keyValueMap.entrySet()) {
+            properties.put(entry.getKey().toString(), entry.getValue());
+        }
+        graph.addEdge(label,
+                new com.alibaba.maxgraph.structure.Vertex((ElementId) src.id(), src.label(), null, graph),
+                new com.alibaba.maxgraph.structure.Vertex((ElementId) dst.id(), dst.label(), null, graph),
+                properties);
     }
 
     private Pair<String, Map<String, Object>> parseVertexProperties(Object... keyValues) {
@@ -182,7 +212,32 @@ public class TinkerMaxGraph implements Graph, WrappedGraph<MaxGraph> {
 
     @Override
     public Transaction tx() {
-        throw Graph.Exceptions.transactionsNotSupported();
+        return new AbstractThreadLocalTransaction(this) {
+            boolean open = false;
+            @Override
+            protected void doOpen() {
+                open = true;
+            }
+
+            @Override
+            protected void doCommit() throws TransactionException {
+                try {
+                    graph.refresh();
+                } catch (Exception e) {
+                    throw new TransactionException("do commit failed", e);
+                }
+            }
+
+            @Override
+            protected void doRollback() throws TransactionException {
+
+            }
+
+            @Override
+            public boolean isOpen() {
+                return open;
+            }
+        };
     }
 
     @Override

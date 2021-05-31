@@ -144,7 +144,6 @@ jobs:
       run: |
         yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm
         yum install -y git
-
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
         tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0

@@ -3,6 +3,9 @@ name = "maxgraph-runtime"
 version = "0.1.0"
 authors = ["maxgraph@alibaba-inc.com"]
 
+[lib]
+crate-type = ["rlib", "cdylib"]
+
 [dependencies]
 abomonation = "0.7"
 abomonation_derive = "0.3"
@@ -36,7 +39,6 @@ zookeeper = "0.5"
 lru_time_cache = "0.8.0"
 pegasus = { path = "../Pegasus" }
 libc = "0.2"
-
 
 [dev-dependencies]
 env_logger = "0.6"

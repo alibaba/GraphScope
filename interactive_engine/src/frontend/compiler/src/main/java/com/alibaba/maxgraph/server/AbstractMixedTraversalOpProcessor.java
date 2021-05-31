@@ -24,6 +24,7 @@
 package com.alibaba.maxgraph.server;
 
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
+import com.alibaba.maxgraph.compiler.step.MaxGraphIoStep;
 import com.alibaba.maxgraph.sdkcommon.graph.DfsRequest;
 import com.codahale.metrics.Timer;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -40,7 +41,9 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalSideEffects;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IoStep;
 import org.apache.tinkerpop.gremlin.process.traversal.util.BytecodeHelper;
+import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.apache.tinkerpop.gremlin.server.GraphManager;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
@@ -349,7 +352,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
         final String traversalSourceName = aliases.entrySet().iterator().next().getValue();
         final TraversalSource g = graphManager.getTraversalSource(traversalSourceName);
 
-        final Object traversal;
+        final Traversal.Admin<?, ?> traversal;
         try {
             final Optional<String> lambdaLanguage = BytecodeHelper.getLambdaLanguage(bytecode);
             if (!lambdaLanguage.isPresent())
@@ -365,6 +368,12 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
             throw new OpProcessorException("Could not deserialize the Traversal instance",
                     ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_SERIALIZATION)
                             .statusMessage(ex.getMessage()).create());
+        }
+
+        for (final IoStep originalIoStep : TraversalHelper.getStepsOfClass(IoStep.class, traversal)) {
+            MaxGraphIoStep maxGraphIoStep = new MaxGraphIoStep<>(originalIoStep.getTraversal(), originalIoStep.getFile());
+            maxGraphIoStep.setMode(originalIoStep.getMode());
+            TraversalHelper.replaceStep(originalIoStep, maxGraphIoStep, traversal);
         }
 
         final Timer.Context timerContext = traversalOpTimer.time();

@@ -16,6 +16,7 @@
 #[macro_use]
 mod error;
 pub mod api;
+pub mod db;
 pub mod config;
 #[allow(dead_code)]
 #[allow(unused_variables)]

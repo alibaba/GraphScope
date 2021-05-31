@@ -20,11 +20,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.junit.Test;
 
-import static org.apache.tinkerpop.gremlin.groovy.jsr223.dsl.credential.__.out;
-import static org.apache.tinkerpop.gremlin.groovy.jsr223.dsl.credential.__.outE;
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.has;
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.hasLabel;
-import static org.mockito.AdditionalMatchers.gt;
 
 public class FilterOperatorTest extends AbstractOperatorTest {
     public FilterOperatorTest() throws Exception {

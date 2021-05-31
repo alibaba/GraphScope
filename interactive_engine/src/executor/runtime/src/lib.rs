@@ -55,6 +55,7 @@ extern crate alloc;
 extern crate pegasus;
 extern crate crossbeam_queue;
 extern crate libc;
+extern crate maxgraph_server;
 
 use maxgraph_common::proto::query_flow::QueryInput;
 use server::Client;
@@ -75,5 +76,6 @@ pub mod rpc;
 pub mod dataflow;
 #[allow(bare_trait_objects)]
 pub mod store;
+mod jna;
 
 

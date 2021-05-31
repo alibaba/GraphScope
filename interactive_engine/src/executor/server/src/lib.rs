@@ -21,7 +21,7 @@ pub use self::store::*;
 mod processor;
 
 mod filter;
-mod service;
+pub mod service;
 pub mod client;
 
 mod common;
