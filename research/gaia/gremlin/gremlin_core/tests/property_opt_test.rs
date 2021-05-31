@@ -25,7 +25,10 @@ mod test {
     fn property_opt_test_01() {
         initialize();
         // expected property with saved property ("id") and unsaved property ("name" and "age")
-        let expected_props = (vec!["id".to_string()], vec!["name".to_string(), "age".to_string()]);
+        let expected_props = (
+            vec!["id".to_string().into()],
+            vec!["name".to_string().into(), "age".to_string().into()],
+        );
         let test_job_factory = TestJobFactory::with_expect_property_opt(expected_props);
         let pb_request = read_pb_request(gen_path("property_opt_test_01")).expect("read pb failed");
         run_test(test_job_factory, pb_request);
@@ -36,8 +39,10 @@ mod test {
     fn property_opt_test_02() {
         initialize();
         // expect that all property ("id", "name" and "age") are saved
-        let expected_props =
-            (vec!["id".to_string(), "name".to_string(), "age".to_string()], vec![]);
+        let expected_props = (
+            vec!["id".to_string().into(), "name".to_string().into(), "age".to_string().into()],
+            vec![],
+        );
         let test_job_factory = TestJobFactory::with_expect_property_opt(expected_props);
         let pb_request = read_pb_request(gen_path("property_opt_test_02")).expect("read pb failed");
         run_test(test_job_factory, pb_request);
@@ -48,7 +53,10 @@ mod test {
     fn property_opt_test_03() {
         initialize();
         // expected property with saved property ("id" and "name") and unsaved property ("age")
-        let expected_props = (vec!["id".to_string(), "name".to_string()], vec!["age".to_string()]);
+        let expected_props = (
+            vec!["id".to_string().into(), "name".to_string().into()],
+            vec!["age".to_string().into()],
+        );
         let test_job_factory = TestJobFactory::with_expect_property_opt(expected_props);
         let pb_request = read_pb_request(gen_path("property_opt_test_03")).expect("read pb failed");
         run_test(test_job_factory, pb_request);
@@ -59,8 +67,10 @@ mod test {
     fn property_opt_test_04() {
         initialize();
         // expect that all property ("id", "name" and "age") are saved
-        let expected_props =
-            (vec!["id".to_string(), "name".to_string(), "age".to_string()], vec![]);
+        let expected_props = (
+            vec!["id".to_string().into(), "name".to_string().into(), "age".to_string().into()],
+            vec![],
+        );
         let test_job_factory = TestJobFactory::with_expect_property_opt(expected_props);
         let pb_request = read_pb_request(gen_path("property_opt_test_04")).expect("read pb failed");
         run_test(test_job_factory, pb_request);
@@ -71,7 +81,10 @@ mod test {
     fn property_opt_test_05() {
         initialize();
         // expected property with saved property ("id" and "name") and unsaved property ("age")
-        let expected_props = (vec!["id".to_string(), "name".to_string()], vec!["age".to_string()]);
+        let expected_props = (
+            vec!["id".to_string().into(), "name".to_string().into()],
+            vec!["age".to_string().into()],
+        );
         let mut test_job_factory = TestJobFactory::with_expect_property_opt(expected_props);
         test_job_factory.set_requirement(Requirement::LABELED_PATH);
         let pb_request = read_pb_request(gen_path("property_opt_test_05")).expect("read pb failed");
@@ -83,8 +96,10 @@ mod test {
     fn property_opt_test_06() {
         initialize();
         // expect that all property ("id", "name" and "age") are saved
-        let expected_props =
-            (vec!["id".to_string(), "name".to_string(), "age".to_string()], vec![]);
+        let expected_props = (
+            vec!["id".to_string().into(), "name".to_string().into(), "age".to_string().into()],
+            vec![],
+        );
         let mut test_job_factory = TestJobFactory::with_expect_property_opt(expected_props);
         test_job_factory.set_requirement(Requirement::LABELED_PATH);
         let pb_request = read_pb_request(gen_path("property_opt_test_06")).expect("read pb failed");
@@ -96,7 +111,10 @@ mod test {
     fn property_opt_test_07() {
         initialize();
         // expected property with saved property ("id") and unsaved property ("age" and "name")
-        let expected_props = (vec!["id".to_string()], vec!["name".to_string(), "age".to_string()]);
+        let expected_props = (
+            vec!["id".to_string().into()],
+            vec!["name".to_string().into(), "age".to_string().into()],
+        );
         let mut test_job_factory = TestJobFactory::with_expect_property_opt(expected_props);
         test_job_factory.set_requirement(Requirement::LABELED_PATH);
         let pb_request = read_pb_request(gen_path("property_opt_test_07")).expect("read pb failed");
@@ -108,8 +126,10 @@ mod test {
     fn property_opt_test_08() {
         initialize();
         // expect that all property ("id", "name" and "age") are saved
-        let expected_props =
-            (vec!["id".to_string(), "name".to_string(), "age".to_string()], vec![]);
+        let expected_props = (
+            vec!["id".to_string().into(), "name".to_string().into(), "age".to_string().into()],
+            vec![],
+        );
         let mut test_job_factory = TestJobFactory::with_expect_property_opt(expected_props);
         test_job_factory.set_requirement(Requirement::LABELED_PATH);
         let pb_request = read_pb_request(gen_path("property_opt_test_08")).expect("read pb failed");
