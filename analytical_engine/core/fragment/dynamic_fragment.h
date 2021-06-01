@@ -1425,6 +1425,16 @@ class DynamicFragment {
             return true;
           }
         }
+      } else if (duplicated_ && Gid2Lid(uid, ulid) && Gid2Lid(vid, vlid) &&
+                 isAlive(id_mask_ - ulid + ivnum_) &&
+                 isAlive(id_mask_ - vlid + ivnum_)) {
+        auto pos = outer_oe_pos_[id_mask_ - ulid];
+        if (pos != -1) {
+          auto& es = edge_space_[pos];
+          if (es.find(vlid) != es.end()) {
+            return true;
+          }
+        }
       }
     }
     return false;
@@ -3038,6 +3048,8 @@ class DynamicFragment {
             if (!directed_) {
               edges.emplace_back(dst_gid, gid, edata);
             }
+          } else if (duplicated_ && !directed_) {
+            edges.emplace_back(dst_gid, gid, edata);
           }
         } else if (vm_ptr_->GetGid(fid_, dst_oid, dst_gid)) {
           // dst is inner vertex but src is outer vertex
@@ -3046,8 +3058,21 @@ class DynamicFragment {
           inner_vertex_alive_[(dst_gid & id_mask_)] = true;
           CHECK(vm_ptr_->GetGid(src_oid, gid));
           origin->GetEdgeData(src_oid, dst_oid, edata);
-          directed() ? edges.emplace_back(gid, dst_gid, edata)
-                     : edges.emplace_back(dst_gid, gid, edata);
+          if (directed_) {
+            edges.emplace_back(gid, dst_gid, edata);
+          } else {
+            edges.emplace_back(dst_gid, gid, edata);
+            if (duplicated_) {
+              edges.emplace_back(gid, dst_gid, edata);
+            }
+          }
+        } else if (duplicated_) {
+          CHECK(vm_ptr_->GetGid(src_oid, gid));
+          CHECK(vm_ptr_->GetGid(dst_oid, dst_gid));
+          edges.emplace_back(gid, dst_gid, edata);
+          if (!directed_ && gid != dst_gid) {
+            edges.emplace_back(dst_gid, gid, edata);
+          }
         }
       }
     }

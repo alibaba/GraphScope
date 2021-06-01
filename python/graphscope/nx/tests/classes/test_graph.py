@@ -346,31 +346,30 @@ class TestGraph(_TestGraph):
             [[0.0, 1.000], [1.0, 1.000], [2.0, 1.000]],
         )
 
-
-@pytest.mark.usefixtures("graphscope_session")
-class TestEdgeSubgraph(_TestEdgeSubgraph):
-    def setup_method(self):
-        # Create a path graph on five nodes.
-        G = nx.path_graph(5)
-        # Add some node, edge, and graph attributes.
-        for i in range(5):
-            G.nodes[i]["name"] = f"node{i}"
-        G.edges[0, 1]["name"] = "edge01"
-        G.edges[3, 4]["name"] = "edge34"
-        G.graph["name"] = "graph"
-        # Get the subgraph induced by the first and last edges.
-        self.G = G
-        self.H = G.edge_subgraph([(0, 1), (3, 4)])
-
-    def test_correct_edges(self):
-        # to_directed/to_undirected
+        esG = G.edge_subgraph([(0, 1), (1, 2), (2, 3)])
+        ret_frame12 = nx.builtin.closeness_centrality(esG)
+        expect1 = [
+            [0.0, 0.000],
+            [1.0, 0.333333],
+            [2.0, 0.444444],
+            [3.0, 0.500],
+        ]
+        expect2 = [
+            [0.0, 0.5],
+            [1.0, 0.75],
+            [2.0, 0.75],
+            [3.0, 0.5],
+        ]
         if G.is_directed():
-            udG = G.to_undirected()
+            assert np.allclose(
+                ret_frame12.sort_values(by=["node"]).to_numpy(),
+                expect1,
+            )
         else:
-            dG = G.to_directd()
-        # sub_graph
-        sG = G.subgraph([0, 1, 2])
-        sG2 = G.edge_subgraph([(0, 1), (1, 2), (2, 3)])
+            assert np.allclose(
+                ret_frame12.sort_values(by=["node"]).to_numpy(),
+                expect2,
+            )
 
 
 @pytest.mark.usefixtures("graphscope_session")
