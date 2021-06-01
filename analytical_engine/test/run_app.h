@@ -227,16 +227,16 @@ void Run() {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double>;
     using AppType = SSSPAverageLength<GraphType>;
-    CreateAndQuery<GraphType, AppType, OID_T>(comm_spec, efile, vfile,
+    CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile,
                                               out_prefix, FLAGS_datasource,
-                                              fnum, spec, FLAGS_sssp_weight);
+                                              fnum, spec);
   } else if (name == "sssp_path") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double>;
     using AppType = SSSPPath<GraphType>;
     CreateAndQuery<GraphType, AppType, OID_T>(
         comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec,
-        FLAGS_sssp_source, FLAGS_sssp_weight);
+        FLAGS_sssp_source);
   } else if (name == "cdlp_auto") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
