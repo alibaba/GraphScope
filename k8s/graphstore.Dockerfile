@@ -25,9 +25,9 @@ RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
     && export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib \
     && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib \
     && if [ "$profile" = "release" ]; then \
-           echo "release mode" && mvn clean package -DskipTests -Drust.compile.mode=release; \
+           echo "release mode" && mvn clean package -Pv2 -DskipTests -Drust.compile.mode=release; \
        else \
-           echo "debug mode" && mvn clean package -DskipTests -Drust.compile.mode=debug ; \
+           echo "debug mode" && mvn clean package -Pv2 -DskipTests -Drust.compile.mode=debug ; \
        fi
 
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
