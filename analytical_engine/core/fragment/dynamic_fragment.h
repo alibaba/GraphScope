@@ -1912,16 +1912,21 @@ class DynamicFragment {
     case grape::LoadStrategy::kOnlyOut: {
       for (auto& e : edges) {
         vid_t dst;
-        if (!is_iv_gid(e.src()))
-          continue;
-        if (is_iv_gid(e.dst())) {
-          dst = iv_gid_to_lid(e.dst());
-        } else {
-          dst = ov_gid_to_lid(e.dst());
+        if (is_iv_gid(e.src())) {
+          if (is_iv_gid(e.dst())) {
+            dst = iv_gid_to_lid(e.dst());
+          } else {
+            dst = ov_gid_to_lid(e.dst());
+          }
+          e.SetEndpoint(iv_gid_to_lid(e.src()), dst);
+          int pos = inner_oe_pos_[e.src()];
+          edge_space_.set_data(pos, e.dst(), e.edata());
+        } else if (duplicated_) {
+          auto ov_index = id_mask_ - ov_gid_to_lid(e.src());
+          dst = gid_to_lid(e.dst());
+          int pos = outer_oe_pos_[ov_index];
+          edge_space_.set_data(pos, dst, e.edata());
         }
-        e.SetEndpoint(iv_gid_to_lid(e.src()), dst);
-        int pos = inner_oe_pos_[e.src()];
-        edge_space_.set_data(pos, e.dst(), e.edata());
       }
       break;
     }
@@ -1943,6 +1948,11 @@ class DynamicFragment {
           e.SetEndpoint(iv_gid_to_lid(e.src()), dst);
           int pos = inner_oe_pos_[e.src()];
           edge_space_.set_data(pos, e.dst(), e.edata());
+
+          if (duplicated_) {
+            pos = outer_ie_pos_[id_mask_ - dst];
+            edge_space_.set_data(pos, e.src(), e.edata());
+          }
         } else if (is_iv_gid(e.dst())) {
           vid_t src;
           if (is_iv_gid(e.src())) {
@@ -1953,6 +1963,19 @@ class DynamicFragment {
           e.SetEndpoint(src, iv_gid_to_lid(e.dst()));
           int pos = inner_ie_pos_[e.dst()];
           edge_space_.set_data(pos, e.src(), e.edata());
+
+          if (duplicated_) {
+            pos = outer_oe_pos_[id_mask_ - src];
+            edge_space_.set_data(pos, e.dst(), e.edata());
+          }
+        } else if (duplicated_) {
+          vid_t src, dst;
+          src = ov_gid_to_lid(e.src());
+          dst = ov_gid_to_lid(e.dst());
+          int pos = outer_oe_pos_[id_mask_ - src];
+          edge_space_.set_data(pos, dst, e.edata());
+          pos = outer_ie_pos_[id_mask_ - dst];
+          edge_space_.set_data(pos, src, e.edata());
         } else {
           CHECK(false);
         }
