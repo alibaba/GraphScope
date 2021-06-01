@@ -63,6 +63,8 @@ spec:
         - {{ .Release.Namespace }}
         - "--k8s_service_type"
         - {{ .Values.coordinator.service.type }}
+        - "--preemptive"
+        - {{ .Values.preemptive | quote }}
         - "--k8s_gs_image"
         {{- if .Values.engines.gae.image.tag }}
         - "{{ .Values.engines.gae.image.name }}:{{ .Values.engines.gae.image.tag }}"

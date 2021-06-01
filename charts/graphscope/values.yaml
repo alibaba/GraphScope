@@ -23,6 +23,7 @@ volumes:
         path: /testingdata
       mounts:
       - mountPath: /tmp/testingdata
+preemptive: true
   
 
 coordinator:
