@@ -46,6 +46,7 @@ def project_to_simple(func):
         if graph.graph_type == types_pb2.ARROW_PROPERTY:
             graph = graph._project_to_simple()
         return func(graph, *args[1:], **kwargs)
+
     return wrapper
 
 

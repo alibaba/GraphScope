@@ -162,12 +162,6 @@ app:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
-  - algo: all_pair_dijkstra_path_length
-    type: cpp_pie
-    class_name: gs::AllPairDijkstraPathLength
-    src: apps/apsp/all_pair_dijkstra_path_length.h
-    compatible_graph:
-      - gs::DynamicProjectedFragment
   - algo: closeness_centrality
     type: cpp_pie
     class_name: gs::ClosenessCentrality

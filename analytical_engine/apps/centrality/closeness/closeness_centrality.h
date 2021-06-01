@@ -16,9 +16,9 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_CENTRALITY_CLOSENESS_CLOSENESS_CENTRALITY_H_
 #define ANALYTICAL_ENGINE_APPS_CENTRALITY_CLOSENESS_CLOSENESS_CENTRALITY_H_
 
+#include <limits>
 #include <map>
 #include <queue>
-#include <limits>
 #include <utility>
 #include <vector>
 
