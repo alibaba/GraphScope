@@ -38,10 +38,10 @@ class ClosenessCentralityContext
       : grape::VertexDataContext<FRAG_T, double>(fragment),
         centrality(this->data()) {}
 
-  void Init(grape::ParallelMessageManager& messages, bool wf,
-            bool use_edata_or_not) {
+  void Init(grape::ParallelMessageManager& messages, bool use_edata_or_not,
+            bool wf) {
     auto& frag = this->fragment();
-    auto& vertices = frag.Vertices();
+    auto vertices = frag.Vertices();
     wf_improve = wf;
     use_edata = use_edata_or_not;
     centrality.SetValue(0.0);
@@ -49,7 +49,7 @@ class ClosenessCentralityContext
 
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
-    auto& inner_vertices = frag.InnerVertices();
+    auto inner_vertices = frag.InnerVertices();
 
     for (auto& u : inner_vertices) {
       os << frag.GetId(u) << "\t" << centrality[u] << std::endl;

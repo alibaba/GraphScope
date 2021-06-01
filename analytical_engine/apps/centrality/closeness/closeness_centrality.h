@@ -18,21 +18,22 @@ limitations under the License.
 
 #include <map>
 #include <queue>
-#include <tuple>
+#include <limits>
 #include <utility>
 #include <vector>
 
 #include "grape/grape.h"
 
-#include "centrality/closeness/closeness_centrality_context.h"
+#include "apps/centrality/closeness/closeness_centrality_context.h"
+
+#include "core/utils/app_utils.h"
 
 namespace gs {
 
 /**
- * @brief Compute the average shortest path length in a *connected* graph.
- * Average shortest path length is average of all sssp length of (source = v,
- * target = u), where v, u is any vertex in graph. Note that this algorithm is
- * time consuming.
+ * @brief Compute the closeness centrality of vertices.
+ * Closeness centrality 1 of a node u is the reciprocal of the average shortest
+ * path distance to u over all n-1 reachable nodes.
  * */
 template <typename FRAG_T>
 class ClosenessCentrality
@@ -47,6 +48,7 @@ class ClosenessCentrality
       grape::LoadStrategy::kBothOutIn;
   using vertex_t = typename fragment_t::vertex_t;
   using vid_t = typename fragment_t::vid_t;
+  using edata_t = typename fragment_t::edata_t;
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
@@ -97,7 +99,13 @@ class ClosenessCentrality
         for (auto& e : es) {
           v = e.get_neighbor();
           distv = ctx.length[tid][v];
-          double edata = (ctx.use_edata) ? e.get_data() : 1.0;
+          double edata = 1.0;
+          static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+              [&](auto& data, auto& use_edata, auto& e) {
+                if (use_edata) {
+                  data = static_cast<double>(e.get_data());
+                }
+              })(edata, ctx.use_edata, e);
           ndistv = distu + edata;
           if (distv > ndistv) {
             ctx.length[tid][v] = ndistv;

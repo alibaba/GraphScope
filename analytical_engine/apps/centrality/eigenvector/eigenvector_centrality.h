@@ -21,6 +21,7 @@ limitations under the License.
 #include "apps/centrality/eigenvector/eigenvector_centrality_context.h"
 
 #include "core/app/app_base.h"
+#include "core/utils/app_utils.h"
 #include "core/worker/default_worker.h"
 
 namespace gs {
@@ -109,7 +110,14 @@ class EigenvectorCentrality
       for (auto& v : inner_vertices) {
         auto es = frag.GetIncomingAdjList(v);
         for (auto& e : es) {
-          x[v] += x_last[e.get_neighbor()] * e.get_data();
+          double edata = 1.0;
+          static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+              [&](auto& data, auto& use_edata, auto& e) {
+                if (use_edata) {
+                  data = static_cast<double>(e.get_data());
+                }
+              })(edata, ctx.use_edata, e);
+          x[v] += x_last[e.get_neighbor()] * edata;
         }
       }
     }

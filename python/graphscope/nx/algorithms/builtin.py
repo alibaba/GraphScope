@@ -19,7 +19,6 @@
 import inspect
 
 import networkx.algorithms as nxa
-from decorator import decorator
 from networkx.utils.decorators import not_implemented_for
 
 import graphscope
@@ -30,18 +29,23 @@ from graphscope.nx.utils.compat import patch_docstring
 from graphscope.proto import types_pb2
 
 
-@decorator
-def project_to_simple(func, *args, **kwargs):
-    graph = args[0]
-    if not hasattr(graph, "graph_type"):
-        raise InvalidArgumentError("Missing graph_type attribute in graph object.")
-    elif graph.graph_type == types_pb2.DYNAMIC_PROPERTY:
-        if "weight" in inspect.getargspec(func)[0]:  # func has weight argument
-            weight = kwargs.pop("weight") if "weight" in kwargs else "weight"
-            graph = graph._project_to_simple(e_prop=weight)
-        else:
-            graph = graph._project_to_simple()
-    return func(graph, *args[1:], **kwargs)
+# decorator function
+def project_to_simple(func):
+    def wrapper(*args, **kwargs):
+        graph = args[0]
+        if not hasattr(graph, "graph_type"):
+            raise InvalidArgumentError("Missing graph_type attribute in graph object.")
+        elif graph.graph_type == types_pb2.DYNAMIC_PROPERTY:
+            if "weight" in inspect.getargspec(func)[0]:  # func has 'weight' argument
+                weight = kwargs.get("weight", None)
+                print(weight)
+                graph = graph._project_to_simple(e_prop=weight)
+                kwargs["weight"] = True if weight else False
+            else:
+                graph = graph._project_to_simple()
+        return func(graph, *args[1:], **kwargs)
+
+    return wrapper
 
 
 @patch_docstring(nxa.pagerank)
@@ -247,7 +251,9 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
     eigenvector_centrality_numpy
     hits
     """
-    ctx = graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
+    ctx = graphscope.eigenvector_centrality(
+        G, tolerance=tol, max_round=max_iter, weight=weight
+    )
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 
@@ -336,6 +342,7 @@ def katz_centrality(
         tolerance=tol,
         max_round=max_iter,
         normalized=normalized,
+        weight=weight,
     )
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
@@ -357,16 +364,10 @@ def has_path(G, source, target):
     return AppAssets(algo="sssp_has_path")(G, source, target)
 
 
+@project_to_simple
 @patch_docstring(nxa.shortest_path)
 def shortest_path(G, source=None, target=None, weight=None):
-    # FIXME: target and method not support.
-    if weight is None:
-        weight = "weight"
-        default = False
-    else:
-        default = True
-    pg = G._project_to_simple(e_prop=weight)
-    return AppAssets(algo="sssp_path")(pg, source, weight=default)
+    return AppAssets(algo="sssp_path")(G, source, weight)
 
 
 @project_to_simple
@@ -404,7 +405,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
     Distances are calculated as sums of weighted edges traversed.
 
     """
-    ctx = AppAssets(algo="sssp_projected")(G, source)
+    ctx = AppAssets(algo="sssp_projected")(G, source, weight)
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 
@@ -438,7 +439,7 @@ def average_shortest_path_length(G, weight=None):
     2.0
 
     """
-    ctx = AppAssets(algo="sssp_average_length")(G, weight=True)
+    ctx = AppAssets(algo="sssp_average_length")(G, weight)
     return ctx.to_numpy("r", axis=0)[0]
 
 
@@ -493,14 +494,12 @@ def bfs_successors(G, source, depth_limit=None):
 
 @project_to_simple
 def all_pairs_dijkstra_path_length(G, weight=None):
-    use_weight = (True if weight else False)
-    return AppAssets(algo="all_pair_dijkstra_path_length")(G, use_weight)
+    return AppAssets(algo="all_pair_dijkstra_path_length")(G, weight)
 
 
 @project_to_simple
 def closeness_centrality(G, weight=None, wf_improved=True):
-    use_weight = (True if weight else False)
-    ctx = AppAssets(algo="closeness_centrality")(G, use_weight, wf_improved)
+    ctx = AppAssets(algo="closeness_centrality")(G, weight, wf_improved)
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 

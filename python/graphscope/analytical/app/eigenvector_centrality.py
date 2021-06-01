@@ -26,7 +26,7 @@ __all__ = ["eigenvector_centrality"]
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
-def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
+def eigenvector_centrality(graph, tolerance=1e-06, max_round=100, weight=True):
     """Compute the eigenvector centrality for the `graph`.
     See more about eigenvector centrality here:
     https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html
@@ -35,6 +35,8 @@ def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
         graph (:class:`Graph`): A projected simple graph.
         tolerance (float, optional): Defaults to 1e-06.
         max_round (int, optional): Defaults to 100.
+        weight (bool, optional): use edge data or not in, if False, all edge weights
+                                 are considered equal. Otherwise use the edge data.
 
     Returns:
         :class:`VertexDataContext`: A context with each vertex assigned with a gv-centrality.
@@ -53,4 +55,4 @@ def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
     """
     tolerance = float(tolerance)
     max_round = int(max_round)
-    return AppAssets(algo="eigenvector_centrality")(graph, tolerance, max_round)
+    return AppAssets(algo="eigenvector_centrality")(graph, tolerance, max_round, weight)

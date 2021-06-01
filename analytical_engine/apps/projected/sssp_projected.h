@@ -25,6 +25,7 @@
 #include "grape/grape.h"
 
 #include "core/app/app_base.h"
+#include "core/utils/app_utils.h"
 #include "core/worker/default_worker.h"
 
 namespace gs {
@@ -33,17 +34,20 @@ template <typename FRAG_T>
 class SSSPProjectedContext : public grape::VertexDataContext<FRAG_T, double> {
   using vid_t = typename FRAG_T::vid_t;
   using oid_t = typename FRAG_T::oid_t;
+  using edata_t = typename FRAG_T::edata_t;
 
  public:
   explicit SSSPProjectedContext(const FRAG_T& fragment)
       : grape::VertexDataContext<FRAG_T, double>(fragment, true),
         partial_result(this->data()) {}
 
-  void Init(grape::DefaultMessageManager& messages, oid_t source_id_) {
+  void Init(grape::DefaultMessageManager& messages,
+            oid_t source_id_ bool use_edata_or_not) {
     auto& frag = this->fragment();
     auto vertices = frag.Vertices();
 
     source_id = source_id_;
+    use_edata = use_edata_or_not;
     partial_result.SetValue(std::numeric_limits<double>::max());
     modified.Init(vertices, false);
   }
@@ -60,6 +64,7 @@ class SSSPProjectedContext : public grape::VertexDataContext<FRAG_T, double> {
   typename FRAG_T::template vertex_array_t<double>& partial_result;
   typename FRAG_T::template vertex_array_t<bool> modified;
   oid_t source_id;
+  bool use_edata;
 };
 
 template <typename FRAG_T>
@@ -93,7 +98,14 @@ class SSSPProjected : public AppBase<FRAG_T, SSSPProjectedContext<FRAG_T>> {
       for (auto& e : es) {
         v = e.neighbor();
         distv = ctx.partial_result[v];
-        ndistv = distu + e.data();
+        double edata = 1.0;
+        static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+            [&](auto& data, auto& use_edata, auto& e) {
+              if (use_edata) {
+                data = static_cast<double>(e.get_data());
+              }
+            })(edata, ctx.use_edata, e);
+        ndistv = distu + edata;
         if (distv > ndistv) {
           ctx.partial_result[v] = ndistv;
           if (frag.IsInnerVertex(v)) {
