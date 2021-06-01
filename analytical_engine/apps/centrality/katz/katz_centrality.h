@@ -107,11 +107,9 @@ class KatzCentrality : public AppBase<FRAG_T, KatzCentralityContext<FRAG_T>>,
           // do the multiplication y^T = Alpha * x^T A - Beta
           double edata = 1.0;
           static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-              [&](auto& data, auto& use_edata, auto& e) {
-                if (use_edata) {
-                  data = static_cast<double>(e.get_data());
-                }
-              })(edata, ctx.use_edata, e);
+              [&](auto& e, auto& data) {
+                data = static_cast<double>(e.get_data());
+              })(e, edata);
           x[v] += x_last[e.get_neighbor()] * edata;
         }
         x[v] = x[v] * ctx.alpha + ctx.beta;

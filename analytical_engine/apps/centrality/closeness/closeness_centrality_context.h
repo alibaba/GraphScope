@@ -38,12 +38,10 @@ class ClosenessCentralityContext
       : grape::VertexDataContext<FRAG_T, double>(fragment),
         centrality(this->data()) {}
 
-  void Init(grape::ParallelMessageManager& messages, bool use_edata_or_not,
-            bool wf) {
+  void Init(grape::ParallelMessageManager& messages, bool wf) {
     auto& frag = this->fragment();
     auto vertices = frag.Vertices();
     wf_improve = wf;
-    use_edata = use_edata_or_not;
     centrality.SetValue(0.0);
   }
 
@@ -57,7 +55,6 @@ class ClosenessCentralityContext
   }
 
   bool wf_improve;  // use Wasserman-Faust improved formula.
-  bool use_edata;
   std::vector<typename FRAG_T::template vertex_array_t<double>> length;
   typename FRAG_T::template vertex_array_t<double>& centrality;
 };

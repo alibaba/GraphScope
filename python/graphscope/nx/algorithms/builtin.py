@@ -38,9 +38,7 @@ def project_to_simple(func):
         elif graph.graph_type == types_pb2.DYNAMIC_PROPERTY:
             if "weight" in inspect.getargspec(func)[0]:  # func has 'weight' argument
                 weight = kwargs.get("weight", None)
-                print(weight)
                 graph = graph._project_to_simple(e_prop=weight)
-                kwargs["weight"] = True if weight else False
             else:
                 graph = graph._project_to_simple()
         return func(graph, *args[1:], **kwargs)
@@ -251,9 +249,7 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
     eigenvector_centrality_numpy
     hits
     """
-    ctx = graphscope.eigenvector_centrality(
-        G, tolerance=tol, max_round=max_iter, weight=weight
-    )
+    ctx = graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 
@@ -342,7 +338,6 @@ def katz_centrality(
         tolerance=tol,
         max_round=max_iter,
         normalized=normalized,
-        weight=weight,
     )
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
@@ -367,7 +362,7 @@ def has_path(G, source, target):
 @project_to_simple
 @patch_docstring(nxa.shortest_path)
 def shortest_path(G, source=None, target=None, weight=None):
-    return AppAssets(algo="sssp_path")(G, source, weight)
+    return AppAssets(algo="sssp_path")(G, source)
 
 
 @project_to_simple
@@ -405,7 +400,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
     Distances are calculated as sums of weighted edges traversed.
 
     """
-    ctx = AppAssets(algo="sssp_projected")(G, source, weight)
+    ctx = AppAssets(algo="sssp_projected")(G, source)
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 
@@ -439,7 +434,7 @@ def average_shortest_path_length(G, weight=None):
     2.0
 
     """
-    ctx = AppAssets(algo="sssp_average_length")(G, weight)
+    ctx = AppAssets(algo="sssp_average_length")(G)
     return ctx.to_numpy("r", axis=0)[0]
 
 
@@ -564,7 +559,7 @@ def closeness_centrality(G, weight=None, wf_improved=True):
        Social Network Analysis: Methods and Applications, 1994,
        Cambridge University Press.
     """
-    ctx = AppAssets(algo="closeness_centrality")(G, weight, wf_improved)
+    ctx = AppAssets(algo="closeness_centrality")(G, wf_improved)
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 

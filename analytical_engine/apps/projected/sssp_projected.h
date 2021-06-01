@@ -41,13 +41,11 @@ class SSSPProjectedContext : public grape::VertexDataContext<FRAG_T, double> {
       : grape::VertexDataContext<FRAG_T, double>(fragment, true),
         partial_result(this->data()) {}
 
-  void Init(grape::DefaultMessageManager& messages,
-            oid_t source_id_ bool use_edata_or_not) {
+  void Init(grape::DefaultMessageManager& messages, oid_t source_id_) {
     auto& frag = this->fragment();
     auto vertices = frag.Vertices();
 
     source_id = source_id_;
-    use_edata = use_edata_or_not;
     partial_result.SetValue(std::numeric_limits<double>::max());
     modified.Init(vertices, false);
   }
@@ -64,7 +62,6 @@ class SSSPProjectedContext : public grape::VertexDataContext<FRAG_T, double> {
   typename FRAG_T::template vertex_array_t<double>& partial_result;
   typename FRAG_T::template vertex_array_t<bool> modified;
   oid_t source_id;
-  bool use_edata;
 };
 
 template <typename FRAG_T>
@@ -99,12 +96,10 @@ class SSSPProjected : public AppBase<FRAG_T, SSSPProjectedContext<FRAG_T>> {
         v = e.neighbor();
         distv = ctx.partial_result[v];
         double edata = 1.0;
-        static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-            [&](auto& data, auto& use_edata, auto& e) {
-              if (use_edata) {
+          static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+              [&](auto& e, auto& data) {
                 data = static_cast<double>(e.get_data());
-              }
-            })(edata, ctx.use_edata, e);
+              })(e, edata);
         ndistv = distu + edata;
         if (distv > ndistv) {
           ctx.partial_result[v] = ndistv;

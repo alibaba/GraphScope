@@ -33,7 +33,6 @@ def katz_centrality(
     tolerance=1e-06,
     max_round=100,
     normalized=True,
-    weight=True,
 ):
     """Compute the Katz centrality.
 
@@ -47,8 +46,6 @@ def katz_centrality(
         tolerance (float, optional): Error tolerance. Defaults to 1e-06.
         max_round (int, optional): Maximun number of rounds. Defaults to 100.
         normalized (bool, optional): Whether to normalize result values. Defaults to True.
-        weight (bool, optional): use edge data or not in, if False, all edge weights
-                                 are considered equal. Otherwise use the edge data.
 
     Returns:
         :class:`VertexDatacontext`: A context with each vertex assigned with the computed katz_centrality.
@@ -77,5 +74,4 @@ def katz_centrality(
         tolerance,
         max_round,
         normalized,
-        weight,
     )

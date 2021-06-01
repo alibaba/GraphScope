@@ -23,7 +23,6 @@ import zipfile
 from io import BytesIO
 
 import yaml
-from decorator import decorator
 
 import graphscope
 from graphscope.framework.context import create_context

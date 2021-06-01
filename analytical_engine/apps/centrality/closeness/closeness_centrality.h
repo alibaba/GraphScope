@@ -101,11 +101,9 @@ class ClosenessCentrality
           distv = ctx.length[tid][v];
           double edata = 1.0;
           static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-              [&](auto& data, auto& use_edata, auto& e) {
-                if (use_edata) {
-                  data = static_cast<double>(e.get_data());
-                }
-              })(edata, ctx.use_edata, e);
+              [&](auto& e, auto& data) {
+                data = static_cast<double>(e.get_data());
+              })(e, edata);
           ndistv = distu + edata;
           if (distv > ndistv) {
             ctx.length[tid][v] = ndistv;

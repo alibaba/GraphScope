@@ -34,7 +34,7 @@ class EigenvectorCentralityContext
         x(this->data()) {}
 
   void Init(grape::DefaultMessageManager& messages, double tolerance,
-            int max_round, bool use_edata_or_not) {
+            int max_round) {
     auto& frag = this->fragment();
     auto vertices = frag.Vertices();
 
@@ -43,7 +43,6 @@ class EigenvectorCentralityContext
 
     this->tolerance = tolerance;
     this->max_round = max_round;
-    this->use_edata = use_edata_or_not;
     curr_round = 0;
   }
 
@@ -62,7 +61,6 @@ class EigenvectorCentralityContext
   double tolerance;
   int max_round;
   int curr_round;
-  bool use_edata;
 };
 }  // namespace gs
 
