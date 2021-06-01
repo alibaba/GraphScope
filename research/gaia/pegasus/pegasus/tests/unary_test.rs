@@ -403,7 +403,7 @@ fn unary_test_notify_01() {
 fn unary_test_state_01() {
     struct LocalCount<D> {
         _ph: std::marker::PhantomData<D>,
-    };
+    }
 
     impl<D: Data> UnaryState<D, u64, u64> for LocalCount<D> {
         type NotifyResult = Option<u64>;

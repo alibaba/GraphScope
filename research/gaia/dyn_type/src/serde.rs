@@ -15,7 +15,7 @@
 
 use crate::{de_dyn_obj, Object, Primitives};
 use core::any::TypeId;
-use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
+use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::io;
 
 impl Encode for Primitives {

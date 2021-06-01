@@ -42,16 +42,16 @@ impl FilterFunction<Traverser> for WhereStep {
         match self.start_token {
             Token::Id => {
                 let id = start.id();
-                crate::structure::reset_tlv_right_value(id);
+                crate::structure::reset_tlv_left_value(id);
             }
             Token::Label => {
                 let label = start.label().clone();
-                crate::structure::reset_tlv_right_value(label.as_object());
+                crate::structure::reset_tlv_left_value(label.as_object());
             }
             Token::Property(ref key) => {
                 if let Some(v) = start.details().get_property(key) {
                     if let Some(value) = v.try_to_owned() {
-                        crate::structure::reset_tlv_right_value(value);
+                        crate::structure::reset_tlv_left_value(value);
                     } else {
                         return Ok(false);
                     }

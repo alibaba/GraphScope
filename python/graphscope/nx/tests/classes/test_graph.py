@@ -18,6 +18,7 @@
 import pytest
 from networkx.classes.tests.test_graph import TestEdgeSubgraph as _TestEdgeSubgraph
 from networkx.classes.tests.test_graph import TestGraph as _TestGraph
+from networkx.testing.utils import assert_graphs_equal
 
 from graphscope import nx
 
@@ -131,7 +132,10 @@ class TestGraph(_TestGraph):
         edges = [((0, 1), 3, 1), ("n", 3.14, 3.14), (True, False, True)]
         G.add_nodes_from(nodes)
         G.add_weighted_edges_from(edges)
-        assert list(G.nodes) == [(0, 1), 3, "n", 3.14, True, False]
+        nlist = list(G.nodes)
+        assert len(nlist) == 6
+        for n in nlist:
+            assert n in [False, (0, 1), 3, "n", 3.14, True]
         assert G[(0, 1)][3]["weight"] == 1
         assert G["n"][3.14]["weight"] == 3.14
         assert G[True][False]["weight"] == True
@@ -160,6 +164,81 @@ class TestGraph(_TestGraph):
         G.remove_edge(2, 2)
         assert G.number_of_selfloops() == 0
 
+    def test_update(self):
+        # specify both edgees and nodes
+        G = self.K3.copy()
+        G.update(nodes=[3, (4, {"size": 2})], edges=[(4, 5), (6, 7, {"weight": 2})])
+        nlist = [
+            (0, {}),
+            (1, {}),
+            (2, {}),
+            (3, {}),
+            (4, {"size": 2}),
+            (5, {}),
+            (6, {}),
+            (7, {}),
+        ]
+        assert sorted(G.nodes.data()) == nlist
+        if G.is_directed():
+            elist = [
+                (0, 1, {}),
+                (0, 2, {}),
+                (1, 0, {}),
+                (1, 2, {}),
+                (2, 0, {}),
+                (2, 1, {}),
+                (4, 5, {}),
+                (6, 7, {"weight": 2}),
+            ]
+        else:
+            elist = [
+                (0, 1, {}),
+                (0, 2, {}),
+                (2, 1, {}),
+                (4, 5, {}),
+                (6, 7, {"weight": 2}),
+            ]
+        assert sorted(G.edges.data()) == elist
+        assert G.graph == {}
+
+        # no keywords -- order is edges, nodes
+        G = self.K3.copy()
+        G.update([(4, 5), (6, 7, {"weight": 2})], [3, (4, {"size": 2})])
+        assert sorted(G.nodes.data()) == nlist
+        assert sorted(G.edges.data()) == elist
+        assert G.graph == {}
+
+        # update using only a graph
+        G = self.Graph()
+        G.graph["foo"] = "bar"
+        G.add_node(2, data=4)
+        G.add_edge(0, 1, weight=0.5)
+        GG = G.copy()
+        H = self.Graph()
+        GG.update(H)
+        assert_graphs_equal(G, GG)
+        H.update(G)
+        assert_graphs_equal(H, G)
+
+        # update nodes only
+        H = self.Graph()
+        H.update(nodes=[3, 4])
+        assert H.nodes ^ {3, 4} == set()
+        assert H.size() == 0
+
+        # update edges only
+        H = self.Graph()
+        H.update(edges=[(3, 4)])
+        if H.is_directed():
+            assert sorted(H.edges.data()) == [(3, 4, {})]
+        else:
+            assert sorted(H.edges.data()) == [(4, 3, {})]
+        assert H.size() == 1
+
+        # No inputs -> exception
+        with pytest.raises(nx.NetworkXError):
+            nx.Graph().update()
+
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestEdgeSubgraph(_TestEdgeSubgraph):
@@ -178,7 +257,7 @@ class TestEdgeSubgraph(_TestEdgeSubgraph):
 
     def test_correct_edges(self):
         """Tests that the subgraph has the correct edges."""
-        assert [(1, 0, "edge01"), (4, 3, "edge34")] == sorted(self.H.edges(data="name"))
+        assert [(0, 1, "edge01"), (4, 3, "edge34")] == sorted(self.H.edges(data="name"))
 
     def test_remove_node(self):
         """Tests that removing a node in the original graph does not

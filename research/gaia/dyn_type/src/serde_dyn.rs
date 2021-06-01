@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::DynType;
-use pegasus::codec::{Decode, Encode};
+use pegasus_common::codec::{Decode, Encode};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -32,7 +32,7 @@ lazy_static! {
 ///
 /// use dyn_type::object::Object;
 /// use dyn_type::{register_type, OwnedOrRef};
-/// use pegasus::preclude::{Encode, Decode};
+/// use pegasus_common::codec::{Encode, Decode};
 ///
 /// let dyn_ty_obj = vec![0_u64, 1, 2, 3];
 /// let obj = Object::DynOwned(Box::new(dyn_ty_obj));
@@ -101,7 +101,7 @@ impl<T: Any + Send + Sync + Clone + Debug + Encode> DynType for T {
 mod test {
     use super::*;
     use crate::{Object, OwnedOrRef};
-    use pegasus::codec::{ReadExt, WriteExt};
+    use pegasus_common::codec::{ReadExt, WriteExt};
 
     #[test]
     fn test_ser_dyn_type() {

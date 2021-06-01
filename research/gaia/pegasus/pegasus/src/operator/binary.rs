@@ -232,7 +232,7 @@ fn guard_binary_notifications(
         let n_state = notifies.entry(sig.clone()).or_insert(Default::default());
         n_state.insert(BINARY_NOTIFIES[port]);
         if *n_state == NotifyState::BOTH {
-            trace_worker!("receive both notifications of scope {}", sig);
+            trace_worker!("receive both notifications of scope {:?}", sig);
             outputs[0].drop_retain(&sig);
         } else {
             outputs[0].retain(&sig);
