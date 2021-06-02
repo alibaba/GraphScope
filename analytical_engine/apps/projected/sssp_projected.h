@@ -71,6 +71,7 @@ class SSSPProjected : public AppBase<FRAG_T, SSSPProjectedContext<FRAG_T>> {
   INSTALL_DEFAULT_WORKER(SSSPProjected<FRAG_T>, SSSPProjectedContext<FRAG_T>,
                          FRAG_T)
   using vertex_t = typename fragment_t::vertex_t;
+  using edata_t = typename fragment_t::edata_t;
 
  private:
   // sequential Dijkstra algorithm for SSSP.

@@ -36,7 +36,9 @@ def project_to_simple(func):
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
         elif graph.graph_type == types_pb2.DYNAMIC_PROPERTY:
-            if "weight" in inspect.getargspec(func)[0]:  # func has 'weight' argument
+            if (
+                "weight" in inspect.getfullargspec(func)[0]
+            ):  # func has 'weight' argument
                 weight = kwargs.get("weight", None)
                 graph = graph._project_to_simple(e_prop=weight)
             else:
