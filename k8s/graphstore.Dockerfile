@@ -30,7 +30,7 @@ RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
            echo "debug mode" && mvn clean package -Pv2 -DskipTests -Drust.compile.mode=debug ; \
        fi
 
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
 
 COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
 COPY --from=builder /opt/graphscope /usr/local/
