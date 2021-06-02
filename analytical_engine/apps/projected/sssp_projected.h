@@ -34,7 +34,6 @@ template <typename FRAG_T>
 class SSSPProjectedContext : public grape::VertexDataContext<FRAG_T, double> {
   using vid_t = typename FRAG_T::vid_t;
   using oid_t = typename FRAG_T::oid_t;
-  using edata_t = typename FRAG_T::edata_t;
 
  public:
   explicit SSSPProjectedContext(const FRAG_T& fragment)
