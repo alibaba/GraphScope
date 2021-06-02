@@ -90,11 +90,12 @@ public class Frontend extends NodeBase {
                 RoleType.EXECUTOR_GRAPH, QueryStoreRpcClient::new);
         SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
                 RoleType.COORDINATOR, SchemaClient::new));
-        MaxGraphWriter writer = new MaxGraphWriterImpl(this.realtimeWriter, schemaWriter, new DdlExecutors(),
+        DdlExecutors ddlExecutors = new DdlExecutors();
+        MaxGraphWriter writer = new MaxGraphWriterImpl(this.realtimeWriter, schemaWriter, ddlExecutors,
                 snapshotCache, "schema", false, null);
         ClientService clientService = new ClientService(this.realtimeWriter, snapshotCache, metricsAggregator,
                 storeIngestClients, this.metaService, queryStoreClients, writer);
-        ClientDdlService clientDdlService = new ClientDdlService(schemaWriter, snapshotCache);
+        ClientDdlService clientDdlService = new ClientDdlService(schemaWriter, snapshotCache, ddlExecutors);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
 
         this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
