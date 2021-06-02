@@ -353,6 +353,20 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToNumpy(
                   "Unsupported context type: " + std::string(ctx_type));
 }
 
+#ifdef NETWORKX
+bl::result<std::string> GrapeInstance::fetchContextData(
+    const rpc::GSParams& params) {
+  BOOST_LEAF_AUTO(ctx_name, params.Get<std::string>(rpc::CTX_NAME));
+  // BOOST_LEAF_AUTO(fetch_type, params.Get<rpc::FetchType>(rpc::FETCH_TYPE));
+  BOOST_LEAF_AUTO(base_ctx_wrapper,
+                  object_manager_.GetObject<IContextWrapper>(ctx_name));
+
+  auto wrapper =
+      std::dynamic_pointer_cast<IVertexDataContextWrapper>(base_ctx_wrapper);
+  return wrapper->GetContextData(params);
+}
+#endif  // NETWORKX
+
 bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToDataframe(
     const rpc::GSParams& params) {
   std::pair<std::string, std::string> range;
@@ -1069,6 +1083,12 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   case rpc::TO_VINEYARD_DATAFRAME: {
     BOOST_LEAF_AUTO(vy_obj_id_in_json, contextToVineyardDataFrame(params));
     r->set_data(vy_obj_id_in_json);
+    break;
+  }
+  case rpc::FETCH_CONTEXT: {
+    BOOST_LEAF_AUTO(context_json, fetchContextData(params));
+    r->set_data(context_json,
+                DispatchResult::AggregatePolicy::kPickFirstNonEmpty);
     break;
   }
   case rpc::ADD_COLUMN: {

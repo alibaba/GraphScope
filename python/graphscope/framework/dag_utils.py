@@ -780,6 +780,19 @@ def to_vineyard_dataframe(results, selector=None, vertex_range=None):
     )
     return op
 
+def fetch_context(results, node):
+    config = {
+        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
+        types_pb2.NODE: utils.s_to_attr(node),
+    }
+    op = Operation(
+        results._session_id,
+        types_pb2.FETCH_CONTEXT,
+        config=config,
+        output_types=types_pb2.RESULTS,
+    )
+    return op
+
 
 def add_column(graph, results, selector):
     """Add a column to `graph`, produce a new graph.

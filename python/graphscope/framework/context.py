@@ -301,6 +301,20 @@ class VertexDataContext(BaseContext):
     def _transform_selector(self, selector):
         return utils.transform_vertex_data_selector(selector)
 
+    def __getitem__(self, key):
+        self._check_unmodified()
+        op = dag_utils.fetch_context(self, json.dumps([key]))
+        ret = op.eval()
+        print("ret", ret)
+        return json.loads(ret)
+
+    def __setitem__(self, key, value):
+        raise NotImplementedError()
+
+    def __iter__(self):
+        for n in self._graph._graph:
+            yield (n, self[n])
+
 
 class LabeledVertexDataContext(BaseContext):
     """The labeld kind of context.

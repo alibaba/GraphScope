@@ -34,6 +34,7 @@
 #include "core/error.h"
 #include "core/object/gs_object.h"
 #include "core/object/i_fragment_wrapper.h"
+#include "core/server/rpc_utils.h"
 
 namespace gs {
 class IFragmentWrapper;
@@ -86,6 +87,11 @@ class IVertexDataContextWrapper : public IContextWrapper {
   ToArrowArrays(
       const grape::CommSpec& comm_spec,
       const std::vector<std::pair<std::string, Selector>>& selectors) = 0;
+
+  virtual bl::result<std::string> GetContextData(const rpc::GSParams& params) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not support.");
+  }
 };
 
 /**

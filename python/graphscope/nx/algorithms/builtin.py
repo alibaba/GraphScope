@@ -488,6 +488,54 @@ def bfs_predecessors(G, source, depth_limit=None):
 def bfs_successors(G, source, depth_limit=None):
     return AppAssets(algo="bfs_generic")(G, source, depth_limit, format="successors")
 
+@project_to_simple
+def all_piars_dijkstra_path_length(G, weight=None):
+    """Compute shortest path lengths between all nodes in a weighted graph.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    cutoff : integer or float, optional
+       Depth to stop the search. Only return paths with length <= cutoff.
+
+    weight : string
+       edge weights will be accessed via the edge attribute with this
+       key (that is, the weight of the edge joining `u` to `v` will be
+       ``G.edges[u, v][weight]``). If no such edge attribute exists,
+       the weight of the edge is assumed to be one.
+
+    Returns
+    -------
+    distance : iterator
+        (source, dictionary) iterator with dictionary keyed by target and
+        shortest path length as the key value.
+
+    Examples
+    --------
+    >>> G = nx.path_graph(5)
+    >>> length = dict(nx.all_pairs_dijkstra_path_length(G))
+    >>> for node in [0, 1, 2, 3, 4]:
+    ...     print(f"1 - {node}: {length[1][node]}")
+    1 - 0: 1
+    1 - 1: 0
+    1 - 2: 1
+    1 - 3: 2
+    1 - 4: 3
+    >>> length[3][2]
+    1
+    >>> length[2][2]
+    0
+
+    Notes
+    -----
+    Edge weight attributes must be numerical.
+    Distances are calculated as sums of weighted edges traversed.
+
+    The dictionary returned only has keys for reachable node pairs.
+    """
+    return AppAssets(algo="all_pair_dijkstra_path_length")(G)
+
 
 @project_to_simple
 def closeness_centrality(G, weight=None, wf_improved=True):

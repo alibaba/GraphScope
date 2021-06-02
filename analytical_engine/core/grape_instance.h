@@ -138,6 +138,7 @@ class GrapeInstance : public Subscriber {
       const std::vector<std::pair<typename DynamicFragment::oid_t,
                                   typename DynamicFragment::oid_t>>&
           induced_edges);
+  bl::result<std::string> fetchContextData(const rpc::GSParams& params);
 #endif  // NETWORKX
 
   bl::result<rpc::GraphDef> addLabelsToGraph(const rpc::GSParams& params);

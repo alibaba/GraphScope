@@ -23,6 +23,11 @@
 #include <utility>
 #include <vector>
 
+#ifdef NETWORKX
+#include "folly/dynamic.h"
+#include "folly/json.h"
+#endif
+
 #include "grape/app/vertex_data_context.h"
 #include "grape/utils/vertex_array.h"
 #include "vineyard/basic/ds/arrow_utils.h"
@@ -40,6 +45,7 @@
 
 #define CONTEXT_TYPE_VERTEX_DATA "vertex_data"
 #define CONTEXT_TYPE_LABELED_VERTEX_DATA "labeled_vertex_data"
+
 
 namespace gs {
 
@@ -456,6 +462,104 @@ class VertexDataContextWrapper : public IVertexDataContextWrapper {
   std::shared_ptr<IFragmentWrapper> frag_wrapper_;
   std::shared_ptr<context_t> ctx_;
 };
+
+
+template <typename FRAG_T>
+class VertexDataContextWrapper<FRAG_T, folly::dynamic>
+    : public IVertexDataContextWrapper {
+  using fragment_t = FRAG_T;
+  using oid_t = typename fragment_t::oid_t;
+  using vertex_t = typename fragment_t::vertex_t;
+  using context_t = grape::VertexDataContext<fragment_t, folly::dynamic>;
+  using vdata_t = typename fragment_t::vdata_t;
+  using data_t = folly::dynamic;
+
+ public:
+  explicit VertexDataContextWrapper(
+      const std::string& id, std::shared_ptr<IFragmentWrapper> frag_wrapper,
+      std::shared_ptr<context_t> ctx)
+      : IVertexDataContextWrapper(id),
+        frag_wrapper_(std::move(frag_wrapper)),
+        ctx_(std::move(ctx)) {}
+
+  std::string context_type() override { return CONTEXT_TYPE_VERTEX_DATA; }
+
+  std::shared_ptr<IFragmentWrapper> fragment_wrapper() override {
+    return frag_wrapper_;
+  }
+
+  bl::result<std::string> GetContextData(const rpc::GSParams& params) override {
+    std::string ret;
+    folly::json::serialization_opts json_opts;
+    json_opts.allow_non_string_keys = true;
+    json_opts.allow_nan_inf = true;
+    BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
+    oid_t node_id = folly::parseJson(node_in_json, json_opts)[0];
+    auto& frag = ctx_->fragment();
+    auto& data = ctx_->data();
+    if (frag.HasNode(node_id)) {
+      vertex_t v;
+      frag.GetVertex(node_id, v);
+      /*
+      if (data[v].type() == dynamic::OBJECT) {
+        folly::dynamic mapping_array = folly::dynamic::array;
+        mapping_array.resize(2, folly::dynamic::array);
+        for (auto& val : data[v].items()) {
+          mapping_array[0].push_back(val.first);
+          mapping_array[1].push_back(val.first);
+        }
+      }
+      */
+      ret = folly::json::serialize(data[v], json_opts);
+    }
+    LOG(INFO) << "frag-" << frag.fid() << " " << ret;
+    return ret;
+  }
+
+  bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
+      const grape::CommSpec& comm_spec, const Selector& selector,
+      const std::pair<std::string, std::string>& range) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not support.");
+  }
+
+  bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors,
+      const std::pair<std::string, std::string>& range) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not support.");
+  }
+
+  bl::result<vineyard::ObjectID> ToVineyardTensor(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const Selector& selector,
+      const std::pair<std::string, std::string>& range) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not support.");
+  }
+
+  bl::result<vineyard::ObjectID> ToVineyardDataframe(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const std::vector<std::pair<std::string, Selector>>& selectors,
+      const std::pair<std::string, std::string>& range) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not support.");
+  }
+
+  bl::result<std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+  ToArrowArrays(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not support.");
+  }
+
+ private:
+  std::shared_ptr<IFragmentWrapper> frag_wrapper_;
+  std::shared_ptr<context_t> ctx_;
+};
+
 
 /**
  * @brief This is the wrapper class for LabeledVertexDataContext. A series of
