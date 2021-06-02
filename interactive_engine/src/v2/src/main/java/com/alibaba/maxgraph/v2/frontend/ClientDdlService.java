@@ -16,12 +16,15 @@
 package com.alibaba.maxgraph.v2.frontend;
 
 import com.alibaba.graphscope.proto.ddl.*;
+import com.alibaba.maxgraph.v2.common.frontend.api.exception.GraphCreateSchemaException;
 import com.alibaba.maxgraph.v2.common.schema.*;
 import com.alibaba.maxgraph.v2.common.schema.GraphDef;
+import com.alibaba.maxgraph.v2.common.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.v2.common.schema.request.DdlRequestBatch;
 import com.alibaba.maxgraph.v2.common.util.UuidUtils;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Set;
@@ -32,70 +35,83 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
 
     private SchemaWriter schemaWriter;
     private SnapshotCache snapshotCache;
+    private DdlExecutors ddlExecutors;
 
-    public ClientDdlService(SchemaWriter schemaWriter, SnapshotCache snapshotCache) {
+    public ClientDdlService(SchemaWriter schemaWriter, SnapshotCache snapshotCache, DdlExecutors ddlExecutors) {
         this.schemaWriter = schemaWriter;
         this.snapshotCache = snapshotCache;
+        this.ddlExecutors = ddlExecutors;
     }
 
     @Override
     public void batchSubmit(BatchSubmitRequest request, StreamObserver<BatchSubmitResponse> responseObserver) {
-        int formatVersion = request.getFormatVersion();
-        boolean simple = request.getSimpleResponse();
-        DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
-        for (BatchSubmitRequest.DDLRequest ddlRequest : request.getValueList()) {
-            switch (ddlRequest.getValueCase()) {
-                case CREATE_VERTEX_TYPE_REQUEST:
-                    CreateVertexTypeRequest cvtReq = ddlRequest.getCreateVertexTypeRequest();
-                    builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.CreateVertexTypeRequest(
-                            parseTypeDefPb(cvtReq.getTypeDef())));
-                    break;
-                case CREATE_EDGE_TYPE_REQUEST:
-                    CreateEdgeTypeRequest cetReq = ddlRequest.getCreateEdgeTypeRequest();
-                    builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.CreateVertexTypeRequest(
-                            parseTypeDefPb(cetReq.getTypeDef())));
-                    break;
-                case ADD_EDGE_KIND_REQUEST:
-                    AddEdgeKindRequest addEdgeKindRequest = ddlRequest.getAddEdgeKindRequest();
-                    builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.AddEdgeKindRequest(
-                            EdgeKind.newBuilder()
-                                    .setEdgeLabel(addEdgeKindRequest.getEdgeLabel())
-                                    .setSrcVertexLabel(addEdgeKindRequest.getSrcVertexLabel())
-                                    .setDstVertexLabel(addEdgeKindRequest.getDstVertexLabel())
-                                    .build()));
-                    break;
-                case REMOVE_EDGE_KIND_REQUEST:
-                    RemoveEdgeKindRequest removeEdgeKindRequest = ddlRequest.getRemoveEdgeKindRequest();
-                    builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.RemoveEdgeKindRequest(
-                            EdgeKind.newBuilder()
-                                    .setEdgeLabel(removeEdgeKindRequest.getEdgeLabel())
-                                    .setSrcVertexLabel(removeEdgeKindRequest.getSrcVertexLabel())
-                                    .setDstVertexLabel(removeEdgeKindRequest.getDstVertexLabel())
-                                    .build()));
-                    break;
-                case DROP_VERTEX_TYPE_REQUEST:
-                    builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.DropVertexTypeRequest(
-                            ddlRequest.getDropVertexTypeRequest().getLabel()));
-                    break;
-                case DROP_EDGE_TYPE_REQUEST:
-                    builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.DropEdgeTypeRequest(
-                            ddlRequest.getDropEdgeTypeRequest().getLabel()));
-                    break;
-                case VALUE_NOT_SET:
-                    break;
+        try {
+            int formatVersion = request.getFormatVersion();
+            boolean simple = request.getSimpleResponse();
+            DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
+            for (BatchSubmitRequest.DDLRequest ddlRequest : request.getValueList()) {
+                switch (ddlRequest.getValueCase()) {
+                    case CREATE_VERTEX_TYPE_REQUEST:
+                        CreateVertexTypeRequest cvtReq = ddlRequest.getCreateVertexTypeRequest();
+                        builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.CreateVertexTypeRequest(
+                                parseTypeDefPb(cvtReq.getTypeDef())));
+                        break;
+                    case CREATE_EDGE_TYPE_REQUEST:
+                        CreateEdgeTypeRequest cetReq = ddlRequest.getCreateEdgeTypeRequest();
+                        builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.CreateEdgeTypeRequest(
+                                parseTypeDefPb(cetReq.getTypeDef())));
+                        break;
+                    case ADD_EDGE_KIND_REQUEST:
+                        AddEdgeKindRequest addEdgeKindRequest = ddlRequest.getAddEdgeKindRequest();
+                        builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.AddEdgeKindRequest(
+                                EdgeKind.newBuilder()
+                                        .setEdgeLabel(addEdgeKindRequest.getEdgeLabel())
+                                        .setSrcVertexLabel(addEdgeKindRequest.getSrcVertexLabel())
+                                        .setDstVertexLabel(addEdgeKindRequest.getDstVertexLabel())
+                                        .build()));
+                        break;
+                    case REMOVE_EDGE_KIND_REQUEST:
+                        RemoveEdgeKindRequest removeEdgeKindRequest = ddlRequest.getRemoveEdgeKindRequest();
+                        builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.RemoveEdgeKindRequest(
+                                EdgeKind.newBuilder()
+                                        .setEdgeLabel(removeEdgeKindRequest.getEdgeLabel())
+                                        .setSrcVertexLabel(removeEdgeKindRequest.getSrcVertexLabel())
+                                        .setDstVertexLabel(removeEdgeKindRequest.getDstVertexLabel())
+                                        .build()));
+                        break;
+                    case DROP_VERTEX_TYPE_REQUEST:
+                        builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.DropVertexTypeRequest(
+                                ddlRequest.getDropVertexTypeRequest().getLabel()));
+                        break;
+                    case DROP_EDGE_TYPE_REQUEST:
+                        builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.DropEdgeTypeRequest(
+                                ddlRequest.getDropEdgeTypeRequest().getLabel()));
+                        break;
+                    case VALUE_NOT_SET:
+                        break;
+                }
             }
+            DdlRequestBatch ddlRequestBatch = builder.build();
+            try {
+                GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
+                this.ddlExecutors.executeDdlRequestBatch(ddlRequestBatch, graphDef, 0);
+            } catch (Exception e) {
+                throw new GraphCreateSchemaException("try execute DDL batch failed", e);
+            }
+            long snapshotId = this.schemaWriter.submitBatchDdl(UuidUtils.getBase64UUIDString(), "", ddlRequestBatch);
+            this.snapshotCache.addListener(snapshotId, () -> {
+                BatchSubmitResponse.Builder responseBuilder = BatchSubmitResponse.newBuilder();
+                responseBuilder.setFormatVersion(FORMAT_VERSION);
+                if (!simple) {
+                    GraphDefPb graphDefPb = toGraphDefPb(this.snapshotCache.getSnapshotWithSchema().getGraphDef());
+                    responseBuilder.setGraphDef(graphDefPb);
+                }
+                responseObserver.onNext(responseBuilder.build());
+                responseObserver.onCompleted();
+            });
+        } catch (Exception e) {
+            responseObserver.onError(e);
         }
-        long snapshotId = this.schemaWriter.submitBatchDdl(UuidUtils.getBase64UUIDString(), "", builder.build());
-        this.snapshotCache.addListener(snapshotId, () -> {
-            BatchSubmitResponse.Builder responseBuilder = BatchSubmitResponse.newBuilder();
-            responseBuilder.setFormatVersion(FORMAT_VERSION);
-            if (!simple) {
-                GraphDefPb graphDefPb = toGraphDefPb(this.snapshotCache.getSnapshotWithSchema().getGraphDef());
-                responseBuilder.setGraphDef(graphDefPb);
-            }
-            responseObserver.onNext(responseBuilder.build());
-            responseObserver.onCompleted();
-        });
     }
 
     private GraphDefPb toGraphDefPb(GraphDef graphDef) {
