@@ -49,7 +49,7 @@ manager:
 				 -f ../k8s/manager.Dockerfile .
 
 graphstore:
-        docker build --progress=$(BUILD_PROGRESS) \
+	docker build --progress=$(BUILD_PROGRESS) \
                                  --build-arg profile=${PROFILE} \
                                  -t ${REGISTRY}/$(DOCKER_ORG)/graphstore:${VERSION} \
                                  --network=host \
