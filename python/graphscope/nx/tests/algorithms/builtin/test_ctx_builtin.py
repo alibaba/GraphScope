@@ -219,11 +219,11 @@ class TestBuiltInApp:
         np.allclose(auth, expected_auth)
         np.allclose(hub, expected_hub)
 
-    @pytest.mark.skip(reason="FIXME(acezen): double free warning in ci.")
     def test_clustering(self):
         ans = dict(nx.builtin.clustering(self.p2p).values)
         self.assert_result_almost_equal(ans, self.p2p_clus_ans)
 
+    @pytest.mark.skip(reason="FIXME(acezen): double free warning in ci.")
     def test_triangles(self):
         ans = dict(nx.builtin.triangles(self.p2p_undirected).values)
         self.assert_result_almost_equal(ans, self.p2p_triangles_ans)
