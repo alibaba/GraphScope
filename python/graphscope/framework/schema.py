@@ -93,10 +93,14 @@ class Label:
         self.properties.append(Property(name, unify_type(type), False))
         return self
 
+    @property
+    def type_enum(self):
+        raise NotImplementedError()
+
     def as_type_def(self):
         pb = graph_def_pb2.TypeDefPb()
         pb.label = self.name
-        pb.type_enum = self.type
+        pb.type_enum = self.type_enum
         for prop in self.properties:
             pb.props.append(prop.as_property_def())
         return pb
@@ -105,6 +109,10 @@ class VertexLabel(Label):
     __slots__ = []
     def __init__(self, name):
         super().__init__(name)
+
+    @property
+    def type_enum(self):
+        return graph_def_pb2.TypeEnumPb.VERTEX
 
     def add_primary_key(self, name, type):
         self.properties.append(Property(name, unify_type(type), True))
@@ -115,6 +123,10 @@ class EdgeLabel(Label):
     def __init__(self, name):
         super().__init__(name)
         self.relations: list[Relation] = []
+
+    @property
+    def type_enum(self):
+        return graph_def_pb2.TypeEnumPb.EDGE
 
     def source(self, label):
         self.relations.append(Relation(label, ""))
@@ -184,18 +196,17 @@ class Schema:
                 request.src_vertex_label = rel.source
                 request.dst_vertex_label = rel.destination
                 requests.value.add().add_edge_kind_request.CopyFrom(request)
-        for item in self.to_drop:
-            if item.type == graph_def_pb2.TypeEnumPb.VERTEX:
-                requests.value.add().drop_vertex_type_request.label = item.name
+        for item in self.vertex_labels_to_drop:
+            requests.value.add().drop_vertex_type_request.label = item.name
+        for item in self.edge_labels_to_drop:
+            if item.relations:
+                request = ddl_service_pb2.RemoveEdgeKindRequest()
+                request.edge_label = item.name
+                request.src_vertex_label = item.relations[0].source
+                request.dst_vertex_label = item.relations[0].destination
+                requests.value.add().drop_edge_kind_request.CopyFrom(request)
             else:
-                if item.relations:
-                    request = ddl_service_pb2.RemoveEdgeKindRequest()
-                    request.edge_label = item.name
-                    request.src_vertex_label = item.relations[0].source
-                    request.dst_vertex_label = item.relations[0].destination
-                    requests.value.add().drop_edge_kind_request.CopyFrom(request)
-                else:
-                    requests.value.add().drop_edge_type_request.label = item.name
+                requests.value.add().drop_edge_type_request.label = item.name
         return requests
 
     def update(self):
