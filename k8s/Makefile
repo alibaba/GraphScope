@@ -51,7 +51,7 @@ manager:
 graphstore:
         docker build --progress=$(BUILD_PROGRESS) \
                                  --build-arg profile=${PROFILE} \
-                                 -t graphscope/graphstore:${SHORT_SHA} \
+                                 -t ${REGISTRY}/$(DOCKER_ORG)/graphstore:${VERSION} \
                                  --network=host \
                                  -f $(WORKING_DIR)/graphstore.Dockerfile ..
 
