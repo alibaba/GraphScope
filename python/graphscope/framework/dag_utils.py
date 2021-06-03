@@ -780,6 +780,7 @@ def to_vineyard_dataframe(results, selector=None, vertex_range=None):
     )
     return op
 
+
 def fetch_context(results, node):
     config = {
         types_pb2.CTX_NAME: utils.s_to_attr(results.key),

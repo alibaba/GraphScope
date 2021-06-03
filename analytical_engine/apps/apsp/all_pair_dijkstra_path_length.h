@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIR_DIJKSTRA_PATH_LENGTH_H_
 #define ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIR_DIJKSTRA_PATH_LENGTH_H_
 
+#include <limits>
 #include <map>
 #include <queue>
 #include <tuple>
@@ -55,16 +56,18 @@ class AllPairDijkstraPathLength
              message_manager_t& messages) {
     auto inner_vertices = frag.InnerVertices();
     auto vertices = frag.Vertices();
-    ForEach(inner_vertices,
-            [&frag, &ctx, &vertices, this](int tid, vertex_t v) {
-            ctx.length[v].Init(vertices, std::numeric_limits<double>::max());
-            this->dijkstraLength(frag, v, ctx);
-            ctx.ret[v] = folly::dynamic::array;
-            for (auto& dst : vertices) {
-              ctx.ret[v].push_back(folly::dynamic::array(
-                  frag.GetId(dst), ctx.length[v][dst]));
+    ForEach(
+        inner_vertices, [&frag, &ctx, &vertices, this](int tid, vertex_t v) {
+          ctx.length[v].Init(vertices, std::numeric_limits<double>::max());
+          this->dijkstraLength(frag, v, ctx);
+          ctx.ret[v] = folly::dynamic::array;
+          for (auto& dst : vertices) {
+            if (ctx.length[v][dst] < std::numeric_limits<double>::max()) {
+              ctx.ret[v].push_back(
+                  folly::dynamic::array(frag.GetId(dst), ctx.length[v][dst]));
             }
-          });
+          }
+        });
     ctx.length.Clear();
   }
 

@@ -63,3 +63,16 @@ class TestRunGenericPath:
             DG, source=2, weight="weight"
         )
         assert dict(ret2.values) == {0.0: 1.0, 1.0: 1.0, 2.0: 0.0, 3.0: 1.0, 4.0: 2.0}
+
+    def test_all_pairs_dijkstra_path_length(self):
+        cycle = nx.cycle_graph(7)
+        pl = nx.builtin.all_pairs_dijkstra_path_length(cycle)
+        assert pl[0] == {0: 0, 1: 1, 2: 2, 3: 3, 4: 3, 5: 2, 6: 1}
+        assert pl[1] == {0: 1, 1: 0, 2: 1, 3: 2, 4: 3, 5: 3, 6: 2}
+
+        for e in cycle.edges:
+            cycle.edges[e]["weight"] = 1
+        cycle[1][2]["weight"] = 10
+        pl = nx.builtin.all_pairs_dijkstra_path_length(cycle, weight="weight")
+        assert pl[0] == {0: 0, 1: 1, 2: 5, 3: 4, 4: 3, 5: 2, 6: 1}
+        assert pl[1] == {0: 1, 1: 0, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2}

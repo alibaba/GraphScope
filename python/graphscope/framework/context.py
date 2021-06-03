@@ -303,7 +303,11 @@ class VertexDataContext(BaseContext):
         return utils.transform_vertex_data_selector(selector)
 
 
-class DynamicVertexDataContext(Mapping):
+class DynamicVertexDataContext(collections.abc.Mapping):
+    """Vertex data context for complicated result store.
+    A vertex has a single value as results.
+    """
+
     def __init__(self, session_id, context_key, graph):
         self._key = context_key
         self._graph = graph
@@ -324,8 +328,7 @@ class DynamicVertexDataContext(Mapping):
         if key not in self._graph._graph:
             raise KeyError(key)
         op = dag_utils.fetch_context(self, json.dumps([key]))
-        ret = op.eval()
-        return dict(json.loads(ret))
+        return dict(json.loads(op.eval()))
 
     def __iter__(self):
         return iter(self._graph._graph)

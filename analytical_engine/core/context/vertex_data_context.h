@@ -47,7 +47,6 @@
 #define CONTEXT_TYPE_LABELED_VERTEX_DATA "labeled_vertex_data"
 #define CONTEXT_TTPE_DYNAMIC_VERTEX_DATA "dynamic_vertex_data"
 
-
 namespace gs {
 
 template <typename FRAG_T, typename DATA_T>
@@ -464,7 +463,6 @@ class VertexDataContextWrapper : public IVertexDataContextWrapper {
   std::shared_ptr<context_t> ctx_;
 };
 
-
 template <typename FRAG_T>
 class VertexDataContextWrapper<FRAG_T, folly::dynamic>
     : public IVertexDataContextWrapper {
@@ -505,7 +503,6 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
       frag.GetVertex(node_id, v);
       ret = folly::json::serialize(data[v], json_opts);
     }
-    LOG(INFO) << "frag-" << frag.fid() << " " << ret;
     return ret;
   }
 
@@ -552,7 +549,6 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
   std::shared_ptr<IFragmentWrapper> frag_wrapper_;
   std::shared_ptr<context_t> ctx_;
 };
-
 
 /**
  * @brief This is the wrapper class for LabeledVertexDataContext. A series of

@@ -488,6 +488,7 @@ def bfs_predecessors(G, source, depth_limit=None):
 def bfs_successors(G, source, depth_limit=None):
     return AppAssets(algo="bfs_generic")(G, source, depth_limit, format="successors")
 
+
 @project_to_simple
 def all_piars_dijkstra_path_length(G, weight=None):
     """Compute shortest path lengths between all nodes in a weighted graph.
