@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img src="https://graphscope.io/assets/images/logo.png" width="400" alt="graphscope-logo">
+    <img src="https://graphscope.io/assets/images/graphscope-logo.svg" width="400" alt="graphscope-logo">
 </h1>
 <p align="center">
     A One-Stop Large-Scale Graph Computing System from Alibaba
