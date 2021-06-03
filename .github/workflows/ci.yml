@@ -99,7 +99,6 @@ jobs:
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} \
                           --network=host \
                           -f ./graphstore.Dockerfile .
-        kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:{{ github.sha }}
 
     - name: Helm test
       run: |
