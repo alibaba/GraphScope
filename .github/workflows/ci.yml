@@ -107,13 +107,14 @@ jobs:
         cd ..
         helm install graphstore --set image.tag=${{ github.sha }} \
                                       ./graphscope-store-service
-        helm test graphstore --timeout 5m0s
+        helm test graphstore --timeout 5m0s 
 
     - name: Clean
       if: false
       run: |
-        helm uninstall graphstore
-        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }}
-        kubectl delete pvc -l app.kubernetes.io/instance=graphstore
+        helm uninstall graphstore || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} || true
+        kubectl delete pvc -l app.kubernetes.io/instance=graphstore || true
+        kubectl delete pod graphstore-graphscope-store-service-frontend-test-rpc-service --wait=false || true
 
 
