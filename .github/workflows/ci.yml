@@ -102,7 +102,9 @@ jobs:
 
     - name: Helm test
       run: |
-        cd charts
+        cd charts/graphscope-store-service
+        helm dependency update
+        cd ..
         helm install graphstore --set image.tag=${{ github.sha }} \
                                       ./graphscope-store-service
         helm test graphstore --timeout 2m0s
