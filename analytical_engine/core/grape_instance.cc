@@ -354,7 +354,6 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToNumpy(
                   "Unsupported context type: " + std::string(ctx_type));
 }
 
-#ifdef NETWORKX
 bl::result<std::string> GrapeInstance::fetchContextData(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(ctx_name, params.Get<std::string>(rpc::CTX_NAME));
@@ -366,7 +365,6 @@ bl::result<std::string> GrapeInstance::fetchContextData(
       std::dynamic_pointer_cast<IVertexDataContextWrapper>(base_ctx_wrapper);
   return wrapper->GetContextData(params);
 }
-#endif  // NETWORKX
 
 bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToDataframe(
     const rpc::GSParams& params) {
