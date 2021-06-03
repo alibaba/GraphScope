@@ -91,9 +91,12 @@ pub enum Events {
 impl Encode for Events {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> ::std::io::Result<()> {
         match self {
-            &Events::Batched(ref events) => events.write_to(writer),
+            &Events::Batched(ref events) => {
+                writer.write_u8(0)?;
+                events.write_to(writer)
+            },
             &Events::Single(ref event) => {
-                writer.write_u32(1u32)?;
+                writer.write_u8(1)?;
                 event.write_to(writer)
             }
         }
@@ -102,8 +105,18 @@ impl Encode for Events {
 
 impl Decode for Events {
     fn read_from<R: ReadExt>(reader: &mut R) -> ::std::io::Result<Self> {
-        let batched = EventBatch::read_from(reader)?;
-        Ok(Events::Batched(batched))
+        let e = reader.read_u8()?;
+        match e {
+            0 => {
+                let batched = EventBatch::read_from(reader)?;
+                Ok(Events::Batched(batched))
+            }
+            1 => {
+                let event = Event::read_from(reader)?;
+                Ok(Events::Single(event))
+            }
+            _ => Err(::std::io::Error::new(::std::io::ErrorKind::Other, "unreachable"))
+        }
     }
 }
 
