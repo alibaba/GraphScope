@@ -28,7 +28,21 @@
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" /> 
+    <link rel="search" title="Search" href="../../../search.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+
 
   
   <script src="../../../_static/js/modernizr.min.js"></script>
@@ -182,6 +196,7 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
+<span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">hashlib</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Mapping</span>
@@ -468,6 +483,36 @@
         <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_data_selector</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span></div>
 
 
+<span class="k">class</span> <span class="nc">DynamicVertexDataContext</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Vertex data context for complicated result store.</span>
+<span class="sd">    A vertex has a single value as results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">context_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">session_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span>
+
+    <span class="c1"># partial inherit the BaseContext methods</span>
+    <span class="n">session_id</span> <span class="o">=</span> <span class="n">BaseContext</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;session_id&quot;</span><span class="p">]</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">BaseContext</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span>
+    <span class="n">signature</span> <span class="o">=</span> <span class="n">BaseContext</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;signature&quot;</span><span class="p">]</span>
+    <span class="fm">__repr__</span> <span class="o">=</span> <span class="n">BaseContext</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;__repr__&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_graph</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">key</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="LabeledVertexDataContext"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.LabeledVertexDataContext">[docs]</a><span class="k">class</span> <span class="nc">LabeledVertexDataContext</span><span class="p">(</span><span class="n">BaseContext</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The labeld kind of context.</span>
 <span class="sd">    This context has several vertex labels and edge labels,</span>
@@ -551,6 +596,8 @@
         <span class="k">return</span> <span class="n">VertexDataContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;labeled_vertex_data&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">LabeledVertexDataContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;dynamic_vertex_data&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DynamicVertexDataContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;vertex_property&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">VertexPropertyContext</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;labeled_vertex_property&quot;</span><span class="p">:</span>

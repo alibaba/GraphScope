@@ -28,7 +28,21 @@
   <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../../search.html" /> 
+    <link rel="search" title="Search" href="../../../../search.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+
 
   
   <script src="../../../../_static/js/modernizr.min.js"></script>
@@ -2120,6 +2134,8 @@
         <span class="n">graph</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_schema_from_def</span><span class="p">(</span><span class="n">graph_def</span><span class="o">.</span><span class="n">schema_def</span><span class="p">)</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>  <span class="c1"># projected graph also can report nodes.</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">graph</span></div>
 </pre></div>
 
