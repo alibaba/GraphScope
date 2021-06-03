@@ -516,7 +516,7 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
       const grape::CommSpec& comm_spec, const Selector& selector,
       const std::pair<std::string, std::string>& range) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Not support.");
+                    "DynamicVertexDataContext not support the operation.");
   }
 
   bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
@@ -524,7 +524,7 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
       const std::vector<std::pair<std::string, Selector>>& selectors,
       const std::pair<std::string, std::string>& range) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Not support.");
+                    "DynamicVertexDataContext not support the operation.");
   }
 
   bl::result<vineyard::ObjectID> ToVineyardTensor(
@@ -532,7 +532,7 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
       const Selector& selector,
       const std::pair<std::string, std::string>& range) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Not support.");
+                    "DynamicVertexDataContext not support the operation.");
   }
 
   bl::result<vineyard::ObjectID> ToVineyardDataframe(
@@ -540,7 +540,7 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
       const std::vector<std::pair<std::string, Selector>>& selectors,
       const std::pair<std::string, std::string>& range) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Not support.");
+                    "DynamicVertexDataContext not support the operation.");
   }
 
   bl::result<std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
@@ -548,7 +548,7 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
       const grape::CommSpec& comm_spec,
       const std::vector<std::pair<std::string, Selector>>& selectors) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Not support.");
+                    "DynamicVertexDataContext not support the operation.");
   }
 
  private:
