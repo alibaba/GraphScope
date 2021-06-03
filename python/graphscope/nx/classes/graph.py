@@ -965,6 +965,7 @@ class Graph(object):
         {'foo': 'bar'}
 
         """
+        self._schema.add_nx_edge_properties(data)
         edge = [json.dumps((u, v, data))]
         self._op = dag_utils.modify_edges(self, types_pb2.NX_UPDATE_EDGES, edge)
         return self._op.eval()
