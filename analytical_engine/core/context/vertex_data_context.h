@@ -45,6 +45,7 @@
 
 #define CONTEXT_TYPE_VERTEX_DATA "vertex_data"
 #define CONTEXT_TYPE_LABELED_VERTEX_DATA "labeled_vertex_data"
+#define CONTEXT_TTPE_DYNAMIC_VERTEX_DATA "dynamic_vertex_data"
 
 
 namespace gs {
@@ -482,7 +483,9 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
         frag_wrapper_(std::move(frag_wrapper)),
         ctx_(std::move(ctx)) {}
 
-  std::string context_type() override { return CONTEXT_TYPE_VERTEX_DATA; }
+  std::string context_type() override {
+    return CONTEXT_TTPE_DYNAMIC_VERTEX_DATA;
+  }
 
   std::shared_ptr<IFragmentWrapper> fragment_wrapper() override {
     return frag_wrapper_;
@@ -500,16 +503,6 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
     if (frag.HasNode(node_id)) {
       vertex_t v;
       frag.GetVertex(node_id, v);
-      /*
-      if (data[v].type() == dynamic::OBJECT) {
-        folly::dynamic mapping_array = folly::dynamic::array;
-        mapping_array.resize(2, folly::dynamic::array);
-        for (auto& val : data[v].items()) {
-          mapping_array[0].push_back(val.first);
-          mapping_array[1].push_back(val.first);
-        }
-      }
-      */
       ret = folly::json::serialize(data[v], json_opts);
     }
     LOG(INFO) << "frag-" << frag.fid() << " " << ret;

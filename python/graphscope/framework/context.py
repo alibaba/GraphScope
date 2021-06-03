@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import collections
 import hashlib
 import json
 from typing import Mapping
@@ -301,19 +302,33 @@ class VertexDataContext(BaseContext):
     def _transform_selector(self, selector):
         return utils.transform_vertex_data_selector(selector)
 
+
+class DynamicVertexDataContext(Mapping):
+    def __init__(self, session_id, context_key, graph):
+        self._key = context_key
+        self._graph = graph
+        self._session_id = session_id
+        self._saved_signature = self.signature
+
+    # partial inherit the BaseContext methods
+    session_id = BaseContext.__dict__["session_id"]
+    key = BaseContext.__dict__["key"]
+    signature = BaseContext.__dict__["signature"]
+    _check_unmodified = BaseContext.__dict__["_check_unmodified"]
+    __repr__ = BaseContext.__dict__["__repr__"]
+
+    def __len__(self):
+        return self._graph._graph.number_of_nodes()
+
     def __getitem__(self, key):
-        self._check_unmodified()
+        if key not in self._graph._graph:
+            raise KeyError(key)
         op = dag_utils.fetch_context(self, json.dumps([key]))
         ret = op.eval()
-        print("ret", ret)
-        return json.loads(ret)
-
-    def __setitem__(self, key, value):
-        raise NotImplementedError()
+        return dict(json.loads(ret))
 
     def __iter__(self):
-        for n in self._graph._graph:
-            yield (n, self[n])
+        return iter(self._graph._graph)
 
 
 class LabeledVertexDataContext(BaseContext):
@@ -399,6 +414,8 @@ def create_context(context_type, session_id, context_key, graph):
         return VertexDataContext(session_id, context_key, graph)
     elif context_type == "labeled_vertex_data":
         return LabeledVertexDataContext(session_id, context_key, graph)
+    elif context_type == "dynamic_vertex_data":
+        return DynamicVertexDataContext(session_id, context_key, graph)
     elif context_type == "vertex_property":
         return VertexPropertyContext(session_id, context_key, graph)
     elif context_type == "labeled_vertex_property":
