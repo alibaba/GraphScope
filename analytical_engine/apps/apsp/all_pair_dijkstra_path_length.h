@@ -69,6 +69,7 @@ class AllPairDijkstraPathLength
                   folly::dynamic::array(frag.GetId(dst), ctx.length[v][dst]));
             }
           }
+          ctx.length[v].Clear();
         });
     ctx.length.Clear();
   }
