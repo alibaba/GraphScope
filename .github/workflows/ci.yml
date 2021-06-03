@@ -57,13 +57,14 @@ jobs:
         mvn clean package -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
+        tar -zcf lib.tar.gz /opt/graphscope
 
     - uses: actions/upload-artifact@v2
       with:
         name: gss-${{ github.sha }}
         path: |
           maxgraph.tar.gz
-          /opt/graphscope
+          lib.tar.gz
         retention-days: 5
 
   gss-test:
@@ -92,6 +93,8 @@ jobs:
         cp k8s/ready_probe.sh artifacts/
         cp .github/workflows/graphstore.Dockerfile artifacts/
         cd artifacts
+        tar -zxf ./gss-${{ github.sha }}/lib.tar.gz
+        mv ./gss-${{ github.sha }}/maxgraph.tar.gz ./
         sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} \
                           --network=host \
