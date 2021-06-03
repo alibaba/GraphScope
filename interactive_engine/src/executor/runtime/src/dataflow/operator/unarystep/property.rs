@@ -272,11 +272,15 @@ pub struct PropKeyValueOperator<F>
 
 impl<F> PropKeyValueOperator<F>
     where F: Fn(&i64) -> u64 + 'static + Send + Sync {
-    pub fn new(input_id: i32,
+    pub fn new<V, VI, E, EI>(input_id: i32,
                              stream_index: i32,
                              shuffle_type: StreamShuffleType<F>,
                              base: &OperatorBase,
-                             context: &RuntimeContext<F>) -> Self {
+                             context: &RuntimeContext<V, VI, E, EI, F>) -> Self
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static {
         let prop_key_value_type = PropKeyValueType::from_i32(base.get_argument().get_int_value()).expect("property type");
         PropKeyValueOperator {
             id: base.get_id(),

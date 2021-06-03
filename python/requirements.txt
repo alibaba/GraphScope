@@ -1,4 +1,5 @@
-Cython>=3.0a6
+Cython==3.0a6
+decorator
 gremlinpython
 grpcio
 grpcio-tools

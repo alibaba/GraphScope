@@ -201,6 +201,7 @@ class LocalLauncher(Launcher):
         with open(zoo_cfg, "w") as f:
             f.write("dataDir={0}\n".format(zoo_data_dir))
             f.write("clientPort={0}\n".format(self._zookeeper_port))
+            f.write("admin.enableServer=false\n")
 
         zk_sh = shutil.which("zkServer.sh")
         if not zk_sh:

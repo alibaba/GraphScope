@@ -1,0 +1,804 @@
+{
+  "types": [
+    {
+      "id": 1,
+      "label": "person",
+      "type": "VERTEX",
+      "propertyDefList": [
+        {
+          "name": "birthday",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 1
+        },
+        {
+          "name": "firstname",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 2
+        },
+        {
+          "name": "creationdate",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 3
+        },
+        {
+          "name": "gender",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 4
+        },
+        {
+          "name": "browserused",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 5
+        },
+        {
+          "name": "locationip",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 6
+        },
+        {
+          "name": "id",
+          "dataType": "LONG",
+          "comment": "",
+          "id": 7
+        },
+        {
+          "name": "lastname",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 8
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY_KEY",
+          "indexType": "PRIMARY_KEY",
+          "propertyNames": [
+            "id"
+          ],
+        }
+      ],
+      "comment": "",
+    },
+    {
+      "id": 2,
+      "label": "post",
+      "type": "VERTEX",
+      "propertyDefList": [
+        {
+          "name": "creationdate",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 3
+        },
+        {
+          "name": "imagefile",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 9
+        },
+        {
+          "name": "length",
+          "dataType": "INT",
+          "comment": "",
+          "id": 10
+        },
+        {
+          "name": "browserused",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 5
+        },
+        {
+          "name": "locationip",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 6
+        },
+        {
+          "name": "language",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 11
+        },
+        {
+          "name": "id",
+          "dataType": "LONG",
+          "comment": "",
+          "id": 7
+        },
+        {
+          "name": "content",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 12
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY_KEY",
+          "indexType": "PRIMARY_KEY",
+          "propertyNames": [
+            "id"
+          ],
+        }
+      ],
+      "comment": "",
+    },
+    {
+      "id": 3,
+      "label": "organisation",
+      "type": "VERTEX",
+      "propertyDefList": [
+        {
+          "name": "name",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 13
+        },
+        {
+          "name": "id",
+          "dataType": "LONG",
+          "comment": "",
+          "id": 7
+        },
+        {
+          "name": "type",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 14
+        },
+        {
+          "name": "url",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 15
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY_KEY",
+          "indexType": "PRIMARY_KEY",
+          "propertyNames": [
+            "id"
+          ],
+        }
+      ],
+      "comment": "",
+    },
+    {
+      "id": 4,
+      "label": "tag",
+      "type": "VERTEX",
+      "propertyDefList": [
+        {
+          "name": "name",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 13
+        },
+        {
+          "name": "id",
+          "dataType": "LONG",
+          "comment": "",
+          "id": 7
+        },
+        {
+          "name": "url",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 15
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY_KEY",
+          "indexType": "PRIMARY_KEY",
+          "propertyNames": [
+            "id"
+          ],
+        }
+      ],
+      "comment": "",
+    },
+    {
+      "id": 5,
+      "label": "place",
+      "type": "VERTEX",
+      "propertyDefList": [
+        {
+          "name": "name",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 13
+        },
+        {
+          "name": "id",
+          "dataType": "LONG",
+          "comment": "",
+          "id": 7
+        },
+        {
+          "name": "type",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 14
+        },
+        {
+          "name": "url",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 15
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY_KEY",
+          "indexType": "PRIMARY_KEY",
+          "propertyNames": [
+            "id"
+          ],
+        }
+      ],
+      "comment": "",
+    },
+    {
+      "id": 6,
+      "label": "forum",
+      "type": "VERTEX",
+      "propertyDefList": [
+        {
+          "name": "creationdate",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 3
+        },
+        {
+          "name": "id",
+          "dataType": "LONG",
+          "comment": "",
+          "id": 7
+        },
+        {
+          "name": "title",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 16
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY_KEY",
+          "indexType": "PRIMARY_KEY",
+          "propertyNames": [
+            "id"
+          ],
+        }
+      ],
+      "comment": "",
+    },
+    {
+      "id": 7,
+      "label": "tagclass",
+      "type": "VERTEX",
+      "propertyDefList": [
+        {
+          "name": "name",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 13
+        },
+        {
+          "name": "id",
+          "dataType": "LONG",
+          "comment": "",
+          "id": 7
+        },
+        {
+          "name": "url",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 15
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY_KEY",
+          "indexType": "PRIMARY_KEY",
+          "propertyNames": [
+            "id"
+          ],
+        }
+      ],
+      "comment": "",
+    },
+    {
+      "id": 8,
+      "label": "comment",
+      "type": "VERTEX",
+      "propertyDefList": [
+        {
+          "name": "creationdate",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 3
+        },
+        {
+          "name": "length",
+          "dataType": "INT",
+          "comment": "",
+          "id": 10
+        },
+        {
+          "name": "browserused",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 5
+        },
+        {
+          "name": "locationip",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 6
+        },
+        {
+          "name": "id",
+          "dataType": "LONG",
+          "comment": "",
+          "id": 7
+        },
+        {
+          "name": "content",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 12
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY_KEY",
+          "indexType": "PRIMARY_KEY",
+          "propertyNames": [
+            "id"
+          ],
+        }
+      ],
+      "comment": "",
+    },
+    {
+      "id": 9,
+      "label": "person_knows_person",
+      "type": "EDGE",
+      "propertyDefList": [
+        {
+          "name": "creationdate",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 3
+        }
+      ],
+      "comment": "",
+      "relationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "person",
+          "edgeLabel": "person_knows_person"
+        }
+      ],
+    },
+    {
+      "id": 10,
+      "label": "person_likes_post",
+      "type": "EDGE",
+      "propertyDefList": [
+        {
+          "name": "creationdate",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 3
+        }
+      ],
+      "indexes": [],
+      "comment": "",
+      "relationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "post",
+          "edgeLabel": "person_likes_post"
+        }
+      ],
+    },
+    {
+      "id": 11,
+      "label": "comment_replyof_post",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "comment",
+          "dstVertexLabel": "post",
+          "edgeLabel": "comment_replyof_post"
+        }
+      ],
+    },
+    {
+      "id": 12,
+      "label": "comment_islocatedin_place",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "comment",
+          "dstVertexLabel": "place",
+          "edgeLabel": "comment_islocatedin_place"
+        }
+      ],
+    },
+    {
+      "id": 13,
+      "label": "place_ispartof_place",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "place",
+          "dstVertexLabel": "place",
+          "edgeLabel": "place_ispartof_place"
+        }
+      ],
+    },
+    {
+      "id": 14,
+      "label": "comment_replyof_comment",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "comment",
+          "dstVertexLabel": "comment",
+          "edgeLabel": "comment_replyof_comment"
+        }
+      ],
+    },
+    {
+      "id": 15,
+      "label": "comment_hastag_tag",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "comment",
+          "dstVertexLabel": "tag",
+          "edgeLabel": "comment_hastag_tag"
+        }
+      ],
+    },
+    {
+      "id": 16,
+      "label": "post_hascreator_person",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "post",
+          "dstVertexLabel": "person",
+          "edgeLabel": "post_hascreator_person"
+        }
+      ],
+    },
+    {
+      "id": 17,
+      "label": "person_islocatedin_place",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "place",
+          "edgeLabel": "person_islocatedin_place"
+        }
+      ],
+    },
+    {
+      "id": 18,
+      "label": "post_hastag_tag",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "post",
+          "dstVertexLabel": "tag",
+          "edgeLabel": "post_hastag_tag"
+        }
+      ],
+    },
+    {
+      "id": 19,
+      "label": "tagclass_issubclassof_tagclass",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "tagclass",
+          "dstVertexLabel": "tagclass",
+          "edgeLabel": "tagclass_issubclassof_tagclass"
+        }
+      ],
+    },
+    {
+      "id": 20,
+      "label": "comment_hascreator_person",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "comment",
+          "dstVertexLabel": "person",
+          "edgeLabel": "comment_hascreator_person"
+        }
+      ],
+    },
+    {
+      "id": 21,
+      "label": "post_islocatedin_place",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "post",
+          "dstVertexLabel": "place",
+          "edgeLabel": "post_islocatedin_place"
+        }
+      ],
+    },
+    {
+      "id": 22,
+      "label": "person_studyat_organisation",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [
+        {
+          "name": "classyear",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 17
+        }
+      ],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "organisation",
+          "edgeLabel": "person_studyat_organisation"
+        }
+      ],
+    },
+    {
+      "id": 23,
+      "label": "forum_containerof_post",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "post",
+          "edgeLabel": "forum_containerof_post"
+        }
+      ],
+    },
+    {
+      "id": 24,
+      "label": "person_hasinterest_tag",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "tag",
+          "edgeLabel": "person_hasinterest_tag"
+        }
+      ],
+    },
+    {
+      "id": 25,
+      "label": "forum_hasmember_person",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [
+        {
+          "name": "joindate",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 18
+        }
+      ],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "forum",
+          "dstVertexLabel": "person",
+          "edgeLabel": "forum_hasmember_person"
+        }
+      ],
+    },
+    {
+      "id": 26,
+      "label": "person_workat_organisation",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [
+        {
+          "name": "workfrom",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 19
+        }
+      ],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "organisation",
+          "edgeLabel": "person_workat_organisation"
+        }
+      ],
+    },
+    {
+      "id": 27,
+      "label": "forum_hasmoderator_person",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "forum",
+          "dstVertexLabel": "person",
+          "edgeLabel": "forum_hasmoderator_person"
+        }
+      ],
+    },
+    {
+      "id": 28,
+      "label": "person_likes_comment",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [
+        {
+          "name": "creationdate",
+          "dataType": "STRING",
+          "comment": "",
+          "id": 3
+        }
+      ],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "comment",
+          "edgeLabel": "person_likes_comment"
+        }
+      ],
+    },
+    {
+      "id": 29,
+      "label": "tag_hastype_tagclass",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "tag",
+          "dstVertexLabel": "tagclass",
+          "edgeLabel": "tag_hastype_tagclass"
+        }
+      ],
+    },
+    {
+      "id": 30,
+      "label": "forum_hastag_tag",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "forum",
+          "dstVertexLabel": "tag",
+          "edgeLabel": "forum_hastag_tag"
+        }
+      ],
+    },
+    {
+      "id": 31,
+      "label": "organisation_islocatedin_place",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [],
+      "indexes": [],
+      "comment": "",
+      "version": 1,
+      "relationShips": [
+        {
+          "srcVertexLabel": "organisation",
+          "dstVertexLabel": "place",
+          "edgeLabel": "organisation_islocatedin_place"
+        }
+      ],
+    }
+  ],
+  "partitionNum": 4,
+  "version": 1,
+}

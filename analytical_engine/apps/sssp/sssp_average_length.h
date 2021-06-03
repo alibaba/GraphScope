@@ -25,6 +25,7 @@ limitations under the License.
 #include "grape/grape.h"
 
 #include "core/app/app_base.h"
+#include "core/utils/app_utils.h"
 #include "core/worker/default_worker.h"
 #include "sssp/sssp_average_length_context.h"
 
@@ -49,6 +50,7 @@ class SSSPAverageLength
       grape::LoadStrategy::kBothOutIn;
   using vertex_t = typename fragment_t::vertex_t;
   using vid_t = typename fragment_t::vid_t;
+  using edata_t = typename fragment_t::vid_t;
   // vertex msg: [source, v, sssp_length]
   // OR sum msg: [fid, fid, sssp_length_sum]
   using tuple_t = typename std::tuple<vid_t, vid_t, double>;
@@ -194,7 +196,11 @@ class SSSPAverageLength
         for (auto& e : oes) {
           auto u = e.get_neighbor();
           if (frag.IsOuterVertex(u)) {
-            double v_u = (ctx.weight) ? e.get_data() : 1;
+            double v_u = 1.0;
+            static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+                [&](auto& e, auto& data) {
+                  data = static_cast<double>(e.get_data());
+                })(e, v_u);
             double dist = ctx.path_distance[v][src_vid] + v_u;
             vid_t u_vid = frag.Vertex2Gid(u);
             messages.SendToFragment(
@@ -239,7 +245,11 @@ class SSSPAverageLength
     for (auto& e : oes) {
       auto u = e.get_neighbor();
       if (frag.IsInnerVertex(u)) {
-        double v_u = (ctx.weight) ? e.get_data() : 1;
+        double v_u = 1.0;
+        static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+            [&](auto& e, auto& data) {
+              data = static_cast<double>(e.get_data());
+            })(e, v_u);
         updateVertexState(u, src_vid, dist_v + v_u, ctx);
       }
     }

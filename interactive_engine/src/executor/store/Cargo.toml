@@ -3,6 +3,7 @@ name = "maxgraph-store"
 version = "0.1.0"
 authors = ["勤远 <wubin.cwb@alibaba-inc.com>"]
 edition = "2018"
+build = "./build.rs"
 
 [dependencies]
 byteorder = "1"
@@ -18,9 +19,13 @@ bincode = "1.2.0"
 crc = "1.8.1"
 rust-ini = "0.13"
 libc = "0.2"
+log4rs = "0.8.0"
+grpcio = "=0.4.1"
 
 maxgraph-common = { path = "../../common/rust/common" }
 
 [dependencies.rocksdb]
 git = "https://github.com/pingcap/rust-rocksdb.git"
 
+[build-dependencies]
+protoc-grpcio = "0.3.0"

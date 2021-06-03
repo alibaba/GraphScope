@@ -45,7 +45,7 @@ set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads REQUIRED)
 
 # find vineyard-----------------------------------------------------------------
-find_package(vineyard 0.2.1 REQUIRED)
+find_package(vineyard 0.2.2 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -73,10 +73,12 @@ endif()
 include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
 
 # find Arrow--------------------------------------------------------------------
-if(GRAPHSCOPE_ANALYTICAL_HOME)
-    include("${ANALYTICAL_ENGINE_HOME}/lib/cmake/FindArrow.cmake")
-else()
-    include("${ANALYTICAL_ENGINE_HOME}/cmake/FindArrow.cmake")
+if(NOT Arrow_FOUND)
+    if(GRAPHSCOPE_ANALYTICAL_HOME)
+        include("${ANALYTICAL_ENGINE_HOME}/lib/cmake/FindArrow.cmake")
+    else()
+        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindArrow.cmake")
+    endif()
 endif()
 
 # find Libunwind----------------------------------------------------------------

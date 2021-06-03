@@ -4,7 +4,7 @@
 # the result image includes all runtime stuffs of graphscope, with analytical engine,
 # learning engine and interactive engine installed.
 
-ARG BASE_VERSION=v0.2.1
+ARG BASE_VERSION=v0.2.2
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 ARG CI=true
@@ -18,6 +18,7 @@ ENV profile=$profile
 
 COPY ./k8s/kube_ssh /opt/graphscope/bin/kube_ssh
 COPY ./k8s/pre_stop.py /opt/graphscope/bin/pre_stop.py
+COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
 COPY . /root/gs
 
 # build & install graph-learn library
@@ -95,7 +96,7 @@ RUN source ~/.bashrc \
 
 # # # # # # # # # # # # # # # # # # # # # #
 # generate final runtime image
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
 
 ARG profile=release
 

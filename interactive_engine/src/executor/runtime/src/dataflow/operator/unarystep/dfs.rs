@@ -41,11 +41,15 @@ pub struct DfsRepeatGraphOperator<F>
 
 impl<F> DfsRepeatGraphOperator<F>
     where F: Fn(&i64) -> u64 + 'static + Send + Sync {
-    pub fn new(input_id: i32,
+    pub fn new<V, VI, E, EI>(input_id: i32,
                              stream_index: i32,
                              shuffle_type: StreamShuffleType<F>,
                              base: &OperatorBase,
-                             context: &RuntimeContext<F>) -> Self {
+                             context: &RuntimeContext<V, VI, E, EI, F>) -> Self
+    where V: Vertex + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
+          E: Edge + 'static,
+          EI: Iterator<Item=E> + Send + 'static {
         let label_list = base.get_argument().get_int_value_list().to_vec().into_iter().map(move |v| v as u32).collect();
         let id_list = base.get_argument().get_long_value_list().to_vec();
         let filter_manager = FilterManager::new(base.get_logical_compare(),
@@ -72,7 +76,7 @@ impl<F> DfsRepeatGraphOperator<F>
                     filter_manager,
                     range_manager,
                     after_requirement,
-                    context.get_vineyard_store().clone());
+                    context.get_store().clone());
                 source.execute()
             } else {
                 let mut source = SourceVertexIdOperator::new(base.get_id(),
@@ -82,7 +86,7 @@ impl<F> DfsRepeatGraphOperator<F>
                                                              filter_manager,
                                                              range_manager,
                                                              after_requirement,
-                                                             context.get_vineyard_store().clone());
+                                                             context.get_store().clone());
                 source.execute()
             }
         };

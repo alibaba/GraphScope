@@ -1,0 +1,17 @@
+refresh_rate: 30 seconds
+appenders:
+  stdout:
+    kind: console
+    encoder:
+      pattern: "{d(%Y-%m-%d %H:%M:%S.%f)} {h({l:<5})} (({f}:{L})) [{T}] {m}{n}"
+
+root:
+  level: info
+  appenders:
+    - stdout
+
+#loggers:
+#  maxgraph-query::server::network:
+#    level: debug
+#    appenders:
+#      - stdout
