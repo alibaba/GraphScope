@@ -24,6 +24,7 @@ import com.alibaba.maxgraph.v2.common.schema.request.DdlRequestBatch;
 import com.alibaba.maxgraph.v2.common.util.UuidUtils;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
@@ -110,7 +111,7 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
                 responseObserver.onCompleted();
             });
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
