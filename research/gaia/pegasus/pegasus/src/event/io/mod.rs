@@ -92,7 +92,10 @@ impl Encode for Events {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> ::std::io::Result<()> {
         match self {
             &Events::Batched(ref events) => events.write_to(writer),
-            _ => unimplemented!("[Unreachable]"),
+            &Events::Single(ref event) => {
+                writer.write_u32(1u32)?;
+                event.write_to(writer)
+            }
         }
     }
 }
