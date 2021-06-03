@@ -16,6 +16,8 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIR_DIJKSTRA_PATH_LENGTH_H_
 #define ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIR_DIJKSTRA_PATH_LENGTH_H_
 
+#ifdef NETWORKX
+
 #include <limits>
 #include <map>
 #include <queue>
@@ -120,4 +122,5 @@ class AllPairDijkstraPathLength
 
 }  // namespace gs
 
+#endif  // NETWORKX
 #endif  // ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIR_DIJKSTRA_PATH_LENGTH_H_

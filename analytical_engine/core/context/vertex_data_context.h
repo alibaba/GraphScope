@@ -463,6 +463,12 @@ class VertexDataContextWrapper : public IVertexDataContextWrapper {
   std::shared_ptr<context_t> ctx_;
 };
 
+#ifdef NETWORKX
+/**
+ * @brief This is folly::dynamic specialization of VertexDataContext.
+ *
+ * @tparam FRAG_T The fragment class (Non-labeled fragment only)
+ */
 template <typename FRAG_T>
 class VertexDataContextWrapper<FRAG_T, folly::dynamic>
     : public IVertexDataContextWrapper {
@@ -549,6 +555,7 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
   std::shared_ptr<IFragmentWrapper> frag_wrapper_;
   std::shared_ptr<context_t> ctx_;
 };
+#endif  // NETWORKX
 
 /**
  * @brief This is the wrapper class for LabeledVertexDataContext. A series of
