@@ -535,7 +535,7 @@ jobs:
         source ~/.bashrc
 
         cd interactive_engine
-        mvn package -Pv2 -Drust.compile.mode=debug
+        mvn package -Pv2 -Drust.compile.mode=debug --quiet
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
 
