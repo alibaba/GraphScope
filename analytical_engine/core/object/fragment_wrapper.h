@@ -24,6 +24,8 @@
 #include "grape/util.h"
 #include "vineyard/client/client.h"
 #include "vineyard/graph/utils/grape_utils.h"
+#include "vineyard/graph/fragment/graph_schema.h"
+
 
 #include "core/context/labeled_vertex_property_context.h"
 #include "core/context/vertex_data_context.h"
@@ -39,19 +41,142 @@
 #include "proto/graph_def.pb.h"
 
 namespace gs {
+
+gs::rpc::graph::DataTypePb PropertyTypeToPb(vineyard::PropertyType type) {
+  if (arrow::boolean()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::BOOL;
+  } else if (arrow::int16()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::SHORT;
+  } else if (arrow::int32()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::INT;
+  } else if (arrow::int64()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::LONG;
+  } else if (arrow::float32()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::FLOAT;
+  } else if (arrow::float64()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::DOUBLE;
+  } else if (arrow::utf8()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::STRING;
+  } else if (arrow::large_utf8()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::STRING;
+  } else if (arrow::large_list(arrow::int32())->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::INT_LIST;
+  } else if (arrow::large_list(arrow::int64())->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::LONG_LIST;
+  } else if (arrow::large_list(arrow::float32())->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::FLOAT_LIST;
+  } else if (arrow::large_list(arrow::float64())->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::DOUBLE_LIST;
+  } else if (arrow::large_list(arrow::large_utf8())->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::STRING_LIST;
+  }
+  else if (arrow::null()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::NULLVALUE;
+  }
+
+  LOG(ERROR) << "Unsupported arrow type " << type->ToString();
+  return gs::rpc::graph::DataTypePb::UNKNOWN;
+}
+
+gs::rpc::graph::DataTypePb PropertyTypeToPb(const std::string& type) {
+  if (type == "bool") {
+    return gs::rpc::graph::DataTypePb::BOOL;
+  } else if (type == "short" || type == "int16" || type == "int16_t") {
+    return gs::rpc::graph::DataTypePb::SHORT;
+  } else if (type == "int" || type == "int32" || type == "int32_t") {
+    return gs::rpc::graph::DataTypePb::INT;
+  } else if (type == "long" || type == "int64" || type == "int64_t") {
+    return gs::rpc::graph::DataTypePb::LONG;
+  } else if (type == "float") {
+    return gs::rpc::graph::DataTypePb::FLOAT;
+  } else if (type == "double") {
+    return gs::rpc::graph::DataTypePb::DOUBLE;
+  } else if (type == "bytes") {
+    return gs::rpc::graph::DataTypePb::BYTES;
+  } else if (type == "string" || type == "str") {
+    return gs::rpc::graph::DataTypePb::STRING;
+  } else if (type == "int_list") {
+    return gs::rpc::graph::DataTypePb::INT_LIST;
+  } else if (type == "long_list") {
+    return gs::rpc::graph::DataTypePb::LONG_LIST;
+  } else if (type == "float_list") {
+    return gs::rpc::graph::DataTypePb::FLOAT_LIST;
+  } else if (type == "double_list") {
+    return gs::rpc::graph::DataTypePb::DOUBLE_LIST;
+  } else if (type == "string_list" || type == "str_list") {
+    return gs::rpc::graph::DataTypePb::STRING_LIST;
+  } else if (type == "grape::EmptyType" || type == "null") {
+    return gs::rpc::graph::DataTypePb::NULLVALUE;
+  }
+  LOG(ERROR) << "Unsupported type " << type;
+  return gs::rpc::graph::DataTypePb::UNKNOWN;
+}
+
+
+gs::rpc::graph::TypeEnumPb TypeToTypeEnum(const std::string& type) {
+    if (type == "VERTEX") {
+        return gs::rpc::graph::TypeEnumPb::VERTEX;
+    } else if (type == "EDGE") {
+        return gs::rpc::graph::TypeEnumPb::EDGE;
+    }
+    return gs::rpc::graph::TypeEnumPb::UNSPECIFIED;
+}
+
+void ToPropertyDef(const vineyard::Entry::PropertyDef& prop, gs::rpc::graph::PropertyDefPb* prop_def) {
+    prop_def->set_id(prop.id);
+    prop_def->set_name(prop.name);
+    prop_def->set_data_type(PropertyTypeToPb(prop.type));
+}
+
+void ToTypeDef(const vineyard::Entry& entry, gs::rpc::graph::TypeDefPb* type_def) {
+    type_def->set_label(entry.label);
+    type_def->mutable_label_id()->set_id(entry.id);
+    type_def->set_type_enum(TypeToTypeEnum(entry.type));
+    auto properties = entry.properties();
+    for (const auto &prop : properties) {
+        ToPropertyDef(prop, type_def->add_props());
+    }
+}
+
+void ToEdgeKind(const std::string& label, const std::pair<std::string, std::string>& relation, gs::rpc::graph::EdgeKindPb* edge_kind) {
+    edge_kind->set_edge_label(label);
+    edge_kind->set_src_vertex_label(relation.first);
+    edge_kind->set_dst_vertex_label(relation.second);
+}
+
 inline void set_graph_def(
     const std::shared_ptr<vineyard::ArrowFragmentBase>& fragment,
-    rpc::GraphDef& graph_def) {
+    rpc::graph::GraphDefPb& graph_def) {
   auto& meta = fragment->meta();
-  graph_def.set_graph_type(rpc::ARROW_PROPERTY);
+  const auto& schema = fragment->schema();
+  graph_def.set_graph_type(rpc::graph::ARROW_PROPERTY);
   graph_def.set_directed(static_cast<bool>(meta.GetKeyValue<int>("directed")));
+  auto v_entries = schema.vertex_entries();
+  auto e_entries = schema.edge_entries();
+  for (const auto& entry : v_entries) {
+    ToTypeDef(entry, graph_def.add_type_defs());
+  }
+  for (const auto& entry : e_entries) {
+    ToTypeDef(entry, graph_def.add_type_defs());
+  }
+  for (const auto& entry : e_entries) {
+    for (const auto& rel : entry.relations) {
+      ToEdgeKind(entry.label, rel, graph_def.add_edge_kinds());
+    }
+  }
+  auto property_name_to_id = graph_def.mutable_property_name_to_id();
+  for (const auto& pair : schema.GetPropertyNameToIDMapping()) {
+    (*property_name_to_id)[pair.first] = pair.second;
+  }
 
-  auto* schema_def = graph_def.mutable_schema_def();
-  schema_def->set_oid_type(
-      vineyard::normalize_datatype(meta.GetKeyValue("oid_type")));
-  schema_def->set_vid_type(
-      vineyard::normalize_datatype(meta.GetKeyValue("vid_type")));
-  schema_def->set_property_schema_json(meta.GetKeyValue("schema"));
+  gs::rpc::graph::VineyardInfoPb vy_info;
+  if (graph_def.has_extension()) {
+    graph_def.extension().UnpackTo(&vy_info);
+  }
+  vy_info.set_oid_type(PropertyTypeToPb(meta.GetKeyValue("oid_type")));
+  vy_info.set_vid_type(PropertyTypeToPb(meta.GetKeyValue("vid_type")));
+
+  graph_def.mutable_extension()->PackFrom(vy_info);
 }
 
 /**
@@ -76,19 +201,19 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
   using label_id_t = typename fragment_t::label_id_t;
 
  public:
-  FragmentWrapper(const std::string& id, rpc::GraphDef graph_def,
+  FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
                   std::shared_ptr<fragment_t> fragment)
       : ILabeledFragmentWrapper(id),
         graph_def_(std::move(graph_def)),
         fragment_(std::move(fragment)) {
-    CHECK_EQ(graph_def_.graph_type(), rpc::ARROW_PROPERTY);
+    CHECK_EQ(graph_def_.graph_type(), rpc::graph::ARROW_PROPERTY);
   }
 
   std::shared_ptr<void> fragment() const override {
     return std::static_pointer_cast<void>(fragment_);
   }
 
-  const rpc::GraphDef& graph_def() const override { return graph_def_; }
+  const rpc::graph::GraphDefPb& graph_def() const override { return graph_def_; }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
@@ -100,7 +225,12 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     auto dst_graph_def = graph_def_;
 
     dst_graph_def.set_key(dst_graph_name);
-    dst_graph_def.set_vineyard_id(frag_group_id);
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (dst_graph_def.has_extension()) {
+      dst_graph_def.extension().UnpackTo(&vy_info);
+    }
+    vy_info.set_vineyard_id(frag_group_id);
+    dst_graph_def.mutable_extension()->PackFrom(vy_info);
 
     auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
         dst_graph_name, dst_graph_def, fragment_);
@@ -119,11 +249,16 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
                                        *client, new_frag_id, comm_spec));
     auto new_frag = client->GetObject<fragment_t>(new_frag_id);
 
-    rpc::GraphDef new_graph_def;
+    rpc::graph::GraphDefPb new_graph_def;
 
     new_graph_def.set_key(dst_graph_name);
-    new_graph_def.set_vineyard_id(frag_group_id);
-    new_graph_def.set_generate_eid(graph_def_.generate_eid());
+
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (graph_def_.has_extension()) {
+      graph_def_.extension().UnpackTo(&vy_info);
+    }
+    vy_info.set_vineyard_id(frag_group_id);
+    new_graph_def.mutable_extension()->PackFrom(vy_info);
 
     set_graph_def(new_frag, new_graph_def);
 
@@ -152,12 +287,12 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     auto graph_type = frag_wrapper->graph_def().graph_type();
     vineyard::ObjectID vm_id_from_ctx = 0;
 
-    if (graph_type == rpc::ARROW_PROPERTY) {
+    if (graph_type == rpc::graph::ARROW_PROPERTY) {
       vm_id_from_ctx =
           std::static_pointer_cast<const vineyard::ArrowFragmentBase>(
               frag_wrapper->fragment())
               ->vertex_map_id();
-    } else if (graph_type == rpc::ARROW_PROJECTED) {
+    } else if (graph_type == rpc::graph::ARROW_PROJECTED) {
       auto& proj_meta =
           std::static_pointer_cast<const ArrowProjectedFragmentBase>(
               frag_wrapper->fragment())
@@ -257,18 +392,21 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       }
     }
 
-    auto new_frag_id = fragment_->AddVertexColumns(*client, columns);
+    BOOST_LEAF_AUTO(new_frag_id, fragment_->AddVertexColumns(*client, columns));
 
     VINEYARD_CHECK_OK(client->Persist(new_frag_id));
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
                                        *client, new_frag_id, comm_spec));
     auto new_frag = client->GetObject<fragment_t>(new_frag_id);
 
-    rpc::GraphDef new_graph_def;
-
+    rpc::graph::GraphDefPb new_graph_def;
     new_graph_def.set_key(dst_graph_name);
-    new_graph_def.set_vineyard_id(frag_group_id);
-    new_graph_def.set_generate_eid(graph_def_.generate_eid());
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (graph_def_.has_extension()) {
+      graph_def_.extension().UnpackTo(&vy_info);
+    }
+    vy_info.set_vineyard_id(frag_group_id);
+    new_graph_def.mutable_extension()->PackFrom(vy_info);
 
     set_graph_def(new_frag, new_graph_def);
 
@@ -425,7 +563,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
   }
 
  private:
-  rpc::GraphDef graph_def_;
+  rpc::graph::GraphDefPb graph_def_;
   std::shared_ptr<fragment_t> fragment_;
 };
 
@@ -440,19 +578,19 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
   using fragment_t = ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
 
  public:
-  FragmentWrapper(const std::string& id, rpc::GraphDef graph_def,
+  FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
                   std::shared_ptr<fragment_t> fragment)
       : IFragmentWrapper(id),
         graph_def_(std::move(graph_def)),
         fragment_(std::move(fragment)) {
-    CHECK_EQ(graph_def_.graph_type(), rpc::ARROW_PROJECTED);
+    CHECK_EQ(graph_def_.graph_type(), rpc::graph::ARROW_PROJECTED);
   }
 
   std::shared_ptr<void> fragment() const override {
     return std::static_pointer_cast<void>(fragment_);
   }
 
-  const rpc::GraphDef& graph_def() const override { return graph_def_; }
+  const rpc::graph::GraphDefPb& graph_def() const override { return graph_def_; }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
@@ -483,7 +621,7 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
   }
 
  private:
-  rpc::GraphDef graph_def_;
+  rpc::graph::GraphDefPb graph_def_;
   std::shared_ptr<fragment_t> fragment_;
 };
 
@@ -499,19 +637,19 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
   using fragment_view_t = DynamicFragmentView;
 
  public:
-  FragmentWrapper(const std::string& id, rpc::GraphDef graph_def,
+  FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
                   std::shared_ptr<fragment_t> fragment)
       : IFragmentWrapper(id),
         graph_def_(std::move(graph_def)),
         fragment_(std::move(fragment)) {
-    CHECK_EQ(graph_def_.graph_type(), rpc::DYNAMIC_PROPERTY);
+    CHECK_EQ(graph_def_.graph_type(), rpc::graph::DYNAMIC_PROPERTY);
   }
 
   std::shared_ptr<void> fragment() const override {
     return std::static_pointer_cast<void>(fragment_);
   }
 
-  const rpc::GraphDef& graph_def() const override { return graph_def_; }
+  const rpc::graph::GraphDefPb& graph_def() const override { return graph_def_; }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
@@ -641,7 +779,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
   }
 
  private:
-  rpc::GraphDef graph_def_;
+  rpc::graph::GraphDefPb graph_def_;
   std::shared_ptr<fragment_t> fragment_;
 };
 
@@ -656,19 +794,19 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
   using fragment_t = DynamicProjectedFragment<VDATA_T, EDATA_T>;
 
  public:
-  FragmentWrapper(const std::string& id, rpc::GraphDef graph_def,
+  FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
                   std::shared_ptr<fragment_t> fragment)
       : IFragmentWrapper(id),
         graph_def_(std::move(graph_def)),
         fragment_(std::move(fragment)) {
-    CHECK_EQ(graph_def_.graph_type(), rpc::DYNAMIC_PROJECTED);
+    CHECK_EQ(graph_def_.graph_type(), rpc::graph::DYNAMIC_PROJECTED);
   }
 
   std::shared_ptr<void> fragment() const override {
     return std::static_pointer_cast<void>(fragment_);
   }
 
-  const rpc::GraphDef& graph_def() const override { return graph_def_; }
+  const rpc::graph::GraphDefPb& graph_def() const override { return graph_def_; }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
@@ -699,7 +837,7 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
   }
 
  private:
-  rpc::GraphDef graph_def_;
+  rpc::graph::GraphDefPb graph_def_;
   std::shared_ptr<fragment_t> fragment_;
 };
 #endif

@@ -42,8 +42,10 @@ message VineyardInfoPb {
     DataTypePb vid_type = 2;
     DataTypePb vdata_type = 3;
     DataTypePb edata_type = 4;
+
     string schema_path = 5;
     bool generate_eid = 6;
+    int64 vineyard_id = 7;
 }
 
 message GraphDefPb {
@@ -104,6 +106,7 @@ enum DataTypePb {
     FLOAT_LIST = 12;
     DOUBLE_LIST = 13;
     STRING_LIST = 14;
+    NULLVALUE = 15;
 }
 
 message PropertyValuePb {

@@ -40,7 +40,7 @@ class IFragmentWrapper : public GSObject {
   explicit IFragmentWrapper(std::string id)
       : GSObject(std::move(id), ObjectType::kFragmentWrapper) {}
 
-  virtual const rpc::GraphDef& graph_def() const = 0;
+  virtual const rpc::graph::GraphDefPb& graph_def() const = 0;
 
   virtual std::shared_ptr<void> fragment() const = 0;
 

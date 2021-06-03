@@ -65,7 +65,7 @@ inline float get_param_impl<float>(const std::map<int, rpc::AttrValue>& params,
 }
 
 template <>
-inline rpc::GraphType get_param_impl<rpc::GraphType>(
+inline rpc::graph::GraphTypePb get_param_impl<rpc::graph::GraphTypePb>(
     const std::map<int, rpc::AttrValue>& params, rpc::ParamKey key) {
   return params.at(key).graph_type();
 }
@@ -123,7 +123,7 @@ inline bl::result<DagDef> ReadDagFromFile(const std::string& location) {
   auto stat = google::protobuf::util::JsonStringToMessage(dag_str, &dag_def);
   if (!stat.ok()) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kIOError,
-                    "Failed to parse: " + stat.error_message().ToString());
+                    "Failed to parse: " + stat.ToString());
   }
   return dag_def;
 }

@@ -177,7 +177,7 @@ class Schema:
                 label_to_drop = EdgeLabel(label)
                 if src_label and dst_label:
                     label_to_drop.source(src_label).destination(dst_label)
-                self.edge_labels_to_drop.append(label)
+                self.edge_labels_to_drop.append(label_to_drop)
                 return
         raise ValueError(f"Label {label} not found.")
 
@@ -204,7 +204,7 @@ class Schema:
                 request.edge_label = item.name
                 request.src_vertex_label = item.relations[0].source
                 request.dst_vertex_label = item.relations[0].destination
-                requests.value.add().drop_edge_kind_request.CopyFrom(request)
+                requests.value.add().remove_edge_kind_request.CopyFrom(request)
             else:
                 requests.value.add().drop_edge_type_request.label = item.name
         return requests

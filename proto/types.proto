@@ -113,14 +113,6 @@ enum OperationType {
   GET_ENGINE_CONFIG = 90;
 };
 
-enum GraphType {
-  IMMUTABLE_EDGECUT = 0;
-  DYNAMIC_PROPERTY = 1;
-  DYNAMIC_PROJECTED = 2;
-  ARROW_PROPERTY = 3;
-  ARROW_PROJECTED = 4;
-}
-
 enum ParamKey {
   GRAPH_NAME = 0;
   DST_GRAPH_NAME = 1;
