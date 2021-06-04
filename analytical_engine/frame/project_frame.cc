@@ -55,7 +55,7 @@ class ProjectSimpleFrame<
   static bl::result<std::shared_ptr<IFragmentWrapper>> Project(
       std::shared_ptr<IFragmentWrapper>& input_wrapper,
       const std::string& projected_graph_name, const rpc::GSParams& params) {
-    if (input_wrapper->graph_def().graph_type() != rpc::ARROW_PROPERTY) {
+    if (input_wrapper->graph_def().graph_type() != rpc::graph::ARROW_PROPERTY) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                       "graph_type should be ARROW_PROPERTY");
     }
@@ -73,9 +73,9 @@ class ProjectSimpleFrame<
     auto projected_frag = projected_fragment_t::Project(
         input_frag, v_label, v_prop, e_label, e_prop);
 
-    rpc::GraphDef graph_def;
+    rpc::graph::GraphDefPb graph_def;
     graph_def.set_key(projected_graph_name);
-    graph_def.set_graph_type(rpc::ARROW_PROJECTED);
+    graph_def.set_graph_type(rpc::graph::ARROW_PROJECTED);
 
     setGraphDef(projected_frag, v_label, e_label, v_prop, e_prop, graph_def);
 
@@ -88,17 +88,19 @@ class ProjectSimpleFrame<
   static void setGraphDef(std::shared_ptr<projected_fragment_t>& fragment,
                           std::string& v_label, std::string& e_label,
                           std::string& v_prop, std::string& e_prop,
-                          rpc::GraphDef& graph_def) {
+                          rpc::graph::GraphDefPb& graph_def) {
     auto& meta = fragment->meta();
     const auto& parent_meta = meta.GetMemberMeta("arrow_fragment");
-    auto oid_type = parent_meta.GetKeyValue("oid_type");
-    auto vid_type = parent_meta.GetKeyValue("vid_type");
 
     graph_def.set_directed(
         static_cast<bool>(parent_meta.template GetKeyValue<int>("directed")));
-    auto* schema_def = graph_def.mutable_schema_def();
-    schema_def->set_oid_type(oid_type);
-    schema_def->set_vid_type(vid_type);
+
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (graph_def.has_extension()) {
+      graph_def.extension().UnpackTo(vy_info);
+    }
+    vy_info.set_oid_type(PropertyTypeToPb(parent_meta.GetKeyValue("oid_type")));
+    vy_info.set_vid_type(PropertyTypeToPb(parent_meta.GetKeyValue("vid_type")));
 
     std::string vdata_type, edata_type;
     if (v_prop != "-1") {
@@ -108,7 +110,7 @@ class ProjectSimpleFrame<
     } else {
       vdata_type = vineyard::normalize_datatype("empty");
     }
-    schema_def->set_vdata_type(vdata_type);
+    vy_info->set_vdata_type(PropertyTypeToPb(vdata_type));
 
     if (e_prop != "-1") {
       std::string edata_key = "edge_property_type_" + e_label + "_" + e_prop;
@@ -117,8 +119,8 @@ class ProjectSimpleFrame<
     } else {
       edata_type = vineyard::normalize_datatype("empty");
     }
-    schema_def->set_edata_type(edata_type);
-    schema_def->set_property_schema_json("{}");
+    vy_info->set_edata_type(PropertyTypeToPb(edata_type));
+    graph_def.mutable_extension()->PackFrom(vy_info);
   }
 };
 
@@ -132,7 +134,8 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
   static bl::result<std::shared_ptr<IFragmentWrapper>> Project(
       std::shared_ptr<IFragmentWrapper>& input_wrapper,
       const std::string& projected_graph_name, const rpc::GSParams& params) {
-    if (input_wrapper->graph_def().graph_type() != rpc::DYNAMIC_PROPERTY) {
+    if (input_wrapper->graph_def().graph_type() !=
+        rpc::graph::DYNAMIC_PROPERTY) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                       "graph_type should be DYNAMIC_PROPERTY");
     }
@@ -143,22 +146,23 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
     auto projected_frag =
         projected_fragment_t::Project(input_frag, v_prop_key, e_prop_key);
 
-    rpc::GraphDef graph_def;
+    rpc::graph::GraphDefPb graph_def;
 
     graph_def.set_key(projected_graph_name);
-    graph_def.set_graph_type(rpc::DYNAMIC_PROJECTED);
-
-    auto* schema = graph_def.mutable_schema_def();
-
-    schema->set_oid_type(vineyard::normalize_datatype(
-        vineyard::TypeName<typename projected_fragment_t::oid_t>::Get()));
-    schema->set_vid_type(vineyard::normalize_datatype(
-        vineyard::TypeName<typename projected_fragment_t::vid_t>::Get()));
-    schema->set_vdata_type(vineyard::normalize_datatype(
-        vineyard::TypeName<typename projected_fragment_t::vdata_t>::Get()));
-    schema->set_edata_type(vineyard::normalize_datatype(
-        vineyard::TypeName<typename projected_fragment_t::edata_t>::Get()));
-
+    graph_def.set_graph_type(rpc::graph::DYNAMIC_PROJECTED);
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (graph_def.has_extension()) {
+      graph_def.extension().UnpackTo(vy_info);
+    }
+    vy_info->set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename projected_fragment_t::oid_t>::Get())));
+    vy_info->set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename projected_fragment_t::vid_t>::Get())));
+    vy_info->set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename projected_fragment_t::vdata_t>::Get())));
+    vy_info->set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename projected_fragment_t::edata_t>::Get())));
+    graph_def.mutable_extension()->PackFrom(vy_info);
     auto wrapper = std::make_shared<FragmentWrapper<projected_fragment_t>>(
         projected_graph_name, graph_def, projected_frag);
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);

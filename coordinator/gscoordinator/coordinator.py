@@ -50,6 +50,7 @@ from graphscope.proto import error_codes_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
+from graphscope.proto import graph_def_pb2
 
 from gscoordinator.cluster import KubernetesClusterLauncher
 from gscoordinator.launcher import LocalLauncher
@@ -345,13 +346,15 @@ class CoordinatorServiceServicer(
                     ),
                 )
                 if response.graph_def.graph_type == types_pb2.ARROW_PROPERTY:
+                    vy_info = graph_def_pb2.VineyardInfoPb()
+                    response.graph_def.extension.Unpack(vy_info)
                     dump_string(
-                        to_maxgraph_schema(
-                            response.graph_def.schema_def.property_schema_json
+                        to_maxgraph_schema(vy_info.property_schema_json
                         ),
                         schema_path,
                     )
-                    response.graph_def.schema_path = schema_path
+                    vy_info.schema_path = schema_path
+                    response.graph_def.extension.Pack(vy_info)
             elif op.op == types_pb2.CREATE_APP:
                 self._object_manager.put(
                     app_sig,
