@@ -76,9 +76,7 @@ def test_demo(gs_conn, data_dir):
         "date", "int"
     )
 
-    # TODO: Load data
-
     interactive = gs_conn.gremlin()
     # TODO: Adapt the queries to ldbc.
-    assert interactive.V().count().toList()[0] == 10
-    assert interactive.E().count().toList()[0] == 8
+    assert interactive.V().count().toList()[0] == 0
+    assert interactive.E().count().toList()[0] == 0
