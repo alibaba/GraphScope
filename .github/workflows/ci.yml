@@ -111,7 +111,7 @@ jobs:
         helm test graphstore --timeout 5m0s 
 
     - name: Clean
-      if: false
+      if: always()
       run: |
         helm uninstall graphstore || true
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} || true

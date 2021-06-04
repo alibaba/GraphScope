@@ -129,10 +129,6 @@ public class OfflineBuild {
         os.writeUTF(objectMapper.writeValueAsString(outputMeta));
         os.flush();
         os.close();
-
-        client.ingestData(dataPath);
-
-
     }
 
 }
