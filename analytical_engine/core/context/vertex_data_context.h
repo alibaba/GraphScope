@@ -47,6 +47,37 @@
 #define CONTEXT_TYPE_LABELED_VERTEX_DATA "labeled_vertex_data"
 #define CONTEXT_TTPE_DYNAMIC_VERTEX_DATA "dynamic_vertex_data"
 
+#ifdefine NETWORKX
+namespace grape {
+template <typename FRAG_T>
+class VertexDataContext<FRAG_T, folly::dynamic> : public ContextBase {
+  using fragment_t = FRAG_T;
+  using oid_t = typename fragment_t::oid_t;
+  using vertex_t = typename fragment_t::vertex_t;
+  using vertex_array_t =
+      typename fragment_t::template vertex_array_t<folly::dynamic>;
+
+ public:
+  using data_t = folly::dynamic;
+
+  explicit VertexDataContext(const fragment_t& fragment)
+      : fragment_(fragment) {}
+
+  const fragment_t& fragment() { return fragment_; }
+
+  inline virtual vertex_array_t& data() { return data_; }
+
+  virtual const folly::dynamic& GetVertexResult(const vertex_t& v) {
+    return data_[v];
+  };
+
+ private:
+  const fragment_t& fragment_;
+  vertex_array_t data_;
+};
+}
+#endif  // NETWORKX
+
 namespace gs {
 
 template <typename FRAG_T, typename DATA_T>
@@ -497,17 +528,13 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
 
   bl::result<std::string> GetContextData(const rpc::GSParams& params) override {
     std::string ret;
-    folly::json::serialization_opts json_opts;
-    json_opts.allow_non_string_keys = true;
-    json_opts.allow_nan_inf = true;
     BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
-    oid_t node_id = folly::parseJson(node_in_json, json_opts)[0];
+    oid_t node_id = folly::parseJson(node_in_json)[0];
     auto& frag = ctx_->fragment();
-    auto& data = ctx_->data();
     if (frag.HasNode(node_id)) {
       vertex_t v;
       frag.GetVertex(node_id, v);
-      ret = folly::json::serialize(data[v], json_opts);
+      ret = folly::json::serialize(ctx_->GetVertexResult(v));
     }
     return ret;
   }

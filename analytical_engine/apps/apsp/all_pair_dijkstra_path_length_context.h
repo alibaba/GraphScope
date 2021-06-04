@@ -38,8 +38,7 @@ class AllPairDijkstraPathLengthContext
   using vertex_t = typename FRAG_T::vertex_t;
 
   explicit AllPairDijkstraPathLengthContext(const FRAG_T& fragment)
-      : grape::VertexDataContext<FRAG_T, folly::dynamic>(fragment),
-        ret(this->data()) {}
+      : grape::VertexDataContext<FRAG_T, folly::dynamic>(fragment) {}
 
   void Init(grape::ParallelMessageManager& messages) {
     auto& frag = this->fragment();
@@ -60,11 +59,23 @@ class AllPairDijkstraPathLengthContext
     }
   }
 
+  const folly::dynamic& GetVertexResult(const vertex_t& v) override {
+    auto& frag = this->fragment();
+    CHECK(frag.IsInnerVertex(v));
+    this->data()[v] = folly::dynamic::array;
+    for (auto& t : frag.Vertices()) {
+      if (ctx.length[v][t] < std::numeric_limits<double>::max()) {
+        this->data[v].push_back(
+            folly::dynamic::array(frag.GetId(t), ctx.length[v][t]));
+      }
+    }
+    return this->data()[v];
+  }
+
   // length[src][v] is path length from src to v
   typename FRAG_T::template vertex_array_t<
       typename FRAG_T::template vertex_array_t<double>>
       length;
-  typename FRAG_T::template vertex_array_t<folly::dynamic>& ret;
 };
 }  // namespace gs
 

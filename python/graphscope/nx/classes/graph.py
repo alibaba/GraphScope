@@ -301,19 +301,6 @@ class Graph(object):
             and incoming_graph_data.graph_type == types_pb2.ARROW_PROPERTY
         )
 
-    def __del__(self):
-        # cleanly ignore all exceptions, cause session may already closed / destroyed.
-        try:
-            if hasattr(self, "_graph") and self._is_client_view:
-                self._graph = None
-            else:
-                op = dag_utils.unload_graph(self)
-                op.eval()
-            self._key = None
-            self._session_id = None
-        except Exception:  # pylint: disable=broad-except
-            pass
-
     @patch_docstring(RefGraph.to_directed_class)
     def to_directed_class(self):
         return nx.DiGraph

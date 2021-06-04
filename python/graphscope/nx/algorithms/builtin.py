@@ -490,7 +490,7 @@ def bfs_successors(G, source, depth_limit=None):
 
 
 @project_to_simple
-def all_piars_dijkstra_path_length(G, weight=None):
+def all_pairs_dijkstra_path_length(G, weight=None):
     """Compute shortest path lengths between all nodes in a weighted graph.
 
     Parameters

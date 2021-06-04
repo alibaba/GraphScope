@@ -62,16 +62,7 @@ class AllPairDijkstraPathLength
         inner_vertices, [&frag, &ctx, &vertices, this](int tid, vertex_t v) {
           ctx.length[v].Init(vertices, std::numeric_limits<double>::max());
           this->dijkstraLength(frag, v, ctx);
-          ctx.ret[v] = folly::dynamic::array;
-          for (auto& dst : vertices) {
-            if (ctx.length[v][dst] < std::numeric_limits<double>::max()) {
-              ctx.ret[v].push_back(
-                  folly::dynamic::array(frag.GetId(dst), ctx.length[v][dst]));
-            }
-          }
-          ctx.length[v].Clear();
         });
-    ctx.length.Clear();
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
