@@ -61,7 +61,13 @@ class AllPairDijkstraPathLength
     ForEach(inner_vertices,
             [&frag, &ctx, &vertices, this](int tid, vertex_t v) {
               ctx.length[v].Init(vertices, std::numeric_limits<double>::max());
-              this->dijkstraLength(frag, v, ctx);
+              if (std::is_same<edata_t, grape::EmptyType>::value) {
+                // unweighted graph, use bfs.
+                this->bfs(frag, v, ctx);
+              } else {
+                // weighted graph, use dijstra.
+                this->dijkstraLength(frag, v, ctx);
+              }
             });
   }
 
@@ -106,6 +112,27 @@ class AllPairDijkstraPathLength
             ctx.length[s][v] = ndistv;
             heap.emplace(-ndistv, v);
           }
+        }
+      }
+    }
+  }
+
+  void bfs(const fragment_t& frag, vertex_t& s, context_t& ctx) {
+    std::queue<vertex_t> que;
+    ctx.length[s][s] = 0;
+    que.push(s);
+    while (!que.empty()) {
+      vertex_t u = que.front();
+      que.pop();
+
+      // set depth for neighbors with current depth + 1
+      auto new_depth = ctx.length[s][u] + 1;
+      auto oes = frag.GetOutgoingAdjList(u);
+      for (auto& e : oes) {
+        vertex_t v = e.get_neighbor();
+        if (ctx.length[s][v] > new_depth) {
+          ctx.length[s][v] = new_depth;
+          que.push(v);
         }
       }
     }
