@@ -34,10 +34,11 @@ class SSSPPathContext : public TensorContext<FRAG_T, typename FRAG_T::oid_t> {
   explicit SSSPPathContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, typename FRAG_T::oid_t>(fragment) {}
 
-  void Init(grape::DefaultMessageManager& messages, oid_t source) {
+  void Init(grape::DefaultMessageManager& messages, oid_t source, bool w) {
     auto& frag = this->fragment();
 
     source_id = source;
+    weight = w;
     predecessor.Init(frag.InnerVertices());
     path_distance.Init(frag.InnerVertices(),
                        std::numeric_limits<double>::max());
@@ -67,6 +68,7 @@ class SSSPPathContext : public TensorContext<FRAG_T, typename FRAG_T::oid_t> {
   }
 
   oid_t source_id;
+  bool weight;
 
   typename FRAG_T::template vertex_array_t<vertex_t> predecessor;
   typename FRAG_T::template vertex_array_t<double> path_distance;

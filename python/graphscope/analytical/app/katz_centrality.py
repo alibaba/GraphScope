@@ -27,12 +27,7 @@ __all__ = ["katz_centrality"]
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def katz_centrality(
-    graph,
-    alpha=0.1,
-    beta=1.0,
-    tolerance=1e-06,
-    max_round=100,
-    normalized=True,
+    graph, alpha=0.1, beta=1.0, tolerance=1e-06, max_round=100, normalized=True
 ):
     """Compute the Katz centrality.
 
@@ -68,10 +63,5 @@ def katz_centrality(
     max_round = int(max_round)
     normalized = bool(normalized)
     return AppAssets(algo="katz_centrality")(
-        graph,
-        alpha,
-        beta,
-        tolerance,
-        max_round,
-        normalized,
+        graph, alpha, beta, tolerance, max_round, normalized
     )

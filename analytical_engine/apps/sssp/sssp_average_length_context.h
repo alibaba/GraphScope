@@ -37,9 +37,10 @@ class SSSPAverageLengthContext : public TensorContext<FRAG_T, double> {
   explicit SSSPAverageLengthContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, double>(fragment) {}
 
-  void Init(grape::DefaultMessageManager& messages) {
+  void Init(grape::DefaultMessageManager& messages, bool w) {
     auto& frag = this->fragment();
 
+    weight = w;
     inner_sum = 0.0;
     path_distance.Init(frag.InnerVertices());
     updated.Init(frag.InnerVertices());
@@ -70,6 +71,8 @@ class SSSPAverageLengthContext : public TensorContext<FRAG_T, double> {
     VLOG(2) << "postprocess_time: " << postprocess_time << "s.";
 #endif
   }
+
+  bool weight;
 
   // length sum of each fragment, only maintained by frag 0
   std::map<fid_t, double> all_sums;

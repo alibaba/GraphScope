@@ -162,9 +162,3 @@ app:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
-  - algo: closeness_centrality
-    type: cpp_pie
-    class_name: gs::ClosenessCentrality
-    src: apps/centrality/closeness/closeness_centrality.h
-    compatible_graph:
-      - gs::DynamicProjectedFragment

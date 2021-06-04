@@ -503,12 +503,7 @@ class DynamicProjectedFragment {
   }
 
   inline projected_adj_linked_list_t GetIncomingAdjList(const vertex_t& v) {
-    int32_t ie_pos;
-    if (fragment_->duplicated() && fragment_->IsOuterVertex(v)) {
-      ie_pos = fragment_->outer_ie_pos()[v.GetValue() - fragment_->ivnum()];
-    } else {
-      ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
-    }
+    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
     if (ie_pos == -1) {
       return projected_adj_linked_list_t();
     }
@@ -520,12 +515,7 @@ class DynamicProjectedFragment {
 
   inline const_projected_adj_linked_list_t GetIncomingAdjList(
       const vertex_t& v) const {
-    int32_t ie_pos;
-    if (fragment_->duplicated() && fragment_->IsOuterVertex(v)) {
-      ie_pos = fragment_->outer_ie_pos()[v.GetValue() - fragment_->ivnum()];
-    } else {
-      ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
-    }
+    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
     if (ie_pos == -1) {
       return const_projected_adj_linked_list_t();
     }
@@ -671,8 +661,6 @@ class DynamicProjectedFragment {
   inline vid_t id_mask() const { return fragment_->id_mask_; }
 
   inline int fid_offset() const { return fragment_->fid_offset_; }
-
-  inline bool directed() const { return fragment_->directed(); }
 
   inline const vid_t* GetOuterVerticesGid() const {
     return fragment_->GetOuterVerticesGid();

@@ -22,7 +22,6 @@ limitations under the License.
 #include "grape/grape.h"
 
 #include "core/app/app_base.h"
-#include "core/utils/app_utils.h"
 #include "core/worker/default_worker.h"
 #include "sssp/sssp_path_context.h"
 
@@ -49,7 +48,6 @@ class SSSPPath : public AppBase<FRAG_T, SSSPPathContext<FRAG_T>>,
       grape::LoadStrategy::kBothOutIn;
   using vertex_t = typename fragment_t::vertex_t;
   using vid_t = typename fragment_t::vid_t;
-  using edata_t = typename fragment_t::edata_t;
   using pair_msg_t = typename std::pair<vid_t, double>;
 
   void PEval(const fragment_t& frag, context_t& ctx,
@@ -151,12 +149,10 @@ class SSSPPath : public AppBase<FRAG_T, SSSPPathContext<FRAG_T>>,
     for (auto& e : oes) {
       auto u = e.get_neighbor();
       double new_distu;
-      double edata = 1.0;
-      static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-          [&](auto& e, auto& data) {
-            data = static_cast<double>(e.get_data());
-          })(e, edata);
-      new_distu = ctx.path_distance[v] + edata;
+      if (ctx.weight)
+        new_distu = ctx.path_distance[v] + e.get_data();
+      else
+        new_distu = ctx.path_distance[v] + 1;
       if (frag.IsOuterVertex(u)) {
         messages.SyncStateOnOuterVertex<fragment_t, pair_msg_t>(
             frag, u, std::make_pair(v_vid, new_distu));

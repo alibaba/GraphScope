@@ -25,7 +25,6 @@
 #include "grape/grape.h"
 
 #include "core/app/app_base.h"
-#include "core/utils/app_utils.h"
 #include "core/worker/default_worker.h"
 
 namespace gs {
@@ -70,7 +69,6 @@ class SSSPProjected : public AppBase<FRAG_T, SSSPProjectedContext<FRAG_T>> {
   INSTALL_DEFAULT_WORKER(SSSPProjected<FRAG_T>, SSSPProjectedContext<FRAG_T>,
                          FRAG_T)
   using vertex_t = typename fragment_t::vertex_t;
-  using edata_t = typename fragment_t::edata_t;
 
  private:
   // sequential Dijkstra algorithm for SSSP.
@@ -95,12 +93,7 @@ class SSSPProjected : public AppBase<FRAG_T, SSSPProjectedContext<FRAG_T>> {
       for (auto& e : es) {
         v = e.neighbor();
         distv = ctx.partial_result[v];
-        double edata = 1.0;
-        static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-            [&](auto& e, auto& data) {
-              data = static_cast<double>(e.get_data());
-            })(e, edata);
-        ndistv = distu + edata;
+        ndistv = distu + e.data();
         if (distv > ndistv) {
           ctx.partial_result[v] = ndistv;
           if (frag.IsInnerVertex(v)) {
