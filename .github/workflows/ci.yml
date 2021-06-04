@@ -110,6 +110,13 @@ jobs:
                                       ./graphscope-store-service
         helm test graphstore --timeout 5m0s 
 
+    - name: Python test
+      run: |
+        export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services graphscope-graphscope-store-service-frontend)
+        export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services graphscope-graphscope-store-service-frontend)
+        export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+        python3 -m pytest -s -vvv python/graphscope/deploy/tests/test_store_service.py
+
     - name: Clean
       if: always()
       run: |

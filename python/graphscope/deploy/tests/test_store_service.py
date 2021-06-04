@@ -56,9 +56,12 @@ def get_gs_image_on_ci_env():
 
 @pytest.fixture
 def gs_conn():
-    grpc_enpoint = os.environ["GRPC_ENDPOINT"]
-    gremlin_endpoint = os.environ["GREMLIN_ENDPOINT"]
-    yield graphscope.conn(grpc_enpoint, gremlin_endpoint)
+    node_ip = os.environ["NODE_IP"]
+    grpc_port = os.environ["GRPC_PORT"]
+    gremlin_port = os.environ["GREMLIN_PORT"]
+    grpc_endpoint = f"{node_ip}:{grpc_port}"
+    gremlin_endpoint = f"{node_ip}:{gremlin_port}"
+    yield graphscope.conn(grpc_endpoint, gremlin_endpoint)
 
 
 @pytest.fixture
