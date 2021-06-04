@@ -62,11 +62,13 @@ class AllPairDijkstraPathLengthContext
   const folly::dynamic& GetVertexResult(const vertex_t& v) override {
     auto& frag = this->fragment();
     CHECK(frag.IsInnerVertex(v));
-    this->data()[v] = folly::dynamic::array;
-    for (auto& t : frag.Vertices()) {
-      if (ctx.length[v][t] < std::numeric_limits<double>::max()) {
-        this->data[v].push_back(
-            folly::dynamic::array(frag.GetId(t), ctx.length[v][t]));
+    if (this->data()[v].isNull()) {
+      this->data()[v] = folly::dynamic::array;
+      for (auto& t : frag.Vertices()) {
+        if (length[v][t] < std::numeric_limits<double>::max()) {
+          this->data()[v].push_back(
+              folly::dynamic::array(frag.GetId(t), length[v][t]));
+        }
       }
     }
     return this->data()[v];

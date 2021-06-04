@@ -47,7 +47,7 @@
 #define CONTEXT_TYPE_LABELED_VERTEX_DATA "labeled_vertex_data"
 #define CONTEXT_TTPE_DYNAMIC_VERTEX_DATA "dynamic_vertex_data"
 
-#ifdefine NETWORKX
+#ifdef NETWORKX
 namespace grape {
 template <typename FRAG_T>
 class VertexDataContext<FRAG_T, folly::dynamic> : public ContextBase {
@@ -60,8 +60,15 @@ class VertexDataContext<FRAG_T, folly::dynamic> : public ContextBase {
  public:
   using data_t = folly::dynamic;
 
-  explicit VertexDataContext(const fragment_t& fragment)
-      : fragment_(fragment) {}
+  explicit VertexDataContext(const fragment_t& fragment,
+                             bool including_outer = false)
+      : fragment_(fragment) {
+    if (including_outer) {
+      data_.Init(fragment.Vertices());
+    } else {
+      data_.Init(fragment.InnerVertices());
+    }
+  }
 
   const fragment_t& fragment() { return fragment_; }
 
@@ -69,13 +76,13 @@ class VertexDataContext<FRAG_T, folly::dynamic> : public ContextBase {
 
   virtual const folly::dynamic& GetVertexResult(const vertex_t& v) {
     return data_[v];
-  };
+  }
 
  private:
   const fragment_t& fragment_;
   vertex_array_t data_;
 };
-}
+}  // namespace grape
 #endif  // NETWORKX
 
 namespace gs {
@@ -534,7 +541,8 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
     if (frag.HasNode(node_id)) {
       vertex_t v;
       frag.GetVertex(node_id, v);
-      ret = folly::json::serialize(ctx_->GetVertexResult(v));
+      folly::json::serialization_opts json_opts;
+      ret = folly::json::serialize(ctx_->GetVertexResult(v), json_opts);
     }
     return ret;
   }

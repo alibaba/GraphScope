@@ -58,11 +58,11 @@ class AllPairDijkstraPathLength
              message_manager_t& messages) {
     auto inner_vertices = frag.InnerVertices();
     auto vertices = frag.Vertices();
-    ForEach(
-        inner_vertices, [&frag, &ctx, &vertices, this](int tid, vertex_t v) {
-          ctx.length[v].Init(vertices, std::numeric_limits<double>::max());
-          this->dijkstraLength(frag, v, ctx);
-        });
+    ForEach(inner_vertices,
+            [&frag, &ctx, &vertices, this](int tid, vertex_t v) {
+              ctx.length[v].Init(vertices, std::numeric_limits<double>::max());
+              this->dijkstraLength(frag, v, ctx);
+            });
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
