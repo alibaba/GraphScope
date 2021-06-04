@@ -78,8 +78,10 @@ def test_demo(gs_conn, data_dir):
     schema.add_edge_label("knows").source("person").destination("person").add_property(
         "date", "int"
     )
+    load_script = os.environ["LOAD_DATA_SCRIPT"]
+    os.system(load_script)
 
     interactive = gs_conn.gremlin()
     # TODO: Adapt the queries to ldbc.
-    assert interactive.V().count().toList()[0] == 0
-    assert interactive.E().count().toList()[0] == 0
+    assert interactive.V().count().toList()[0] == 903
+    assert interactive.E().count().toList()[0] == 6626
