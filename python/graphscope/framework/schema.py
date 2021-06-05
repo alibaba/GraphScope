@@ -280,13 +280,13 @@ class Schema:
 
 class Graph:
     def __init__(self, graph_def, conn=None) -> None:
-        self.schema = Schema()
-        schema.from_graph_def(graph_def)
+        self._schema = Schema()
+        self._schema.from_graph_def(graph_def)
         self._conn = conn
-        self.schema._conn = conn
+        self._schema._conn = conn
 
     def schema(self):
-        return self.schema
+        return self._schema
 
 
 if __name__ == "__main__":
