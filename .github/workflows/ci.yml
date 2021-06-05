@@ -113,6 +113,7 @@ jobs:
 
     - name: Python test
       run: |
+        echo ${GITHUB_WORKSPACE}
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services graphstore-graphscope-store-service-frontend)
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services graphstore-graphscope-store-service-frontend)
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
@@ -140,7 +141,7 @@ jobs:
         python3 -m pytest -s -vvv python/graphscope/deploy/tests/test_store_service.py
 
     - name: Clean
-      if: always()
+      if: false
       run: |
         export JAVA_HOME=/usr/lib/jvm/default-java/
         /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
