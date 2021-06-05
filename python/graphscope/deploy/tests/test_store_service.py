@@ -72,11 +72,11 @@ def data_dir():
 def test_demo(gs_conn, data_dir):
     graph = gs_conn.g()
     schema = graph.schema()
-    schema.add_vertex_label("person").add_primary_key("id", "int").add_property(
+    schema.add_vertex_label("person").add_primary_key("id", "long").add_property(
         "name", "str"
     )
     schema.add_edge_label("knows").source("person").destination("person").add_property(
-        "date", "int"
+        "date", "str"
     )
     schema.update()
     load_script = os.environ["LOAD_DATA_SCRIPT"]
