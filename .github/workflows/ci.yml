@@ -93,7 +93,7 @@ jobs:
       run: |
         cp k8s/ready_probe.sh artifacts/
         cp .github/workflows/graphstore.Dockerfile artifacts/
-        cd artifacts
+        pushd artifacts
         tar -zxf ./gss-${{ github.sha }}/lib.tar.gz
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
         
@@ -101,6 +101,11 @@ jobs:
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} \
                           --network=host \
                           -f ./graphstore.Dockerfile .
+        popd
+        python3 -m pip install -r python/requirements.txt
+        python3 -m pip install -r python/requirements-dev.txt
+        python3 -m pip install pytest-cov
+        pushd python && sudo -E python3 setup.py develop && popd
 
     - name: Helm test
       run: |
@@ -138,11 +143,11 @@ jobs:
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
 
-        cd ${GITHUB_WORKSPACE}
-        python3 -m pytest -s -vvv python/graphscope/deploy/tests/test_store_service.py
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest -s -vvv graphscope/deploy/tests/test_store_service.py
 
     - name: Clean
-      if: false
+      if: always()
       run: |
         export JAVA_HOME=/usr/lib/jvm/default-java/
         yes | /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
