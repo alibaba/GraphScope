@@ -116,13 +116,14 @@ jobs:
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services graphscope-graphscope-store-service-frontend)
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services graphscope-graphscope-store-service-frontend)
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+        export JAVA_HOME=/usr/lib/jvm/default-java/
 
         cd /tmp
-        wget https://mirrors.bfsu.edu.cn/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
+        wget -q https://mirrors.bfsu.edu.cn/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
         tar -zxf hadoop-2.10.1.tar.gz
 
         cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
-        sed s/MAXGRAPH_HOME/${GITHUB_WORKSPACE}\/artifacts\/maxgraph/ offline_load.sh.template > offline_load.sh
+        sed s/MAXGRAPH_HOME/${GITHUB_WORKSPACE//\//\\/}\/artifacts\/maxgraph/ offline_load.sh.template > offline_load.sh
         chmod +x offline_load.sh
         export LOAD_DATA_SCRIPT=${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts/offline_load.sh
         sed s/GRAPH_ENDPOINT/$NODE_IP:$GRPC_PORT/ databuild.config.template > databuild.config
@@ -134,13 +135,15 @@ jobs:
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
 
+        cd ${GITHUB_WORKSPACE}
         python3 -m pytest -s -vvv python/graphscope/deploy/tests/test_store_service.py
 
     - name: Clean
       if: always()
       run: |
-        /tmp/hadoop-2.10.1/sbin/stop-dfs.sh
-        rm -rf /tmp/hadoop*
+        export JAVA_HOME=/usr/lib/jvm/default-java/
+        /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
+        rm -rf /tmp/hadoop* || true
         helm uninstall graphstore || true
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} || true
         kubectl delete pvc -l app.kubernetes.io/instance=graphstore || true
