@@ -237,7 +237,7 @@ void ToDynamicFragment(
             vineyard::TypeName<typename gs::DynamicFragment::vdata_t>::Get())));
         vy_info->set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
             vineyard::TypeName<typename gs::DynamicFragment::edata_t>::Get())));
-
+        vy_info->set_property_schema_json("{}");
         graph_def.mutable_extension()->PackFrom(vy_info);
 
         auto wrapper =

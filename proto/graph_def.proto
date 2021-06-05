@@ -42,10 +42,11 @@ message VineyardInfoPb {
     DataTypePb vid_type = 2;
     DataTypePb vdata_type = 3;
     DataTypePb edata_type = 4;
-
+    
     string schema_path = 5;
     bool generate_eid = 6;
     int64 vineyard_id = 7;
+    string property_schema_json = 8;
 }
 
 message GraphDefPb {
