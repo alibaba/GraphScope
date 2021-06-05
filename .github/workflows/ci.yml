@@ -144,10 +144,10 @@ jobs:
       if: false
       run: |
         export JAVA_HOME=/usr/lib/jvm/default-java/
-        /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
+        yes | /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
         rm -rf /tmp/hadoop* || true
         helm uninstall graphstore || true
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} || true
-        kubectl delete pvc -l app.kubernetes.io/instance=graphstore || true
+        kubectl delete pvc -l app.kubernetes.io/instance=graphstore --wait=false || true
         kubectl delete pod graphstore-graphscope-store-service-frontend-test-rpc-service --wait=false || true
 
