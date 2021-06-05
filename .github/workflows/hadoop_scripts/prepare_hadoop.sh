@@ -4,7 +4,7 @@ set -e
 BASE_DIR=$(dirname "$0")
 HADOOP_HOME=$1
 
-HOST=$(hostname)
+HOST=$(hostname -I | awk '{print $1}')
 
 FS="hdfs://${HOST}:9000"
 cp $BASE_DIR/hdfs-site.xml $HADOOP_HOME/etc/hadoop/hdfs-site.xml
