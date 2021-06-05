@@ -215,9 +215,11 @@ class Schema:
                 return
         raise ValueError(f"Label {label} not found.")
 
-    def from_graph_def(self, graph_def):
-        self.vertex_labels.clear()
-        self.edge_labels.clear()
+    @classmethod
+    def from_graph_def(cls, graph_def):
+        schema = cls()
+        schema.vertex_labels.clear()
+        schema.edge_labels.clear()
         edge_kinds = {}
         for kind in graph_def.edge_kinds:
             if kind.edge_label not in edge_kinds:
@@ -227,13 +229,13 @@ class Schema:
             )
         for type_def_pb in graph_def.type_defs:
             if type_def_pb.type_enum == graph_def_pb2.VERTEX:
-                self.vertex_labels.append(VertexLabel.from_type_def(type_def_pb))
+                schema.vertex_labels.append(VertexLabel.from_type_def(type_def_pb))
             else:
                 label = EdgeLabel.from_type_def(type_def_pb)
                 for kinds in edge_kinds[label.name]:
                     for src, dst in kinds:
                         label.source(src).destination(dst)
-                self.edge_labels.append(label)
+                schema.edge_labels.append(label)
         return schema
 
     def _prepare_batch_rpc(self):
