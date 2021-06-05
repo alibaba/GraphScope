@@ -44,7 +44,7 @@ class Connection:
 
     def g(self):
         request = ddl_service_pb2.GetGraphDefRequest()
-        graph_def = self.get_graph_def(request)
+        graph_def = self.get_graph_def(request).graph_def
         graph = Graph(graph_def, self)
         return graph
 

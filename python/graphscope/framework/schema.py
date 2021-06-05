@@ -81,13 +81,10 @@ class Property:
 
     @classmethod
     def from_property_def(cls, pb):
-        prop = cls()
+        prop = cls(pb.name, pb.data_type, pb.pk)
         prop.id = pb.id
         prop.inner_id = pb.inner_id
-        prop.name = pb.name
-        prop.data_type = pb.data_type
         prop.default_value = pb.default_value
-        prop.is_primary_key = pb.pk
         prop.comment = pb.comment
         return prop
 
@@ -122,8 +119,7 @@ class Label:
 
     @classmethod
     def from_type_def(cls, pb):
-        label = cls()
-        label.name = pb.label
+        label = cls(pb.label)
         label.label_id = pb.label_id
         label.version_id = pb.version_id
         for prop_pb in pb.props:
@@ -230,9 +226,8 @@ class Schema:
                 self.vertex_labels.append(VertexLabel.from_type_def(type_def_pb))
             else:
                 label = EdgeLabel.from_type_def(type_def_pb)
-                for kinds in edge_kinds[label.name]:
-                    for src, dst in kinds:
-                        label.source(src).destination(dst)
+                for src, dst in edge_kinds[label.name]:
+                    label.source(src).destination(dst)
                 self.edge_labels.append(label)
         return self
 
