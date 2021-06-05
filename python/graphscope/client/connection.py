@@ -30,9 +30,9 @@ from graphscope.proto import ddl_service_pb2_grpc
 
 
 class Connection:
-    def __init__(self, addr, gremlin_addr=None) -> None:
+    def __init__(self, addr, gremlin_endpoint=None) -> None:
         self._addr = addr
-        self._gremlin_addr = gremlin_addr
+        self._gremlin_endpoint = gremlin_endpoint
         channel = grpc.insecure_channel(addr)
         self._stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
 
@@ -49,9 +49,9 @@ class Connection:
         return graph
 
     def gremlin(self):
-        graph_url = "ws://%s/gremlin" % self._gremlin_addr
+        graph_url = "ws://%s/gremlin" % self._gremlin_endpoint
         return traversal().withRemote(DriverRemoteConnection(graph_url, "g"))
 
 
-def conn(addr):
-    return Connection(addr)
+def conn(addr, gremlin_endpoint=None):
+    return Connection(addr, gremlin_endpoint)
