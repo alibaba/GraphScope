@@ -215,11 +215,9 @@ class Schema:
                 return
         raise ValueError(f"Label {label} not found.")
 
-    @classmethod
-    def from_graph_def(cls, graph_def):
-        schema = cls()
-        schema.vertex_labels.clear()
-        schema.edge_labels.clear()
+    def from_graph_def(self, graph_def):
+        self.vertex_labels.clear()
+        self.edge_labels.clear()
         edge_kinds = {}
         for kind in graph_def.edge_kinds:
             if kind.edge_label not in edge_kinds:
@@ -229,14 +227,14 @@ class Schema:
             )
         for type_def_pb in graph_def.type_defs:
             if type_def_pb.type_enum == graph_def_pb2.VERTEX:
-                schema.vertex_labels.append(VertexLabel.from_type_def(type_def_pb))
+                self.vertex_labels.append(VertexLabel.from_type_def(type_def_pb))
             else:
                 label = EdgeLabel.from_type_def(type_def_pb)
                 for kinds in edge_kinds[label.name]:
                     for src, dst in kinds:
                         label.source(src).destination(dst)
-                schema.edge_labels.append(label)
-        return schema
+                self.edge_labels.append(label)
+        return self
 
     def _prepare_batch_rpc(self):
         requests = ddl_service_pb2.BatchSubmitRequest()
@@ -282,7 +280,8 @@ class Schema:
 
 class Graph:
     def __init__(self, graph_def, conn=None) -> None:
-        self.schema = Schema.from_graph_def(graph_def)
+        self.schema = Schema()
+        schema.from_graph_def(graph_def)
         self._conn = conn
         self.schema._conn = conn
 

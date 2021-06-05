@@ -78,6 +78,7 @@ def test_demo(gs_conn, data_dir):
     schema.add_edge_label("knows").source("person").destination("person").add_property(
         "date", "int"
     )
+    schema.update()
     load_script = os.environ["LOAD_DATA_SCRIPT"]
     os.system(load_script)
 
