@@ -147,7 +147,8 @@ jobs:
         python3 -m pytest -s -vvv graphscope/deploy/tests/test_store_service.py
 
     - name: Clean
-      if: always()
+      #if: always()
+      if: false
       run: |
         export JAVA_HOME=/usr/lib/jvm/default-java/
         yes | /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
