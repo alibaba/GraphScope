@@ -139,7 +139,7 @@ void ToTypeDef(const vineyard::Entry& entry,
   auto properties = entry.properties();
   auto primary_keys = entry.primary_keys;
   for (const auto& prop : properties) {
-    ToPropertyDef(prop, , primary_keys, type_def->add_props());
+    ToPropertyDef(prop, primary_keys, type_def->add_props());
   }
 }
 

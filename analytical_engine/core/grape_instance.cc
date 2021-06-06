@@ -49,7 +49,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     const rpc::GSParams& params) {
   std::string graph_name = "graph_" + generateId();
 
-  BOOST_LEAF_AUTO(graph_type, params.Get<rpc::graph::GraphTypePb>(rpc::GRAPH_TYPE));
+  BOOST_LEAF_AUTO(graph_type,
+                  params.Get<rpc::graph::GraphTypePb>(rpc::GRAPH_TYPE));
 
   switch (graph_type) {
   case rpc::graph::DYNAMIC_PROPERTY: {
@@ -840,7 +841,8 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::graphToDataframe(
 }
 
 bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
-  BOOST_LEAF_AUTO(graph_type, params.Get<rpc::graph::GraphTypePb>(rpc::GRAPH_TYPE));
+  BOOST_LEAF_AUTO(graph_type,
+                  params.Get<rpc::graph::GraphTypePb>(rpc::GRAPH_TYPE));
   BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
   BOOST_LEAF_AUTO(lib_path, params.Get<std::string>(rpc::GRAPH_LIBRARY_PATH));
 
