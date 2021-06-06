@@ -120,6 +120,7 @@ class ProjectSimpleFrame<
       edata_type = vineyard::normalize_datatype("empty");
     }
     vy_info->set_edata_type(PropertyTypeToPb(edata_type));
+    vy_info->set_property_schema_json("{}");
     graph_def.mutable_extension()->PackFrom(vy_info);
   }
 };

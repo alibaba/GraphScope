@@ -95,7 +95,8 @@ class GrapeInstance : public Subscriber {
 
   bl::result<rpc::graph::GraphDefPb> projectGraph(const rpc::GSParams& params);
 
-  bl::result<rpc::graph::GraphDefPb> projectToSimple(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> projectToSimple(
+      const rpc::GSParams& params);
 
   bl::result<void> modifyVertices(const rpc::GSParams& params,
                                   const std::vector<std::string>& vertices);
@@ -128,7 +129,8 @@ class GrapeInstance : public Subscriber {
 
   bl::result<rpc::graph::GraphDefPb> toUnDirected(const rpc::GSParams& params);
 
-  bl::result<rpc::graph::GraphDefPb> createGraphView(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> createGraphView(
+      const rpc::GSParams& params);
 
 #ifdef NETWORKX
   bl::result<rpc::graph::GraphDefPb> induceSubGraph(
@@ -140,7 +142,8 @@ class GrapeInstance : public Subscriber {
           induced_edges);
 #endif  // NETWORKX
 
-  bl::result<rpc::graph::GraphDefPb> addLabelsToGraph(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> addLabelsToGraph(
+      const rpc::GSParams& params);
 
   bl::result<std::shared_ptr<grape::InArchive>> graphToNumpy(
       const rpc::GSParams& params);
