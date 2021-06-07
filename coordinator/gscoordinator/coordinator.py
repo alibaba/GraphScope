@@ -282,7 +282,8 @@ class CoordinatorServiceServicer(
         if (
             (
                 op.op == types_pb2.CREATE_GRAPH
-                and op.attr[types_pb2.GRAPH_TYPE].graph_type == graph_def_pb2.ARROW_PROPERTY
+                and op.attr[types_pb2.GRAPH_TYPE].graph_type
+                == graph_def_pb2.ARROW_PROPERTY
             )
             or op.op == types_pb2.TRANSFORM_GRAPH
             or op.op == types_pb2.PROJECT_TO_SIMPLE
@@ -338,7 +339,7 @@ class CoordinatorServiceServicer(
                 schema_path = os.path.join("/tmp", response.graph_def.key + ".json")
                 vy_info = graph_def_pb2.VineyardInfoPb()
                 response.graph_def.extension.Unpack(vy_info)
-                    
+
                 self._object_manager.put(
                     response.graph_def.key,
                     GraphMeta(
