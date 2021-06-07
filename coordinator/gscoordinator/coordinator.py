@@ -336,18 +336,19 @@ class CoordinatorServiceServicer(
                 types_pb2.ADD_COLUMN,
             ):
                 schema_path = os.path.join("/tmp", response.graph_def.key + ".json")
+                vy_info = graph_def_pb2.VineyardInfoPb()
+                response.graph_def.extension.Unpack(vy_info)
+                    
                 self._object_manager.put(
                     response.graph_def.key,
                     GraphMeta(
                         response.graph_def.key,
-                        response.graph_def.vineyard_id,
-                        response.graph_def.schema_def,
+                        vy_info.vineyard_id,
+                        response.graph_def,
                         schema_path,
                     ),
                 )
                 if response.graph_def.graph_type == graph_def_pb2.ARROW_PROPERTY:
-                    vy_info = graph_def_pb2.VineyardInfoPb()
-                    response.graph_def.extension.Unpack(vy_info)
                     dump_string(
                         to_maxgraph_schema(vy_info.property_schema_json),
                         schema_path,

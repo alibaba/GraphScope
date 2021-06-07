@@ -86,7 +86,8 @@ def not_compatible_for(*graph_types):
                 "arrow_property": graph.graph_type == graph_def_pb2.ARROW_PROPERTY,
                 "dynamic_property": graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY,
                 "arrow_projected": graph.graph_type == graph_def_pb2.ARROW_PROJECTED,
-                "dynamic_projected": graph.graph_type == graph_def_pb2.DYNAMIC_PROJECTED,
+                "dynamic_projected": graph.graph_type
+                == graph_def_pb2.DYNAMIC_PROJECTED,
             }
             match = False
             try:

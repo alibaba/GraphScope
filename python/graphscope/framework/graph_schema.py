@@ -22,6 +22,7 @@ import json
 from typing import List
 
 from graphscope.framework.utils import unify_type
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
@@ -105,8 +106,8 @@ class GraphSchema:
         self._vid_type = None
 
         # simple graph only
-        self._vdata_type = types_pb2.INVALID
-        self._edata_type = types_pb2.INVALID
+        self._vdata_type = graph_def_pb2.UNKNOWN
+        self._edata_type = graph_def_pb2.UNKNOWN
 
         # list of entries
         self._vertex_entries: List[Entry] = []
@@ -194,11 +195,11 @@ class GraphSchema:
     def __repr__(self):
         s = f"oid_type: {self._oid_type}\nvid_type: {self._vid_type}\n"
         if (
-            self._vdata_type != types_pb2.INVALID
-            and self._edata_type != types_pb2.INVALID
+            self._vdata_type != graph_def_pb2.UNKNOWN
+            and self._edata_type != graph_def_pb2.UNKNOWN
         ):
-            s += f"vdata_type: {types_pb2.DataType.Name(self._vdata_type)}\n"
-            s += f"edata_type: {types_pb2.DataType.Name(self._edata_type)}\n"
+            s += f"vdata_type: {graph_def_pb2.DataTypePb.Name(self._vdata_type)}\n"
+            s += f"edata_type: {graph_def_pb2.DataTypePb.Name(self._edata_type)}\n"
         for entry in self._valid_vertex_entries():
             s += f"type: VERTEX\n{str(entry)}\n"
         for entry in self._valid_edge_entries():
@@ -317,8 +318,8 @@ class GraphSchema:
     def clear(self):
         self._oid_type = None
         self._vid_type = None
-        self._vdata_type = types_pb2.INVALID
-        self._edata_type = types_pb2.INVALID
+        self._vdata_type = graph_def_pb2.UNKNOWN
+        self._edata_type = graph_def_pb2.UNKNOWN
 
         self._vertex_entries.clear()
         self._edge_entries.clear()

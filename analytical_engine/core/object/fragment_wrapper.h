@@ -90,9 +90,9 @@ gs::rpc::graph::DataTypePb PropertyTypeToPb(const std::string& type) {
   } else if (type == "long" || type == "int64" || type == "int64_t") {
     return gs::rpc::graph::DataTypePb::LONG;
   } else if (type == "uint" || type == "uint32" || type == "uint32_t") {
-    return gs::rpc::graph::DataType::UINT;
+    return gs::rpc::graph::DataTypePb::UINT;
   } else if (type == "ulong" || type == "uint64" || type == "uint64_t") {
-    return gs::rpc::graph::DataType::ULONG;
+    return gs::rpc::graph::DataTypePb::ULONG;
   } else if (type == "float") {
     return gs::rpc::graph::DataTypePb::FLOAT;
   } else if (type == "double") {

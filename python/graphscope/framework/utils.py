@@ -229,61 +229,57 @@ def decode_dataframe(value):
 def unify_type(t):
     # If type is None, we deduce type from source file.
     if t is None:
-        return types_pb2.INVALID
+        return graph_def_pb2.UNKNOWN
     if isinstance(t, str):
         t = t.lower()
-        if t == "int":
-            return types_pb2.INT
-        elif t in ("int32_t", "int32"):
-            return types_pb2.INT32
-        elif t == "long":
-            return types_pb2.LONG
-        elif t in ("int64_t", "int64"):
-            return types_pb2.INT64
+        if t in ("int", "int32_t", "int32"):
+            return graph_def_pb2.INT
+        elif t in ("long", "int64_t", "int64"):
+            return graph_def_pb2.LONG
         elif t in ("uint32_t", "uint32"):
-            return types_pb2.UINT32
+            return graph_def_pb2.UINT
         elif t in ("uint64_t", "uint64"):
-            return types_pb2.UINT64
+            return graph_def_pb2.ULONG
         elif t == "float":
-            return types_pb2.FLOAT
+            return graph_def_pb2.FLOAT
         elif t == "double":
-            return types_pb2.DOUBLE
+            return graph_def_pb2.DOUBLE
         elif t in ("str", "string", "std::string"):
-            return types_pb2.STRING
+            return graph_def_pb2.STRING
         elif t in ("empty", "grape::emptytype"):
-            return types_pb2.NULLVALUE
+            return graph_def_pb2.NULLVALUE
     elif isinstance(t, type):
         unify_types = {
-            int: types_pb2.LONG,
-            float: types_pb2.DOUBLE,
-            str: types_pb2.STRING,
-            bool: types_pb2.BOOLEAN,
-            list: types_pb2.LIST,
+            int: graph_def_pb2.LONG,
+            float: graph_def_pb2.DOUBLE,
+            str: graph_def_pb2.STRING,
+            bool: graph_def_pb2.BOOL,
+            list: graph_def_pb2.INT_LIST,
         }
         return unify_types[t]
-    elif isinstance(t, int):  # types_pb2.DataType
+    elif isinstance(t, int):  # graph_def_pb2.DataType
         return t
     raise TypeError("Not supported type {}".format(t))
 
 
 def data_type_to_cpp(t):
-    if t == types_pb2.INT or t == types_pb2.INT32:
+    if t == graph_def_pb2.INT:
         return "int32_t"
-    elif t == types_pb2.LONG or t == types_pb2.INT64:
+    elif t == graph_def_pb2.LONG:
         return "int64_t"
-    elif t == types_pb2.UINT32:
+    elif t == graph_def_pb2.UINT:
         return "uint32_t"
-    elif t == types_pb2.UINT64:
+    elif t == graph_def_pb2.ULONG:
         return "uint64_t"
-    elif t == types_pb2.FLOAT:
+    elif t == graph_def_pb2.FLOAT:
         return "float"
-    elif t == types_pb2.DOUBLE:
+    elif t == graph_def_pb2.DOUBLE:
         return "double"
-    elif t == types_pb2.STRING:
+    elif t == graph_def_pb2.STRING:
         return "std::string"
-    elif t is None or t == types_pb2.NULLVALUE:
+    elif t is None or t == graph_def_pb2.NULLVALUE:
         return "grape::EmptyType"
-    elif t == types_pb2.INVALID:
+    elif t == graph_def_pb2.UNKNOWN:
         return ""
     raise ValueError("Not support type {}".format(t))
 

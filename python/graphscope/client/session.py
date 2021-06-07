@@ -906,10 +906,10 @@ class Session(object):
         def group_property_types(props):
             weighted, labeled, i, f, s, attr_types = "false", "false", 0, 0, 0, {}
             for prop in props:
-                if prop.type in [types_pb2.STRING]:
+                if prop.type in [graph_def_pb2.STRING]:
                     s += 1
                     attr_types[prop.name] = "s"
-                elif prop.type in (types_pb2.FLOAT, types_pb2.DOUBLE):
+                elif prop.type in (graph_def_pb2.FLOAT, graph_def_pb2.DOUBLE):
                     f += 1
                     attr_types[prop.name] = "f"
                 else:

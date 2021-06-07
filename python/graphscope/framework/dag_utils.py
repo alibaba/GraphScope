@@ -162,16 +162,18 @@ def dynamic_to_arrow(graph):
                 )
             )
     if oid_type == int or oid_type is None:
-        oid_type = utils.data_type_to_cpp(types_pb2.INT64)
+        oid_type = utils.data_type_to_cpp(graph_def_pb2.LONG)
     elif oid_type == str:
-        oid_type = utils.data_type_to_cpp(types_pb2.STRING)
+        oid_type = utils.data_type_to_cpp(graph_def_pb2.STRING)
     else:
         raise RuntimeError("Unsupported oid type: " + str(oid_type))
-    vid_type = utils.data_type_to_cpp(types_pb2.UINT64)
+    vid_type = utils.data_type_to_cpp(graph_def_pb2.ULONG)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_PROPERTY),
-        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_PROPERTY),
+        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(
+            graph_def_pb2.ARROW_PROPERTY
+        ),
         types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
         types_pb2.VID_TYPE: utils.s_to_attr(vid_type),
     }
@@ -198,7 +200,9 @@ def arrow_to_dynamic(graph):
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_PROPERTY),
-        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.DYNAMIC_PROPERTY),
+        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(
+            graph_def_pb2.DYNAMIC_PROPERTY
+        ),
         types_pb2.OID_TYPE: utils.s_to_attr(graph.schema.oid_type),
         types_pb2.VID_TYPE: utils.s_to_attr(graph.schema.vid_type),
     }
@@ -472,7 +476,8 @@ def copy_graph(graph, copy_type="identical"):
         Operation
     """
     check_argument(
-        graph.graph_type in (graph_def_pb2.ARROW_PROPERTY, graph_def_pb2.DYNAMIC_PROPERTY)
+        graph.graph_type
+        in (graph_def_pb2.ARROW_PROPERTY, graph_def_pb2.DYNAMIC_PROPERTY)
     )
     check_argument(copy_type in ("identical", "reverse"))
     config = {

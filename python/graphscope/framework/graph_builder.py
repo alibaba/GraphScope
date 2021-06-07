@@ -184,6 +184,8 @@ def load_from(
     v_labels = normalize_parameter_vertices(vertices)
     e_labels = normalize_parameter_edges(edges)
     config = assemble_op_config(v_labels, e_labels, oid_type, directed, generate_eid)
-    op = dag_utils.create_graph(sess.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config)
+    op = dag_utils.create_graph(
+        sess.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
+    )
     graph = sess.g(op)
     return graph
