@@ -542,7 +542,7 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
       frag.GetVertex(node_id, v);
       return folly::json::serialize(ctx_->GetVertexResult(v), json_opts_);
     }
-    return ret;
+    return std::string("");
   }
 
   bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
