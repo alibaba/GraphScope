@@ -421,7 +421,7 @@ def test_multiple_add_vertices_edges(graphscope_session):
     )
 
     assert graph.schema.vertex_labels == ["person", "software"]
-    assert graph.schema.edge_labels == ["created", "knows"]
+    assert graph.schema.edge_labels == ["knows", "created"]
 
     graph = graph.add_vertices(Loader(f"{prefix}/person.csv", delimiter="|"), "person2")
     graph = graph.add_edges(
@@ -491,7 +491,7 @@ def test_project_subgraph(arrow_modern_graph):
         edges={"created": ["eid", "weight"], "knows": None},
     )
     assert graph.schema.vertex_labels == ["person", "software"]
-    assert graph.schema.edge_labels == ["created", "knows"]
+    assert graph.schema.edge_labels == ["knows", "created"]
     assert [p.id for p in graph.schema.get_vertex_properties("person")] == [0, 1, 2]
     assert [p.id for p in graph.schema.get_vertex_properties("software")] == [0, 2]
     assert [p.id for p in graph.schema.get_edge_properties("created")] == [0, 1]

@@ -97,7 +97,7 @@ class ProjectSimpleFrame<
 
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
-      graph_def.extension().UnpackTo(vy_info);
+      graph_def.extension().UnpackTo(&vy_info);
     }
     vy_info.set_oid_type(PropertyTypeToPb(parent_meta.GetKeyValue("oid_type")));
     vy_info.set_vid_type(PropertyTypeToPb(parent_meta.GetKeyValue("vid_type")));
@@ -110,7 +110,7 @@ class ProjectSimpleFrame<
     } else {
       vdata_type = vineyard::normalize_datatype("empty");
     }
-    vy_info->set_vdata_type(PropertyTypeToPb(vdata_type));
+    vy_info.set_vdata_type(PropertyTypeToPb(vdata_type));
 
     if (e_prop != "-1") {
       std::string edata_key = "edge_property_type_" + e_label + "_" + e_prop;
@@ -119,8 +119,8 @@ class ProjectSimpleFrame<
     } else {
       edata_type = vineyard::normalize_datatype("empty");
     }
-    vy_info->set_edata_type(PropertyTypeToPb(edata_type));
-    vy_info->set_property_schema_json("{}");
+    vy_info.set_edata_type(PropertyTypeToPb(edata_type));
+    vy_info.set_property_schema_json("{}");
     graph_def.mutable_extension()->PackFrom(vy_info);
   }
 };
@@ -153,15 +153,15 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
     graph_def.set_graph_type(rpc::graph::DYNAMIC_PROJECTED);
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
-      graph_def.extension().UnpackTo(vy_info);
+      graph_def.extension().UnpackTo(&vy_info);
     }
-    vy_info->set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
+    vy_info.set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
         vineyard::TypeName<typename projected_fragment_t::oid_t>::Get())));
-    vy_info->set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
+    vy_info.set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
         vineyard::TypeName<typename projected_fragment_t::vid_t>::Get())));
-    vy_info->set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+    vy_info.set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
         vineyard::TypeName<typename projected_fragment_t::vdata_t>::Get())));
-    vy_info->set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+    vy_info.set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
         vineyard::TypeName<typename projected_fragment_t::edata_t>::Get())));
     graph_def.mutable_extension()->PackFrom(vy_info);
     auto wrapper = std::make_shared<FragmentWrapper<projected_fragment_t>>(

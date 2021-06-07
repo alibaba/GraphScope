@@ -232,15 +232,15 @@ void ToDynamicFragment(
         if (graph_def.has_extension()) {
           graph_def.extension().UnpackTo(&vy_info);
         }
-        vy_info->set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vy_info.set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
             vineyard::TypeName<typename gs::DynamicFragment::oid_t>::Get())));
-        vy_info->set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vy_info.set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
             vineyard::TypeName<typename gs::DynamicFragment::vid_t>::Get())));
-        vy_info->set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vy_info.set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
             vineyard::TypeName<typename gs::DynamicFragment::vdata_t>::Get())));
-        vy_info->set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vy_info.set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
             vineyard::TypeName<typename gs::DynamicFragment::edata_t>::Get())));
-        vy_info->set_property_schema_json("{}");
+        vy_info.set_property_schema_json("{}");
         graph_def.mutable_extension()->PackFrom(vy_info);
 
         auto wrapper =

@@ -182,7 +182,7 @@ class Graph(object):
         self._generate_eid = vy_info.generate_eid
 
         self._schema_path = vy_info.schema_path
-        self._schema.get_schema_from_def(vy_info.schema_def)
+        self._schema.get_schema_from_def(vy_info)
         self._v_labels = self._schema.vertex_labels
         self._e_labels = self._schema.edge_labels
         self._e_relationships = self._schema.edge_relationships
@@ -320,7 +320,7 @@ class Graph(object):
             [f"EDGE: {label}\tsrc: {src}\tdst: {dst}" for label, src, dst in relations]
         )
 
-        return f"graphscope.Graph\n{types_pb2.GraphType.Name(self._graph_type)}\n{v_str}\n{e_str}"
+        return f"graphscope.Graph\n{graph_def_pb2.GraphTypePb.Name(self._graph_type)}\n{v_str}\n{e_str}"
 
     def __repr__(self):
         return self.__str__()

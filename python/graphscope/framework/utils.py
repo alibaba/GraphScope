@@ -229,23 +229,39 @@ def decode_dataframe(value):
 def unify_type(t):
     # If type is None, we deduce type from source file.
     if t is None:
-        return graph_def_pb2.UNKNOWN
+        return graph_def_pb2.DataTypePb.UNKNOWN
     if isinstance(t, str):
         t = t.lower()
-        if t in ("int", "int32_t", "int32"):
-            return graph_def_pb2.INT
-        elif t in ("long", "int64_t", "int64"):
-            return graph_def_pb2.LONG
+        if t in ("b", "bool"):
+            return graph_def_pb2.DataTypePb.BOOL
+        elif t in ("c", "char"):
+            return graph_def_pb2.DataTypePb.CHAR
+        elif t in ("s", "short"):
+            return graph_def_pb2.DataTypePb.SHORT
+        elif t in ("i", "int", "int32", "int32_t"):
+            return graph_def_pb2.DataTypePb.INT
+        elif t in ("l", "long", "int64_t", "int64"):
+            return graph_def_pb2.DataTypePb.LONG
         elif t in ("uint32_t", "uint32"):
-            return graph_def_pb2.UINT
+            return graph_def_pb2.DataTypePb.UINT
         elif t in ("uint64_t", "uint64"):
-            return graph_def_pb2.ULONG
-        elif t == "float":
-            return graph_def_pb2.FLOAT
-        elif t == "double":
-            return graph_def_pb2.DOUBLE
+            return graph_def_pb2.DataTypePb.ULONG
+        elif t in ("f", "float"):
+            return graph_def_pb2.DataTypePb.FLOAT
+        elif t in ("d", "double"):
+            return graph_def_pb2.DataTypePb.DOUBLE
         elif t in ("str", "string", "std::string"):
-            return graph_def_pb2.STRING
+            return graph_def_pb2.DataTypePb.STRING
+        elif t == "bytes":
+            return graph_def_pb2.DataTypePb.BYTES
+        elif t == "int_list":
+            return graph_def_pb2.DataTypePb.INT_LIST
+        elif t == "long_list":
+            return graph_def_pb2.DataTypePb.LONG_LIST
+        elif t == "float_list":
+            return graph_def_pb2.DataTypePb.FLOAT_LIST
+        elif t == "double_list":
+            return graph_def_pb2.DataTypePb.DOUBLE_LIST
         elif t in ("empty", "grape::emptytype"):
             return graph_def_pb2.NULLVALUE
     elif isinstance(t, type):

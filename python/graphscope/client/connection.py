@@ -20,13 +20,23 @@
 """
 
 import grpc
-from gremlin_python.driver.client import Client
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
 
-from graphscope.framework.schema import Graph
+from graphscope.framework.graph_schema import GraphSchema
 from graphscope.proto import ddl_service_pb2
 from graphscope.proto import ddl_service_pb2_grpc
+
+
+class Graph:
+    def __init__(self, graph_def, conn=None) -> None:
+        self._schema = GraphSchema()
+        self._schema.from_graph_def(graph_def)
+        self._conn = conn
+        self._schema._conn = conn
+
+    def schema(self):
+        return self._schema
 
 
 class Connection:

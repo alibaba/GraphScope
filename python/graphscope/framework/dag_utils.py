@@ -43,9 +43,11 @@ def create_app(graph, app):
         types_pb2.APP_ALGO: utils.s_to_attr(app.algo),
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
         types_pb2.OID_TYPE: utils.s_to_attr(
-            utils.normalize_data_type_str(graph.schema.oid_type)
+            utils.normalize_data_type_str(utils.data_type_to_cpp(graph.schema.oid_type))
         ),
-        types_pb2.VID_TYPE: utils.s_to_attr(graph.schema.vid_type),
+        types_pb2.VID_TYPE: utils.s_to_attr(
+            utils.data_type_to_cpp(graph.schema.vid_type)
+        ),
         types_pb2.V_DATA_TYPE: utils.s_to_attr(
             utils.data_type_to_cpp(graph.schema.vdata_type)
         ),
@@ -418,8 +420,8 @@ def project_arrow_property_graph_to_simple(
         types_pb2.V_PROP_ID: utils.i_to_attr(v_prop_id),
         types_pb2.E_LABEL_ID: utils.i_to_attr(e_label_id),
         types_pb2.E_PROP_ID: utils.i_to_attr(e_prop_id),
-        types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
-        types_pb2.VID_TYPE: utils.s_to_attr(vid_type),
+        types_pb2.OID_TYPE: utils.s_to_attr(utils.data_type_to_cpp(oid_type)),
+        types_pb2.VID_TYPE: utils.s_to_attr(utils.data_type_to_cpp(vid_type)),
         types_pb2.V_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(v_data_type)),
         types_pb2.E_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(e_data_type)),
     }
