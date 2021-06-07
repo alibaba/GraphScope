@@ -836,6 +836,10 @@ class DynamicProjectedFragment {
     return fragment_->GetOidType(comm_spec);
   }
 
+  inline bool HasNode(const oid_t& node) const {
+    return fragment_->HasNode(node);
+  }
+
  private:
   fragment_t* fragment_;
   std::string v_prop_key_;

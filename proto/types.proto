@@ -106,6 +106,8 @@ enum OperationType {
 
   REGISTER_GRAPH_TYPE = 58;
 
+  GET_CONTEXT_DATA = 59;
+
   FROM_NUMPY = 80;
   FROM_DATAFRAME = 81;
   FROM_FILE = 82;

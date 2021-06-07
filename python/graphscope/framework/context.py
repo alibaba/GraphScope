@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import collections
 import hashlib
 import json
 from typing import Mapping
@@ -302,6 +303,36 @@ class VertexDataContext(BaseContext):
         return utils.transform_vertex_data_selector(selector)
 
 
+class DynamicVertexDataContext(collections.abc.Mapping):
+    """Vertex data context for complicated result store.
+    A vertex has a single value as results.
+    """
+
+    def __init__(self, session_id, context_key, graph):
+        self._key = context_key
+        self._graph = graph
+        self._session_id = session_id
+        self._saved_signature = self.signature
+
+    # partial inherit the BaseContext methods
+    session_id = BaseContext.__dict__["session_id"]
+    key = BaseContext.__dict__["key"]
+    signature = BaseContext.__dict__["signature"]
+    __repr__ = BaseContext.__dict__["__repr__"]
+
+    def __len__(self):
+        return self._graph._graph.number_of_nodes()
+
+    def __getitem__(self, key):
+        if key not in self._graph._graph:
+            raise KeyError(key)
+        op = dag_utils.get_context_data(self, json.dumps([key]))
+        return dict(json.loads(op.eval()))
+
+    def __iter__(self):
+        return iter(self._graph._graph)
+
+
 class LabeledVertexDataContext(BaseContext):
     """The labeld kind of context.
     This context has several vertex labels and edge labels,
@@ -385,6 +416,8 @@ def create_context(context_type, session_id, context_key, graph):
         return VertexDataContext(session_id, context_key, graph)
     elif context_type == "labeled_vertex_data":
         return LabeledVertexDataContext(session_id, context_key, graph)
+    elif context_type == "dynamic_vertex_data":
+        return DynamicVertexDataContext(session_id, context_key, graph)
     elif context_type == "vertex_property":
         return VertexPropertyContext(session_id, context_key, graph)
     elif context_type == "labeled_vertex_property":

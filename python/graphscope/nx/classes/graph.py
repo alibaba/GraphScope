@@ -1954,4 +1954,6 @@ class Graph(object):
         graph._session_id = self._session_id
         graph.schema.get_schema_from_def(graph_def.schema_def)
         graph._saved_signature = self._saved_signature
+        graph._graph = self  # projected graph also can report nodes.
+        graph._is_client_view = False
         return graph
