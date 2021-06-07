@@ -98,16 +98,18 @@ enum DataTypePb {
     SHORT = 3;
     INT = 4;
     LONG = 5;
-    FLOAT = 6;
-    DOUBLE = 7;
-    STRING = 8;
-    BYTES = 9;
-    INT_LIST = 10;
-    LONG_LIST = 11;
-    FLOAT_LIST = 12;
-    DOUBLE_LIST = 13;
-    STRING_LIST = 14;
-    NULLVALUE = 15;
+    UINT = 6;
+    ULONG = 7;
+    FLOAT = 8;
+    DOUBLE = 9;
+    STRING = 10;
+    BYTES = 11;
+    INT_LIST = 12;
+    LONG_LIST = 13;
+    FLOAT_LIST = 14;
+    DOUBLE_LIST = 15;
+    STRING_LIST = 16;
+    NULLVALUE = 17;
 }
 
 message PropertyValuePb {

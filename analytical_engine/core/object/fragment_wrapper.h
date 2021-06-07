@@ -50,6 +50,10 @@ gs::rpc::graph::DataTypePb PropertyTypeToPb(vineyard::PropertyType type) {
     return gs::rpc::graph::DataTypePb::INT;
   } else if (arrow::int64()->Equals(type)) {
     return gs::rpc::graph::DataTypePb::LONG;
+  } else if (arrow::uint32()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::UINT;
+  } else if (arrow::uint64()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::ULONG;
   } else if (arrow::float32()->Equals(type)) {
     return gs::rpc::graph::DataTypePb::FLOAT;
   } else if (arrow::float64()->Equals(type)) {
@@ -85,6 +89,10 @@ gs::rpc::graph::DataTypePb PropertyTypeToPb(const std::string& type) {
     return gs::rpc::graph::DataTypePb::INT;
   } else if (type == "long" || type == "int64" || type == "int64_t") {
     return gs::rpc::graph::DataTypePb::LONG;
+  } else if (type == "uint" || type == "uint32" || type == "uint32_t") {
+    return gs::rpc::graph::DataType::UINT;
+  } else if (type == "ulong" || type == "uint64" || type == "uint64_t") {
+    return gs::rpc::graph::DataType::ULONG;
   } else if (type == "float") {
     return gs::rpc::graph::DataTypePb::FLOAT;
   } else if (type == "double") {

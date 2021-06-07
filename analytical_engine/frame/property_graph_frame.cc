@@ -86,8 +86,11 @@ void LoadGraph(
           gs::rpc::graph::GraphDefPb graph_def;
 
           graph_def.set_key(graph_name);
-
-          graph_def.set_vineyard_id(new_frag_group_id);
+          gs::rpc::graph::VineyardInfoPb vy_info;
+          if (graph_def.has_extension()) {
+            graph_def.extension().UnpackTo(&vy_info);
+          }
+          vy_info.set_vineyard_id(new_frag_group_id);
           gs::set_graph_def(frag, graph_def);
 
           auto wrapper = std::make_shared<gs::FragmentWrapper<_GRAPH_TYPE>>(

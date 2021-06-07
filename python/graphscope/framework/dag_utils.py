@@ -371,7 +371,7 @@ def project_arrow_property_graph(graph, vertex_collections, edge_collections):
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
-        graph_def_pb2.ARROW_PROPERTY_DEFINITION: attr,
+        types_pb2.ARROW_PROPERTY_DEFINITION: attr,
     }
     op = Operation(
         graph.session_id,

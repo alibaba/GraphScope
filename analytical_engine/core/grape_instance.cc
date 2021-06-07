@@ -77,18 +77,22 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     graph_def.set_directed(directed);
     graph_def.set_graph_type(rpc::graph::DYNAMIC_PROPERTY);
     // dynamic graph doesn't have a vineyard id
-    graph_def.set_vineyard_id(-1);
-    auto* schema_def = graph_def.mutable_schema_def();
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (graph_def.has_extension()) {
+      graph_def.extension().UnpackTo(&vy_info);
+    }
+    vy_info.set_vineyard_id(-1);
 
-    schema_def->set_oid_type(
-        vineyard::TypeName<typename DynamicFragment::oid_t>::Get());
-    schema_def->set_vid_type(
-        vineyard::TypeName<typename DynamicFragment::vid_t>::Get());
-    schema_def->set_vdata_type(
-        vineyard::TypeName<typename DynamicFragment::vdata_t>::Get());
-    schema_def->set_edata_type(
-        vineyard::TypeName<typename DynamicFragment::edata_t>::Get());
-    schema_def->set_property_schema_json("{}");
+    vy_info->set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::oid_t>::Get())));
+    vy_info->set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::vid_t>::Get())));
+    vy_info->set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::vdata_t>::Get())));
+    vy_info->set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::edata_t>::Get())));
+    vy_info->set_property_schema_json("{}");
+    graph_def.mutable_extension()->PackFrom(vy_info);
 
     auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
         graph_name, graph_def, fragment);
