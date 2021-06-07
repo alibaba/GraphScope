@@ -306,7 +306,7 @@ def assemble_op_config(
     attr.list.func.extend([process_edge(edge) for edge in edges])
 
     config = {}
-    config[types_pb2.ARROW_PROPERTY_DEFINITION] = attr
+    config[graph_def_pb2.ARROW_PROPERTY_DEFINITION] = attr
     config[types_pb2.DIRECTED] = utils.b_to_attr(directed)
     config[types_pb2.OID_TYPE] = utils.s_to_attr(oid_type)
     config[types_pb2.GENERATE_EID] = utils.b_to_attr(generate_eid)

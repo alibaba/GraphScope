@@ -29,6 +29,7 @@ from graphscope.client.archive import OutArchive
 from graphscope.framework.errors import check_argument
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import data_types_pb2
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
@@ -103,15 +104,15 @@ def list_i_to_attr(list_i):
 
 
 def graph_type_to_cpp_class(graph_type):
-    if graph_type == types_pb2.IMMUTABLE_EDGECUT:
+    if graph_type == graph_def_pb2.IMMUTABLE_EDGECUT:
         return "grape::ImmutableEdgecutFragment"
-    if graph_type == types_pb2.DYNAMIC_PROPERTY:
+    if graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
         return "gs::DynamicFragment"
-    if graph_type == types_pb2.DYNAMIC_PROJECTED:
+    if graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
         return "gs::DynamicProjectedFragment"
-    if graph_type == types_pb2.ARROW_PROPERTY:
+    if graph_type == graph_def_pb2.ARROW_PROPERTY:
         return "vineyard::ArrowFragment"
-    if graph_type == types_pb2.ARROW_PROJECTED:
+    if graph_type == graph_def_pb2.ARROW_PROJECTED:
         return "gs::ArrowProjectedFragment"
     return "null"
 

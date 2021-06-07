@@ -282,7 +282,7 @@ class CoordinatorServiceServicer(
         if (
             (
                 op.op == types_pb2.CREATE_GRAPH
-                and op.attr[types_pb2.GRAPH_TYPE].graph_type == types_pb2.ARROW_PROPERTY
+                and op.attr[types_pb2.GRAPH_TYPE].graph_type == graph_def_pb2.ARROW_PROPERTY
             )
             or op.op == types_pb2.TRANSFORM_GRAPH
             or op.op == types_pb2.PROJECT_TO_SIMPLE
@@ -345,7 +345,7 @@ class CoordinatorServiceServicer(
                         schema_path,
                     ),
                 )
-                if response.graph_def.graph_type == types_pb2.ARROW_PROPERTY:
+                if response.graph_def.graph_type == graph_def_pb2.ARROW_PROPERTY:
                     vy_info = graph_def_pb2.VineyardInfoPb()
                     response.graph_def.extension.Unpack(vy_info)
                     dump_string(

@@ -60,6 +60,7 @@ from graphscope.framework.graph import Graph
 from graphscope.framework.operation import Operation
 from graphscope.interactive.query import InteractiveQuery
 from graphscope.interactive.query import InteractiveQueryStatus
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
@@ -899,7 +900,7 @@ class Session(object):
 
         if not graph.loaded():
             raise InvalidArgumentError("The graph has already been unloaded")
-        if not graph.graph_type == types_pb2.ARROW_PROPERTY:
+        if not graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
 
         def group_property_types(props):
@@ -1012,7 +1013,7 @@ class Session(object):
 
         if not graph.loaded():
             raise InvalidArgumentError("The graph has already been unloaded")
-        if not graph.graph_type == types_pb2.ARROW_PROPERTY:
+        if not graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
 
         interactive_query = InteractiveQuery(session=self, object_id=graph.vineyard_id)
@@ -1072,7 +1073,7 @@ class Session(object):
 
         if not graph.loaded():
             raise InvalidArgumentError("The graph has already been unloaded")
-        if not graph.graph_type == types_pb2.ARROW_PROPERTY:
+        if not graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
 
         from graphscope.learning.graph import Graph as LearningGraph

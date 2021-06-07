@@ -31,6 +31,7 @@ from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 logger = logging.getLogger("graphscope")
@@ -151,7 +152,7 @@ def test_unload(graphscope_session):
 def test_error_on_project_to_simple_wrong_graph_type(arrow_property_graph):
     sg = arrow_property_graph.project(vertices={"v0": []}, edges={"e0": []})
     pg = sg._project_to_simple()
-    assert pg._graph_type == types_pb2.ARROW_PROJECTED
+    assert pg._graph_type == graph_def_pb2.ARROW_PROJECTED
     with pytest.raises(AssertionError):
         pg._project_to_simple()
     with pytest.raises(AssertionError):
@@ -163,7 +164,7 @@ def test_error_on_project_to_simple_wrong_graph_type(arrow_property_graph):
 )
 def test_error_on_project_to_simple_wrong_graph_type_2(dynamic_property_graph):
     sdg = dynamic_property_graph.project_to_simple()
-    assert sdg._graph_type == types_pb2.DYNAMIC_PROJECTED
+    assert sdg._graph_type == graph_def_pb2.DYNAMIC_PROJECTED
     with pytest.raises(AssertionError):
         sdg.project_to_simple()
 

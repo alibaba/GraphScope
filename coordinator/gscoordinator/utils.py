@@ -40,6 +40,7 @@ from queue import Queue
 from string import Template
 
 import yaml
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
@@ -277,11 +278,11 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         ".",
         "-DNETWORKX=" + engine_config["networkx"],
     ]
-    if graph_type == types_pb2.ARROW_PROPERTY:
+    if graph_type == graph_def_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]
     elif (
-        graph_type == types_pb2.ARROW_PROJECTED
-        or graph_type == types_pb2.DYNAMIC_PROJECTED
+        graph_type == graph_def_pb2.ARROW_PROJECTED
+        or graph_type == graph_def_pb2.DYNAMIC_PROJECTED
     ):
         cmake_commands += ["-DPROJECT_FRAME=True"]
     else:
@@ -395,23 +396,23 @@ def _codegen_app_info(attr, meta_file: str):
 
 # a mapping for classname to header file.
 GRAPH_HEADER_MAP = {
-    types_pb2.IMMUTABLE_EDGECUT: (
+    graph_def_pb2.IMMUTABLE_EDGECUT: (
         "grape::ImmutableEdgecutFragment",
         "grape/fragment/immutable_edgecut_fragment.h",
     ),
-    types_pb2.DYNAMIC_PROJECTED: (
+    graph_def_pb2.DYNAMIC_PROJECTED: (
         "gs::DynamicProjectedFragment",
         "core/fragment/dynamic_projected_fragment.h",
     ),
-    types_pb2.ARROW_PROPERTY: (
+    graph_def_pb2.ARROW_PROPERTY: (
         "vineyard::ArrowFragment",
         "vineyard/graph/fragment/arrow_fragment.h",
     ),
-    types_pb2.ARROW_PROJECTED: (
+    graph_def_pb2.ARROW_PROJECTED: (
         "gs::ArrowProjectedFragment",
         "core/fragment/arrow_projected_fragment.h",
     ),
-    types_pb2.DYNAMIC_PROPERTY: (
+    graph_def_pb2.DYNAMIC_PROPERTY: (
         "gs::DynamicFragment",
         "core/fragment/dynamic_fragment.h",
     ),
