@@ -23,6 +23,11 @@
 #include <utility>
 #include <vector>
 
+#ifdef NETWORKX
+#include "folly/dynamic.h"
+#include "folly/json.h"
+#endif
+
 #include "grape/app/vertex_data_context.h"
 #include "grape/utils/vertex_array.h"
 #include "vineyard/basic/ds/arrow_utils.h"
@@ -40,6 +45,45 @@
 
 #define CONTEXT_TYPE_VERTEX_DATA "vertex_data"
 #define CONTEXT_TYPE_LABELED_VERTEX_DATA "labeled_vertex_data"
+#define CONTEXT_TTPE_DYNAMIC_VERTEX_DATA "dynamic_vertex_data"
+
+#ifdef NETWORKX
+namespace grape {
+template <typename FRAG_T>
+class VertexDataContext<FRAG_T, folly::dynamic> : public ContextBase {
+  using fragment_t = FRAG_T;
+  using oid_t = typename fragment_t::oid_t;
+  using vertex_t = typename fragment_t::vertex_t;
+  using vertex_array_t =
+      typename fragment_t::template vertex_array_t<folly::dynamic>;
+
+ public:
+  using data_t = folly::dynamic;
+
+  explicit VertexDataContext(const fragment_t& fragment,
+                             bool including_outer = false)
+      : fragment_(fragment) {
+    if (including_outer) {
+      data_.Init(fragment.Vertices());
+    } else {
+      data_.Init(fragment.InnerVertices());
+    }
+  }
+
+  const fragment_t& fragment() { return fragment_; }
+
+  inline virtual vertex_array_t& data() { return data_; }
+
+  virtual const folly::dynamic& GetVertexResult(const vertex_t& v) {
+    return data_[v];
+  }
+
+ private:
+  const fragment_t& fragment_;
+  vertex_array_t data_;
+};
+}  // namespace grape
+#endif  // NETWORKX
 
 namespace gs {
 
@@ -456,6 +500,96 @@ class VertexDataContextWrapper : public IVertexDataContextWrapper {
   std::shared_ptr<IFragmentWrapper> frag_wrapper_;
   std::shared_ptr<context_t> ctx_;
 };
+
+#ifdef NETWORKX
+/**
+ * @brief This is folly::dynamic specialization of VertexDataContext.
+ *
+ * @tparam FRAG_T The fragment class (Non-labeled fragment only)
+ */
+template <typename FRAG_T>
+class VertexDataContextWrapper<FRAG_T, folly::dynamic>
+    : public IVertexDataContextWrapper {
+  using fragment_t = FRAG_T;
+  using oid_t = typename fragment_t::oid_t;
+  using vertex_t = typename fragment_t::vertex_t;
+  using context_t = grape::VertexDataContext<fragment_t, folly::dynamic>;
+  using vdata_t = typename fragment_t::vdata_t;
+  using data_t = folly::dynamic;
+
+ public:
+  explicit VertexDataContextWrapper(
+      const std::string& id, std::shared_ptr<IFragmentWrapper> frag_wrapper,
+      std::shared_ptr<context_t> ctx)
+      : IVertexDataContextWrapper(id),
+        frag_wrapper_(std::move(frag_wrapper)),
+        ctx_(std::move(ctx)) {}
+
+  std::string context_type() override {
+    return CONTEXT_TTPE_DYNAMIC_VERTEX_DATA;
+  }
+
+  std::shared_ptr<IFragmentWrapper> fragment_wrapper() override {
+    return frag_wrapper_;
+  }
+
+  bl::result<std::string> GetContextData(const rpc::GSParams& params) override {
+    BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
+    oid_t node_id = folly::parseJson(node_in_json)[0];
+    auto& frag = ctx_->fragment();
+    if (frag.HasNode(node_id)) {
+      vertex_t v;
+      frag.GetVertex(node_id, v);
+      return folly::json::serialize(ctx_->GetVertexResult(v), json_opts_);
+    }
+    return std::string("");
+  }
+
+  bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
+      const grape::CommSpec& comm_spec, const Selector& selector,
+      const std::pair<std::string, std::string>& range) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "DynamicVertexDataContext not support the operation.");
+  }
+
+  bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors,
+      const std::pair<std::string, std::string>& range) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "DynamicVertexDataContext not support the operation.");
+  }
+
+  bl::result<vineyard::ObjectID> ToVineyardTensor(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const Selector& selector,
+      const std::pair<std::string, std::string>& range) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "DynamicVertexDataContext not support the operation.");
+  }
+
+  bl::result<vineyard::ObjectID> ToVineyardDataframe(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      const std::vector<std::pair<std::string, Selector>>& selectors,
+      const std::pair<std::string, std::string>& range) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "DynamicVertexDataContext not support the operation.");
+  }
+
+  bl::result<std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+  ToArrowArrays(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "DynamicVertexDataContext not support the operation.");
+  }
+
+ private:
+  std::shared_ptr<IFragmentWrapper> frag_wrapper_;
+  std::shared_ptr<context_t> ctx_;
+  folly::json::serialization_opts json_opts_;
+};
+#endif  // NETWORKX
 
 /**
  * @brief This is the wrapper class for LabeledVertexDataContext. A series of

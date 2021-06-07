@@ -144,6 +144,7 @@ class GrapeInstance : public Subscriber {
 
   bl::result<rpc::graph::GraphDefPb> addLabelsToGraph(
       const rpc::GSParams& params);
+  bl::result<std::string> getContextData(const rpc::GSParams& params);
 
   bl::result<std::shared_ptr<grape::InArchive>> graphToNumpy(
       const rpc::GSParams& params);
