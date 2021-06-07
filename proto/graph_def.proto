@@ -109,7 +109,8 @@ enum DataTypePb {
     FLOAT_LIST = 14;
     DOUBLE_LIST = 15;
     STRING_LIST = 16;
-    NULLVALUE = 17;
+    DYNAMIC = 17;
+    NULLVALUE = 18;
 }
 
 message PropertyValuePb {

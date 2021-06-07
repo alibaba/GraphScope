@@ -182,7 +182,7 @@ class Graph(object):
         self._generate_eid = vy_info.generate_eid
 
         self._schema_path = vy_info.schema_path
-        self._schema.get_schema_from_def(vy_info)
+        self._schema.from_graph_def(graph_def)
         self._v_labels = self._schema.vertex_labels
         self._e_labels = self._schema.edge_labels
         self._e_relationships = self._schema.edge_relationships

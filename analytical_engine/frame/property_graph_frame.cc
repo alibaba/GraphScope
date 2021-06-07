@@ -209,49 +209,48 @@ void ToDynamicFragment(
     std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
     const std::string& dst_graph_name,
     gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
-  wrapper_out = gs::bl::try_handle_some(
-      [&]() -> gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>> {
+  wrapper_out = gs::bl::try_handle_some([&]() -> gs::bl::result<std::shared_ptr<
+                                                  gs::IFragmentWrapper>> {
 #ifdef NETWORKX
-        if (wrapper_in->graph_def().graph_type() !=
-            gs::rpc::graph::ARROW_PROPERTY) {
-          RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                          "Source fragment it not ArrowFragment.");
-        }
-        auto arrow_frag =
-            std::static_pointer_cast<_GRAPH_TYPE>(wrapper_in->fragment());
-        gs::ArrowToDynamicConverter<_GRAPH_TYPE> converter(comm_spec);
+    if (wrapper_in->graph_def().graph_type() !=
+        gs::rpc::graph::ARROW_PROPERTY) {
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                      "Source fragment it not ArrowFragment.");
+    }
+    auto arrow_frag =
+        std::static_pointer_cast<_GRAPH_TYPE>(wrapper_in->fragment());
+    gs::ArrowToDynamicConverter<_GRAPH_TYPE> converter(comm_spec);
 
-        BOOST_LEAF_AUTO(dynamic_frag, converter.Convert(arrow_frag));
+    BOOST_LEAF_AUTO(dynamic_frag, converter.Convert(arrow_frag));
 
-        gs::rpc::graph::GraphDefPb graph_def;
+    gs::rpc::graph::GraphDefPb graph_def;
 
-        graph_def.set_key(dst_graph_name);
-        graph_def.set_directed(dynamic_frag->directed());
-        graph_def.set_graph_type(gs::rpc::graph::DYNAMIC_PROPERTY);
-        gs::rpc::graph::VineyardInfoPb vy_info;
-        if (graph_def.has_extension()) {
-          graph_def.extension().UnpackTo(&vy_info);
-        }
-        vy_info.set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
-            vineyard::TypeName<typename gs::DynamicFragment::oid_t>::Get())));
-        vy_info.set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
-            vineyard::TypeName<typename gs::DynamicFragment::vid_t>::Get())));
-        vy_info.set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
-            vineyard::TypeName<typename gs::DynamicFragment::vdata_t>::Get())));
-        vy_info.set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
-            vineyard::TypeName<typename gs::DynamicFragment::edata_t>::Get())));
-        vy_info.set_property_schema_json("{}");
-        graph_def.mutable_extension()->PackFrom(vy_info);
+    graph_def.set_key(dst_graph_name);
+    graph_def.set_directed(dynamic_frag->directed());
+    graph_def.set_graph_type(gs::rpc::graph::DYNAMIC_PROPERTY);
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (graph_def.has_extension()) {
+      graph_def.extension().UnpackTo(&vy_info);
+    }
+    vy_info.set_oid_type(gs::PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::oid_t>::Get())));
+    vy_info.set_vid_type(gs::PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::vid_t>::Get())));
+    vy_info.set_vdata_type(gs::PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::vdata_t>::Get())));
+    vy_info.set_edata_type(gs::PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::edata_t>::Get())));
+    vy_info.set_property_schema_json("{}");
+    graph_def.mutable_extension()->PackFrom(vy_info);
 
-        auto wrapper =
-            std::make_shared<gs::FragmentWrapper<gs::DynamicFragment>>(
-                dst_graph_name, graph_def, dynamic_frag);
-        return std::dynamic_pointer_cast<gs::IFragmentWrapper>(wrapper);
+    auto wrapper = std::make_shared<gs::FragmentWrapper<gs::DynamicFragment>>(
+        dst_graph_name, graph_def, dynamic_frag);
+    return std::dynamic_pointer_cast<gs::IFragmentWrapper>(wrapper);
 #else
-        RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                        "GS is compiled without folly");
+    RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
+                    "GS is compiled without folly");
 #endif
-      });
+  });
 }
 
 void AddLabelsToGraph(

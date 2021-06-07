@@ -99,7 +99,7 @@ gs::rpc::graph::DataTypePb PropertyTypeToPb(const std::string& type) {
     return gs::rpc::graph::DataTypePb::DOUBLE;
   } else if (type == "bytes") {
     return gs::rpc::graph::DataTypePb::BYTES;
-  } else if (type == "string" || type == "str") {
+  } else if (type == "string" || type == "std::string" || type == "str") {
     return gs::rpc::graph::DataTypePb::STRING;
   } else if (type == "int_list") {
     return gs::rpc::graph::DataTypePb::INT_LIST;
@@ -113,6 +113,8 @@ gs::rpc::graph::DataTypePb PropertyTypeToPb(const std::string& type) {
     return gs::rpc::graph::DataTypePb::STRING_LIST;
   } else if (type == "grape::EmptyType" || type == "null") {
     return gs::rpc::graph::DataTypePb::NULLVALUE;
+  } else if (type == "folly::dynamic") {
+    return gs::rpc::graph::DataTypePb::DYNAMIC;
   }
   LOG(ERROR) << "Unsupported type " << type;
   return gs::rpc::graph::DataTypePb::UNKNOWN;

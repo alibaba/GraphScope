@@ -1917,7 +1917,7 @@ class Graph(object):
 
         if v_prop is None:
             v_prop = str(v_prop)
-            v_prop_type = types_pb2.NULLVALUE
+            v_prop_type = graph_def_pb2.NULLVALUE
         else:
             check_argument(isinstance(v_prop, str))
             v_label = self._schema.vertex_labels[0]
@@ -1933,7 +1933,7 @@ class Graph(object):
 
         if e_prop is None:
             e_prop = str(e_prop)
-            e_prop_type = types_pb2.NULLVALUE
+            e_prop_type = graph_def_pb2.NULLVALUE
         else:
             check_argument(isinstance(e_prop, str))
             e_label = self._schema.edge_labels[0]
@@ -1953,6 +1953,6 @@ class Graph(object):
         graph._graph_type = graph_def_pb2.DYNAMIC_PROJECTED
         graph._key = graph_def.key
         graph._session_id = self._session_id
-        graph.schema.get_schema_from_def(graph_def.schema_def)
+        graph.schema.from_graph_def(graph_def)
         graph._saved_signature = self._saved_signature
         return graph

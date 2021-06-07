@@ -45,6 +45,10 @@ class Property:
         pb.pk = self.is_primary_key
         return pb
 
+    @property
+    def type(self):
+        return self.data_type
+
     @classmethod
     def from_property_def(cls, pb):
         prop = cls(pb.name, pb.data_type, pb.pk)
@@ -93,7 +97,7 @@ class Label:
 
     @property
     def id(self) -> int:
-        return self.label_id
+        return self._label_id
 
     @property
     def label(self) -> str:
@@ -153,8 +157,8 @@ class VertexLabel(Label):
 class EdgeLabel(Label):
     __slots__ = ["_relations"]
 
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, name, id=0):
+        super().__init__(name, id)
         self._relations: list[Relation] = []
 
     @property
@@ -208,10 +212,10 @@ class GraphSchema:
         self._vertex_labels: List[VertexLabel] = []
         self._edge_labels: List[EdgeLabel] = []
 
-        self.vertex_labels_to_add: list[VertexLabel] = []
-        self.edge_labels_to_add: list[EdgeLabel] = []
-        self.vertex_labels_to_drop: list[VertexLabel] = []
-        self.edge_labels_to_drop: list[EdgeLabel] = []
+        self._vertex_labels_to_add: list[VertexLabel] = []
+        self._edge_labels_to_add: list[EdgeLabel] = []
+        self._vertex_labels_to_drop: list[VertexLabel] = []
+        self._edge_labels_to_drop: list[EdgeLabel] = []
         # 1 indicate valid, 0 indicate invalid.
         self._valid_vertices = []
         self._valid_edges = []
@@ -290,8 +294,8 @@ class GraphSchema:
                             entry = EdgeLabel(item["label"], item["id"])
                             assert entry.id == len(self._edge_labels)
                             for rel in item["rawRelationShips"]:
-                                entry.source(
-                                    rel["srcVertexLabel"], rel["dstVertexLabel"]
+                                entry.source(rel["srcVertexLabel"]).destination(
+                                    rel["dstVertexLabel"]
                                 )
                             add_common_attributes(entry, item)
                             self._edge_labels.append(entry)
@@ -457,10 +461,10 @@ class GraphSchema:
 
         self._vertex_labels.clear()
         self._edge_labels.clear()
-        self.vertex_labels_to_add.clear()
-        self.vertex_labels_to_drop.clear()
-        self.edge_labels_to_add.clear()
-        self.edge_labels_to_drop.clear()
+        self._vertex_labels_to_add.clear()
+        self._vertex_labels_to_drop.clear()
+        self._edge_labels_to_add.clear()
+        self._edge_labels_to_drop.clear()
         self._valid_vertices.clear()
         self._valid_edges.clear()
         self._v_label_index.clear()
@@ -476,8 +480,8 @@ class GraphSchema:
         if properties:
             for prop in properties:
                 item = item.add_property(*prop)
-        self.vertex_labels_to_add.append(item)
-        return self.vertex_labels_to_add[-1]
+        self._vertex_labels_to_add.append(item)
+        return self._vertex_labels_to_add[-1]
 
     def add_edge_label(self, label, src_label=None, dst_label=None, properties=None):
         item = EdgeLabel(label)
@@ -488,29 +492,29 @@ class GraphSchema:
         if properties:
             for prop in properties:
                 item = item.add_property(*prop)
-        self.edge_labels_to_add.append(item)
-        return self.edge_labels_to_add[-1]
+        self._edge_labels_to_add.append(item)
+        return self._edge_labels_to_add[-1]
 
     def drop(self, label, src_label=None, dst_label=None):
-        for item in itertools.chain(self.vertex_labels, self.vertex_labels_to_add):
+        for item in itertools.chain(self.vertex_labels, self._vertex_labels_to_add):
             if label == item.name:
-                self.vertex_labels_to_drop.append(VertexLabel(label))
+                self._vertex_labels_to_drop.append(VertexLabel(label))
                 return
-        for item in itertools.chain(self.edge_labels, self.edge_labels_to_add):
+        for item in itertools.chain(self.edge_labels, self._edge_labels_to_add):
             if label == item.name:
                 label_to_drop = EdgeLabel(label)
                 if src_label and dst_label:
                     label_to_drop.source(src_label).destination(dst_label)
-                self.edge_labels_to_drop.append(label_to_drop)
+                self._edge_labels_to_drop.append(label_to_drop)
                 return
         raise ValueError(f"Label {label} not found.")
 
     def _prepare_batch_rpc(self):
         requests = ddl_service_pb2.BatchSubmitRequest()
-        for item in self.vertex_labels_to_add:
+        for item in self._vertex_labels_to_add:
             type_pb = item.as_type_def()
             requests.value.add().create_vertex_type_request.type_def.CopyFrom(type_pb)
-        for item in self.edge_labels_to_add:
+        for item in self._edge_labels_to_add:
             type_pb = item.as_type_def()
             requests.value.add().create_edge_type_request.type_def.CopyFrom(type_pb)
             for rel in item.relations:
@@ -520,9 +524,9 @@ class GraphSchema:
                 request.src_vertex_label = rel.source
                 request.dst_vertex_label = rel.destination
                 requests.value.add().add_edge_kind_request.CopyFrom(request)
-        for item in self.vertex_labels_to_drop:
+        for item in self._vertex_labels_to_drop:
             requests.value.add().drop_vertex_type_request.label = item.label
-        for item in self.edge_labels_to_drop:
+        for item in self._edge_labels_to_drop:
             if item.relations:
                 request = ddl_service_pb2.RemoveEdgeKindRequest()
                 request.edge_label = item.label
@@ -535,10 +539,10 @@ class GraphSchema:
 
     def update(self):
         requests = self._prepare_batch_rpc()
-        self.vertex_labels_to_add.clear()
-        self.edge_labels_to_add.clear()
-        self.vertex_labels_to_drop.clear()
-        self.edge_labels_to_drop.clear()
+        self._vertex_labels_to_add.clear()
+        self._edge_labels_to_add.clear()
+        self._vertex_labels_to_drop.clear()
+        self._edge_labels_to_drop.clear()
         response = self._conn.submit(requests)
         self.from_graph_def(response.graph_def)
         return self

@@ -176,8 +176,8 @@ def dynamic_to_arrow(graph):
         types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(
             graph_def_pb2.ARROW_PROPERTY
         ),
-        types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
-        types_pb2.VID_TYPE: utils.s_to_attr(vid_type),
+        types_pb2.OID_TYPE: utils.s_to_attr(utils.data_type_to_cpp(oid_type)),
+        types_pb2.VID_TYPE: utils.s_to_attr(utils.data_type_to_cpp(vid_type)),
     }
 
     op = Operation(

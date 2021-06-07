@@ -65,25 +65,25 @@ def load_graph(session):
             "e0": [
                 (
                     "{}/twitter_e_0_0_0#header_row=true".format(new_data_dir),
-                    ["weight"],
+                    [("weight", "double")],
                     ("src", "v0"),
                     ("dst", "v0"),
                 ),
                 (
                     "{}/twitter_e_0_1_0#header_row=true".format(new_data_dir),
-                    ["weight"],
+                    [("weight", "double")],
                     ("src", "v0"),
                     ("dst", "v1"),
                 ),
                 (
                     "{}/twitter_e_1_0_0#header_row=true".format(new_data_dir),
-                    ["weight"],
+                    [("weight", "double")],
                     ("src", "v1"),
                     ("dst", "v0"),
                 ),
                 (
                     "{}/twitter_e_1_1_0#header_row=true".format(new_data_dir),
-                    ["weight"],
+                    [("weight", "double")],
                     ("src", "v1"),
                     ("dst", "v1"),
                 ),
@@ -91,25 +91,25 @@ def load_graph(session):
             "e1": [
                 (
                     "{}/twitter_e_0_0_1#header_row=true".format(new_data_dir),
-                    ["weight"],
+                    [("weight", "double")],
                     ("src", "v0"),
                     ("dst", "v0"),
                 ),
                 (
                     "{}/twitter_e_0_1_1#header_row=true".format(new_data_dir),
-                    ["weight"],
+                    [("weight", "double")],
                     ("src", "v0"),
                     ("dst", "v1"),
                 ),
                 (
                     "{}/twitter_e_1_0_1#header_row=true".format(new_data_dir),
-                    ["weight"],
+                    [("weight", "double")],
                     ("src", "v1"),
                     ("dst", "v0"),
                 ),
                 (
                     "{}/twitter_e_1_1_1#header_row=true".format(new_data_dir),
-                    ["weight"],
+                    [("weight", "double")],
                     ("src", "v1"),
                     ("dst", "v1"),
                 ),

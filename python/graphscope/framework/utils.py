@@ -226,44 +226,49 @@ def decode_dataframe(value):
     return pd.DataFrame(arrays)
 
 
+def _unify_str_type(t):
+    t = t.lower()
+    if t in ("b", "bool"):
+        return graph_def_pb2.DataTypePb.BOOL
+    elif t in ("c", "char"):
+        return graph_def_pb2.DataTypePb.CHAR
+    elif t in ("s", "short"):
+        return graph_def_pb2.DataTypePb.SHORT
+    elif t in ("i", "int", "int32", "int32_t"):
+        return graph_def_pb2.DataTypePb.INT
+    elif t in ("l", "long", "int64_t", "int64"):
+        return graph_def_pb2.DataTypePb.LONG
+    elif t in ("uint32_t", "uint32"):
+        return graph_def_pb2.DataTypePb.UINT
+    elif t in ("uint64_t", "uint64"):
+        return graph_def_pb2.DataTypePb.ULONG
+    elif t in ("f", "float"):
+        return graph_def_pb2.DataTypePb.FLOAT
+    elif t in ("d", "double"):
+        return graph_def_pb2.DataTypePb.DOUBLE
+    elif t in ("str", "string", "std::string"):
+        return graph_def_pb2.DataTypePb.STRING
+    elif t == "bytes":
+        return graph_def_pb2.DataTypePb.BYTES
+    elif t == "int_list":
+        return graph_def_pb2.DataTypePb.INT_LIST
+    elif t == "long_list":
+        return graph_def_pb2.DataTypePb.LONG_LIST
+    elif t == "float_list":
+        return graph_def_pb2.DataTypePb.FLOAT_LIST
+    elif t == "double_list":
+        return graph_def_pb2.DataTypePb.DOUBLE_LIST
+    elif t in ("empty", "grape::emptytype"):
+        return graph_def_pb2.NULLVALUE
+    raise TypeError("Not supported type {}".format(t))
+
+
 def unify_type(t):
     # If type is None, we deduce type from source file.
     if t is None:
         return graph_def_pb2.DataTypePb.UNKNOWN
     if isinstance(t, str):
-        t = t.lower()
-        if t in ("b", "bool"):
-            return graph_def_pb2.DataTypePb.BOOL
-        elif t in ("c", "char"):
-            return graph_def_pb2.DataTypePb.CHAR
-        elif t in ("s", "short"):
-            return graph_def_pb2.DataTypePb.SHORT
-        elif t in ("i", "int", "int32", "int32_t"):
-            return graph_def_pb2.DataTypePb.INT
-        elif t in ("l", "long", "int64_t", "int64"):
-            return graph_def_pb2.DataTypePb.LONG
-        elif t in ("uint32_t", "uint32"):
-            return graph_def_pb2.DataTypePb.UINT
-        elif t in ("uint64_t", "uint64"):
-            return graph_def_pb2.DataTypePb.ULONG
-        elif t in ("f", "float"):
-            return graph_def_pb2.DataTypePb.FLOAT
-        elif t in ("d", "double"):
-            return graph_def_pb2.DataTypePb.DOUBLE
-        elif t in ("str", "string", "std::string"):
-            return graph_def_pb2.DataTypePb.STRING
-        elif t == "bytes":
-            return graph_def_pb2.DataTypePb.BYTES
-        elif t == "int_list":
-            return graph_def_pb2.DataTypePb.INT_LIST
-        elif t == "long_list":
-            return graph_def_pb2.DataTypePb.LONG_LIST
-        elif t == "float_list":
-            return graph_def_pb2.DataTypePb.FLOAT_LIST
-        elif t == "double_list":
-            return graph_def_pb2.DataTypePb.DOUBLE_LIST
-        elif t in ("empty", "grape::emptytype"):
-            return graph_def_pb2.NULLVALUE
+        return _unify_str_type(t)
     elif isinstance(t, type):
         unify_types = {
             int: graph_def_pb2.LONG,
@@ -295,6 +300,8 @@ def data_type_to_cpp(t):
         return "std::string"
     elif t is None or t == graph_def_pb2.NULLVALUE:
         return "grape::EmptyType"
+    elif t == graph_def_pb2.DYNAMIC:
+        return "folly::dynamic"
     elif t == graph_def_pb2.UNKNOWN:
         return ""
     raise ValueError("Not support type {}".format(t))
