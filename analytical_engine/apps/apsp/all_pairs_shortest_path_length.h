@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIR_DIJKSTRA_PATH_LENGTH_H_
-#define ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIR_DIJKSTRA_PATH_LENGTH_H_
+#ifndef ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIRS_SHORTEST_PATH_LENGTH_H_
+#define ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIRS_SHORTEST_PATH_LENGTH_H_
 
 #ifdef NETWORKX
 
@@ -27,25 +27,24 @@ limitations under the License.
 
 #include "grape/grape.h"
 
-#include "apps/apsp/all_pair_dijkstra_path_length_context.h"
+#include "apps/apsp/all_pairs_shortest_path_length_context.h"
 #include "core/utils/app_utils.h"
 
 namespace gs {
 
 /**
- * @brief Compute the average shortest path length in a *connected* graph.
- * Average shortest path length is average of all sssp length of (source = v,
- * target = u), where v, u is any vertex in graph. Note that this algorithm is
- * time consuming.
+ * @brief Compute the all pairs shortest path length of a graph.
+ * if the graph is weighted graph, use Dijkstra algorithm.
+ * if the graph is unweighted graph, use BFS algorithm.
  * */
 template <typename FRAG_T>
-class AllPairDijkstraPathLength
+class AllPairsShortestPathLength
     : public grape::ParallelAppBase<FRAG_T,
-                                    AllPairDijkstraPathLengthContext<FRAG_T>>,
+                                    AllPairsShortestPathLengthContext<FRAG_T>>,
       public grape::ParallelEngine {
  public:
-  INSTALL_PARALLEL_WORKER(AllPairDijkstraPathLength<FRAG_T>,
-                          AllPairDijkstraPathLengthContext<FRAG_T>, FRAG_T)
+  INSTALL_PARALLEL_WORKER(AllPairsShortestPathLength<FRAG_T>,
+                          AllPairsShortestPathLengthContext<FRAG_T>, FRAG_T)
   static constexpr grape::MessageStrategy message_strategy =
       grape::MessageStrategy::kSyncOnOuterVertex;
   static constexpr grape::LoadStrategy load_strategy =
@@ -77,7 +76,7 @@ class AllPairDijkstraPathLength
   }
 
  private:
-  // sequential Dijkstra length algorithm for SSSP.
+  // sequential Dijkstra length algorithm.
   void dijkstraLength(const fragment_t& frag, vertex_t& s, context_t& ctx) {
     {
       auto vertices = frag.Vertices();
@@ -142,4 +141,4 @@ class AllPairDijkstraPathLength
 }  // namespace gs
 
 #endif  // NETWORKX
-#endif  // ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIR_DIJKSTRA_PATH_LENGTH_H_
+#endif  // ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIRS_SHORTEST_PATH_LENGTH_H_

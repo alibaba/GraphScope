@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIR_DIJKSTRA_PATH_LENGTH_CONTEXT_H_
-#define ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIR_DIJKSTRA_PATH_LENGTH_CONTEXT_H_
+#ifndef ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIRS_SHORTEST_PATH_LENGTH_CONTEXT_H_
+#define ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIRS_SHORTEST_PATH_LENGTH_CONTEXT_H_
 
 #ifdef NETWORKX
 
@@ -30,14 +30,14 @@ limitations under the License.
 namespace gs {
 
 template <typename FRAG_T>
-class AllPairDijkstraPathLengthContext
+class AllPairsShortestPathLengthContext
     : public grape::VertexDataContext<FRAG_T, folly::dynamic> {
  public:
   using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
   using vertex_t = typename FRAG_T::vertex_t;
 
-  explicit AllPairDijkstraPathLengthContext(const FRAG_T& fragment)
+  explicit AllPairsShortestPathLengthContext(const FRAG_T& fragment)
       : grape::VertexDataContext<FRAG_T, folly::dynamic>(fragment) {}
 
   void Init(grape::ParallelMessageManager& messages) {
@@ -82,4 +82,4 @@ class AllPairDijkstraPathLengthContext
 }  // namespace gs
 
 #endif  // NETWORKX
-#endif  // ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIR_DIJKSTRA_PATH_LENGTH_CONTEXT_H_
+#endif  // ANALYTICAL_ENGINE_APPS_APSP_ALL_PAIRS_SHORTEST_PATH_LENGTH_CONTEXT_H_

@@ -490,8 +490,8 @@ def bfs_successors(G, source, depth_limit=None):
 
 
 @project_to_simple
-def all_pairs_dijkstra_path_length(G, weight=None):
-    """Compute shortest path lengths between all nodes in a weighted graph.
+def all_pairs_shortest_path_length(G, weight=None):
+    """Compute shortest path lengths between all nodes in a graph.
 
     Parameters
     ----------
@@ -535,7 +535,7 @@ def all_pairs_dijkstra_path_length(G, weight=None):
 
     The dictionary returned only has keys for reachable node pairs.
     """
-    return AppAssets(algo="all_pair_dijkstra_path_length")(G)
+    return AppAssets(algo="all_pairs_shortest_path_length")(G)
 
 
 @project_to_simple
