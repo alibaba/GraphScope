@@ -495,22 +495,17 @@ def all_pairs_shortest_path_length(G, weight=None):
 
     Parameters
     ----------
-    G : NetworkX graph
+    G : networkx graph
 
-    cutoff : integer or float, optional
-       Depth to stop the search. Only return paths with length <= cutoff.
-
-    weight : string
+    weight : string (defualt=None)
        edge weights will be accessed via the edge attribute with this
        key (that is, the weight of the edge joining `u` to `v` will be
-       ``G.edges[u, v][weight]``). If no such edge attribute exists,
-       the weight of the edge is assumed to be one.
+       ``G.edges[u, v][weight]``). If is None, every edge is assume to be one.
 
     Returns
     -------
-    distance : iterator
-        (source, dictionary) iterator with dictionary keyed by target and
-        shortest path length as the key value.
+     :class:`DynamicVertexDataContext`: A context with each vertex assigned with the shortest distance.
+        One can use the context to access node's distance result or iterate by nodes.
 
     Examples
     --------
@@ -533,7 +528,6 @@ def all_pairs_shortest_path_length(G, weight=None):
     Edge weight attributes must be numerical.
     Distances are calculated as sums of weighted edges traversed.
 
-    The dictionary returned only has keys for reachable node pairs.
     """
     return AppAssets(algo="all_pairs_shortest_path_length")(G)
 
@@ -571,11 +565,11 @@ def closeness_centrality(G, weight=None, wf_improved=True):
     Parameters
     ----------
     G : graph
-      A NetworkX graph
+      A networkx graph
 
     weight : edge attribute key, optional (default=None)
       Use the specified edge attribute as the edge distance in shortest
-      path calculations
+      path calculations, if None, every edge is assumed to be one.
 
     wf_improved : bool, optional (default=True)
       If True, scale by the fraction of nodes reachable. This gives the
@@ -585,21 +579,6 @@ def closeness_centrality(G, weight=None, wf_improved=True):
     Returns
     -------
     nodes: dataframe
-
-    Notes
-    -----
-    The closeness centrality is normalized to `(n-1)/(|G|-1)` where
-    `n` is the number of nodes in the connected part of graph
-    containing the node.  If the graph is not completely connected,
-    this algorithm computes the closeness centrality for each
-    connected part separately scaled by that parts size.
-
-    If the 'weight' keyword is set to an edge attribute key then the
-    shortest-path length will be computed using Dijkstra's algorithm with
-    that edge attribute as the edge weight.
-
-    The closeness centrality uses *inward* distance to a node, not outward.
-    If you want to use outword distances apply the function to `G.reverse()`
 
     References
     ----------
