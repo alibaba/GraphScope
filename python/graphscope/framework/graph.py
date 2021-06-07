@@ -37,7 +37,8 @@ from graphscope.framework.graph_utils import EdgeLabel
 from graphscope.framework.graph_utils import EdgeSubLabel
 from graphscope.framework.graph_utils import VertexLabel
 from graphscope.framework.operation import Operation
-from graphscope.proto import attr_value_pb2
+from graphscope.framework.utils import data_type_to_cpp
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 logger = logging.getLogger("graphscope")
@@ -173,13 +174,15 @@ class Graph(object):
         )
 
         self._key = graph_def.key
-        self._vineyard_id = graph_def.vineyard_id
-        self._oid_type = graph_def.schema_def.oid_type
         self._directed = graph_def.directed
-        self._generate_eid = graph_def.generate_eid
+        vy_info = graph_def_pb2.VineyardInfoPb()
+        graph_def.extension.Unpack(vy_info)
+        self._vineyard_id = vy_info.vineyard_id
+        self._oid_type = data_type_to_cpp(vy_info.oid_type)
+        self._generate_eid = vy_info.generate_eid
 
-        self._schema_path = graph_def.schema_path
-        self._schema.get_schema_from_def(graph_def.schema_def)
+        self._schema_path = vy_info.schema_path
+        self._schema.get_schema_from_def(vy_info.schema_def)
         self._v_labels = self._schema.vertex_labels
         self._e_labels = self._schema.edge_labels
         self._e_relationships = self._schema.edge_relationships

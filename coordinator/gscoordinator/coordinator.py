@@ -47,10 +47,10 @@ from graphscope.proto import attr_value_pb2
 from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import engine_service_pb2_grpc
 from graphscope.proto import error_codes_pb2
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
-from graphscope.proto import graph_def_pb2
 
 from gscoordinator.cluster import KubernetesClusterLauncher
 from gscoordinator.launcher import LocalLauncher
@@ -349,8 +349,7 @@ class CoordinatorServiceServicer(
                     vy_info = graph_def_pb2.VineyardInfoPb()
                     response.graph_def.extension.Unpack(vy_info)
                     dump_string(
-                        to_maxgraph_schema(vy_info.property_schema_json
-                        ),
+                        to_maxgraph_schema(vy_info.property_schema_json),
                         schema_path,
                     )
                     vy_info.schema_path = schema_path
