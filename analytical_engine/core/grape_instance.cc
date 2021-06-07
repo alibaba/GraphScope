@@ -220,7 +220,6 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
     context_type = ctx_wrapper->context_type();
     BOOST_LEAF_CHECK(object_manager_.PutObject(ctx_wrapper));
   }
-  LOG(INFO) << "context_type=" << context_type;
 
   return toJson({{"context_type", context_type}, {"context_key", context_key}});
 }
