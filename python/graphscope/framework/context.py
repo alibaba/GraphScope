@@ -318,7 +318,6 @@ class DynamicVertexDataContext(collections.abc.Mapping):
     session_id = BaseContext.__dict__["session_id"]
     key = BaseContext.__dict__["key"]
     signature = BaseContext.__dict__["signature"]
-    _check_unmodified = BaseContext.__dict__["_check_unmodified"]
     __repr__ = BaseContext.__dict__["__repr__"]
 
     def __len__(self):
@@ -327,7 +326,7 @@ class DynamicVertexDataContext(collections.abc.Mapping):
     def __getitem__(self, key):
         if key not in self._graph._graph:
             raise KeyError(key)
-        op = dag_utils.fetch_context(self, json.dumps([key]))
+        op = dag_utils.get_context_data(self, json.dumps([key]))
         return dict(json.loads(op.eval()))
 
     def __iter__(self):

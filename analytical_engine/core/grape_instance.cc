@@ -353,10 +353,9 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToNumpy(
                   "Unsupported context type: " + std::string(ctx_type));
 }
 
-bl::result<std::string> GrapeInstance::fetchContextData(
+bl::result<std::string> GrapeInstance::getContextData(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(ctx_name, params.Get<std::string>(rpc::CTX_NAME));
-  // BOOST_LEAF_AUTO(fetch_type, params.Get<rpc::FetchType>(rpc::FETCH_TYPE));
   BOOST_LEAF_AUTO(base_ctx_wrapper,
                   object_manager_.GetObject<IContextWrapper>(ctx_name));
 
@@ -1083,8 +1082,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     r->set_data(vy_obj_id_in_json);
     break;
   }
-  case rpc::FETCH_CONTEXT: {
-    BOOST_LEAF_AUTO(context_json, fetchContextData(params));
+  case rpc::GET_CONTEXT_DATA: {
+    BOOST_LEAF_AUTO(context_json, getContextData(params));
     r->set_data(context_json,
                 DispatchResult::AggregatePolicy::kPickFirstNonEmpty);
     break;

@@ -140,7 +140,7 @@ class GrapeInstance : public Subscriber {
           induced_edges);
 #endif  // NETWORKX
 
-  bl::result<std::string> fetchContextData(const rpc::GSParams& params);
+  bl::result<std::string> getContextData(const rpc::GSParams& params);
 
   bl::result<rpc::GraphDef> addLabelsToGraph(const rpc::GSParams& params);
 

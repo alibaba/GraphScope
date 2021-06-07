@@ -534,15 +534,13 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
   }
 
   bl::result<std::string> GetContextData(const rpc::GSParams& params) override {
-    std::string ret;
     BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
     oid_t node_id = folly::parseJson(node_in_json)[0];
     auto& frag = ctx_->fragment();
     if (frag.HasNode(node_id)) {
       vertex_t v;
       frag.GetVertex(node_id, v);
-      folly::json::serialization_opts json_opts;
-      ret = folly::json::serialize(ctx_->GetVertexResult(v), json_opts);
+      return folly::json::serialize(ctx_->GetVertexResult(v), json_opts_);
     }
     return ret;
   }
@@ -589,6 +587,7 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
  private:
   std::shared_ptr<IFragmentWrapper> frag_wrapper_;
   std::shared_ptr<context_t> ctx_;
+  folly::json::serialization_opts json_opts_;
 };
 #endif  // NETWORKX
 
