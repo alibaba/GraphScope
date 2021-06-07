@@ -195,6 +195,15 @@ class DiGraph(Graph):
 
     @patch_docstring(Graph.__init__)
     def __init__(self, incoming_graph_data=None, **attr):
+        if self._session is None:
+            try:
+                self._session = get_default_session()
+            except RuntimeError:
+                raise ValueError(
+                    "The nx binding session is None, that maybe no default session found. "
+                    "Please register a session as default session."
+                )
+
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
         self.adjlist_dict_factory = self.adjlist_dict_factory
@@ -216,17 +225,6 @@ class DiGraph(Graph):
             "create_empty_in_engine", True
         )  # a hidden parameter
         self._distributed = attr.pop("dist", False)
-
-        if self._is_gs_graph(incoming_graph_data):
-            self._session_id = incoming_graph_data.session_id
-        elif create_empty_in_engine:
-            sess = get_default_session()
-            if sess is None:
-                raise ValueError(
-                    "Cannot find a default session. "
-                    "Please register a session using graphscope.session(...).as_default()"
-                )
-            self._session_id = sess.session_id
 
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(
@@ -447,5 +445,5 @@ class DiGraph(Graph):
             graph_def = op.eval()
             g._key = graph_def.key
             g._schema = deepcopy(self._schema)
-        g._session_id = self._session_id
+        g._session = self._session
         return g

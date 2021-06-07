@@ -22,7 +22,6 @@ from networkx.classes.tests.test_graph import TestGraph as _TestGraph
 from networkx.testing.utils import assert_graphs_equal
 
 from graphscope import nx
-from graphscope.framework.dag_utils import create_subgraph
 
 
 @pytest.mark.usefixtures("graphscope_session")

@@ -1189,6 +1189,22 @@ class Session(object):
         graph._attach_learning_instance(learning_graph)
         return learning_graph
 
+    def nx(self):
+        import importlib.util
+
+        spec = importlib.util.find_spec("graphscope.nx")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        graph = type("Graph", (mod.Graph.__base__,), dict(mod.Graph.__dict__))
+        digraph = type("DiGraph", (mod.DiGraph.__base__,), dict(mod.DiGraph.__dict__))
+        setattr(graph, "_session", self)
+        setattr(digraph, "_session", self)
+        setattr(mod, "Graph", graph)
+        setattr(mod, "DiGraph", digraph)
+
+        return mod
+
 
 session = Session
 

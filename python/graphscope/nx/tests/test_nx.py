@@ -23,6 +23,7 @@ import pytest
 import graphscope
 import graphscope.nx as nx
 from graphscope.client.session import g
+from graphscope.client.session import get_default_session
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
@@ -330,15 +331,22 @@ class TestGraphTransformation(object):
         with pytest.raises(AnalyticalEngineInternalError):
             nx_g = self.NXGraph(g)
 
-    @pytest.mark.skip(reason="TODO: open it")
     def test_multiple_sessions(self):
-        g = self.single_label_g
         sess2 = graphscope.session(cluster_type="hosts", num_workers=1)
-        g2 = ldbc_sample_single_label_with_sess(sess2, self.data_dir, False)
+        nx2 = sess2.nx()
+        g = self.single_label_g
+
+        if self.NXGraph is nx.Graph:
+            g2 = ldbc_sample_single_label_with_sess(sess2, self.data_dir, False)
+        else:
+            g2 = ldbc_sample_single_label_with_sess(sess2, self.data_dir, True)
         assert g.session_id != g2.session_id
 
-        nx_g = self.NXGraph(g)
-        nx_g2 = self.NXGraph(g2)
+        nx_g = self.NXGraph(g, dist=True)
+        if nx_g.is_directed():
+            nx_g2 = nx2.DiGraph(g2, dist=True)
+        else:
+            nx_g2 = nx2.Graph(g2, dist=True)
         self.assert_convert_success(g2, nx_g2)
         assert nx_g.session_id == g.session_id
         assert nx_g2.session_id == g2.session_id
@@ -505,3 +513,27 @@ class TestDiGraphProjectTest(TestGraphProjectTest):
         )
         cls.g.add_node(0, vdata_str="kdjfao")
         cls.g.add_node(1, vdata_int=123)
+
+
+@pytest.mark.usefixtures("graphscope_session")
+class TestImportNetworkxModuleWithSession(object):
+    @classmethod
+    def setup_class(cls):
+        cls.session1 = graphscope.session(cluster_type="hosts", num_workers=1)
+        cls.session2 = graphscope.session(cluster_type="hosts", num_workers=1)
+        # cls.session_lazy = graphscope.session(cluster_type="hosts", num_workers=1, mode="lazy")
+
+    def test_import(self):
+        import graphscope.nx as nx_default
+
+        nx1 = self.session1.nx()
+        nx2 = self.session2.nx()
+        G = nx_default.Graph()
+        G1 = nx1.Graph()
+        G2 = nx2.Graph()
+        assert G.session_id == get_default_session().session_id
+        assert G1.session_id == self.session1.session_id
+        assert G2.session_id == self.session2.session_id
+
+        self.session1.close()
+        self.session2.close()
