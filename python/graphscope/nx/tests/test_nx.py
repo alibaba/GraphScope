@@ -143,20 +143,20 @@ class TestGraphTransformation(object):
 
     def _schema_equal(self, gs_schema, nx_schema):
         v_props = {}
-        for entry in gs_schema._valid_vertex_entries():
+        for entry in gs_schema._valid_vertex_labels():
             for prop in entry.properties:
                 v_props[prop.name] = prop.type
         e_props = {}
-        for entry in gs_schema._valid_edge_entries():
+        for entry in gs_schema._valid_edge_labels():
             for prop in entry.properties:
                 e_props[prop.name] = prop.type
         gs_v_props = {
             prop.name: prop.type
-            for prop in list(nx_schema._valid_vertex_entries())[0].properties
+            for prop in list(nx_schema._valid_vertex_labels())[0].properties
         }
         gs_e_props = {
             prop.name: prop.type
-            for prop in list(nx_schema._valid_edge_entries())[0].properties
+            for prop in list(nx_schema._valid_edge_labels())[0].properties
         }
         return v_props == gs_v_props and e_props == gs_e_props
 
