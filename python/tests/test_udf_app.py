@@ -975,18 +975,18 @@ def test_get_schema(graphscope_session, arrow_property_graph):
     ctx1 = a1(arrow_property_graph)
     r1 = ctx1.to_numpy("r:v0", vertex_range={"begin": 0, "end": 7})
     assert r1.tolist() == [
-        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,DOUBLE,e1,weight,DOUBLE,",
-        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,DOUBLE,e1,weight,DOUBLE,",
-        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,DOUBLE,e1,weight,DOUBLE,",
+        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,LONG,e1,weight,LONG,",
+        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,LONG,e1,weight,LONG,",
+        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,LONG,e1,weight,LONG,",
     ]
     # pie
     a2 = PIE_GetSchema()
     ctx2 = a2(arrow_property_graph)
     r2 = ctx2.to_numpy("r:v0", vertex_range={"begin": 0, "end": 7})
     assert r2.tolist() == [
-        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,DOUBLE,e1,weight,DOUBLE,",
-        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,DOUBLE,e1,weight,DOUBLE,",
-        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,DOUBLE,e1,weight,DOUBLE,",
+        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,LONG,e1,weight,LONG,",
+        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,LONG,e1,weight,LONG,",
+        "v0,v1,weight,DOUBLE,id,LONG,e0,weight,LONG,e1,weight,LONG,",
     ]
 
 
