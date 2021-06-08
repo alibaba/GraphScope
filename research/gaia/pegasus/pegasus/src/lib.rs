@@ -26,7 +26,7 @@ extern crate pegasus_common;
 
 use std::cell::{Cell, RefCell};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 mod config;
 mod graph;
@@ -53,7 +53,7 @@ mod worker;
 pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
 pub use crate::operator::{never_clone, NeverClone};
 use crate::worker_id::WorkerIdIter;
-pub use config::{read_from, Configuration, JobConf};
+pub use config::{read_from, Configuration, JobConf, ServerConf};
 pub use data::Data;
 pub use pegasus_common::codec;
 use pegasus_executor::{ExecError, TaskGuard};
@@ -62,9 +62,11 @@ pub use pegasus_network::ServerDetect;
 pub use tag::Tag;
 pub use worker::Worker;
 pub use worker_id::{get_current_worker, WorkerId};
+use std::collections::HashSet;
 
 lazy_static! {
     static ref SERVER_ID: Mutex<Option<u64>> = Mutex::new(None);
+    static ref SERVERS: RwLock<Vec<u64>> = RwLock::new(vec![]);
 }
 
 thread_local! {
@@ -90,6 +92,16 @@ pub fn server_id() -> Option<u64> {
     })
 }
 
+pub fn get_servers() -> Vec<u64> {
+    let lock = SERVERS.read().expect("fetch read lock failure;");
+    lock.to_vec()
+}
+
+pub fn get_servers_len() -> usize {
+    let lock = SERVERS.read().expect("fetch read lock failure;");
+    lock.len()
+}
+
 fn set_server_id(server_id: u64) -> Option<u64> {
     let mut id = SERVER_ID.lock().expect("lock poisoned");
     if let Some(id) = &*id {
@@ -101,14 +113,20 @@ fn set_server_id(server_id: u64) -> Option<u64> {
 }
 
 pub fn startup(conf: Configuration) -> Result<(), StartupError> {
+    let mut servers = HashSet::new();
     let server_id = conf.server_id();
+    servers.insert(server_id);
     if let Some(id) = set_server_id(server_id) {
         return Err(StartupError::AlreadyStarted(id));
     }
+
     if let Some(net_conf) = conf.network_config() {
         if let Some(peers) = net_conf.get_peers()? {
             let addr = net_conf.local_addr()?;
             let conn_conf = net_conf.get_connection_param();
+            for p in peers.iter(){
+                servers.insert(p.id);
+            }
             let addr = pegasus_network::start_up(server_id, conn_conf, addr, peers)?;
             info!("server {} start on {:?}", server_id, addr);
         } else {
@@ -119,6 +137,12 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
         pegasus_executor::set_core_pool_size(pool_size as usize);
     }
     pegasus_executor::try_start_executor_async();
+    let mut lock = SERVERS.write().expect("fetch servers lock failure;");
+    assert!(lock.is_empty());
+    for s in servers {
+        lock.push(s);
+    }
+    lock.sort();
     Ok(())
 }
 
@@ -196,7 +220,18 @@ where
 #[inline]
 fn allocate_worker(conf: &Arc<JobConf>) -> Result<Option<WorkerIdIter>, BuildJobError> {
     if let Some(my_id) = server_id() {
-        let servers = conf.servers();
+        let server_conf = conf.servers();
+        let servers = match server_conf {
+            ServerConf::Local => {
+                return Ok(Some(WorkerIdIter::new(conf.job_id, conf.workers, 0, conf.workers)));
+            },
+            ServerConf::Partial(ids) => {
+                ids.clone()
+            },
+            ServerConf::All => {
+                get_servers()
+            }
+        };
         if servers.is_empty() || (servers.len() == 1 && servers[0] == my_id) {
             Ok(Some(WorkerIdIter::new(conf.job_id, conf.workers, 0, conf.workers)))
         } else {
@@ -209,7 +244,7 @@ fn allocate_worker(conf: &Arc<JobConf>) -> Result<Option<WorkerIdIter>, BuildJob
             if my_index < 0 {
                 Ok(None)
             } else {
-                if pegasus_network::check_connect(my_id, servers) {
+                if pegasus_network::check_connect(my_id, &servers) {
                     let peers = conf.workers * servers.len() as u32;
                     let start = my_index as u32 * conf.workers;
                     Ok(Some(WorkerIdIter::new(conf.job_id, peers, start, start + conf.workers)))

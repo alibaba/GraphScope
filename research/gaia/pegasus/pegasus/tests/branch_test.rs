@@ -20,7 +20,7 @@ use pegasus::{Configuration, JobConf};
 fn branch_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(9, "branch_test", 2);
+    let conf = JobConf::with_id(9, "branch_test", 2);
 
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {

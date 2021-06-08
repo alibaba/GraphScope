@@ -23,7 +23,7 @@ use pegasus::api::function::EncodeFunction;
 use pegasus::api::{Count, Fold, Group, KeyBy, ResultSet, Sink, RANGES};
 use pegasus::codec::ShadeCodec;
 use pegasus::stream::Stream;
-use pegasus::{BuildJobError, Data, JobConf, JobGuard, NeverClone};
+use pegasus::{BuildJobError, Data, JobConf, JobGuard, NeverClone, ServerConf};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -283,7 +283,7 @@ fn sink_shade<D: Send + Debug + 'static, O: Output + Clone>(
 
 #[inline]
 fn parse_job_conf(conf: pb::JobConfig) -> JobConf {
-    let mut job_conf = JobConf::new(conf.job_id, conf.job_name, conf.workers);
+    let mut job_conf = JobConf::with_id(conf.job_id, conf.job_name, conf.workers);
     if conf.time_limit != 0 {
         job_conf.time_limit = conf.time_limit;
     }
@@ -298,7 +298,7 @@ fn parse_job_conf(conf: pb::JobConfig) -> JobConf {
     }
     job_conf.plan_print = conf.plan_print;
     if !conf.servers.is_empty() {
-        job_conf.add_servers(&conf.servers);
+        job_conf.reset_servers(ServerConf::Partial(conf.servers.clone()));
     }
     job_conf
 }

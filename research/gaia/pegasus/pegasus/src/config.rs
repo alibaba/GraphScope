@@ -17,6 +17,9 @@ use crate::errors::StartupError;
 use pegasus_network::config::NetworkConfig;
 use serde::Deserialize;
 use std::path::Path;
+use ahash::AHasher;
+use std::hash::Hasher;
+use crate::{get_servers, get_servers_len};
 
 #[derive(Debug, Deserialize)]
 pub struct Configuration {
@@ -52,6 +55,31 @@ pub fn read_from<P: AsRef<Path>>(path: P) -> Result<Configuration, StartupError>
 }
 
 #[derive(Debug, Clone)]
+pub enum ServerConf {
+    Local,
+    Partial(Vec<u64>),
+    All
+}
+
+impl ServerConf {
+    pub fn len(&self) -> usize {
+        match self {
+            ServerConf::Local => 0,
+            ServerConf::Partial(v) => v.len(),
+            ServerConf::All => get_servers_len()
+        }
+    }
+
+    pub fn get_servers(&self) -> Vec<u64> {
+        match self {
+            ServerConf::Local => vec![],
+            ServerConf::Partial(servers) => servers.clone(),
+            ServerConf::All => get_servers()
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct JobConf {
     /// unique identifier of the job;
     pub job_id: u64,
@@ -70,13 +98,24 @@ pub struct JobConf {
     /// set to print runtime dataflow plan before running;
     pub plan_print: bool,
     /// the id of servers this job will run on;
-    servers: Vec<u64>,
+    servers: ServerConf,
     /// set enable trace job run progress;
     pub trace_enable: bool,
 }
 
 impl JobConf {
-    pub fn new<S: Into<String>>(job_id: u64, name: S, workers: u32) -> Self {
+
+    pub fn new<S: Into<String>>(name: S) -> Self {
+        let mut conf = JobConf::default();
+        let name = name.into();
+        let mut hasher = AHasher::default();
+        hasher.write(name.as_bytes());
+        conf.job_id = hasher.finish();
+        conf.job_name = name;
+        conf
+    }
+
+    pub fn with_id<S: Into<String>>(job_id: u64, name: S, workers: u32) -> Self {
         let mut conf = JobConf::default();
         conf.job_id = job_id;
         conf.job_name = name.into();
@@ -84,16 +123,21 @@ impl JobConf {
         conf
     }
 
-    pub fn servers(&self) -> &[u64] {
+    pub fn set_workers(&mut self, workers: u32) {
+        self.workers = workers;
+    }
+
+    pub fn servers(&self) -> &ServerConf {
         &self.servers
     }
 
-    pub fn add_servers(&mut self, servers: &[u64]) {
-        self.servers.extend_from_slice(servers);
+    pub fn reset_servers(&mut self, servers: ServerConf) {
+        self.servers = servers
     }
 
     pub fn total_workers(&self) -> usize {
-        if self.servers.is_empty() {
+        let len = self.servers.len();
+        if len == 0 {
             return self.workers as usize;
         } else {
             self.servers.len() * self.workers as usize
@@ -103,6 +147,7 @@ impl JobConf {
 
 impl Default for JobConf {
     fn default() -> Self {
+
         JobConf {
             job_id: 0,
             job_name: "anonymity".to_owned(),
@@ -112,7 +157,7 @@ impl Default for JobConf {
             output_capacity: 64,
             memory_limit: !0u32,
             plan_print: true,
-            servers: vec![],
+            servers: ServerConf::Local,
             trace_enable: false,
         }
     }
