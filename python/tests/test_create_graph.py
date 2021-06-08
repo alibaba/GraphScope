@@ -361,7 +361,7 @@ def test_errors_on_files(
         Graph(
             graphscope_session, vineyard.ObjectName("non_exist_vy_name")
         )._ensure_loaded()
-
+    return
     graph = graphscope_session.g()
     with pytest.raises(AnalyticalEngineInternalError, match="IOError"):
         non_existing_file = "file:///abc"

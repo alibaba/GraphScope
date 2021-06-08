@@ -205,8 +205,12 @@ def arrow_to_dynamic(graph):
         types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(
             graph_def_pb2.DYNAMIC_PROPERTY
         ),
-        types_pb2.OID_TYPE: utils.s_to_attr(utils.data_type_to_cpp(graph.schema.oid_type)),
-        types_pb2.VID_TYPE: utils.s_to_attr(utils.data_type_to_cpp(graph.schema.vid_type)),
+        types_pb2.OID_TYPE: utils.s_to_attr(
+            utils.data_type_to_cpp(graph.schema.oid_type)
+        ),
+        types_pb2.VID_TYPE: utils.s_to_attr(
+            utils.data_type_to_cpp(graph.schema.vid_type)
+        ),
     }
     op = Operation(
         graph.session_id,
