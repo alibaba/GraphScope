@@ -72,7 +72,7 @@ def test_simple_context_to_vineyard_dataframe(
 
 
 def test_property_context_to_numpy(property_context):
-    out = property_context.to_numpy("v:v0.weight")
+    out = property_context.to_numpy("v:v0.dist")
     assert out.shape == (40521,)
     out = property_context.to_numpy("r:v1.dist_1")
     assert out.shape == (40786,)
@@ -100,7 +100,7 @@ def test_property_context_to_vineyard_tensor(property_context):
 
 def test_property_context_to_vineyard_dataframe(graphscope_session, property_context):
     out = property_context.to_vineyard_dataframe(
-        {"id": "v:v0.id", "data": "v:v0.weight", "result": "r:v0.dist_0"}
+        {"id": "v:v0.id", "data": "v:v0.dist", "result": "r:v0.dist_0"}
     )
     assert out is not None
 
