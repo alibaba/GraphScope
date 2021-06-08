@@ -253,7 +253,7 @@ class GraphSchema:
                 self._valid_vertices.append(1)
             else:
                 label = EdgeLabel.from_type_def(type_def_pb)
-                for src, dst in edge_kinds[label.name]:
+                for src, dst in edge_kinds[label.label]:
                     label.source(src).destination(dst)
                 self._edge_labels.append(label)
                 self._valid_edges.append(1)
@@ -497,11 +497,11 @@ class GraphSchema:
 
     def drop(self, label, src_label=None, dst_label=None):
         for item in itertools.chain(self.vertex_labels, self._vertex_labels_to_add):
-            if label == item.name:
+            if label == item.label:
                 self._vertex_labels_to_drop.append(VertexLabel(label))
                 return
         for item in itertools.chain(self.edge_labels, self._edge_labels_to_add):
-            if label == item.name:
+            if label == item.label:
                 label_to_drop = EdgeLabel(label)
                 if src_label and dst_label:
                     label_to_drop.source(src_label).destination(dst_label)
