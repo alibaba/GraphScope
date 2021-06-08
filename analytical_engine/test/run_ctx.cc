@@ -60,8 +60,8 @@ void RunCTXSSSP(std::shared_ptr<FragmentType> fragment,
   ctx->Output(ostream);
   ostream.close();
 
-  gs::rpc::GraphDef graph_def;
-  graph_def.set_graph_type(gs::rpc::ARROW_PROJECTED);
+  gs::rpc::graph::GraphDefPb graph_def;
+  graph_def.set_graph_type(gs::rpc::graph::ARROW_PROJECTED);
 
   auto frag_wrapper = std::make_shared<gs::FragmentWrapper<FragmentType>>(
       "graph_123", graph_def, fragment);

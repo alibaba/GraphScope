@@ -110,18 +110,6 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
                     dstPkMap, (EdgeType) type, propertiesMap, tableId, false);
             this.outKey.set(inEdgeKeyRef.getArray(), inEdgeKeyRef.getOffset(), inEdgeKeyRef.getLength());
             context.write(this.outKey, this.outVal);
-
-//            if (type.getLabel().equalsIgnoreCase("knows")) {
-//                BytesRef reverseOutEdgeKeyRef = this.dataEncoder.encodeEdgeKey((VertexType) dstType, dstPkMap,
-//                        (VertexType) srcType, srcPkMap, (EdgeType) type, propertiesMap, tableId, true);
-//                this.outKey.set(reverseOutEdgeKeyRef.getArray(), reverseOutEdgeKeyRef.getOffset(), reverseOutEdgeKeyRef.getLength());
-//                context.write(this.outKey, this.outVal);
-//
-//                BytesRef reverseInEdgeKeyRef = this.dataEncoder.encodeEdgeKey((VertexType) dstType, dstPkMap,
-//                        (VertexType) srcType, srcPkMap, (EdgeType) type, propertiesMap, tableId, false);
-//                this.outKey.set(reverseInEdgeKeyRef.getArray(), reverseInEdgeKeyRef.getOffset(), reverseInEdgeKeyRef.getLength());
-//                context.write(this.outKey, this.outVal);
-//            }
         } else {
             throw new IllegalArgumentException("invalid label [" + labelId + "], only support VertexType and EdgeType");
         }

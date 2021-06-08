@@ -80,7 +80,7 @@ class GrapeInstance : public Subscriber {
       const CommandDetail& cmd) override;
 
  private:
-  bl::result<rpc::GraphDef> loadGraph(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> loadGraph(const rpc::GSParams& params);
 
   bl::result<void> unloadGraph(const rpc::GSParams& params);
 
@@ -93,9 +93,10 @@ class GrapeInstance : public Subscriber {
 
   bl::result<std::string> reportGraph(const rpc::GSParams& params);
 
-  bl::result<rpc::GraphDef> projectGraph(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> projectGraph(const rpc::GSParams& params);
 
-  bl::result<rpc::GraphDef> projectToSimple(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> projectToSimple(
+      const rpc::GSParams& params);
 
   bl::result<void> modifyVertices(const rpc::GSParams& params,
                                   const std::vector<std::string>& vertices);
@@ -118,20 +119,21 @@ class GrapeInstance : public Subscriber {
   bl::result<std::string> contextToVineyardDataFrame(
       const rpc::GSParams& params);
 
-  bl::result<rpc::GraphDef> addColumn(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> addColumn(const rpc::GSParams& params);
 
-  bl::result<rpc::GraphDef> convertGraph(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> convertGraph(const rpc::GSParams& params);
 
-  bl::result<rpc::GraphDef> copyGraph(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> copyGraph(const rpc::GSParams& params);
 
-  bl::result<rpc::GraphDef> toDirected(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> toDirected(const rpc::GSParams& params);
 
-  bl::result<rpc::GraphDef> toUnDirected(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> toUnDirected(const rpc::GSParams& params);
 
-  bl::result<rpc::GraphDef> createGraphView(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> createGraphView(
+      const rpc::GSParams& params);
 
 #ifdef NETWORKX
-  bl::result<rpc::GraphDef> induceSubGraph(
+  bl::result<rpc::graph::GraphDefPb> induceSubGraph(
       const rpc::GSParams& params,
       const std::unordered_set<typename DynamicFragment::oid_t>&
           induced_vertices,
@@ -140,9 +142,9 @@ class GrapeInstance : public Subscriber {
           induced_edges);
 #endif  // NETWORKX
 
+  bl::result<rpc::graph::GraphDefPb> addLabelsToGraph(
+      const rpc::GSParams& params);
   bl::result<std::string> getContextData(const rpc::GSParams& params);
-
-  bl::result<rpc::GraphDef> addLabelsToGraph(const rpc::GSParams& params);
 
   bl::result<std::shared_ptr<grape::InArchive>> graphToNumpy(
       const rpc::GSParams& params);

@@ -94,7 +94,7 @@ def gs_session_distributed():
         k8s_coordinator_cpu=2,
         k8s_coordinator_mem="4Gi",
         k8s_vineyard_cpu=2,
-        k8s_vineyard_mem="512Mi",
+        k8s_vineyard_mem="1Gi",
         k8s_engine_cpu=2,
         k8s_engine_mem="4Gi",
         k8s_etcd_cpu=4,

@@ -245,12 +245,12 @@ def test_loader_with_specified_data_type(
         student_group_e, "group", ["group_id", ("member_size", "int")]
     )
     assert [p.type for p in graph.schema.get_vertex_properties("student")] == [
-        21,
-        11,
-        18,
-        21,
+        10,
+        4,
+        8,
+        10,
     ]
-    assert [p.type for p in graph.schema.get_edge_properties("group")] == [21, 11]
+    assert [p.type for p in graph.schema.get_edge_properties("group")] == [10, 4]
 
 
 def test_multi_src_dst_edge_loader(

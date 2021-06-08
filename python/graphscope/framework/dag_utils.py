@@ -22,6 +22,7 @@ from graphscope.framework import utils
 from graphscope.framework.errors import check_argument
 from graphscope.framework.operation import Operation
 from graphscope.proto import attr_value_pb2
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import query_args_pb2
 from graphscope.proto import types_pb2
 
@@ -42,9 +43,11 @@ def create_app(graph, app):
         types_pb2.APP_ALGO: utils.s_to_attr(app.algo),
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
         types_pb2.OID_TYPE: utils.s_to_attr(
-            utils.normalize_data_type_str(graph.schema.oid_type)
+            utils.normalize_data_type_str(utils.data_type_to_cpp(graph.schema.oid_type))
         ),
-        types_pb2.VID_TYPE: utils.s_to_attr(graph.schema.vid_type),
+        types_pb2.VID_TYPE: utils.s_to_attr(
+            utils.data_type_to_cpp(graph.schema.vid_type)
+        ),
         types_pb2.V_DATA_TYPE: utils.s_to_attr(
             utils.data_type_to_cpp(graph.schema.vdata_type)
         ),
@@ -79,13 +82,13 @@ def create_graph(session_id, graph_type, **kwargs):
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_type),
     }
 
-    if graph_type == types_pb2.ARROW_PROPERTY:
+    if graph_type == graph_def_pb2.ARROW_PROPERTY:
         attrs = kwargs.pop("attrs", None)
         if attrs:
             for k, v in attrs.items():
                 if isinstance(v, attr_value_pb2.AttrValue):
                     config[k] = v
-    elif graph_type == types_pb2.DYNAMIC_PROPERTY:
+    elif graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
         config[types_pb2.E_FILE] = utils.s_to_attr(kwargs["efile"])
         config[types_pb2.V_FILE] = utils.s_to_attr(kwargs["vfile"])
         config[types_pb2.DIRECTED] = utils.b_to_attr(kwargs["directed"])
@@ -122,7 +125,7 @@ def add_labels_to_graph(graph, **kwargs):
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph._graph_type),
     }
 
-    if graph._graph_type == types_pb2.ARROW_PROPERTY:
+    if graph._graph_type == graph_def_pb2.ARROW_PROPERTY:
         attrs = kwargs.pop("attrs", None)
         if attrs:
             for k, v in attrs.items():
@@ -149,7 +152,7 @@ def dynamic_to_arrow(graph):
 
     Returns: An op of transform dynamic graph to arrow graph with necessary configurations.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     oid_type = None
     for node in graph:
         if oid_type is None:
@@ -161,16 +164,18 @@ def dynamic_to_arrow(graph):
                 )
             )
     if oid_type == int or oid_type is None:
-        oid_type = utils.data_type_to_cpp(types_pb2.INT64)
+        oid_type = utils.data_type_to_cpp(graph_def_pb2.LONG)
     elif oid_type == str:
-        oid_type = utils.data_type_to_cpp(types_pb2.STRING)
+        oid_type = utils.data_type_to_cpp(graph_def_pb2.STRING)
     else:
         raise RuntimeError("Unsupported oid type: " + str(oid_type))
-    vid_type = utils.data_type_to_cpp(types_pb2.UINT64)
+    vid_type = utils.data_type_to_cpp(graph_def_pb2.ULONG)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.ARROW_PROPERTY),
-        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.ARROW_PROPERTY),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_PROPERTY),
+        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(
+            graph_def_pb2.ARROW_PROPERTY
+        ),
         types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
         types_pb2.VID_TYPE: utils.s_to_attr(vid_type),
     }
@@ -193,13 +198,19 @@ def arrow_to_dynamic(graph):
     Returns:
         An op of transform arrow graph to dynamic graph with necessary configurations.
     """
-    check_argument(graph.graph_type == types_pb2.ARROW_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.ARROW_PROPERTY),
-        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.DYNAMIC_PROPERTY),
-        types_pb2.OID_TYPE: utils.s_to_attr(graph.schema.oid_type),
-        types_pb2.VID_TYPE: utils.s_to_attr(graph.schema.vid_type),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_PROPERTY),
+        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(
+            graph_def_pb2.DYNAMIC_PROPERTY
+        ),
+        types_pb2.OID_TYPE: utils.s_to_attr(
+            utils.data_type_to_cpp(graph.schema.oid_type)
+        ),
+        types_pb2.VID_TYPE: utils.s_to_attr(
+            utils.data_type_to_cpp(graph.schema.vid_type)
+        ),
     }
     op = Operation(
         graph.session_id,
@@ -221,7 +232,7 @@ def modify_edges(graph, modify_type, edges):
     Returns:
         An op to modify edges on the graph.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
@@ -246,7 +257,7 @@ def modify_vertices(graph, modify_type, vertices):
     Returns:
         An op to modify vertices on the graph.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
@@ -357,7 +368,7 @@ def report_graph(
 
 
 def project_arrow_property_graph(graph, vertex_collections, edge_collections):
-    check_argument(graph.graph_type == types_pb2.ARROW_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
     attr = attr_value_pb2.AttrValue()
     v_attr = attr_value_pb2.NameAttrList()
     e_attr = attr_value_pb2.NameAttrList()
@@ -405,16 +416,16 @@ def project_arrow_property_graph_to_simple(
     Returns:
         An op to project `graph`, results in a simple ARROW_PROJECTED graph.
     """
-    check_argument(graph.graph_type == types_pb2.ARROW_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.ARROW_PROJECTED),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_PROJECTED),
         types_pb2.V_LABEL_ID: utils.i_to_attr(v_label_id),
         types_pb2.V_PROP_ID: utils.i_to_attr(v_prop_id),
         types_pb2.E_LABEL_ID: utils.i_to_attr(e_label_id),
         types_pb2.E_PROP_ID: utils.i_to_attr(e_prop_id),
-        types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
-        types_pb2.VID_TYPE: utils.s_to_attr(vid_type),
+        types_pb2.OID_TYPE: utils.s_to_attr(utils.data_type_to_cpp(oid_type)),
+        types_pb2.VID_TYPE: utils.s_to_attr(utils.data_type_to_cpp(vid_type)),
         types_pb2.V_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(v_data_type)),
         types_pb2.E_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(e_data_type)),
     }
@@ -440,10 +451,10 @@ def project_dynamic_property_graph(graph, v_prop, e_prop, v_prop_type, e_prop_ty
     Returns:
         Operation to project a dynamic property graph. Results in a simple graph.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.DYNAMIC_PROJECTED),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.DYNAMIC_PROJECTED),
         types_pb2.V_PROP_KEY: utils.s_to_attr(v_prop),
         types_pb2.E_PROP_KEY: utils.s_to_attr(e_prop),
         types_pb2.V_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(v_prop_type)),
@@ -471,7 +482,8 @@ def copy_graph(graph, copy_type="identical"):
         Operation
     """
     check_argument(
-        graph.graph_type in (types_pb2.ARROW_PROPERTY, types_pb2.DYNAMIC_PROPERTY)
+        graph.graph_type
+        in (graph_def_pb2.ARROW_PROPERTY, graph_def_pb2.DYNAMIC_PROPERTY)
     )
     check_argument(copy_type in ("identical", "reverse"))
     config = {
@@ -497,7 +509,7 @@ def to_directed(graph):
     Returns:
         Operation
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -520,7 +532,7 @@ def to_undirected(graph):
     Returns:
         Operation
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -544,7 +556,7 @@ def create_graph_view(graph, view_type):
     Returns:
         Operation
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     check_argument(view_type in ("reversed", "directed", "undirected"))
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
@@ -569,7 +581,7 @@ def clear_graph(graph):
     Returns:
         An op to modify edges on the graph.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -591,7 +603,7 @@ def clear_edges(graph):
     Returns:
         An op to modify edges on the graph.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -615,7 +627,7 @@ def create_subgraph(graph, nodes=None, edges=None):
     Returns:
         Operation
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }

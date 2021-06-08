@@ -45,6 +45,7 @@ from graphscope.nx.convert import to_nx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.other import empty_graph_in_engine
 from graphscope.nx.utils.other import parse_ret_as_dict
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
@@ -200,7 +201,7 @@ class Graph(object):
     node_dict_factory = NodeDict
     adjlist_dict_factory = AdjDict
     graph_attr_dict_factory = dict
-    _graph_type = types_pb2.DYNAMIC_PROPERTY
+    _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
 
     def __init__(self, incoming_graph_data=None, **attr):
         """Initialize a graph with edges, name, or graph attributes
@@ -298,7 +299,7 @@ class Graph(object):
     def _is_gs_graph(self, incoming_graph_data):
         return (
             hasattr(incoming_graph_data, "graph_type")
-            and incoming_graph_data.graph_type == types_pb2.ARROW_PROPERTY
+            and incoming_graph_data.graph_type == graph_def_pb2.ARROW_PROPERTY
         )
 
     @patch_docstring(RefGraph.to_directed_class)
@@ -349,9 +350,9 @@ class Graph(object):
     def template_str(self):
         if self._key is None:
             raise RuntimeError("graph should be registered in remote.")
-        if self._graph_type == types_pb2.DYNAMIC_PROPERTY:
+        if self._graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
             return "gs::DynamicFragment"
-        elif self._graph_type == types_pb2.DYNAMIC_PROJECTED:
+        elif self._graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
             edata_type = utils.data_type_to_cpp(self._schema.edata_type)
             return f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
@@ -1916,7 +1917,7 @@ class Graph(object):
 
         if v_prop is None:
             v_prop = str(v_prop)
-            v_prop_type = types_pb2.NULLVALUE
+            v_prop_type = graph_def_pb2.NULLVALUE
         else:
             check_argument(isinstance(v_prop, str))
             v_label = self._schema.vertex_labels[0]
@@ -1932,7 +1933,7 @@ class Graph(object):
 
         if e_prop is None:
             e_prop = str(e_prop)
-            e_prop_type = types_pb2.NULLVALUE
+            e_prop_type = graph_def_pb2.NULLVALUE
         else:
             check_argument(isinstance(e_prop, str))
             e_label = self._schema.edge_labels[0]
@@ -1949,10 +1950,10 @@ class Graph(object):
         graph_def = op.eval()
         graph = self.__class__(create_empty_in_engine=False)
         graph = nx.freeze(graph)
-        graph._graph_type = types_pb2.DYNAMIC_PROJECTED
+        graph._graph_type = graph_def_pb2.DYNAMIC_PROJECTED
         graph._key = graph_def.key
         graph._session_id = self._session_id
-        graph.schema.get_schema_from_def(graph_def.schema_def)
+        graph.schema.from_graph_def(graph_def)
         graph._saved_signature = self._saved_signature
         graph._graph = self  # projected graph also can report nodes.
         graph._is_client_view = False

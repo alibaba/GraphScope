@@ -94,6 +94,10 @@ public class PropertyValue {
         return valObject;
     }
 
+    public DataType getDataType() {
+        return dataType;
+    }
+
     public byte[] getValBytes() {
         return valBytes;
     }

@@ -26,6 +26,7 @@ from graphscope.client.session import g
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
@@ -142,20 +143,20 @@ class TestGraphTransformation(object):
 
     def _schema_equal(self, gs_schema, nx_schema):
         v_props = {}
-        for entry in gs_schema._valid_vertex_entries():
+        for entry in gs_schema._valid_vertex_labels():
             for prop in entry.properties:
                 v_props[prop.name] = prop.type
         e_props = {}
-        for entry in gs_schema._valid_edge_entries():
+        for entry in gs_schema._valid_edge_labels():
             for prop in entry.properties:
                 e_props[prop.name] = prop.type
         gs_v_props = {
             prop.name: prop.type
-            for prop in list(nx_schema._valid_vertex_entries())[0].properties
+            for prop in list(nx_schema._valid_vertex_labels())[0].properties
         }
         gs_e_props = {
             prop.name: prop.type
-            for prop in list(nx_schema._valid_edge_entries())[0].properties
+            for prop in list(nx_schema._valid_edge_labels())[0].properties
         }
         return v_props == gs_v_props and e_props == gs_e_props
 
@@ -375,37 +376,37 @@ class TestGraphProjectTest(object):
         # default, e_prop='', v_prop=''
         sg1 = self.g._project_to_simple()
         assert (
-            sg1.schema.vdata_type == types_pb2.NULLVALUE
-            and sg1.schema.edata_type == types_pb2.NULLVALUE
+            sg1.schema.vdata_type == graph_def_pb2.NULLVALUE
+            and sg1.schema.edata_type == graph_def_pb2.NULLVALUE
         )
 
         # to_simple with e_prop
         sg2 = self.g._project_to_simple(e_prop="edata_float")
         assert (
-            sg2.schema.vdata_type == types_pb2.NULLVALUE
-            and sg2.schema.edata_type == types_pb2.DOUBLE
+            sg2.schema.vdata_type == graph_def_pb2.NULLVALUE
+            and sg2.schema.edata_type == graph_def_pb2.DOUBLE
         )
 
         # to_simple with v_prop
         sg3 = self.g._project_to_simple(v_prop="vdata_str")
         assert (
-            sg3.schema.vdata_type == types_pb2.STRING
-            and sg3.schema.edata_type == types_pb2.NULLVALUE
+            sg3.schema.vdata_type == graph_def_pb2.STRING
+            and sg3.schema.edata_type == graph_def_pb2.NULLVALUE
         )
 
         # to_simple with e_prop and v_prop
         sg4 = self.g._project_to_simple(v_prop="vdata_int", e_prop="edata_str")
         assert (
-            sg4.schema.vdata_type == types_pb2.INT64
-            and sg4.schema.edata_type == types_pb2.STRING
+            sg4.schema.vdata_type == graph_def_pb2.LONG
+            and sg4.schema.edata_type == graph_def_pb2.STRING
         )
 
         # empty graph to simple
         empty_g = self.NXGraph()
         sg5 = empty_g._project_to_simple()
         assert (
-            sg5.schema.vdata_type == types_pb2.NULLVALUE
-            and sg5.schema.edata_type == types_pb2.NULLVALUE
+            sg5.schema.vdata_type == graph_def_pb2.NULLVALUE
+            and sg5.schema.edata_type == graph_def_pb2.NULLVALUE
         )
         with pytest.raises(
             InvalidArgumentError, match="graph not contains the vertex property foo"

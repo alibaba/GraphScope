@@ -228,8 +228,6 @@ class EdgeLabel(object):
 
         self._session_id = session_id
 
-        self._finished = False
-
     def __str__(self):
         s = "\ntype: EdgeLabel"
         s += "\nlabel: " + self.label
@@ -252,11 +250,8 @@ class EdgeLabel(object):
         self.sub_labels[(src, dst)] = sub_label
 
     def finish(self, id_type: str = "int64_t"):
-        if self._finished:
-            return
         for sub_label in self.sub_labels.values():
             sub_label.finish(id_type, self._session_id)
-        self._finished = True
 
 
 def process_vertex(vertex: VertexLabel) -> attr_value_pb2.NameAttrList:

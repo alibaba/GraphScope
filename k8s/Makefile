@@ -48,6 +48,13 @@ manager:
 				 -t graphscope/maxgraph_standalone_manager:${SHORT_SHA} \
 				 -f ../k8s/manager.Dockerfile .
 
+graphstore:
+	docker build --progress=$(BUILD_PROGRESS) \
+                                 --build-arg profile=${PROFILE} \
+                                 -t ${REGISTRY}/$(DOCKER_ORG)/graphstore:${VERSION} \
+                                 --network=host \
+                                 -f $(WORKING_DIR)/graphstore.Dockerfile ..
+
 graphscope-manylinux2010:
 	docker build --progress=$(BUILD_PROGRESS) \
 				 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-manylinux2010:${VERSION} \

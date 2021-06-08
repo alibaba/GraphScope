@@ -54,11 +54,6 @@ jobs:
         sudo apt install -y libarrow-dev=1.0.1-1 libarrow-python-dev=1.0.1-1
 
         # install zookeeper
-        #wget https://archive.apache.org/dist/zookeeper/zookeeper-3.6.2/apache-zookeeper-3.6.2-bin.tar.gz
-        #tar xf apache-zookeeper-3.6.2-bin.tar.gz -C /tmp/
-        #cp /tmp/apache-zookeeper-3.6.2-bin/conf/zoo_sample.cfg /tmp/apache-zookeeper-3.6.2-bin/conf/zoo.cfg
-        #sudo ln -s /tmp/apache-zookeeper-3.6.2-bin /usr/local/zookeeper
-
         wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz
         tar xf zookeeper-3.4.14.tar.gz -C /tmp/
         cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
@@ -90,7 +85,7 @@ jobs:
 
     - name: Install libvineyard
       run: |
-        git clone -b v0.2.2 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
+        git clone -b v0.2.3 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
         cd libvineyard
         git submodule update --init
         mkdir build && pushd build

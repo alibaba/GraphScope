@@ -32,6 +32,7 @@ from graphscope.framework.dag_utils import unload_app
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.utils import graph_type_to_cpp_class
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
@@ -42,7 +43,7 @@ def project_to_simple(func):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
-        if graph.graph_type == types_pb2.ARROW_PROPERTY:
+        if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
             graph = graph._project_to_simple()
         return func(graph, *args[1:], **kwargs)
 
@@ -82,10 +83,11 @@ def not_compatible_for(*graph_types):
                 )
 
             terms = {
-                "arrow_property": graph.graph_type == types_pb2.ARROW_PROPERTY,
-                "dynamic_property": graph.graph_type == types_pb2.DYNAMIC_PROPERTY,
-                "arrow_projected": graph.graph_type == types_pb2.ARROW_PROJECTED,
-                "dynamic_projected": graph.graph_type == types_pb2.DYNAMIC_PROJECTED,
+                "arrow_property": graph.graph_type == graph_def_pb2.ARROW_PROPERTY,
+                "dynamic_property": graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY,
+                "arrow_projected": graph.graph_type == graph_def_pb2.ARROW_PROJECTED,
+                "dynamic_projected": graph.graph_type
+                == graph_def_pb2.DYNAMIC_PROJECTED,
             }
             match = False
             try:

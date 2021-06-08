@@ -32,7 +32,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.2
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.3
       options:
         --shm-size 4096m
     strategy:
@@ -138,7 +138,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.2
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.3
     steps:
     - name: Install Dependencies
       run: |
@@ -177,7 +177,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.2
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.3
     steps:
     - name: Install Dependencies
       run: |
@@ -340,7 +340,6 @@ jobs:
         export GS_TEST_DIR='/root/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/classes
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/test_nx.py
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/test_ctx_builtin.py
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/algorithms/builtin \
                                             python/graphscope/nx/tests/test_utils.py
 
@@ -507,6 +506,136 @@ jobs:
       run: |
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
             registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+
+  build-gss:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.3
+    steps:
+    - name: Install Dependencies
+      run: |
+        yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm
+        yum install -y git
+        wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
+        tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+        echo "source ~/.cargo/env" >> ~/.bashrc
+
+    - uses: actions/checkout@v2.3.2
+
+    - name: Build
+      run: |
+        export PATH=${PATH}:/usr/local/go/bin
+        export CMAKE_PREFIX_PATH=/opt/graphscope
+        export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
+        source ~/.bashrc
+
+        cd interactive_engine
+        mvn clean package -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
+        cd ${GITHUB_WORKSPACE}
+        mv interactive_engine/distribution/target/maxgraph.tar.gz ./
+        tar -zcf lib.tar.gz /opt/graphscope
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: gss-${{ github.sha }}
+        path: |
+          maxgraph.tar.gz
+          lib.tar.gz
+        retention-days: 5
+
+  gss-test:
+    runs-on: self-hosted
+    needs: [build-gss]
+    steps:
+    - name: Clean up
+      run: |
+        echo "CI is running on host $(curl -s 'https://api.ipify.org')"
+        sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm || true
+        sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
+        sudo rm -rf ./* || true
+        find ./ -name "*.egg-info" | xargs sudo rm -rf || true
+        find ./ -name "*.whl" | xargs sudo rm -rf || true
+        find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
+        find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
+
+    - uses: actions/checkout@v2.3.2
+
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+
+    - name: Prepare Image
+      run: |
+        cp k8s/ready_probe.sh artifacts/
+        cp .github/workflows/graphstore.Dockerfile artifacts/
+        pushd artifacts
+        tar -zxf ./gss-${{ github.sha }}/lib.tar.gz
+        tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
+
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} \
+                          --network=host \
+                          -f ./graphstore.Dockerfile .
+        popd
+        python3 -m pip install -r python/requirements.txt
+        python3 -m pip install -r python/requirements-dev.txt
+        python3 -m pip install pytest-cov
+        pushd python && sudo -E python3 setup.py develop && popd
+
+    - name: Helm test
+      run: |
+        cd charts/graphscope-store-service
+        helm dependency update
+        cd ..
+        helm install graphstore --set image.tag=${{ github.sha }} \
+                                      ./graphscope-store-service
+        helm test graphstore --timeout 5m0s
+
+    - name: Python test
+      run: |
+        echo ${GITHUB_WORKSPACE}
+        export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services graphstore-graphscope-store-service-frontend)
+        export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services graphstore-graphscope-store-service-frontend)
+        export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
+        export JAVA_HOME=/usr/lib/jvm/default-java/
+
+        cd /tmp
+        wget -q https://mirrors.bfsu.edu.cn/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
+        tar -zxf hadoop-2.10.1.tar.gz
+
+        cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
+        REPLACE_STR=${GITHUB_WORKSPACE}/artifacts/maxgraph
+        sed s/MAXGRAPH_HOME/${REPLACE_STR//\//\\/}/ offline_load.sh.template > offline_load.sh
+        chmod +x offline_load.sh
+        export LOAD_DATA_SCRIPT=${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts/offline_load.sh
+        sed s/GRAPH_ENDPOINT/$NODE_IP:$GRPC_PORT/ databuild.config.template > databuild.config
+
+        ./prepare_hadoop.sh /tmp/hadoop-2.10.1
+        export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
+        export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        hadoop fs -mkdir /ldbc_sample || true
+        hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
+        hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
+
+        cd ${GITHUB_WORKSPACE}/python
+        python3 -m pytest -s -vvv graphscope/deploy/tests/test_store_service.py
+
+    - name: Clean
+      if: always()
+      run: |
+        export JAVA_HOME=/usr/lib/jvm/default-java/
+        yes | /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
+        rm -rf /tmp/hadoop* || true
+        helm uninstall graphstore || true
+        kubectl delete pvc -l app.kubernetes.io/instance=graphstore --wait=false || true
+        kubectl delete pod graphstore-graphscope-store-service-frontend-test-rpc-service --wait=false || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} || true
+
 
   release-image:
     runs-on: ubuntu-20.04

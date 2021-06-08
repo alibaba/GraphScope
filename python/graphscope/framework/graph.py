@@ -37,7 +37,8 @@ from graphscope.framework.graph_utils import EdgeLabel
 from graphscope.framework.graph_utils import EdgeSubLabel
 from graphscope.framework.graph_utils import VertexLabel
 from graphscope.framework.operation import Operation
-from graphscope.proto import attr_value_pb2
+from graphscope.framework.utils import data_type_to_cpp
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 logger = logging.getLogger("graphscope")
@@ -89,7 +90,7 @@ class Graph(object):
         """
 
         self._key = None
-        self._graph_type = types_pb2.ARROW_PROPERTY
+        self._graph_type = graph_def_pb2.ARROW_PROPERTY
         self._vineyard_id = 0
         self._schema = GraphSchema()
         self._session = session
@@ -128,7 +129,7 @@ class Graph(object):
             if isinstance(incoming_data, Operation):
                 self._pending_op = incoming_data
                 if self._pending_op.type == types_pb2.PROJECT_TO_SIMPLE:
-                    self._graph_type = types_pb2.ARROW_PROJECTED
+                    self._graph_type = graph_def_pb2.ARROW_PROJECTED
             elif isinstance(incoming_data, nx.Graph):
                 self._pending_op = self._from_nx_graph(incoming_data)
             elif isinstance(incoming_data, Graph):
@@ -173,13 +174,15 @@ class Graph(object):
         )
 
         self._key = graph_def.key
-        self._vineyard_id = graph_def.vineyard_id
-        self._oid_type = graph_def.schema_def.oid_type
         self._directed = graph_def.directed
-        self._generate_eid = graph_def.generate_eid
+        vy_info = graph_def_pb2.VineyardInfoPb()
+        graph_def.extension.Unpack(vy_info)
+        self._vineyard_id = vy_info.vineyard_id
+        self._oid_type = data_type_to_cpp(vy_info.oid_type)
+        self._generate_eid = vy_info.generate_eid
 
-        self._schema_path = graph_def.schema_path
-        self._schema.get_schema_from_def(graph_def.schema_def)
+        self._schema_path = vy_info.schema_path
+        self._schema.from_graph_def(graph_def)
         self._v_labels = self._schema.vertex_labels
         self._e_labels = self._schema.edge_labels
         self._e_relationships = self._schema.edge_relationships
@@ -262,11 +265,11 @@ class Graph(object):
         vid_type = self._schema.vid_type
         vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
         edata_type = utils.data_type_to_cpp(self._schema.edata_type)
-        if self._graph_type == types_pb2.ARROW_PROPERTY:
+        if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
             template = f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
-        elif self._graph_type == types_pb2.ARROW_PROJECTED:
+        elif self._graph_type == graph_def_pb2.ARROW_PROJECTED:
             template = f"gs::ArrowProjectedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
-        elif self._graph_type == types_pb2.DYNAMIC_PROJECTED:
+        elif self._graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
             template = f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
         else:
             raise ValueError(f"Unsupported graph type: {self._graph_type}")
@@ -317,7 +320,7 @@ class Graph(object):
             [f"EDGE: {label}\tsrc: {src}\tdst: {dst}" for label, src, dst in relations]
         )
 
-        return f"graphscope.Graph\n{types_pb2.GraphType.Name(self._graph_type)}\n{v_str}\n{e_str}"
+        return f"graphscope.Graph\n{graph_def_pb2.GraphTypePb.Name(self._graph_type)}\n{v_str}\n{e_str}"
 
     def __repr__(self):
         return self.__str__()
@@ -366,7 +369,7 @@ class Graph(object):
 
     def _project_to_simple(self):
         self._ensure_loaded()
-        check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
+        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
         check_argument(
             self.schema.vertex_label_num == 1,
             "Cannot project to simple, vertex label number is not one.",
@@ -428,7 +431,7 @@ class Graph(object):
         check_argument(
             isinstance(selector, Mapping), "selector of add column must be a dict"
         )
-        check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
+        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
         self._check_unmodified()
         selector = {
             key: results._transform_selector(value) for key, value in selector.items()
@@ -451,7 +454,7 @@ class Graph(object):
         Returns:
             `numpy.ndarray`
         """
-        check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
+        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
         self._ensure_loaded()
         self._check_unmodified()
         selector = utils.transform_labeled_vertex_property_data_selector(self, selector)
@@ -470,7 +473,7 @@ class Graph(object):
         Returns:
             `pandas.DataFrame`
         """
-        check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
+        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
         self._ensure_loaded()
         self._check_unmodified()
         check_argument(
@@ -527,7 +530,7 @@ class Graph(object):
         Returns:
             :class:`Graph`: An identical graph, but with a new vineyard id.
         """
-        check_argument(incoming_graph.graph_type == types_pb2.ARROW_PROPERTY)
+        check_argument(incoming_graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
         check_argument(incoming_graph.loaded())
         return dag_utils.copy_graph(incoming_graph)
 
@@ -559,7 +562,7 @@ class Graph(object):
         config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
         config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
         return dag_utils.create_graph(
-            self.session_id, types_pb2.ARROW_PROPERTY, attrs=config
+            self.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
         )
 
     def _from_vineyard_name(self, vineyard_name):
@@ -572,7 +575,7 @@ class Graph(object):
         config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
         config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
         return dag_utils.create_graph(
-            self.session_id, types_pb2.ARROW_PROPERTY, attrs=config
+            self.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
         )
 
     def _attach_interactive_instance(self, instance):
@@ -681,7 +684,7 @@ class Graph(object):
             op = dag_utils.add_labels_to_graph(self, attrs=config)
         else:
             op = dag_utils.create_graph(
-                self.session_id, types_pb2.ARROW_PROPERTY, attrs=config
+                self.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
             )
         return op
 
@@ -859,7 +862,7 @@ class Graph(object):
         vertices: Mapping[str, Union[List[str], None]],
         edges: Mapping[str, Union[List[str], None]],
     ):
-        check_argument(self.graph_type == types_pb2.ARROW_PROPERTY)
+        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
 
         def get_all_v_props_id(label) -> List[int]:
             props = self.schema.get_vertex_properties(label)

@@ -27,6 +27,7 @@ syntax = "proto3";
 
 package gs.rpc;
 
+import "proto/graph_def.proto";
 import "proto/types.proto";
 
 // Comment indicates the corresponding attr type. Only the field matching the
@@ -52,7 +53,7 @@ message AttrValue {
     float f = 4;           // "float"
     bool b = 5;            // "bool"
     DataType type = 6;     // "type"
-    GraphType graph_type = 7;  // "graph type"
+    gs.rpc.graph.GraphTypePb graph_type = 7;  // "graph type"
     ModifyType modify_type = 8;    // "modify type"
     ReportType report_type = 9;   // "nx report type"
     ListValue list = 10;    // any "list(...)"

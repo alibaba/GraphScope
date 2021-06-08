@@ -26,6 +26,7 @@ from graphscope import nx
 from graphscope.framework.app import AppAssets
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.nx.utils.compat import patch_docstring
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
@@ -35,7 +36,7 @@ def project_to_simple(func):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
-        elif graph.graph_type == types_pb2.DYNAMIC_PROPERTY:
+        elif graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
             if (
                 "weight" in inspect.getfullargspec(func)[0]
             ):  # func has 'weight' argument

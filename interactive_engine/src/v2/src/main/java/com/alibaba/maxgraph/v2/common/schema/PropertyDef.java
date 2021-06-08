@@ -72,6 +72,10 @@ public class PropertyDef implements GraphProperty {
         return defaultValue.getValue();
     }
 
+    public PropertyValue getDefaultPropertyValue() {
+        return this.defaultValue;
+    }
+
     public boolean isPartOfPrimaryKey() {
         return pk;
     }

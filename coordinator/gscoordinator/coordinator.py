@@ -47,6 +47,7 @@ from graphscope.proto import attr_value_pb2
 from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import engine_service_pb2_grpc
 from graphscope.proto import error_codes_pb2
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
@@ -281,7 +282,8 @@ class CoordinatorServiceServicer(
         if (
             (
                 op.op == types_pb2.CREATE_GRAPH
-                and op.attr[types_pb2.GRAPH_TYPE].graph_type == types_pb2.ARROW_PROPERTY
+                and op.attr[types_pb2.GRAPH_TYPE].graph_type
+                == graph_def_pb2.ARROW_PROPERTY
             )
             or op.op == types_pb2.TRANSFORM_GRAPH
             or op.op == types_pb2.PROJECT_TO_SIMPLE
@@ -335,23 +337,25 @@ class CoordinatorServiceServicer(
                 types_pb2.ADD_COLUMN,
             ):
                 schema_path = os.path.join("/tmp", response.graph_def.key + ".json")
+                vy_info = graph_def_pb2.VineyardInfoPb()
+                response.graph_def.extension.Unpack(vy_info)
+
                 self._object_manager.put(
                     response.graph_def.key,
                     GraphMeta(
                         response.graph_def.key,
-                        response.graph_def.vineyard_id,
-                        response.graph_def.schema_def,
+                        vy_info.vineyard_id,
+                        response.graph_def,
                         schema_path,
                     ),
                 )
-                if response.graph_def.graph_type == types_pb2.ARROW_PROPERTY:
+                if response.graph_def.graph_type == graph_def_pb2.ARROW_PROPERTY:
                     dump_string(
-                        to_maxgraph_schema(
-                            response.graph_def.schema_def.property_schema_json
-                        ),
+                        to_maxgraph_schema(vy_info.property_schema_json),
                         schema_path,
                     )
-                    response.graph_def.schema_path = schema_path
+                    vy_info.schema_path = schema_path
+                    response.graph_def.extension.Pack(vy_info)
             elif op.op == types_pb2.CREATE_APP:
                 self._object_manager.put(
                     app_sig,
