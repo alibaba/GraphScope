@@ -27,6 +27,7 @@ import graphscope
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
+from graphscope.proto import graph_def_pb2
 
 
 @pytest.fixture
@@ -245,12 +246,15 @@ def test_loader_with_specified_data_type(
         student_group_e, "group", ["group_id", ("member_size", "int")]
     )
     assert [p.type for p in graph.schema.get_vertex_properties("student")] == [
-        10,
-        4,
-        8,
-        10,
+        graph_def_pb2.STRING,
+        graph_def_pb2.INT,
+        graph_def_pb2.FLOAT,
+        graph_def_pb2.STRING,
     ]
-    assert [p.type for p in graph.schema.get_edge_properties("group")] == [10, 4]
+    assert [p.type for p in graph.schema.get_edge_properties("group")] == [
+        graph_def_pb2.STRING,
+        graph_def_pb2.INT,
+    ]
 
 
 def test_multi_src_dst_edge_loader(
