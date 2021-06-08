@@ -618,7 +618,7 @@ jobs:
         export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-        hadoop fs -mkdir /ldbc_sample
+        hadoop fs -mkdir /ldbc_sample || true
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
 
