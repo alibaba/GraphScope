@@ -1527,6 +1527,17 @@ ignored.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="graphscope.nx.Graph.session">
+<em class="property">property </em><code class="sig-name descname">session</code><a class="headerlink" href="#graphscope.nx.Graph.session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the currrent session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Return session that the graph belongs to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="graphscope.nx.Graph.session_id">
 <em class="property">property </em><code class="sig-name descname">session_id</code><a class="headerlink" href="#graphscope.nx.Graph.session_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the currrent session_id.</p>
@@ -3344,6 +3355,17 @@ the original graph.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="graphscope.nx.DiGraph.session">
+<em class="property">property </em><code class="sig-name descname">session</code><a class="headerlink" href="#graphscope.nx.DiGraph.session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the currrent session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Return session that the graph belongs to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="graphscope.nx.DiGraph.session_id">
 <em class="property">property </em><code class="sig-name descname">session_id</code><a class="headerlink" href="#graphscope.nx.DiGraph.session_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the currrent session_id.</p>
@@ -3684,26 +3706,8 @@ can be transformed into each other. We define the transformation in each Graph c
 constructors.</p>
 <dl class="py function">
 <dt id="graphscope.framework.graph.Graph.__init__">
-<code class="sig-prename descclassname">graphscope.framework.graph.Graph.</code><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">session</span></em>, <em class="sig-param"><span class="n">incoming_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">oid_type</span><span class="o">=</span><span class="default_value">'int64'</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">generate_eid</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.framework.graph.Graph.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">graphscope.framework.graph.Graph.</code><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">graph_node</span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.framework.graph.Graph.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a <code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code> object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>session_id</strong> (<em>str</em>) – Session id of the session the graph is created in.</p></li>
-<li><p><strong>incoming_data</strong> – <p>Graph can be initialized through various type of sources,
-which can be one of:</p>
-<blockquote>
-<div><ul>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Operation</span></code></p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">nx.Graph</span></code></p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.Object</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.ObjectId</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.ObjectName</span></code></p></li>
-</ul>
-</div></blockquote>
-</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -3875,6 +3879,16 @@ in all labels and not has parallel edge between edge label.</p></li>
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.5.0/index.html">v0.5.0</a></dd>
               
             
 

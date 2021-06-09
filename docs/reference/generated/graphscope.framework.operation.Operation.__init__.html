@@ -129,7 +129,6 @@
 <li class="toctree-l4"><a class="reference internal" href="graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
 <li class="toctree-l4"><a class="reference internal" href="graphscope.framework.operation.Operation.signature.html">graphscope.framework.operation.Operation.signature</a></li>
 <li class="toctree-l4"><a class="reference internal" href="graphscope.framework.operation.Operation.eval.html">graphscope.framework.operation.Operation.eval</a></li>
-<li class="toctree-l4"><a class="reference internal" href="graphscope.framework.operation.Operation.set_output.html">graphscope.framework.operation.Operation.set_output</a></li>
 <li class="toctree-l4"><a class="reference internal" href="graphscope.framework.operation.Operation.evaluated.html">graphscope.framework.operation.Operation.evaluated</a></li>
 </ul>
 </li>
@@ -216,7 +215,7 @@
 <dl class="py method">
 <dt id="graphscope.framework.operation.Operation.__init__">
 <code class="sig-prename descclassname">Operation.</code><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session_id</span></em>, <em class="sig-param"><span class="n">op_type</span></em>, <em class="sig-param"><span class="n">inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_types</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">config</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">query_args</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/framework/operation.html#Operation.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.operation.Operation.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates an <code class="code docutils literal notranslate"><span class="pre">Operation</span></code>.</p>
+<dd><p>Creates an <code class="code docutils literal notranslate"><span class="pre">graphscope.framework.operation.Operation</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -231,10 +230,7 @@ AttrValue).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>TypeError</strong> – if <cite>op_def</cite> is not a <cite>OpDef</cite>, or if <cite>g</cite> is not a <cite>Dag</cite>.</p></li>
-<li><p><strong>ValueError</strong> – if the <cite>op_def</cite> name is not valid.</p></li>
-</ul>
+<dd class="field-even"><p><strong>TypeError</strong> – value in inputs is not a <a class="reference internal" href="../operation.html#graphscope.framework.operation.Operation" title="graphscope.framework.operation.Operation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operation</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -326,6 +322,16 @@ AttrValue).</p></li>
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.5.0/index.html">v0.5.0</a></dd>
               
             
 

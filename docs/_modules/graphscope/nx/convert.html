@@ -373,6 +373,10 @@
 <span class="sd">    &gt;&gt;&gt; gs_g = gs_g.add_vertices(...).add_edges(...)</span>
 <span class="sd">    &gt;&gt;&gt; nx_g = nx.Graph(gs_g)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">gs_graph</span><span class="o">.</span><span class="n">session_id</span> <span class="o">!=</span> <span class="n">dst_nx_graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;graphscope graph and networkx graph not in the same session.&quot;</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="n">dst_nx_graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="o">!=</span> <span class="n">gs_graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;is_directed of gs_graph must agree with create_using&quot;</span><span class="p">)</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">arrow_to_dynamic</span><span class="p">(</span><span class="n">gs_graph</span><span class="p">)</span>
@@ -476,6 +480,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.5.0/index.html">v0.5.0</a></dd>
               
             
 

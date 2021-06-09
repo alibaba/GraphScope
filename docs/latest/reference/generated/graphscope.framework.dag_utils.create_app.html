@@ -227,21 +227,9 @@
 <h1>graphscope.framework.dag_utils.create_app<a class="headerlink" href="#graphscope-framework-dag-utils-create-app" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="graphscope.framework.dag_utils.create_app">
-<code class="sig-prename descclassname">graphscope.framework.dag_utils.</code><code class="sig-name descname">create_app</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">app</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/framework/dag_utils.html#create_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.dag_utils.create_app" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for create an <cite>CREATE_APP</cite> Operation with configuration.
-Compile and load an application after evaluated.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A <code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code> instance</p></li>
-<li><p><strong>app</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">App</span></code>) – A <code class="xref py py-class docutils literal notranslate"><span class="pre">App</span></code> instance.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>An <code class="xref py py-class docutils literal notranslate"><span class="pre">Operation</span></code> with configuration that instruct
-analytical engine how to build the app.</p>
-</dd>
-</dl>
+<code class="sig-prename descclassname">graphscope.framework.dag_utils.</code><code class="sig-name descname">create_app</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">app_assets</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/framework/dag_utils.html#create_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.dag_utils.create_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for create an <cite>CREATE_APP</cite> Operation with configuration.</p>
+<p>This op will do nothing but provide required information for <cite>BOUND_APP</cite></p>
 </dd></dl>
 
 </section>
@@ -331,6 +319,16 @@ analytical engine how to build the app.</p>
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.5.0/index.html">v0.5.0</a></dd>
               
             
 

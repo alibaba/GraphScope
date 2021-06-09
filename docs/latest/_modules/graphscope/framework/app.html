@@ -200,12 +200,15 @@
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">zipfile</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">BytesIO</span>
 
 <span class="kn">import</span> <span class="nn">yaml</span>
 
 <span class="kn">import</span> <span class="nn">graphscope</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="k">import</span> <span class="n">create_context</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="k">import</span> <span class="n">ContextDAGNode</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="k">import</span> <span class="n">DAGNode</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="k">import</span> <span class="n">bind_app</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="k">import</span> <span class="n">create_app</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="k">import</span> <span class="n">run_app</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="k">import</span> <span class="n">unload_app</span>
@@ -289,13 +292,13 @@
     <span class="k">return</span> <span class="n">_not_compatible_for</span>
 
 
-<div class="viewcode-block" id="AppAssets"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets">[docs]</a><span class="k">class</span> <span class="nc">AppAssets</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class holds the bytes of the gar resource.</span>
+<div class="viewcode-block" id="AppAssets"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets">[docs]</a><span class="k">class</span> <span class="nc">AppAssets</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class represents a app assert node in a DAG that holds the bytes of the gar resource.</span>
 
 <span class="sd">    Assets includes name (for builtin algorithm), and gar (for user defined algorithm),</span>
 <span class="sd">    and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`.</span>
 
-<span class="sd">    The instance of this class can be passed to init :class:`graphscope.App`.</span>
+<span class="sd">    The instance of this class can be passed to init :class:`graphscope.framework.app.AppDAGNode`.</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        algo (str): Name of the algorithm</span>
@@ -321,10 +324,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="o">=</span> <span class="n">gar</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">gar</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># built_in apps has no gar resource.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="o">=</span> <span class="kc">None</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="AppAssets.__repr__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;graphscope.AppAssets &lt;type: </span><span class="si">{self._type}</span><span class="s2">, algorithm: </span><span class="si">{self._algo}</span><span class="s2">&gt;&quot;</span></div>
+        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;graphscope.framework.app.AppAssets &lt;type: </span><span class="si">{self._type}</span><span class="s2">, algorithm: </span><span class="si">{self._algo}</span><span class="s2">&gt;&quot;</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">algo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -369,6 +373,7 @@
         <span class="sd">&quot;&quot;&quot;Generate a signature of the app assets by its algo name (and gar resources).</span>
 
 <span class="sd">        Used to uniquely identify a app assets.</span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            str: signature of this assets</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -382,7 +387,7 @@
         <span class="sd">&quot;&quot;&quot;Determine if this algorithm can run on this type of graph.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            graph (:class:`Graph`): A graph instance.</span>
+<span class="sd">            graph (:class:`GraphDAGNode`): A graph instance.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            InvalidArgumentError:</span>
@@ -393,15 +398,6 @@
 <span class="sd">            ScannerError:</span>
 <span class="sd">                - Yaml file format is incorrect.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="n">graph</span><span class="p">,</span>
-            <span class="p">(</span>
-                <span class="n">graphscope</span><span class="o">.</span><span class="n">framework</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
-                <span class="n">graphscope</span><span class="o">.</span><span class="n">nx</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
-                <span class="n">graphscope</span><span class="o">.</span><span class="n">nx</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">digraph</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">,</span>
-            <span class="p">),</span>
-        <span class="p">):</span>
-            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Wrong type of graph.&quot;</span><span class="p">)</span>
         <span class="c1"># builtin app</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;cpp_pie&quot;</span>
@@ -425,12 +421,14 @@
 
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Instantiate an App and do queries over it.&quot;&quot;&quot;</span>
-        <span class="n">app_</span> <span class="o">=</span> <span class="n">App</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">app_</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="n">AppDAGNode</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">app_</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="App"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App">[docs]</a><span class="k">class</span> <span class="nc">App</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;An application that can run on graphs and produce results.</span>
+<span class="k">class</span> <span class="nc">AppDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class represents a app node in a DAG.</span>
+
+<span class="sd">    An application that can run on graphs and produce results.</span>
 
 <span class="sd">    Analytical engine will build the app dynamic library when instantiate a app instance.</span>
 <span class="sd">    The dynamic library will be reused if subsequent app&#39;s signature matches one of previous ones.</span>
@@ -445,57 +443,29 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="App.__init__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">app_assets</span><span class="p">:</span> <span class="n">AppAssets</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">app_assets</span><span class="p">:</span> <span class="n">AppAssets</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create an application using given :code:`gar` file, or given application</span>
 <span class="sd">            class name.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            graph (:class:`Graph`): A :class:`Graph` instance.</span>
+<span class="sd">            graph (:class:`GraphDAGNode`): A :class:`GraphDAGNode` instance.</span>
 <span class="sd">            app_assets: A :class:`AppAssets` instance.</span>
-
-<span class="sd">        Raise:</span>
-<span class="sd">            TypeError: The type of app_assets incorrect.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The graph is not loaded.&quot;</span><span class="p">)</span>
-        <span class="n">app_assets</span><span class="o">.</span><span class="n">is_compatible</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span> <span class="o">=</span> <span class="n">app_assets</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span>
 
-        <span class="n">opr</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">opr</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span> <span class="o">=</span> <span class="n">app_assets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">is_compatible</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">bind_app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="p">)</span>
+        <span class="c1"># add op to dag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;graphscope.App &lt;type: </span><span class="si">{self._app_assets.type}</span><span class="s2">, algorithm: </span><span class="si">{self._app_assets.algo}</span><span class="s2">&quot;</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;bounded_graph: {str(self._graph)}&gt;&quot;</span>
         <span class="k">return</span> <span class="n">s</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;A unique identifier of App.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Signature is computed by all critical components of the App.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span>
-            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">signature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">template_str</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
-                <span class="s2">&quot;utf-8&quot;</span>
-            <span class="p">)</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return the session_id, which is copied from the graph.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            str: Id of the session which loaded the app.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">algo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -528,51 +498,78 @@
         <span class="n">app_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">type</span>
         <span class="n">check_argument</span><span class="p">(</span><span class="n">app_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">DAGNode</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The graph is not loaded&quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;cython_pie&quot;</span><span class="p">,</span> <span class="s2">&quot;cython_pregel&quot;</span><span class="p">]:</span>
             <span class="c1"># cython app support kwargs only</span>
             <span class="n">check_argument</span><span class="p">(</span>
                 <span class="ow">not</span> <span class="n">args</span><span class="p">,</span> <span class="s2">&quot;Only support using keyword arguments in cython app.&quot;</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">ContextDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ContextDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Create a `RUN_APP` Operation, and send it to analytical engine to do actual query.</span>
-<span class="sd">        Then retrieve query contexts and return.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">run_app</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
-        <span class="n">context_key</span><span class="p">,</span> <span class="n">context_type</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">],</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_type&quot;</span><span class="p">]</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="n">create_context</span><span class="p">(</span>
-            <span class="n">context_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">,</span> <span class="n">context_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">results</span>
-
-    <span class="k">def</span> <span class="nf">_check_unmodified</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Ensure app is not modified, cause it may need to recompile the dynamic library.&quot;&quot;&quot;</span>
-        <span class="n">check_argument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signature</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span><span class="p">)</span>
-
-<div class="viewcode-block" id="App.loaded"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.loaded">[docs]</a>    <span class="k">def</span> <span class="nf">loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Since key is only set by engine after it load the app, and unset to None when unload,</span>
-<span class="sd">           we can use the key to detect whether the app is loaded.</span>
+    <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unload this app from graphscope engine.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            bool: The app is loaded or not.</span>
+<span class="sd">            :class:`graphscope.framework.app.UnloadedApp`: Evaluated in eager mode.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">unload_app</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">UnloadedApp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="App"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App">[docs]</a><span class="k">class</span> <span class="nc">App</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="App.__init__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_node</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span> <span class="o">=</span> <span class="n">app_node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="o">.</span><span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="c1"># copy and set op evaluated</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span></div>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> not found.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A unique identifier of App.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Signature is computed by all critical components of the App.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">signature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">template_str</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+                <span class="s2">&quot;utf-8&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
 <div class="viewcode-block" id="App.unload"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.unload">[docs]</a>    <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unload app. Both on engine side and python side. Set the key to None.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">:</span>
-            <span class="n">op</span> <span class="o">=</span> <span class="n">unload_app</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-            <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="kc">None</span></div></div>
+        <span class="n">rlt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="o">.</span><span class="n">unload</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">rlt</span></div>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span></div>
+
+
+<span class="k">class</span> <span class="nc">UnloadedApp</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Unloaded app node in a DAG.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
+        <span class="c1"># add op to dag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="load_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app">[docs]</a><span class="k">def</span> <span class="nf">load_app</span><span class="p">(</span><span class="n">algo</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -586,7 +583,7 @@
 <span class="sd">          str represent the path of resource.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Instance of &lt;graphscope.AppAssets&gt;</span>
+<span class="sd">        Instance of &lt;graphscope.framework.app.AppAssets&gt;</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        FileNotFoundError: File not exist.</span>
@@ -611,10 +608,8 @@
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">is_zipfile</span><span class="p">(</span><span class="n">gar</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a zip file.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gar</span><span class="p">))</span>
-
         <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">algo</span><span class="p">),</span> <span class="n">content</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Wrong type with </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gar</span><span class="p">))</span></div>
@@ -695,6 +690,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.5.0/index.html">v0.5.0</a></dd>
               
             
 

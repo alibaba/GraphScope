@@ -228,16 +228,19 @@
 <span class="kn">from</span> <span class="nn">graphscope.config</span> <span class="k">import</span> <span class="n">GSConfig</span> <span class="k">as</span> <span class="n">gs_config</span>
 <span class="kn">from</span> <span class="nn">graphscope.deploy.hosts.cluster</span> <span class="k">import</span> <span class="n">HostsClusterLauncher</span>
 <span class="kn">from</span> <span class="nn">graphscope.deploy.kubernetes.cluster</span> <span class="k">import</span> <span class="n">KubernetesClusterLauncher</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="k">import</span> <span class="n">Dag</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="ne">ConnectionError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">FatalError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">GRPCError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">InteractiveEngineInternalError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">InvalidArgumentError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">K8sError</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">LearningEngineInternalError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="k">import</span> <span class="n">check_argument</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="k">import</span> <span class="n">Graph</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="k">import</span> <span class="n">GraphDAGNode</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.operation</span> <span class="k">import</span> <span class="n">Operation</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="k">import</span> <span class="n">decode_dataframe</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="k">import</span> <span class="n">decode_numpy</span>
 <span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="k">import</span> <span class="n">InteractiveQuery</span>
 <span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="k">import</span> <span class="n">InteractiveQueryStatus</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">graph_def_pb2</span>
@@ -252,6 +255,115 @@
 <span class="n">_session_dict</span> <span class="o">=</span> <span class="p">{}</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;graphscope&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_FetchHandler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handler for structured fetches.</span>
+<span class="sd">    This class takes care of extracting a sub-DAG as targets for a user-provided structure for fetches,</span>
+<span class="sd">    which can be used for a low level `run` call of grpc_client.</span>
+
+<span class="sd">    Given the results of the low level run call, this class can also rebuild a result structure</span>
+<span class="sd">    matching the user-provided structure for fetches, but containing the corresponding results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span> <span class="o">=</span> <span class="n">fetches</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unpack</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unpack</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">fetch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="s2">&quot;op&quot;</span><span class="p">):</span>
+                <span class="n">fetch</span> <span class="o">=</span> <span class="n">fetch</span><span class="o">.</span><span class="n">op</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="n">Operation</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expect a `Operation` in sess run method.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span>
+        <span class="c1"># extract sub dag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dag</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">extract_subdag_for</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ops</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;debug&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;sub_dag: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dag</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dag</span>
+
+    <span class="k">def</span> <span class="nf">_rebuild_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">],</span> <span class="n">Operation</span><span class="p">):</span>
+            <span class="c1"># for nx Graph</span>
+            <span class="k">return</span> <span class="n">op_result</span><span class="o">.</span><span class="n">graph_def</span>
+        <span class="c1"># get graph dag node as base</span>
+        <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
+        <span class="c1"># construct graph</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">graph_dag_node</span><span class="p">)</span>
+        <span class="c1"># update graph flied from graph_def</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">update_from_graph_def</span><span class="p">(</span><span class="n">op_result</span><span class="o">.</span><span class="n">graph_def</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">g</span>
+
+    <span class="k">def</span> <span class="nf">_rebuild_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="k">import</span> <span class="n">App</span>
+
+        <span class="c1"># get app dag node as base</span>
+        <span class="n">app_dag_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
+        <span class="c1"># construct app</span>
+        <span class="n">app</span> <span class="o">=</span> <span class="n">App</span><span class="p">(</span><span class="n">app_dag_node</span><span class="p">,</span> <span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">app</span>
+
+    <span class="k">def</span> <span class="nf">_rebuild_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="k">import</span> <span class="n">Context</span>
+        <span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="k">import</span> <span class="n">DynamicVertexDataContext</span>
+
+        <span class="c1"># get context dag node as base</span>
+        <span class="n">context_dag_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="n">context_type</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_type&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;dynamic_vertex_data&quot;</span><span class="p">:</span>
+            <span class="c1"># for nx</span>
+            <span class="k">return</span> <span class="n">DynamicVertexDataContext</span><span class="p">(</span>
+                <span class="n">context_dag_node</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">],</span> <span class="n">context_type</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">context_dag_node</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">],</span> <span class="n">context_type</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">wrapper_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">message_pb2</span><span class="o">.</span><span class="n">RunStepResponse</span><span class="p">):</span>
+        <span class="n">rets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ops</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">op_result</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">key</span> <span class="o">==</span> <span class="n">op_result</span><span class="o">.</span><span class="n">key</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">RUN_APP</span><span class="p">:</span>
+                            <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rebuild_context</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">op_result</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c1"># for nx Graph</span>
+                            <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">:</span>
+                        <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rebuild_graph</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">op_result</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">APP</span><span class="p">:</span>
+                        <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">BOUND_APP</span><span class="p">:</span>
+                        <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rebuild_app</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">op_result</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="ow">in</span> <span class="p">(</span>
+                        <span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_TENSOR</span><span class="p">,</span>
+                        <span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_DATAFRAME</span><span class="p">,</span>
+                    <span class="p">):</span>
+                        <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))[</span><span class="s2">&quot;object_id&quot;</span><span class="p">]</span>
+                        <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="ow">in</span> <span class="p">(</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">TENSOR</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DATAFRAME</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="p">(</span>
+                            <span class="n">op</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">CONTEXT_TO_DATAFRAME</span>
+                            <span class="ow">or</span> <span class="n">op</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_TO_DATAFRAME</span>
+                        <span class="p">):</span>
+                            <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decode_dataframe</span><span class="p">(</span><span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="p">))</span>
+                        <span class="k">if</span> <span class="p">(</span>
+                            <span class="n">op</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">CONTEXT_TO_NUMPY</span>
+                            <span class="ow">or</span> <span class="n">op</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_TO_NUMPY</span>
+                        <span class="p">):</span>
+                            <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decode_numpy</span><span class="p">(</span><span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">:</span>
+                        <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="k">break</span>
+        <span class="k">return</span> <span class="n">rets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unpack</span> <span class="k">else</span> <span class="n">rets</span>
 
 
 <div class="viewcode-block" id="Session"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session">[docs]</a><span class="k">class</span> <span class="nc">Session</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -278,15 +390,15 @@
 <span class="sd">        &gt;&gt;&gt; sess = gs.session()</span>
 <span class="sd">        &gt;&gt;&gt; g = sess.g()</span>
 <span class="sd">        &gt;&gt;&gt; pg = g.project(vertices={&#39;v&#39;: []}, edges={&#39;e&#39;: [&#39;dist&#39;]})</span>
-<span class="sd">        &gt;&gt;&gt; r = s.sssp(g, 4)</span>
-<span class="sd">        &gt;&gt;&gt; s.close()</span>
+<span class="sd">        &gt;&gt;&gt; r = gs.sssp(g, 4)</span>
+<span class="sd">        &gt;&gt;&gt; sess.close()</span>
 
 <span class="sd">        &gt;&gt;&gt; # or use a session as default</span>
-<span class="sd">        &gt;&gt;&gt; s = gs.session().as_default()</span>
-<span class="sd">        &gt;&gt;&gt; g = g()</span>
+<span class="sd">        &gt;&gt;&gt; sess = gs.session().as_default()</span>
+<span class="sd">        &gt;&gt;&gt; g = gs.g()</span>
 <span class="sd">        &gt;&gt;&gt; pg = g.project(vertices={&#39;v&#39;: []}, edges={&#39;e&#39;: [&#39;dist&#39;]})</span>
 <span class="sd">        &gt;&gt;&gt; r = gs.sssp(pg, 4)</span>
-<span class="sd">        &gt;&gt;&gt; s.close()</span>
+<span class="sd">        &gt;&gt;&gt; sess.close()</span>
 
 <span class="sd">    We support setup a service cluster and create a RPC session in following ways:</span>
 
@@ -318,8 +430,9 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">cluster_type</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">cluster_type</span><span class="p">,</span>
         <span class="n">addr</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">addr</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span>
+        <span class="n">cluster_type</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">cluster_type</span><span class="p">,</span>
         <span class="n">num_workers</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span>
         <span class="n">preemptive</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">preemptive</span><span class="p">,</span>
         <span class="n">k8s_namespace</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_namespace</span><span class="p">,</span>
@@ -367,6 +480,13 @@
 
 <span class="sd">            addr (str, optional): The endpoint of a pre-launched GraphScope instance with &#39;&lt;ip&gt;:&lt;port&gt;&#39; format.</span>
 <span class="sd">                A new session id will be generated for each session connection.</span>
+
+<span class="sd">            mode (str, optional): optional values are eager and lazy. Defaults to eager.</span>
+<span class="sd">                Eager execution is a flexible platform for research and experimentation, it provides:</span>
+<span class="sd">                    An intuitive interface: Quickly test on small data.</span>
+<span class="sd">                    Easier debugging: Call ops directly to inspect running models and test changes.</span>
+<span class="sd">                Lazy execution means GraphScope does not process the data till it has to. It just gathers all the</span>
+<span class="sd">                    information to a DAG that we feed into it, and processes only when we execute :code:`sess.run(fetches)`</span>
 
 <span class="sd">            cluster_type (str, optional): Deploy GraphScope instance on hosts or k8s cluster. Defaults to k8s.</span>
 <span class="sd">                Available options: &quot;k8s&quot; and &quot;hosts&quot;. Note that only support deployed on localhost with hosts mode.</span>
@@ -534,10 +654,10 @@
 <span class="sd">            TypeError: If the given argument combination is invalid and cannot be used to create</span>
 <span class="sd">                a GraphScope session.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">num_workers</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_workers</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_accessable_params</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;addr&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mode&quot;</span><span class="p">,</span>
             <span class="s2">&quot;cluster_type&quot;</span><span class="p">,</span>
             <span class="s2">&quot;num_workers&quot;</span><span class="p">,</span>
             <span class="s2">&quot;preemptive&quot;</span><span class="p">,</span>
@@ -583,7 +703,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_load_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">slient</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">DEFAULT_CONFIG_FILE</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_config</span><span class="p">(</span><span class="n">DEFAULT_CONFIG_FILE</span><span class="p">)</span>
 
@@ -592,6 +712,9 @@
 
         <span class="c1"># initial setting of cluster_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_cluster_type</span><span class="p">()</span>
+
+        <span class="c1"># initial dag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dag</span> <span class="o">=</span> <span class="n">Dag</span><span class="p">()</span>
 
         <span class="c1"># mars cannot work with run-on-local mode</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cluster_type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">HOSTS</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;with_mars&quot;</span><span class="p">]:</span>
@@ -616,7 +739,7 @@
             <span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;k8s_vineyard_shared_mem&quot;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;The `k8s_vineyard_shared_mem` has benn deprecated and has no effect, &quot;</span>
+                <span class="s2">&quot;The `k8s_vineyard_shared_mem` has been deprecated and has no effect, &quot;</span>
                 <span class="s2">&quot;please use `vineyard_shared_mem` instead.&quot;</span>
                 <span class="o">%</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;k8s_vineyard_shared_mem&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
                 <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">,</span>
@@ -679,7 +802,10 @@
             <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_send_heartbeat</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">()</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_sending_thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_sending_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_sending_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># networkx module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span> <span class="o">=</span> <span class="kc">None</span></div>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">)</span>
@@ -690,6 +816,10 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dag</span>
 
     <span class="k">def</span> <span class="nf">_load_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">slient</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
@@ -745,6 +875,9 @@
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span>
         <span class="k">return</span> <span class="n">info</span>
 
+    <span class="k">def</span> <span class="nf">eager</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;mode&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;eager&quot;</span>
+
     <span class="k">def</span> <span class="nf">_send_heartbeat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="p">:</span>
@@ -782,7 +915,7 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">instance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">instance</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="k">except</span> <span class="n">InteractiveEngineInternalError</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                 <span class="k">pass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
@@ -791,12 +924,15 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">instance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">instance</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="k">except</span> <span class="n">LearningEngineInternalError</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                 <span class="k">pass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">_session_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
@@ -851,9 +987,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="fm">__exit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetch</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Run operations of `fetch`.</span>
+    <span class="k">def</span> <span class="nf">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag_node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">dag_node</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dag_node</span>
 
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run operations of `fetch`.</span>
 <span class="sd">        Args:</span>
 <span class="sd">            fetch: :class:`Operation`</span>
 
@@ -871,60 +1012,17 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Different values for different output types of :class:`Operation`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># prepare names to run and fetch</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="s2">&quot;op&quot;</span><span class="p">):</span>
-            <span class="n">fetch</span> <span class="o">=</span> <span class="n">fetch</span><span class="o">.</span><span class="n">op</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="n">Operation</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expect a `Operation`&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">fetch</span><span class="o">.</span><span class="n">output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The op &lt;</span><span class="si">%s</span><span class="s2">&gt; are evaluated duplicated.&quot;</span> <span class="o">%</span> <span class="n">fetch</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
-
-        <span class="c1"># convert to list to be compatible with rpc client method signature</span>
-        <span class="n">fetch_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">fetch</span><span class="p">]</span>
-
-        <span class="n">dag</span> <span class="o">=</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">DagDef</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">fetch_ops</span><span class="p">:</span>
-            <span class="n">dag</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">as_op_def</span><span class="p">())])</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Attempted to use a closed Session.&quot;</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Session disconnected.&quot;</span><span class="p">)</span>
-
-        <span class="c1"># execute the query</span>
+        <span class="n">fetch_handler</span> <span class="o">=</span> <span class="n">_FetchHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dag</span><span class="p">,</span> <span class="n">fetches</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">dag</span><span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">fetch_handler</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">FatalError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">raise</span>
-        <span class="n">check_argument</span><span class="p">(</span>
-            <span class="nb">len</span><span class="p">(</span><span class="n">fetch_ops</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Cannot execute multiple ops at the same time&quot;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_value</span><span class="p">(</span><span class="n">fetch_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">response</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_parse_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">message_pb2</span><span class="o">.</span><span class="n">RunStepResponse</span><span class="p">):</span>
-        <span class="c1"># attach an output to op, indicating the op is already run.</span>
-        <span class="n">op</span><span class="o">.</span><span class="n">set_output</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
-
-        <span class="c1"># if loads a arrow property graph, will return {&#39;object_id&#39;: xxxx}</span>
-        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">graph_def</span>
-        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">APP</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="ow">in</span> <span class="p">(</span>
-            <span class="n">types_pb2</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">,</span>
-            <span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_TENSOR</span><span class="p">,</span>
-            <span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_DATAFRAME</span><span class="p">,</span>
-        <span class="p">):</span>
-            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="ow">in</span> <span class="p">(</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">TENSOR</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">DATAFRAME</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">result</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
-                <span class="s2">&quot;Not recognized output type: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span>
-            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">fetch_handler</span><span class="o">.</span><span class="n">wrapper_results</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1001,7 +1099,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span></div>
 
     <span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_data</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">directed</span><span class="p">,</span> <span class="n">generate_eid</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+            <span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_data</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">directed</span><span class="p">,</span> <span class="n">generate_eid</span><span class="p">)</span>
+        <span class="p">)</span>
 
 <div class="viewcode-block" id="Session.load_from"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.load_from">[docs]</a>    <span class="k">def</span> <span class="nf">load_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Load a graph within the session.</span>
@@ -1272,7 +1372,30 @@
         <span class="n">learning_graph</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">learning_graph</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_attach_learning_instance</span><span class="p">(</span><span class="n">learning_graph</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">learning_graph</span></div></div>
+        <span class="k">return</span> <span class="n">learning_graph</span></div>
+
+    <span class="k">def</span> <span class="nf">nx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Networkx module need session to be eager mode. &quot;</span>
+                <span class="s2">&quot;The session is lazy mode.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span>
+        <span class="kn">import</span> <span class="nn">importlib.util</span>
+
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;graphscope.nx&quot;</span><span class="p">)</span>
+        <span class="n">mod</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">exec_module</span><span class="p">(</span><span class="n">mod</span><span class="p">)</span>
+
+        <span class="n">graph</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="s2">&quot;Graph&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">Graph</span><span class="o">.</span><span class="n">__base__</span><span class="p">,),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">Graph</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span>
+        <span class="n">digraph</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="s2">&quot;DiGraph&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">DiGraph</span><span class="o">.</span><span class="n">__base__</span><span class="p">,),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">DiGraph</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;_session&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">digraph</span><span class="p">,</span> <span class="s2">&quot;_session&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s2">&quot;Graph&quot;</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s2">&quot;DiGraph&quot;</span><span class="p">,</span> <span class="n">digraph</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span> <span class="o">=</span> <span class="n">mod</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span></div>
 
 
 <span class="n">session</span> <span class="o">=</span> <span class="n">Session</span>
@@ -1413,7 +1536,7 @@
 <span class="k">def</span> <span class="nf">get_session_by_id</span><span class="p">(</span><span class="n">handle</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return the session by handle.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">handle</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_session_dict</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Session not exists.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Session </span><span class="si">{}</span><span class="s2"> not exists.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">handle</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">_session_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
 
 
@@ -1529,6 +1652,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.5.0/index.html">v0.5.0</a></dd>
               
             
 

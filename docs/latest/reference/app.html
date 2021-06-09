@@ -212,10 +212,10 @@
 <dl class="py class">
 <dt id="graphscope.framework.app.AppAssets">
 <em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.app.</code><code class="sig-name descname">AppAssets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">algo</span></em>, <em class="sig-param"><span class="n">gar</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class holds the bytes of the gar resource.</p>
+<dd><p>A class represents a app assert node in a DAG that holds the bytes of the gar resource.</p>
 <p>Assets includes name (for builtin algorithm), and gar (for user defined algorithm),
 and its type (one of <cite>cpp_pie</cite>, <cite>cython_pie</cite>, <cite>cython_pregel</cite>.</p>
-<p>The instance of this class can be passed to init <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.App</span></code>.</p>
+<p>The instance of this class can be passed to init <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.app.AppDAGNode</span></code>.</p>
 <dl class="py attribute">
 <dt id="graphscope.framework.app.AppAssets.algo">
 <code class="sig-name descname">algo</code><a class="headerlink" href="#graphscope.framework.app.AppAssets.algo" title="Permalink to this definition">¶</a></dt>
@@ -282,12 +282,6 @@ Default to None</p></li>
 <dd><p>Return repr(self).</p>
 </dd></dl>
 
-<dl class="py attribute">
-<dt id="graphscope.framework.app.AppAssets.__weakref__">
-<code class="sig-name descname">__weakref__</code><a class="headerlink" href="#graphscope.framework.app.AppAssets.__weakref__" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of weak references to the object (if defined)</p>
-</dd></dl>
-
 <dl class="py method">
 <dt id="id0">
 <em class="property">property </em><code class="sig-name descname">algo</code><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
@@ -322,7 +316,7 @@ Default to None</p></li>
 <dd><p>Determine if this algorithm can run on this type of graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A graph instance.</p>
+<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code>) – A graph instance.</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><ul class="simple">
@@ -345,9 +339,15 @@ Default to None</p></li>
 <dt id="id2">
 <em class="property">property </em><code class="sig-name descname">signature</code><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a signature of the app assets by its algo name (and gar resources).</p>
-<p>Used to uniquely identify a app assets.
-:returns: signature of this assets
-:rtype: str</p>
+<p>Used to uniquely identify a app assets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signature of this assets</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -444,84 +444,11 @@ Default to None</p></li>
 <h2>App object<a class="headerlink" href="#app-object" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="graphscope.framework.app.App">
-<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.app.</code><code class="sig-name descname">App</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">app_assets</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#graphscope.framework.app.AppAssets" title="graphscope.framework.app.AppAssets">graphscope.framework.app.AppAssets</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.app.App" title="Permalink to this definition">¶</a></dt>
-<dd><p>An application that can run on graphs and produce results.</p>
-<p>Analytical engine will build the app dynamic library when instantiate a app instance.
-The dynamic library will be reused if subsequent app’s signature matches one of previous ones.</p>
-<dl class="py attribute">
-<dt id="graphscope.framework.app.App.key">
-<code class="sig-name descname">key</code><a class="headerlink" href="#graphscope.framework.app.App.key" title="Permalink to this definition">¶</a></dt>
-<dd><p>Identifier of the app, associated with the dynamic library path.
-set by analytical engine after library is built.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="graphscope.framework.app.App.signature">
-<code class="sig-name descname">signature</code><a class="headerlink" href="#graphscope.framework.app.App.signature" title="Permalink to this definition">¶</a></dt>
-<dd><p>Combination of app_assets’s and graph’s signature.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="graphscope.framework.app.App.session_id">
-<code class="sig-name descname">session_id</code><a class="headerlink" href="#graphscope.framework.app.App.session_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Session id of the session that associated with the app.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="graphscope.framework.app.App.algo">
-<code class="sig-name descname">algo</code><a class="headerlink" href="#graphscope.framework.app.App.algo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Algorithm name of app_assets.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="graphscope.framework.app.App.gar">
-<code class="sig-name descname">gar</code><a class="headerlink" href="#graphscope.framework.app.App.gar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gar content of app_assets.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.app.</code><code class="sig-name descname">App</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">app_node</span></em>, <em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.app.App" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
 <dt id="graphscope.framework.app.App.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">app_assets</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#graphscope.framework.app.AppAssets" title="graphscope.framework.app.AppAssets">graphscope.framework.app.AppAssets</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.app.App.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Create an application using given <code class="code docutils literal notranslate"><span class="pre">gar</span></code> file, or given application</dt><dd><p>class name.</p>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A <code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code> instance.</p></li>
-<li><p><strong>app_assets</strong> – A <a class="reference internal" href="#graphscope.framework.app.AppAssets" title="graphscope.framework.app.AppAssets"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppAssets</span></code></a> instance.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>TypeError</strong> – The type of app_assets incorrect.</p>
-</dd>
-</dl>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">app_node</span></em>, <em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.app.App.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -531,73 +458,14 @@ set by analytical engine after library is built.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="id4">
-<em class="property">property </em><code class="sig-name descname">algo</code><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
-<dd><p>Algorithm name, e.g. sssp, pagerank.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Algorithm name of this asset.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="id5">
-<em class="property">property </em><code class="sig-name descname">gar</code><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gar resource.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>gar resource of this asset.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bytes</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="id6">
-<em class="property">property </em><code class="sig-name descname">key</code><a class="headerlink" href="#id6" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.framework.app.App.key">
+<em class="property">property </em><code class="sig-name descname">key</code><a class="headerlink" href="#graphscope.framework.app.App.key" title="Permalink to this definition">¶</a></dt>
 <dd><p>A unique identifier of App.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="graphscope.framework.app.App.loaded">
-<code class="sig-name descname">loaded</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.loaded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.app.App.loaded" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Since key is only set by engine after it load the app, and unset to None when unload,</dt><dd><p>we can use the key to detect whether the app is loaded.</p>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The app is loaded or not.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="id7">
-<em class="property">property </em><code class="sig-name descname">session_id</code><a class="headerlink" href="#id7" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the session_id, which is copied from the graph.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Id of the session which loaded the app.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="id8">
-<em class="property">property </em><code class="sig-name descname">signature</code><a class="headerlink" href="#id8" title="Permalink to this definition">¶</a></dt>
+<dt id="graphscope.framework.app.App.signature">
+<em class="property">property </em><code class="sig-name descname">signature</code><a class="headerlink" href="#graphscope.framework.app.App.signature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Signature is computed by all critical components of the App.</p>
 </dd></dl>
 
@@ -711,6 +579,16 @@ set by analytical engine after library is built.</p>
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.5.0/index.html">v0.5.0</a></dd>
               
             
 

@@ -319,16 +319,11 @@
         <span class="k">def</span> <span class="nf">load_subgraph</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
             <span class="kn">import</span> <span class="nn">vineyard</span>
 
-            <span class="kn">import</span> <span class="nn">graphscope</span>
-
-            <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">generate_eid</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span>
-                <span class="n">Loader</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectName</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_vertex_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">))</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span>
+                <span class="n">vertices</span><span class="o">=</span><span class="p">[</span><span class="n">Loader</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectName</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_vertex_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">))],</span>
+                <span class="n">edges</span><span class="o">=</span><span class="p">[</span><span class="n">Loader</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectName</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_edge_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">))],</span>
+                <span class="n">generate_eid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span>
-                <span class="n">Loader</span><span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectName</span><span class="p">(</span><span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">_edge_stream&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">))</span>
-            <span class="p">)</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">_ensure_loaded</span><span class="p">()</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;subgraph has been loaded&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">graph</span>
 
@@ -474,6 +469,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.5.0/index.html">v0.5.0</a></dd>
               
             
 

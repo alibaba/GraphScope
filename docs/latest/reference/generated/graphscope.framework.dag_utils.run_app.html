@@ -227,13 +227,12 @@
 <h1>graphscope.framework.dag_utils.run_app<a class="headerlink" href="#graphscope-framework-dag-utils-run-app" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="graphscope.framework.dag_utils.run_app">
-<code class="sig-prename descclassname">graphscope.framework.dag_utils.</code><code class="sig-name descname">run_app</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="n">app</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/framework/dag_utils.html#run_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.dag_utils.run_app" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run <cite>app</cite> on the <cite>graph</cite>.</p>
+<code class="sig-prename descclassname">graphscope.framework.dag_utils.</code><code class="sig-name descname">run_app</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">app</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/framework/dag_utils.html#run_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.dag_utils.run_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run <cite>bound app</cite> on the <cite>graph</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A loaded graph.</p></li>
-<li><p><strong>app</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">App</span></code>) – A loaded app that will be queried.</p></li>
+<li><p><strong>app</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">AppDAGNode</span></code>) – A <code class="xref py py-class docutils literal notranslate"><span class="pre">AppDAGNode</span></code> instance which represent a bound app.</p></li>
 <li><p><strong>key</strong> (<em>str</em>) – Key of query results, can be used to retrieve results.</p></li>
 <li><p><strong>*args</strong> – Additional query params that will be used in evaluation.</p></li>
 <li><p><strong>**kwargs</strong> – Key-value formated query params that mostly used in Cython apps.</p></li>
@@ -332,6 +331,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.5.0/index.html">v0.5.0</a></dd>
               
             
 
