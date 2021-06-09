@@ -341,8 +341,8 @@ jobs:
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/classes
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/test_nx.py
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/test_ctx_builtin.py
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/algorithms/builtin \
-                                            python/graphscope/nx/tests/test_utils.py
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/algorithms/builtin
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/test_utils.py
 
         pkill -TERM etcd || true
 
