@@ -37,7 +37,7 @@ def gs_conn():
     yield graphscope.conn(grpc_endpoint, gremlin_endpoint)
 
 
-def test_demo(gs_conn, data_dir):
+def test_demo(gs_conn):
     graph = gs_conn.g()
     schema = graph.schema()
     schema.add_vertex_label("person").add_primary_key("id", "long").add_property(
