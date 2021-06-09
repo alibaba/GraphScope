@@ -22,6 +22,42 @@ from graphscope.framework.graph import Graph
 
 
 def load_ogbn_mag(sess, prefix):
+    vertices = {
+        "paper": os.path.join(prefix, "paper.csv"),
+        "author": os.path.join(prefix, "author.csv"),
+        "institution": os.path.join(prefix, "institution.csv"),
+        "field_of_study": os.path.join(prefix, "field_of_study.csv"),
+    }
+    edges = {
+        "affiliated": (
+            os.path.join(prefix, "author_affiliated_with_institution.csv"),
+            [],
+            ("src_id", "author"),
+            ("dst_id", "institution"),
+        ),
+        "cites": (
+            os.path.join(prefix, "paper_cites_paper.csv"),
+            [],
+            ("src_id", "paper"),
+            ("dst_id", "paper"),
+        ),
+        "hasTopic": (
+            os.path.join(prefix, "paper_has_topic_field_of_study.csv"),
+            [],
+            ("src_id", "paper"),
+            ("dst_id", "field_of_study"),
+        ),
+        "writes": (
+            os.path.join(prefix, "author_writes_paper.csv"),
+            [],
+            ("src_id", "author"),
+            ("dst_id", "paper"),
+        ),
+    }
+    return sess.load_from(edges, vertices)
+
+
+def load_ogbn_mag_eager(sess, prefix):
     """Load ogbn_mag graph.
     The ogbn-mag dataset is a heterogeneous network composed of a subset of the Microsoft Academic Graph (MAG).
     See more details here:
