@@ -26,6 +26,7 @@ import graphscope
 
 logger = logging.getLogger("graphscope")
 
+
 @pytest.fixture
 def gs_conn():
     node_ip = os.environ["NODE_IP"]
