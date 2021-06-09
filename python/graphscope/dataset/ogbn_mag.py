@@ -19,7 +19,6 @@
 import os
 
 from graphscope.framework.graph import Graph
-from graphscope.framework.loader import Loader
 
 
 def load_ogbn_mag(sess, prefix):

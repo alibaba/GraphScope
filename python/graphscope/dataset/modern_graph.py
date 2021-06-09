@@ -28,13 +28,13 @@ def load_modern_graph(sess, prefix, directed=True):
     functionalities.
 
     Args:
-    sess (:class:`graphscope.Session`): Load graph within the session.
-    prefix (str): Data directory.
-    directed (bool, optional): Determine to load a directed or undirected graph.
-    Defaults to True.
+        sess (:class:`graphscope.Session`): Load graph within the session.
+        prefix (str): Data directory.
+        directed (bool, optional): Determine to load a directed or undirected graph.
+            Defaults to True.
 
     Returns:
-    :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
+        :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
     """
     graph = sess.g(directed=directed)
     graph = (
