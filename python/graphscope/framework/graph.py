@@ -41,6 +41,7 @@ from graphscope.framework.graph_utils import EdgeSubLabel
 from graphscope.framework.graph_utils import VertexLabel
 from graphscope.framework.operation import Operation
 from graphscope.framework.utils import data_type_to_cpp
+from graphscope.proto import attr_value_pb2
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
@@ -148,7 +149,7 @@ class GraphInterface(metaclass=ABCMeta):
         config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
         config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(False)
         return dag_utils.create_graph(
-            self.session_id, raph_def_pb2.ARROW_PROPERTY, inputs=None, attrs=config
+            self.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=None, attrs=config
         )
 
 

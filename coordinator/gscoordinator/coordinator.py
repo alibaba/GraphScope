@@ -393,11 +393,11 @@ class CoordinatorServiceServicer(
                     )
                     if op_result.graph_def.graph_type == graph_def_pb2.ARROW_PROPERTY:
                         dump_string(
-                            to_maxgraph_schema(vy_info.property_schema_json)
+                            to_maxgraph_schema(vy_info.property_schema_json),
                             schema_path,
                         )
+                        vy_info.schema_path = schema_path
                         op_result.graph_def.extension.Pack(vy_info)
-                        op_result.graph_def.schema_path = schema_path
                 elif op.op == types_pb2.BIND_APP:
                     self._object_manager.put(
                         app_sig,

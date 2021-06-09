@@ -394,16 +394,16 @@ def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op):
                 attr_value_pb2.AttrValue(graph_type=result.graph_def.graph_type)
             )
             op.attr[types_pb2.OID_TYPE].CopyFrom(
-                utils.normalize_data_type_str(utils.data_type_to_cp(vy_info.oid_type))
+                utils.s_to_attr(utils.normalize_data_type_str(utils.data_type_to_cpp(vy_info.oid_type)))
             )
             op.attr[types_pb2.VID_TYPE].CopyFrom(
-                utils.normalize_data_type_str(utils.data_type_to_cp(vy_info.vid_type))
+                utils.s_to_attr(utils.data_type_to_cpp(vy_info.vid_type))
             )
             op.attr[types_pb2.V_DATA_TYPE].CopyFrom(
-                utils.normalize_data_type_str(utils.data_type_to_cp(vy_info.vdata_type))
+                utils.s_to_attr(utils.data_type_to_cpp(vy_info.vdata_type))
             )
             op.attr[types_pb2.E_DATA_TYPE].CopyFrom(
-                utils.normalize_data_type_str(utils.data_type_to_cp(vy_info.edata_type))
+                utils.s_to_attr(utils.data_type_to_cpp(vy_info.edata_type))
             )
 
 
@@ -427,9 +427,12 @@ def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     result = op_result_pool[key_of_parent_op]
+    assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
+    vy_info = graph_def_pb2.VineyardInfoPb()
+    result.graph_def.extension.Unpack(vy_info)
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
     op.attr[types_pb2.VINEYARD_ID].CopyFrom(
-        utils.i_to_attr(result.graph_def.vineyard_id)
+        utils.i_to_attr(vy_info.vineyard_id)
     )
 
 
@@ -442,7 +445,7 @@ def _pre_process_for_add_column_op(op, op_result_pool, key_to_op):
             graph_name = r.graph_def.key
             graph_type = r.graph_def.graph_type
             schema = GraphSchema()
-            schema.from_graph_def(r.graph_def.schema_def)
+            schema.from_graph_def(r.graph_def)
     for key_of_parent_op in op.parents:
         parent_op = key_to_op[key_of_parent_op]
         if parent_op.op == types_pb2.RUN_APP:
@@ -493,7 +496,7 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op):
     r = op_result_pool[graph_op.key]
     # transform selector
     schema = GraphSchema()
-    schema.from_graph_def(r.graph_def.schema_def)
+    schema.from_graph_def(r.graph_def)
     selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
     if op.op in (types_pb2.CONTEXT_TO_DATAFRAME, types_pb2.TO_VINEYARD_DATAFRAME):
         selector = _tranform_dataframe_selector(context_type, schema, selector)
@@ -508,14 +511,14 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op):
 
 def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op):
     # for nx graph
-    if op.attr[types_pb2.GRAPH_TYPE].graph_type == types_pb2.DYNAMIC_PROJECTED:
+    if op.attr[types_pb2.GRAPH_TYPE].graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
         return
     assert len(op.parents) == 1
     # get parent graph schema
     key_of_parent_op = op.parents[0]
     r = op_result_pool[key_of_parent_op]
     schema = GraphSchema()
-    schema.from_graph_def(r.graph_def.schema_def)
+    schema.from_graph_def(r.graph_def)
     graph_name = r.graph_def.key
     check_argument(
         schema.vertex_label_num == 1,
@@ -552,14 +555,19 @@ def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op):
     op.attr[types_pb2.V_PROP_ID].CopyFrom(utils.i_to_attr(v_prop_id))
     op.attr[types_pb2.E_LABEL_ID].CopyFrom(utils.i_to_attr(e_label_id))
     op.attr[types_pb2.E_PROP_ID].CopyFrom(utils.i_to_attr(e_prop_id))
-    op.attr[types_pb2.OID_TYPE].CopyFrom(utils.s_to_attr(oid_type))
-    op.attr[types_pb2.VID_TYPE].CopyFrom(utils.s_to_attr(vid_type))
+    op.attr[types_pb2.OID_TYPE].CopyFrom(
+        utils.s_to_attr(utils.data_type_to_cpp(oid_type))
+    )
+    op.attr[types_pb2.VID_TYPE].CopyFrom(
+        utils.s_to_attr(utils.data_type_to_cpp(vid_type))
+    )
     op.attr[types_pb2.V_DATA_TYPE].CopyFrom(
         utils.s_to_attr(utils.data_type_to_cpp(vdata_type))
     )
     op.attr[types_pb2.E_DATA_TYPE].CopyFrom(
         utils.s_to_attr(utils.data_type_to_cpp(edata_type))
     )
+    logger.info(op)
 
 
 def _pre_process_for_project_op(op, op_result_pool, key_to_op):
@@ -576,7 +584,7 @@ def _pre_process_for_project_op(op, op_result_pool, key_to_op):
     key_of_parent_op = op.parents[0]
     r = op_result_pool[key_of_parent_op]
     schema = GraphSchema()
-    schema.from_graph_def(r.graph_def.schema_def)
+    schema.from_graph_def(r.graph_def)
     graph_name = r.graph_def.key
     vertices = json.loads(op.attr[types_pb2.VERTEX_COLLECTIONS].s.decode("utf-8"))
     edges = json.loads(op.attr[types_pb2.EDGE_COLLECTIONS].s.decode("utf-8"))

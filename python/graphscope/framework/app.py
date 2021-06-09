@@ -27,7 +27,6 @@ import yaml
 
 import graphscope
 from graphscope.framework.context import ContextDAGNode
-from graphscope.framework.context import create_context
 from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import bind_app
 from graphscope.framework.dag_utils import create_app

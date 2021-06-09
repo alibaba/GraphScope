@@ -172,11 +172,10 @@ class ContextDAGNode(DAGNode):
         return ResultDAGNode(self, op)
 
 
-class Context(collections.abc.Mapping):
+class Context(object):
     def __init__(self, context_node, key, type):
         self._context_node = context_node
         self._session = context_node.session
-        self._session_id = self._session.session_id
         self._graph = self._context_node._graph
         self._key = key
         self._type = type
@@ -184,10 +183,6 @@ class Context(collections.abc.Mapping):
         self._context_node.op = deepcopy(self._context_node.op)
         self._context_node.evaluated = True
         self._saved_signature = self.signature
-
-    @property
-    def session_id(self):
-        return self._session_id
 
     @property
     def op(self):
@@ -213,18 +208,6 @@ class Context(collections.abc.Mapping):
 
     def __repr__(self):
         return f"graphscope.{self.__class__.__name__} from graph {str(self._graph)}"
-
-    def __len__(self):
-        return self._graph._graph.number_of_nodes()
-
-    def __getitem__(self, key):
-        if key not in self._graph._graph:
-            raise KeyError(key)
-        op = dag_utils.get_context_data(self, json.dumps([key]))
-        return dict(json.loads(op.eval()))
-
-    def __iter__(self):
-        return iter(self._graph._graph)
 
     def _check_unmodified(self):
         check_argument(self._saved_signature == self.signature)
@@ -320,45 +303,15 @@ class Context(collections.abc.Mapping):
         df.to_csv(fd, header=True, index=False)
 
 
-class TensorContext(ContextDAGNode):
-    """Tensor context holds a tensor.
-    Only axis is meaningful when considering a TensorContext.
-    """
-
-    def _transform_selector(self, selector):
-        return None
-
-
-class VertexDataContext(ContextDAGNode):
-    """The most simple kind of context.
-    A vertex has a single value as results.
-
-    - The syntax of selector on vertex is:
-        - `v.id`: Get the Id of vertices
-        - `v.data`: Get the data of vertices (If there is any, means origin data on the graph, not results)
-
-    - The syntax of selector of edge is:
-        - `e.src`: Get the source Id of edges
-        - `e.dst`: Get the destination Id of edges
-        - `e.data`: Get the edge data on the edges (If there is any, means origin data on the graph)
-
-    - The syntax of selector of results is:
-        - `r`: Get quering results of algorithms. e.g. Rankings of vertices after doing PageRank.
-    """
-
-    def _transform_selector(self, selector):
-        return utils.transform_vertex_data_selector(selector)
-
-
 class DynamicVertexDataContext(collections.abc.Mapping):
     """Vertex data context for complicated result store.
     A vertex has a single value as results.
     """
 
-    def __init__(self, session_id, context_key, graph):
-        self._key = context_key
-        self._graph = graph
-        self._session_id = session_id
+    def __init__(self, context_node, key, type):
+        self._key = key
+        self._graph = context_node._graph
+        self._session_id = context_node.session_id
         self._saved_signature = self.signature
 
     @property
@@ -393,98 +346,3 @@ class DynamicVertexDataContext(collections.abc.Mapping):
 
     def __iter__(self):
         return iter(self._graph._graph)
-
-
-class LabeledVertexDataContext(ContextDAGNode):
-    """The labeld kind of context.
-    This context has several vertex labels and edge labels,
-    and each label has several properties.
-    Selection are performed on labels first, then on properties.
-
-    We use `:` to filter labels, and `.` to select properties.
-    And the results has no property, only have labels.
-
-    - The syntax of selector of vertex is:
-        - `v:label_name.id`: Get Id that belongs to a specific vertex label.
-        - `v:label_name.property_name`: Get data that on a specific property of a specific vertex label.
-
-    - The syntax of selector of edge is:
-        - `e:label_name.src`: Get source Id of a specific edge label.
-        - `e:label_name.dst`: Get destination Id of a specific edge label.
-        - `e:label_name.property_name`: Get data on a specific property of a specific edge label.
-
-    - The syntax of selector of results is:
-        - `r:label_name`: Get results data of a vertex label.
-    """
-
-    def _transform_selector(self, selector):
-        return utils.transform_labeled_vertex_data_selector(
-            self._graph.schema, selector
-        )
-
-
-class VertexPropertyContext(ContextDAGNode):
-    """The simple kind of context with property.
-    A vertex can have multiple values (a.k.a. properties) as results.
-
-    - The syntax of selector on vertex is:
-        - `v.id`: Get the Id of vertices
-        - `v.data`: Get the data of vertices (If there is any, means origin data on the graph, not results)
-
-    - The syntax of selector of edge is:
-        - `e.src`: Get the source Id of edges
-        - `e.dst`: Get the destination Id of edges
-        - `e.data`: Get the edge data on the edges (If there is any, means origin data on the graph)
-
-    - The syntax of selector of results is:
-        - `r.column_name`: Get the property named `column_name` in results. e.g. `r.hub` in :func:`graphscope.hits`.
-    """
-
-    def _transform_selector(self, selector):
-        return utils.transform_vertex_property_data_selector(selector)
-
-
-class LabeledVertexPropertyContext(ContextDAGNode):
-    """The labeld kind of context with properties.
-    This context has several vertex labels and edge labels,
-    And each label has several properties.
-    Selection are performed on labels first, then on properties.
-
-    We use `:` to filter labels, and `.` to select properties.
-    And the results can have several properties.
-    - The syntax of selector of vertex is:
-        - `v:label_name.id`: Get Id that belongs to a specific vertex label.
-        - `v:label_name.property_name`: Get data that on a specific property of a specific vertex label.
-
-    - The syntax of selector of edge is:
-        - `e:label_name.src`: Get source Id of a specific edge label.
-        - `e:label_name.dst`: Get destination Id of a specific edge label.
-        - `e:label_name.property_name`: Get data on a specific property of a specific edge label.
-
-    - The syntax of selector of results is:
-        - `r:label_name.column_name`: Get the property named `column_name` of `label_name`.
-
-    """
-
-    def _transform_selector(self, selector):
-        return utils.transform_labeled_vertex_property_data_selector(
-            self._graph.schema, selector
-        )
-
-
-def create_context(context_type, session_id, context_key, graph):
-    """A context factory, create concrete context class by context_type."""
-    if context_type == "tensor":
-        return TensorContext(session_id, context_key, graph)
-    if context_type == "vertex_data":
-        return VertexDataContext(session_id, context_key, graph)
-    elif context_type == "labeled_vertex_data":
-        return LabeledVertexDataContext(session_id, context_key, graph)
-    elif context_type == "dynamic_vertex_data":
-        return DynamicVertexDataContext(session_id, context_key, graph)
-    elif context_type == "vertex_property":
-        return VertexPropertyContext(session_id, context_key, graph)
-    elif context_type == "labeled_vertex_property":
-        return LabeledVertexPropertyContext(session_id, context_key, graph)
-    else:
-        raise InvalidArgumentError("Not supported context type: " + context_type)
