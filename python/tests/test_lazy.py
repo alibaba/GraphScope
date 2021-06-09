@@ -66,9 +66,7 @@ def arrow_property_graph(graphscope_session):
     g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_1", "e1", ["weight"], "v0", "v1")
     g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_1", "e1", ["weight"], "v1", "v0")
     g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_1", "e1", ["weight"], "v1", "v1")
-
-    yield g
-    g.unload()
+    return g
 
 
 @pytest.mark.skip(reason="waiting for optimization of dag")
