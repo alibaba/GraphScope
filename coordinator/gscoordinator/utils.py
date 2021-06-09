@@ -41,7 +41,6 @@ from queue import Queue
 from string import Template
 
 import yaml
-from graphscope.proto import graph_def_pb2
 from graphscope.framework import utils
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.utils import transform_labeled_vertex_data_selector
@@ -49,6 +48,7 @@ from graphscope.framework.utils import transform_labeled_vertex_property_data_se
 from graphscope.framework.utils import transform_vertex_data_selector
 from graphscope.framework.utils import transform_vertex_property_data_selector
 from graphscope.proto import attr_value_pb2
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
@@ -384,7 +384,9 @@ def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op):
         else:
             # get graph runtime information from results
             result = op_result_pool[key_of_parent_op]
-            assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
+            assert result.graph_def.extension.Is(
+                graph_def_pb2.VineyardInfoPb.DESCRIPTOR
+            )
             vy_info = graph_def_pb2.VineyardInfoPb()
             result.graph_def.extension.Unpack(vy_info)
             op.attr[types_pb2.GRAPH_NAME].CopyFrom(
@@ -394,7 +396,11 @@ def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op):
                 attr_value_pb2.AttrValue(graph_type=result.graph_def.graph_type)
             )
             op.attr[types_pb2.OID_TYPE].CopyFrom(
-                utils.s_to_attr(utils.normalize_data_type_str(utils.data_type_to_cpp(vy_info.oid_type)))
+                utils.s_to_attr(
+                    utils.normalize_data_type_str(
+                        utils.data_type_to_cpp(vy_info.oid_type)
+                    )
+                )
             )
             op.attr[types_pb2.VID_TYPE].CopyFrom(
                 utils.s_to_attr(utils.data_type_to_cpp(vy_info.vid_type))
@@ -431,9 +437,7 @@ def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op):
     vy_info = graph_def_pb2.VineyardInfoPb()
     result.graph_def.extension.Unpack(vy_info)
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
-    op.attr[types_pb2.VINEYARD_ID].CopyFrom(
-        utils.i_to_attr(vy_info.vineyard_id)
-    )
+    op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
 
 
 def _pre_process_for_add_column_op(op, op_result_pool, key_to_op):

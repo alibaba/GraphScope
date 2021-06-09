@@ -131,7 +131,8 @@ class _FetchHandler(object):
         return app
 
     def _rebuild_context(self, seq, op: Operation, op_result: op_def_pb2.OpResult):
-        from graphscope.framework.context import Context, DynamicVertexDataContext
+        from graphscope.framework.context import Context
+        from graphscope.framework.context import DynamicVertexDataContext
 
         # get context dag node as base
         context_dag_node = self._fetches[seq]
@@ -139,7 +140,9 @@ class _FetchHandler(object):
         context_type = ret["context_type"]
         if context_type == "dynamic_vertex_data":
             # for nx
-            return DynamicVertexDataContext(context_dag_node, ret["context_key"], context_type)
+            return DynamicVertexDataContext(
+                context_dag_node, ret["context_key"], context_type
+            )
         else:
             return Context(context_dag_node, ret["context_key"], context_type)
 
