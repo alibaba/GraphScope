@@ -672,7 +672,7 @@ jobs:
 
     - name: Release images
       run: |
-        echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
+        # echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
         sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
         # sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
