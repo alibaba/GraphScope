@@ -205,7 +205,7 @@ class CoordinatorServiceServicer(
         # Generate session id
         self._session_id = self._generate_session_id()
         self._key_to_op = dict()
-        # List of op_def_pb2.OpResult
+        # dict of op_def_pb2.OpResult
         self._op_result_pool = dict()
         self._udf_app_workspace = os.path.join(WORKSPACE, self._session_id)
 

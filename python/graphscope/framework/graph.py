@@ -447,7 +447,8 @@ class GraphDAGNode(DAGNode, GraphInterface):
         return graph_dag_node
 
     def unload(self):
-        raise RuntimeError("Cannot unload a dag node graph")
+        # do nothing for dag node
+        pass
 
     def project(
         self,

@@ -571,7 +571,6 @@ def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op):
     op.attr[types_pb2.E_DATA_TYPE].CopyFrom(
         utils.s_to_attr(utils.data_type_to_cpp(edata_type))
     )
-    logger.info(op)
 
 
 def _pre_process_for_project_op(op, op_result_pool, key_to_op):

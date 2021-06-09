@@ -330,7 +330,8 @@ class AppDAGNode(DAGNode):
         return ContextDAGNode(self, self._graph, *args, **kwargs)
 
     def unload(self):
-        raise RuntimeError("Cannot unload dag node app")
+        # do nothing for dag node
+        pass
 
 
 class App(object):
