@@ -573,15 +573,15 @@ jobs:
     - name: Prepare Image
       run: |
         cp k8s/ready_probe.sh artifacts/
-        cp .github/workflows/graphstore.Dockerfile artifacts/
+        cp .github/workflows/graphscope-store.Dockerfile artifacts/
         pushd artifacts
         tar -zxf ./gss-${{ github.sha }}/lib.tar.gz
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
 
         sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} \
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                           --network=host \
-                          -f ./graphstore.Dockerfile .
+                          -f ./graphscope-store.Dockerfile .
         popd
         python3 -m pip install -r python/requirements.txt
         python3 -m pip install -r python/requirements-dev.txt
@@ -590,18 +590,18 @@ jobs:
 
     - name: Helm test
       run: |
-        cd charts/graphscope-store-service
+        cd charts/graphscope-store
         helm dependency update
         cd ..
-        helm install graphstore --set image.tag=${{ github.sha }} \
-                                      ./graphscope-store-service
-        helm test graphstore --timeout 5m0s
+        helm install ci --set image.tag=${{ github.sha }} \
+                                      ./graphscope-store
+        helm test ci --timeout 5m0s
 
     - name: Python test
       run: |
         echo ${GITHUB_WORKSPACE}
-        export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services graphstore-graphscope-store-service-frontend)
-        export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services graphstore-graphscope-store-service-frontend)
+        export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
+        export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         export JAVA_HOME=/usr/lib/jvm/default-java/
 
@@ -633,10 +633,10 @@ jobs:
         export JAVA_HOME=/usr/lib/jvm/default-java/
         HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
         rm -rf /tmp/hadoop* || true
-        helm uninstall graphstore || true
-        kubectl delete pvc -l app.kubernetes.io/instance=graphstore --wait=false || true
-        kubectl delete pod graphstore-graphscope-store-service-frontend-test-rpc-service --wait=false || true
-        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} || true
+        helm uninstall ci || true
+        kubectl delete pvc -l app.kubernetes.io/instance=ci --wait=false || true
+        kubectl delete pod ci-graphscope-store-frontend-test-rpc-service --wait=false || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} || true
 
 
   release-image:
@@ -667,9 +667,9 @@ jobs:
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
                           --network=host \
                           -f ./manager.Dockerfile .
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} \
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                           --network=host \
-                          -f ./graphstore.Dockerfile .
+                          -f ./graphscope-store.Dockerfile .
 
     - name: Release images
       run: |
@@ -684,17 +684,17 @@ jobs:
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest
 
-        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:latest
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }}
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:latest
+        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
+                        registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }}
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest
 
     - name: Clean
       if: always()
       run: |
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest \
             registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:latest \
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
             registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha}} || true
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha}} || true

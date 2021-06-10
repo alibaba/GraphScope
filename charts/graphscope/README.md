@@ -111,7 +111,7 @@ See [*helm uninstall*](https://helm.sh/docs/helm/helm_uninstall/) for command do
 # Helm 3 or 2
 $ helm upgrade [RELEASE_NAME] [CHART] --install
 ```
-Sess [*helm upgrade*](https://helm.sh/docs/helm/helm_upgrade/) for command documentation.
+See [*helm upgrade*](https://helm.sh/docs/helm/helm_upgrade/) for command documentation.
 
 
 ## Configuration

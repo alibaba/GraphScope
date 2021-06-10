@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "graphscope-store-service.store.fullname" . }}-headless
+  name: {{ include "graphscope-store.store.fullname" . }}-headless
   namespace: {{ .Release.Namespace }}
-  labels: {{- include "graphscope-store-service.labels" . | nindent 4 }}
+  labels: {{- include "graphscope-store.labels" . | nindent 4 }}
     app.kubernetes.io/component: store
     {{- if .Values.commonLabels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
@@ -30,5 +30,5 @@ spec:
       port: {{ .Values.store.service.engine }}
       targetPort: engine
 
-  selector: {{- include "graphscope-store-service.selectorLabels" . | nindent 4 }}
+  selector: {{- include "graphscope-store.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: store
