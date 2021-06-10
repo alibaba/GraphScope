@@ -21,8 +21,6 @@ import networkx.exception as exception
 import networkx.testing as testing
 from networkx.exception import *
 
-# define nx attributes
-from graphscope.client.session import get_default_session
 from graphscope.nx.algorithms import *
 from graphscope.nx.classes import *
 from graphscope.nx.convert import *
@@ -32,14 +30,6 @@ from graphscope.nx.readwrite import *
 from graphscope.nx.relabel import *
 from graphscope.nx.utils import *
 
-try:
-    session = get_default_session()
-    if not session.eager():
-        raise ValueError(
-            "Networkx module need session to be eager mode. "
-            "The default session is lazy mode."
-        )
-except RuntimeError:
-    # no default session found.
-    session = None
-setattr(Graph, "_session", session)
+# set session attribute to Graph and DiGraph
+setattr(Graph, "_session", None)
+setattr(DiGraph, "_session", None)
