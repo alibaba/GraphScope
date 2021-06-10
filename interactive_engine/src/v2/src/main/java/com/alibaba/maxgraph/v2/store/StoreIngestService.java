@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.v2.store;
 
 import com.alibaba.maxgraph.proto.v2.*;
 import com.alibaba.maxgraph.v2.common.CompletionCallback;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
@@ -39,7 +40,7 @@ public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
 
             @Override
             public void onError(Throwable t) {
-                responseObserver.onError(t);
+                responseObserver.onError(Status.INTERNAL.withDescription(t.getMessage()).asRuntimeException());
             }
         });
     }
