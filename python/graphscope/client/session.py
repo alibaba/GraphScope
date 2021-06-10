@@ -69,7 +69,7 @@ from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
 DEFAULT_CONFIG_FILE = os.environ.get(
-    "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/gs_config.json")
+    "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/session.json")
 )
 
 _session_dict = {}
