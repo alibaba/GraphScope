@@ -248,14 +248,7 @@ class Graph(object):
 
         """
         if self._session is None:
-            try:
-                self._session = get_default_session()
-                print("get default session", self._session.session_id)
-            except RuntimeError:
-                raise ValueError(
-                    "The nx binding session is None, that maybe no default session found. "
-                    "Please register a session as default session."
-                )
+            self._try_to_get_default_session()
 
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
@@ -298,6 +291,21 @@ class Graph(object):
             hasattr(incoming_graph_data, "graph_type")
             and incoming_graph_data.graph_type == graph_def_pb2.ARROW_PROPERTY
         )
+
+    def _try_to_get_default_session(self):
+        try:
+            session = get_default_session()
+            if not session.eager():
+                raise ValueError(
+                    "Networkx module need session to be eager mode. "
+                    "The default session is lazy mode."
+                )
+            self._session = session
+        except RuntimeError:
+            raise ValueError(
+                "The nx binding session is None, that maybe no default session found. "
+                "Please register a session as default session."
+            )
 
     @patch_docstring(RefGraph.to_directed_class)
     def to_directed_class(self):

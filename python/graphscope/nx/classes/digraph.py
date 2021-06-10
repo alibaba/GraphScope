@@ -196,13 +196,7 @@ class DiGraph(Graph):
     @patch_docstring(Graph.__init__)
     def __init__(self, incoming_graph_data=None, **attr):
         if self._session is None:
-            try:
-                self._session = get_default_session()
-            except RuntimeError:
-                raise ValueError(
-                    "The nx binding session is None, that maybe no default session found. "
-                    "Please register a session as default session."
-                )
+            self._try_to_get_default_session()
 
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory

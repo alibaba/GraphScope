@@ -1190,6 +1190,11 @@ class Session(object):
         return learning_graph
 
     def nx(self):
+        if not self.eager():
+            raise ValueError(
+                "Networkx module need session to be eager mode. "
+                "The session is lazy mode."
+            )
         import importlib.util
 
         spec = importlib.util.find_spec("graphscope.nx")

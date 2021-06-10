@@ -521,7 +521,9 @@ class TestImportNetworkxModuleWithSession(object):
     def setup_class(cls):
         cls.session1 = graphscope.session(cluster_type="hosts", num_workers=1)
         cls.session2 = graphscope.session(cluster_type="hosts", num_workers=1)
-        # cls.session_lazy = graphscope.session(cluster_type="hosts", num_workers=1, mode="lazy")
+        cls.session_lazy = graphscope.session(
+            cluster_type="hosts", num_workers=1, mode="lazy"
+        )
 
     def test_import(self):
         import graphscope.nx as nx_default
@@ -537,3 +539,11 @@ class TestImportNetworkxModuleWithSession(object):
 
         self.session1.close()
         self.session2.close()
+
+    def test_error_import_with_wrong_session(self):
+        with pytest.raises(
+            ValueError,
+            match="Networkx module need session to be eager mode. The session is lazy mode.",
+        ):
+            nx = self.session_lazy.nx()
+        self.session_lazy.close()
