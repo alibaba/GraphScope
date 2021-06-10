@@ -29,6 +29,8 @@ message ResponseStatus {
   oneof detail {
     NullDetail null = 3;
     OpDef op = 4;
+    // pickle coordinator python exception
+    bytes full_exception = 5;
   }
 }
 

@@ -28,7 +28,6 @@ from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.dataset.ldbc import load_ldbc
 from graphscope.framework.errors import AnalyticalEngineInternalError
-from graphscope.framework.errors import CoordinatorInternalError
 from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.graph import Graph
@@ -92,19 +91,19 @@ def test_error_label_on_project_to_simple(arrow_property_graph):
     g = arrow_property_graph
     # g has vertex labels: v0, v1, v2, v3, each label has a property: weight
     # g has edge label: e0, e1, each label has a property: dist
-    with pytest.raises(CoordinatorInternalError, match="v4"):
+    with pytest.raises(KeyError, match="v4"):
         pg = g.project(vertices={"v4": []}, edges={"e0": []})
         pg._project_to_simple()
 
-    with pytest.raises(CoordinatorInternalError, match="e2"):
+    with pytest.raises(KeyError, match="e2"):
         pg = g.project(vertices={"v0": []}, edges={"e2": []})
         pg._project_to_simple()
 
-    with pytest.raises(CoordinatorInternalError, match="foo"):
+    with pytest.raises(KeyError, match="foo"):
         pg = g.project(vertices={"v0": ["foo"]}, edges={"e0": []})
         pg._project_to_simple()
 
-    with pytest.raises(CoordinatorInternalError, match="foo"):
+    with pytest.raises(KeyError, match="foo"):
         pg = g.project(vertices={"v0": []}, edges={"e0": ["foo"]})
         pg._project_to_simple()
 
@@ -112,13 +111,13 @@ def test_error_label_on_project_to_simple(arrow_property_graph):
 def test_error_relationship_on_project_to_simple(arrow_modern_graph):
     g = arrow_modern_graph
     with pytest.raises(
-        CoordinatorInternalError,
+        ValueError,
         match="Cannot find a valid relation",
     ):
         pg = g.project(vertices={"person": []}, edges={"created": []})
         pg._project_to_simple()
     with pytest.raises(
-        CoordinatorInternalError,
+        ValueError,
         match="Cannot find a valid relation",
     ):
         pg = g.project(vertices={"software": []}, edges={"knows": []})
@@ -167,13 +166,13 @@ def test_error_on_project_to_simple_wrong_graph_type(arrow_property_graph):
 def test_error_on_project_to_simple_wrong_graph_type_2(dynamic_property_graph):
     sdg = dynamic_property_graph.project_to_simple()
     assert sdg._graph_type == graph_def_pb2.DYNAMIC_PROJECTED
-    with pytest.raises(CoordinatorInternalError):
+    with pytest.raises(AssertionError):
         sdg.project_to_simple()
 
 
 def test_error_on_operation_on_graph(graphscope_session):
     g = graphscope_session.g()
-    with pytest.raises(CoordinatorInternalError, match="v"):
+    with pytest.raises(KeyError, match="v"):
         pg = g.project(vertices={"v": []}, edges={"e": []})
         pg._project_to_simple()._ensure_loaded()
 
@@ -266,13 +265,13 @@ def test_graph_to_dataframe(arrow_property_graph):
 
 
 def test_error_on_add_column(arrow_property_graph, property_context):
-    with pytest.raises(CoordinatorInternalError, match="non_exist_label"):
+    with pytest.raises(KeyError, match="non_exist_label"):
         out = arrow_property_graph.add_column(
             property_context,
             {"id": "v:non_exist_label.id", "result": "r:non_exist_label.age"},
         )
 
-    with pytest.raises(CoordinatorInternalError, match="non_exist_prop"):
+    with pytest.raises(KeyError, match="non_exist_prop"):
         out = arrow_property_graph.add_column(
             property_context, {"id": "v:v0.non_exist_prop"}
         )
@@ -280,7 +279,7 @@ def test_error_on_add_column(arrow_property_graph, property_context):
     with pytest.raises(AssertionError, match="selector of add column must be a dict"):
         out = arrow_property_graph.add_column(property_context, selector=None)
 
-    with pytest.raises(CoordinatorInternalError, match="Invalid selector"):
+    with pytest.raises(SyntaxError, match="Invalid selector"):
         out = arrow_property_graph.add_column(property_context, {"id": "xxx:a.b"})
 
 
@@ -473,7 +472,7 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.vertex_labels == []
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
-        CoordinatorInternalError,
+        ValueError,
         match="Check failed: Cannot project to simple, vertex label number is not one.",
     ):
         graphscope.wcc(sub_graph)
@@ -483,7 +482,7 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.vertex_labels == ["person"]
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
-        CoordinatorInternalError,
+        ValueError,
         match="Check failed: Cannot project to simple, edge label number is not one.",
     ):
         graphscope.wcc(sub_graph)
@@ -506,9 +505,7 @@ def test_project_subgraph(arrow_modern_graph):
     assert [p.id for p in graph.schema.get_vertex_properties("person")] == [0, 1, 2]
     assert [p.id for p in graph.schema.get_edge_properties("knows")] == [0]
 
-    with pytest.raises(
-        CoordinatorInternalError, match="weight not exist in properties"
-    ):
+    with pytest.raises(ValueError, match="weight not exist in properties"):
         graph = graph.project(edges={"knows": ["weight"]}, vertices={"person": []})
 
     graph = graph.project(edges={"knows": []}, vertices={"person": []})
@@ -523,7 +520,7 @@ def test_project_subgraph(arrow_modern_graph):
 
 def test_error_on_project(arrow_property_graph, ldbc_graph):
     graph = arrow_property_graph
-    with pytest.raises(CoordinatorInternalError, match="Cannot project to simple"):
+    with pytest.raises(ValueError, match="Cannot project to simple"):
         graphscope.sssp(graph, 4)
     g2 = graph.project(vertices={"v0": []}, edges={"e0": []})
     assert g2.schema.edge_relationships == [[("v0", "v0")]]
@@ -531,14 +528,14 @@ def test_error_on_project(arrow_property_graph, ldbc_graph):
     ldbc = ldbc_graph
     # vertices empty
     with pytest.raises(
-        CoordinatorInternalError,
+        ValueError,
         match="Cannot find a valid relation in given vertices and edges",
     ):
         sub_graph = ldbc.project(vertices={}, edges={"knows": None})
 
     # project not related vertex and edge
     with pytest.raises(
-        CoordinatorInternalError,
+        ValueError,
         match="Cannot find a valid relation in given vertices and edges",
     ):
         sub_graph = ldbc.project(vertices={"person": None}, edges={"hasInterest": None})
@@ -549,25 +546,25 @@ def test_error_on_project(arrow_property_graph, ldbc_graph):
     )
 
     # project with not existed vertex
-    with pytest.raises(CoordinatorInternalError, match="comment not exists"):
+    with pytest.raises(ValueError, match="comment not exists"):
         sub_graph.project(vertices={"comment": None}, edges={"knows": None})
 
     # project with not existed edge
-    with pytest.raises(CoordinatorInternalError, match="isSubclassOf not exists"):
+    with pytest.raises(ValueError, match="isSubclassOf not exists"):
         sub_graph.project(vertices={"tagclass": None}, edges={"isSubclassOf": None})
 
     # more than one property on vertex can not project to simple
     sub_graph = ldbc.project(
         vertices={"person": ["id", "firstName"]}, edges={"knows": ["eid"]}
     )
-    with pytest.raises(CoordinatorInternalError):
+    with pytest.raises(ValueError):
         sub_graph._project_to_simple()
 
     # more than one property on edge can not project to simple
     sub_graph = ldbc.project(
         vertices={"person": ["id"]}, edges={"knows": ["eid", "creationDate"]}
     )
-    with pytest.raises(CoordinatorInternalError):
+    with pytest.raises(ValueError):
         sub_graph._project_to_simple()
 
 

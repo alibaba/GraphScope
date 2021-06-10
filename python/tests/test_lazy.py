@@ -50,8 +50,23 @@ def sess():
 
 
 @pytest.fixture
+def student_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return Loader("%s/student.v" % data_dir, header_row=True, delimiter=",")
+
+
+@pytest.fixture
+def teacher_v(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return Loader("%s/teacher.v" % data_dir, header_row=True, delimiter=",")
+
+
+@pytest.fixture
 def student_group_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
     return Loader("%s/group.e" % data_dir, header_row=True, delimiter=",")
+
+
+@pytest.fixture
+def teacher_group_e(data_dir=os.path.expandvars("${GS_TEST_DIR}/property_graph")):
+    return Loader("%s/teacher_group.e" % data_dir, header_row=True, delimiter=",")
 
 
 def arrow_property_graph(graphscope_session):
@@ -110,3 +125,35 @@ def test_add_column(sess):
     c = sssp(pg, 20)
     g1 = g.add_column(c, {"id_col": "v.id", "data_col": "v.data", "result_col": "r"})
     sess.run(g1)
+
+
+def test_multi_src_dst_edge_loader(
+    sess, student_group_e, teacher_group_e, student_v, teacher_v
+):
+    graph = sess.g()
+    graph = graph.add_vertices(
+        student_v, "student", ["name", "lesson_nums", "avg_score"], "student_id"
+    )
+    graph = graph.add_vertices(
+        teacher_v, "teacher", ["student_num", "score", "email", "tel"], "teacher_id"
+    )
+    graph = graph.add_edges(
+        student_group_e,
+        "group",
+        ["group_id", "member_size"],
+        src_label="student",
+        dst_label="student",
+        src_field="leader_student_id",
+        dst_field="member_student_id",
+    )
+    graph = graph.add_edges(
+        teacher_group_e,
+        "group",
+        ["group_id", "member_size"],
+        src_label="teacher",
+        dst_label="teacher",
+        src_field="leader_teacher_id",
+        dst_field="member_teacher_id",
+    )
+    g = sess.run(graph)
+    print(g)

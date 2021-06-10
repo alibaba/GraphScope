@@ -17,6 +17,7 @@
 #
 
 import inspect
+import pickle
 
 from graphscope.proto import error_codes_pb2
 from graphscope.proto import op_def_pb2
@@ -174,6 +175,9 @@ def check_grpc_response(response):
 
     error_type = _gs_error_types.get(status.code)
     if error_type:
+        if error_type == CoordinatorInternalError:
+            e = pickle.loads(detail)
+            raise (e)
         raise error_type(status.error_msg, detail)
     else:
         raise RuntimeError(

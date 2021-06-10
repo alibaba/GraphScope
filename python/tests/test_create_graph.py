@@ -25,7 +25,6 @@ import vineyard
 
 import graphscope
 from graphscope.framework.errors import AnalyticalEngineInternalError
-from graphscope.framework.errors import CoordinatorInternalError
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
 from graphscope.proto import graph_def_pb2

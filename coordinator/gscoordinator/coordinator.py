@@ -24,6 +24,7 @@ import hashlib
 import json
 import logging
 import os
+import pickle
 import queue
 import random
 import signal
@@ -273,6 +274,7 @@ class CoordinatorServiceServicer(
                     message_pb2.RunStepResponse,
                     error_codes_pb2.COORDINATOR_INTERNAL_ERROR,
                     error_msg,
+                    full_exception=pickle.dumps(e),
                     results=op_results,
                 )
 
@@ -675,12 +677,17 @@ class CoordinatorServiceServicer(
         )
 
     @staticmethod
-    def _make_response(resp_cls, code, error_msg="", op=None, **kwargs):
+    def _make_response(
+        resp_cls, code, error_msg="", op=None, full_exception=None, **kwargs
+    ):
         resp = resp_cls(
             status=message_pb2.ResponseStatus(code=code, error_msg=error_msg), **kwargs
         )
         if op:
             resp.status.op.CopyFrom(op)
+        elif full_exception:
+            # bytes
+            resp.status.full_exception = full_exception
         return resp
 
     def _cleanup(self, cleanup_instance=True, is_dangling=False):
