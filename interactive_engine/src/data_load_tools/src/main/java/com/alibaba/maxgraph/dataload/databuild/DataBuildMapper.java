@@ -49,12 +49,13 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
     private BytesWritable outKey = new BytesWritable();
     private BytesWritable outVal = new BytesWritable();
     private boolean ldbcCustomize;
+    private boolean skipHeader;
 
     @Override
     protected void setup(Context context) throws IOException {
         this.objectMapper = new ObjectMapper();
         Configuration conf = context.getConfiguration();
-        this.separator = conf.get(OfflineBuild.SEPARATOR, "\\|");
+        this.separator = conf.get(OfflineBuild.SEPARATOR);
         String schemaJson = conf.get(OfflineBuild.SCHEMA_JSON);
         this.graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
         this.dataEncoder = new DataEncoder(this.graphSchema);
@@ -62,13 +63,13 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
         this.fileToColumnMappingInfo = this.objectMapper.readValue(columnMappingsJson,
                 new TypeReference<Map<String, ColumnMappingInfo>>() {});
         this.ldbcCustomize = conf.getBoolean(OfflineBuild.LDBC_CUSTOMIZE, false);
-
+        this.skipHeader = conf.getBoolean(OfflineBuild.SKIP_HEADER, true);
         DST_FMT.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
     }
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        if (key.get() == 0L) {
+        if (skipHeader && key.get() == 0L) {
             return;
         }
         String fullPath = context.getConfiguration().get(MRJobConfig.MAP_INPUT_FILE);
