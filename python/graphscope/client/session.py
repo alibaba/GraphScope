@@ -55,7 +55,6 @@ from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InteractiveEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import K8sError
-from graphscope.framework.errors import LearningEngineInternalError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
 from graphscope.framework.graph import GraphDAGNode
@@ -70,7 +69,7 @@ from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
 DEFAULT_CONFIG_FILE = os.environ.get(
-    "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/session.json")
+    "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/gs_config.json")
 )
 
 _session_dict = {}
@@ -733,8 +732,6 @@ class Session(object):
             try:
                 if instance is not None:
                     instance.close()
-            except InteractiveEngineInternalError:
-                pass
             except Exception:
                 pass
         self._interactive_instance_dict.clear()
@@ -744,8 +741,6 @@ class Session(object):
             try:
                 if instance is not None:
                     instance.close()
-            except LearningEngineInternalError:
-                pass
             except Exception:
                 pass
         self._learning_instance_dict.clear()
