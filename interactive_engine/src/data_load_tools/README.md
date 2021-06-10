@@ -10,9 +10,9 @@ This is a toolset for bulk loading data from raw files to graphscope persistent 
 
 ### Get Binary
 
-If you have the distribution package `maxgraph.tar.gz`, decompress it. Then you can find the map-reduce job jar `data_load_tools-0.0.1-SNAPSHOT.jar` under `maxgraph/lib/` and the executable `load_tool.sh` under `maxgraph/bin/`. The `load_tool.sh` is just a wrapper for java command, you can only use `data_load_tools-0.0.1-SNAPSHOT.jar` in the following demonstration. 
+If you have the distribution package `maxgraph.tar.gz`, decompress it. Then you can find the map-reduce job jar `data_load_tools-0.0.1-SNAPSHOT.jar` under `maxgraph/lib/` and the executable `load_tool.sh` under `maxgraph/bin/`.
 
-If you want to build from source code, just run `mvn clean package -DskipTests`. You can find the compiled jar `data_load_tools-0.0.1-SNAPSHOT.jar` in the `target/` directory.
+If you want to build from source code, just run `mvn clean package -DskipTests`. You can find the compiled jar `data_load_tools-0.0.1-SNAPSHOT.jar` in the `target/` directory. The `load_tool.sh` is just a wrapper for java command, you can only use `data_load_tools-0.0.1-SNAPSHOT.jar` in the following demonstration.
 
 ### Usage
 The data loading tools assume the original data files are in the HDFS. Each file should represents either a vertex type or a relationship of an edge type. Below is the sample data of a vertex type `person`:
