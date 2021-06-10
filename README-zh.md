@@ -50,6 +50,12 @@ GraphScope 的 Python 客户端以包的形式分发，您可以通过 `pip`命�
 pip3 install graphscope
 ```
 
+注意安装 GraphScope 的 Python 客户端需要 `pip>=19.0`，如果您遇到了形如 _"ERROR: Could not find a version that satisfies the requirement graphscope"_ 的错误，请通过如下命令来更新 `pip`:
+
+```bash
+pip3 install -U pip
+```
+
 接下来我们会用一个具体的例子，来演示 GraphScope 如何帮助数据科学家高效的分析、处理大规模图数据。
 
 当前发布的版本没有包含一些例如鉴权、加密之列的安全功能，暂时不推荐在生产环境使用。我们后续会有一些安全性更新，请您持续关注。

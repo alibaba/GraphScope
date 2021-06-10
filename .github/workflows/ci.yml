@@ -641,7 +641,7 @@ jobs:
   release-image:
     runs-on: ubuntu-20.04
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    needs: [ gie-test, python-test, k8s-test ]
+    needs: [ gie-test, python-test, k8s-test, gss-test ]
     steps:
     - uses: actions/checkout@v2.3.2
 
@@ -651,17 +651,24 @@ jobs:
     - name: Prepare Image
       run: |
         cp .github/workflows/*.Dockerfile artifacts/
-        cd artifacts
+        cp k8s/ready_probe.sh artifacts/
+        pushd artifacts
+
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
+        tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
+
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
                           --network=host \
                           -f ./manager.Dockerfile .
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} \
+                          --network=host \
+                          -f ./graphstore.Dockerfile .
 
     - name: Release images
       run: |
@@ -676,10 +683,17 @@ jobs:
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest
 
+        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} \
+                        registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:latest
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }}
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:latest
+
     - name: Clean
       if: always()
       run: |
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest \
             registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest \
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:latest \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha}} || true

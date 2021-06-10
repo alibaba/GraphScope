@@ -51,6 +51,12 @@ GraphScope client is distributed as a python package and can be easily installed
 pip3 install graphscope
 ```
 
+Note that graphscope requires `pip>=19.0`, if you meet error like _"ERROR: Could not find a version that satisfies the requirement graphscope"_ please upgrade your pip with
+
+```bash
+pip3 install -U pip
+```
+
 Next, we will walk you through a concrete example to illustrate how GraphScope can be used by data scientists to effectively analyze large graphs.
 
 Please note that we have not hardened this release for production use and it lacks important security features such as authentication and encryption, and therefore **it is NOT recommended for production use (yet)!**
