@@ -156,4 +156,3 @@ def test_multi_src_dst_edge_loader(
         dst_field="member_teacher_id",
     )
     g = sess.run(graph)
-    print(g)
