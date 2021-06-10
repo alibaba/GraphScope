@@ -49,7 +49,16 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
-class Graph(object):
+class _GraphBase(object):
+    """
+    Base class for networkx module.
+    This is an empty class use to classify networkx graph.
+    """
+
+    pass
+
+
+class Graph(_GraphBase):
     """
     Base class for undirected graphs in graphscope.nx.
 
@@ -295,17 +304,17 @@ class Graph(object):
     def _try_to_get_default_session(self):
         try:
             session = get_default_session()
-            if not session.eager():
-                raise ValueError(
-                    "Networkx module need session to be eager mode. "
-                    "The default session is lazy mode."
-                )
-            self._session = session
         except RuntimeError:
-            raise ValueError(
+            raise RuntimeError(
                 "The nx binding session is None, that maybe no default session found. "
                 "Please register a session as default session."
             )
+        if not session.eager():
+            raise RuntimeError(
+                "Networkx module need session to be eager mode. "
+                "The default session is lazy mode."
+            )
+        self._session = session
 
     @patch_docstring(RefGraph.to_directed_class)
     def to_directed_class(self):
@@ -322,9 +331,16 @@ class Graph(object):
 
     @property
     def session(self):
-        from graphscope.client.session import get_session_by_id
+        """Get the currrent session.
 
-        return get_session_by_id(self._session_id)
+        Returns:
+            Return session that the graph belongs to.
+        """
+        if hasattr(self, "_graph") and self._is_client_view:
+            return (
+                self._graph.session
+            )  # this graph is a client side graph view, use host graph session
+        return self._session
 
     @property
     def session_id(self):

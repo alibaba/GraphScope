@@ -625,6 +625,9 @@ class Session(object):
         self._heartbeat_sending_thread.daemon = True
         self._heartbeat_sending_thread.start()
 
+        # networkx module
+        self._nx = None
+
     def __repr__(self):
         return str(self.info)
 
@@ -1191,10 +1194,12 @@ class Session(object):
 
     def nx(self):
         if not self.eager():
-            raise ValueError(
+            raise RuntimeError(
                 "Networkx module need session to be eager mode. "
                 "The session is lazy mode."
             )
+        if self._nx:
+            return self._nx
         import importlib.util
 
         spec = importlib.util.find_spec("graphscope.nx")
@@ -1207,8 +1212,8 @@ class Session(object):
         setattr(digraph, "_session", self)
         setattr(mod, "Graph", graph)
         setattr(mod, "DiGraph", digraph)
-
-        return mod
+        self._nx = mod
+        return self._nx
 
 
 session = Session
@@ -1349,7 +1354,7 @@ def get_default_session():
 def get_session_by_id(handle):
     """Return the session by handle."""
     if handle not in _session_dict:
-        raise ValueError("Session not exists.")
+        raise ValueError("Session {} not exists.".format(handle))
     return _session_dict.get(handle)
 
 

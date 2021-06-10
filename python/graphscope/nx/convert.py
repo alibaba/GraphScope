@@ -193,6 +193,10 @@ def from_gs_graph(gs_graph, dst_nx_graph):
     >>> gs_g = gs_g.add_vertices(...).add_edges(...)
     >>> nx_g = nx.Graph(gs_g)
     """
+    if gs_graph.session_id != dst_nx_graph.session_id:
+        raise RuntimeError(
+            "graphscope graph and networkx graph not in the same session."
+        )
     if dst_nx_graph.is_directed() != gs_graph.is_directed():
         raise TypeError("is_directed of gs_graph must agree with create_using")
     op = arrow_to_dynamic(gs_graph)

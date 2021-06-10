@@ -334,22 +334,22 @@ class TestGraphTransformation(object):
     def test_multiple_sessions(self):
         sess2 = graphscope.session(cluster_type="hosts", num_workers=1)
         nx2 = sess2.nx()
-        g = self.single_label_g
+        gs_g = self.single_label_g
 
         if self.NXGraph is nx.Graph:
-            g2 = ldbc_sample_single_label_with_sess(sess2, self.data_dir, False)
+            gs_g2 = ldbc_sample_single_label_with_sess(sess2, self.data_dir, False)
         else:
-            g2 = ldbc_sample_single_label_with_sess(sess2, self.data_dir, True)
-        assert g.session_id != g2.session_id
+            gs_g2 = ldbc_sample_single_label_with_sess(sess2, self.data_dir, True)
+        assert gs_g.session_id != gs_g2.session_id
 
-        nx_g = self.NXGraph(g, dist=True)
+        nx_g = self.NXGraph(gs_g, dist=True)
         if nx_g.is_directed():
-            nx_g2 = nx2.DiGraph(g2, dist=True)
+            nx_g2 = nx2.DiGraph(gs_g2, dist=True)
         else:
-            nx_g2 = nx2.Graph(g2, dist=True)
-        self.assert_convert_success(g2, nx_g2)
-        assert nx_g.session_id == g.session_id
-        assert nx_g2.session_id == g2.session_id
+            nx_g2 = nx2.Graph(gs_g2, dist=True)
+        self.assert_convert_success(gs_g2, nx_g2)
+        assert nx_g.session_id == gs_g.session_id
+        assert nx_g2.session_id == gs_g2.session_id
 
         # copies
         cg1 = nx_g2.copy()
@@ -364,6 +364,19 @@ class TestGraphTransformation(object):
         assert sg1.session_id == nx_g2.session_id
         sg2 = nx_g2.edge_subgraph([(274877907301, 274877907299)])
         assert sg2.session_id == nx_g2.session_id
+
+        # error raise if gs graph and nx graph not in the same session.
+        with pytest.raises(
+            RuntimeError,
+            match="graphscope graph and networkx graph not in the same session.",
+        ):
+            tmp = self.NXGraph(gs_g2)
+        with pytest.raises(
+            RuntimeError,
+            match="networkx graph and graphscope graph not in the same session.",
+        ):
+            tmp = g(nx_g2)
+            print(tmp.session_id, nx_g2.session_id)
 
         sess2.close()
 
@@ -542,7 +555,7 @@ class TestImportNetworkxModuleWithSession(object):
 
     def test_error_import_with_wrong_session(self):
         with pytest.raises(
-            ValueError,
+            RuntimeError,
             match="Networkx module need session to be eager mode. The session is lazy mode.",
         ):
             nx = self.session_lazy.nx()
