@@ -631,11 +631,11 @@ jobs:
       if: always()
       run: |
         export JAVA_HOME=/usr/lib/jvm/default-java/
-        yes | /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
+        HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
+        rm -rf /tmp/hadoop* || true
         helm uninstall graphstore || true
         kubectl delete pvc -l app.kubernetes.io/instance=graphstore --wait=false || true
         kubectl delete pod graphstore-graphscope-store-service-frontend-test-rpc-service --wait=false || true
-        rm -rf /tmp/hadoop* || true
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphstore:${{ github.sha }} || true
 
 

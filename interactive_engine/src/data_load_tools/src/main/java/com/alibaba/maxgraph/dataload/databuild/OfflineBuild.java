@@ -56,6 +56,7 @@ public class OfflineBuild {
     public static final String COLUMN_MAPPINGS = "column.mappings";
     public static final String LDBC_CUSTOMIZE = "ldbc.customize";
     public static final String LOAD_AFTER_BUILD = "load.after.build";
+    public static final String SKIP_HEADER = "skip.header";
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         String propertiesFile = args[0];
@@ -91,6 +92,7 @@ public class OfflineBuild {
         String ldbcCustomize = properties.getProperty(LDBC_CUSTOMIZE, "true");
         long splitSize = Long.valueOf(properties.getProperty(SPLIT_SIZE, "256")) * 1024 * 1024;
         boolean loadAfterBuild = properties.getProperty(LOAD_AFTER_BUILD, "false").equalsIgnoreCase("true");
+        boolean skipHeader = properties.getProperty(SKIP_HEADER, "true").equalsIgnoreCase("true");
         Configuration conf = new Configuration();
         conf.setBoolean("mapreduce.map.speculative", false);
         conf.setBoolean("mapreduce.reduce.speculative", false);
@@ -100,6 +102,8 @@ public class OfflineBuild {
         String mappings = objectMapper.writeValueAsString(columnMappingInfos);
         conf.setStrings(COLUMN_MAPPINGS, mappings);
         conf.setBoolean(LDBC_CUSTOMIZE, ldbcCustomize.equalsIgnoreCase("true"));
+        conf.set(SEPARATOR, properties.getProperty(SEPARATOR, "\\|"));
+        conf.setBoolean(SKIP_HEADER, skipHeader);
         Job job = Job.getInstance(conf, "build graph data");
         job.setJarByClass(OfflineBuild.class);
         job.setMapperClass(DataBuildMapper.class);
