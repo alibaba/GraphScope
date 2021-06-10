@@ -138,7 +138,8 @@ if (CYTHON_PREGEL_APP)
                                         ${VINEYARD_LIBRARIES}
                                         ${LIBGRAPELITE_LIBRARIES}
                                         ${GLOG_LIBRARIES}
-                                        ${ARROW_SHARED_LIB})
+                                        ${ARROW_SHARED_LIB}
+                                        ${PROTO})
     set_target_properties(${FRAME_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
 elseif (CYTHON_PIE_APP)
     file(GLOB_RECURSE FILES_NEED_COMPILE "*.cc")
@@ -155,7 +156,8 @@ elseif (CYTHON_PIE_APP)
                                         ${VINEYARD_LIBRARIES}
                                         ${LIBGRAPELITE_LIBRARIES}
                                         ${GLOG_LIBRARIES}
-                                        ${ARROW_SHARED_LIB})
+                                        ${ARROW_SHARED_LIB}
+                                        ${PROTO})
     set_target_properties(${FRAME_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
 elseif (PROPERTY_GRAPH_FRAME)
     add_library(${FRAME_NAME} SHARED ${ANALYTICAL_ENGINE_FRAME_DIR}/property_graph_frame.cc)

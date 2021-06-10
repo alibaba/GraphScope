@@ -735,6 +735,8 @@ class Session(object):
                     instance.close()
             except InteractiveEngineInternalError:
                 pass
+            except Exception:
+                pass
         self._interactive_instance_dict.clear()
 
         # close all learning instances
@@ -744,10 +746,15 @@ class Session(object):
                     instance.close()
             except LearningEngineInternalError:
                 pass
+            except Exception:
+                pass
         self._learning_instance_dict.clear()
 
         if self._grpc_client:
-            self._grpc_client.close()
+            try:
+                self._grpc_client.close()
+            except Exception:
+                pass
             self._grpc_client = None
             _session_dict.pop(self._session_id, None)
 

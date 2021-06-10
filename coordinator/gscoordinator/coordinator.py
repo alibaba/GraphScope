@@ -214,6 +214,14 @@ class CoordinatorServiceServicer(
         self._streaming_logs = True
         sys.stdout.drop(False)
 
+        # check version compatibility from client
+        if self._request.version != __version__:
+            logger.warning(
+                "Version between client and server is inconsistent: %s vs %s",
+                self._request.version,
+                __version__,
+            )
+
         return self._make_response(
             message_pb2.ConnectSessionResponse,
             code=error_codes_pb2.OK,
