@@ -26,7 +26,7 @@ id|name
 
 The data loading procedure consists of 3 steps: 
 
-1. Offline data build
+#### 1. Offline data build
 
   Build data by running the hadoop map-reduce job with following command:
   
@@ -61,7 +61,7 @@ skip.header=true
   |skip.header|false|true|Whether to skip the first line of the input file|
   
 
-2. Ingest data
+#### 2. Ingest data
   
   Now ingest the offline built data into the graph storage. If you have `load_data.sh`, then run:
   
@@ -76,7 +76,7 @@ skip.header=true
 
   The offline built data can be ingested successfully only once, otherwise errors will occur.
 
-3. Commit data
+#### 3. Commit data
   
   After data ingested into graph storage, you need to commit data loading. The data will not be able to read until committed successfully. If you have `load_data.sh`, then run:
   
