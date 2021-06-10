@@ -286,6 +286,7 @@ class TestGraphTransformation(object):
     def test_error_on_view_to_gs(self):
         nx_g = self.NXGraph(dist=True)
         nx_g._graph = None  # graph view always has a _graph attribute
+        nx_g._is_client_view = False
         with pytest.raises(TypeError, match="graph view can not convert to gs graph"):
             gs_g = g(nx_g)
 
