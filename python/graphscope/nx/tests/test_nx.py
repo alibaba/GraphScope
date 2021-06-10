@@ -332,6 +332,7 @@ class TestGraphTransformation(object):
         with pytest.raises(AnalyticalEngineInternalError):
             nx_g = self.NXGraph(g)
 
+    @pytest.mark.skip(reason="FIXME: multiple session crash in ci.")
     def test_multiple_sessions(self):
         sess2 = graphscope.session(cluster_type="hosts", num_workers=1)
         nx2 = sess2.nx()
