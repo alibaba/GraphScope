@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "graphscope-store-service.frontend.fullname" . }}-headless
+  name: {{ include "graphscope-store.ingestor.fullname" . }}-headless
   namespace: {{ .Release.Namespace }}
-  labels: {{- include "graphscope-store-service.labels" . | nindent 4 }}
-    app.kubernetes.io/component: frontend
+  labels: {{- include "graphscope-store.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingestor
     {{- if .Values.commonLabels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
     {{- end }}
@@ -18,8 +18,8 @@ spec:
   publishNotReadyAddresses: true
   ports:
     - name: port
-      port: {{ .Values.frontend.service.port }}
+      port: {{ .Values.ingestor.service.port }}
       targetPort: port
 
-  selector: {{- include "graphscope-store-service.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: frontend
+  selector: {{- include "graphscope-store.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ingestor

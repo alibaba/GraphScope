@@ -306,7 +306,7 @@ class Session(object):
                 Eager execution is a flexible platform for research and experimentation, it provides:
                     An intuitive interface: Quickly test on small data.
                     Easier debugging: Call ops directly to inspect running models and test changes.
-                Lazy execution means GraphScope does not precess the data till it has to. It just gathers all the
+                Lazy execution means GraphScope does not process the data till it has to. It just gathers all the
                     information to a DAG that we feed into it, and processes only when we execute :code:`sess.run(fetches)`
 
             cluster_type (str, optional): Deploy GraphScope instance on hosts or k8s cluster. Defaults to k8s.

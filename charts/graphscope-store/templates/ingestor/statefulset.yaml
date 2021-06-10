@@ -1,64 +1,64 @@
-{{- $frontendFullname := include "graphscope-store-service.frontend.fullname" . }}
-{{- $ingestorFullname := include "graphscope-store-service.ingestor.fullname" . }}
-{{- $coordinatorFullname := include "graphscope-store-service.coordinator.fullname" . }}
-{{- $storeFullname := include "graphscope-store-service.store.fullname" . }}
-{{- $kafkaFullname := include "graphscope-store-service.kafka.fullname" . -}}
+{{- $frontendFullname := include "graphscope-store.frontend.fullname" . }}
+{{- $ingestorFullname := include "graphscope-store.ingestor.fullname" . }}
+{{- $coordinatorFullname := include "graphscope-store.coordinator.fullname" . }}
+{{- $storeFullname := include "graphscope-store.store.fullname" . }}
+{{- $kafkaFullname := include "graphscope-store.kafka.fullname" . -}}
 {{- $releaseNamespace := .Release.Namespace }}
 {{- $clusterDomain := .Values.clusterDomain }}
 
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "graphscope-store-service.frontend.fullname" . }}
+  name: {{ include "graphscope-store.ingestor.fullname" . }}
   namespace: {{ .Release.Namespace }}
-  labels: {{- include "graphscope-store-service.labels" . | nindent 4 }}
-    app.kubernetes.io/component: frontend
+  labels: {{- include "graphscope-store.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingestor
     {{- if .Values.commonLabels }}
-    {{- include "graphscope-store-service.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- include "graphscope-store.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
     {{- end }}
   {{- if .Values.commonAnnotations }}
-  annotations: {{- include "graphscope-store-service.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  annotations: {{- include "graphscope-store.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
   {{- end }}
 spec:
-  replicas: {{ .Values.frontend.replicaCount }}
+  replicas: {{ .Values.ingestor.replicaCount }}
   selector:
-    matchLabels: {{ include "graphscope-store-service.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: frontend
-  serviceName: {{ include "graphscope-store-service.frontend.fullname" . }}-headless
+    matchLabels: {{ include "graphscope-store.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ingestor
+  serviceName: {{ include "graphscope-store.ingestor.fullname" . }}-headless
   updateStrategy:
-    type: {{ .Values.frontend.updateStrategy }}
-    {{- if (eq "Recreate" .Values.frontend.updateStrategy) }}
+    type: {{ .Values.ingestor.updateStrategy }}
+    {{- if (eq "Recreate" .Values.ingestor.updateStrategy) }}
     rollingUpdate: null
     {{- end }}
   template:
     metadata:
       annotations:
-        {{- if (include "graphscope-store-service.createConfigmap" .) }}
+        {{- if (include "graphscope-store.createConfigmap" .) }}
         checksum/configuration: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- end }}
-        {{- if .Values.frontend.podAnnotations }}
-        {{- include "graphscope-store-service.tplvalues.render" (dict "value" .Values.frontend.podAnnotations "context" $) | nindent 8 }}
+        {{- if .Values.ingestor.podAnnotations }}
+        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.ingestor.podAnnotations "context" $) | nindent 8 }}
         {{- end }}
-      labels: {{- include "graphscope-store-service.labels" . | nindent 8 }}
-        app.kubernetes.io/component: frontend
+      labels: {{- include "graphscope-store.labels" . | nindent 8 }}
+        app.kubernetes.io/component: ingestor
         {{- if .Values.commonLabels }}
-        {{- include "graphscope-store-service.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 8 }}
+        {{- include "graphscope-store.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 8 }}
         {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "graphscope-store-service.serviceAccountName" . }}
-      {{- if .Values.frontend.affinity }}
-      affinity: {{- include "graphscope-store-service.tplvalues.render" (dict "value" .Values.frontend.affinity "context" $) | nindent 8 }}
+      serviceAccountName: {{ include "graphscope-store.serviceAccountName" . }}
+      {{- if .Values.ingestor.affinity }}
+      affinity: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.ingestor.affinity "context" $) | nindent 8 }}
       {{- end }}
       initContainers:
-        {{- if .Values.frontend.initContainers }}
-        {{- include "graphscope-store-service.tplvalues.render" (dict "value" .Values.frontend.initContainers "context" $) | nindent 8 }}
+        {{- if .Values.ingestor.initContainers }}
+        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.ingestor.initContainers "context" $) | nindent 8 }}
         {{- end }}
       containers:
-        - name: frontend
-          image: {{ include "graphscope-store-service.image" . }}
+        - name: ingestor
+          image: {{ include "graphscope-store.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           command:
           - /bin/bash
@@ -76,9 +76,9 @@ spec:
                 -e "s/INGESTOR/$(DNS_NAME_PREFIX_INGESTOR)/g" \
                 -e "s/COORDINATOR/$(DNS_NAME_PREFIX_COORDINATOR)/g" \
                 -e "s/STORE/$(DNS_NAME_PREFIX_STORE)/g" \
-            /opt/graphscope-store-service/conf/my.cnf > /home/maxgraph/config
+            /etc/graphscope-store/my.cnf.tpl > /etc/graphscope-store/my.cnf
 
-            LOG_NAME=testlog MAXGRAPH_CONF_FILE=/home/maxgraph/config /home/maxgraph/maxgraph/bin/maxgraph.sh frontend
+            LOG_NAME=graphscope-store.log MAXGRAPH_CONF_FILE=/etc/graphscope-store/my.cnf /home/maxgraph/maxgraph/bin/maxgraph.sh ingestor
             tail -f /dev/null
           env:
             - name: DEBUG
@@ -88,7 +88,7 @@ spec:
             - name: MAXGRAPH_JAVA_OPTS
               value: {{ .Values.javaOpts | quote }}
             - name: ROLE
-              value: "frontend"
+              value: "ingestor"
             - name: FRONTEND_COUNT
               value: {{ .Values.frontend.replicaCount | quote }}
             - name: INGESTOR_COUNT
@@ -108,7 +108,7 @@ spec:
             - name: DNS_NAME_SERVICE_KAFKA
               value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: KAFKA_SERVERS
-              value: {{ include "graphscope-store-service.kafka.brokerlist" . }}
+              value: {{ include "graphscope-store.kafka.brokerlist" . }}
             {{- if .Values.maxgraphLogbackFile }}
             - name: MAXGRAPH_LOGBACK_FILE
               value: {{ .Values.maxgraphLogbackFile | quote }}
@@ -116,18 +116,15 @@ spec:
           ports:
             - name: port
               containerPort: 55555
-            - name: gremlin
-              containerPort: 12312
-          {{- if .Values.frontend.resources }}
-          resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
+          {{- if .Values.ingestor.resources }}
+          resources: {{- toYaml .Values.ingestor.resources | nindent 12 }}
           {{- end }}
           volumeMounts:
             - name: config
-              mountPath: /opt/graphscope-store-service/conf/my.cnf
+              mountPath: /etc/graphscope-store/my.cnf.tpl
               subPath: my.cnf
 
       volumes:
         - name: config
           configMap:
-            name: {{ include "graphscope-store-service.configmapName" . }}
-
+            name: {{ include "graphscope-store.configmapName" . }}

@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "graphscope-store-service.name" -}}
+{{- define "graphscope-store.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "graphscope-store-service.fullname" -}}
+{{- define "graphscope-store.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -23,35 +23,35 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 {{- end }}
 
-{{- define "graphscope-store-service.coordinator.fullname" -}}
-{{- printf "%s-%s" (include "graphscope-store-service.fullname" .) "coordinator" | trunc 63 | trimSuffix "-" -}}
+{{- define "graphscope-store.coordinator.fullname" -}}
+{{- printf "%s-%s" (include "graphscope-store.fullname" .) "coordinator" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "graphscope-store-service.frontend.fullname" -}}
-{{- printf "%s-%s" (include "graphscope-store-service.fullname" .) "frontend" | trunc 63 | trimSuffix "-" -}}
+{{- define "graphscope-store.frontend.fullname" -}}
+{{- printf "%s-%s" (include "graphscope-store.fullname" .) "frontend" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "graphscope-store-service.ingestor.fullname" -}}
-{{- printf "%s-%s" (include "graphscope-store-service.fullname" .) "ingestor" | trunc 63 | trimSuffix "-" -}}
+{{- define "graphscope-store.ingestor.fullname" -}}
+{{- printf "%s-%s" (include "graphscope-store.fullname" .) "ingestor" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "graphscope-store-service.store.fullname" -}}
-{{- printf "%s-%s" (include "graphscope-store-service.fullname" .) "store" | trunc 63 | trimSuffix "-" -}}
+{{- define "graphscope-store.store.fullname" -}}
+{{- printf "%s-%s" (include "graphscope-store.fullname" .) "store" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "graphscope-store-service.chart" -}}
+{{- define "graphscope-store.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "graphscope-store-service.labels" -}}
-helm.sh/chart: {{ include "graphscope-store-service.chart" . }}
-{{ include "graphscope-store-service.selectorLabels" . }}
+{{- define "graphscope-store.labels" -}}
+helm.sh/chart: {{ include "graphscope-store.chart" . }}
+{{ include "graphscope-store.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -61,24 +61,24 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "graphscope-store-service.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "graphscope-store-service.name" . }}
+{{- define "graphscope-store.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "graphscope-store.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Return the proper graphscope-store-service image name
+Return the proper graphscope-store image name
 */}}
-{{- define "graphscope-store-service.image" -}}
-{{ include "graphscope-store-service.images.image" .Values.image }}
+{{- define "graphscope-store.image" -}}
+{{ include "graphscope-store.images.image" .Values.image }}
 {{- end -}}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "graphscope-store-service.serviceAccountName" -}}
+{{- define "graphscope-store.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "graphscope-store-service.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "graphscope-store.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
@@ -87,18 +87,18 @@ Create the name of the service account to use
 {{/*
 Return the configmap with the graphscope configuration
 */}}
-{{- define "graphscope-store-service.configmapName" -}}
+{{- define "graphscope-store.configmapName" -}}
 {{- if .Values.existingConfigmap -}}
     {{- printf "%s" (tpl .Values.existingConfigmap $) -}}
 {{- else -}}
-    {{- printf "%s" (include "graphscope-store-service.fullname" .) -}}
+    {{- printf "%s" (include "graphscope-store.fullname" .) -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
 Return true if a configmap object should be created for graphscope-service
 */}}
-{{- define "graphscope-store-service.createConfigmap" -}}
+{{- define "graphscope-store.createConfigmap" -}}
 {{- if not .Values.existingConfigmap }}
     {{- true -}}
 {{- else -}}
@@ -108,16 +108,16 @@ Return true if a configmap object should be created for graphscope-service
 {{/*
 Return the proper image name (for the init container volume-permissions image)
 */}}
-{{- define "graphscope-store-service.volumePermissions.image" -}}
-{{ include "graphscope-store-service.images.image" .Values.volumePermissions.image }}
+{{- define "graphscope-store.volumePermissions.image" -}}
+{{ include "graphscope-store.images.image" .Values.volumePermissions.image }}
 {{- end -}}
 
 {{/*
 Renders a value that contains template.
 Usage:
-{{ include "graphscope-store-service.tplvalues.render" ( dict "value" .Values.path.to.the.Value "context" $) }}
+{{ include "graphscope-store.tplvalues.render" ( dict "value" .Values.path.to.the.Value "context" $) }}
 */}}
-{{- define "graphscope-store-service.tplvalues.render" -}}
+{{- define "graphscope-store.tplvalues.render" -}}
     {{- if typeIs "string" .value }}
         {{- tpl .value .context }}
     {{- else }}
@@ -128,9 +128,9 @@ Usage:
 
 {{/*
 Return the proper image name
-{{ include "graphscope-store-service.images.image" .Values.path.to.the.image }}
+{{ include "graphscope-store.images.image" .Values.path.to.the.image }}
 */}}
-{{- define "graphscope-store-service.images.image" -}}
+{{- define "graphscope-store.images.image" -}}
 {{- $tag := .tag | toString -}}
 {{- if .registry }}
 {{- printf "%s/%s:%s" .registry .repository $tag -}}
@@ -142,9 +142,9 @@ Return the proper image name
 
 {{/*
 Return  the proper Storage Class
-{{ include "graphscope-store-service.storage.class" .Values.path.to.the.persistence }}
+{{ include "graphscope-store.storage.class" .Values.path.to.the.persistence }}
 */}}
-{{- define "graphscope-store-service.storage.class" -}}
+{{- define "graphscope-store.storage.class" -}}
 
 {{- $storageClass := .storageClass -}}
 {{- if $storageClass -}}
@@ -161,19 +161,19 @@ Return  the proper Storage Class
 Create a default fully qualified kafka name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
-{{- define "graphscope-store-service.kafka.fullname" -}}
+{{- define "graphscope-store.kafka.fullname" -}}
 {{- printf "%s-%s" .Release.Name "kafka" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
 Get full broker list.
 */}}
-{{- define "graphscope-store-service.kafka.brokerlist" -}}
+{{- define "graphscope-store.kafka.brokerlist" -}}
 
 {{- $replicaCount := int .Values.kafka.replicaCount -}}
 {{- $releaseNamespace := .Release.Namespace -}}
 {{- $clusterDomain := .Values.clusterDomain -}}
-{{- $fullname := include "graphscope-store-service.kafka.fullname" . -}}
+{{- $fullname := include "graphscope-store.kafka.fullname" . -}}
 {{- $servicePort := int .Values.kafka.service.port -}}
 
 {{- $brokerList := list }}

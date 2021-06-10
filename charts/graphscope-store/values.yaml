@@ -1,10 +1,10 @@
-# Default values for graphscope-store-service.
+# Default values for graphscope-store.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 image:
-  registry: registry.cn-hongkong.aliyuncs.com/graphscope
-  repository: graphstore
+  registry: registry.cn-hongkong.aliyuncs.com
+  repository: graphscope/graphscope-store
   tag: latest
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
@@ -56,10 +56,10 @@ ingestorSenderBufferSize: 128
 ## Coordinator Config
 snapshotIncreaseIntervalMs: 1000
 offsetsPersistIntervalMs: 3000
-fileMetaStorePath: "/opt/graphscope-meta"
+fileMetaStorePath: "/etc/graphscope-store/my.meta"
 
 ## Store Config
-storeDataPath: "/opt/graphscope-data"
+storeDataPath: "/var/lib/graphscope-store"
 storeWriteThreadCount: 1
 
 ## Kafka Config
@@ -579,6 +579,42 @@ coordinator:
     successThreshold: 1
 
   initContainers: []
+
+  ## Enable persistence using Persistent Volume Claims
+  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+  ##
+  persistence:
+    ## If true, use a Persistent Volume Claim, If false, use emptyDir
+    ##
+    enabled: true
+    ## Name of existing PVC to hold GraphScope coordinator meta
+    ## NOTE: When it's set the rest of persistence parameters are ignored
+    ##
+    # existingClaim:
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+    ## Persistent Volume Claim annotations
+    ##
+    annotations: {}
+    ## Persistent Volume Access Mode
+    ##
+    accessModes:
+      - ReadWriteOnce
+    ## Persistent Volume size
+    ##
+    size: 100Mi
+    ## selector can be used to match an existing PersistentVolume
+    ## selector:
+    ##   matchLabels:
+    ##     app: my-app
+    ##
+    selector: {}
 
   ## GraphScope store Service parameters
   ##
