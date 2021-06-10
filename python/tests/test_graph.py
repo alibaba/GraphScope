@@ -28,6 +28,7 @@ from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.dataset.ldbc import load_ldbc
 from graphscope.framework.errors import AnalyticalEngineInternalError
+from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
@@ -153,9 +154,9 @@ def test_error_on_project_to_simple_wrong_graph_type(arrow_property_graph):
     sg = arrow_property_graph.project(vertices={"v0": []}, edges={"e0": []})
     pg = sg._project_to_simple()
     assert pg._graph_type == graph_def_pb2.ARROW_PROJECTED
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidArgumentError):
         pg._project_to_simple()
-    with pytest.raises(AssertionError):
+    with pytest.raises(InvalidArgumentError):
         pg.project(vertices={"v0": []}, edges={"e0": []})
 
 
@@ -323,7 +324,7 @@ def test_add_vertices_edges(graphscope_session):
     with pytest.raises(ValueError, match="Ambiguous vertex label"):
         graph = graph.add_edges(Loader(f"{prefix}/knows.csv", delimiter="|"), "created")
 
-    with pytest.raises(ValueError, match="Cannot add new relation to existed graph"):
+    with pytest.raises(ValueError, match="already existed in graph"):
         graph = graph.add_edges(
             Loader(f"{prefix}/knows.csv", delimiter="|"),
             "knows",
@@ -471,7 +472,7 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.vertex_labels == []
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
-        InvalidArgumentError,
+        ValueError,
         match="Check failed: Cannot project to simple, vertex label number is not one.",
     ):
         graphscope.wcc(sub_graph)
@@ -481,7 +482,7 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.vertex_labels == ["person"]
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
-        InvalidArgumentError,
+        ValueError,
         match="Check failed: Cannot project to simple, edge label number is not one.",
     ):
         graphscope.wcc(sub_graph)
@@ -519,7 +520,7 @@ def test_project_subgraph(arrow_modern_graph):
 
 def test_error_on_project(arrow_property_graph, ldbc_graph):
     graph = arrow_property_graph
-    with pytest.raises(AssertionError, match="Cannot project to simple"):
+    with pytest.raises(ValueError, match="Cannot project to simple"):
         graphscope.sssp(graph, 4)
     g2 = graph.project(vertices={"v0": []}, edges={"e0": []})
     assert g2.schema.edge_relationships == [[("v0", "v0")]]
@@ -527,13 +528,15 @@ def test_error_on_project(arrow_property_graph, ldbc_graph):
     ldbc = ldbc_graph
     # vertices empty
     with pytest.raises(
-        ValueError, match="Cannot find a valid relation in given vertices and edges"
+        ValueError,
+        match="Cannot find a valid relation in given vertices and edges",
     ):
         sub_graph = ldbc.project(vertices={}, edges={"knows": None})
 
     # project not related vertex and edge
     with pytest.raises(
-        ValueError, match="Cannot find a valid relation in given vertices and edges"
+        ValueError,
+        match="Cannot find a valid relation in given vertices and edges",
     ):
         sub_graph = ldbc.project(vertices={"person": None}, edges={"hasInterest": None})
 
@@ -554,14 +557,14 @@ def test_error_on_project(arrow_property_graph, ldbc_graph):
     sub_graph = ldbc.project(
         vertices={"person": ["id", "firstName"]}, edges={"knows": ["eid"]}
     )
-    with pytest.raises(InvalidArgumentError):
+    with pytest.raises(ValueError):
         sub_graph._project_to_simple()
 
     # more than one property on edge can not project to simple
     sub_graph = ldbc.project(
         vertices={"person": ["id"]}, edges={"knows": ["eid", "creationDate"]}
     )
-    with pytest.raises(InvalidArgumentError):
+    with pytest.raises(ValueError):
         sub_graph._project_to_simple()
 
 

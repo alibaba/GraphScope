@@ -316,6 +316,12 @@ class Graph(object):
         return self._op
 
     @property
+    def session(self):
+        from graphscope.client.session import get_session_by_id
+
+        return get_session_by_id(self._session_id)
+
+    @property
     def session_id(self):
         """Get the currrent session_id.
 
@@ -1718,6 +1724,7 @@ class Graph(object):
         g._key = graph_def.key
         g._session_id = self._session_id
         g._schema = copy.deepcopy(self._schema)
+        g._op = op
         return g
 
     def _is_view(self):
@@ -1785,7 +1792,8 @@ class Graph(object):
         if n not in self:
             raise NetworkXError("The node %s is not in the graph." % (n,))
         op = dag_utils.report_graph(self, report_type, node=json.dumps([n]))
-        return op.eval()
+        ret = op.eval()
+        return ret
 
     def _batch_get_nbrs(self, location, report_type=types_pb2.SUCCS_BY_LOC):
         """Get neighbors of nodes by location in batch.
@@ -1947,7 +1955,7 @@ class Graph(object):
         op = dag_utils.project_dynamic_property_graph(
             self, v_prop, e_prop, v_prop_type, e_prop_type
         )
-        graph_def = op.eval()
+        graph_def = op.eval(leaf=False)
         graph = self.__class__(create_empty_in_engine=False)
         graph = nx.freeze(graph)
         graph._graph_type = graph_def_pb2.DYNAMIC_PROJECTED
@@ -1956,5 +1964,6 @@ class Graph(object):
         graph.schema.from_graph_def(graph_def)
         graph._saved_signature = self._saved_signature
         graph._graph = self  # projected graph also can report nodes.
+        graph._op = op
         graph._is_client_view = False
         return graph

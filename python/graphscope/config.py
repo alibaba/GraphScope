@@ -26,6 +26,9 @@ class GSConfig(object):
     # the endpoint of a pre-launched GraphScope instance.
     addr = None
 
+    # "lazy" or "eager", defaults to "eager"
+    mode = "eager"
+
     # "k8s" or "hosts"
     cluster_type = "k8s"
 

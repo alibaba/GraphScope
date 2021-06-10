@@ -24,6 +24,7 @@ import hashlib
 import json
 import logging
 import os
+import pickle
 import queue
 import random
 import signal
@@ -53,6 +54,8 @@ from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
 from gscoordinator.cluster import KubernetesClusterLauncher
+from gscoordinator.dag_manager import DAGManager
+from gscoordinator.dag_manager import GSEngine
 from gscoordinator.launcher import LocalLauncher
 from gscoordinator.object_manager import GraphMeta
 from gscoordinator.object_manager import LibMeta
@@ -64,6 +67,7 @@ from gscoordinator.utils import dump_string
 from gscoordinator.utils import get_app_sha256
 from gscoordinator.utils import get_graph_sha256
 from gscoordinator.utils import get_lib_path
+from gscoordinator.utils import op_pre_process
 from gscoordinator.utils import str2bool
 from gscoordinator.utils import to_maxgraph_schema
 from gscoordinator.version import __version__
@@ -201,6 +205,9 @@ class CoordinatorServiceServicer(
 
         # Generate session id
         self._session_id = self._generate_session_id()
+        self._key_to_op = dict()
+        # dict of op_def_pb2.OpResult
+        self._op_result_pool = dict()
         self._udf_app_workspace = os.path.join(WORKSPACE, self._session_id)
 
         # Session connected, fetch logs via gRPC.
@@ -249,70 +256,84 @@ class CoordinatorServiceServicer(
                 message_pb2.HeartBeatResponse, error_codes_pb2.OK
             )
 
-    def RunStep(self, request, context):  # noqa: C901
-        # only one op in one step is allowed.
-        if len(request.dag_def.op) != 1:
-            return self._make_response(
-                message_pb2.RunStepResponse,
-                error_codes_pb2.INVALID_ARGUMENT_ERROR,
-                "Request's op size is not equal to 1.",
-            )
-
-        op = request.dag_def.op[0]
-
-        # Compile app or not.
-        if op.op == types_pb2.CREATE_APP:
+    def run_on_analytical_engine(  # noqa: C901
+        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
+    ):
+        for op in dag_def.op:
+            self._key_to_op[op.key] = op
             try:
-                op, app_sig, app_lib_path = self._maybe_compile_app(op)
+                op_pre_process(op, self._op_result_pool, self._key_to_op)
             except Exception as e:
-                error_msg = "Failed to compile app: {}".format(str(e))
+                error_msg = (
+                    "Failed to pre process op {0} with error message {1}".format(
+                        op, str(e)
+                    )
+                )
                 logger.error(error_msg)
                 return self._make_response(
                     message_pb2.RunStepResponse,
-                    error_codes_pb2.COMPILATION_ERROR,
+                    error_codes_pb2.COORDINATOR_INTERNAL_ERROR,
                     error_msg,
-                    op,
+                    full_exception=pickle.dumps(e),
+                    results=op_results,
                 )
 
-        # If engine crashed, we will get a SocketClosed grpc Exception.
-        # In that case, we should notify client the engine is dead.
-
-        # Compile graph or not
-        # arrow property graph and project graph need to compile
-        if (
-            (
-                op.op == types_pb2.CREATE_GRAPH
-                and op.attr[types_pb2.GRAPH_TYPE].graph_type
-                == graph_def_pb2.ARROW_PROPERTY
-            )
-            or op.op == types_pb2.TRANSFORM_GRAPH
-            or op.op == types_pb2.PROJECT_TO_SIMPLE
-            or op.op == types_pb2.ADD_LABELS
-        ):
-            try:
-                op = self._maybe_register_graph(op, request.session_id)
-            except grpc.RpcError as e:
-                logger.error("self._launcher.poll() = %s", self._launcher.poll())
-                if self._launcher.poll() is not None:
-                    message = "Analytical engine exited with %s" % self._launcher.poll()
-                else:
-                    message = str(e)
-                return self._make_response(
-                    message_pb2.RunStepResponse,
-                    error_codes_pb2.FATAL_ERROR,
-                    message,
-                    op,
+            # Compile app or not.
+            if op.op == types_pb2.BIND_APP:
+                try:
+                    op, app_sig, app_lib_path = self._maybe_compile_app(op)
+                except Exception as e:
+                    error_msg = "Failed to compile app: {0}".format(str(e))
+                    logger.error(error_msg)
+                    return self._make_response(
+                        message_pb2.RunStepResponse,
+                        error_codes_pb2.COMPILATION_ERROR,
+                        error_msg,
+                        results=op_results,
+                    )
+            # Compile graph or not
+            # arrow property graph and project graph need to compile
+            # If engine crashed, we will get a SocketClosed grpc Exception.
+            # In that case, we should notify client the engine is dead.
+            if (
+                (
+                    op.op == types_pb2.CREATE_GRAPH
+                    and op.attr[types_pb2.GRAPH_TYPE].graph_type
+                    == graph_def_pb2.ARROW_PROPERTY
                 )
-            except Exception as e:
-                error_msg = "Graph compile error: {}".format(str(e))
-                logger.error(error_msg)
-                return self._make_response(
-                    message_pb2.RunStepResponse,
-                    error_codes_pb2.COMPILATION_ERROR,
-                    error_msg,
-                    op,
-                )
+                or op.op == types_pb2.TRANSFORM_GRAPH
+                or op.op == types_pb2.PROJECT_TO_SIMPLE
+                or op.op == types_pb2.ADD_LABELS
+            ):
+                try:
+                    op = self._maybe_register_graph(op, session_id)
+                except grpc.RpcError as e:
+                    logger.error("self._launcher.poll() = %s", self._launcher.poll())
+                    if self._launcher.poll() is not None:
+                        message = (
+                            "Analytical engine exited with %s" % self._launcher.poll()
+                        )
+                    else:
+                        message = str(e)
+                    return self._make_response(
+                        message_pb2.RunStepResponse,
+                        error_codes_pb2.COMPILATION_ERROR,
+                        message,
+                        results=op_results,
+                    )
+                except Exception as e:
+                    error_msg = "Graph compile error: {}".format(str(e))
+                    logger.error(error_msg)
+                    return self._make_response(
+                        message_pb2.RunStepResponse,
+                        error_codes_pb2.COMPILATION_ERROR,
+                        error_msg,
+                        results=op_results,
+                    )
 
+        request = message_pb2.RunStepRequest(
+            session_id=self._session_id, dag_def=dag_def
+        )
         try:
             response = self._analytical_engine_stub.RunStep(request)
         except grpc.RpcError as e:
@@ -321,52 +342,92 @@ class CoordinatorServiceServicer(
                 message = "Analytical engine exited with %s" % self._launcher.poll()
             else:
                 message = str(e)
+            op_results.extend(response.results)
             return self._make_response(
-                message_pb2.RunStepResponse, error_codes_pb2.FATAL_ERROR, message, op
+                message_pb2.RunStepResponse,
+                error_codes_pb2.FATAL_ERROR,
+                message,
+                results=op_results,
             )
         except Exception as e:
+            op_results.extend(response.results)
             return self._make_response(
-                message_pb2.RunStepResponse, error_codes_pb2.UNKNOWN, str(e), op
+                message_pb2.RunStepResponse,
+                error_codes_pb2.UNKNOWN,
+                str(e),
+                results=op_results,
             )
 
-        if response.status.code == error_codes_pb2.OK:
-            if op.op in (
-                types_pb2.CREATE_GRAPH,
-                types_pb2.PROJECT_GRAPH,
-                types_pb2.ADD_LABELS,
-                types_pb2.ADD_COLUMN,
+        op_results.extend(response.results)
+        for r in response.results:
+            op = self._key_to_op[r.key]
+            if op.op not in (
+                types_pb2.CONTEXT_TO_NUMPY,
+                types_pb2.CONTEXT_TO_DATAFRAME,
+                types_pb2.TO_VINEYARD_TENSOR,
+                types_pb2.TO_VINEYARD_DATAFRAME,
+                types_pb2.REPORT_GRAPH,
             ):
-                schema_path = os.path.join("/tmp", response.graph_def.key + ".json")
-                vy_info = graph_def_pb2.VineyardInfoPb()
-                response.graph_def.extension.Unpack(vy_info)
+                self._op_result_pool[r.key] = r
 
-                self._object_manager.put(
-                    response.graph_def.key,
-                    GraphMeta(
-                        response.graph_def.key,
-                        vy_info.vineyard_id,
-                        response.graph_def,
-                        schema_path,
-                    ),
-                )
-                if response.graph_def.graph_type == graph_def_pb2.ARROW_PROPERTY:
-                    dump_string(
-                        to_maxgraph_schema(vy_info.property_schema_json),
-                        schema_path,
+        if response.status.code == error_codes_pb2.OK:
+            for op_result in response.results:
+                key = op_result.key
+                op = self._key_to_op[key]
+                if op.op in (
+                    types_pb2.CREATE_GRAPH,
+                    types_pb2.PROJECT_GRAPH,
+                    types_pb2.ADD_LABELS,
+                    types_pb2.ADD_COLUMN,
+                ):
+                    schema_path = os.path.join(
+                        "/tmp", op_result.graph_def.key + ".json"
                     )
-                    vy_info.schema_path = schema_path
-                    response.graph_def.extension.Pack(vy_info)
-            elif op.op == types_pb2.CREATE_APP:
-                self._object_manager.put(
-                    app_sig,
-                    LibMeta(response.result.decode("utf-8"), "app", app_lib_path),
-                )
-            elif op.op == types_pb2.UNLOAD_GRAPH:
-                self._object_manager.pop(op.attr[types_pb2.GRAPH_NAME].s.decode())
-            elif op.op == types_pb2.UNLOAD_APP:
-                self._object_manager.pop(op.attr[types_pb2.APP_NAME].s.decode())
-
+                    vy_info = graph_def_pb2.VineyardInfoPb()
+                    op_result.graph_def.extension.Unpack(vy_info)
+                    self._object_manager.put(
+                        op_result.graph_def.key,
+                        GraphMeta(
+                            op_result.graph_def.key,
+                            vy_info.vineyard_id,
+                            op_result.graph_def,
+                            schema_path,
+                        ),
+                    )
+                    if op_result.graph_def.graph_type == graph_def_pb2.ARROW_PROPERTY:
+                        dump_string(
+                            to_maxgraph_schema(vy_info.property_schema_json),
+                            schema_path,
+                        )
+                        vy_info.schema_path = schema_path
+                        op_result.graph_def.extension.Pack(vy_info)
+                elif op.op == types_pb2.BIND_APP:
+                    self._object_manager.put(
+                        app_sig,
+                        LibMeta(op_result.result.decode("utf-8"), "app", app_lib_path),
+                    )
+                elif op.op == types_pb2.UNLOAD_GRAPH:
+                    self._object_manager.pop(op.attr[types_pb2.GRAPH_NAME].s.decode())
+                elif op.op == types_pb2.UNLOAD_APP:
+                    self._object_manager.pop(op.attr[types_pb2.APP_NAME].s.decode())
         return response
+
+    def RunStep(self, request, context):
+        op_results = list()
+        # split dag
+        dag_manager = DAGManager(request.dag_def)
+        while not dag_manager.empty():
+            next_dag = dag_manager.get_next_dag()
+            run_dag_on, dag_def = next_dag
+            if run_dag_on == GSEngine.analytical_engine:
+                ret = self.run_on_analytical_engine(
+                    request.session_id, dag_def, op_results
+                )
+            if ret.status.code != error_codes_pb2.OK:
+                return ret
+        return self._make_response(
+            message_pb2.RunStepResponse, error_codes_pb2.OK, results=op_results
+        )
 
     def _maybe_compile_app(self, op):
         app_sig = get_app_sha256(op.attr)
@@ -418,7 +479,11 @@ class CoordinatorServiceServicer(
             if register_response.status.code == error_codes_pb2.OK:
                 self._object_manager.put(
                     graph_sig,
-                    LibMeta(register_response.result, "graph_frame", graph_lib_path),
+                    LibMeta(
+                        register_response.results[0].result,
+                        "graph_frame",
+                        graph_lib_path,
+                    ),
                 )
             else:
                 raise RuntimeError("Error occur when register graph")
@@ -612,12 +677,17 @@ class CoordinatorServiceServicer(
         )
 
     @staticmethod
-    def _make_response(resp_cls, code, error_msg="", op=None, **args):
+    def _make_response(
+        resp_cls, code, error_msg="", op=None, full_exception=None, **kwargs
+    ):
         resp = resp_cls(
-            status=message_pb2.ResponseStatus(code=code, error_msg=error_msg), **args
+            status=message_pb2.ResponseStatus(code=code, error_msg=error_msg), **kwargs
         )
         if op:
             resp.status.op.CopyFrom(op)
+        elif full_exception:
+            # bytes
+            resp.status.full_exception = full_exception
         return resp
 
     def _cleanup(self, cleanup_instance=True, is_dangling=False):
@@ -689,7 +759,8 @@ class CoordinatorServiceServicer(
             session_id=self._session_id, dag_def=dag_def
         )
         fetch_response = self._analytical_engine_stub.RunStep(fetch_request)
-        config = json.loads(fetch_response.result.decode("utf-8"))
+
+        config = json.loads(fetch_response.results[0].result.decode("utf-8"))
         if self._launcher_type == types_pb2.K8S:
             config["vineyard_service_name"] = self._launcher.get_vineyard_service_name()
             config["vineyard_rpc_endpoint"] = self._launcher.get_vineyard_rpc_endpoint()

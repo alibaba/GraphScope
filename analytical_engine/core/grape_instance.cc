@@ -897,6 +897,10 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     break;
   }
   case rpc::CREATE_APP: {
+    // do nothing
+    break;
+  }
+  case rpc::BIND_APP: {
     BOOST_LEAF_AUTO(app_name, loadApp(params));
     r->set_data(app_name);
     break;

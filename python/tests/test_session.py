@@ -187,9 +187,8 @@ def test_error_on_used_after_close():
     s1 = graphscope.session(cluster_type="hosts")
 
     s1.close()
-    with pytest.raises(ValueError, match="Session not exists."):
+    with pytest.raises(RuntimeError, match="Attempted to use a closed Session."):
         g = load_graph(s1)
-        g._ensure_loaded()
 
     with pytest.raises(RuntimeError, match="No default session found."):
         g = graphscope.load_from(
@@ -197,7 +196,6 @@ def test_error_on_used_after_close():
                 "e0": "twitter_property_e_0#header_row=true",
             }
         )
-        g._ensure_loaded()
 
     # close after close
     s2 = graphscope.session(cluster_type="hosts")
@@ -229,12 +227,10 @@ def test_border_cases():
                 "e0": "twitter_property_e_0#header_row=true",
             }
         )
-        g._ensure_loaded()
     s1.as_default()
     assert graphscope.get_default_session() == s1
 
     g3 = load_graph(s3)
-    g3._ensure_loaded()  # g3 is op of s3
 
     with pytest.raises(
         ValueError,
@@ -259,4 +255,3 @@ def test_border_cases():
                 "e0": "twitter_property_e_0#header_row=true",
             }
         )
-        g._ensure_loaded()

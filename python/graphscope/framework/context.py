@@ -19,18 +19,28 @@
 import collections
 import hashlib
 import json
+from copy import deepcopy
 from typing import Mapping
 
 from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
+from graphscope.framework.dag import DAGNode
+from graphscope.framework.dag_utils import run_app
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
-from graphscope.framework.utils import decode_dataframe
-from graphscope.framework.utils import decode_numpy
 
 
-class BaseContext(object):
+class ResultDAGNode(DAGNode):
+    def __init__(self, context, op):
+        self._context = context
+        self._session = self._context.session
+        self._op = op
+        # add op to dag
+        self._session.dag.add_op(self._op)
+
+
+class ContextDAGNode(DAGNode):
     """Base class of concrete contexts.
     Hold a handle of app querying context.
 
@@ -61,40 +71,16 @@ class BaseContext(object):
         >>> out = ret.to_vineyard_dataframe()  # return an object id
     """
 
-    def __init__(self, session_id, context_key, graph):
-        self._key = context_key
+    def __init__(self, bound_app, graph, *args, **kwargs):
+        self._bound_app = bound_app
         self._graph = graph
-        self._session_id = session_id
-        self._saved_signature = self.signature
+        self._session = self._bound_app.session
+        # add op to dag
+        self._op = run_app(self._bound_app, *args, **kwargs)
+        self._session.dag.add_op(self._op)
 
     def __repr__(self):
         return f"graphscope.{self.__class__.__name__} from graph {str(self._graph)}"
-
-    @property
-    def key(self):
-        """Unique identifier of a context."""
-        return self._key
-
-    @property
-    def signature(self):
-        """Compute digest by key and graph signatures.
-        Used to ensure the critical information of context is untouched.
-        """
-        check_argument(
-            self._key is not None,
-            "Context key error, maybe it is not connected to engine.",
-        )
-        return hashlib.sha256(
-            "{}.{}".format(self._key, self._graph.signature).encode("utf-8")
-        ).hexdigest()
-
-    def _check_unmodified(self):
-        check_argument(self._saved_signature == self.signature)
-
-    @property
-    def session_id(self):
-        """Return the session id associated with the context."""
-        return self._session_id
 
     def _transform_selector(self, selector):
         raise NotImplementedError()
@@ -117,13 +103,12 @@ class BaseContext(object):
         Returns:
             numpy.ndarray.
         """
-        self._check_unmodified()
-        selector = self._transform_selector(selector)
+        if selector is None:
+            raise RuntimeError("selector cannot be None")
         vertex_range = utils.transform_vertex_range(vertex_range)
 
         op = dag_utils.context_to_numpy(self, selector, vertex_range, axis)
-        raw_values = op.eval()
-        return decode_numpy(raw_values)
+        return ResultDAGNode(self, op)
 
     def to_dataframe(self, selector, vertex_range=None):
         """Return results as a pandas DataFrame
@@ -142,19 +127,13 @@ class BaseContext(object):
         Returns:
             pandas.DataFrame
         """
-        self._check_unmodified()
-
         check_argument(
             isinstance(selector, Mapping), "selector of to_dataframe must be a dict"
         )
-        selector = {
-            key: self._transform_selector(value) for key, value in selector.items()
-        }
         selector = json.dumps(selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
         op = dag_utils.context_to_dataframe(self, selector, vertex_range)
-        raw_values = op.eval()
-        return decode_dataframe(raw_values)
+        return ResultDAGNode(self, op)
 
     def to_vineyard_tensor(self, selector=None, vertex_range=None, axis=0):
         """Return results as a vineyard tensor.
@@ -163,14 +142,10 @@ class BaseContext(object):
         Returns:
             str: object id of vineyard tensor
         """
-        self._check_unmodified()
-        selector = self._transform_selector(selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
 
         op = dag_utils.to_vineyard_tensor(self, selector, vertex_range, axis)
-        ret = op.eval()
-        object_id = json.loads(ret)["object_id"]
-        return object_id
+        return ResultDAGNode(self, op)
 
     def to_vineyard_dataframe(self, selector=None, vertex_range=None):
         """Return results as a vineyard dataframe.
@@ -190,21 +165,76 @@ class BaseContext(object):
         Returns:
             str: object id of vineyard tensor
         """
-        self._check_unmodified()
         if selector is not None:
-            check_argument(
-                isinstance(selector, Mapping),
-                "selector of to_vineyard_dataframe must be a dict",
-            )
-            selector = {
-                key: self._transform_selector(value) for key, value in selector.items()
-            }
             selector = json.dumps(selector)
         vertex_range = utils.transform_vertex_range(vertex_range)
         op = dag_utils.to_vineyard_dataframe(self, selector, vertex_range)
-        ret = op.eval()
-        object_id = json.loads(ret)["object_id"]
-        return object_id
+        return ResultDAGNode(self, op)
+
+
+class Context(object):
+    def __init__(self, context_node, key, type):
+        self._context_node = context_node
+        self._session = context_node.session
+        self._graph = self._context_node._graph
+        self._key = key
+        self._type = type
+        # copy and set op evaluated
+        self._context_node.op = deepcopy(self._context_node.op)
+        self._context_node.evaluated = True
+        self._saved_signature = self.signature
+
+    @property
+    def op(self):
+        return self._context_node.op
+
+    @property
+    def key(self):
+        """Unique identifier of a context."""
+        return self._key
+
+    @property
+    def signature(self):
+        """Compute digest by key and graph signatures.
+        Used to ensure the critical information of context is untouched.
+        """
+        check_argument(
+            self._key is not None,
+            "Context key error, maybe it is not connected to engine.",
+        )
+        return hashlib.sha256(
+            "{}.{}".format(self._key, self._graph.signature).encode("utf-8")
+        ).hexdigest()
+
+    def __repr__(self):
+        return f"graphscope.{self.__class__.__name__} from graph {str(self._graph)}"
+
+    def _check_unmodified(self):
+        check_argument(self._saved_signature == self.signature)
+
+    def to_numpy(self, selector, vertex_range=None, axis=0):
+        self._check_unmodified()
+        return self._session._wrapper(
+            self._context_node.to_numpy(selector, vertex_range, axis)
+        )
+
+    def to_dataframe(self, selector, vertex_range=None):
+        self._check_unmodified()
+        return self._session._wrapper(
+            self._context_node.to_dataframe(selector, vertex_range)
+        )
+
+    def to_vineyard_tensor(self, selector=None, vertex_range=None, axis=0):
+        self._check_unmodified()
+        return self._session._wrapper(
+            self._context_node.to_vineyard_tensor(selector, vertex_range, axis)
+        )
+
+    def to_vineyard_dataframe(self, selector=None, vertex_range=None):
+        self._check_unmodified()
+        return self._session._wrapper(
+            self._context_node.to_vineyard_dataframe(selector, vertex_range)
+        )
 
     def output(self, fd, selector, vertex_range=None, **kwargs):
         """Dump results to `fd`.
@@ -273,52 +303,37 @@ class BaseContext(object):
         df.to_csv(fd, header=True, index=False)
 
 
-class TensorContext(BaseContext):
-    """Tensor context holds a tensor.
-    Only axis is meaningful when considering a TensorContext.
-    """
-
-    def _transform_selector(self, selector):
-        return None
-
-
-class VertexDataContext(BaseContext):
-    """The most simple kind of context.
-    A vertex has a single value as results.
-
-    - The syntax of selector on vertex is:
-        - `v.id`: Get the Id of vertices
-        - `v.data`: Get the data of vertices (If there is any, means origin data on the graph, not results)
-
-    - The syntax of selector of edge is:
-        - `e.src`: Get the source Id of edges
-        - `e.dst`: Get the destination Id of edges
-        - `e.data`: Get the edge data on the edges (If there is any, means origin data on the graph)
-
-    - The syntax of selector of results is:
-        - `r`: Get quering results of algorithms. e.g. Rankings of vertices after doing PageRank.
-    """
-
-    def _transform_selector(self, selector):
-        return utils.transform_vertex_data_selector(selector)
-
-
 class DynamicVertexDataContext(collections.abc.Mapping):
     """Vertex data context for complicated result store.
     A vertex has a single value as results.
     """
 
-    def __init__(self, session_id, context_key, graph):
-        self._key = context_key
-        self._graph = graph
-        self._session_id = session_id
+    def __init__(self, context_node, key, type):
+        self._key = key
+        self._graph = context_node._graph
+        self._session_id = context_node.session_id
         self._saved_signature = self.signature
 
-    # partial inherit the BaseContext methods
-    session_id = BaseContext.__dict__["session_id"]
-    key = BaseContext.__dict__["key"]
-    signature = BaseContext.__dict__["signature"]
-    __repr__ = BaseContext.__dict__["__repr__"]
+    @property
+    def session_id(self):
+        return self._session_id
+
+    @property
+    def key(self):
+        return self._key
+
+    @property
+    def signature(self):
+        check_argument(
+            self._key is not None,
+            "Context key error, maybe it is not connected to engine.",
+        )
+        return hashlib.sha256(
+            "{}.{}".format(self._key, self._graph.signature).encode("utf-8")
+        )
+
+    def __repr__(self):
+        return f"graphscope.{self.__class__.__name__} from graph {str(self._graph)}"
 
     def __len__(self):
         return self._graph._graph.number_of_nodes()
@@ -331,96 +346,3 @@ class DynamicVertexDataContext(collections.abc.Mapping):
 
     def __iter__(self):
         return iter(self._graph._graph)
-
-
-class LabeledVertexDataContext(BaseContext):
-    """The labeld kind of context.
-    This context has several vertex labels and edge labels,
-    and each label has several properties.
-    Selection are performed on labels first, then on properties.
-
-    We use `:` to filter labels, and `.` to select properties.
-    And the results has no property, only have labels.
-
-    - The syntax of selector of vertex is:
-        - `v:label_name.id`: Get Id that belongs to a specific vertex label.
-        - `v:label_name.property_name`: Get data that on a specific property of a specific vertex label.
-
-    - The syntax of selector of edge is:
-        - `e:label_name.src`: Get source Id of a specific edge label.
-        - `e:label_name.dst`: Get destination Id of a specific edge label.
-        - `e:label_name.property_name`: Get data on a specific property of a specific edge label.
-
-    - The syntax of selector of results is:
-        - `r:label_name`: Get results data of a vertex label.
-    """
-
-    def _transform_selector(self, selector):
-        return utils.transform_labeled_vertex_data_selector(self._graph, selector)
-
-
-class VertexPropertyContext(BaseContext):
-    """The simple kind of context with property.
-    A vertex can have multiple values (a.k.a. properties) as results.
-
-    - The syntax of selector on vertex is:
-        - `v.id`: Get the Id of vertices
-        - `v.data`: Get the data of vertices (If there is any, means origin data on the graph, not results)
-
-    - The syntax of selector of edge is:
-        - `e.src`: Get the source Id of edges
-        - `e.dst`: Get the destination Id of edges
-        - `e.data`: Get the edge data on the edges (If there is any, means origin data on the graph)
-
-    - The syntax of selector of results is:
-        - `r.column_name`: Get the property named `column_name` in results. e.g. `r.hub` in :func:`graphscope.hits`.
-    """
-
-    def _transform_selector(self, selector):
-        return utils.transform_vertex_property_data_selector(selector)
-
-
-class LabeledVertexPropertyContext(BaseContext):
-    """The labeld kind of context with properties.
-    This context has several vertex labels and edge labels,
-    And each label has several properties.
-    Selection are performed on labels first, then on properties.
-
-    We use `:` to filter labels, and `.` to select properties.
-    And the results can have several properties.
-    - The syntax of selector of vertex is:
-        - `v:label_name.id`: Get Id that belongs to a specific vertex label.
-        - `v:label_name.property_name`: Get data that on a specific property of a specific vertex label.
-
-    - The syntax of selector of edge is:
-        - `e:label_name.src`: Get source Id of a specific edge label.
-        - `e:label_name.dst`: Get destination Id of a specific edge label.
-        - `e:label_name.property_name`: Get data on a specific property of a specific edge label.
-
-    - The syntax of selector of results is:
-        - `r:label_name.column_name`: Get the property named `column_name` of `label_name`.
-
-    """
-
-    def _transform_selector(self, selector):
-        return utils.transform_labeled_vertex_property_data_selector(
-            self._graph, selector
-        )
-
-
-def create_context(context_type, session_id, context_key, graph):
-    """A context factory, create concrete context class by context_type."""
-    if context_type == "tensor":
-        return TensorContext(session_id, context_key, graph)
-    if context_type == "vertex_data":
-        return VertexDataContext(session_id, context_key, graph)
-    elif context_type == "labeled_vertex_data":
-        return LabeledVertexDataContext(session_id, context_key, graph)
-    elif context_type == "dynamic_vertex_data":
-        return DynamicVertexDataContext(session_id, context_key, graph)
-    elif context_type == "vertex_property":
-        return VertexPropertyContext(session_id, context_key, graph)
-    elif context_type == "labeled_vertex_property":
-        return LabeledVertexPropertyContext(session_id, context_key, graph)
-    else:
-        raise InvalidArgumentError("Not supported context type: " + context_type)

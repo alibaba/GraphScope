@@ -561,8 +561,11 @@ class KubernetesClusterLauncher(Launcher):
             self._create_services()
             time.sleep(1)
             self._waiting_for_services_ready()
-            logger.info("Coordinator pod start successful, connecting to service...")
             self._coordinator_endpoint = self._get_coordinator_endpoint()
+            logger.info(
+                "Coordinator pod start successful with address %s, connecting to service ...",
+                self._coordinator_endpoint,
+            )
         except Exception as e:
             time.sleep(1)
             self._dump_coordinator_failed_status()

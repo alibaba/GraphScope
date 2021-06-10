@@ -99,8 +99,10 @@ class ProjectSimpleFrame<
     if (graph_def.has_extension()) {
       graph_def.extension().UnpackTo(&vy_info);
     }
-    vy_info.set_oid_type(PropertyTypeToPb(parent_meta.GetKeyValue("oid_type")));
-    vy_info.set_vid_type(PropertyTypeToPb(parent_meta.GetKeyValue("vid_type")));
+    vy_info.set_oid_type(PropertyTypeToPb(
+        vineyard::normalize_datatype(parent_meta.GetKeyValue("oid_type"))));
+    vy_info.set_vid_type(PropertyTypeToPb(
+        vineyard::normalize_datatype(parent_meta.GetKeyValue("vid_type"))));
 
     std::string vdata_type, edata_type;
     if (v_prop != "-1") {

@@ -48,6 +48,7 @@ from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.hosts.cluster import HostsClusterLauncher
 from graphscope.deploy.kubernetes.cluster import KubernetesClusterLauncher
+from graphscope.framework.dag import Dag
 from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import GRPCError
@@ -57,7 +58,10 @@ from graphscope.framework.errors import K8sError
 from graphscope.framework.errors import LearningEngineInternalError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
+from graphscope.framework.graph import GraphDAGNode
 from graphscope.framework.operation import Operation
+from graphscope.framework.utils import decode_dataframe
+from graphscope.framework.utils import decode_numpy
 from graphscope.interactive.query import InteractiveQuery
 from graphscope.interactive.query import InteractiveQueryStatus
 from graphscope.proto import graph_def_pb2
@@ -72,6 +76,115 @@ DEFAULT_CONFIG_FILE = os.environ.get(
 _session_dict = {}
 
 logger = logging.getLogger("graphscope")
+
+
+class _FetchHandler(object):
+    """Handler for structured fetches.
+    This class takes care of extracting a sub-DAG as targets for a user-provided structure for fetches,
+    which can be used for a low level `run` call of grpc_client.
+
+    Given the results of the low level run call, this class can also rebuild a result structure
+    matching the user-provided structure for fetches, but containing the corresponding results.
+    """
+
+    def __init__(self, dag, fetches):
+        self._fetches = fetches
+        self._ops = list()
+        self._unpack = False
+        if not isinstance(self._fetches, (list, tuple)):
+            self._fetches = [self._fetches]
+            self._unpack = True
+        for fetch in self._fetches:
+            if hasattr(fetch, "op"):
+                fetch = fetch.op
+            if not isinstance(fetch, Operation):
+                raise ValueError("Expect a `Operation` in sess run method.")
+            self._ops.append(fetch)
+        # extract sub dag
+        self._sub_dag = dag.extract_subdag_for(self._ops)
+        if "debug" in os.environ:
+            logger.info("sub_dag: %s", self._sub_dag)
+
+    @property
+    def targets(self):
+        return self._sub_dag
+
+    def _rebuild_graph(self, seq, op: Operation, op_result: op_def_pb2.OpResult):
+        if isinstance(self._fetches[seq], Operation):
+            # for nx Graph
+            return op_result.graph_def
+        # get graph dag node as base
+        graph_dag_node = self._fetches[seq]
+        # construct graph
+        g = Graph(graph_dag_node)
+        # update graph flied from graph_def
+        g.update_from_graph_def(op_result.graph_def)
+        return g
+
+    def _rebuild_app(self, seq, op: Operation, op_result: op_def_pb2.OpResult):
+        from graphscope.framework.app import App
+
+        # get app dag node as base
+        app_dag_node = self._fetches[seq]
+        # construct app
+        app = App(app_dag_node, op_result.result.decode("utf-8"))
+        return app
+
+    def _rebuild_context(self, seq, op: Operation, op_result: op_def_pb2.OpResult):
+        from graphscope.framework.context import Context
+        from graphscope.framework.context import DynamicVertexDataContext
+
+        # get context dag node as base
+        context_dag_node = self._fetches[seq]
+        ret = json.loads(op_result.result.decode("utf-8"))
+        context_type = ret["context_type"]
+        if context_type == "dynamic_vertex_data":
+            # for nx
+            return DynamicVertexDataContext(
+                context_dag_node, ret["context_key"], context_type
+            )
+        else:
+            return Context(context_dag_node, ret["context_key"], context_type)
+
+    def wrapper_results(self, response: message_pb2.RunStepResponse):
+        rets = list()
+        for seq, op in enumerate(self._ops):
+            for op_result in response.results:
+                if op.key == op_result.key:
+                    if op.output_types == types_pb2.RESULTS:
+                        if op.type == types_pb2.RUN_APP:
+                            rets.append(self._rebuild_context(seq, op, op_result))
+                        else:
+                            # for nx Graph
+                            rets.append(op_result.result.decode("utf-8"))
+                    if op.output_types == types_pb2.GRAPH:
+                        rets.append(self._rebuild_graph(seq, op, op_result))
+                    if op.output_types == types_pb2.APP:
+                        rets.append(None)
+                    if op.output_types == types_pb2.BOUND_APP:
+                        rets.append(self._rebuild_app(seq, op, op_result))
+                    if op.output_types in (
+                        types_pb2.VINEYARD_TENSOR,
+                        types_pb2.VINEYARD_DATAFRAME,
+                    ):
+                        rets.append(
+                            json.loads(op_result.result.decode("utf-8"))["object_id"]
+                        )
+                    if op.output_types in (types_pb2.TENSOR, types_pb2.DATAFRAME):
+                        if (
+                            op.type == types_pb2.CONTEXT_TO_DATAFRAME
+                            or op.type == types_pb2.GRAPH_TO_DATAFRAME
+                        ):
+                            rets.append(decode_dataframe(op_result.result))
+                        if (
+                            op.type == types_pb2.CONTEXT_TO_NUMPY
+                            or op.type == types_pb2.GRAPH_TO_NUMPY
+                        ):
+                            rets.append(decode_numpy(op_result.result))
+                    if op.output_types == types_pb2.NULL_OUTPUT:
+                        rets.append(None)
+                    break
+        return rets[0] if self._unpack else rets
 
 
 class Session(object):
@@ -98,15 +211,15 @@ class Session(object):
         >>> sess = gs.session()
         >>> g = sess.g()
         >>> pg = g.project(vertices={'v': []}, edges={'e': ['dist']})
-        >>> r = s.sssp(g, 4)
-        >>> s.close()
+        >>> r = gs.sssp(g, 4)
+        >>> sess.close()
 
         >>> # or use a session as default
-        >>> s = gs.session().as_default()
-        >>> g = g()
+        >>> sess = gs.session().as_default()
+        >>> g = gs.g()
         >>> pg = g.project(vertices={'v': []}, edges={'e': ['dist']})
         >>> r = gs.sssp(pg, 4)
-        >>> s.close()
+        >>> sess.close()
 
     We support setup a service cluster and create a RPC session in following ways:
 
@@ -138,8 +251,9 @@ class Session(object):
     def __init__(
         self,
         config=None,
-        cluster_type=gs_config.cluster_type,
         addr=gs_config.addr,
+        mode=gs_config.mode,
+        cluster_type=gs_config.cluster_type,
         num_workers=gs_config.num_workers,
         preemptive=gs_config.preemptive,
         k8s_namespace=gs_config.k8s_namespace,
@@ -187,6 +301,13 @@ class Session(object):
 
             addr (str, optional): The endpoint of a pre-launched GraphScope instance with '<ip>:<port>' format.
                 A new session id will be generated for each session connection.
+
+            mode (str, optional): optional values are eager and lazy. Defaults to eager.
+                Eager execution is a flexible platform for research and experimentation, it provides:
+                    An intuitive interface: Quickly test on small data.
+                    Easier debugging: Call ops directly to inspect running models and test changes.
+                Lazy execution means GraphScope does not precess the data till it has to. It just gathers all the
+                    information to a DAG that we feed into it, and processes only when we execute :code:`sess.run(fetches)`
 
             cluster_type (str, optional): Deploy GraphScope instance on hosts or k8s cluster. Defaults to k8s.
                 Available options: "k8s" and "hosts". Note that only support deployed on localhost with hosts mode.
@@ -354,10 +475,10 @@ class Session(object):
             TypeError: If the given argument combination is invalid and cannot be used to create
                 a GraphScope session.
         """
-        num_workers = int(num_workers)
         self._config_params = {}
         self._accessable_params = (
             "addr",
+            "mode",
             "cluster_type",
             "num_workers",
             "preemptive",
@@ -403,7 +524,7 @@ class Session(object):
         if isinstance(config, dict):
             self._config_params.update(config)
         elif isinstance(config, str):
-            self._load_config(config, False)
+            self._load_config(config, slient=False)
         elif DEFAULT_CONFIG_FILE:
             self._load_config(DEFAULT_CONFIG_FILE)
 
@@ -412,6 +533,9 @@ class Session(object):
 
         # initial setting of cluster_type
         self._cluster_type = self._parse_cluster_type()
+
+        # initial dag
+        self._dag = Dag()
 
         # mars cannot work with run-on-local mode
         if self._cluster_type == types_pb2.HOSTS and self._config_params["with_mars"]:
@@ -436,7 +560,7 @@ class Session(object):
             )
         if "k8s_vineyard_shared_mem" in kw:
             warnings.warn(
-                "The `k8s_vineyard_shared_mem` has benn deprecated and has no effect, "
+                "The `k8s_vineyard_shared_mem` has been deprecated and has no effect, "
                 "please use `vineyard_shared_mem` instead."
                 % kw.pop("k8s_vineyard_shared_mem", None),
                 category=DeprecationWarning,
@@ -511,6 +635,10 @@ class Session(object):
     def session_id(self):
         return self._session_id
 
+    @property
+    def dag(self):
+        return self._dag
+
     def _load_config(self, path, slient=True):
         config_path = os.path.expandvars(os.path.expanduser(path))
         try:
@@ -564,6 +692,9 @@ class Session(object):
         info["coordinator_endpoint"] = self._coordinator_endpoint
         info["engine_config"] = self._engine_config
         return info
+
+    def eager(self):
+        return self._config_params["mode"] == "eager"
 
     def _send_heartbeat(self):
         while not self._closed:
@@ -671,9 +802,14 @@ class Session(object):
             self._default_session.__exit__(None, None, None)
             self._default_session = None
 
-    def run(self, fetch):
-        """Run operations of `fetch`.
+    def _wrapper(self, dag_node):
+        if self.eager():
+            return self.run(dag_node)
+        else:
+            return dag_node
 
+    def run(self, fetches, debug=False):
+        """Run operations of `fetch`.
         Args:
             fetch: :class:`Operation`
 
@@ -691,60 +827,17 @@ class Session(object):
         Returns:
             Different values for different output types of :class:`Operation`
         """
-
-        # prepare names to run and fetch
-        if hasattr(fetch, "op"):
-            fetch = fetch.op
-        if not isinstance(fetch, Operation):
-            raise ValueError("Expect a `Operation`")
-        if fetch.output is not None:
-            raise ValueError("The op <%s> are evaluated duplicated." % fetch.key)
-
-        # convert to list to be compatible with rpc client method signature
-        fetch_ops = [fetch]
-
-        dag = op_def_pb2.DagDef()
-        for op in fetch_ops:
-            dag.op.extend([copy.deepcopy(op.as_op_def())])
-
         if self._closed:
             raise RuntimeError("Attempted to use a closed Session.")
-
         if not self._grpc_client:
             raise RuntimeError("Session disconnected.")
-
-        # execute the query
+        fetch_handler = _FetchHandler(self.dag, fetches)
         try:
-            response = self._grpc_client.run(dag)
+            response = self._grpc_client.run(fetch_handler.targets)
         except FatalError:
             self.close()
             raise
-        check_argument(
-            len(fetch_ops) == 1, "Cannot execute multiple ops at the same time"
-        )
-        return self._parse_value(fetch_ops[0], response)
-
-    def _parse_value(self, op, response: message_pb2.RunStepResponse):
-        # attach an output to op, indicating the op is already run.
-        op.set_output(response.metrics)
-
-        # if loads a arrow property graph, will return {'object_id': xxxx}
-        if op.output_types == types_pb2.GRAPH:
-            return response.graph_def
-        if op.output_types == types_pb2.APP:
-            return response.result.decode("utf-8")
-        if op.output_types in (
-            types_pb2.RESULTS,
-            types_pb2.VINEYARD_TENSOR,
-            types_pb2.VINEYARD_DATAFRAME,
-        ):
-            return response.result.decode("utf-8")
-        if op.output_types in (types_pb2.TENSOR, types_pb2.DATAFRAME):
-            return response.result
-        else:
-            raise InvalidArgumentError(
-                "Not recognized output type: %s" % op.output_types
-            )
+        return fetch_handler.wrapper_results(response)
 
     def _connect(self):
         if self._config_params["addr"] is not None:
@@ -821,7 +914,9 @@ class Session(object):
         return self._config_params
 
     def g(self, incoming_data=None, oid_type="int64", directed=True, generate_eid=True):
-        return Graph(self, incoming_data, oid_type, directed, generate_eid)
+        return self._wrapper(
+            GraphDAGNode(self, incoming_data, oid_type, directed, generate_eid)
+        )
 
     def load_from(self, *args, **kwargs):
         """Load a graph within the session.

@@ -89,6 +89,10 @@ def report_type_to_attr(t):
     return attr_value_pb2.AttrValue(report_type=t)
 
 
+def place_holder_to_attr():
+    return attr_value_pb2.AttrValue(place_holder=types_pb2.PlaceHolder())
+
+
 def list_str_to_attr(list_of_str):
     attr = attr_value_pb2.AttrValue()
     attr.list.s[:] = [
@@ -413,7 +417,7 @@ def transform_vertex_property_data_selector(selector):
     return selector
 
 
-def transform_labeled_vertex_data_selector(graph, selector):
+def transform_labeled_vertex_data_selector(schema, selector):
     """Formats: 'v:x.y/id', 'e:x.y/src/dst', 'r:label',
                 x denotes label name, y denotes property name.
     Returned selector will change label name to 'label{id}', where id is x's id in labels.
@@ -421,7 +425,7 @@ def transform_labeled_vertex_data_selector(graph, selector):
     """
     if selector is None:
         raise RuntimeError("selector cannot be None")
-    schema = graph.schema
+
     ret_type, segments = selector.split(":")
     if ret_type not in ("v", "e", "r"):
         raise SyntaxError("Invalid selector: " + selector)
@@ -436,7 +440,7 @@ def transform_labeled_vertex_data_selector(graph, selector):
     return "{}:{}".format(ret_type, ret)
 
 
-def transform_labeled_vertex_property_data_selector(graph, selector):
+def transform_labeled_vertex_property_data_selector(schema, selector):
     """Formats: 'v:x.y/id', 'e:x.y/src/dst', 'r:x.y',
                 x denotes label name, y denotes property name.
     Returned selector will change label name to 'label{id}', where id is x's id in labels.
@@ -444,7 +448,6 @@ def transform_labeled_vertex_property_data_selector(graph, selector):
     """
     if selector is None:
         raise RuntimeError("selector cannot be None")
-    schema = graph.schema
     ret_type, segments = selector.split(":")
     if ret_type not in ("v", "e", "r"):
         raise SyntaxError("Invalid selector: " + selector)

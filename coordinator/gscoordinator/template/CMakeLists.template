@@ -174,6 +174,6 @@ else ()
     target_compile_definitions(${FRAME_NAME} PRIVATE _GRAPH_TYPE=$_graph_type _GRAPH_HEADER=$_graph_header
                                                      _APP_TYPE=$_app_type _APP_HEADER=$_app_header)
     target_include_directories(${FRAME_NAME} PRIVATE utils apps)
-    target_link_libraries(${FRAME_NAME} ${LIBGRAPELITE_LIBRARIES} ${PROTO})
+    target_link_libraries(${FRAME_NAME} ${LIBGRAPELITE_LIBRARIES} ${VINEYARD_LIBRARIES} ${PROTO})
     set_target_properties(${FRAME_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
 endif ()

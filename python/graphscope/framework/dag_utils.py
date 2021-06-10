@@ -19,6 +19,7 @@
 import numpy as np
 
 from graphscope.framework import utils
+from graphscope.framework.dag import DAGNode
 from graphscope.framework.errors import check_argument
 from graphscope.framework.operation import Operation
 from graphscope.proto import attr_value_pb2
@@ -27,47 +28,75 @@ from graphscope.proto import query_args_pb2
 from graphscope.proto import types_pb2
 
 
-def create_app(graph, app):
+def create_app(app_assets):
     """Wrapper for create an `CREATE_APP` Operation with configuration.
+
+    This op will do nothing but provide required information for `BOUND_APP`
+    """
+    config = {types_pb2.APP_ALGO: utils.s_to_attr(app_assets.algo)}
+    if app_assets.gar is not None:
+        config[types_pb2.GAR] = utils.bytes_to_attr(app_assets.gar)
+    op = Operation(
+        None, types_pb2.CREATE_APP, config=config, output_types=types_pb2.APP
+    )
+    return op
+
+
+def bind_app(graph, app_assets):
+    """Wrapper for create an `BIND_APP` Operation with configuration.
     Compile and load an application after evaluated.
 
     Args:
-        graph (:class:`Graph`): A :class:`Graph` instance
-        app (:class:`App`): A :class:`App` instance.
+        graph (:class:`GraphDAGNode`): A :class:`GraphDAGNode` instance
+        app (:class:`AppAssets`): A :class:`AppAssets` instance.
 
     Returns:
         An :class:`Operation` with configuration that instruct
         analytical engine how to build the app.
     """
-    config = {
-        types_pb2.APP_ALGO: utils.s_to_attr(app.algo),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
-        types_pb2.OID_TYPE: utils.s_to_attr(
-            utils.normalize_data_type_str(utils.data_type_to_cpp(graph.schema.oid_type))
-        ),
-        types_pb2.VID_TYPE: utils.s_to_attr(
-            utils.data_type_to_cpp(graph.schema.vid_type)
-        ),
-        types_pb2.V_DATA_TYPE: utils.s_to_attr(
-            utils.data_type_to_cpp(graph.schema.vdata_type)
-        ),
-        types_pb2.E_DATA_TYPE: utils.s_to_attr(
-            utils.data_type_to_cpp(graph.schema.edata_type)
-        ),
-    }
-    if app.gar is not None:
-        config[types_pb2.GAR] = utils.bytes_to_attr(app.gar)
-
-    opr = Operation(
+    inputs = [graph.op, app_assets.op]
+    op = Operation(
         graph.session_id,
-        types_pb2.CREATE_APP,
-        config=config,
-        output_types=types_pb2.APP,
+        types_pb2.BIND_APP,
+        inputs=inputs,
+        config={},
+        output_types=types_pb2.BOUND_APP,
     )
-    return opr
+    return op
 
 
-def create_graph(session_id, graph_type, **kwargs):
+def run_app(app, *args, **kwargs):
+    """Run `bound app` on the `graph`.
+
+    Args:
+        app (:class:`AppDAGNode`): A :class:`AppDAGNode` instance which represent a bound app.
+        key (str): Key of query results, can be used to retrieve results.
+        *args: Additional query params that will be used in evaluation.
+        **kwargs: Key-value formated query params that mostly used in Cython apps.
+
+    Returns:
+        An op to run app on the specified graph, with optional query parameters.
+    """
+    inputs = [app.op]
+    config = {}
+    output_prefix = kwargs.pop("output_prefix", ".")
+    config[types_pb2.OUTPUT_PREFIX] = utils.s_to_attr(output_prefix)
+    # optional query arguments.
+    params = utils.pack_query_params(*args, **kwargs)
+    query_args = query_args_pb2.QueryArgs()
+    query_args.args.extend(params)
+    op = Operation(
+        app.session_id,
+        types_pb2.RUN_APP,
+        inputs=inputs,
+        config=config,
+        output_types=types_pb2.RESULTS,
+        query_args=query_args,
+    )
+    return op
+
+
+def create_graph(session_id, graph_type, inputs=None, **kwargs):
     """Create an `CREATE_GRAPH` op, add op to default dag.
 
     Args:
@@ -97,7 +126,11 @@ def create_graph(session_id, graph_type, **kwargs):
         raise RuntimeError("Not supported graph type {}".format(graph_type))
 
     op = Operation(
-        session_id, types_pb2.CREATE_GRAPH, config=config, output_types=types_pb2.GRAPH
+        session_id,
+        types_pb2.CREATE_GRAPH,
+        inputs=inputs,
+        config=config,
+        output_types=types_pb2.GRAPH,
     )
     return op
 
@@ -120,11 +153,15 @@ def add_labels_to_graph(graph, **kwargs):
         Since we don't want to trigger the loading, we must not use
         any api that can trigger the loading process implicitly.
     """
+    from graphscope.framework.graph import GraphDAGNode
+
+    assert isinstance(graph, GraphDAGNode)
+    inputs = [graph.op]
     config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph._key),
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph._graph_type),
     }
-
+    # inferred from the context of the dag.
+    config.update({types_pb2.GRAPH_NAME: utils.place_holder_to_attr()})
     if graph._graph_type == graph_def_pb2.ARROW_PROPERTY:
         attrs = kwargs.pop("attrs", None)
         if attrs:
@@ -138,6 +175,7 @@ def add_labels_to_graph(graph, **kwargs):
     op = Operation(
         graph._session.session_id,
         types_pb2.ADD_LABELS,
+        inputs=inputs,
         config=config,
         output_types=types_pb2.GRAPH,
     )
@@ -271,40 +309,6 @@ def modify_vertices(graph, modify_type, vertices):
     return op
 
 
-def run_app(graph, app, *args, **kwargs):
-    """Run `app` on the `graph`.
-
-    Args:
-        graph (:class:`Graph`): A loaded graph.
-        app (:class:`App`): A loaded app that will be queried.
-        key (str): Key of query results, can be used to retrieve results.
-        *args: Additional query params that will be used in evaluation.
-        **kwargs: Key-value formated query params that mostly used in Cython apps.
-
-    Returns:
-        An op to run app on the specified graph, with optional query parameters.
-    """
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.APP_NAME: utils.s_to_attr(app.key),
-    }
-    output_prefix = kwargs.pop("output_prefix", ".")
-    config[types_pb2.OUTPUT_PREFIX] = utils.s_to_attr(output_prefix)
-    # optional query arguments.
-    params = utils.pack_query_params(*args, **kwargs)
-    query_args = query_args_pb2.QueryArgs()
-    query_args.args.extend(params)
-
-    op = Operation(
-        graph.session_id,
-        types_pb2.RUN_APP,
-        config=config,
-        output_types=types_pb2.RESULTS,
-        query_args=query_args,
-    )
-    return op
-
-
 def report_graph(
     graph, report_type, node=None, edge=None, fid=None, lid=None, key=None
 ):
@@ -369,24 +373,20 @@ def report_graph(
 
 def project_arrow_property_graph(graph, vertex_collections, edge_collections):
     check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
-    attr = attr_value_pb2.AttrValue()
-    v_attr = attr_value_pb2.NameAttrList()
-    e_attr = attr_value_pb2.NameAttrList()
-    for label, props in vertex_collections.items():
-        v_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
-    for label, props in edge_collections.items():
-        e_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
-    attr.list.func.extend([v_attr, e_attr])
-
     config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
-        types_pb2.ARROW_PROPERTY_DEFINITION: attr,
     }
+    config.update(
+        {
+            types_pb2.VERTEX_COLLECTIONS: utils.s_to_attr(vertex_collections),
+            types_pb2.EDGE_COLLECTIONS: utils.s_to_attr(edge_collections),
+        }
+    )
     op = Operation(
         graph.session_id,
         types_pb2.PROJECT_GRAPH,
         config=config,
+        inputs=[graph.op],
         output_types=types_pb2.GRAPH,
     )
     return op
@@ -394,12 +394,12 @@ def project_arrow_property_graph(graph, vertex_collections, edge_collections):
 
 def project_arrow_property_graph_to_simple(
     graph,
-    v_label_id,
-    v_prop_id,
-    e_label_id,
-    e_prop_id,
-    v_data_type,
-    e_data_type,
+    v_label_id=None,
+    v_prop_id=None,
+    e_label_id=None,
+    e_prop_id=None,
+    v_data_type=None,
+    e_data_type=None,
     oid_type=None,
     vid_type=None,
 ):
@@ -417,22 +417,12 @@ def project_arrow_property_graph_to_simple(
         An op to project `graph`, results in a simple ARROW_PROJECTED graph.
     """
     check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_PROJECTED),
-        types_pb2.V_LABEL_ID: utils.i_to_attr(v_label_id),
-        types_pb2.V_PROP_ID: utils.i_to_attr(v_prop_id),
-        types_pb2.E_LABEL_ID: utils.i_to_attr(e_label_id),
-        types_pb2.E_PROP_ID: utils.i_to_attr(e_prop_id),
-        types_pb2.OID_TYPE: utils.s_to_attr(utils.data_type_to_cpp(oid_type)),
-        types_pb2.VID_TYPE: utils.s_to_attr(utils.data_type_to_cpp(vid_type)),
-        types_pb2.V_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(v_data_type)),
-        types_pb2.E_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(e_data_type)),
-    }
+    config = {}
     op = Operation(
         graph.session_id,
         types_pb2.PROJECT_TO_SIMPLE,
         config=config,
+        inputs=[graph.op],
         output_types=types_pb2.GRAPH,
     )
     return op
@@ -654,9 +644,13 @@ def unload_app(app):
     Returns:
         An op to unload the `app`.
     """
-    config = {types_pb2.APP_NAME: utils.s_to_attr(app.key)}
+    config = {}
     op = Operation(
-        app._session_id, types_pb2.UNLOAD_APP, config=config, output_types=types_pb2.APP
+        app._session_id,
+        types_pb2.UNLOAD_APP,
+        config=config,
+        inputs=[app.op],
+        output_types=types_pb2.NULL_OUTPUT,
     )
     return op
 
@@ -670,20 +664,23 @@ def unload_graph(graph):
     Returns:
         An op to unload the `graph`.
     """
-    config = {types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key)}
-    # Dynamic graph doesn't have a vineyard id
-    if hasattr(graph, "vineyard_id"):
-        config[types_pb2.VINEYARD_ID] = utils.i_to_attr(graph.vineyard_id)
+    config = {}
+    if not isinstance(graph, DAGNode):
+        config.update({types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key)})
+        # Dynamic graph doesn't have a vineyard id
+        if hasattr(graph, "vineyard_id"):
+            config[types_pb2.VINEYARD_ID] = utils.i_to_attr(graph.vineyard_id)
     op = Operation(
         graph.session_id,
         types_pb2.UNLOAD_GRAPH,
         config=config,
-        output_types=types_pb2.GRAPH,
+        inputs=[graph.op],
+        output_types=types_pb2.NULL_OUTPUT,
     )
     return op
 
 
-def context_to_numpy(results, selector=None, vertex_range=None, axis=0):
+def context_to_numpy(context, selector=None, vertex_range=None, axis=0):
     """Retrieve results as a numpy ndarray.
 
     Args:
@@ -694,9 +691,7 @@ def context_to_numpy(results, selector=None, vertex_range=None, axis=0):
     Returns:
         An op to retrieve query results and convert to numpy ndarray.
     """
-    config = {
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
@@ -704,15 +699,16 @@ def context_to_numpy(results, selector=None, vertex_range=None, axis=0):
     if axis is not None:
         config[types_pb2.AXIS] = utils.i_to_attr(axis)
     op = Operation(
-        results._session_id,
+        context.session_id,
         types_pb2.CONTEXT_TO_NUMPY,
         config=config,
+        inputs=[context.op],
         output_types=types_pb2.TENSOR,
     )
     return op
 
 
-def context_to_dataframe(results, selector=None, vertex_range=None):
+def context_to_dataframe(context, selector=None, vertex_range=None):
     """Retrieve results as a pandas DataFrame.
 
     Args:
@@ -723,23 +719,22 @@ def context_to_dataframe(results, selector=None, vertex_range=None):
     Returns:
         An op to retrieve query results and convert to pandas DataFrame.
     """
-    config = {
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
         config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
     op = Operation(
-        results._session_id,
+        context.session_id,
         types_pb2.CONTEXT_TO_DATAFRAME,
         config=config,
+        inputs=[context.op],
         output_types=types_pb2.DATAFRAME,
     )
     return op
 
 
-def to_vineyard_tensor(results, selector=None, vertex_range=None, axis=None):
+def to_vineyard_tensor(context, selector=None, vertex_range=None, axis=None):
     """Retrieve results as vineyard tensor.
 
     Parameters:
@@ -749,9 +744,7 @@ def to_vineyard_tensor(results, selector=None, vertex_range=None, axis=None):
     Returns:
         An op to convert query results into a vineyard tensor.
     """
-    config = {
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
@@ -759,15 +752,16 @@ def to_vineyard_tensor(results, selector=None, vertex_range=None, axis=None):
     if axis is not None:
         config[types_pb2.AXIS] = utils.i_to_attr(axis)
     op = Operation(
-        results._session_id,
+        context.session_id,
         types_pb2.TO_VINEYARD_TENSOR,
         config=config,
+        inputs=[context.op],
         output_types=types_pb2.VINEYARD_TENSOR,
     )
     return op
 
 
-def to_vineyard_dataframe(results, selector=None, vertex_range=None):
+def to_vineyard_dataframe(context, selector=None, vertex_range=None):
     """Retrieve results as vineyard dataframe.
 
     Parameters:
@@ -777,17 +771,16 @@ def to_vineyard_dataframe(results, selector=None, vertex_range=None):
     Returns:
         An op to convert query results into a vineyard dataframe.
     """
-    config = {
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
         config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
     op = Operation(
-        results._session_id,
+        context.session_id,
         types_pb2.TO_VINEYARD_DATAFRAME,
         config=config,
+        inputs=[context.op],
         output_types=types_pb2.VINEYARD_DATAFRAME,
     )
     return op
@@ -819,16 +812,12 @@ def add_column(graph, results, selector):
     Returns:
         A new graph with new columns added.
     """
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
-        types_pb2.SELECTOR: utils.s_to_attr(selector),
-    }
+    config = {types_pb2.SELECTOR: utils.s_to_attr(selector)}
     op = Operation(
         graph.session_id,
         types_pb2.ADD_COLUMN,
         config=config,
+        inputs=[graph.op, results.op],
         output_types=types_pb2.GRAPH,
     )
     return op
