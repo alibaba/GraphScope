@@ -89,5 +89,5 @@ skip.header=true
   $ java -cp data_load_tools-0.0.1-SNAPSHOT.jar com.alibaba.maxgraph.dataload.LoadTool -c commit -d hdfs://1.2.3.4:9000/tmp/data_output
   ```
 
-  **Notice: The later committed data will override the earlier committed data which have same vertex types or edge relations.**
+  **Notice: The later committed data will overwrite the earlier committed data which have same vertex types or edge relations.**
 	
