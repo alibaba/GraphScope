@@ -55,7 +55,6 @@ from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InteractiveEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import K8sError
-from graphscope.framework.errors import LearningEngineInternalError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
 from graphscope.framework.graph import GraphDAGNode
@@ -733,7 +732,7 @@ class Session(object):
             try:
                 if instance is not None:
                     instance.close()
-            except InteractiveEngineInternalError:
+            except Exception:
                 pass
         self._interactive_instance_dict.clear()
 
@@ -742,12 +741,15 @@ class Session(object):
             try:
                 if instance is not None:
                     instance.close()
-            except LearningEngineInternalError:
+            except Exception:
                 pass
         self._learning_instance_dict.clear()
 
         if self._grpc_client:
-            self._grpc_client.close()
+            try:
+                self._grpc_client.close()
+            except Exception:
+                pass
             self._grpc_client = None
             _session_dict.pop(self._session_id, None)
 

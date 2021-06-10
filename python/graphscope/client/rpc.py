@@ -33,6 +33,7 @@ from graphscope.framework.errors import check_grpc_response
 from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import error_codes_pb2
 from graphscope.proto import message_pb2
+from graphscope.version import __version__
 
 logger = logging.getLogger("graphscope")
 
@@ -212,6 +213,7 @@ class GRPCClient(object):
         request = message_pb2.ConnectSessionRequest(
             cleanup_instance=cleanup_instance,
             dangling_timeout_seconds=dangling_timeout_seconds,
+            version=__version__,
         )
 
         response = self._stub.ConnectSession(request)

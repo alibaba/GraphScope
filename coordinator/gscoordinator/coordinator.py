@@ -38,6 +38,7 @@ from concurrent import futures
 from io import StringIO
 
 import grpc
+from packaging import version
 
 from gscoordinator.io_utils import StdoutWrapper
 
@@ -213,6 +214,16 @@ class CoordinatorServiceServicer(
         # Session connected, fetch logs via gRPC.
         self._streaming_logs = True
         sys.stdout.drop(False)
+
+        # check version compatibility from client
+        sv = version.parse(__version__)
+        cv = version.parse(self._request.version)
+        if sv.major != cv.major or sv.minor != cv.minor:
+            logger.warning(
+                "Version between client and server is inconsistent: %s vs %s",
+                self._request.version,
+                __version__,
+            )
 
         return self._make_response(
             message_pb2.ConnectSessionResponse,

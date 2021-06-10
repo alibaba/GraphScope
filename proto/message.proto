@@ -43,6 +43,8 @@ message ResponseStatus {
 message ConnectSessionRequest {
   bool cleanup_instance = 1;
   int32 dangling_timeout_seconds = 2;
+  // check version compatibility
+  string version = 3;
 }
 
 message ConnectSessionResponse {
