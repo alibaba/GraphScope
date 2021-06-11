@@ -249,7 +249,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._op = incoming_data
             if self._op.type == types_pb2.PROJECT_TO_SIMPLE:
                 self._graph_type = graph_def_pb2.ARROW_PROJECTED
-        elif isinstance(incoming_data, nx.Graph):
+        elif isinstance(incoming_data, nx.classes.graph._GraphBase):
             self._op = self._from_nx_graph(incoming_data)
         elif isinstance(incoming_data, Graph):
             self._op = dag_utils.copy_graph(incoming_data)
@@ -422,6 +422,10 @@ class GraphDAGNode(DAGNode, GraphInterface):
             >>> nx_g = nx.path_graph(10)
             >>> gs_g = gs.Graph(nx_g)
         """
+        if self.session_id != incoming_graph.session_id:
+            raise RuntimeError(
+                "networkx graph and graphscope graph not in the same session."
+            )
         if hasattr(incoming_graph, "_graph"):
             msg = "graph view can not convert to gs graph"
             raise TypeError(msg)

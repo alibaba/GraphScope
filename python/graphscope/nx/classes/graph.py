@@ -49,7 +49,16 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
-class Graph(object):
+class _GraphBase(object):
+    """
+    Base class for networkx module.
+    This is an empty class use to classify networkx graph.
+    """
+
+    pass
+
+
+class Graph(_GraphBase):
     """
     Base class for undirected graphs in graphscope.nx.
 
@@ -247,6 +256,9 @@ class Graph(object):
         >>> G = nx.Graph(g) # or DiGraph
 
         """
+        if self._session is None:
+            self._try_to_get_default_session()
+
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
         self.adjlist_dict_factory = self.adjlist_dict_factory
@@ -256,7 +268,6 @@ class Graph(object):
 
         self._key = None
         self._op = None
-        self._session_id = None
         self._schema = GraphSchema()
         self._schema.init_nx_schema()
 
@@ -264,18 +275,6 @@ class Graph(object):
             "create_empty_in_engine", True
         )  # a hidden parameter
         self._distributed = attr.pop("dist", False)
-
-        if self._is_gs_graph(incoming_graph_data):
-            self._session_id = incoming_graph_data.session_id
-        elif create_empty_in_engine:
-            sess = get_default_session()
-            if sess is None:
-                raise ValueError(
-                    "Cannot find a default session. "
-                    "Please register a session using graphscope.session(...).as_default()"
-                )
-            self._session_id = sess.session_id
-
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(
                 self, self.is_directed(), self._distributed
@@ -302,6 +301,21 @@ class Graph(object):
             and incoming_graph_data.graph_type == graph_def_pb2.ARROW_PROPERTY
         )
 
+    def _try_to_get_default_session(self):
+        try:
+            session = get_default_session()
+        except RuntimeError:
+            raise RuntimeError(
+                "The nx binding session is None, that maybe no default session found. "
+                "Please register a session as default session."
+            )
+        if not session.eager():
+            raise RuntimeError(
+                "Networkx module need session to be eager mode. "
+                "The default session is lazy mode."
+            )
+        self._session = session
+
     @patch_docstring(RefGraph.to_directed_class)
     def to_directed_class(self):
         return nx.DiGraph
@@ -317,9 +331,16 @@ class Graph(object):
 
     @property
     def session(self):
-        from graphscope.client.session import get_session_by_id
+        """Get the currrent session.
 
-        return get_session_by_id(self._session_id)
+        Returns:
+            Return session that the graph belongs to.
+        """
+        if hasattr(self, "_graph") and self._is_client_view:
+            return (
+                self._graph.session
+            )  # this graph is a client side graph view, use host graph session
+        return self._session
 
     @property
     def session_id(self):
@@ -332,7 +353,7 @@ class Graph(object):
             return (
                 self._graph.session_id
             )  # this graph is a client side graph view, use host graph session_id
-        return self._session_id
+        return self._session.session_id
 
     @property
     def key(self):
@@ -1520,7 +1541,7 @@ class Graph(object):
             graph_def = op.eval()
             g._key = graph_def.key
             g._schema = copy.deepcopy(self._schema)
-        g._session_id = self._session_id
+        g._session = self._session
         return g
 
     def to_undirected(self, as_view=False):
@@ -1564,9 +1585,9 @@ class Graph(object):
                 op = dag_utils.create_graph_view(self, "undirected")
                 graph_def = op.eval()
                 g._key = graph_def.key
-                g._session_id = self._session_id
                 g._schema = copy.deepcopy(self._schema)
                 g._graph = self
+                g._session = self._session
                 g._is_client_view = False
                 g = freeze(g)
                 return g
@@ -1575,7 +1596,7 @@ class Graph(object):
             op = dag_utils.to_undirected(self)
             graph_def = op.eval()
             g._key = graph_def.key
-            g._session_id = self._session_id
+            g._session = self._session
             g._schema = copy.deepcopy(self._schema)
             return g
         else:
@@ -1628,9 +1649,9 @@ class Graph(object):
                 op = dag_utils.create_graph_view(self, "directed")
                 graph_def = op.eval()
                 g._key = graph_def.key
-                g._session_id = self._session_id
                 g._schema = copy.deepcopy(self._schema)
                 g._graph = self
+                g._session = self._session
                 g._is_client_view = False
                 g = freeze(g)
                 return g
@@ -1639,7 +1660,7 @@ class Graph(object):
             op = dag_utils.to_directed(self)
             graph_def = op.eval()
             g._key = graph_def.key
-            g._session_id = self._session_id
+            g._session = self._session
             g._schema = copy.deepcopy(self._schema)
             return g
 
@@ -1678,7 +1699,7 @@ class Graph(object):
         op = dag_utils.create_subgraph(self, nodes=induced_nodes)
         graph_def = op.eval()
         g._key = graph_def.key
-        g._session_id = self._session_id
+        g._session = self._session
         g._schema = copy.deepcopy(self._schema)
         return g
 
@@ -1722,7 +1743,7 @@ class Graph(object):
         op = dag_utils.create_subgraph(self, edges=induced_edges)
         graph_def = op.eval()
         g._key = graph_def.key
-        g._session_id = self._session_id
+        g._session = self._session
         g._schema = copy.deepcopy(self._schema)
         g._op = op
         return g
@@ -1960,7 +1981,7 @@ class Graph(object):
         graph = nx.freeze(graph)
         graph._graph_type = graph_def_pb2.DYNAMIC_PROJECTED
         graph._key = graph_def.key
-        graph._session_id = self._session_id
+        graph._session = self._session
         graph.schema.from_graph_def(graph_def)
         graph._saved_signature = self._saved_signature
         graph._graph = self  # projected graph also can report nodes.
