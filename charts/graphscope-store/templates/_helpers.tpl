@@ -70,7 +70,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Return the proper graphscope-store image name
 */}}
 {{- define "graphscope-store.image" -}}
-{{ include "graphscope-store.images.image" .Values.image }}
+{{ include "graphscope-store.images.image" . }}
 {{- end -}}
 
 {{/*
@@ -105,12 +105,6 @@ Return true if a configmap object should be created for graphscope-service
 {{- end -}}
 {{- end -}}
 
-{{/*
-Return the proper image name (for the init container volume-permissions image)
-*/}}
-{{- define "graphscope-store.volumePermissions.image" -}}
-{{ include "graphscope-store.images.image" .Values.volumePermissions.image }}
-{{- end -}}
 
 {{/*
 Renders a value that contains template.
@@ -128,14 +122,19 @@ Usage:
 
 {{/*
 Return the proper image name
-{{ include "graphscope-store.images.image" .Values.path.to.the.image }}
+{{ include "graphscope-store.images.image" . }}
 */}}
 {{- define "graphscope-store.images.image" -}}
-{{- $tag := .tag | toString -}}
-{{- if .registry }}
+{{- $tag := .Chart.AppVersion | toString -}}
+{{- with .Values.image -}}
+{{- if .tag -}}
+{{- $tag = .tag | toString -}}
+{{- end -}}
+{{- if .registry -}}
 {{- printf "%s/%s:%s" .registry .repository $tag -}}
 {{- else -}}
 {{- printf "%s:%s" .repository $tag -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 
