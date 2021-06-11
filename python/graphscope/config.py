@@ -54,16 +54,16 @@ class GSConfig(object):
 
     # etcd resource configuration
     k8s_etcd_num_pods = 1
-    k8s_etcd_cpu = 0.2
-    k8s_etcd_mem = "128Mi"
+    k8s_etcd_cpu = 1.0
+    k8s_etcd_mem = "512Mi"
 
     # zookeeper resource configuration
     k8s_zookeeper_cpu = 0.2
-    k8s_zookeeper_mem = "128Mi"
+    k8s_zookeeper_mem = "512Mi"
 
     # GIE graph manager resource configuration
     k8s_gie_graph_manager_cpu = 0.2
-    k8s_gie_graph_manager_mem = "256Mi"
+    k8s_gie_graph_manager_mem = "512Mi"
 
     # GIE gremlin server resource configuration
     k8s_gie_gremlin_server_cpu = 0.5
@@ -72,7 +72,7 @@ class GSConfig(object):
     # vineyard resource configuration
     k8s_vineyard_daemonset = "none"
     k8s_vineyard_cpu = 0.2
-    k8s_vineyard_mem = "128Mi"
+    k8s_vineyard_mem = "512Mi"
     vineyard_shared_mem = "4Gi"
 
     # engine resource configuration
@@ -106,7 +106,7 @@ class GSConfig(object):
     # GIE instance will be created automatically when a property graph loaded.
     # Otherwise, you should create a GIE instance manually by `sess.gremlin` if
     # `initializing_interactive_engine` is False
-    initializing_interactive_engine = True
+    initializing_interactive_engine = False
 
     timeout_seconds = 600
 
