@@ -34,7 +34,7 @@ fn unary_test_01() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
     let (tx, rx) = crossbeam_channel::unbounded();
-    let mut conf = JobConf::with_id(1, "unary_test_01", 1);
+    let mut conf = JobConf::new("unary_test_01");
     conf.plan_print = true;
     let guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -79,7 +79,8 @@ fn unary_test_01() {
 fn unary_test_02() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(2, "unary_test_02", 2);
+    let mut conf = JobConf::new("unary_test_02");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -127,7 +128,8 @@ fn unary_test_02() {
 fn unary_test_03() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(3, "unary_test_03", 2);
+    let mut conf = JobConf::new("unary_test_03");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -178,7 +180,8 @@ fn unary_test_03() {
 fn unary_test_04() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(4, "unary_test_04", 2);
+    let mut conf = JobConf::new("unary_test_04");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -220,7 +223,8 @@ fn unary_test_04() {
 fn unary_test_05() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(4, "unary_test_04", 2);
+    let mut conf = JobConf::new("unary_test_04");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -310,7 +314,8 @@ fn unary_test_notify_01() {
 
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(5, "unary_test_notify_01", 2);
+    let mut conf = JobConf::new("unary_test_notify_01");
+    conf.set_workers(2);
 
     let (output_tx, output_rx) = crossbeam_channel::unbounded();
     let (input_tx, input_rx) = crossbeam_channel::unbounded();
@@ -443,7 +448,8 @@ fn unary_test_state_01() {
 
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(6, "unary_test_state_01", 2);
+    let mut conf = JobConf::new("unary_test_state_01");
+    conf.set_workers(2);
 
     let (input_tx, input_rx) = crossbeam_channel::unbounded();
     let (output_tx, output_rx) = crossbeam_channel::unbounded();

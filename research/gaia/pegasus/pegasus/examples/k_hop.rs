@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use pegasus::{JobConf, Configuration, ServerConf};
 use structopt::StructOpt;
 use std::sync::Arc;
-use pegasus::api::{Exchange, Map, Count, Range, Sink, ResultSet};
+use pegasus::api::{Exchange, Map, Count, Range, Sink, ResultSet, Iteration};
 use pegasus::preclude::Pipeline;
 use std::time::Instant;
 
@@ -15,6 +15,8 @@ struct Config {
     k           : u32,
     #[structopt(short = "t", default_value = "100")]
     times       : u32,
+    #[structopt(short = "f")]
+    use_loop    : bool,
     /// The path of the origin graph data ;
     #[structopt(long = "data", parse(from_os_str))]
     data_path   : PathBuf,
@@ -45,33 +47,48 @@ fn main() {
     let src = graph.sample_vertices(config.times as usize);
     let mut guards = Vec::new();
     let k_hop = config.k;
+    let use_loop = config.use_loop;
+    let (tx, rx) = crossbeam_channel::unbounded();
     for (i, id) in src.into_iter().enumerate() {
         let mut conf = conf.clone();
         conf.job_id = i as u64;
+        let tx = tx.clone();
         let start = Instant::now();
         let g = pegasus::run(conf.clone(), |worker| {
             let index = worker.id.index;
             let graph = graph.clone();
+            let tx = tx.clone();
+            let src = if index == 0 {
+               vec![id]
+            } else {
+                vec![]
+            };
             worker.dataflow(move |dfb| {
-                let mut stream = if index == 0 {
-                    dfb.input_from_iter(vec![id].into_iter())
+                let mut stream = dfb.input_from_iter(src.into_iter())?;
+                if use_loop {
+                    stream = stream.iterate(k_hop, |start| {
+                        let graph = graph.clone();
+                        start.exchange_with_fn(|id| *id)?
+                            .flat_map_with_fn(Pipeline, move |id| {
+                                Ok(graph.get_neighbors(id).map(|item| Ok(item)))
+                            })
+                    })?;
                 } else {
-                    dfb.input_from_iter(vec![].into_iter())
-                }?;
-                for _i  in 0..k_hop {
-                    let graph = graph.clone();
-                    stream = stream.exchange_with_fn(|id| *id)?
-                        .flat_map_with_fn(Pipeline, move |id| {
-                            Ok(graph.get_neighbors(id).map(|item| Ok(item)))
-                        })?;
+                    for _i in 0..k_hop {
+                        let graph = graph.clone();
+                        stream = stream.exchange_with_fn(|id| *id)?
+                            .flat_map_with_fn(Pipeline, move |id| {
+                                Ok(graph.get_neighbors(id).map(|item| Ok(item)))
+                            })?;
+                    }
                 }
                 stream.count(Range::Global)?
-                    .sink_by(|info| {
-                        let job_id = info.worker_id.job_id;
+                    .sink_by(|_| {
                         move |_, result| {
                             match result {
                                 ResultSet::Data(cnt) => {
-                                    println!("job[{}]: {} has k-hop {} neighbors, use {:?}", job_id, id, cnt[0], start.elapsed());
+                                    let elp = start.elapsed();
+                                    tx.send((id, cnt[0], elp)).ok();
                                 }
                                 ResultSet::End => {}
                             }
@@ -82,6 +99,49 @@ fn main() {
         }).unwrap().unwrap();
         guards.push(g);
     }
+
+    std::mem::drop(tx);
+    let mut cnt_list = Vec::new();
+    let mut elp_list = Vec::new();
+    let mut n = 10;
+    while let Ok((id, cnt, elp)) = rx.recv() {
+        if n > 0 {
+            println!("{}\tfind k-hop\t{}\tneighbors, use {:?};", id, cnt, elp);
+        }
+        n -= 1;
+        cnt_list.push(cnt);
+        elp_list.push(elp.as_millis() as u64);
+    }
+    println!("...");
+    println!("==========================================================");
+
+    cnt_list.sort();
+    let len = cnt_list.len();
+    println!("{} k-hop counts range from: [{} .. {}]", len, cnt_list[0], cnt_list[len - 1]);
+    let len = len as f64;
+    let mut i = (len * 0.99) as usize;
+    println!("99% k-hop count <= {}", cnt_list[i]);
+    i = (len * 0.90) as usize;
+    println!("90% k-hop count <= {}", cnt_list[i]);
+    i = (len * 0.5) as usize;
+    println!("50% k-hop count <= {}", cnt_list[i]);
+    let total: u64 = cnt_list.iter().sum();
+    println!("avg k-hop count {}", total as f64 / len);
+
+    println!("==========================================================");
+    elp_list.sort();
+    let len = elp_list.len();
+    println!("{} k-hop elapses range from: [{} .. {}]", len, elp_list[0], elp_list[len - 1]);
+    let len = len as f64;
+    let mut i = (len * 0.99) as usize;
+    println!("99% elapse <= {} ms", elp_list[i]);
+    i = (len * 0.90) as usize;
+    println!("90% elapse <= {} ms", elp_list[i]);
+    i = (len * 0.5) as usize;
+    println!("50% elapse <= {} ms", elp_list[i]);
+    let total: u64 = elp_list.iter().sum();
+    println!("avg elapse {} ms", total as f64 / len);
+
 
     pegasus::shutdown_all();
 }

@@ -28,7 +28,7 @@ pub trait Sink<D: Data> {
     fn sink_by<B, F>(&self, construct: B) -> Result<(), BuildJobError>
     where
         B: FnOnce(&OperatorMeta) -> F,
-        F: Fn(&Tag, ResultSet<D>) + Send + 'static;
+        F: FnMut(&Tag, ResultSet<D>) + Send + 'static;
 }
 
 impl<D: Encode> Encode for ResultSet<D> {

@@ -22,7 +22,8 @@ use std::collections::HashMap;
 fn test_subtask_fork() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(50, "test_subtask_fork", 2);
+    let mut conf = JobConf::new("test_subtask_fork");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -82,7 +83,8 @@ fn test_subtask_fork() {
 fn test_subtask_fork_join() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(51, "test_subtask_fork_join", 2);
+    let mut conf = JobConf::new("test_subtask_fork_join");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -129,7 +131,8 @@ fn test_subtask_fork_join() {
 fn test_subtask_fork_count_join() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(52, "test_subtask_count_fork_join", 2);
+    let mut conf = JobConf::new("test_subtask_count_fork_join");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -178,7 +181,8 @@ fn test_subtask_fork_count_join() {
 fn test_subtask_in_iteration_01() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(52, "test_subtask_count_fork_join", 2);
+    let mut conf = JobConf::new("test_subtask_count_fork_join");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -230,7 +234,8 @@ fn test_subtask_in_iteration_01() {
 fn test_subtask_in_iteration_02() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(52, "test_subtask_count_fork_join", 2);
+    let mut conf = JobConf::new("test_subtask_count_fork_join");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     pegasus::run(conf, |worker| {
         let tx = tx.clone();

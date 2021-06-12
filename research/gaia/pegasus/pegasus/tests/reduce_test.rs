@@ -78,7 +78,8 @@ fn barrier_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
     let (tx, rx) = crossbeam_channel::unbounded();
-    let conf = JobConf::with_id(1, "barrier_test", 2);
+    let mut conf = JobConf::new( "barrier_test");
+    conf.set_workers(2);
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
         worker.dataflow(|dfb| {
@@ -115,7 +116,8 @@ fn group_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
     let (tx, rx) = crossbeam_channel::unbounded();
-    let conf = JobConf::with_id(1, "group_test", 2);
+    let mut conf = JobConf::new("group_test");
+    conf.set_workers(2);
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
         worker.dataflow(|dfb| {
@@ -173,7 +175,8 @@ fn fold_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
     let (tx, rx) = crossbeam_channel::unbounded();
-    let conf = JobConf::with_id(1, "fold_test", 2);
+    let mut conf = JobConf::new("fold_test");
+    conf.set_workers(2);
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
         worker.dataflow(|dfb| {
@@ -239,7 +242,8 @@ fn dedup_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
     let (tx, rx) = crossbeam_channel::unbounded();
-    let conf = JobConf::with_id(1, "dedup_test", 2);
+    let mut conf = JobConf::new("dedup_test");
+    conf.set_workers(2);
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
         worker.dataflow(|dfb| {
@@ -276,7 +280,8 @@ fn sort_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
     let (tx, rx) = crossbeam_channel::unbounded();
-    let conf = JobConf::with_id(1, "sort_test", 2);
+    let mut conf = JobConf::new("sort_test");
+    conf.set_workers(2);
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
         worker.dataflow(|dfb| {
@@ -312,7 +317,8 @@ fn top_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
     let (tx, rx) = crossbeam_channel::unbounded();
-    let conf = JobConf::with_id(1, "top_test", 2);
+    let mut conf = JobConf::new("top_test");
+    conf.set_workers(2);
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
         worker.dataflow(|dfb| {
@@ -348,7 +354,8 @@ fn custom_top_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
     let (tx, rx) = crossbeam_channel::unbounded();
-    let conf = JobConf::with_id(1, "custom_top_test", 2);
+    let mut conf = JobConf::new("custom_top_test");
+    conf.set_workers(2);
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
         worker.dataflow(|dfb| {

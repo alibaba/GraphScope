@@ -46,7 +46,7 @@ impl<D, F> SinkOperator<D, F> {
 impl<D, F> OperatorCore for SinkOperator<D, F>
 where
     D: Data,
-    F: Fn(&Tag, ResultSet<D>) + Send,
+    F: FnMut(&Tag, ResultSet<D>) + Send,
 {
     fn on_receive(
         &mut self, tag: &Tag, inputs: &[Box<dyn InputProxy>], _: &[Box<dyn OutputProxy>],
@@ -81,7 +81,7 @@ impl<D: Data> Sink<D> for Stream<D> {
     fn sink_by<B, F>(&self, construct: B) -> Result<(), BuildJobError>
     where
         B: FnOnce(&OperatorMeta) -> F,
-        F: Fn(&Tag, ResultSet<D>) + Send + 'static,
+        F: FnMut(&Tag, ResultSet<D>) + Send + 'static,
     {
         self.sink_stream("sink", Pipeline, |meta| {
             meta.set_kind(OperatorKind::Sink);

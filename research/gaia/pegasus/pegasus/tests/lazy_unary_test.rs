@@ -23,7 +23,7 @@ use pegasus::{Configuration, JobConf};
 fn lazy_test_01() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(9, "lazy_unary_01", 1);
+    let conf = JobConf::new( "lazy_unary_01");
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -68,7 +68,8 @@ fn lazy_test_01() {
 fn lazy_test_02() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(10, "lazy_unary_01", 2);
+    let mut conf = JobConf::new("lazy_unary_01");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let index = worker.id.index;

@@ -23,8 +23,7 @@ use pegasus::{Configuration, JobConf};
 fn binary_test_01() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(7, "binary_test_01", 1);
-
+    let conf = JobConf::new("binary_test_01");
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();

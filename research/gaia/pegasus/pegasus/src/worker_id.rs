@@ -174,7 +174,7 @@ macro_rules! info_worker {
         inspect_worker!(log::Level::Info, $arg0);
     );
     ($arg0: expr, $($arg:tt)*) => (
-        inspect_worker!(log::Level::Info, $arg0, $($arg)*);
+        inspect_worker!(log::Level::Info, $arg0, $($arg)*);9
     )
 }
 

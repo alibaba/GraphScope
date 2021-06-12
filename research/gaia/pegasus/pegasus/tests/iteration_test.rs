@@ -23,7 +23,8 @@ use pegasus::{Configuration, JobConf};
 fn ping_pong_test_01() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(60, "ping_pong_test_01", 2);
+    let mut conf = JobConf::new("ping_pong_test_01");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     let guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -71,7 +72,8 @@ fn ping_pong_test_01() {
 fn ping_pong_test_02() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(61, "ping_pong_test_02", 2);
+    let mut conf = JobConf::new("ping_pong_test_02");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -122,7 +124,8 @@ fn ping_pong_test_02() {
 fn ping_pong_test_03() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(63, "ping_pong_test_03", 2);
+    let mut conf = JobConf::new("ping_pong_test_03");
+    conf.set_workers(2);
     let (input_tx, input_rx) = crossbeam_channel::unbounded();
     let (output_tx, output_rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
@@ -196,7 +199,8 @@ fn ping_pong_test_03() {
 fn flat_map_iteration_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::with_id(61, "ping_pong_test_02", 2);
+    let mut conf = JobConf::new("ping_pong_test_02");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
