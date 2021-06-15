@@ -17,6 +17,7 @@
 #
 
 import inspect
+from functools import wraps
 
 import networkx.algorithms as nxa
 from networkx.utils.decorators import not_implemented_for
@@ -32,6 +33,7 @@ from graphscope.proto import types_pb2
 
 # decorator function
 def project_to_simple(func):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
@@ -47,11 +49,6 @@ def project_to_simple(func):
         return func(graph, *args[1:], **kwargs)
 
     return wrapper
-
-
-@patch_docstring(nxa.pagerank)
-def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6):
-    raise NotImplementedError
 
 
 @project_to_simple
@@ -79,14 +76,13 @@ def hits(G, max_iter=100, tol=1.0e-8, normalized=True):
     Returns
     -------
     (node, hubs,authorities) : three-column of dataframe
-        node containing the hub and authority
-       values.
+        node containing the hub and authority values.
 
 
     Examples
     --------
     >>> G = nx.path_graph(4)
-    >>> nx.hits(G)
+    >>> nx.builtin.hits(G)
 
     References
     ----------
@@ -234,7 +230,7 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
       Error tolerance used to check convergence in power method iteration.
 
     weight : None or string, optional (default=None)
-      If None, that take it as edge attribute 'weight'
+      If None, all edge weights are considered equal.
       Otherwise holds the name of the edge attribute used as weight.
 
     Returns
@@ -245,7 +241,7 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
     Examples
     --------
     >>> G = nx.path_graph(4)
-    >>> centrality = nx.eigenvector_centrality(G)
+    >>> centrality = nx.builtin.eigenvector_centrality(G)
 
     See Also
     --------
@@ -318,20 +314,20 @@ def katz_centrality(
       If True normalize the resulting values.
 
     weight : None or string, optional (default=None)
-      If None, that take it as edge attribute 'weight'.
+      If None, all edge weights are considered equal.
       Otherwise holds the name of the edge attribute used as weight.
 
     Returns
     -------
     nodes : dataframe
-       Dataframe of nodes with Katz centrality as the value.
+       Dataframe of nodes with katz centrality as the value.
 
     Examples
     --------
     >>> import math
     >>> G = nx.path_graph(4)
     >>> phi = (1 + math.sqrt(5)) / 2.0  # largest eigenvalue of adj matrix
-    >>> centrality = nx.katz_centrality(G, 1 / phi - 0.01)
+    >>> centrality = nx.builtin.katz_centrality(G, 1 / phi - 0.01)
 
     """
     ctx = graphscope.katz_centrality(
@@ -363,12 +359,6 @@ def has_path(G, source, target):
 
 
 @project_to_simple
-@patch_docstring(nxa.shortest_path)
-def shortest_path(G, source=None, target=None, weight=None):
-    return AppAssets(algo="sssp_path")(G, source)
-
-
-@project_to_simple
 def single_source_dijkstra_path_length(G, source, weight=None):
     """Find shortest weighted path lengths in G from a source node.
 
@@ -386,6 +376,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
        the edge weights will be accessed via the
        edge attribute with this key (that is, the weight of the edge
        joining `u` to `v` will be ``G.edges[u, v][weight]``).
+       if None, all edge weight equal to one.
 
     Returns
     -------
@@ -395,7 +386,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
     Examples
     --------
     >>> G = nx.path_graph(5)
-    >>> length = nx.single_source_dijkstra_path_length(G, 0)
+    >>> length = nx.builtin.single_source_dijkstra_path_length(G, 0)
 
     Notes
     -----
@@ -409,7 +400,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
 
 @project_to_simple
 def average_shortest_path_length(G, weight=None):
-    """Returns the average shortest path length.
+    r"""Returns the average shortest path length.
 
     The average shortest path length is
 
@@ -426,14 +417,13 @@ def average_shortest_path_length(G, weight=None):
     G : networkx graph
 
     weight : None or string, optional (default = None)
-       If None, default take as 'weight'.
+       If None, every edge has weight/distance/cost 1.
        If a string, use this edge attribute as the edge weight.
-
 
     Examples
     --------
     >>> G = nx.path_graph(5)
-    >>> nx.average_shortest_path_length(G)
+    >>> nx.builtin.average_shortest_path_length(G)
     2.0
 
     """
@@ -467,9 +457,9 @@ def bfs_edges(G, source, depth_limit=None):
     To get the edges in a breadth-first search::
 
         >>> G = nx.path_graph(3)
-        >>> list(nx.bfs_edges(G, 0))
+        >>> list(nx.builtin.bfs_edges(G, 0))
         [(0, 1), (1, 2)]
-        >>> list(nx.bfs_edges(G, source=0, depth_limit=1))
+        >>> list(nx.builtin.bfs_edges(G, source=0, depth_limit=1))
         [(0, 1)]
 
     """
@@ -479,14 +469,66 @@ def bfs_edges(G, source, depth_limit=None):
 
 
 @project_to_simple
-@patch_docstring(nxa.bfs_predecessors)
 def bfs_predecessors(G, source, depth_limit=None):
+    """Returns predecessors in breadth-first-search from source.
+
+    Parameters
+    ----------
+    G : networkx graph
+
+    source : node
+       Specify starting node for breadth-first search
+
+    depth_limit : int, optional(default=len(G))
+        Specify the maximum search depth
+
+    Returns
+    -------
+    pred: class:`VertexDataContext`:
+        A context with predecessors of source.
+
+    Notes
+    -----
+    Based on http://www.ics.uci.edu/~eppstein/PADS/BFS.py
+    by D. Eppstein, July 2004. The modifications
+    to allow depth limits based on the Wikipedia article
+    "`Depth-limited-search`_".
+
+    .. _Depth-limited-search: https://en.wikipedia.org/wiki/Depth-limited_search
+
+    """
     return AppAssets(algo="bfs_generic")(G, source, depth_limit, format="predecessors")
 
 
 @project_to_simple
-@patch_docstring(nxa.bfs_successors)
 def bfs_successors(G, source, depth_limit=None):
+    """Returns successors in breadth-first-search from source.
+
+    Parameters
+    ----------
+    G : networkx graph
+
+    source : node
+       Specify starting node for breadth-first search
+
+    depth_limit : int, optional(default=len(G))
+        Specify the maximum search depth
+
+    Returns
+    -------
+    succ: class:`VertexDataContext`:
+        A context with successors of source.
+
+    Notes
+    -----
+    Based on http://www.ics.uci.edu/~eppstein/PADS/BFS.py
+    by D. Eppstein, July 2004. The modifications
+    to allow depth limits based on the Wikipedia article
+    "`Depth-limited-search`_".
+
+    .. _Depth-limited-search: https://en.wikipedia.org/wiki/Depth-limited_search
+
+    """
     return AppAssets(algo="bfs_generic")(G, source, depth_limit, format="successors")
 
 
@@ -511,7 +553,7 @@ def all_pairs_shortest_path_length(G, weight=None):
     Examples
     --------
     >>> G = nx.path_graph(5)
-    >>> length = dict(nx.all_pairs_dijkstra_path_length(G))
+    >>> length = dict(nx.builtin.all_pairs_dijkstra_path_length(G))
     >>> for node in [0, 1, 2, 3, 4]:
     ...     print(f"1 - {node}: {length[1][node]}")
     1 - 0: 1
@@ -594,7 +636,6 @@ def closeness_centrality(G, weight=None, wf_improved=True):
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 
-@patch_docstring(nxa.bfs_tree)
 def bfs_tree(G, source, reverse=False, depth_limit=None):
     """Returns an oriented tree constructed from of a breadth-first-search
     starting at source.
@@ -714,7 +755,7 @@ def clustering(G):
     Examples
     --------
     >>> G = nx.path_graph(5)
-    >>>nx.clustering(G)
+    >>>nx.builtin.clustering(G)
 
     References
     ----------
@@ -762,16 +803,36 @@ def triangles(G, nodes=None):
 
 
 @project_to_simple
-@patch_docstring(nxa.transitivity)
 def transitivity(G):
+   r"""Compute graph transitivity, the fraction of all possible triangles
+    present in G.
+
+    Possible triangles are identified by the number of "triads"
+    (two edges with a shared vertex).
+
+    The transitivity is
+
+    .. math::
+
+        T = 3\frac{\#triangles}{\#triads}.
+
+    Parameters
+    ----------
+    G : graph
+
+    Returns
+    -------
+    out : Context
+       Transitivity
+
+    """
     # FIXME: nodes not support.
     return AppAssets(algo="transitivity")(G)
 
 
 @project_to_simple
-@patch_docstring(nxa.average_clustering)
 def average_clustering(G, nodes=None, count_zeros=True):
-    """Compute the average clustering coefficient for the graph G.
+    r"""Compute the average clustering coefficient for the graph G.
 
     The clustering coefficient for the graph is the average,
 
@@ -793,7 +854,7 @@ def average_clustering(G, nodes=None, count_zeros=True):
     Examples
     --------
     >>> G = nx.complete_graph(5)
-    >>> print(nx.average_clustering(G))
+    >>> print(nx.builtin.average_clustering(G))
     1.0
 
     Notes

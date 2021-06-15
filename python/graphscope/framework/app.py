@@ -22,6 +22,7 @@ import os
 import zipfile
 from copy import deepcopy
 from io import BytesIO
+from functools import wraps
 
 import yaml
 
@@ -42,6 +43,7 @@ DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
 
 def project_to_simple(func):
+    @wraps(func)
     def wrapper(*args, **kwargs):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
