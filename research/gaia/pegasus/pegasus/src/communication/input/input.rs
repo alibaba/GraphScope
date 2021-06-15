@@ -24,8 +24,9 @@ use crate::{Data, Tag};
 use pegasus_common::downcast::*;
 use pegasus_common::rc::RcPointer;
 use std::cell::{Cell, Ref, RefCell};
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashSet, VecDeque};
 use std::time::Instant;
+use ahash::AHashMap;
 
 struct Stash<D> {
     one_shot: Option<DataSet<D>>,
@@ -166,7 +167,7 @@ pub struct InboundChannel<D: Data> {
     pub disconnected: bool,
     pub forbid_cancel: bool,
     pull: GeneralPull<DataSet<D>>,
-    stash_index: HashMap<Tag, usize>,
+    stash_index: AHashMap<Tag, usize>,
     stash_data: Vec<StashedData<D>>,
     stashed_scope: VecDeque<Option<Tag>>,
     event_bus: EventBus,
@@ -206,7 +207,7 @@ impl<D: Data> InboundChannel<D> {
             disconnected: false,
             forbid_cancel: meta.forbid_cancel,
             pull,
-            stash_index: HashMap::new(),
+            stash_index: AHashMap::new(),
             stash_data: Vec::new(),
             stashed_scope: queue,
             event_bus,

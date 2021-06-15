@@ -20,6 +20,7 @@ use pegasus_common::rc::RcPointer;
 use std::cell::{Cell, RefCell, RefMut};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
+use ahash::AHashMap;
 
 #[derive(Default)]
 pub struct Panel {
@@ -150,7 +151,7 @@ pub struct ChannelRxState {
     pub scope_depth: usize,
     pub index: u32,
     scope_end: CountDownLatchTree,
-    scope_data: RefCell<HashMap<Tag, RcPointer<Panel>>>,
+    scope_data: RefCell<AHashMap<Tag, RcPointer<Panel>>>,
     parent_scope_skipped: RefCell<HashSet<Tag>>,
     notifications: RefCell<TagAntiChainSet>,
     seq_gen: Cell<usize>,
@@ -164,7 +165,7 @@ impl ChannelRxState {
             index,
             scope_depth,
             scope_end: CountDownLatchTree::new(tx_peers),
-            scope_data: RefCell::new(HashMap::new()),
+            scope_data: RefCell::new(AHashMap::new()),
             parent_scope_skipped: RefCell::new(HashSet::new()),
             notifications: RefCell::new(TagAntiChainSet::new()),
             seq_gen: Cell::new(0),

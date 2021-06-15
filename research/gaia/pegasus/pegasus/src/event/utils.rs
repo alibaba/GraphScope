@@ -17,6 +17,7 @@ use crate::Tag;
 use pegasus_common::rc::RcPointer;
 use std::cell::{RefCell, RefMut};
 use std::collections::{HashMap, HashSet};
+use ahash::AHashMap;
 
 #[derive(Clone)]
 enum Fence {
@@ -144,7 +145,7 @@ impl<T> CountDownLatchNode<T> {
 pub struct CountDownLatchTree {
     pub guard: usize,
     root: CountDownLatchNode<Tag>,
-    leaf: RefCell<HashMap<Tag, RcPointer<CountDownLatchNode<Tag>>>>,
+    leaf: RefCell<AHashMap<Tag, RcPointer<CountDownLatchNode<Tag>>>>,
     count_downed: RefCell<Vec<Tag>>,
 }
 
@@ -153,7 +154,7 @@ impl CountDownLatchTree {
         CountDownLatchTree {
             guard,
             root: CountDownLatchNode::new(guard, Tag::Root),
-            leaf: RefCell::new(HashMap::new()),
+            leaf: RefCell::new(AHashMap::new()),
             count_downed: RefCell::new(vec![]),
         }
     }
