@@ -804,7 +804,7 @@ def triangles(G, nodes=None):
 
 @project_to_simple
 def transitivity(G):
-   r"""Compute graph transitivity, the fraction of all possible triangles
+    r"""Compute graph transitivity, the fraction of all possible triangles
     present in G.
 
     Possible triangles are identified by the number of "triads"

@@ -21,8 +21,8 @@ import json
 import os
 import zipfile
 from copy import deepcopy
-from io import BytesIO
 from functools import wraps
+from io import BytesIO
 
 import yaml
 

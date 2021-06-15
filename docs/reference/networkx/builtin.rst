@@ -17,3 +17,5 @@ Builtin algorithms
 .. autofunction:: graphscope.nx.builtin.clustering
 .. autofunction:: graphscope.nx.builtin.triangles
 .. autofunction:: graphscope.nx.builtin.average_clustering
+.. autofunction:: graphscope.nx.builtin.all_pairs_shortest_path_length
+.. autofunction:: graphscope.nx.builtin.closeness_centrality
