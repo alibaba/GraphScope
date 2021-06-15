@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -96,6 +96,7 @@ mod intra_process;
 mod intra_thread;
 
 use crate::data_plane::inter_processes::{CombinationPull, RemotePush};
+use crate::ServerConf;
 use intra_process::IntraProcessPull;
 use intra_process::IntraProcessPush;
 
@@ -183,8 +184,9 @@ pub fn build_local_channels<T: Data>(
 }
 
 pub fn build_channels<T: Data>(
-    id: ChannelId, workers: usize, server_index: usize, servers: &[u64],
+    id: ChannelId, workers: usize, server_index: usize, server_conf: &ServerConf,
 ) -> Result<LinkedList<ChannelResource<T>>, BuildJobError> {
+    let servers = server_conf.get_servers();
     if servers.is_empty() {
         return Ok(build_local_channels(id, workers));
     }
@@ -238,9 +240,9 @@ pub fn build_channels<T: Data>(
     {
         for i in 0..workers {
             let ch_id = encode_channel_id(id, i as u32);
-            let sends = pegasus_network::ipc_channel_send::<T>(ch_id, my_server_id, servers)?;
+            let sends = pegasus_network::ipc_channel_send::<T>(ch_id, my_server_id, &servers)?;
             remote_sends.push(sends);
-            let recv = pegasus_network::ipc_channel_recv::<T>(ch_id, my_server_id, servers)?;
+            let recv = pegasus_network::ipc_channel_recv::<T>(ch_id, my_server_id, &servers)?;
             remote_recv.push_back(recv);
         }
     }

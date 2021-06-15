@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,7 +46,7 @@ impl<D, F> SinkOperator<D, F> {
 impl<D, F> OperatorCore for SinkOperator<D, F>
 where
     D: Data,
-    F: Fn(&Tag, ResultSet<D>) + Send,
+    F: FnMut(&Tag, ResultSet<D>) + Send,
 {
     fn on_receive(
         &mut self, tag: &Tag, inputs: &[Box<dyn InputProxy>], _: &[Box<dyn OutputProxy>],
@@ -81,7 +81,7 @@ impl<D: Data> Sink<D> for Stream<D> {
     fn sink_by<B, F>(&self, construct: B) -> Result<(), BuildJobError>
     where
         B: FnOnce(&OperatorMeta) -> F,
-        F: Fn(&Tag, ResultSet<D>) + Send + 'static,
+        F: FnMut(&Tag, ResultSet<D>) + Send + 'static,
     {
         self.sink_stream("sink", Pipeline, |meta| {
             meta.set_kind(OperatorKind::Sink);

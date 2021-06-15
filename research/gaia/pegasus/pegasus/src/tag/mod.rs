@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ pub enum Tag {
     One(u32),
     Two(u32, u32),
     Three(u32, u32, u32),
-    Spilled(Vec<u32>)
+    Spilled(Vec<u32>),
 }
 
 pub const MAX_DEPTH: usize = !0u8 as usize;
@@ -166,21 +166,21 @@ impl Tag {
                 } else {
                     Tag::One(*v)
                 }
-            },
+            }
             Tag::Two(a, b) => {
                 if *b > 0 {
                     Tag::Two(*a, *b - 1)
                 } else {
                     Tag::Two(*a, *b)
                 }
-            },
+            }
             Tag::Three(a, b, c) => {
                 if *c > 0 {
                     Tag::Three(*a, *b, *c - 1)
                 } else {
                     Tag::Three(*a, *b, *c)
                 }
-            },
+            }
             Tag::Spilled(t) => {
                 let mut v = t.clone();
                 if let [.., last] = &mut v[..] {
@@ -450,9 +450,15 @@ impl Decode for Tag {
 
 #[macro_export]
 macro_rules! tag {
-    ($elem:expr) => ( Tag::with($elem as u32) );
-    ($elem1:expr, $elem2:expr) => ( Tag::Two($elem1 as u32, $elem2 as u32) );
-    ($elem1:expr, $elem2:expr, $elem3: expr) => ( Tag::Three($elem1 as u32, $elem2 as u32, $elem3 as u32) );
+    ($elem:expr) => {
+        Tag::with($elem as u32)
+    };
+    ($elem1:expr, $elem2:expr) => {
+        Tag::Two($elem1 as u32, $elem2 as u32)
+    };
+    ($elem1:expr, $elem2:expr, $elem3: expr) => {
+        Tag::Three($elem1 as u32, $elem2 as u32, $elem3 as u32)
+    };
 }
 
 pub mod tools;
@@ -469,7 +475,7 @@ mod tests {
         let mut rng = thread_rng();
         assert_eq!(Tag::Root, Tag::Root);
         for _ in 0..CHECK_TIMES {
-            let i : u32 = rng.gen();
+            let i: u32 = rng.gen();
             assert_eq!(Tag::One(i), Tag::One(i));
             assert_ne!(Tag::Root, Tag::One(i));
             for _ in 0..CHECK_TIMES {
@@ -705,7 +711,10 @@ mod tests {
                     assert_eq!(Tag::Three(i, j, k).to_parent(), Some(Tag::Two(i, j)));
                     for _ in 0..CHECK_TIMES {
                         let l: u32 = rng.gen();
-                        assert_eq!(Tag::Spilled(vec![i, j, k, l]).to_parent(), Some(Tag::Three(i, j, k)));
+                        assert_eq!(
+                            Tag::Spilled(vec![i, j, k, l]).to_parent(),
+                            Some(Tag::Three(i, j, k))
+                        );
                     }
                 }
             }
@@ -730,7 +739,10 @@ mod tests {
                     for _ in 0..CHECK_TIMES {
                         let l: u32 = rng.gen();
                         assert_eq!(Tag::Three(i, j, k).advance_to(l), Tag::Three(i, j, l));
-                        assert_eq!(Tag::Spilled(vec![i, j, k, l]).advance(), Tag::Spilled(vec![i, j, k, l + 1]));
+                        assert_eq!(
+                            Tag::Spilled(vec![i, j, k, l]).advance(),
+                            Tag::Spilled(vec![i, j, k, l + 1])
+                        );
                     }
                 }
             }
@@ -744,7 +756,7 @@ mod tests {
         assert_eq!(Tag::Two(0, 0).len(), 2);
         assert_eq!(Tag::Three(0, 0, 0).len(), 3);
         for i in 4..MAX_DEPTH {
-            assert_eq!(Tag::Spilled(vec![0;i]).len(), i);
+            assert_eq!(Tag::Spilled(vec![0; i]).len(), i);
         }
     }
 
@@ -770,7 +782,7 @@ mod tests {
                     assert!(!Tag::One(j).is_parent_of(&t_2));
                 }
                 assert!(!t_2.is_parent_of(&t_2));
-                for _  in 0..CHECK_TIMES {
+                for _ in 0..CHECK_TIMES {
                     let k: u32 = rng.gen();
                     let t_3 = Tag::Three(i, j, k);
 
@@ -784,7 +796,7 @@ mod tests {
                     }
 
                     if k != j {
-                       assert!(!Tag::Two(i, k).is_parent_of(&t_3));
+                        assert!(!Tag::Two(i, k).is_parent_of(&t_3));
                     }
 
                     assert!(!t_3.is_parent_of(&Tag::Root));
@@ -814,7 +826,6 @@ mod tests {
                         if k != l {
                             assert!(!Tag::Three(i, j, l).is_parent_of(&t_4));
                         }
-
                     }
                 }
             }

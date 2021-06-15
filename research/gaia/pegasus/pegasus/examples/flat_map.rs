@@ -16,7 +16,8 @@ fn main() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
     let config: Config = Config::from_args();
-    let mut conf = JobConf::new(1, "flatmap", 1);
+    let mut conf = JobConf::new("flatmap");
+    conf.set_workers(1);
     conf.plan_print = true;
     conf.batch_size = config.batch_size as u32;
     conf.output_capacity = config.capacity as u32;

@@ -68,3 +68,6 @@ cmake-build-debug/
 
 # Local build
 scripts/bin
+
+# Dataflow dot
+**/*.dot
