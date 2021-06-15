@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,12 +14,12 @@
 //! limitations under the License.
 
 use crate::errors::StartupError;
+use crate::{get_servers, get_servers_len};
+use ahash::AHasher;
 use pegasus_network::config::NetworkConfig;
 use serde::Deserialize;
-use std::path::Path;
-use ahash::AHasher;
 use std::hash::Hasher;
-use crate::{get_servers, get_servers_len};
+use std::path::Path;
 
 #[derive(Debug, Deserialize)]
 pub struct Configuration {
@@ -58,7 +58,7 @@ pub fn read_from<P: AsRef<Path>>(path: P) -> Result<Configuration, StartupError>
 pub enum ServerConf {
     Local,
     Partial(Vec<u64>),
-    All
+    All,
 }
 
 impl ServerConf {
@@ -66,7 +66,7 @@ impl ServerConf {
         match self {
             ServerConf::Local => 0,
             ServerConf::Partial(v) => v.len(),
-            ServerConf::All => get_servers_len()
+            ServerConf::All => get_servers_len(),
         }
     }
 
@@ -74,7 +74,7 @@ impl ServerConf {
         match self {
             ServerConf::Local => vec![],
             ServerConf::Partial(servers) => servers.clone(),
-            ServerConf::All => get_servers()
+            ServerConf::All => get_servers(),
         }
     }
 }
@@ -104,7 +104,6 @@ pub struct JobConf {
 }
 
 impl JobConf {
-
     pub fn new<S: Into<String>>(name: S) -> Self {
         let mut conf = JobConf::default();
         let name = name.into();
@@ -147,7 +146,6 @@ impl JobConf {
 
 impl Default for JobConf {
     fn default() -> Self {
-
         JobConf {
             job_id: 0,
             job_name: "anonymity".to_owned(),

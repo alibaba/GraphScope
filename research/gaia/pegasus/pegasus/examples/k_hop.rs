@@ -1,28 +1,27 @@
-use std::path::PathBuf;
-use pegasus::{JobConf, Configuration, ServerConf};
-use structopt::StructOpt;
-use std::sync::Arc;
-use pegasus::api::{Exchange, Map, Count, Range, Sink, ResultSet, Iteration};
+use pegasus::api::{Count, Exchange, Iteration, Map, Range, ResultSet, Sink};
 use pegasus::preclude::Pipeline;
+use pegasus::{Configuration, JobConf, ServerConf};
+use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Instant;
-
+use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "k-hop", about = "Search k-hop neighbors on parallel dataflow")]
 struct Config {
     /// The number of hop this job will search;
     #[structopt(short = "k", default_value = "3")]
-    k           : u32,
+    k: u32,
     #[structopt(short = "t", default_value = "100")]
-    times       : u32,
+    times: u32,
     #[structopt(short = "f")]
-    use_loop    : bool,
+    use_loop: bool,
     /// The path of the origin graph data ;
     #[structopt(long = "data", parse(from_os_str))]
-    data_path   : PathBuf,
+    data_path: PathBuf,
     /// the number of partitions to partition the local graph;
     #[structopt(short = "p", default_value = "1")]
-    partitions : u32,
+    partitions: u32,
     #[structopt(short = "s", long = "servers")]
     servers: Option<PathBuf>,
 }
@@ -58,45 +57,40 @@ fn main() {
             let index = worker.id.index;
             let graph = graph.clone();
             let tx = tx.clone();
-            let src = if index == 0 {
-               vec![id]
-            } else {
-                vec![]
-            };
+            let src = if index == 0 { vec![id] } else { vec![] };
             worker.dataflow(move |dfb| {
                 let mut stream = dfb.input_from_iter(src.into_iter())?;
                 if use_loop {
                     stream = stream.iterate(k_hop, |start| {
                         let graph = graph.clone();
-                        start.exchange_with_fn(|id| *id)?
-                            .flat_map_with_fn(Pipeline, move |id| {
-                                Ok(graph.get_neighbors(id).map(|item| Ok(item)))
-                            })
+                        start.exchange_with_fn(|id| *id)?.flat_map_with_fn(Pipeline, move |id| {
+                            Ok(graph.get_neighbors(id).map(|item| Ok(item)))
+                        })
                     })?;
                 } else {
                     for _i in 0..k_hop {
                         let graph = graph.clone();
-                        stream = stream.exchange_with_fn(|id| *id)?
+                        stream = stream
+                            .exchange_with_fn(|id| *id)?
                             .flat_map_with_fn(Pipeline, move |id| {
                                 Ok(graph.get_neighbors(id).map(|item| Ok(item)))
                             })?;
                     }
                 }
-                stream.count(Range::Global)?
-                    .sink_by(|_| {
-                        move |_, result| {
-                            match result {
-                                ResultSet::Data(cnt) => {
-                                    let elp = start.elapsed();
-                                    tx.send((id, cnt[0], elp)).ok();
-                                }
-                                ResultSet::End => {}
-                            }
+                stream.count(Range::Global)?.sink_by(|_| {
+                    move |_, result| match result {
+                        ResultSet::Data(cnt) => {
+                            let elp = start.elapsed();
+                            tx.send((id, cnt[0], elp)).ok();
                         }
-                    })?;
+                        ResultSet::End => {}
+                    }
+                })?;
                 Ok(())
             })
-        }).unwrap().unwrap();
+        })
+        .unwrap()
+        .unwrap();
         guards.push(g);
     }
 
@@ -141,7 +135,6 @@ fn main() {
     println!("50% elapse <= {} ms", elp_list[i]);
     let total: u64 = elp_list.iter().sum();
     println!("avg elapse {} ms", total as f64 / len);
-
 
     pegasus::shutdown_all();
 }

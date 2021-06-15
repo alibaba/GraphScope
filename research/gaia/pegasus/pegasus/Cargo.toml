@@ -23,6 +23,7 @@ enum_dispatch = "0.3"
 toml = "0.5"
 serde = { version = "1.0", features = ["derive"] }
 ahash = "0.7.2"
+dot = "0.1.4"
 
 [features]
 default = []

@@ -59,10 +59,10 @@ pub use pegasus_common::codec;
 use pegasus_executor::{ExecError, TaskGuard};
 pub use pegasus_memory::alloc::check_current_task_memory;
 pub use pegasus_network::ServerDetect;
+use std::collections::HashSet;
 pub use tag::Tag;
 pub use worker::Worker;
 pub use worker_id::{get_current_worker, WorkerId};
-use std::collections::HashSet;
 
 lazy_static! {
     static ref SERVER_ID: Mutex<Option<u64>> = Mutex::new(None);
@@ -124,7 +124,7 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
         if let Some(peers) = net_conf.get_peers()? {
             let addr = net_conf.local_addr()?;
             let conn_conf = net_conf.get_connection_param();
-            for p in peers.iter(){
+            for p in peers.iter() {
                 servers.insert(p.id);
             }
             let addr = pegasus_network::start_up(server_id, conn_conf, addr, peers)?;
@@ -224,13 +224,9 @@ fn allocate_worker(conf: &Arc<JobConf>) -> Result<Option<WorkerIdIter>, BuildJob
         let servers = match server_conf {
             ServerConf::Local => {
                 return Ok(Some(WorkerIdIter::new(conf.job_id, conf.workers, 0, conf.workers)));
-            },
-            ServerConf::Partial(ids) => {
-                ids.clone()
-            },
-            ServerConf::All => {
-                get_servers()
             }
+            ServerConf::Partial(ids) => ids.clone(),
+            ServerConf::All => get_servers(),
         };
         if servers.is_empty() || (servers.len() == 1 && servers[0] == my_id) {
             Ok(Some(WorkerIdIter::new(conf.job_id, conf.workers, 0, conf.workers)))

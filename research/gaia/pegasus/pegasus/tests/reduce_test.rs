@@ -78,7 +78,7 @@ fn barrier_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
     let (tx, rx) = crossbeam_channel::unbounded();
-    let mut conf = JobConf::new( "barrier_test");
+    let mut conf = JobConf::new("barrier_test");
     conf.set_workers(2);
     pegasus::run(conf, |worker| {
         let tx = tx.clone();

@@ -1,17 +1,21 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
+
+use dot::LabelText::LabelStr;
+use dot::{Edges, Id, LabelText, Nodes};
+use std::borrow::Cow;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Default)]
 pub struct Port {
@@ -166,5 +170,80 @@ impl LogicalGraph {
     #[allow(dead_code)]
     pub fn vertex_size(&self) -> usize {
         self.in_e.len()
+    }
+}
+
+/// Create a *.dot file which contains the dataflow logical plan;
+/// Open the dot file with graphviz; There is online graphviz at :
+/// https://dreampuf.github.io/GraphvizOnline/
+pub struct DotGraph {
+    job_name: String,
+    job_id: u64,
+    operators: Vec<String>,
+    edges: Vec<Edge>,
+}
+
+impl DotGraph {
+    pub fn new(job_name: String, job_id: u64, operators: Vec<String>, edges: Vec<Edge>) -> Self {
+        DotGraph { job_name, job_id, operators, edges }
+    }
+}
+
+type V = (u32, String);
+
+impl<'a> dot::Labeller<'a, V, Edge> for DotGraph {
+    fn graph_id(&'a self) -> Id<'a> {
+        let name = self.job_name.replace("-", "_");
+        match dot::Id::new(name) {
+            Err(_) => {
+                warn!("create dot graph failure, maybe invalid job name;");
+                dot::Id::new(format!("unknown_{}", self.job_id)).unwrap()
+            }
+            Ok(r) => r,
+        }
+    }
+
+    fn node_id(&'a self, n: &(u32, String)) -> Id<'a> {
+        let x = n.1.replace("-", "_");
+        match dot::Id::new(format!("{}_{}", x, n.0)) {
+            Err(_) => {
+                warn!("create dot graph failure, maybe invalid job name;");
+                dot::Id::new(format!("unknown_{}", n.0)).unwrap()
+            }
+            Ok(r) => r,
+        }
+    }
+
+    fn edge_label(&'a self, e: &Edge) -> LabelText<'a> {
+        let label = if e.is_local {
+            format!("{}_{}_{}", e.source.port, e.id, e.target.port)
+        } else {
+            format!("{}_{}R_{}", e.source.port, e.id, e.target.port)
+        };
+        LabelStr(Cow::Owned(label))
+    }
+}
+
+impl<'a> dot::GraphWalk<'a, V, Edge> for DotGraph {
+    fn nodes(&'a self) -> Nodes<'a, (u32, String)> {
+        let mut nodes = Vec::with_capacity(self.operators.len());
+        for (i, op) in self.operators.iter().enumerate() {
+            nodes.push((i as u32, op.clone()));
+        }
+        Cow::Owned(nodes)
+    }
+
+    fn edges(&'a self) -> Edges<'a, Edge> {
+        Cow::Borrowed(&self.edges)
+    }
+
+    fn source(&'a self, edge: &Edge) -> (u32, String) {
+        let offset = edge.source.index;
+        (offset as u32, self.operators[offset].clone())
+    }
+
+    fn target(&'a self, edge: &Edge) -> (u32, String) {
+        let offset = edge.target.index;
+        (offset as u32, self.operators[offset].clone())
     }
 }
