@@ -30,11 +30,36 @@ from graphscope.nx.utils.compat import patch_docstring
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
+__all__ = [
+    "hits",
+    "degree_centrality",
+    "in_degree_centrality",
+    "out_degree_centrality",
+    "eigenvector_centrality",
+    "katz_centrality",
+    "has_path",
+    "shortest_path",
+    "single_source_dijkstra_path_length",
+    "average_shortest_path_length",
+    "bfs_edges",
+    "bfs_predecessors",
+    "bfs_successors",
+    "all_pairs_shortest_path_length",
+    "closeness_centrality",
+    "bfs_tree",
+    "k_core",
+    "clustering",
+    "triangles",
+    "transitivity",
+    "average_clustering",
+    "weakly_connected_components",
+]
+
 
 # decorator function
 def project_to_simple(func):
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def _project_to_simple(*args, **kwargs):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
@@ -48,7 +73,36 @@ def project_to_simple(func):
                 graph = graph._project_to_simple()
         return func(graph, *args[1:], **kwargs)
 
-    return wrapper
+    return _project_to_simple
+
+
+def not_compatible_for_mode(*graph_mode):
+    def _not_compatible_for_mode(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            graph = args[0]
+            terms = {
+                "duplicated": graph._distributed == False,
+                "distributed": graph._distributed == True,
+            }
+            match = False
+            try:
+                for t in graph_mode:
+                    match = match or terms[t]
+            except KeyError:
+                raise InvalidArgumentError(
+                    "Use one or more of duplicated,distributed",
+                )
+            if match:
+                raise InvalidArgumentError(
+                    "Not compatible for %s mode" % " ".join(graph_mode)
+                )
+            else:
+                return func(*args, **kwargs)
+
+        return wrapper
+
+    return _not_compatible_for_mode
 
 
 @project_to_simple
@@ -359,6 +413,35 @@ def has_path(G, source, target):
 
 
 @project_to_simple
+def shortest_path(G, source=None, target=None, weight=None):
+    """Compute shortest paths in the graph.
+
+    Parameters
+    ----------
+    G : networkx graph
+
+    source : node, optional
+        Starting node for path. If not specified, compute shortest
+        paths for each possible starting node.
+
+    target : node, optional
+        Ending node for path. If not specified, compute shortest
+        paths to all possible nodes.
+
+    weight : None or string, optional (default = None)
+        If None, every edge has weight/distance/cost 1.
+        If a string, use this edge attribute as the edge weight.
+
+    Returns
+    -------
+    path: Context
+        A context containing shortest paths result.
+
+    """
+    return AppAssets(algo="sssp_path")(G, source)
+
+
+@project_to_simple
 def single_source_dijkstra_path_length(G, source, weight=None):
     """Find shortest weighted path lengths in G from a source node.
 
@@ -532,6 +615,7 @@ def bfs_successors(G, source, depth_limit=None):
     return AppAssets(algo="bfs_generic")(G, source, depth_limit, format="successors")
 
 
+@not_compatible_for_mode("distributed")
 @project_to_simple
 def all_pairs_shortest_path_length(G, weight=None):
     """Compute shortest path lengths between all nodes in a graph.
@@ -575,6 +659,7 @@ def all_pairs_shortest_path_length(G, weight=None):
     return AppAssets(algo="all_pairs_shortest_path_length")(G)
 
 
+@not_compatible_for_mode("distributed")
 @project_to_simple
 def closeness_centrality(G, weight=None, wf_improved=True):
     r"""Compute closeness centrality for nodes.
