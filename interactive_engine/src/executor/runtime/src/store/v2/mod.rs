@@ -20,6 +20,7 @@ pub fn create_global_graph(config: &StoreConfig, partition_ids: &Vec<PartitionId
     });
     let mut config_builder = GraphConfigBuilder::new();
     config_builder.set_storage_engine("rocksdb");
+    config_builder.add_storage_option("partition.count", &*config.partition_num.to_string());
     let graph_config = config_builder.build();
     GlobalGraph::new(disks, &graph_config, partition_ids).unwrap()
 }
