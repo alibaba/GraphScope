@@ -1,8 +1,13 @@
 # Data Load Tools
-This is a toolset for bulk loading data from raw files to graphscope persistent storage service. It includes a hadoop map-reduce job for offline data build, and a tool for ingesting and committing the offline output to the persistent storage service.
+This is a toolset for bulk loading data from raw files to graphscope persistent storage service. 
+Currently the tool supports a specific format of the raw data as described in "Data Format", 
+and the originial data must be located in an HDFS. To load the data files into GraphScope storage, 
+users can run the data-loading tool from a terminal on a Client machine, and we assume that Client 
+has access to a Hadoop cluster, which can run MapReduce jobs, have read/write access to the HDFS, 
+and connect to a running GraphScope storage service.
 
 ## Quick Start
-### Prequisities
+### Prerequisites
 
 - Java compilation environment (Maven 3.5+ / JDK1.8), if you need to build the tools from source code
 - Hadoop cluster (version 2.x) that can run map-reduce jobs and has HDFS supported
@@ -14,9 +19,14 @@ If you have the distribution package `maxgraph.tar.gz`, decompress it. Then you 
 
 If you want to build from source code, just run `mvn clean package -DskipTests`. You can find the compiled jar `data_load_tools-0.0.1-SNAPSHOT.jar` in the `target/` directory. The `load_tool.sh` is just a wrapper for java command, you can only use `data_load_tools-0.0.1-SNAPSHOT.jar` in the following demonstration.
 
-### Usage
-The data loading tools assume the original data files are in the HDFS. Each file should represents either a vertex type or a relationship of an edge type. Below is the sample data of a vertex type `person`:
+### Data Format
 
+The data loading tools assume the original data files are in the HDFS.
+
+Each file should represents either a vertex type or a relationship of an edge type. Below are the sample 
+data of a vertex type person and a relationShip person-knows->person of edge type knows:
+
+- person.csv
 ```
 id|name
 1000|Alice
@@ -24,9 +34,35 @@ id|name
 ...
 ```
 
-The data loading procedure consists of 3 steps: 
+- person_knows_person.csv
+```
+person_id|person_id_1|date
+1000|1001|20210611151923
+...
+```
 
-#### 1. Offline data build
+The first line of the data file is a header that describes the key of each field. The header is not required. 
+If there is no header in the data file, you need to set `skip.header` to `true` in the data building process 
+(For details, see params description in "Building a partitioned graph").
+
+The rest lines are the data records. Each line represents one record. Data fields are seperated by a custom seperator 
+("|" in the example above). In the vertex data file `person.csv`, `id` field and `name` field are the primary-key and 
+the property of the vertex type `person` respectively. In the edge data file `person_knows_person.csv`, `person_id` 
+field is the primary-key of the source vertex, `person_id_1` field is the primary-key of the destination vertex, `date` 
+is the property of the edge type `knows`.
+
+All the data fields will be parsed according to the data-type defined in the graph schema. If the input data field 
+cannot be parsed correctly, data building process would be failed with corresponding errors.
+
+
+### Loading Process
+The loading process contains three steps:
+
+- Step 1: A partitioned graph is built from the source files and stored in the same HDFS using a MapReduce job
+- Step 2: The graph partitions are loaded into the store servers (in parallel)
+- Step 3: Commit to the online service so that data is ready for serving queries
+
+#### 1. Building a partitioned graph
 
   Build data by running the hadoop map-reduce job with following command:
   
@@ -38,7 +74,6 @@ The data loading procedure consists of 3 steps:
   
   ```
   split.size=256
-partition.num=16
 separator=\\|
 input.path=/tmp/ldbc_sample
 output.path=/tmp/data_output
@@ -52,7 +87,6 @@ skip.header=true
   | Config key | Required | Default | Description |
   | --- | --- | --- | --- |
   | split.size| false | 256 | Hadoop map-reduce input data split size in MB |
-  | partition.num | true | - | Partition num of target graph |
   | separator | false | \\\\\| | Seperator used to parse each field in a line | 
   | input.path | true | - | Input HDFS dir |
   | output.path | true | - | Output HDFS dir |
@@ -60,8 +94,21 @@ skip.header=true
   | column.mapping.config | true | - | Mapping info for each input file in JSON format. Each key in the first level should be a fileName that can be found in the `input.path`, and the corresponding value defines the mapping info. For a vertex type, the mapping info should includes 1) `label` of the vertex type, 2) `propertiesColMap` that describes the mapping from input field to graph property in the format of `{ columnIdx: "propertyName" }`. For an edge type, the mapping info should includes 1) `label` of the edge type, 2) `srcLabel` of the source vertex type, 3) `dstLabel` of the destination vertex type, 4) `srcPkColMap` that describes the mapping from input field to graph property of the primary keys in the source vertex type, 5) `dstPkColMap` that describes the mapping from input field to graph property of the primary keys in the destination vertex type, 6) `propertiesColMap` that describes the mapping from input field to graph property of the edge type |
   |skip.header|false|true|Whether to skip the first line of the input file|
   
+  After data building completed, you can find the output files in the `output.path` of HDFS. The output files includes a 
+  meta file named `META`, an empty file named `_SUCCESS`, and some data files that one for each partition named in the 
+  pattern of `part-r-xxxxx.sst`. The layout of the output directory should look like:
+  
+```
+/tmp/data_output
+  |- META
+  |- _SUCCESS
+  |- part-r-00000.sst
+  |- part-r-00001.sst
+  |- part-r-00002.sst
+  ...
+```
 
-#### 2. Ingest data
+#### 2. Loading graph partitions
   
   Now ingest the offline built data into the graph storage. If you have `load_data.sh`, then run:
   
@@ -76,7 +123,7 @@ skip.header=true
 
   The offline built data can be ingested successfully only once, otherwise errors will occur.
 
-#### 3. Commit data
+#### 3. Commit to store service
   
   After data ingested into graph storage, you need to commit data loading. The data will not be able to read until committed successfully. If you have `load_data.sh`, then run:
   

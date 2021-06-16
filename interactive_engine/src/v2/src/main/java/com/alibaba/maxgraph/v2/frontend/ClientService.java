@@ -73,6 +73,13 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     }
 
     @Override
+    public void getPartitionNum(GetPartitionNumRequest request, StreamObserver<GetPartitionNumResponse> responseObserver) {
+        int partitionCount = metaService.getPartitionCount();
+        responseObserver.onNext(GetPartitionNumResponse.newBuilder().setPartitionNum(partitionCount).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void prepareDataLoad(PrepareDataLoadRequest request, StreamObserver<PrepareDataLoadResponse> responseObserver) {
         for (DataLoadTargetPb dataLoadTargetPb : request.getDataLoadTargetsList()) {
             DataLoadTarget dataLoadTarget = DataLoadTarget.parseProto(dataLoadTargetPb);

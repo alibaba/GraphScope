@@ -162,6 +162,11 @@ public class Client implements Closeable {
         return response.getGraphDef().toString();
     }
 
+    public int getPartitionNum() {
+        GetPartitionNumResponse response = this.stub.getPartitionNum(GetPartitionNumRequest.newBuilder().build());
+        return response.getPartitionNum();
+    }
+
     @Override
     public void close() {
         this.channel.shutdown();

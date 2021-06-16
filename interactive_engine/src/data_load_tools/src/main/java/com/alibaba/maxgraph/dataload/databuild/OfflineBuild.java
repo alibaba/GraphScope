@@ -44,7 +44,6 @@ import java.util.*;
 public class OfflineBuild {
     private static final Logger logger = LoggerFactory.getLogger(OfflineBuild.class);
 
-    public static final String PARTITION_NUM = "partition.num";
     public static final String INPUT_PATH = "input.path";
     public static final String OUTPUT_PATH = "output.path";
     public static final String GRAPH_ENDPOINT = "graph.endpoint";
@@ -64,7 +63,6 @@ public class OfflineBuild {
         try (InputStream is = new FileInputStream(propertiesFile)) {
             properties.load(is);
         }
-        int partitionNum = Integer.parseInt(properties.getProperty(PARTITION_NUM));
         String inputPath = properties.getProperty(INPUT_PATH);
         String outputPath = properties.getProperty(OUTPUT_PATH);
         String columnMappingConfigStr = properties.getProperty(COLUMN_MAPPING_CONFIG);
@@ -84,6 +82,7 @@ public class OfflineBuild {
         }
         GraphSchema schema = client.prepareDataLoad(targets);
         String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
+        int partitionNum = client.getPartitionNum();
 
         Map<String, ColumnMappingInfo> columnMappingInfos = new HashMap<>();
         columnMappingConfig.forEach((fileName, fileColumnMapping) -> {
