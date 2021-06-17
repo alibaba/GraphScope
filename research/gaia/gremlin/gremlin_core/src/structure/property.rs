@@ -60,11 +60,11 @@ impl Encode for PropKey {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
         match self {
             PropKey::Str(s) => {
-                writer.write_u8(1)?;
+                writer.write_u8(0)?;
                 s.write_to(writer)?;
             }
             PropKey::Id(i) => {
-                writer.write_u8(2)?;
+                writer.write_u8(1)?;
                 writer.write_u32(*i)?;
             }
         }
@@ -75,12 +75,16 @@ impl Encode for PropKey {
 impl Decode for PropKey {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let kind = <u8>::read_from(reader)?;
-        if kind == 1 {
-            let prop_key = <String>::read_from(reader)?;
-            Ok(PropKey::Str(prop_key))
-        } else {
-            let prop_key = <PropId>::read_from(reader)?;
-            Ok(PropKey::Id(prop_key))
+        match kind {
+            0 => {
+                let prop_key = <String>::read_from(reader)?;
+                Ok(PropKey::Str(prop_key))
+            }
+            1 => {
+                let prop_key = <PropId>::read_from(reader)?;
+                Ok(PropKey::Id(prop_key))
+            }
+            _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
         }
     }
 }
