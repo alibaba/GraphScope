@@ -198,7 +198,7 @@ pub fn has_property_ge<O: Into<Object>>(key: PropKey, value: O) -> ElementFilter
     ElementFilter::HasProperty(HasProperty::ge(key, Some(value.into())))
 }
 
-pub fn contains_property(key: String, value: HashSet<Object>) -> ElementFilter {
+pub fn contains_property(key: PropKey, value: HashSet<Object>) -> ElementFilter {
     ElementFilter::ContainsProperty(ContainsProperty::with_in(key, value))
 }
 

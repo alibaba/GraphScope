@@ -77,17 +77,17 @@ impl Reverse for HasProperty {
 }
 
 pub struct ContainsProperty {
-    pub key: String,
+    pub key: PropKey,
     pub cmp: Contains,
     pub expect: HashSet<Object>,
 }
 
 impl ContainsProperty {
-    pub fn with_in(key: String, expect: HashSet<Object>) -> Self {
+    pub fn with_in(key: PropKey, expect: HashSet<Object>) -> Self {
         ContainsProperty { key, cmp: Contains::Within, expect }
     }
 
-    pub fn with_out(key: String, expect: HashSet<Object>) -> Self {
+    pub fn with_out(key: PropKey, expect: HashSet<Object>) -> Self {
         ContainsProperty { key, cmp: Contains::Without, expect }
     }
 }
@@ -95,7 +95,7 @@ impl ContainsProperty {
 impl<E: Element> Predicate<E> for ContainsProperty {
     fn test(&self, entry: &E) -> Option<bool> {
         let details: &DynDetails = entry.details();
-        if let Some(left) = details.get_property(self.key.as_str()) {
+        if let Some(left) = details.get_property(&self.key) {
             self.cmp.test(&left.try_to_owned().unwrap(), &self.expect)
         } else {
             None

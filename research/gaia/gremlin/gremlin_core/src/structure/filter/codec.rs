@@ -280,12 +280,18 @@ fn with_in(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter,
     match &left.item {
         Some(pb_type::key::Item::Name(name)) => {
             if let Some(right) = right {
-                Ok(contains_property(name.clone(), right))
+                Ok(contains_property(name.into(), right))
             } else {
                 Err(ParseError::InvalidData)
             }
         }
-        Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
+        Some(pb_type::key::Item::NameId(prop_id)) => {
+            if let Some(right) = right {
+                Ok(contains_property((*prop_id).into(), right))
+            } else {
+                Err(ParseError::InvalidData)
+            }
+        },
         Some(pb_type::key::Item::Id(_)) => {
             if let Some(right) = right {
                 let mut right_ids = HashSet::new();
