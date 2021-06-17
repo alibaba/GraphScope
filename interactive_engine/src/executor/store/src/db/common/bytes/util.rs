@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use serde::export::PhantomData;
+use std::marker::PhantomData;
 use protobuf::Message;
 use crate::db::api::{GraphResult, GraphError};
 use crate::db::api::GraphErrorCode::InvalidData;
