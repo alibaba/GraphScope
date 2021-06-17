@@ -34,15 +34,17 @@ use store::v2::global_graph_schema::GlobalGraphSchema;
 
 pub struct GlobalGraph {
     graph_partitions: HashMap<PartitionId, Arc<GraphStore>>,
+    total_partition: u32,
 }
 
 unsafe impl Send for GlobalGraph {}
 unsafe impl Sync for GlobalGraph {}
 
 impl GlobalGraph {
-    pub fn empty() -> Self {
+    pub fn empty(total_partition: u32) -> Self {
         GlobalGraph {
             graph_partitions: HashMap::new(),
+            total_partition,
         }
     }
 
@@ -60,6 +62,7 @@ impl GlobalGraph {
         }
         Ok(GlobalGraph {
             graph_partitions,
+            total_partition: graph_config.get_storage_option("partition.count").unwrap().parse().unwrap(),
         })
     }
 
@@ -486,7 +489,7 @@ impl GlobalGraphQuery for GlobalGraph {
 
 impl GraphPartitionManager for GlobalGraph {
     fn get_partition_id(&self, vid: i64) -> i32 {
-        let partition_count = self.graph_partitions.len();
+        let partition_count = self.total_partition;
         floor_mod(vid, partition_count as i64) as i32
     }
 

@@ -41,11 +41,12 @@ impl ExecutorServer {
     pub fn new(graph_config: Arc<GraphConfig>) -> GraphResult<Self> {
         let node_id = graph_config.get_storage_option("node.idx").unwrap().parse::<usize>().unwrap();
         let store_config = Arc::new(StoreConfig::init_from_config(graph_config.get_storage_options()));
+        let partition = store_config.partition_num;
         info!("store config created {:?}",store_config);
         Ok(ExecutorServer {
             graph_config,
             store_config,
-            graph: Arc::new(GlobalGraph::empty()),
+            graph: Arc::new(GlobalGraph::empty(partition)),
             listener: None,
             node_id,
             partition_worker_ids: HashMap::new(),
