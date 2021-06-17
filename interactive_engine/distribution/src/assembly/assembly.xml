@@ -13,7 +13,7 @@
         <fileSet>
             <directory>${project.parent.basedir}/src/executor/target</directory>
             <includes>
-                <include>libmaxgraph_runtime*</include>
+                <include>libmaxgraph_jna*</include>
             </includes>
             <outputDirectory>native</outputDirectory>
         </fileSet>

@@ -76,6 +76,3 @@ pub mod rpc;
 pub mod dataflow;
 #[allow(bare_trait_objects)]
 pub mod store;
-mod jna;
-
-

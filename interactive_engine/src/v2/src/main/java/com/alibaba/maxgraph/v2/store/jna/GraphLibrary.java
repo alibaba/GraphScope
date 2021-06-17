@@ -20,7 +20,7 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 
 public interface GraphLibrary extends Library {
-    GraphLibrary INSTANCE = Native.load("maxgraph_runtime", GraphLibrary.class);
+    GraphLibrary INSTANCE = Native.load("maxgraph_jna", GraphLibrary.class);
 
     Pointer openGraphStore(byte[] config, int len);
     boolean closeGraphStore(Pointer pointer);
