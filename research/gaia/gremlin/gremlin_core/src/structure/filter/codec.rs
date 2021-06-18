@@ -16,7 +16,7 @@
 use crate::generated::common as pb_type;
 use crate::generated::gremlin as pb;
 use crate::structure::filter::*;
-use crate::structure::Label;
+use crate::structure::{Label, PropId};
 use crate::Element;
 use dyn_type::{CastError, Object, Primitives};
 use graph_store::prelude::INVALID_LABEL_ID;
@@ -196,9 +196,9 @@ fn eq(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, Pars
         Some(pb_type::key::Item::NameId(prop_id)) => {
             if let Some(value) = right {
                 // TODO(longbin) String clone, potentially downgrade performance
-                Ok(has_property((*prop_id).into(), value))
+                Ok(has_property((*prop_id as PropId).into(), value))
             } else {
-                Ok(by_property((*prop_id).into()))
+                Ok(by_property((*prop_id as PropId).into()))
             }
         }
         Some(pb_type::key::Item::Id(_)) => {
@@ -236,9 +236,9 @@ fn lt(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, Pars
         Some(pb_type::key::Item::NameId(prop_id)) => {
             let right: Option<Object> = pb_value_to_object(right);
             if let Some(value) = right {
-                Ok(has_property_lt((*prop_id).into(), value))
+                Ok(has_property_lt((*prop_id as PropId).into(), value))
             } else {
-                Ok(by_property_lt((*prop_id).into()))
+                Ok(by_property_lt((*prop_id as PropId).into()))
             }
         }
         Some(pb_type::key::Item::Id(_)) | Some(pb_type::key::Item::Label(_)) => {
@@ -262,9 +262,9 @@ fn lte(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, Par
         Some(pb_type::key::Item::NameId(prop_id)) => {
             let right: Option<Object> = pb_value_to_object(right);
             if let Some(value) = right {
-                Ok(has_property_le((*prop_id).into(), value))
+                Ok(has_property_le((*prop_id as PropId).into(), value))
             } else {
-                Ok(by_property_le((*prop_id).into()))
+                Ok(by_property_le((*prop_id as PropId).into()))
             }
         }
         Some(pb_type::key::Item::Id(_)) | Some(pb_type::key::Item::Label(_)) => {
@@ -287,11 +287,11 @@ fn with_in(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter,
         }
         Some(pb_type::key::Item::NameId(prop_id)) => {
             if let Some(right) = right {
-                Ok(contains_property((*prop_id).into(), right))
+                Ok(contains_property((*prop_id as PropId).into(), right))
             } else {
                 Err(ParseError::InvalidData)
             }
-        },
+        }
         Some(pb_type::key::Item::Id(_)) => {
             if let Some(right) = right {
                 let mut right_ids = HashSet::new();

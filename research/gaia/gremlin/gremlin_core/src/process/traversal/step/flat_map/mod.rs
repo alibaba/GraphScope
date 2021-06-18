@@ -52,7 +52,7 @@ impl FlatMapFuncGen for pb::GremlinStep {
                         .iter()
                         .map(|prop_name| prop_name.into())
                         .collect();
-                    Ok(Box::new(PropertiesStep { props: prop_keys, tags }))
+                    Ok(Box::new(PropertiesStep { prop_keys, tags }))
                 }
                 pb::gremlin_step::Step::UnfoldStep(unfold_step) => Ok(Box::new(unfold_step)),
                 _ => Err(str_to_dyn_error("pb GremlinStep is not a FlatMap Step")),

@@ -20,7 +20,7 @@ use bit_set::BitSet;
 use pegasus::api::function::FlatMapFunction;
 
 pub struct PropertiesStep {
-    pub props: Vec<PropKey>,
+    pub prop_keys: Vec<PropKey>,
     pub tags: BitSet,
 }
 
@@ -30,7 +30,7 @@ impl FlatMapFunction<Traverser, Traverser> for PropertiesStep {
     fn exec(&self, input: Traverser) -> DynResult<DynIter<Traverser>> {
         if let Some(elem) = input.get_element() {
             let mut result = vec![];
-            for prop_name in self.props.iter() {
+            for prop_name in self.prop_keys.iter() {
                 let prop_value = elem.details().get_property(prop_name);
                 if let Some(prop_value) = prop_value {
                     let mut traverser = input.clone();

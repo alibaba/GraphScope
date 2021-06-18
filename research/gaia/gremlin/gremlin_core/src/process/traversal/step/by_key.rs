@@ -16,7 +16,7 @@
 use crate::generated::common as common_pb;
 use crate::generated::gremlin as pb;
 use crate::structure::codec::ParseError;
-use crate::structure::{PropKey, Tag, Token};
+use crate::structure::{PropId, PropKey, Tag, Token};
 use crate::FromPb;
 
 /// Define the possible options in Gremlin's `by()-step`
@@ -47,7 +47,9 @@ impl FromPb<common_pb::Key> for Token {
     {
         match token_pb.item {
             Some(common_pb::key::Item::Name(prop_name)) => Ok(Token::Property(prop_name.into())),
-            Some(common_pb::key::Item::NameId(prop_id)) => Ok(Token::Property(prop_id.into())),
+            Some(common_pb::key::Item::NameId(prop_id)) => {
+                Ok(Token::Property((prop_id as PropId).into()))
+            }
             Some(common_pb::key::Item::Id(_)) => Ok(Token::Id),
             Some(common_pb::key::Item::Label(_)) => Ok(Token::Label),
             _ => Err(ParseError::InvalidData),
@@ -62,7 +64,7 @@ impl FromPb<pb::ByKey> for ByStepOption {
     {
         match by_key_pb.item {
             Some(pb::by_key::Item::Key(key)) => Ok(ByStepOption::OptToken(Token::from_pb(key)?)),
-            // TODO: should be prop_name or prop_id
+            // TODO(bingqing): should be prop_name or prop_id
             Some(pb::by_key::Item::Name(properties_pb)) => {
                 let mut properties = vec![];
                 for prop_name in properties_pb.item {

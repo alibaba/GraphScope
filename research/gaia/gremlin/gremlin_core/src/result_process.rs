@@ -95,13 +95,13 @@ fn property_to_pb(result_property: &ResultProperty) -> result_pb::TagEntries {
             let mut props_pb = vec![];
             for (prop_name, prop_val) in value_map {
                 let pb_value = object_to_pb_value(prop_val);
-                // TODO: should be prop_name or prop_id
                 let property = match prop_name {
                     PropKey::Str(prop_name) => {
                         result_pb::Property { key: prop_name.to_string(), value: Some(pb_value) }
                     }
-                    PropKey::Id(prop_id) => {
-                        result_pb::Property { key: (*prop_id).to_string(), value: Some(pb_value) }
+                    PropKey::Id(_prop_id) => {
+                        // TODO(bingqing): should be prop_name or prop_id in proto
+                        unimplemented!()
                     }
                 };
 

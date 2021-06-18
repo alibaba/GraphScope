@@ -219,9 +219,9 @@ pub mod test {
                                     let tag_entry: Vec<(PropKey, Object)> = if let Some(element) =
                                         one_tag_value.graph_element.as_ref()
                                     {
-                                        vec![("".to_string().into(), element.id().into())]
+                                        vec![("".into(), element.id().into())]
                                     } else if let Some(value) = one_tag_value.value.as_ref() {
-                                        vec![("".to_string().into(), value.clone())]
+                                        vec![("".into(), value.clone())]
                                     } else {
                                         let value_map = one_tag_value
                                             .properties
@@ -414,8 +414,8 @@ pub mod test {
     impl Output for TestOutputStruct {
         fn send(&self, res: JobResponse) {
             if let Some(result) = res.result {
-                if let JobResult::Err(_) = result {
-                    panic!("send result into test output failure");
+                if let JobResult::Err(e) = result {
+                    panic!("send result into test output failure {:?}", e);
                 }
             }
         }

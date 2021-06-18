@@ -50,9 +50,15 @@ impl From<&String> for PropKey {
     }
 }
 
-impl From<i32> for PropKey {
-    fn from(prop_id: i32) -> Self {
-        PropKey::Id(prop_id as PropId)
+impl From<&str> for PropKey {
+    fn from(prop_name: &str) -> Self {
+        PropKey::Str(prop_name.to_string())
+    }
+}
+
+impl From<PropId> for PropKey {
+    fn from(prop_id: PropId) -> Self {
+        PropKey::Id(prop_id)
     }
 }
 

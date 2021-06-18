@@ -68,9 +68,7 @@ mod test {
         initialize();
         let expected: Vec<Vec<(Tag, Vec<(PropKey, Object)>)>> = vec![1, 2, 3, 4, 5, 6]
             .into_iter()
-            .map(|id| {
-                vec![(0 as Tag, vec![("".to_string().into(), (to_global_id(id) as i64).into())])]
-            })
+            .map(|id| vec![(0 as Tag, vec![("".into(), (to_global_id(id) as i64).into())])])
             .collect();
         let mut test_job_factory = TestJobFactory::with_expect_get_properties(expected);
         test_job_factory.set_requirement(Requirement::LABELED_PATH);
@@ -84,7 +82,7 @@ mod test {
         initialize();
         let expected: Vec<Vec<(Tag, Vec<(PropKey, Object)>)>> = vec![0, 0, 1, 0, 1, 0]
             .into_iter()
-            .map(|label_id| vec![(0 as Tag, vec![("".to_string().into(), label_id.into())])])
+            .map(|label_id| vec![(0 as Tag, vec![("".into(), label_id.into())])])
             .collect();
         let mut test_job_factory = TestJobFactory::with_expect_get_properties(expected);
         test_job_factory.set_requirement(Requirement::LABELED_PATH);
@@ -98,7 +96,7 @@ mod test {
         initialize();
         let expected: Vec<Vec<(Tag, Vec<(PropKey, Object)>)>> = vec![1, 2, 3, 4, 5, 6]
             .into_iter()
-            .map(|id| vec![(0 as Tag, vec![("".to_string().into(), id.into())])])
+            .map(|id| vec![(0 as Tag, vec![("".into(), id.into())])])
             .collect();
         let mut test_job_factory = TestJobFactory::with_expect_get_properties(expected);
         test_job_factory.set_requirement(Requirement::LABELED_PATH);
@@ -111,20 +109,8 @@ mod test {
     fn select_step_test_04() {
         initialize();
         let expected: Vec<Vec<(Tag, Vec<(PropKey, Object)>)>> = vec![
-            vec![(
-                0,
-                vec![
-                    ("id".to_string().into(), 3.into()),
-                    ("name".to_string().into(), "lop".into()),
-                ],
-            )],
-            vec![(
-                0,
-                vec![
-                    ("id".to_string().into(), 5.into()),
-                    ("name".to_string().into(), "ripple".into()),
-                ],
-            )],
+            vec![(0, vec![("id".into(), 3.into()), ("name".into(), "lop".into())])],
+            vec![(0, vec![("id".into(), 5.into()), ("name".into(), "ripple".into())])],
         ];
         let mut test_job_factory = TestJobFactory::with_expect_get_properties(expected);
         test_job_factory.set_requirement(Requirement::LABELED_PATH);
@@ -137,14 +123,8 @@ mod test {
     fn select_step_test_05() {
         initialize();
         let expected: Vec<Vec<(Tag, Vec<(PropKey, Object)>)>> = vec![
-            vec![
-                (0, vec![("".to_string().into(), 3.into())]),
-                (1, vec![("".to_string().into(), "lop".into())]),
-            ],
-            vec![
-                (0, vec![("".to_string().into(), 5.into())]),
-                (1, vec![("".to_string().into(), "ripple".into())]),
-            ],
+            vec![(0, vec![("".into(), 3.into())]), (1, vec![("".into(), "lop".into())])],
+            vec![(0, vec![("".into(), 5.into())]), (1, vec![("".into(), "ripple".into())])],
         ];
         let mut test_job_factory = TestJobFactory::with_expect_get_properties(expected);
         test_job_factory.set_requirement(Requirement::LABELED_PATH);
@@ -158,24 +138,12 @@ mod test {
         initialize();
         let expected: Vec<Vec<(Tag, Vec<(PropKey, Object)>)>> = vec![
             vec![
-                (0, vec![("".to_string().into(), 3.into())]),
-                (
-                    1,
-                    vec![
-                        ("id".to_string().into(), 3.into()),
-                        ("name".to_string().into(), "lop".into()),
-                    ],
-                ),
+                (0, vec![("".into(), 3.into())]),
+                (1, vec![("id".into(), 3.into()), ("name".into(), "lop".into())]),
             ],
             vec![
-                (0, vec![("".to_string().into(), 5.into())]),
-                (
-                    1,
-                    vec![
-                        ("id".to_string().into(), 5.into()),
-                        ("name".to_string().into(), "ripple".into()),
-                    ],
-                ),
+                (0, vec![("".into(), 5.into())]),
+                (1, vec![("id".into(), 5.into()), ("name".into(), "ripple".into())]),
             ],
         ];
         let mut test_job_factory = TestJobFactory::with_expect_get_properties(expected);
