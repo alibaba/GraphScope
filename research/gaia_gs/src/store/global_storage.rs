@@ -17,7 +17,7 @@ pub type RuntimeLabelId = u8;
 use crate::store::util::{str_to_dyn_error, IterList};
 use dyn_type::{Object, Primitives};
 use gremlin_core::structure::{
-    DefaultDetails, Direction, DynDetails, Edge, Label, QueryParams, Statement, Vertex,
+    DefaultDetails, Direction, DynDetails, Edge, Label, PropKey, QueryParams, Statement, Vertex,
 };
 use gremlin_core::{register_graph, DynIter, DynResult, GraphProxy, Partitioner, ID};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
@@ -344,15 +344,7 @@ fn to_runtime_vertex<V: StoreVertex>(v: &V, schema: Arc<dyn Schema>) -> Vertex {
     let label = encode_runtime_label(v.get_label_id());
     let properties = v
         .get_properties()
-        .map(|(prop_id, prop_val)| {
-            if let Some(prop_name) = schema.get_prop_name(prop_id) {
-                (prop_name, encode_property(prop_val))
-            } else {
-                // TODO(bingqing): throw error
-                info!("get prop_id failed, return prop_id.to_string() for test");
-                ((prop_id).to_string(), encode_property(prop_val))
-            }
-        })
+        .map(|(prop_id, prop_val)| encode_property(prop_id, prop_val, schema.clone()))
         .collect();
     let details = DefaultDetails::new_with_prop(id, label.clone().unwrap(), properties);
     Vertex::new(id, label, details)
@@ -364,15 +356,7 @@ fn to_runtime_edge<E: StoreEdge>(e: &E, schema: Arc<dyn Schema>) -> Edge {
     let label = encode_runtime_label(e.get_label_id());
     let properties = e
         .get_properties()
-        .map(|(prop_id, prop_val)| {
-            if let Some(prop_name) = schema.get_prop_name(prop_id) {
-                (prop_name, encode_property(prop_val))
-            } else {
-                // TODO(bingqing): throw error
-                info!("get prop_id failed, return prop_id.to_string() for test");
-                ((prop_id).to_string(), encode_property(prop_val))
-            }
-        })
+        .map(|(prop_id, prop_val)| encode_property(prop_id, prop_val, schema.clone()))
         .collect();
     Edge::new(
         id,
@@ -444,8 +428,18 @@ fn encode_runtime_label(l: LabelId) -> Option<Label> {
     Some(Label::Id(l as RuntimeLabelId))
 }
 
-fn encode_property(prop: Property) -> Object {
-    match prop {
+fn encode_property(
+    prop_id: PropId,
+    prop_val: Property,
+    schema: Arc<dyn Schema>,
+) -> (PropKey, Object) {
+    let prop_key = if let Some(prop_name) = schema.get_prop_name(prop_id) {
+        // TODO(bingqing): store prop_name just for test now, will only store prop_id when compiler supports prop_id
+        PropKey::Str(prop_name)
+    } else {
+        PropKey::Id(prop_id)
+    };
+    let prop_val = match prop_val {
         Property::Bool(b) => b.into(),
         Property::Char(c) => Object::Primitive(Primitives::Byte(c as i8)),
         Property::Short(s) => Object::Primitive(Primitives::Integer(s as i32)),
@@ -456,7 +450,8 @@ fn encode_property(prop: Property) -> Object {
         Property::Bytes(v) => Object::Blob(v.into_boxed_slice()),
         Property::String(s) => Object::String(s),
         _ => unimplemented!(),
-    }
+    };
+    (prop_key, prop_val)
 }
 
 fn build_partition_label_vertex_ids(
