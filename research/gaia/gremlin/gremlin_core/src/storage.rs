@@ -14,8 +14,8 @@
 //! limitations under the License.
 
 use crate::structure::{
-    DefaultDetails, Details, Direction, DynDetails, Edge, Label, QueryParams, Statement, Vertex,
-    ID_BITS,
+    DefaultDetails, Details, Direction, DynDetails, Edge, Label, PropKey, QueryParams, Statement,
+    Vertex, ID_BITS,
 };
 use crate::{register_graph, DynResult, GraphProxy, ID};
 use dyn_type::BorrowObject;
@@ -358,14 +358,17 @@ fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<String
     let label = encode_runtime_v_label(&v);
     let mut properties = HashMap::new();
     if props.is_empty() {
-        if let Some(prop_vals) = v.clone_all_properties() {
-            properties = prop_vals;
+        if let Some(mut prop_vals) = v.clone_all_properties() {
+            // TODO: shall we directly return PropKey?
+            for (prop, obj) in prop_vals.drain() {
+                properties.insert(prop.into(), obj);
+            }
         }
     } else {
         for prop in props {
             if let Some(val) = v.get_property(prop) {
                 if let Some(obj) = val.try_to_owned() {
-                    properties.insert(prop.clone(), obj);
+                    properties.insert(prop.into(), obj);
                 }
             }
         }
@@ -383,8 +386,11 @@ fn to_runtime_edge(
     let id = encode_runtime_e_id(&e);
     let label = encode_runtime_e_label(&e);
     let mut properties = HashMap::new();
-    if let Some(prop_vals) = e.clone_all_properties() {
-        properties = prop_vals;
+    if let Some(mut prop_vals) = e.clone_all_properties() {
+        // TODO: shall we directly return PropKey?
+        for (prop, obj) in prop_vals.drain() {
+            properties.insert(prop.into(), obj);
+        }
     }
     Edge::new(
         id,
@@ -411,27 +417,32 @@ impl LazyVertexDetails {
 }
 
 impl Details for LazyVertexDetails {
-    fn get_property(&self, key: &str) -> Option<BorrowObject> {
-        let mut ptr = self.inner.load(Ordering::SeqCst);
-        if ptr.is_null() {
-            if let Some(v) = self.store.get_vertex(self.id) {
-                let v = Box::new(v);
-                let new_ptr = Box::into_raw(v);
-                let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
-                if swapped.is_null() {
-                    ptr = new_ptr;
+    fn get_property(&self, key: &PropKey) -> Option<BorrowObject> {
+        if let PropKey::Str(key) = key {
+            let mut ptr = self.inner.load(Ordering::SeqCst);
+            if ptr.is_null() {
+                if let Some(v) = self.store.get_vertex(self.id) {
+                    let v = Box::new(v);
+                    let new_ptr = Box::into_raw(v);
+                    let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
+                    if swapped.is_null() {
+                        ptr = new_ptr;
+                    } else {
+                        unsafe {
+                            std::ptr::drop_in_place(new_ptr);
+                        }
+                        ptr = swapped
+                    };
                 } else {
-                    unsafe {
-                        std::ptr::drop_in_place(new_ptr);
-                    }
-                    ptr = swapped
-                };
-            } else {
-                return None;
+                    return None;
+                }
             }
-        }
 
-        unsafe { (*ptr).get_property(key) }
+            unsafe { (*ptr).get_property(key) }
+        } else {
+            info!("Have not support getting property by prop_id in experiments store yet");
+            None
+        }
     }
 
     fn get_id(&self) -> ID {
@@ -462,7 +473,7 @@ struct LazyEdgeDetails {
 impl_as_any!(LazyEdgeDetails);
 
 impl Details for LazyEdgeDetails {
-    fn get_property(&self, _key: &str) -> Option<BorrowObject> {
+    fn get_property(&self, _key: &PropKey) -> Option<BorrowObject> {
         unimplemented!()
     }
 

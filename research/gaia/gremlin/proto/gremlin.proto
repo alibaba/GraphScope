@@ -210,6 +210,7 @@ message ByKey {
     // by(id/label/property/values("p1","p2")
     common.Key key = 1;
     // by(valueMap("prop1", "prop2")), empty means all
+    // TODO(bingqing): StringArray or Int32Array
     common.StringArray name = 2;
     // by(keys)
     MapKey map_keys = 3;
@@ -279,6 +280,7 @@ message GroupByUnfold {
 message PathLocalCountStep{}
 
 message PropertiesStep {
+  // TODO(bingqing): StringArray or Int32Array
   repeated string properties = 1;
 }
 

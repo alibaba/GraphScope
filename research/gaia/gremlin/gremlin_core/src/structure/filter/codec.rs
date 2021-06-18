@@ -16,7 +16,7 @@
 use crate::generated::common as pb_type;
 use crate::generated::gremlin as pb;
 use crate::structure::filter::*;
-use crate::structure::Label;
+use crate::structure::{Label, PropId};
 use crate::Element;
 use dyn_type::{CastError, Object, Primitives};
 use graph_store::prelude::INVALID_LABEL_ID;
@@ -185,15 +185,22 @@ pub fn parse_node<E: Element>(
 fn eq(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, ParseError> {
     let right: Option<Object> = pb_value_to_object(right);
     match &left.item {
-        Some(pb_type::key::Item::Name(name)) => {
+        Some(pb_type::key::Item::Name(prop_name)) => {
             if let Some(value) = right {
                 // TODO(longbin) String clone, potentially downgrade performance
-                Ok(has_property(name.clone(), value))
+                Ok(has_property(prop_name.into(), value))
             } else {
-                Ok(by_property(name.clone()))
+                Ok(by_property(prop_name.into()))
             }
         }
-        Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
+        Some(pb_type::key::Item::NameId(prop_id)) => {
+            if let Some(value) = right {
+                // TODO(longbin) String clone, potentially downgrade performance
+                Ok(has_property((*prop_id as PropId).into(), value))
+            } else {
+                Ok(by_property((*prop_id as PropId).into()))
+            }
+        }
         Some(pb_type::key::Item::Id(_)) => {
             let r = right.map(|r| r.as_u128()).transpose()?;
             Ok(has_id(r))
@@ -221,12 +228,19 @@ fn lt(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, Pars
             let right: Option<Object> = pb_value_to_object(right);
             if let Some(value) = right {
                 // TODO(longbin) String clone, potentially downgrade performance
-                Ok(has_property_lt(name.clone(), value))
+                Ok(has_property_lt(name.into(), value))
             } else {
-                Ok(by_property_lt(name.clone()))
+                Ok(by_property_lt(name.into()))
             }
         }
-        Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
+        Some(pb_type::key::Item::NameId(prop_id)) => {
+            let right: Option<Object> = pb_value_to_object(right);
+            if let Some(value) = right {
+                Ok(has_property_lt((*prop_id as PropId).into(), value))
+            } else {
+                Ok(by_property_lt((*prop_id as PropId).into()))
+            }
+        }
         Some(pb_type::key::Item::Id(_)) | Some(pb_type::key::Item::Label(_)) => {
             Err(ParseError::OtherErr("Can only compare for property values;".to_string()))
         }
@@ -240,12 +254,19 @@ fn lte(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, Par
         Some(pb_type::key::Item::Name(name)) => {
             let right: Option<Object> = pb_value_to_object(right);
             if let Some(value) = right {
-                Ok(has_property_le(name.clone(), value))
+                Ok(has_property_le(name.into(), value))
             } else {
-                Ok(by_property_le(name.clone()))
+                Ok(by_property_le(name.into()))
             }
         }
-        Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
+        Some(pb_type::key::Item::NameId(prop_id)) => {
+            let right: Option<Object> = pb_value_to_object(right);
+            if let Some(value) = right {
+                Ok(has_property_le((*prop_id as PropId).into(), value))
+            } else {
+                Ok(by_property_le((*prop_id as PropId).into()))
+            }
+        }
         Some(pb_type::key::Item::Id(_)) | Some(pb_type::key::Item::Label(_)) => {
             Err(ParseError::OtherErr("Can only compare for property values;".to_string()))
         }
@@ -259,12 +280,18 @@ fn with_in(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter,
     match &left.item {
         Some(pb_type::key::Item::Name(name)) => {
             if let Some(right) = right {
-                Ok(contains_property(name.clone(), right))
+                Ok(contains_property(name.into(), right))
             } else {
                 Err(ParseError::InvalidData)
             }
         }
-        Some(pb_type::key::Item::NameId(_)) => unimplemented!(),
+        Some(pb_type::key::Item::NameId(prop_id)) => {
+            if let Some(right) = right {
+                Ok(contains_property((*prop_id as PropId).into(), right))
+            } else {
+                Err(ParseError::InvalidData)
+            }
+        }
         Some(pb_type::key::Item::Id(_)) => {
             if let Some(right) = right {
                 let mut right_ids = HashSet::new();

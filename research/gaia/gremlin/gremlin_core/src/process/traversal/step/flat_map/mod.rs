@@ -46,7 +46,13 @@ impl FlatMapFuncGen for pb::GremlinStep {
                     vertex_step.gen_flat_map()
                 }
                 pb::gremlin_step::Step::PropertiesStep(properties_step) => {
-                    Ok(Box::new(PropertiesStep { props: properties_step.properties.clone(), tags }))
+                    // TODO: should pass prop_name or prop_id
+                    let prop_keys = properties_step
+                        .properties
+                        .iter()
+                        .map(|prop_name| prop_name.into())
+                        .collect();
+                    Ok(Box::new(PropertiesStep { prop_keys, tags }))
                 }
                 pb::gremlin_step::Step::UnfoldStep(unfold_step) => Ok(Box::new(unfold_step)),
                 _ => Err(str_to_dyn_error("pb GremlinStep is not a FlatMap Step")),
