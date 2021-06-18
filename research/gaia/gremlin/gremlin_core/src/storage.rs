@@ -418,34 +418,31 @@ impl LazyVertexDetails {
 
 impl Details for LazyVertexDetails {
     fn get_property(&self, key: &PropKey) -> Option<BorrowObject> {
-        let key = match key {
-            PropKey::Str(key) => key,
-            PropKey::Id(_) => {
-                // TODO: support getting property by prop_id in experiments store
-                info!("Have not support getting property by prop_id in experiments store yet");
-                ""
-            }
-        };
-        let mut ptr = self.inner.load(Ordering::SeqCst);
-        if ptr.is_null() {
-            if let Some(v) = self.store.get_vertex(self.id) {
-                let v = Box::new(v);
-                let new_ptr = Box::into_raw(v);
-                let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
-                if swapped.is_null() {
-                    ptr = new_ptr;
+        if let PropKey::Str(key) = key {
+            let mut ptr = self.inner.load(Ordering::SeqCst);
+            if ptr.is_null() {
+                if let Some(v) = self.store.get_vertex(self.id) {
+                    let v = Box::new(v);
+                    let new_ptr = Box::into_raw(v);
+                    let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
+                    if swapped.is_null() {
+                        ptr = new_ptr;
+                    } else {
+                        unsafe {
+                            std::ptr::drop_in_place(new_ptr);
+                        }
+                        ptr = swapped
+                    };
                 } else {
-                    unsafe {
-                        std::ptr::drop_in_place(new_ptr);
-                    }
-                    ptr = swapped
-                };
-            } else {
-                return None;
+                    return None;
+                }
             }
-        }
 
-        unsafe { (*ptr).get_property(key) }
+            unsafe { (*ptr).get_property(key) }
+        } else {
+            info!("Have not support getting property by prop_id in experiments store yet");
+            None
+        }
     }
 
     fn get_id(&self) -> ID {
