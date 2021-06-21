@@ -190,30 +190,6 @@ impl MockGraphPartition {
     }
 }
 
-fn trans_partition_vertex_ids(src_ids: Vec<PartitionVertexIds>) -> i64 {
-    if src_ids.len() > 1 {
-        panic!("vertices len should be 1 ")
-    }
-    let (_pid, vertices) = src_ids.get(0).unwrap();
-    if vertices.len() == 1 {
-        vertices[0]
-    } else {
-        panic!("vertices len should be 1 ")
-    }
-}
-
-fn trans_label_partition_vertex_ids(src_ids: Vec<PartitionLabeledVertexIds>) -> Vec<VertexId> {
-    if src_ids.len() > 1 {
-        panic!("vertices len should be 1 ")
-    }
-    let (_pid, label_vertices) = src_ids.get(0).unwrap();
-    if label_vertices.len() > 1 {
-        panic!("vertices len should be 1 ")
-    }
-    let (_label, vertices) = label_vertices.get(0).unwrap();
-    vertices.clone()
-}
-
 // TODO(bingqing): confirm with graphscope: output_prop_ids of Some(vec![]) means no property needed; and output_prop_ids of None means all properties needed
 fn clone_vertex_with_property(
     v: &LocalStoreVertex,
@@ -250,34 +226,30 @@ fn clone_edge_with_property(
     }
 }
 
-impl GlobalGraphQuery for MockGraphPartition {
-    type V = LocalStoreVertex;
-    type E = LocalStoreEdge;
-    type VI = IntoIter<LocalStoreVertex>;
-    type EI = IntoIter<LocalStoreEdge>;
-
+impl MockGraphPartition {
     fn get_out_vertex_ids(
         &self,
         _si: i64,
-        src_ids: Vec<PartitionVertexIds>,
+        src_ids: &Vec<i64>,
         edge_labels: &Vec<u32>,
         _condition: Option<&Condition>,
         _dedup_prop_ids: Option<&Vec<u32>>,
         _limit: usize,
-    ) -> Box<dyn Iterator<Item = (i64, Self::VI)>> {
-        let src_id = trans_partition_vertex_ids(src_ids);
+    ) -> Box<dyn Iterator<Item = (i64, IntoIter<LocalStoreVertex>)>> {
         let mut result = Vec::new();
-        if let Some(out_edge_list) = self.out_edge_list.get(&src_id) {
-            let mut out_vertices = Vec::new();
-            for out_edge in out_edge_list {
-                if edge_labels.is_empty() || edge_labels.contains(&out_edge.get_label_id()) {
-                    out_vertices.push(LocalStoreVertex::new(
-                        out_edge.get_dst_id(),
-                        out_edge.get_dst_label_id(),
-                    ))
+        for src_id in src_ids {
+            if let Some(out_edge_list) = self.out_edge_list.get(src_id) {
+                let mut out_vertices = Vec::new();
+                for out_edge in out_edge_list {
+                    if edge_labels.is_empty() || edge_labels.contains(&out_edge.get_label_id()) {
+                        out_vertices.push(LocalStoreVertex::new(
+                            out_edge.get_dst_id(),
+                            out_edge.get_dst_label_id(),
+                        ))
+                    }
                 }
+                result.push((*src_id, out_vertices.into_iter()));
             }
-            result.push((src_id, out_vertices.into_iter()));
         }
         Box::new(result.into_iter())
     }
@@ -285,24 +257,25 @@ impl GlobalGraphQuery for MockGraphPartition {
     fn get_out_edges(
         &self,
         _si: i64,
-        src_ids: Vec<PartitionVertexIds>,
+        src_ids: &Vec<i64>,
         edge_labels: &Vec<u32>,
         _condition: Option<&Condition>,
         _dedup_prop_ids: Option<&Vec<u32>>,
         output_prop_ids: Option<&Vec<u32>>,
         _limit: usize,
-    ) -> Box<dyn Iterator<Item = (i64, Self::EI)>> {
-        let src_id = trans_partition_vertex_ids(src_ids);
+    ) -> Box<dyn Iterator<Item = (i64, IntoIter<LocalStoreEdge>)>> {
         let mut result = Vec::new();
-        if let Some(out_edge_list) = self.out_edge_list.get(&src_id) {
-            let mut out_edges = vec![];
-            for out_edge in out_edge_list {
-                if edge_labels.is_empty() || edge_labels.contains(&out_edge.get_label_id()) {
-                    let e = clone_edge_with_property(out_edge, output_prop_ids);
-                    out_edges.push(e);
+        for src_id in src_ids {
+            if let Some(out_edge_list) = self.out_edge_list.get(src_id) {
+                let mut out_edges = vec![];
+                for out_edge in out_edge_list {
+                    if edge_labels.is_empty() || edge_labels.contains(&out_edge.get_label_id()) {
+                        let e = clone_edge_with_property(out_edge, output_prop_ids);
+                        out_edges.push(e);
+                    }
                 }
+                result.push((*src_id, out_edges.into_iter()));
             }
-            result.push((src_id, out_edges.into_iter()));
         }
         Box::new(result.into_iter())
     }
@@ -310,25 +283,26 @@ impl GlobalGraphQuery for MockGraphPartition {
     fn get_in_vertex_ids(
         &self,
         _si: i64,
-        dst_ids: Vec<(u32, Vec<i64>)>,
+        dst_ids: &Vec<i64>,
         edge_labels: &Vec<u32>,
         _condition: Option<&Condition>,
         _dedup_prop_ids: Option<&Vec<u32>>,
         _limit: usize,
-    ) -> Box<dyn Iterator<Item = (i64, Self::VI)>> {
-        let src_id = trans_partition_vertex_ids(dst_ids);
+    ) -> Box<dyn Iterator<Item = (i64, IntoIter<LocalStoreVertex>)>> {
         let mut result = Vec::new();
-        if let Some(out_edge_list) = self.in_edge_list.get(&src_id) {
-            let mut out_vertices = Vec::new();
-            for out_edge in out_edge_list {
-                if edge_labels.is_empty() || edge_labels.contains(&out_edge.get_label_id()) {
-                    out_vertices.push(LocalStoreVertex::new(
-                        out_edge.get_src_id(),
-                        out_edge.get_src_label_id(),
-                    ))
+        for dst_id in dst_ids {
+            if let Some(out_edge_list) = self.in_edge_list.get(dst_id) {
+                let mut out_vertices = Vec::new();
+                for out_edge in out_edge_list {
+                    if edge_labels.is_empty() || edge_labels.contains(&out_edge.get_label_id()) {
+                        out_vertices.push(LocalStoreVertex::new(
+                            out_edge.get_src_id(),
+                            out_edge.get_src_label_id(),
+                        ))
+                    }
                 }
+                result.push((*dst_id, out_vertices.into_iter()));
             }
-            result.push((src_id, out_vertices.into_iter()));
         }
         Box::new(result.into_iter())
     }
@@ -336,72 +310,45 @@ impl GlobalGraphQuery for MockGraphPartition {
     fn get_in_edges(
         &self,
         _si: i64,
-        dst_ids: Vec<(u32, Vec<i64>)>,
+        dst_ids: &Vec<i64>,
         edge_labels: &Vec<u32>,
         _: Option<&Condition>,
         _: Option<&Vec<u32>>,
         output_prop_ids: Option<&Vec<u32>>,
         _: usize,
-    ) -> Box<dyn Iterator<Item = (i64, Self::EI)>> {
-        let src_id = trans_partition_vertex_ids(dst_ids);
+    ) -> Box<dyn Iterator<Item = (i64, IntoIter<LocalStoreEdge>)>> {
         let mut result = Vec::new();
-        if let Some(out_edge_list) = self.in_edge_list.get(&src_id) {
-            let mut out_edges = vec![];
-            for out_edge in out_edge_list {
-                if edge_labels.is_empty() || edge_labels.contains(&out_edge.get_label_id()) {
-                    let e = clone_edge_with_property(out_edge, output_prop_ids);
-                    out_edges.push(e);
+        for dst_id in dst_ids {
+            if let Some(out_edge_list) = self.in_edge_list.get(dst_id) {
+                let mut out_edges = vec![];
+                for out_edge in out_edge_list {
+                    if edge_labels.is_empty() || edge_labels.contains(&out_edge.get_label_id()) {
+                        let e = clone_edge_with_property(out_edge, output_prop_ids);
+                        out_edges.push(e);
+                    }
                 }
+                result.push((*dst_id, out_edges.into_iter()));
             }
-            result.push((src_id, out_edges.into_iter()));
         }
         Box::new(result.into_iter())
-    }
-
-    fn count_out_edges(
-        &self,
-        _: i64,
-        _: Vec<(u32, Vec<i64>)>,
-        _: &Vec<u32>,
-        _: Option<&Condition>,
-    ) -> Box<dyn Iterator<Item = (i64, usize)>> {
-        unimplemented!()
-    }
-
-    fn count_in_edges(
-        &self,
-        _: i64,
-        _: Vec<(u32, Vec<i64>)>,
-        _: &Vec<u32>,
-        _: Option<&Condition>,
-    ) -> Box<dyn Iterator<Item = (i64, usize)>> {
-        unimplemented!()
     }
 
     fn get_vertex_properties(
         &self,
         _: i64,
-        ids: Vec<(u32, Vec<(Option<u32>, Vec<i64>)>)>,
+        label_ids: &Vec<(Option<u32>, Vec<i64>)>,
         output_prop_ids: Option<&Vec<u32>>,
-    ) -> Self::VI {
-        let ids = trans_label_partition_vertex_ids(ids);
+    ) -> IntoIter<LocalStoreVertex> {
         let mut result = vec![];
-        for id in ids {
-            if let Some(vertex) = self.vertex_list.get(&id) {
-                let v = clone_vertex_with_property(vertex, output_prop_ids);
-                result.push(v);
+        for (_label, ids) in label_ids {
+            for id in ids {
+                if let Some(vertex) = self.vertex_list.get(id) {
+                    let v = clone_vertex_with_property(vertex, output_prop_ids);
+                    result.push(v);
+                }
             }
         }
         result.into_iter()
-    }
-
-    fn get_edge_properties(
-        &self,
-        _: i64,
-        _: Vec<(u32, Vec<(Option<u32>, Vec<i64>)>)>,
-        _: Option<&Vec<u32>>,
-    ) -> Self::EI {
-        unimplemented!()
     }
 
     fn get_all_vertices(
@@ -413,7 +360,7 @@ impl GlobalGraphQuery for MockGraphPartition {
         output_prop_ids: Option<&Vec<u32>>,
         _: usize,
         _: &Vec<u32>,
-    ) -> Self::VI {
+    ) -> IntoIter<LocalStoreVertex> {
         let mut result = vec![];
         for (_vid, vertex) in self.vertex_list.iter() {
             if labels.is_empty() || labels.contains(&vertex.get_label_id()) {
@@ -433,7 +380,7 @@ impl GlobalGraphQuery for MockGraphPartition {
         output_prop_ids: Option<&Vec<u32>>,
         _: usize,
         _: &Vec<u32>,
-    ) -> Self::EI {
+    ) -> IntoIter<LocalStoreEdge> {
         let mut result = vec![];
         for (_vid, edges) in self.out_edge_list.iter() {
             for edge in edges {
@@ -444,22 +391,6 @@ impl GlobalGraphQuery for MockGraphPartition {
             }
         }
         result.into_iter()
-    }
-
-    fn count_all_vertices(&self, _: i64, _: &Vec<u32>, _: Option<&Condition>, _: &Vec<u32>) -> u64 {
-        unimplemented!()
-    }
-
-    fn count_all_edges(&self, _: i64, _: &Vec<u32>, _: Option<&Condition>, _: &Vec<u32>) -> u64 {
-        unimplemented!()
-    }
-
-    fn translate_vertex_id(&self, _: i64) -> i64 {
-        unimplemented!()
-    }
-
-    fn get_schema(&self, _: i64) -> Option<Arc<dyn Schema>> {
-        unimplemented!()
     }
 }
 
@@ -501,10 +432,10 @@ impl GlobalGraphQuery for MockGraph {
         limit: usize,
     ) -> Box<dyn Iterator<Item = (i64, Self::VI)>> {
         let mut res = vec![];
-        for (pid, ids_per_pid) in src_ids.iter() {
+        for (pid, partition_ids) in src_ids.iter() {
             let iter = self.partition_list.get(pid).unwrap().get_out_vertex_ids(
                 si,
-                vec![(pid.clone(), ids_per_pid.clone())],
+                partition_ids,
                 edge_labels,
                 condition,
                 dedup_prop_ids,
@@ -528,10 +459,10 @@ impl GlobalGraphQuery for MockGraph {
         limit: usize,
     ) -> Box<dyn Iterator<Item = (i64, Self::EI)>> {
         let mut res = vec![];
-        for (pid, ids_per_pid) in src_ids.iter() {
+        for (pid, partition_ids) in src_ids.iter() {
             let iter = self.partition_list.get(pid).unwrap().get_out_edges(
                 si,
-                vec![(pid.clone(), ids_per_pid.clone())],
+                partition_ids,
                 edge_labels,
                 condition,
                 dedup_prop_ids,
@@ -555,10 +486,10 @@ impl GlobalGraphQuery for MockGraph {
         limit: usize,
     ) -> Box<dyn Iterator<Item = (i64, Self::VI)>> {
         let mut res = vec![];
-        for (pid, ids_per_pid) in dst_ids.iter() {
+        for (pid, partition_ids) in dst_ids.iter() {
             let iter = self.partition_list.get(pid).unwrap().get_in_vertex_ids(
                 si,
-                vec![(pid.clone(), ids_per_pid.clone())],
+                partition_ids,
                 edge_labels,
                 condition,
                 dedup_prop_ids,
@@ -582,10 +513,10 @@ impl GlobalGraphQuery for MockGraph {
         limit: usize,
     ) -> Box<dyn Iterator<Item = (i64, Self::EI)>> {
         let mut res = vec![];
-        for (pid, ids_per_pid) in dst_ids.iter() {
+        for (pid, partition_ids) in dst_ids.iter() {
             let iter = self.partition_list.get(pid).unwrap().get_in_edges(
                 si,
-                vec![(pid.clone(), ids_per_pid.clone())],
+                partition_ids,
                 edge_labels,
                 condition,
                 dedup_prop_ids,
@@ -626,10 +557,10 @@ impl GlobalGraphQuery for MockGraph {
         output_prop_ids: Option<&Vec<u32>>,
     ) -> Self::VI {
         let mut res = vec![];
-        for (pid, ids_per_pid) in ids.iter() {
+        for (pid, partition_label_ids) in ids.iter() {
             let iter = self.partition_list.get(pid).unwrap().get_vertex_properties(
                 si,
-                vec![(pid.clone(), ids_per_pid.clone())],
+                partition_label_ids,
                 output_prop_ids,
             );
             for v in iter {

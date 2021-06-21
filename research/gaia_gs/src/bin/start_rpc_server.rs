@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use gaia_gs::store::global_storage::create_global_storage;
+use gaia_gs::store::global_storage::create_gs_store;
 use gaia_gs::store::global_storage::MultiPartition;
 use gaia_gs::store::mg_mock::build_modern_mock_graph;
 use gremlin_core::compiler::GremlinJobCompiler;
@@ -87,9 +87,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = combine_config(server_config.server_id, host_config, common_config);
     let addr = format!("{}:{}", "0.0.0.0", server_config.rpc_port);
 
-    let graph = Arc::new(build_modern_mock_graph());
-    let partitioner = build_modern_mock_graph();
-    create_global_storage(graph.clone(), graph.clone());
+    let graph = build_modern_mock_graph();
+    let partitioner = graph.clone();
+    create_gs_store(Arc::new(graph), Arc::new(partitioner.clone()));
     let partition = MultiPartition::new(partitioner, num_servers);
     register_gremlin_types().expect("register gremlin types failed");
 

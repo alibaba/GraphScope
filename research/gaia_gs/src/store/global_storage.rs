@@ -32,7 +32,7 @@ use std::sync::Arc;
 static INVALID_LABEL_ID: LabelId = 0xffffffff;
 static INVALID_PROP_ID: PropId = 0xffffffff;
 
-pub struct GraphScope<V, VI, E, EI>
+pub struct GraphScopeStore<V, VI, E, EI>
 where
     V: StoreVertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
@@ -44,7 +44,7 @@ where
 }
 
 #[allow(dead_code)]
-pub fn create_global_storage<V, VI, E, EI>(
+pub fn create_gs_store<V, VI, E, EI>(
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
     partition_manager: Arc<dyn GraphPartitionManager>,
 ) where
@@ -53,7 +53,7 @@ pub fn create_global_storage<V, VI, E, EI>(
     E: StoreEdge + 'static,
     EI: Iterator<Item = E> + Send + 'static,
 {
-    let graph = GraphScope {
+    let graph = GraphScopeStore {
         store,
         partition_manager,
     };
@@ -88,7 +88,7 @@ macro_rules! filter_ok {
     };
 }
 
-impl<V, VI, E, EI> GraphProxy for GraphScope<V, VI, E, EI>
+impl<V, VI, E, EI> GraphProxy for GraphScopeStore<V, VI, E, EI>
 where
     V: StoreVertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
@@ -381,7 +381,6 @@ where
 
 /// in maxgraph store, Option<Vec<PropId>>: None means we need all properties, and Some means we need given properties (and Some(vec![]) means we do not need any property)
 /// while in gaia, None means we do not need any properties, and Some means we need given properties (and Some(vec![]) means we need all properties)
-// TODO(bingqing): make prop_names consistent
 #[inline]
 fn encode_storage_prop_key(
     prop_names: Option<&Vec<String>>,
@@ -403,6 +402,7 @@ fn encode_storage_prop_key(
     }
 }
 
+#[inline]
 fn encode_storage_label(labels: &Vec<Label>, schema: Arc<dyn Schema>) -> Vec<LabelId> {
     labels
         .iter()
@@ -413,10 +413,12 @@ fn encode_storage_label(labels: &Vec<Label>, schema: Arc<dyn Schema>) -> Vec<Lab
         .collect::<Vec<LabelId>>()
 }
 
+#[inline]
 fn encode_runtime_v_id<V: maxgraph_store::api::Vertex>(v: &V) -> ID {
     v.get_id() as ID
 }
 
+#[inline]
 fn encode_runtime_e_id<E: StoreEdge>(e: &E) -> ID {
     let g_dst = e.get_dst_id();
     let g_src = e.get_src_id();
@@ -424,10 +426,12 @@ fn encode_runtime_e_id<E: StoreEdge>(e: &E) -> ID {
     eid
 }
 
+#[inline]
 fn encode_runtime_label(l: LabelId) -> Option<Label> {
     Some(Label::Id(l as RuntimeLabelId))
 }
 
+#[inline]
 fn encode_property(
     prop_id: PropId,
     prop_val: Property,
@@ -537,7 +541,7 @@ impl MultiPartition {
     }
 }
 
-impl<V, VI, E, EI> GraphPartitionManager for GraphScope<V, VI, E, EI>
+impl<V, VI, E, EI> GraphPartitionManager for GraphScopeStore<V, VI, E, EI>
 where
     V: StoreVertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
