@@ -44,6 +44,10 @@ impl GremlinJobCompiler {
     pub fn get_server_index(&self) -> u64 {
         self.server_index
     }
+
+    pub fn get_partitioner(&self) -> Arc<dyn Partitioner> {
+        self.partitioner.clone()
+    }
 }
 
 impl JobCompiler<Traverser> for GremlinJobCompiler {
