@@ -13,9 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use gaia_gs::store::global_storage::create_gs_store;
-use gaia_gs::store::global_storage::MultiPartition;
-use gaia_gs::store::mg_mock::build_modern_mock_graph;
+use gs_gremlin::store::global_storage::create_gs_store;
+use gs_gremlin::store::global_storage::MultiPartition;
+use gs_gremlin::store::mg_mock::build_modern_mock_graph;
 use gremlin_core::compiler::GremlinJobCompiler;
 use gremlin_core::register_gremlin_types;
 use log::info;
