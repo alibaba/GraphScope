@@ -3,9 +3,6 @@ name = "maxgraph-runtime"
 version = "0.1.0"
 authors = ["maxgraph@alibaba-inc.com"]
 
-[lib]
-crate-type = ["rlib", "cdylib"]
-
 [dependencies]
 abomonation = "0.7"
 abomonation_derive = "0.3"

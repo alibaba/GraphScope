@@ -16,7 +16,7 @@
 use crate::generated::common as common_pb;
 use crate::generated::gremlin as pb;
 use crate::structure::codec::ParseError;
-use crate::structure::{Tag, Token};
+use crate::structure::{PropId, PropKey, Tag, Token};
 use crate::FromPb;
 
 /// Define the possible options in Gremlin's `by()-step`
@@ -25,7 +25,7 @@ pub enum ByStepOption {
     /// by(id), by(label), by('name') where 'name' refers to a property name
     OptToken(Token),
     /// by(valueMap('name1','name2',...)) where 'name1', 'name2' etc. refers to a property name
-    OptProperties(Vec<String>),
+    OptProperties(Vec<PropKey>),
     /// `group()` will produce key-value pairs, and `by()` can follow keys, e.g., order().by(keys) or order().by(select(keys).values('id'))
     OptGroupKeys(Option<Token>),
     /// `group()` will produce key-value pairs, and `by()` can follow values, e.g., order().by(values) or order().by(select(values).values('id'))
@@ -46,9 +46,9 @@ impl FromPb<common_pb::Key> for Token {
         Self: Sized,
     {
         match token_pb.item {
-            Some(common_pb::key::Item::Name(prop_name)) => Ok(Token::Property(prop_name)),
-            Some(common_pb::key::Item::NameId(_)) => {
-                Err("PropertyId is Unsupported for now".into())
+            Some(common_pb::key::Item::Name(prop_name)) => Ok(Token::Property(prop_name.into())),
+            Some(common_pb::key::Item::NameId(prop_id)) => {
+                Ok(Token::Property((prop_id as PropId).into()))
             }
             Some(common_pb::key::Item::Id(_)) => Ok(Token::Id),
             Some(common_pb::key::Item::Label(_)) => Ok(Token::Label),
@@ -64,10 +64,11 @@ impl FromPb<pb::ByKey> for ByStepOption {
     {
         match by_key_pb.item {
             Some(pb::by_key::Item::Key(key)) => Ok(ByStepOption::OptToken(Token::from_pb(key)?)),
+            // TODO(bingqing): should be prop_name or prop_id
             Some(pb::by_key::Item::Name(properties_pb)) => {
                 let mut properties = vec![];
-                for prop in properties_pb.item {
-                    properties.push(prop);
+                for prop_name in properties_pb.item {
+                    properties.push(prop_name.into());
                 }
                 Ok(ByStepOption::OptProperties(properties))
             }

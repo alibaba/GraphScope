@@ -1,17 +1,16 @@
 use std::ffi::{c_void, CStr};
-use jna::executor_server::ExecutorServer;
 use maxgraph_store::db::proto::common::ConfigPb;
 use maxgraph_store::db::common::bytes::util::parse_pb;
 use maxgraph_store::db::api::{GraphConfigBuilder, GraphError};
 use std::sync::Arc;
 use maxgraph_store::api::PartitionId;
 use maxgraph_store::db::common::unsafe_util::to_mut;
-use store::global_store::GlobalStore;
 use maxgraph_store::db::graph::store::GraphStore;
-use jna::jna_server_response::{JnaEngineServerResponse, JnaRpcServerPortResponse};
 use std::os::raw::c_char;
 use std::str;
 use itertools::Itertools;
+use executor::pegasus::executor_server::ExecutorServer;
+use executor::pegasus::jna_server_response::{JnaEngineServerResponse, JnaRpcServerPortResponse};
 
 pub type ExecutorHandle = *const c_void;
 pub type GraphHandle = *const c_void;

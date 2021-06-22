@@ -30,7 +30,7 @@ pub mod test {
     };
     use gremlin_core::process::traversal::step::{graph_step_from, ResultProperty};
     use gremlin_core::process::traversal::traverser::{Requirement, Traverser};
-    use gremlin_core::structure::{Details, Tag, VertexOrEdge};
+    use gremlin_core::structure::{Details, PropKey, Tag, VertexOrEdge};
     use gremlin_core::{create_demo_graph, DynIter, Element, Partitioner, ID};
     use gremlin_core::{GremlinStepPb, Partition};
     use pegasus::api::function::{
@@ -66,11 +66,11 @@ pub mod test {
         // is_ordered flag, if true, indicates that the expected_ids is ordered.
         is_ordered: bool,
         // to test property optimization, with the saved property_names and unsaved property_names
-        expected_properties: Option<(Vec<String>, Vec<String>)>,
+        expected_properties: Option<(Vec<PropKey>, Vec<PropKey>)>,
         // to test remove tag optimization, with the expected history path length
         expected_path_len: Option<usize>,
         // to test the result of select step
-        expected_tag_props: Option<Vec<Vec<(Tag, Vec<(String, Object)>)>>>,
+        expected_tag_props: Option<Vec<Vec<(Tag, Vec<(PropKey, Object)>)>>>,
         // to test early stop, with the expected value of number of results
         expected_result_num: Option<usize>,
     }
@@ -116,7 +116,7 @@ pub mod test {
             factory
         }
 
-        pub fn with_expect_property_opt(expected_props: (Vec<String>, Vec<String>)) -> Self {
+        pub fn with_expect_property_opt(expected_props: (Vec<PropKey>, Vec<PropKey>)) -> Self {
             let mut factory = TestJobFactory::new();
             factory.expected_properties = Some(expected_props);
             factory
@@ -129,7 +129,7 @@ pub mod test {
         }
 
         pub fn with_expect_get_properties(
-            expected_tag_props: Vec<Vec<(Tag, Vec<(String, Object)>)>>,
+            expected_tag_props: Vec<Vec<(Tag, Vec<(PropKey, Object)>)>>,
         ) -> Self {
             let mut factory = TestJobFactory::new();
             factory.expected_tag_props = Some(expected_tag_props);
@@ -157,9 +157,9 @@ pub mod test {
         expected_paths: Option<Vec<Vec<ID>>>,
         expected_group_result: Option<Vec<(ID, Vec<ID>)>>,
         is_ordered: bool,
-        property_opt: Option<(Vec<String>, Vec<String>)>,
+        property_opt: Option<(Vec<PropKey>, Vec<PropKey>)>,
         expected_path_len: Option<usize>,
-        expected_tag_props: Option<Vec<Vec<(Tag, Vec<(String, Object)>)>>>,
+        expected_tag_props: Option<Vec<Vec<(Tag, Vec<(PropKey, Object)>)>>>,
         expected_result_num: Option<usize>,
     }
 
@@ -216,12 +216,12 @@ pub mod test {
                             {
                                 let mut tag_entries = vec![];
                                 for (tag, one_tag_value) in result_prop.tag_entries.iter() {
-                                    let tag_entry: Vec<(String, Object)> = if let Some(element) =
+                                    let tag_entry: Vec<(PropKey, Object)> = if let Some(element) =
                                         one_tag_value.graph_element.as_ref()
                                     {
-                                        vec![("".to_string(), element.id().into())]
+                                        vec![("".into(), element.id().into())]
                                     } else if let Some(value) = one_tag_value.value.as_ref() {
-                                        vec![("".to_string(), value.clone())]
+                                        vec![("".into(), value.clone())]
                                     } else {
                                         let value_map = one_tag_value
                                             .properties
@@ -414,8 +414,8 @@ pub mod test {
     impl Output for TestOutputStruct {
         fn send(&self, res: JobResponse) {
             if let Some(result) = res.result {
-                if let JobResult::Err(_) = result {
-                    panic!("send result into test output failure");
+                if let JobResult::Err(e) = result {
+                    panic!("send result into test output failure {:?}", e);
                 }
             }
         }
