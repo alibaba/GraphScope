@@ -15,11 +15,12 @@
  */
 package com.alibaba.graphscope.gaia.processor;
 
-import com.alibaba.graphscope.gaia.GlobalEngineConf;
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.result.DefaultResultParser;
 import com.alibaba.graphscope.gaia.result.GremlinResultProcessor;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
 import com.alibaba.graphscope.gaia.broadcast.RpcBroadcastProcessor;
@@ -46,8 +47,9 @@ public class MaxGraphOpProcessor extends AbstractGraphOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(MaxGraphOpProcessor.class);
     private AbstractBroadcastProcessor broadcastProcessor;
 
-    public MaxGraphOpProcessor() {
-        this.broadcastProcessor = new RpcBroadcastProcessor((List) GlobalEngineConf.getDefaultSysConf().get("hosts"));
+    public MaxGraphOpProcessor(GaiaConfig config, GraphStoreService graphStore) {
+        super(config, graphStore);
+        this.broadcastProcessor = new RpcBroadcastProcessor(config.getPegasusPhysicalHosts());
     }
 
     @Override
@@ -68,7 +70,7 @@ public class MaxGraphOpProcessor extends AbstractGraphOpProcessor {
                 })
                 .transformResult(o -> {
                     if (o != null && o instanceof Traversal) {
-                        applyStrategy((Traversal) o);
+                        applyStrategy((Traversal) o, config, graphStore);
                     }
                     return o;
                 })
@@ -78,10 +80,10 @@ public class MaxGraphOpProcessor extends AbstractGraphOpProcessor {
                         TraversalBuilder traversalBuilder = new TraversalBuilder((Traversal.Admin) o)
                                 .addConfig(PlanConfig.QUERY_ID, queryId)
                                 .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) o))
-                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId));
+                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config));
                         AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
                         PlanUtils.print(jobReqBuilder);
-                        broadcastProcessor.broadcast(jobReqBuilder.build(), ctx, new GremlinResultProcessor(ctx, new DefaultResultParser(traversalBuilder)));
+                        broadcastProcessor.broadcast(jobReqBuilder.build(), new GremlinResultProcessor(ctx, new DefaultResultParser(traversalBuilder, graphStore)));
                     } else {
                         List<Object> results = new ArrayList<>();
                         if (o != null) {

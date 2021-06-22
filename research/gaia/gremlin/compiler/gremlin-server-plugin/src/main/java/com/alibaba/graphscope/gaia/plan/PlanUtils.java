@@ -16,8 +16,8 @@
 package com.alibaba.graphscope.gaia.plan;
 
 import com.alibaba.graphscope.common.proto.Gremlin;
-import com.alibaba.graphscope.gaia.GlobalEngineConf;
 import com.alibaba.graphscope.gaia.JsonUtils;
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
@@ -37,7 +37,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ComparatorHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceEdge;
 import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceVertex;
@@ -75,34 +74,15 @@ public class PlanUtils {
         return resultIds;
     }
 
-    public static PegasusClient.JobConfig getDefaultConfig(long queryId) {
+    public static PegasusClient.JobConfig getDefaultConfig(long queryId, GaiaConfig config) {
         try {
-            String queryName = "demo_query_" + queryId;
-            // read engine default config
-            Map<String, Object> jobConfig = GlobalEngineConf.getDefaultSysConf();
-            Graph.Variables variables = GlobalEngineConf.getGlobalVariables();
-            if (variables != null) {
-                // update config if set in global variables
-                jobConfig.forEach((k, v) -> {
-                    Optional value = variables.get(k);
-                    if (value.isPresent()) {
-                        jobConfig.put(k, value.get());
-                    }
-                });
-            }
-            long hosts = ((List) jobConfig.get("hosts")).size();
-            List<Long> servers = new ArrayList<>();
-            for (long i = 0; i < hosts; ++i) {
-                servers.add(i);
-            }
-            long pegasusTimeOut = (Integer) jobConfig.get("time_limit");
-            logger.debug("pegasus time_limit is {} ms", pegasusTimeOut);
+            String queryName = "gaia_query_" + queryId;
             return PegasusClient.JobConfig.newBuilder()
                     .setJobId(queryId)
                     .setJobName(queryName)
-                    .setWorkers((Integer) jobConfig.get("workers"))
-                    .addAllServers(servers)
-                    .setTimeLimit(pegasusTimeOut)
+                    .setWorkers(config.getPegasusWorkerNum())
+                    .addAllServers(config.getPegasusServers())
+                    .setTimeLimit(config.getPegasusTimeout())
                     .build();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -188,8 +168,8 @@ public class PlanUtils {
             List<Object> results = new ArrayList<>();
             results.add(Collections.singletonMap("source", printGremlinStep(job.getSource())));
             job.getPlan().getPlan().forEach(k -> results.add(printOpr(k)));
-            // logger.info("{}", JsonUtils.toJson(results));
-            FileUtils.writeStringToFile(new File("plan.log"), JsonUtils.toJson(results), StandardCharsets.UTF_8, true);
+            logger.info("{}", JsonUtils.toJson(results));
+            // FileUtils.writeStringToFile(new File("plan.log"), JsonUtils.toJson(results), StandardCharsets.UTF_8, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -24,14 +24,13 @@
  */
 package com.alibaba.graphscope.gaia.processor;
 
-import com.alibaba.graphscope.gaia.GlobalEngineConf;
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.idmaker.IncrementalQueryIdMaker;
 import com.alibaba.graphscope.gaia.plan.strategy.GraphTraversalStrategies;
-import com.alibaba.graphscope.gaia.plan.strategy.OrderGuaranteeStrategy;
 import com.alibaba.graphscope.gaia.plan.strategy.global.PathHistoryStrategy;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.codahale.metrics.Timer;
-import com.alibaba.graphscope.gaia.plan.strategy.PropertyShuffleStrategy;
 import com.alibaba.graphscope.gaia.plan.strategy.global.PreCachePropertyStrategy;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
@@ -47,7 +46,6 @@ import org.apache.tinkerpop.gremlin.server.handler.Frame;
 import org.apache.tinkerpop.gremlin.server.handler.StateKey;
 import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +55,6 @@ import javax.script.SimpleBindings;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -66,9 +63,13 @@ import java.util.function.Supplier;
 public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
     protected IdMaker queryIdMaker;
     private static final Logger logger = LoggerFactory.getLogger(MaxGraphOpProcessor.class);
+    protected GaiaConfig config;
+    protected GraphStoreService graphStore;
 
-    public AbstractGraphOpProcessor() {
+    public AbstractGraphOpProcessor(GaiaConfig config, GraphStoreService graphStore) {
         this.queryIdMaker = new IncrementalQueryIdMaker();
+        this.config = config;
+        this.graphStore = graphStore;
     }
 
     protected abstract GremlinExecutor.LifeCycle createLifeCycle(Context ctx, Supplier<GremlinExecutor> gremlinExecutorSupplier, BindingSupplier bindingsSupplier);
@@ -178,19 +179,11 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
         }
     }
 
-    public static synchronized void applyStrategy(Traversal traversal) {
-        GraphTraversalStrategies traversalStrategies = GraphTraversalStrategies.instance();
-        boolean removeTagOn = isOptOn("remove_tag");
-        boolean labelPathRequireOn = isOptOn("label_path_requirement");
-        boolean propertyCacheOn = isOptOn("property_cache");
-        logger.debug("remove {}, require {}, cache {}", removeTagOn, labelPathRequireOn, propertyCacheOn);
-        if (propertyCacheOn) {
-            traversalStrategies.removeStrategies(PropertyShuffleStrategy.class);
-            traversalStrategies.removeStrategies(OrderGuaranteeStrategy.class);
-        } else {
-            traversalStrategies.addStrategyByPriority(GraphTraversalStrategies.PROPERTY_SHUFFLE_PRIORITY, PropertyShuffleStrategy.instance());
-            traversalStrategies.addStrategyByPriority(GraphTraversalStrategies.ORDER_GUARANTEE_PRIORITY, OrderGuaranteeStrategy.instance());
-        }
+    public static synchronized void applyStrategy(Traversal traversal, GaiaConfig config, GraphStoreService graphStore) {
+        GraphTraversalStrategies traversalStrategies = new GraphTraversalStrategies(config, graphStore);
+        boolean removeTagOn = config.getOptimizationStrategyFlag(GaiaConfig.REMOVE_TAG);
+        boolean labelPathRequireOn = config.getOptimizationStrategyFlag(GaiaConfig.LABEL_PATH_REQUIREMENT);
+        logger.debug("remove {}, require {}", removeTagOn, labelPathRequireOn);
         traversal.asAdmin().setStrategies(traversalStrategies);
         traversal.asAdmin().applyStrategies();
         if (removeTagOn || labelPathRequireOn) {
@@ -198,28 +191,6 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
             PathHistoryStrategy.setIsRemoveTagOn(removeTagOn);
             PathHistoryStrategy.instance().apply(traversal.asAdmin());
         }
-        if (propertyCacheOn) {
-            PreCachePropertyStrategy.instance().apply(traversal.asAdmin());
-        }
-    }
-
-    public static boolean isOptOn(String optName) {
-        // read engine default config, must exist related config
-        Map<String, Object> optMap = (Map) GlobalEngineConf.getDefaultSysConf().get("optimizations");
-        // reset from sys property or variable, optional
-        if (System.getProperty(optName) != null) {
-            optMap.put(optName, Boolean.valueOf(System.getProperty(optName)));
-        }
-        Graph.Variables variables = GlobalEngineConf.getGlobalVariables();
-        if (variables != null) {
-            // update config if set in global variables
-            optMap.forEach((k, v) -> {
-                Optional value = variables.get(k);
-                if (value.isPresent()) {
-                    optMap.put(k, value.get());
-                }
-            });
-        }
-        return (boolean) optMap.get(optName);
+        PreCachePropertyStrategy.instance().apply(traversal.asAdmin());
     }
 }

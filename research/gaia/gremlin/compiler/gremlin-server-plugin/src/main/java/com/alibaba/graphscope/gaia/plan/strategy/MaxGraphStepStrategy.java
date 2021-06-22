@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.gaia.plan.strategy;
 
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
@@ -30,11 +31,15 @@ import java.util.List;
 
 public class MaxGraphStepStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
     private static final MaxGraphStepStrategy INSTANCE = new MaxGraphStepStrategy();
+    private GraphStoreService graphStore;
 
     private MaxGraphStepStrategy() {
     }
 
-    public static MaxGraphStepStrategy instance() {
+    public static MaxGraphStepStrategy instance(GraphStoreService graphStore) {
+        if (INSTANCE.graphStore == null) {
+            INSTANCE.graphStore = graphStore;
+        }
         return INSTANCE;
     }
 
@@ -50,7 +55,7 @@ public class MaxGraphStepStrategy extends AbstractTraversalStrategy<TraversalStr
                     List<HasContainer> originalContainers = ((HasContainerHolder) currentStep).getHasContainers();
                     for (final HasContainer hasContainer : originalContainers) {
                         if (!GraphStep.processHasContainerIds(maxGraphStep, hasContainer) &&
-                                !MaxGraphStep.processPrimaryKey(maxGraphStep, hasContainer, originalContainers, primaryKeyAsIndex) &&
+                                !MaxGraphStep.processPrimaryKey(maxGraphStep, hasContainer, originalContainers, primaryKeyAsIndex, graphStore) &&
                                 !MaxGraphStep.processHasLabels(maxGraphStep, hasContainer, originalContainers)) {
                             maxGraphStep.addHasContainer(hasContainer);
                         }

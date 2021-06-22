@@ -66,6 +66,11 @@
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java-util</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba.maxgraph</groupId>
+            <version>0.0.1-SNAPSHOT</version>
+            <artifactId>maxgraph-common</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

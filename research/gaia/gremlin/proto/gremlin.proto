@@ -209,7 +209,7 @@ message ByKey {
   oneof item {
     // by(id/label/property/values("p1","p2")
     common.Key key = 1;
-    // by(valueMap("prop1", "prop2")), empty means all
+    // by(valueMap("prop1", "prop2")) in string, empty means all
     common.StringArray name = 2;
     // by(keys)
     MapKey map_keys = 3;
@@ -217,6 +217,8 @@ message ByKey {
     MapValue map_values = 4;
     // by value computed by sub traversal
     SubValue computed = 5;
+    // by(valueMap("prop1", "prop2")) in int32, empty means all
+    common.I32Array name_id = 6;
   }
 }
 
@@ -279,7 +281,10 @@ message GroupByUnfold {
 message PathLocalCountStep{}
 
 message PropertiesStep {
-  repeated string properties = 1;
+  oneof item {
+    common.StringArray name = 1;
+    common.I32Array name_id = 2;
+  }
 }
 
 // map

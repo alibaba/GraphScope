@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.gaia.plan;
 
+import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.plan.extractor.PropertyExtractor;
@@ -36,6 +37,7 @@ import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
 import com.google.protobuf.ByteString;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -378,7 +380,12 @@ public class LogicPlanGlobalMap {
                 Gremlin.PropertiesStep.Builder builder = Gremlin.PropertiesStep.newBuilder();
                 String[] properties = ((PropertiesStep) t).getPropertyKeys();
                 if (properties != null && properties.length > 0) {
-                    builder.addAllProperties(Arrays.asList(properties));
+                    if (StringUtils.isNumeric(properties[0])) {
+                        builder.setNameId(Common.I32Array.newBuilder().addAllItem(
+                                Arrays.stream(properties).map(k -> Integer.valueOf(k)).collect(Collectors.toList())));
+                    } else {
+                        builder.setName(Common.StringArray.newBuilder().addAllItem(Arrays.asList(properties)));
+                    }
                 }
                 return builder.build();
             }

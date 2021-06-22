@@ -24,7 +24,8 @@
  */
 package com.alibaba.graphscope.gaia.plan.strategy;
 
-import com.alibaba.graphscope.gaia.store.StaticGraphStore;
+import com.alibaba.graphscope.gaia.store.ExperimentalGraphStore;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -104,7 +105,8 @@ public final class MaxGraphStep<S, E extends Element> extends GraphStep<S, E> im
      * label + id -> global_id
      */
     public static boolean processPrimaryKey(final MaxGraphStep<?, ?> graphStep, final HasContainer hasContainer,
-                                            final List<HasContainer> originalContainers, boolean[] primaryKeyAsIndex) {
+                                            final List<HasContainer> originalContainers, boolean[] primaryKeyAsIndex,
+                                            final GraphStoreService graphStore) {
         if (graphStep.ids.length == 0 && isValidPrimaryKey(hasContainer)
                 && (hasContainer.getKey().equals(T.label.getAccessor()) && isValidPrimaryKey(getContainer(originalContainers, "id"))
                 || hasContainer.getKey().equals("id") && isValidPrimaryKey(getContainer(originalContainers, T.label.getAccessor())))) {
@@ -113,7 +115,8 @@ public final class MaxGraphStep<S, E extends Element> extends GraphStep<S, E> im
 
         if (!hasContainer.getKey().equals(T.label.getAccessor()) && !hasContainer.getKey().equals("id")
                 || hasContainer.getBiPredicate() != Compare.eq && hasContainer.getBiPredicate() != Contains.within
-                || !isFirstHasContainerWithKey(hasContainer, originalContainers) || !primaryKeyAsIndex[0]) {
+                || !isFirstHasContainerWithKey(hasContainer, originalContainers) || !primaryKeyAsIndex[0]
+                || !(graphStore instanceof ExperimentalGraphStore)) {
             return false;
         }
 
@@ -123,12 +126,12 @@ public final class MaxGraphStep<S, E extends Element> extends GraphStep<S, E> im
             if (predicate.getValue() instanceof List && ((List) predicate.getValue()).get(0) instanceof String) {
                 List<String> values = (List<String>) predicate.getValue();
                 values.forEach(k -> {
-                    long globalId = StaticGraphStore.INSTANCE.getGlobalId(Long.valueOf(k),
+                    long globalId = graphStore.getGlobalId(Long.valueOf(k),
                             ((Number) propertyIdContainer.getPredicate().getValue()).longValue());
                     graphStep.addIds(globalId);
                 });
             } else if (predicate.getValue() instanceof String) {
-                long globalId = StaticGraphStore.INSTANCE.getGlobalId(Long.valueOf((String) predicate.getValue()),
+                long globalId = graphStore.getGlobalId(Long.valueOf((String) predicate.getValue()),
                         ((Number) propertyIdContainer.getPredicate().getValue()).longValue());
                 graphStep.addIds(globalId);
             } else {
