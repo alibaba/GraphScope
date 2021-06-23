@@ -659,17 +659,12 @@ def unload_graph(graph):
     """Unload a graph.
 
     Args:
-        graph (:class:`Graph`): The graph to unload.
+        graph (:class:`GraphDAGNode`): The graph to unload.
 
     Returns:
         An op to unload the `graph`.
     """
     config = {}
-    if not isinstance(graph, DAGNode):
-        config.update({types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key)})
-        # Dynamic graph doesn't have a vineyard id
-        if hasattr(graph, "vineyard_id"):
-            config[types_pb2.VINEYARD_ID] = utils.i_to_attr(graph.vineyard_id)
     op = Operation(
         graph.session_id,
         types_pb2.UNLOAD_GRAPH,

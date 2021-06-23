@@ -34,7 +34,9 @@ class Dag(object):
     """
 
     def __init__(self):
+        # the order in which op joins the dag, starting by 1.
         self._seq = 1
+        #  mapping from op's key to op
         self._ops_by_key = dict()
         self._ops_seq_by_key = dict()
 
@@ -149,7 +151,7 @@ class DAGNode(object):
 
     @property
     def session(self):
-        """Get the session that the graph belogs to."""
+        """Get the session that the dag node belongs to."""
         assert self._session is not None
         return self._session
 
@@ -159,6 +161,6 @@ class DAGNode(object):
 
     @property
     def session_id(self):
-        """Get the session id that the graph belogs to."""
+        """Get the session id that the dag node belongs to."""
         assert self._session is not None
         return self._session.session_id

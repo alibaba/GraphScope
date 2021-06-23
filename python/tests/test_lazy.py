@@ -33,6 +33,7 @@ graphscope.set_option(show_log=True)
 
 from graphscope import property_sssp
 from graphscope import sssp
+from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.loader import Loader
 
 test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
@@ -90,6 +91,45 @@ def test_vertices_omitted_form_loader(sess, student_group_e):
     g1 = g.add_edges(student_group_e)
     g2 = sess.run(g1)  # g2 is a Graph instance
     assert g2.loaded()
+
+
+def test_unload_graph(sess, student_v, teacher_v, student_group_e):
+    # case 1
+    # 1. load empty g
+    # 2. unload g
+    g = sess.g()
+    ug = g.unload()
+    assert sess.run(ug) is None
+
+    # case 2
+    g = sess.g()
+    g1 = g.add_vertices(student_v, "student")
+    g2 = g.add_vertices(teacher_v, "teacher")
+    ug1 = g1.unload()
+    ug2 = g2.unload()
+    assert sess.run(ug1) is None
+    assert sess.run(ug2) is None
+
+    # case 3
+    g = sess.g()
+    g1 = g.add_vertices(student_v, "student")
+    g2 = g1.add_vertices(teacher_v, "teacher")
+    g3 = g2.add_edges(
+        student_group_e, "group", src_label="student", dst_label="student"
+    )
+    ug = g.unload()
+    ug1 = g1.unload()
+    ug2 = g2.unload()
+    ug3 = g3.unload()
+    sess.run([ug, ug1, ug2, ug3])
+
+
+def test_error_using_unload_graph(sess, student_v):
+    with pytest.raises(AnalyticalEngineInternalError):
+        g = sess.g()
+        ug = g.unload()
+        g1 = g.add_vertices(student_v, "student")
+        sess.run([ug, g1])
 
 
 def test_context(sess):

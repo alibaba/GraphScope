@@ -30,12 +30,12 @@ from graphscope.proto import op_def_pb2
 class Operation(object):
     """Represents a dag op that performs computation on tensors.
 
-    For example :code:`c = run_app(a, b)` creates an :code:`Operation` of type
-    "RunApp" that takes operation :code:`a` and :code:`b` as input, and produces :code:`c`
-    as output.
+    For example :code:`g2 = g1.add_vertices("path")` create an :code:`Operation` of type
+    "ADD_LABELS" that takes operation of :code:`g1` as input, and produces a graph dag node
+    :code:`g2` which contains this operation as output.
 
-    After the dag has been launched in a session, an `Operation` can
-    be executed by passing it to :code:`graphscope.Session.run`.
+    After the dag has been launched in a session, an `Operation` can be executed by
+    :code`op.eval()` or passing it to :code:`session.run`.
     """
 
     def __init__(
@@ -85,7 +85,7 @@ class Operation(object):
 
     @property
     def key(self):
-        """Unique key for each :code:`types_pb2.OpDef`"""
+        """Unique key for each :code:`op_def_pb2.OpDef`"""
         return self._op_def.key
 
     @property
@@ -111,8 +111,11 @@ class Operation(object):
     @property
     def signature(self):
         """Signature of its parents' signatures and its own parameters.
-        Used to unique identify one `Operation` with fixed configuration, if the configuration
-        changed, the signature will be changed accordingly.
+
+        Used to unique identify one `Operation` with fixed configuration,
+        if the configuration changed, the signature will be changed accordingly.
+
+        Note that this method has not been used.
         """
         content = ""
         for op in self._parents:
@@ -135,9 +138,6 @@ class Operation(object):
         res = sess.run(self)
         return res
 
-    def generate_new_key(self):
-        self._op_def.key = uuid.uuid4().hex
-
     def add_parent(self, op):
         self._parents.append(op)
         self._op_def.parents.extend([op.key])
@@ -149,7 +149,10 @@ class Operation(object):
         return str(self.as_op_def())
 
     def __repr__(self):
-        return "<grape.Operation '%s'(%s)>" % (self.type, self.key)
+        return "<graphscope.framework.operation.Operation '%s'(%s)>" % (
+            self.type,
+            self.key,
+        )
 
     def to_json(self):
         """Get json represented op."""
