@@ -363,6 +363,8 @@ def op_pre_process(op, op_result_pool, key_to_op):
         types_pb2.TO_VINEYARD_DATAFRAME,
     ):
         _pre_process_for_context_op(op, op_result_pool, key_to_op)
+    if op.op == types_pb2.UNLOAD_APP:
+        _pre_process_for_unload_app_op(op, op_result_pool, key_to_op)
 
 
 def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op):
@@ -438,6 +440,15 @@ def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op):
     result.graph_def.extension.Unpack(vy_info)
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
     op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
+
+
+def _pre_process_for_unload_app_op(op, op_result_pool, key_to_op):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    op.attr[types_pb2.APP_NAME].CopyFrom(
+        utils.s_to_attr(result.result.decode("utf-8"))
+    )
 
 
 def _pre_process_for_add_column_op(op, op_result_pool, key_to_op):

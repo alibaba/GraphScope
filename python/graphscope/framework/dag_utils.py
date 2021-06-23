@@ -639,14 +639,14 @@ def unload_app(app):
     """Unload a loaded app.
 
     Args:
-        app (:class:`App`): The app to unload.
+        app (:class:`AppDAGNode`): The app to unload.
 
     Returns:
         An op to unload the `app`.
     """
     config = {}
     op = Operation(
-        app._session_id,
+        app.session_id,
         types_pb2.UNLOAD_APP,
         config=config,
         inputs=[app.op],

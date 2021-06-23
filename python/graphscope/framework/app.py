@@ -331,8 +331,13 @@ class AppDAGNode(DAGNode):
         return ContextDAGNode(self, self._graph, *args, **kwargs)
 
     def unload(self):
-        # do nothing for dag node
-        pass
+        """Unload this app from graphscope engine.
+
+        Returns:
+            :class:`graphscope.framework.app.UnloadedApp`: Evaluated in eager mode.
+        """
+        op = unload_app(self)
+        return UnloadedApp(self._session, op)
 
 
 class App(object):
@@ -368,13 +373,22 @@ class App(object):
 
     def unload(self):
         """Unload app. Both on engine side and python side. Set the key to None."""
-        op = unload_app(self)
-        op.eval()
+        self._session._wrapper(self._app_node.unload())
         self._key = None
         self._session = None
 
     def __call__(self, *args, **kwargs):
         return self._session._wrapper(self._app_node(*args, **kwargs))
+
+
+class UnloadedApp(DAGNode):
+    """Unloaded app node in a DAG."""
+
+    def __init__(self, session, op):
+        self._session = session
+        self._op = op
+        # add op to dag
+        self._session.dag.add_op(self._op)
 
 
 def load_app(algo, gar=None, **kwargs):
