@@ -62,7 +62,7 @@ import java.util.function.Supplier;
 
 public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
     protected IdMaker queryIdMaker;
-    private static final Logger logger = LoggerFactory.getLogger(MaxGraphOpProcessor.class);
+    private static final Logger logger = LoggerFactory.getLogger(GaiaGraphOpProcessor.class);
     protected GaiaConfig config;
     protected GraphStoreService graphStore;
 

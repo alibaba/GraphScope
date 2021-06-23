@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.gaia.processor;
 
+import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
@@ -43,13 +44,13 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.function.Supplier;
 
-public class MaxGraphOpProcessor extends AbstractGraphOpProcessor {
-    private static final Logger logger = LoggerFactory.getLogger(MaxGraphOpProcessor.class);
+public class GaiaGraphOpProcessor extends AbstractGraphOpProcessor {
+    private static final Logger logger = LoggerFactory.getLogger(GaiaGraphOpProcessor.class);
     private AbstractBroadcastProcessor broadcastProcessor;
 
-    public MaxGraphOpProcessor(GaiaConfig config, GraphStoreService graphStore) {
+    public GaiaGraphOpProcessor(GaiaConfig config, GraphStoreService graphStore, RpcChannelFetcher fetcher) {
         super(config, graphStore);
-        this.broadcastProcessor = new RpcBroadcastProcessor(config.getPegasusPhysicalHosts());
+        this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
     }
 
     @Override
@@ -96,7 +97,7 @@ public class MaxGraphOpProcessor extends AbstractGraphOpProcessor {
 
     @Override
     public String getName() {
-        return "maxgraph";
+        return "";
     }
 
     @Override

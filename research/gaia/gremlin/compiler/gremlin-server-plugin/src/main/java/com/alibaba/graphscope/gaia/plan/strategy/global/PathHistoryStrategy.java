@@ -20,7 +20,7 @@ import com.alibaba.graphscope.gaia.plan.meta.object.Lifetime;
 import com.alibaba.graphscope.gaia.plan.meta.object.StepId;
 import com.alibaba.graphscope.gaia.plan.meta.object.TraversalId;
 import com.alibaba.graphscope.gaia.plan.meta.object.TraverserElement;
-import com.alibaba.graphscope.gaia.plan.strategy.MaxGraphStep;
+import com.alibaba.graphscope.gaia.plan.strategy.GaiaGraphStep;
 import com.alibaba.graphscope.gaia.plan.translator.TraversalMetaCollector;
 import com.alibaba.graphscope.gaia.plan.translator.builder.MetaConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalMetaBuilder;
@@ -103,9 +103,9 @@ public class PathHistoryStrategy implements GlobalTraversalStrategy {
             step = step.getNextStep();
         } while (!(step instanceof EmptyStep));
 
-        if (traversalsRequire != null && traversal.getStartStep() instanceof MaxGraphStep) {
+        if (traversalsRequire != null && traversal.getStartStep() instanceof GaiaGraphStep) {
             // source
-            ((MaxGraphStep) traversal.getStartStep()).setTraverserRequirement(traversalsRequire.get(TraversalId.root()).get().getTraverserRequirement());
+            ((GaiaGraphStep) traversal.getStartStep()).setTraverserRequirement(traversalsRequire.get(TraversalId.root()).get().getTraverserRequirement());
         }
         setLocked((DefaultTraversal) traversal, true);
     }

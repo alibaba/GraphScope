@@ -21,7 +21,7 @@ import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.idmaker.IncrementalQueryIdMaker;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
-import com.alibaba.graphscope.gaia.processor.MaxGraphOpProcessor;
+import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
 import com.alibaba.graphscope.gaia.store.ExperimentalGraphStore;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.pegasus.builder.AbstractBuilder;
@@ -57,9 +57,8 @@ public class QueryTest {
     }
 
     public static Traversal getTestTraversal(GaiaConfig config, GraphStoreService storeService) {
-        Traversal traversal = g.V().as("a").values("a", "b", "c");
-        // g.V().hasLabel("person").has("id",1).values("name");
-        MaxGraphOpProcessor.applyStrategy(traversal, config, storeService);
+        Traversal traversal = CR_1_1();
+        GaiaGraphOpProcessor.applyStrategy(traversal, config, storeService);
         return traversal;
     }
 

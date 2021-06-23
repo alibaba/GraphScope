@@ -182,6 +182,12 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.graphscope</groupId>
+            <artifactId>gremlin-server-plugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <profiles>

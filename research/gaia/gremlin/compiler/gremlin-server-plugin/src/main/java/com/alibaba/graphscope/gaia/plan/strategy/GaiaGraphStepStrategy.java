@@ -29,14 +29,14 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 
 import java.util.List;
 
-public class MaxGraphStepStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
-    private static final MaxGraphStepStrategy INSTANCE = new MaxGraphStepStrategy();
+public class GaiaGraphStepStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
+    private static final GaiaGraphStepStrategy INSTANCE = new GaiaGraphStepStrategy();
     private GraphStoreService graphStore;
 
-    private MaxGraphStepStrategy() {
+    private GaiaGraphStepStrategy() {
     }
 
-    public static MaxGraphStepStrategy instance(GraphStoreService graphStore) {
+    public static GaiaGraphStepStrategy instance(GraphStoreService graphStore) {
         if (INSTANCE.graphStore == null) {
             INSTANCE.graphStore = graphStore;
         }
@@ -46,7 +46,7 @@ public class MaxGraphStepStrategy extends AbstractTraversalStrategy<TraversalStr
     @Override
     public void apply(Traversal.Admin<?, ?> traversal) {
         for (final GraphStep originalGraphStep : TraversalHelper.getStepsOfClass(GraphStep.class, traversal)) {
-            final MaxGraphStep<?, ?> maxGraphStep = new MaxGraphStep<>(originalGraphStep);
+            final GaiaGraphStep<?, ?> maxGraphStep = new GaiaGraphStep<>(originalGraphStep);
             TraversalHelper.replaceStep(originalGraphStep, maxGraphStep, traversal);
             Step<?, ?> currentStep = maxGraphStep.getNextStep();
             boolean[] primaryKeyAsIndex = new boolean[]{false};
@@ -55,8 +55,8 @@ public class MaxGraphStepStrategy extends AbstractTraversalStrategy<TraversalStr
                     List<HasContainer> originalContainers = ((HasContainerHolder) currentStep).getHasContainers();
                     for (final HasContainer hasContainer : originalContainers) {
                         if (!GraphStep.processHasContainerIds(maxGraphStep, hasContainer) &&
-                                !MaxGraphStep.processPrimaryKey(maxGraphStep, hasContainer, originalContainers, primaryKeyAsIndex, graphStore) &&
-                                !MaxGraphStep.processHasLabels(maxGraphStep, hasContainer, originalContainers)) {
+                                !GaiaGraphStep.processPrimaryKey(maxGraphStep, hasContainer, originalContainers, primaryKeyAsIndex, graphStore) &&
+                                !GaiaGraphStep.processHasLabels(maxGraphStep, hasContainer, originalContainers)) {
                             maxGraphStep.addHasContainer(hasContainer);
                         }
                     }

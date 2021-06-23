@@ -42,14 +42,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public final class MaxGraphStep<S, E extends Element> extends GraphStep<S, E> implements HasContainerHolder, AutoCloseable {
-    private static final Logger logger = LoggerFactory.getLogger(MaxGraphStep.class);
+public final class GaiaGraphStep<S, E extends Element> extends GraphStep<S, E> implements HasContainerHolder, AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(GaiaGraphStep.class);
     private final List<HasContainer> hasContainers = new ArrayList<>();
     private final List<String> graphLabels = new ArrayList<>();
     // default
     private TraverserRequirement traverserRequirement = TraverserRequirement.PATH;
 
-    public MaxGraphStep(final GraphStep<S, E> originalGraphStep) {
+    public GaiaGraphStep(final GraphStep<S, E> originalGraphStep) {
         super(originalGraphStep.getTraversal(), originalGraphStep.getReturnClass(), originalGraphStep.isStartStep(), originalGraphStep.getIds());
         originalGraphStep.getLabels().forEach(this::addLabel);
     }
@@ -104,7 +104,7 @@ public final class MaxGraphStep<S, E extends Element> extends GraphStep<S, E> im
     /**
      * label + id -> global_id
      */
-    public static boolean processPrimaryKey(final MaxGraphStep<?, ?> graphStep, final HasContainer hasContainer,
+    public static boolean processPrimaryKey(final GaiaGraphStep<?, ?> graphStep, final HasContainer hasContainer,
                                             final List<HasContainer> originalContainers, boolean[] primaryKeyAsIndex,
                                             final GraphStoreService graphStore) {
         if (graphStep.ids.length == 0 && isValidPrimaryKey(hasContainer)
@@ -141,7 +141,7 @@ public final class MaxGraphStep<S, E extends Element> extends GraphStep<S, E> im
         return true;
     }
 
-    public static boolean processHasLabels(final MaxGraphStep<?, ?> graphStep, final HasContainer hasContainer,
+    public static boolean processHasLabels(final GaiaGraphStep<?, ?> graphStep, final HasContainer hasContainer,
                                            List<HasContainer> originalContainers) {
         if (!hasContainer.getKey().equals(T.label.getAccessor()) || graphStep.getIds().length != 0
                 || graphStep.getGraphLabels().size() != 0

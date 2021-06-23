@@ -36,7 +36,7 @@ public class GraphTraversalStrategies extends DefaultTraversalStrategies {
         strategies.add(PathLocalCountStrategy.instance());
         strategies.add(WhereTraversalStrategy.instance());
         strategies.add(SchemaIdMakerStrategy.instance(config, graphStore));
-        strategies.add(MaxGraphStepStrategy.instance(graphStore));
+        strategies.add(GaiaGraphStepStrategy.instance(graphStore));
         strategies.add(IncidentToAdjacentStrategy.instance());
         strategies.add(OrderGlobalLimitStrategy.instance());
         strategies.add(BySubTraversalStrategy.instance());

@@ -114,11 +114,11 @@ public class LogicPlanGlobalMap {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
                 Gremlin.GraphStep.Builder builder = Gremlin.GraphStep.newBuilder()
-                        .addAllIds(PlanUtils.extractIds(((MaxGraphStep) t).getIds()))
+                        .addAllIds(PlanUtils.extractIds(((GaiaGraphStep) t).getIds()))
                         .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
-                        .setPredicates(new PredicateTranslator(new HasContainerP((MaxGraphStep) t)).translate())
-                        .addTraverserRequirements(Gremlin.TraverserRequirement.valueOf(((MaxGraphStep) t).getTraverserRequirement().name()));
-                List<String> edgeLabels = ((MaxGraphStep) t).getGraphLabels();
+                        .setPredicates(new PredicateTranslator(new HasContainerP((GaiaGraphStep) t)).translate())
+                        .addTraverserRequirements(Gremlin.TraverserRequirement.valueOf(((GaiaGraphStep) t).getTraverserRequirement().name()));
+                List<String> edgeLabels = ((GaiaGraphStep) t).getGraphLabels();
                 if (!edgeLabels.isEmpty()) {
                     edgeLabels.forEach(l -> builder.addLabels(Integer.valueOf(l)));
                 }

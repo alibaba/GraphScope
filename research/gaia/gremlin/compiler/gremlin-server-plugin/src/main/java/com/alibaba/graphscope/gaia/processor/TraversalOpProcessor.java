@@ -2,6 +2,7 @@ package com.alibaba.graphscope.gaia.processor;
 
 import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
 import com.alibaba.graphscope.gaia.broadcast.RpcBroadcastProcessor;
+import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.idmaker.IncrementalQueryIdMaker;
@@ -41,12 +42,12 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
     private GaiaConfig config;
     private GraphStoreService graphStore;
 
-    public TraversalOpProcessor(GaiaConfig config, GraphStoreService graphStore) {
+    public TraversalOpProcessor(GaiaConfig config, GraphStoreService graphStore, RpcChannelFetcher fetcher) {
         super(false);
         this.config = config;
         this.graphStore = graphStore;
         this.queryIdMaker = new IncrementalQueryIdMaker();
-        this.broadcastProcessor = new RpcBroadcastProcessor(config.getPegasusPhysicalHosts());
+        this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
     }
 
     @Override
@@ -68,7 +69,7 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
                 op = (context -> {
                     Object byteCode = message.getArgs().get(Tokens.ARGS_GREMLIN);
                     Traversal traversal = executor.eval((Bytecode) byteCode, new SimpleBindings(), null, traversalSourceName);
-                    MaxGraphOpProcessor.applyStrategy(traversal, config, graphStore);
+                    GaiaGraphOpProcessor.applyStrategy(traversal, config, graphStore);
                     long queryId = (long) queryIdMaker.getId(traversal);
                     TraversalBuilder traversalBuilder = new TraversalBuilder((Traversal.Admin) traversal)
                             .addConfig(PlanConfig.QUERY_ID, queryId)
@@ -83,11 +84,11 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
                 });
                 return op;
             case Tokens.OPS_KEYS:
-                MaxGraphOpProcessor.writeResultList(ctx, Collections.EMPTY_LIST, ResponseStatusCode.SUCCESS);
+                GaiaGraphOpProcessor.writeResultList(ctx, Collections.EMPTY_LIST, ResponseStatusCode.SUCCESS);
                 return null;
             default:
                 String errorMsg = "not support " + message.getOp();
-                MaxGraphOpProcessor.writeResultList(ctx, Collections.singletonList(errorMsg), ResponseStatusCode.REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS);
+                GaiaGraphOpProcessor.writeResultList(ctx, Collections.singletonList(errorMsg), ResponseStatusCode.REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS);
                 return null;
         }
     }

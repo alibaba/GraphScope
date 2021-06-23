@@ -18,7 +18,7 @@ package com.alibaba.graphscope.gaia.result;
 import com.alibaba.graphscope.common.proto.GremlinResult;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
-import com.alibaba.graphscope.gaia.processor.MaxGraphOpProcessor;
+import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
 import com.google.protobuf.ByteString;
 import io.grpc.Status;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -60,7 +60,7 @@ public class GremlinResultProcessor implements ResultProcessor {
                     }
                 }
             } catch (Exception e) {
-                MaxGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(e.getMessage()), ResponseStatusCode.SERVER_ERROR);
+                GaiaGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(e.getMessage()), ResponseStatusCode.SERVER_ERROR);
                 // cannot write to this context any more
                 locked = true;
                 throw new RuntimeException(e);
@@ -73,7 +73,7 @@ public class GremlinResultProcessor implements ResultProcessor {
         synchronized (this) {
             if (!locked) {
                 logger.debug("start finish");
-                MaxGraphOpProcessor.writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
+                GaiaGraphOpProcessor.writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
                 locked = true;
             }
         }
@@ -84,7 +84,7 @@ public class GremlinResultProcessor implements ResultProcessor {
         synchronized (this) {
             if (!locked) {
                 logger.debug("start error");
-                MaxGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(status.toString()), ResponseStatusCode.SERVER_ERROR);
+                GaiaGraphOpProcessor.writeResultList(writeResult, Collections.singletonList(status.toString()), ResponseStatusCode.SERVER_ERROR);
                 locked = true;
             }
         }
