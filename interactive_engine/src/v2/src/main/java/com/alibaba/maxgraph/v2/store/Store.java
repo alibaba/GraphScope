@@ -27,7 +27,10 @@ import com.alibaba.maxgraph.v2.common.rpc.ChannelManager;
 import com.alibaba.maxgraph.v2.common.rpc.MaxGraphNameResolverFactory;
 import com.alibaba.maxgraph.v2.common.rpc.RpcServer;
 import com.alibaba.maxgraph.v2.common.util.CuratorUtils;
+import com.alibaba.maxgraph.v2.store.executor.ExecutorEngine;
 import com.alibaba.maxgraph.v2.store.executor.ExecutorService;
+import com.alibaba.maxgraph.v2.store.executor.gaia.GaiaEngine;
+import com.alibaba.maxgraph.v2.store.executor.gaia.GaiaService;
 import io.grpc.NameResolver;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -35,7 +38,6 @@ import java.io.IOException;
 
 public class Store extends NodeBase {
 
-    private CuratorFramework curator;
     private NodeDiscovery discovery;
     private ChannelManager channelManager;
     private MetaService metaService;
@@ -43,17 +45,15 @@ public class Store extends NodeBase {
     private WriterAgent writerAgent;
     private RpcServer rpcServer;
     private ExecutorService executorService;
+    private GaiaService gaiaService;
 
     public Store(Configs configs) {
         super(configs);
         configs = reConfig(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
-        if (CommonConfig.DISCOVERY_MODE.get(configs).equalsIgnoreCase("file")) {
-            this.discovery = new FileDiscovery(configs);
-        } else {
-            this.curator = CuratorUtils.makeCurator(configs);
-            this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
-        }
+        DiscoveryFactory discoveryFactory = new DiscoveryFactory(configs);
+        this.discovery = discoveryFactory.makeDiscovery(localNodeProvider);
+
         NameResolver.Factory nameResolverFactory = new MaxGraphNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
@@ -66,14 +66,13 @@ public class Store extends NodeBase {
         StoreIngestService storeIngestService = new StoreIngestService(this.storeService);
         this.rpcServer = new RpcServer(configs, localNodeProvider, storeWriteService, storeSchemaService,
                 storeIngestService);
-        this.executorService = new ExecutorService(configs, storeService, this.curator, this.discovery);
+        this.executorService = new ExecutorService(configs, storeService, discoveryFactory);
+        ExecutorEngine executorEngine = new GaiaEngine(configs, discoveryFactory);
+        this.gaiaService = new GaiaService(executorEngine, this.storeService);
     }
 
     @Override
     public void start() {
-        if (this.curator != null) {
-            this.curator.start();
-        }
         this.metaService.start();
         try {
             this.storeService.start();
@@ -96,20 +95,19 @@ public class Store extends NodeBase {
         this.discovery.start();
         this.channelManager.start();
         this.executorService.start();
+        this.gaiaService.start();
     }
 
     @Override
     public void close() throws IOException {
+        this.gaiaService.stop();
+        this.executorService.close();
         this.rpcServer.stop();
         this.writerAgent.stop();
         this.storeService.stop();
         this.metaService.stop();
         this.channelManager.stop();
         this.discovery.stop();
-        if (this.curator != null) {
-            this.curator.close();
-        }
-        this.executorService.close();
     }
 
     public static void main(String[] args) throws IOException {

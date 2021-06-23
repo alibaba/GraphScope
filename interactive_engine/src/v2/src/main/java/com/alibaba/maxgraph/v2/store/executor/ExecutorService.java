@@ -19,10 +19,7 @@ import com.alibaba.maxgraph.v2.common.MetaService;
 import com.alibaba.maxgraph.v2.common.config.CommonConfig;
 import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.config.StoreConfig;
-import com.alibaba.maxgraph.v2.common.discovery.LocalNodeProvider;
-import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.v2.common.discovery.RoleType;
-import com.alibaba.maxgraph.v2.common.discovery.ZkDiscovery;
+import com.alibaba.maxgraph.v2.common.discovery.*;
 import com.alibaba.maxgraph.v2.common.util.ThreadFactoryUtils;
 import com.alibaba.maxgraph.v2.store.GraphPartition;
 import com.alibaba.maxgraph.v2.store.StoreService;
@@ -51,34 +48,25 @@ public class ExecutorService implements Cloneable {
             TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
             ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler("executor-service-pool", logger));
 
-    public ExecutorService(Configs configs, StoreService storeService, CuratorFramework curator,
-                           NodeDiscovery discovery) {
+    public ExecutorService(Configs configs, StoreService storeService, DiscoveryFactory discoveryFactory) {
         this.configs = configs;
-        this.curator = curator;
         this.storeService = storeService;
-        ExecutorDiscoveryManager discoveryManager;
-        if (CommonConfig.DISCOVERY_MODE.get(configs).equalsIgnoreCase("file")) {
-            LocalNodeProvider provider = new LocalNodeProvider(configs);
-            discoveryManager = new ExecutorDiscoveryManager(provider, discovery, provider, discovery, provider,
-                    discovery, provider, discovery);
-        } else {
-            LocalNodeProvider engineServerProvider = new LocalNodeProvider(RoleType.EXECUTOR_ENGINE, configs);
-            NodeDiscovery engineServerDiscovery = new ZkDiscovery(configs, engineServerProvider, this.curator);
-            LocalNodeProvider storeQueryProvider = new LocalNodeProvider(RoleType.EXECUTOR_GRAPH, configs);
-            NodeDiscovery storeQueryDiscovery = new ZkDiscovery(configs, storeQueryProvider, this.curator);
-            LocalNodeProvider queryExecuteProvider = new LocalNodeProvider(RoleType.EXECUTOR_QUERY, configs);
-            NodeDiscovery queryExecuteDiscovery = new ZkDiscovery(configs, queryExecuteProvider, this.curator);
-            LocalNodeProvider queryManageProvider = new LocalNodeProvider(RoleType.EXECUTOR_MANAGE, configs);
-            NodeDiscovery queryManageDiscovery = new ZkDiscovery(configs, queryManageProvider, this.curator);
-            discoveryManager = new ExecutorDiscoveryManager(engineServerProvider,
-                    engineServerDiscovery,
-                    storeQueryProvider,
-                    storeQueryDiscovery,
-                    queryExecuteProvider,
-                    queryExecuteDiscovery,
-                    queryManageProvider,
-                    queryManageDiscovery);
-        }
+
+        LocalNodeProvider engineServerProvider = new LocalNodeProvider(RoleType.EXECUTOR_ENGINE, configs);
+        LocalNodeProvider storeQueryProvider = new LocalNodeProvider(RoleType.EXECUTOR_GRAPH, configs);
+        LocalNodeProvider queryExecuteProvider = new LocalNodeProvider(RoleType.EXECUTOR_QUERY, configs);
+        LocalNodeProvider queryManageProvider = new LocalNodeProvider(RoleType.EXECUTOR_MANAGE, configs);
+
+        ExecutorDiscoveryManager discoveryManager = new ExecutorDiscoveryManager(
+                engineServerProvider,
+                discoveryFactory.makeDiscovery(engineServerProvider),
+                storeQueryProvider,
+                discoveryFactory.makeDiscovery(storeQueryProvider),
+                queryExecuteProvider,
+                discoveryFactory.makeDiscovery(queryExecuteProvider),
+                queryManageProvider,
+                discoveryFactory.makeDiscovery(queryManageProvider)
+        );
         this.executorManager = new ExecutorManager(configs, discoveryManager);
     }
 
