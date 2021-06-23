@@ -34,3 +34,4 @@ from graphscope.analytical.app.sssp import property_sssp
 from graphscope.analytical.app.sssp import sssp
 from graphscope.analytical.app.triangles import triangles
 from graphscope.analytical.app.wcc import wcc
+from graphscope.analytical.app.pagerank_nx import pagerank_nx

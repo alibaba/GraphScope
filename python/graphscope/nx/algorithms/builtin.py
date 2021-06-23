@@ -49,9 +49,9 @@ def project_to_simple(func):
     return wrapper
 
 
-@patch_docstring(nxa.pagerank)
+@project_to_simple
 def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6):
-    raise NotImplementedError
+    return AppAssets(algo="pagerank_nx")(G, alpha, max_iter, tol)
 
 
 @project_to_simple
