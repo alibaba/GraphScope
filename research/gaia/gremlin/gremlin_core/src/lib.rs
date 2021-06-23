@@ -44,13 +44,14 @@ pub mod structure;
 
 pub mod compiler;
 mod result_process;
-mod storage;
+#[macro_use]
+pub mod graph_proxy;
 
 use crate::result_process::result_to_pb;
 use crate::structure::filter::codec::ParseError;
 pub use generated::gremlin::GremlinStep as GremlinStepPb;
+pub use graph_proxy::{create_demo_graph, ID_MASK};
 use std::io;
-pub use storage::{create_demo_graph, ID_MASK, ID_SHIFT_BITS};
 
 #[cfg(feature = "proto_inplace")]
 mod generated {

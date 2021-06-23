@@ -15,15 +15,14 @@
 
 use crate::generated::gremlin as pb;
 use crate::generated::gremlin::EntityType;
+use crate::graph_proxy::encode_store_e_id;
 use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::{Requirement, Traverser};
-use crate::storage::encode_store_e_id;
 use crate::structure::codec::pb_chain_to_filter;
-use crate::structure::{Edge, Label, QueryParams, Vertex, ID};
+use crate::structure::{Edge, Label, LabelId, QueryParams, Vertex, ID};
 use crate::FromPb;
 use bit_set::BitSet;
-use graph_store::common::LabelId;
 use pegasus::BuildJobError;
 use pegasus_common::downcast::*;
 use prost::alloc::str::FromStr;

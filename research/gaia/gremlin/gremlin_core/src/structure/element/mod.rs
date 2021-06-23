@@ -17,7 +17,6 @@ use crate::structure::property::DynDetails;
 use dyn_type::object::Primitives;
 use dyn_type::Object;
 pub use edge::Edge;
-use graph_store::common::LabelId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::fmt::Debug;
 use std::io;
@@ -26,6 +25,7 @@ pub use vertex::Vertex;
 
 /// The type of either vertex or edge id
 pub type ID = u128;
+pub type LabelId = u8;
 
 /// The number of bits in an `ID`
 pub const ID_BITS: usize = std::mem::size_of::<ID>() * 8;

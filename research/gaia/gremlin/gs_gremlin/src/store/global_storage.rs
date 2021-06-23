@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub type RuntimeLabelId = u8;
 use crate::store::util::{str_to_dyn_error, IterList};
 use dyn_type::{Object, Primitives};
+use gremlin_core::structure::LabelId as RuntimeLabelId;
 use gremlin_core::structure::{
     DefaultDetails, Direction, DynDetails, Edge, Label, PropKey, QueryParams, Statement, Vertex,
 };
+use gremlin_core::{filter_limit, filter_limit_ok, limit_n};
 use gremlin_core::{register_graph, DynIter, DynResult, GraphProxy, Partitioner, ID};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::graph_schema::Schema;
@@ -60,34 +61,6 @@ pub fn create_gs_store<V, VI, E, EI>(
     register_graph(Arc::new(graph));
 }
 
-macro_rules! filter {
-    ($iter: expr, $f: expr) => {
-        if let Some(ref f) = $f {
-            let f = f.clone();
-            let r = $iter.filter(move |v| f.test(v).unwrap_or(false));
-            Box::new(r)
-        } else {
-            let r = $iter;
-            Box::new(r)
-        }
-    };
-}
-
-macro_rules! filter_ok {
-    ($iter: expr, $f: expr) => {
-        if let Some(ref f) = $f {
-            let f = f.clone();
-            let r = $iter
-                .filter(move |v| f.test(v).unwrap_or(false))
-                .map(|v| Ok(v));
-            Box::new(r)
-        } else {
-            let r = $iter.map(|v| Ok(v));
-            Box::new(r)
-        }
-    };
-}
-
 impl<V, VI, E, EI> GraphProxy for GraphScopeStore<V, VI, E, EI>
 where
     V: StoreVertex + 'static,
@@ -121,7 +94,7 @@ where
             )
             .map(move |v| to_runtime_vertex(&v, schema.clone()));
 
-        Ok(filter!(result, filter))
+        Ok(filter_limit!(result, filter, None))
     }
 
     fn scan_edge(
@@ -148,7 +121,7 @@ where
             )
             .map(move |e| to_runtime_edge(&e, schema.clone()));
 
-        Ok(filter!(result, filter))
+        Ok(filter_limit!(result, filter, None))
     }
 
     fn get_vertex(
@@ -174,7 +147,7 @@ where
             )
             .map(move |v| to_runtime_vertex(&v, schema.clone()));
 
-        Ok(filter!(result, filter))
+        Ok(filter_limit!(result, filter, None))
     }
 
     fn get_edge(
@@ -198,7 +171,7 @@ where
             )
             .map(move |e| to_runtime_edge(&e, schema.clone()));
 
-        Ok(filter!(result, filter))
+        Ok(filter_limit!(result, filter, None))
     }
 
     fn prepare_explore_vertex(
@@ -261,7 +234,7 @@ where
             let schema = schema.clone();
             let iter_list =
                 IterList::new(iters).map(move |v| to_runtime_vertex(&v, schema.clone()));
-            Ok(filter_ok!(iter_list, filter))
+            Ok(filter_limit_ok!(iter_list, filter, None))
         });
         Ok(stmt)
     }
@@ -332,7 +305,7 @@ where
             let schema = schema.clone();
             let iters = iter.map(|(_src, ei)| ei).collect();
             let iter_list = IterList::new(iters).map(move |e| to_runtime_edge(&e, schema.clone()));
-            Ok(filter_ok!(iter_list, filter))
+            Ok(filter_limit_ok!(iter_list, filter, None))
         });
         Ok(stmt)
     }
