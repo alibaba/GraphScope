@@ -20,11 +20,11 @@ use std::borrow::BorrowMut;
 use std::sync::mpsc::channel;
 use std::time::Duration;
 use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
-use executor::pegasus::pegasus_server_manager::PegasusServerManager;
 use maxgraph_runtime::server::manager::ManagerGuards;
 use maxgraph_runtime::store::task_partition_manager::TaskPartitionManager;
 use maxgraph_runtime::server::query_manager::QueryManager;
 use maxgraph_runtime::store::remote_store_service::RemoteStoreServiceManager;
+use crate::executor::pegasus::pegasus_server_manager::PegasusServerManager;
 
 pub struct ExecutorServer {
     graph_config: Arc<GraphConfig>,
