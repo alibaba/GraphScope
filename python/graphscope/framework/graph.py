@@ -119,8 +119,7 @@ class GraphInterface(metaclass=ABCMeta):
                 "networkx graph and graphscope graph not in the same session."
             )
         if hasattr(g, "_graph"):
-            msg = "graph view can not convert to gs graph"
-            raise TypeError(msg)
+            raise TypeError("graph view can not convert to gs graph")
         return dag_utils.dynamic_to_arrow(g)
 
     def _from_vineyard(self, vineyard_object):
@@ -198,13 +197,16 @@ class GraphDAGNode(DAGNode, GraphInterface):
         >>> sess = gs.session(mode="lazy")
         >>> g = sess.g()
         >>> g1 = g.add_vertices("person.csv","person")
-        >>> sess.run(g1)
+        >>> print(g1) # <graphscope.framework.graph.GraphDAGNode object>
+        >>> g2 = sess.run(g1)
+        >>> print(g2) # <graphscope.framework.graph.Graph object>
 
         >>> # eager mode
         >>> import graphscope as gs
         >>> sess = gs.session(mode="eager")
         >>> g = sess.g()
         >>> g1 = g.add_vertices("person.csv","person")
+        >>> print(g1) # <graphscope.framework.graph.Graph object>
         >>> g1.unload()
     """
 
@@ -327,7 +329,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             vertices (Union[str, Loader]): Vertex data source.
             label (str, optional): Vertex label name. Defaults to "_".
             properties (list[str], optional): List of column names loaded as properties. Defaults to None.
-            vid_field (int, optional): Column index or name used as id field. Defaults to 0.
+            vid_field (int or str, optional): Column index or property name used as id field. Defaults to 0.
 
         Raises:
             ValueError: If the given value is invalid or conflict with current graph.
@@ -595,7 +597,6 @@ class Graph(GraphInterface):
     .. code:: python
 
         >>> import graphscope as gs
-        >>> from graphscope.framework.loader import Loader
         >>> sess = gs.session()
         >>> graph = sess.g()
         >>> graph = graph.add_vertices("person.csv","person")

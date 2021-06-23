@@ -113,12 +113,12 @@ def not_compatible_for(*graph_types):
 
 
 class AppAssets(DAGNode):
-    """A class holds the bytes of the gar resource.
+    """A class represents a app assert node in a DAG that holds the bytes of the gar resource.
 
     Assets includes name (for builtin algorithm), and gar (for user defined algorithm),
     and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`.
 
-    The instance of this class can be passed to init :class:`graphscope.App`.
+    The instance of this class can be passed to init :class:`graphscope.framework.app.AppDAGNode`.
 
     Attributes:
         algo (str): Name of the algorithm
@@ -148,7 +148,7 @@ class AppAssets(DAGNode):
         self._op = create_app(self)
 
     def __repr__(self) -> str:
-        return f"graphscope.AppAssets <type: {self._type}, algorithm: {self._algo}>"
+        return f"graphscope.framework.app.AppAssets <type: {self._type}, algorithm: {self._algo}>"
 
     @property
     def algo(self):
@@ -193,6 +193,7 @@ class AppAssets(DAGNode):
         """Generate a signature of the app assets by its algo name (and gar resources).
 
         Used to uniquely identify a app assets.
+
         Returns:
             str: signature of this assets
         """
@@ -245,7 +246,7 @@ class AppAssets(DAGNode):
 
 
 class AppDAGNode(DAGNode):
-    """App node in a DAG.
+    """A class represents a app node in a DAG.
 
     An application that can run on graphs and produce results.
 
@@ -387,7 +388,7 @@ def load_app(algo, gar=None, **kwargs):
           str represent the path of resource.
 
     Returns:
-        Instance of <graphscope.AppAssets>
+        Instance of <graphscope.framework.app.AppAssets>
 
     Raises:
         FileNotFoundError: File not exist.

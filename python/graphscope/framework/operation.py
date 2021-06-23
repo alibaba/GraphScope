@@ -47,7 +47,7 @@ class Operation(object):
         config=None,
         query_args=None,
     ):
-        """Creates an :code:`Operation`.
+        """Creates an :code:`graphscope.framework.operation.Operation`.
 
         Args:
             op_type: :code:`types_pb2.OperationType`
@@ -90,6 +90,7 @@ class Operation(object):
 
     @property
     def parents(self):
+        """A list of :code:`graphscope.framework.operation.Operation`"""
         return self._parents
 
     @property
@@ -127,6 +128,11 @@ class Operation(object):
         return self._leaf
 
     def eval(self, leaf=True):
+        """Evaluate by :code:`sess.run`.
+
+        Args:
+            leaf (bool, optional): Leaf Operation means there is no successor.
+        """
         # NB: to void cycle import
         # pylint: disable=import-outside-toplevel, cyclic-import
         from graphscope.client.session import get_session_by_id

@@ -123,6 +123,13 @@ def test_unload_graph(sess, student_v, teacher_v, student_group_e):
     ug3 = g3.unload()
     sess.run([ug, ug1, ug2, ug3])
 
+    # case 4
+    # test unload twice
+    g = sess.g()
+    ug = g.unload()
+    assert sess.run(ug) is None
+    assert sess.run(ug) is None
+
 
 def test_error_using_unload_graph(sess, student_v):
     with pytest.raises(AnalyticalEngineInternalError):
