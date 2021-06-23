@@ -811,10 +811,12 @@ class Graph(GraphInterface):
             self._close_learning_instances()
         except Exception as e:
             logger.error("Failed to close learning instances: %s" % e)
+        rlt = None
         if not self._detached:
-            self._session._wrapper(self._graph_node.unload())
+            rlt = self._session._wrapper(self._graph_node.unload())
         self._key = None
         self._session = None
+        return rlt
 
     def _project_to_simple(self):
         return self._session._wrapper(self._graph_node._project_to_simple())

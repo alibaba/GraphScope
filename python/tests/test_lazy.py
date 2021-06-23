@@ -95,6 +95,20 @@ def test_vertices_omitted_form_loader(sess, student_group_e):
     assert g2.loaded()
 
 
+def test_construct_graph_step_by_step(sess):
+    _g = sess.g(generate_eid=False)
+    g = sess.run(_g)
+    print(g.key)
+    _g1 = g.add_vertices(f"{new_property_dir}/twitter_v_0", "v0")
+    g1 = sess.run(_g1)
+    _g2 = g1.add_vertices(f"{new_property_dir}/twitter_v_1", "v1")
+    g2 = sess.run(_g2)
+    ug = g.unload()
+    ug1 = g1.unload()
+    ug2 = g2.unload()
+    sess.run([ug, ug1, ug2])
+
+
 def test_unload_graph(sess, student_v, teacher_v, student_group_e):
     # case 1
     # 1. load empty g

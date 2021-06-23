@@ -373,9 +373,10 @@ class App(object):
 
     def unload(self):
         """Unload app. Both on engine side and python side. Set the key to None."""
-        self._session._wrapper(self._app_node.unload())
+        rlt = self._session._wrapper(self._app_node.unload())
         self._key = None
         self._session = None
+        return rlt
 
     def __call__(self, *args, **kwargs):
         return self._session._wrapper(self._app_node(*args, **kwargs))
