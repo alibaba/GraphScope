@@ -446,9 +446,7 @@ def _pre_process_for_unload_app_op(op, op_result_pool, key_to_op):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     result = op_result_pool[key_of_parent_op]
-    op.attr[types_pb2.APP_NAME].CopyFrom(
-        utils.s_to_attr(result.result.decode("utf-8"))
-    )
+    op.attr[types_pb2.APP_NAME].CopyFrom(utils.s_to_attr(result.result.decode("utf-8")))
 
 
 def _pre_process_for_add_column_op(op, op_result_pool, key_to_op):

@@ -43,7 +43,7 @@ class DAGManager(object):
         types_pb2.PROJECT_TO_SIMPLE,  # need loaded graph schema information
         types_pb2.ADD_COLUMN,  # need ctx result
         types_pb2.UNLOAD_GRAPH,  # need loaded graph information
-        types_pb2.UNLOAD_APP, # need loaded app information
+        types_pb2.UNLOAD_APP,  # need loaded app information
     ]
 
     def __init__(self, dag_def: op_def_pb2.DagDef):
