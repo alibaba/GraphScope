@@ -30,6 +30,6 @@ public interface GaiaLibrary extends Library {
 
     void stopEngine(Pointer engine);
 
-    void updatePeerView(String peerViewString);
+    void updatePeerView(Pointer pointer, String peerViewString);
 
 }

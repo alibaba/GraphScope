@@ -68,7 +68,7 @@ public class GaiaEngine implements ExecutorEngine {
                 String peerViewString = nodes.values().stream()
                         .map(n -> String.format("%s-%s:%s", n.getIdx(), n.getHost(), n.getPort()))
                         .collect(Collectors.joining(","));
-                GaiaLibrary.INSTANCE.updatePeerView(peerViewString);
+                GaiaLibrary.INSTANCE.updatePeerView(this.pointer, peerViewString);
             }
         }
     }
