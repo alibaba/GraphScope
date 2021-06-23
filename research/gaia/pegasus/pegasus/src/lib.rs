@@ -63,6 +63,7 @@ use std::collections::HashSet;
 pub use tag::Tag;
 pub use worker::Worker;
 pub use worker_id::{get_current_worker, WorkerId};
+use std::net::SocketAddr;
 
 lazy_static! {
     static ref SERVER_ID: Mutex<Option<u64>> = Mutex::new(None);
@@ -148,24 +149,26 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
 
 pub fn startup_with<D: ServerDetect + 'static>(
     conf: Configuration, detect: D,
-) -> Result<(), StartupError> {
+) -> Result<Option<SocketAddr>, StartupError> {
     let server_id = conf.server_id();
     if let Some(id) = set_server_id(server_id) {
         return Err(StartupError::AlreadyStarted(id));
     }
-
-    if let Some(net_conf) = conf.network_config() {
+    let res = if let Some(net_conf) = conf.network_config() {
         let addr = net_conf.local_addr()?;
         let conn_conf = net_conf.get_connection_param();
         let addr = pegasus_network::start_up(server_id, conn_conf, addr, detect)?;
         info!("server {} start on {:?}", server_id, addr);
-    }
+        Some(addr)
+    } else {
+        None
+    };
 
     if let Some(pool_size) = conf.max_pool_size {
         pegasus_executor::set_core_pool_size(pool_size as usize);
     }
     pegasus_executor::try_start_executor_async();
-    Ok(())
+    Ok(res)
 }
 
 pub fn shutdown_all() {
