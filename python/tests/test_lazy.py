@@ -98,7 +98,6 @@ def test_vertices_omitted_form_loader(sess, student_group_e):
 def test_construct_graph_step_by_step(sess):
     _g = sess.g(generate_eid=False)
     g = sess.run(_g)
-    print(g.key)
     _g1 = g.add_vertices(f"{new_property_dir}/twitter_v_0", "v0")
     g1 = sess.run(_g1)
     _g2 = g1.add_vertices(f"{new_property_dir}/twitter_v_1", "v1")
