@@ -4,20 +4,19 @@ use maxgraph_store::db::graph::store::GraphStore;
 use std::net::SocketAddr;
 use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
 use gaia_pegasus::Configuration;
-use executor::gaia::jna_server_detector::JnaServerDetector;
 use gremlin_core::{register_gremlin_types, Partition};
 use maxgraph_store::db::api::GraphErrorCode::EngineError;
 use tokio::runtime::Runtime;
-use crate::executor::gaia::jna_server_detector::JnaServerDetector;
 use tokio::sync::oneshot;
 use gremlin_core::compiler::GremlinJobCompiler;
 use pegasus_server::service::Service;
 use pegasus_server::rpc::start_rpc_server;
+use pegasus_network::manager::SimpleServerDetector;
 
 pub struct GaiaServer {
     config: Arc<GraphConfig>,
     graph: Arc<GlobalGraph>,
-    detector: Arc<JnaServerDetector>,
+    detector: Arc<SimpleServerDetector>,
 }
 
 impl GaiaServer {
@@ -26,7 +25,7 @@ impl GaiaServer {
         Ok(GaiaServer {
             config,
             graph: Arc::new(GlobalGraph::empty(partition_count)),
-            detector: Arc::new(JnaServerDetector::new()),
+            detector: Arc::new(SimpleServerDetector::new()),
         })
     }
 
@@ -35,10 +34,16 @@ impl GaiaServer {
     }
 
     pub fn start(&self) -> GraphResult<(u16, u16)> {
-        let report = self.config.get_storage_option("gaia.report")?.parse()
-            .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
-        let worker_num = self.config.get_storage_option("worker.num")?.parse()
-            .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
+        let report = match self.config.get_storage_option("gaia.report") {
+            None => false,
+            Some(report_string) => report_string.parse()
+                .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?,
+        };
+        let worker_num = match self.config.get_storage_option("worker.num") {
+            None => 0,
+            Some(worker_num_string) => worker_num_string.parse()
+                .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?,
+        };
         let rpc_port = match self.config.get_storage_option("gaia.server.port") {
             None => { 0 },
             Some(server_port_string) => {
@@ -49,17 +54,19 @@ impl GaiaServer {
             .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
         register_gremlin_types().map_err(|e| GraphError::new(EngineError, "register gremlin types failed".to_string()))?;
         let gaia_config = make_gaia_config(self.config.clone());
+        let server_id = gaia_config.server_id();
         let socket_addr = gaia_pegasus::startup_with(gaia_config, self.detector.clone())
-            .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))??;
+            .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?
+            .ok_or(GraphError::new(EngineError, "gaia engine return None addr".to_string()))?;
 
         let (tx, rx) = oneshot::channel();
-        let mut rt = Runtime::new().map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
+        let rt = Runtime::new().map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
         rt.block_on(async {
             // TODO
             let partition = Partition { num_servers: 0, };
-            let factory = GremlinJobCompiler::new(partition, worker_num, gaia_config.server_id());
+            let factory = GremlinJobCompiler::new(partition, worker_num, server_id);
             let service = Service::new(factory);
-            let local_addr = start_rpc_server(addr, service, report).await?;
+            let local_addr = start_rpc_server(addr, service, report).await.unwrap();
             tx.send(local_addr.port()).unwrap();
         });
         let server_port = futures::executor::block_on(rx).unwrap();

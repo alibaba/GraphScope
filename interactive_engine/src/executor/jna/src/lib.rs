@@ -13,7 +13,6 @@ extern crate grpcio;
 extern crate lazy_static;
 extern crate pegasus_network;
 extern crate gremlin_core;
-extern crate tokio;
 
 mod executor;
 mod store;
