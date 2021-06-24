@@ -62,18 +62,7 @@ class PageRankNetworkxContext
     }
   }
 
-  /*
-    const folly::dynamic& GetVertexResult(const vertex_t& v) override {
-      auto& frag = this->fragment();
-      CHECK(frag.IsInnerVertex(v));
-      if (this->data()[v].isNull()) {
-        this->data()[v] = result[v];
-      }
-      return this->data()[v];
-    }
-  */
-
-  typename FRAG_T::template vertex_array_t<int> degree;
+  typename FRAG_T::template vertex_array_t<double> degree;
   typename FRAG_T::template vertex_array_t<double>& result;
   typename FRAG_T::template vertex_array_t<double> pre_result;
 

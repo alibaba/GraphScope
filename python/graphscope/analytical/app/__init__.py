@@ -30,8 +30,8 @@ from graphscope.analytical.app.katz_centrality import katz_centrality
 from graphscope.analytical.app.louvain import louvain
 from graphscope.analytical.app.lpa import lpa
 from graphscope.analytical.app.pagerank import pagerank
+from graphscope.analytical.app.pagerank_nx import pagerank_nx
 from graphscope.analytical.app.sssp import property_sssp
 from graphscope.analytical.app.sssp import sssp
 from graphscope.analytical.app.triangles import triangles
 from graphscope.analytical.app.wcc import wcc
-from graphscope.analytical.app.pagerank_nx import pagerank_nx

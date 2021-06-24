@@ -50,7 +50,7 @@ def project_to_simple(func):
 
 
 @project_to_simple
-def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6):
+def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6, weight=None):
     return AppAssets(algo="pagerank_nx")(G, alpha, max_iter, tol)
 
 

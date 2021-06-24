@@ -21,7 +21,7 @@ from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 
-__all__ = ["pagerank"]
+__all__ = ["pagerank_nx"]
 
 
 @project_to_simple
@@ -50,5 +50,5 @@ def pagerank_nx(graph, alpha=0.85, max_iter=100, tol=1e-06):
 
     """
     alpha = float(alpha)
-    max_round = int(max_round)
-    return AppAssets(algo="pagerank_nx")(graph, alpha, max_round, tol)
+    max_iter = int(max_iter)
+    return AppAssets(algo="pagerank_nx")(graph, alpha, max_iter, tol)

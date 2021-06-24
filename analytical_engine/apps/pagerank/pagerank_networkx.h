@@ -63,17 +63,24 @@ class PageRankNetworkx
 
     // assign initial ranks
     ForEach(inner_vertices, [&ctx, &frag, p, &messages](int tid, vertex_t u) {
-      int EdgeNum = frag.GetOutgoingAdjList(u).Size();
-      ctx.degree[u] = EdgeNum;
+      if (std::is_same<edata_t, grape::EmptyType>::value) {
+        // use original degree
+        ctx.degree[u] = static_cast<double>(frag.GetOutgoingAdjList(u).Size());
+      } else {
+        // use weigted degree
+        for (auto& e : frag.GetOutgoingAdjList(u)) {
+          ctx.degree[u] += static_cast<double>(e.get_data());
+        }
+      }
       ctx.result[u] = p;
-      if (EdgeNum > 0) {
+      if (ctx.degree[u] != 0.0) {
         messages.SendMsgThroughOEdges<fragment_t, double>(
-            frag, u, ctx.result[u] / EdgeNum, tid);
+            frag, u, ctx.result[u] / ctx.degree[u], tid);
       }
     });
 
     for (auto u : inner_vertices) {
-      if (ctx.degree[u] == 0) {
+      if (ctx.degree[u] == 0.0) {
         ++ctx.dangling_vnum;
       }
     }
@@ -105,8 +112,8 @@ class PageRankNetworkx
     }
 
     ForEach(inner_vertices, [&ctx](int tid, vertex_t u) {
-      if (ctx.degree[u] > 0) {
-        ctx.pre_result[u] = ctx.result[u] / static_cast<double>(ctx.degree[u]);
+      if (ctx.degree[u] > 0.0) {
+        ctx.pre_result[u] = ctx.result[u] / ctx.degree[u];
       } else {
         ctx.pre_result[u] = ctx.result[u];
       }
@@ -126,7 +133,7 @@ class PageRankNetworkx
     double eps = 0.0;
     ctx.dangling_sum = 0.0;
     for (auto& v : inner_vertices) {
-      if (ctx.degree[v] > 0) {
+      if (ctx.degree[v] > 0.0) {
         eps += fabs(ctx.result[v] - ctx.pre_result[v] * ctx.degree[v]);
       } else {
         eps += fabs(ctx.result[v] - ctx.pre_result[v]);
