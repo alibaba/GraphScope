@@ -493,6 +493,7 @@ impl GraphPartitionManager for GlobalGraph {
         floor_mod(vid, partition_count as i64) as i32
     }
 
+    // TODO(haixia): impl for v2 store
     fn get_server_id(&self, _pid: u32) -> i32 {
         unimplemented!()
     }

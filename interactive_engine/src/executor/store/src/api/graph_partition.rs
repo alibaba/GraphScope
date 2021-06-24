@@ -52,6 +52,7 @@ impl GraphPartitionManager for ConstantPartitionManager {
     }
 
     fn get_server_id(&self, _pid: u32) -> i32 {
+        //TODO(bingqing)
         unimplemented!()
     }
 
@@ -97,6 +98,7 @@ impl<V, VI, E, EI> GraphPartitionManager for FixedStorePartitionManager<V, VI, E
     }
 
     fn get_server_id(&self, _pid: u32) -> i32 {
+        // TODO(bingqing)
         unimplemented!()
     }
 
