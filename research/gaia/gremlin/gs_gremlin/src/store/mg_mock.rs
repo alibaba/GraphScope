@@ -840,6 +840,10 @@ impl GraphPartitionManager for MockGraph {
         floor_mod(vid, partition_count as VertexId) as i32
     }
 
+    fn get_server_id(&self, _pid: u32) -> i32 {
+        0
+    }
+
     fn get_process_partition_list(&self) -> Vec<PartitionId> {
         self.partition_list
             .keys()

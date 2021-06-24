@@ -455,7 +455,6 @@ fn build_partition_vertex_ids(
 /// A simple partition utility, that one server contains multiple graph partitions
 pub struct MultiPartition {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
-    num_servers: usize,
 }
 
 impl Partitioner for MultiPartition {
@@ -472,19 +471,18 @@ impl Partitioner for MultiPartition {
         let partition_id = self
             .graph_partition_manager
             .get_partition_id(*id as VertexId) as u64;
-        // TODO(bingqing): confirm partition id -> server id
-        // We now assume: server 0: p0, p2; server 1: p1, p3
-        let server_index = partition_id % self.num_servers as u64;
+        let server_index = self
+            .graph_partition_manager
+            .get_server_id(partition_id as PropId) as u64;
         let worker_index = partition_id % worker_num_per_server;
         server_index * worker_num_per_server + worker_index as u64
     }
 }
 
 impl MultiPartition {
-    pub fn new<P: GraphPartitionManager + 'static>(p: P, num_servers: usize) -> Self {
+    pub fn new<P: GraphPartitionManager + 'static>(p: P) -> Self {
         MultiPartition {
             graph_partition_manager: Arc::new(p),
-            num_servers,
         }
     }
 }
@@ -496,8 +494,12 @@ where
     E: StoreEdge + 'static,
     EI: Iterator<Item = E> + Send + 'static,
 {
-    fn get_partition_id(&self, vid: i64) -> i32 {
+    fn get_partition_id(&self, vid: VertexId) -> i32 {
         self.partition_manager.get_partition_id(vid)
+    }
+
+    fn get_server_id(&self, pid: PartitionId) -> i32 {
+        self.partition_manager.get_server_id(pid)
     }
 
     fn get_process_partition_list(&self) -> Vec<u32> {

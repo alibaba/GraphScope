@@ -13,11 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use gremlin_core::compiler::GremlinJobCompiler;
+use gremlin_core::register_gremlin_types;
 use gs_gremlin::store::global_storage::create_gs_store;
 use gs_gremlin::store::global_storage::MultiPartition;
 use gs_gremlin::store::mg_mock::build_modern_mock_graph;
-use gremlin_core::compiler::GremlinJobCompiler;
-use gremlin_core::register_gremlin_types;
 use log::info;
 use pegasus::Configuration;
 use pegasus_server::config::combine_config;
@@ -90,7 +90,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let graph = build_modern_mock_graph();
     let partitioner = graph.clone();
     create_gs_store(Arc::new(graph), Arc::new(partitioner.clone()));
-    let partition = MultiPartition::new(partitioner, num_servers);
+    let partition = MultiPartition::new(partitioner);
     register_gremlin_types().expect("register gremlin types failed");
 
     if let Some(engine_config) = config {
