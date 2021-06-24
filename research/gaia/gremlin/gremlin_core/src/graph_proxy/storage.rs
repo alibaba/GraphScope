@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::graph_proxy::from_fn;
 use crate::structure::{
     DefaultDetails, Details, Direction, DynDetails, Edge, Label, LabelId, PropKey, QueryParams,
     Statement, Vertex, ID_BITS,
@@ -26,7 +27,6 @@ use graph_store::prelude::{
     DefaultId, EdgeId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId,
     LDBCGraphSchema, LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
 };
-use pegasus::api::function::DynIter;
 use pegasus_common::downcast::*;
 use std::collections::HashMap;
 use std::path::Path;
@@ -298,19 +298,18 @@ fn to_runtime_vertex(
 ) -> Vertex {
     // For vertices, we query properties via vid
     let details = LazyVertexDetails::new(v.get_id(), store);
-    let id = encode_runtime_v_id(&v);
-    let label = encode_runtime_v_label(&v);
+    let id = v.get_id() as ID;
+    let label = Some(Label::Id(v.get_label()[0]));
     Vertex::new(id, label, details)
 }
 
 #[inline]
 fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<String>) -> Vertex {
-    let id = encode_runtime_v_id(&v);
-    let label = encode_runtime_v_label(&v);
+    let id = v.get_id() as ID;
+    let label = Some(Label::Id(v.get_label()[0]));
     let mut properties = HashMap::new();
     if props.is_empty() {
         if let Some(mut prop_vals) = v.clone_all_properties() {
-            // TODO: shall we directly return PropKey?
             for (prop, obj) in prop_vals.drain() {
                 properties.insert(prop.into(), obj);
             }
@@ -334,11 +333,12 @@ fn to_runtime_edge(
     e: LocalEdge<DefaultId, InternalId>, _store: &'static LargeGraphDB<DefaultId, InternalId>,
 ) -> Edge {
     // TODO: For edges, we clone all properties by default for now. But we'd better get properties on demand
-    let id = encode_runtime_e_id(&e);
-    let label = encode_runtime_e_label(&e);
+    // Edge's ID is encoded by the source vertex's `ID`, and its internal index
+    let ei = e.get_edge_id();
+    let id = ((ei.1 as ID) << ID_SHIFT_BITS) | (ei.0 as ID);
+    let label = Some(Label::Id(e.get_label()));
     let mut properties = HashMap::new();
     if let Some(mut prop_vals) = e.clone_all_properties() {
-        // TODO: shall we directly return PropKey?
         for (prop, obj) in prop_vals.drain() {
             properties.insert(prop.into(), obj);
         }
@@ -437,18 +437,6 @@ impl Details for LazyEdgeDetails {
     }
 }
 
-#[inline]
-fn from_fn<I, O, F>(func: F) -> Box<dyn Statement<I, O>>
-where
-    F: Fn(I) -> DynResult<DynIter<O>> + Send + Sync + 'static,
-{
-    Box::new(func) as Box<dyn Statement<I, O>>
-}
-
-fn encode_runtime_v_id(v: &LocalVertex<DefaultId>) -> ID {
-    v.get_id() as ID
-}
-
 pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
 
 /// Given the encoding of an edge, the `ID_MASK` is used to get the lower half part of an edge, which is
@@ -456,24 +444,10 @@ pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
 /// machine of the edge.
 pub const ID_MASK: ID = ((1 as ID) << (ID_SHIFT_BITS as ID)) - (1 as ID);
 
-/// Edge's ID is encoded by the source vertex's `ID`, and its internal index
-fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
-    let ei = e.get_edge_id();
-    ((ei.1 as ID) << ID_SHIFT_BITS) | (ei.0 as ID)
-}
-
 pub fn encode_store_e_id(e: &ID) -> EdgeId<DefaultId> {
     let index = (*e >> ID_SHIFT_BITS) as usize;
     let start_id = (*e & ID_MASK) as DefaultId;
     (start_id, index)
-}
-
-fn encode_runtime_v_label(v: &LocalVertex<DefaultId>) -> Option<Label> {
-    Some(Label::Id(v.get_label()[0]))
-}
-
-fn encode_runtime_e_label(e: &LocalEdge<DefaultId, InternalId>) -> Option<Label> {
-    Some(Label::Id(e.get_label()))
 }
 
 /// Transform string-typed labels into a id-typed labels.

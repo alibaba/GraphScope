@@ -14,7 +14,17 @@
 //! limitations under the License.
 
 mod storage;
+use crate::structure::Statement;
+use crate::DynResult;
+use pegasus::api::function::DynIter;
 pub use storage::{create_demo_graph, encode_store_e_id, ID_MASK};
+
+pub fn from_fn<I, O, F>(func: F) -> Box<dyn Statement<I, O>>
+where
+    F: Fn(I) -> DynResult<DynIter<O>> + Send + Sync + 'static,
+{
+    Box::new(func) as Box<dyn Statement<I, O>>
+}
 
 #[macro_export]
 macro_rules! limit_n {

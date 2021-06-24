@@ -15,12 +15,13 @@
 
 use crate::store::util::{str_to_dyn_error, IterList};
 use dyn_type::{Object, Primitives};
+use gremlin_core::graph_proxy::from_fn;
 use gremlin_core::structure::LabelId as RuntimeLabelId;
 use gremlin_core::structure::{
     DefaultDetails, Direction, DynDetails, Edge, Label, PropKey, QueryParams, Statement, Vertex,
 };
 use gremlin_core::{filter_limit, filter_limit_ok, limit_n};
-use gremlin_core::{register_graph, DynIter, DynResult, GraphProxy, Partitioner, ID};
+use gremlin_core::{register_graph, DynResult, GraphProxy, Partitioner, ID};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::graph_schema::Schema;
 use maxgraph_store::api::prelude::Property;
@@ -313,11 +314,11 @@ where
 
 #[inline]
 fn to_runtime_vertex<V: StoreVertex>(v: &V, schema: Arc<dyn Schema>) -> Vertex {
-    let id = encode_runtime_v_id(v);
-    let label = encode_runtime_label(v.get_label_id());
+    let id = v.get_id() as ID;
+    let label = Some(Label::Id(v.get_label_id() as RuntimeLabelId));
     let properties = v
         .get_properties()
-        .map(|(prop_id, prop_val)| encode_property(prop_id, prop_val, schema.clone()))
+        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val, schema.clone()))
         .collect();
     let details = DefaultDetails::new_with_prop(id, label.clone().unwrap(), properties);
     Vertex::new(id, label, details)
@@ -325,11 +326,11 @@ fn to_runtime_vertex<V: StoreVertex>(v: &V, schema: Arc<dyn Schema>) -> Vertex {
 
 #[inline]
 fn to_runtime_edge<E: StoreEdge>(e: &E, schema: Arc<dyn Schema>) -> Edge {
-    let id = encode_runtime_e_id(e);
-    let label = encode_runtime_label(e.get_label_id());
+    let id = ((e.get_dst_id() as ID) << 64) | (e.get_src_id() as ID);
+    let label = Some(Label::Id(e.get_label_id() as RuntimeLabelId));
     let properties = e
         .get_properties()
-        .map(|(prop_id, prop_val)| encode_property(prop_id, prop_val, schema.clone()))
+        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val, schema.clone()))
         .collect();
     Edge::new(
         id,
@@ -342,14 +343,6 @@ fn to_runtime_edge<E: StoreEdge>(e: &E, schema: Arc<dyn Schema>) -> Edge {
             properties,
         )),
     )
-}
-
-#[inline]
-fn from_fn<I, O, F>(func: F) -> Box<dyn Statement<I, O>>
-where
-    F: Fn(I) -> DynResult<DynIter<O>> + Send + Sync + 'static,
-{
-    Box::new(func) as Box<dyn Statement<I, O>>
 }
 
 /// in maxgraph store, Option<Vec<PropId>>: None means we need all properties, and Some means we need given properties (and Some(vec![]) means we do not need any property)
@@ -387,25 +380,7 @@ fn encode_storage_label(labels: &Vec<Label>, schema: Arc<dyn Schema>) -> Vec<Lab
 }
 
 #[inline]
-fn encode_runtime_v_id<V: maxgraph_store::api::Vertex>(v: &V) -> ID {
-    v.get_id() as ID
-}
-
-#[inline]
-fn encode_runtime_e_id<E: StoreEdge>(e: &E) -> ID {
-    let g_dst = e.get_dst_id();
-    let g_src = e.get_src_id();
-    let eid = ((g_dst as ID) << 64) | (g_src as ID);
-    eid
-}
-
-#[inline]
-fn encode_runtime_label(l: LabelId) -> Option<Label> {
-    Some(Label::Id(l as RuntimeLabelId))
-}
-
-#[inline]
-fn encode_property(
+fn encode_runtime_property(
     prop_id: PropId,
     prop_val: Property,
     schema: Arc<dyn Schema>,
