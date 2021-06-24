@@ -20,15 +20,8 @@ option java_outer_classname = "GremlinResult";
 
 import "common.proto";
 
-message PropertyKey {
-  oneof item {
-    string name = 1;
-    int32 name_id = 2;
-  }
-}
-
 message Property {
-  PropertyKey key = 1;
+  common.PropertyKey key = 1;
   common.Value value = 2;
 }
 

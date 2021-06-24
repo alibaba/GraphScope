@@ -204,13 +204,17 @@ message MapKey {common.Key key = 1;}
 message MapValue {common.Key key = 1;}
 message SubValue {}
 
+message PropKeys {
+ repeated common.PropertyKey prop_keys = 1;
+}
+
 // we try to unify the by key for select, group, and order
 message ByKey {
   oneof item {
     // by(id/label/property/values("p1","p2")
     common.Key key = 1;
-    // by(valueMap("prop1", "prop2")) in string, empty means all
-    common.StringArray name = 2;
+    // by(valueMap("prop1", "prop2")) in string, or by(valueMap(prop_id1, prop_id2)) in integer, empty means all
+    PropKeys prop_keys = 2;
     // by(keys)
     MapKey map_keys = 3;
     // by(values)
@@ -281,10 +285,7 @@ message GroupByUnfold {
 message PathLocalCountStep{}
 
 message PropertiesStep {
-  oneof item {
-    common.StringArray name = 1;
-    common.I32Array name_id = 2;
-  }
+  PropKeys prop_keys = 1;
 }
 
 // map
