@@ -307,7 +307,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo '$TZ' > /etc/timezone
 
 # for programming output
-ENV LC_ALL=C
+RUN localedef -c -f UTF-8 -i en_US en_US.UTF-8
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 ENV PATH=${PATH}:/usr/local/go/bin
 ENV RUST_BACKTRACE=1

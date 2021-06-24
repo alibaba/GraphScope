@@ -113,12 +113,12 @@ def not_compatible_for(*graph_types):
 
 
 class AppAssets(DAGNode):
-    """A class holds the bytes of the gar resource.
+    """A class represents a app assert node in a DAG that holds the bytes of the gar resource.
 
     Assets includes name (for builtin algorithm), and gar (for user defined algorithm),
     and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`.
 
-    The instance of this class can be passed to init :class:`graphscope.App`.
+    The instance of this class can be passed to init :class:`graphscope.framework.app.AppDAGNode`.
 
     Attributes:
         algo (str): Name of the algorithm
@@ -148,7 +148,7 @@ class AppAssets(DAGNode):
         self._op = create_app(self)
 
     def __repr__(self) -> str:
-        return f"graphscope.AppAssets <type: {self._type}, algorithm: {self._algo}>"
+        return f"graphscope.framework.app.AppAssets <type: {self._type}, algorithm: {self._algo}>"
 
     @property
     def algo(self):
@@ -193,6 +193,7 @@ class AppAssets(DAGNode):
         """Generate a signature of the app assets by its algo name (and gar resources).
 
         Used to uniquely identify a app assets.
+
         Returns:
             str: signature of this assets
         """
@@ -245,7 +246,7 @@ class AppAssets(DAGNode):
 
 
 class AppDAGNode(DAGNode):
-    """App node in a DAG.
+    """A class represents a app node in a DAG.
 
     An application that can run on graphs and produce results.
 
@@ -330,8 +331,13 @@ class AppDAGNode(DAGNode):
         return ContextDAGNode(self, self._graph, *args, **kwargs)
 
     def unload(self):
-        # do nothing for dag node
-        pass
+        """Unload this app from graphscope engine.
+
+        Returns:
+            :class:`graphscope.framework.app.UnloadedApp`: Evaluated in eager mode.
+        """
+        op = unload_app(self)
+        return UnloadedApp(self._session, op)
 
 
 class App(object):
@@ -367,13 +373,23 @@ class App(object):
 
     def unload(self):
         """Unload app. Both on engine side and python side. Set the key to None."""
-        op = unload_app(self)
-        op.eval()
+        rlt = self._session._wrapper(self._app_node.unload())
         self._key = None
         self._session = None
+        return rlt
 
     def __call__(self, *args, **kwargs):
         return self._session._wrapper(self._app_node(*args, **kwargs))
+
+
+class UnloadedApp(DAGNode):
+    """Unloaded app node in a DAG."""
+
+    def __init__(self, session, op):
+        self._session = session
+        self._op = op
+        # add op to dag
+        self._session.dag.add_op(self._op)
 
 
 def load_app(algo, gar=None, **kwargs):
@@ -387,7 +403,7 @@ def load_app(algo, gar=None, **kwargs):
           str represent the path of resource.
 
     Returns:
-        Instance of <graphscope.AppAssets>
+        Instance of <graphscope.framework.app.AppAssets>
 
     Raises:
         FileNotFoundError: File not exist.
