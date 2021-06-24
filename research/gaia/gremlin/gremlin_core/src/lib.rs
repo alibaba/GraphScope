@@ -108,6 +108,7 @@ pub trait FromPb<T> {
 
 pub trait Partitioner: Send + Sync + 'static {
     fn get_partition(&self, id: &ID, job_workers: usize) -> u64;
+    fn get_partition_num(&self) -> usize;
 }
 
 /// A simple partition utility
@@ -126,6 +127,10 @@ impl Partitioner for Partition {
         // 3. `magic_num % workers` then picks up one of the workers in the machine R
         // to do the computation.
         ((id_usize - magic_num * self.num_servers) * workers + magic_num % workers) as u64
+    }
+
+    fn get_partition_num(&self) -> usize {
+        self.num_servers
     }
 }
 

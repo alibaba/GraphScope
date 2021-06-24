@@ -295,16 +295,14 @@ pub mod test {
                 .map_err(|e| format!("protobuf decode failure: {}", e))?;
             if let Some(worker_id) = pegasus::get_current_worker() {
                 let num_workers = worker_id.peers as usize / self.inner.get_num_servers();
-                let mut step = graph_step_from(&mut step, self.inner.get_num_servers())?;
+                let mut step = graph_step_from(&mut step, self.inner.get_partitioner())?;
                 step.set_num_workers(num_workers);
-                step.set_server_index(self.inner.get_server_index());
                 step.set_requirement(self.requirement);
-                Ok(step.gen_source(Some(worker_id.index as usize)))
+                Ok(step.gen_source(worker_id.index as usize))
             } else {
-                let mut step = graph_step_from(&mut step, self.inner.get_num_servers())?;
-                step.set_server_index(self.inner.get_server_index());
+                let mut step = graph_step_from(&mut step, self.inner.get_partitioner())?;
                 step.set_requirement(self.requirement);
-                Ok(step.gen_source(None))
+                Ok(step.gen_source(self.inner.get_server_index() as usize))
             }
         }
 
