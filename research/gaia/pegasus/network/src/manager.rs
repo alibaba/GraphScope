@@ -16,9 +16,10 @@
 use crate::config::ConnectionParams;
 use crate::{NetError, Server};
 use std::net::{SocketAddr, ToSocketAddrs};
+use std::sync::{Arc, Mutex};
 
 pub trait ServerDetect: Send {
-    fn fetch(&mut self) -> &[Server];
+    fn fetch(&mut self) -> Vec<Server>;
 }
 
 #[allow(dead_code)]
@@ -62,7 +63,34 @@ impl ServerManager {
 }
 
 impl ServerDetect for Vec<Server> {
-    fn fetch(&mut self) -> &[Server] {
-        self.as_slice()
+    fn fetch(&mut self) -> Vec<Server> {
+        self.clone()
+    }
+}
+
+pub struct SimpleServerDetector {
+    peers_mutex: Mutex<Vec<Server>>,
+}
+
+impl SimpleServerDetector {
+    pub fn new() -> Self {
+        SimpleServerDetector {
+            peers_mutex: Mutex::new(vec![]),
+        }
+    }
+
+    pub fn update_peer_view(&self, peer_view: Vec<(u64, SocketAddr)>) {
+        let new_peers = peer_view.into_iter()
+            .map(|(id, addr)| Server { id, addr, })
+            .collect::<Vec<Server>>();
+        let mut peers =  self.peers_mutex.lock().unwrap();
+        *peers = new_peers;
+    }
+}
+
+impl ServerDetect for Arc<SimpleServerDetector> {
+    fn fetch(&mut self) -> Vec<Server> {
+        let peers = self.peers_mutex.lock().unwrap();
+        peers.clone()
     }
 }
