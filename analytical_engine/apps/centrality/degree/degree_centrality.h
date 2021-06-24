@@ -19,8 +19,6 @@ limitations under the License.
 #include "grape/grape.h"
 
 #include "apps/centrality/degree/degree_centrality_context.h"
-#include "core/app/app_base.h"
-#include "core/worker/default_worker.h"
 
 namespace gs {
 /**
@@ -30,44 +28,39 @@ namespace gs {
  */
 template <typename FRAG_T>
 class DegreeCentrality
-    : public AppBase<FRAG_T, DegreeCentralityContext<FRAG_T>>,
-      public grape::Communicator {
+    : public grape::ParallelAppBase<FRAG_T, DegreeCentralityContext<FRAG_T>>,
+      public grape::ParallelEngine {
  public:
-  INSTALL_DEFAULT_WORKER(DegreeCentrality<FRAG_T>,
-                         DegreeCentralityContext<FRAG_T>, FRAG_T)
+  INSTALL_PARALLEL_WORKER(DegreeCentrality<FRAG_T>,
+                          DegreeCentralityContext<FRAG_T>, FRAG_T)
+  using vertex_t = typename fragment_t::vertex_t;
+
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     auto inner_vertices = frag.InnerVertices();
-    auto max_degree = frag.GetTotalVerticesNum() - 1;
-    auto& type = ctx.degree_centrality_type;
-    auto& centrality = ctx.centrality;
+    double max_degree = static_cast<double>(frag.GetTotalVerticesNum() - 1);
 
-    switch (type) {
-    case DegreeCentralityType::IN: {
-      for (auto& v : inner_vertices) {
-        double degree = frag.GetLocalInDegree(v);
-        centrality[v] = degree / max_degree;
+    ForEach(inner_vertices, [&frag, &ctx, max_degree](int tid, vertex_t v) {
+      switch (ctx.degree_centrality_type) {
+      case DegreeCentralityType::IN: {
+        ctx.centrality[v] =
+            static_cast<double>(frag.GetLocalInDegree(v)) / max_degree;
+        break;
       }
-      break;
-    }
-    case DegreeCentralityType::OUT: {
-      for (auto& v : inner_vertices) {
-        double degree = frag.GetLocalOutDegree(v);
-        centrality[v] = degree / max_degree;
+      case DegreeCentralityType::OUT: {
+        ctx.centrality[v] =
+            static_cast<double>(frag.GetLocalOutDegree(v)) / max_degree;
+      } break;
+      case DegreeCentralityType::BOTH: {
+        double degree = static_cast<double>(frag.GetLocalInDegree(v) +
+                                            frag.GetLocalOutDegree(v));
+        ctx.centrality[v] = degree / max_degree;
+      } break;
       }
-      break;
-    }
-    case DegreeCentralityType::BOTH: {
-      for (auto& v : inner_vertices) {
-        double degree = frag.GetLocalInDegree(v) + frag.GetLocalOutDegree(v);
-        centrality[v] = degree / max_degree;
-      }
-      break;
-    }
-    }
+    });
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
