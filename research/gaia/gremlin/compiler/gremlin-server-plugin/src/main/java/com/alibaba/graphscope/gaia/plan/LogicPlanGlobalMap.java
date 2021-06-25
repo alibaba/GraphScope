@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
 public class LogicPlanGlobalMap {
     public enum STEP {
         GraphStep,
-        MaxGraphStep,
+        GaiaGraphStep,
         TraversalFilterStep,
         HasStep,
         WherePredicateStep,
@@ -110,7 +110,7 @@ public class LogicPlanGlobalMap {
                         .build();
             }
         });
-        stepPlanMap.put(STEP.MaxGraphStep, new GremlinStepResource() {
+        stepPlanMap.put(STEP.GaiaGraphStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
                 Gremlin.GraphStep.Builder builder = Gremlin.GraphStep.newBuilder()
@@ -380,12 +380,17 @@ public class LogicPlanGlobalMap {
                 Gremlin.PropertiesStep.Builder builder = Gremlin.PropertiesStep.newBuilder();
                 String[] properties = ((PropertiesStep) t).getPropertyKeys();
                 if (properties != null && properties.length > 0) {
+                    Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
                     if (StringUtils.isNumeric(properties[0])) {
-                        builder.setNameId(Common.I32Array.newBuilder().addAllItem(
-                                Arrays.stream(properties).map(k -> Integer.valueOf(k)).collect(Collectors.toList())));
+                        keysBuilder.addAllPropKeys(Arrays.stream(properties)
+                                .map(k -> Common.PropertyKey.newBuilder().setNameId(Integer.valueOf(k)).build())
+                                .collect(Collectors.toList()));
                     } else {
-                        builder.setName(Common.StringArray.newBuilder().addAllItem(Arrays.asList(properties)));
+                        keysBuilder.addAllPropKeys(Arrays.stream(properties)
+                                .map(k -> Common.PropertyKey.newBuilder().setName(k).build())
+                                .collect(Collectors.toList()));
                     }
+                    builder.setPropKeys(keysBuilder);
                 }
                 return builder.build();
             }

@@ -67,11 +67,17 @@ public interface TagKeyExtractor {
             PropertyMapStep propertyMapStep = (PropertyMapStep) value.getStartStep();
             String[] propertyKeys = propertyMapStep.getPropertyKeys();
             if (propertyKeys != null && propertyKeys.length > 0) {
+                Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
                 if (StringUtils.isNumeric(propertyKeys[0])) {
-                    builder.setNameId(Common.I32Array.newBuilder().addAllItem(Arrays.stream(propertyKeys).map(k -> Integer.valueOf(k)).collect(Collectors.toList())));
+                    keysBuilder.addAllPropKeys(Arrays.stream(propertyKeys)
+                            .map(k -> Common.PropertyKey.newBuilder().setNameId(Integer.valueOf(k)).build())
+                            .collect(Collectors.toList()));
                 } else {
-                    builder.setName(Common.StringArray.newBuilder().addAllItem(Arrays.asList(propertyKeys)));
+                    keysBuilder.addAllPropKeys(Arrays.stream(propertyKeys)
+                            .map(k -> Common.PropertyKey.newBuilder().setName(k).build())
+                            .collect(Collectors.toList()));
                 }
+                builder.setPropKeys(keysBuilder);
             }
         } else if (value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof PropertiesStep) {
             PropertiesStep propertiesStep = (PropertiesStep) value.getStartStep();

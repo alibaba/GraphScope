@@ -221,8 +221,6 @@ message ByKey {
     MapValue map_values = 4;
     // by value computed by sub traversal
     SubValue computed = 5;
-    // by(valueMap("prop1", "prop2")) in int32, empty means all
-    common.I32Array name_id = 6;
   }
 }
 

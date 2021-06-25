@@ -187,7 +187,7 @@ public class DefaultResultParser implements ResultParser {
         Map<String, Object> result = new HashMap<>();
         entries.getPropertyList().forEach(p -> {
             String propertyName;
-            if (p.getKey().getItemCase() == GremlinResult.PropertyKey.ItemCase.NAME_ID) {
+            if (p.getKey().getItemCase() == Common.PropertyKey.ItemCase.NAME_ID) {
                 propertyName = graphStore.getPropertyName(p.getKey().getNameId());
             } else {
                 propertyName = p.getKey().getName();
