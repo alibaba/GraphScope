@@ -57,9 +57,7 @@ use std::sync::atomic::AtomicBool;
 use maxgraph_runtime::utils::get_lambda_service_client;
 use maxgraph_runtime::store::remote_store_service::RemoteStoreServiceManager;
 use maxgraph_store::api::graph_partition::{GraphPartitionManager};
-use maxgraph_runtime::store::ffi::{GlobalVertex, GlobalVertexIter, FFIEdge, GlobalEdgeIter};
 use maxgraph_server::StoreContext;
-use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
 use maxgraph_runtime::store::v2::create_global_graph;
 
 fn main() {
@@ -83,7 +81,6 @@ fn main() {
 
     let worker_num = store_config.timely_worker_per_process;
     let store_config = Arc::new(store_config);
-    let process_num = store_config.worker_num as i32;
     if store_config.graph_type.to_lowercase().eq(VINEYARD_GRAPH) {
         if cfg!(target_os = "linux") {
             info!("Start executor with vineyard graph object id {:?}", store_config.vineyard_graph_id);

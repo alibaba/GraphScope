@@ -9,7 +9,6 @@ extern crate pegasus;
 extern crate log;
 extern crate log4rs;
 extern crate grpcio;
-#[macro_use]
 extern crate lazy_static;
 extern crate pegasus_network;
 extern crate gremlin_core;

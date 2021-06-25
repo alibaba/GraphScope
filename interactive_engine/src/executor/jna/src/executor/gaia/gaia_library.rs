@@ -1,7 +1,7 @@
 use std::os::raw::{c_void, c_char};
 use maxgraph_store::db::proto::common::ConfigPb;
 use maxgraph_store::db::common::bytes::util::parse_pb;
-use maxgraph_store::db::api::{GraphConfigBuilder, GraphError};
+use maxgraph_store::db::api::GraphConfigBuilder;
 use std::sync::Arc;
 use maxgraph_store::db::common::unsafe_util::to_mut;
 use maxgraph_store::db::graph::store::GraphStore;
@@ -54,7 +54,10 @@ pub extern fn startEngine(engine_handle: EngineHandle) -> Box<EnginePortsRespons
 
 #[no_mangle]
 pub extern fn stopEngine(engine_handle: EngineHandle) {
-    unimplemented!()
+    let engine_ptr = unsafe {
+        to_mut(&*(engine_handle as *const GaiaServer))
+    };
+    engine_ptr.stop();
 }
 
 #[no_mangle]

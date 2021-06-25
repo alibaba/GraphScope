@@ -2,7 +2,7 @@
 use std::os::raw::{c_char, c_void};
 use std::ffi::CStr;
 use std::str;
-use maxgraph_store::db::api::{GraphConfigBuilder, SnapshotId, GraphResult, GraphStorage, Vertex, TypeDef, EdgeId, EdgeKind, GraphError, DataLoadTarget};
+use maxgraph_store::db::api::{GraphConfigBuilder, SnapshotId, GraphResult, GraphStorage, TypeDef, EdgeId, EdgeKind, DataLoadTarget};
 use maxgraph_store::db::api::PropertyMap;
 use maxgraph_store::db::proto::common::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, PrepareDataLoadPb, CommitDataLoadPb};
 use maxgraph_store::db::graph::store::GraphStore;

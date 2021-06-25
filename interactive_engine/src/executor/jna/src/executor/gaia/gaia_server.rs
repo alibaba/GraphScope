@@ -1,4 +1,4 @@
-use maxgraph_store::db::api::{GraphConfig, GraphResult, GraphError, GraphErrorCode};
+use maxgraph_store::db::api::{GraphConfig, GraphResult, GraphError};
 use std::sync::Arc;
 use maxgraph_store::db::graph::store::GraphStore;
 use std::net::SocketAddr;
@@ -53,7 +53,7 @@ impl GaiaServer {
         };
         let addr = format!("{}:{}", "0.0.0.0", rpc_port).parse()
             .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
-        register_gremlin_types().map_err(|e| GraphError::new(EngineError, "register gremlin types failed".to_string()))?;
+        register_gremlin_types().map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
         let gaia_config = make_gaia_config(self.config.clone());
         let server_id = gaia_config.server_id();
         let socket_addr = gaia_pegasus::startup_with(gaia_config, self.detector.clone())
@@ -75,9 +75,12 @@ impl GaiaServer {
     }
 
     pub fn update_peer_view(&self, peer_view: Vec<(u64, SocketAddr)>) {
-        self.detector.update_peer_view(peer_view);
+        self.detector.update_peer_view(peer_view.into_iter());
     }
 
+    pub fn stop(&self) {
+        gaia_pegasus::shutdown_all();
+    }
 }
 
 fn make_gaia_config(graph_config: Arc<GraphConfig>) -> Configuration {
