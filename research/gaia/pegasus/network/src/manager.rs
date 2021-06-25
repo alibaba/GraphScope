@@ -63,7 +63,7 @@ impl ServerManager {
 }
 
 impl ServerDetect for Vec<Server> {
-    fn fetch(&mut self) -> Vec<Server> {
+    fn fetch(&self) -> Vec<Server> {
         self.clone()
     }
 }
@@ -79,18 +79,24 @@ impl SimpleServerDetector {
         }
     }
 
-    pub fn update_peer_view(&self, peer_view: Vec<(u64, SocketAddr)>) {
-        let new_peers = peer_view.into_iter()
+    pub fn update_peer_view<Iter: Iterator<Item=(u64, SocketAddr)>>(&self, peer_view: Iter) {
+        let new_peers = peer_view
             .map(|(id, addr)| Server { id, addr, })
             .collect::<Vec<Server>>();
-        let mut peers =  self.peers_mutex.lock().unwrap();
+        let mut peers =  self.peers_mutex.lock().expect("unexpected error locking when update peer view");
         *peers = new_peers;
     }
 }
 
-impl ServerDetect for Arc<SimpleServerDetector> {
+impl ServerDetect for SimpleServerDetector {
     fn fetch(&mut self) -> Vec<Server> {
-        let peers = self.peers_mutex.lock().unwrap();
+        let peers = self.peers_mutex.lock().expect("unexpected error locking when fetch servers");
         peers.clone()
+    }
+}
+
+impl ServerDetect for Arc<SimpleServerDetector> {
+    fn fetch(&self) -> Vec<Server> {
+        self.fetch()
     }
 }
