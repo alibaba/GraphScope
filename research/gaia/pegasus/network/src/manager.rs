@@ -19,7 +19,7 @@ use std::net::{SocketAddr, ToSocketAddrs};
 use std::sync::{Arc, Mutex};
 
 pub trait ServerDetect: Send {
-    fn fetch(&mut self) -> Vec<Server>;
+    fn fetch(&self) -> Vec<Server>;
 }
 
 #[allow(dead_code)]
@@ -89,7 +89,7 @@ impl SimpleServerDetector {
 }
 
 impl ServerDetect for SimpleServerDetector {
-    fn fetch(&mut self) -> Vec<Server> {
+    fn fetch(&self) -> Vec<Server> {
         let peers = self.peers_mutex.lock().expect("unexpected error locking when fetch servers");
         peers.clone()
     }
@@ -97,6 +97,6 @@ impl ServerDetect for SimpleServerDetector {
 
 impl ServerDetect for Arc<SimpleServerDetector> {
     fn fetch(&self) -> Vec<Server> {
-        self.fetch()
+        self.as_ref().fetch()
     }
 }
