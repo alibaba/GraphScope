@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.gaia.plan;
 
+import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.JsonUtils;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
@@ -29,6 +30,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
@@ -51,6 +53,7 @@ import java.lang.reflect.Modifier;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PlanUtils {
     private static final Logger logger = LoggerFactory.getLogger(PlanUtils.class);
@@ -345,5 +348,21 @@ public class PlanUtils {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Gremlin.PropKeys convertFrom(List<String> properties) {
+        Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
+        if (properties != null && properties.size() > 0) {
+            if (StringUtils.isNumeric(properties.get(0))) {
+                keysBuilder.addAllPropKeys(properties.stream()
+                        .map(k -> Common.PropertyKey.newBuilder().setNameId(Integer.valueOf(k)).build())
+                        .collect(Collectors.toList()));
+            } else {
+                keysBuilder.addAllPropKeys(properties.stream()
+                        .map(k -> Common.PropertyKey.newBuilder().setName(k).build())
+                        .collect(Collectors.toList()));
+            }
+        }
+        return keysBuilder.build();
     }
 }

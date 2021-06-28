@@ -275,7 +275,7 @@ public class LogicPlanGlobalMap {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
                 return Gremlin.IdentityStep.newBuilder().setIsAll(((PropertyIdentityStep) t).isNeedAll())
-                        .addAllProperties(((PropertyIdentityStep) t).getAttachProperties())
+                        .setProperties(PlanUtils.convertFrom(((PropertyIdentityStep) t).getAttachProperties()))
                         .build();
             }
         });
@@ -377,21 +377,9 @@ public class LogicPlanGlobalMap {
         stepPlanMap.put(STEP.PropertiesStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
-                Gremlin.PropertiesStep.Builder builder = Gremlin.PropertiesStep.newBuilder();
                 String[] properties = ((PropertiesStep) t).getPropertyKeys();
-                if (properties != null && properties.length > 0) {
-                    Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
-                    if (StringUtils.isNumeric(properties[0])) {
-                        keysBuilder.addAllPropKeys(Arrays.stream(properties)
-                                .map(k -> Common.PropertyKey.newBuilder().setNameId(Integer.valueOf(k)).build())
-                                .collect(Collectors.toList()));
-                    } else {
-                        keysBuilder.addAllPropKeys(Arrays.stream(properties)
-                                .map(k -> Common.PropertyKey.newBuilder().setName(k).build())
-                                .collect(Collectors.toList()));
-                    }
-                    builder.setPropKeys(keysBuilder);
-                }
+                Gremlin.PropertiesStep.Builder builder = Gremlin.PropertiesStep.newBuilder()
+                        .setPropKeys(PlanUtils.convertFrom(Arrays.asList(properties)));
                 return builder.build();
             }
         });

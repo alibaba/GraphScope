@@ -17,6 +17,7 @@ package com.alibaba.graphscope.gaia.plan.extractor;
 
 import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
+import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.plan.strategy.PreBySubTraversal;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -32,7 +33,6 @@ import org.apache.tinkerpop.gremlin.structure.Column;
 import org.apache.tinkerpop.gremlin.structure.T;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 public interface TagKeyExtractor {
     default Gremlin.ByKey modulateBy(Traversal.Admin value) {
@@ -66,19 +66,7 @@ public interface TagKeyExtractor {
         } else if (value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof PropertyMapStep) {
             PropertyMapStep propertyMapStep = (PropertyMapStep) value.getStartStep();
             String[] propertyKeys = propertyMapStep.getPropertyKeys();
-            if (propertyKeys != null && propertyKeys.length > 0) {
-                Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
-                if (StringUtils.isNumeric(propertyKeys[0])) {
-                    keysBuilder.addAllPropKeys(Arrays.stream(propertyKeys)
-                            .map(k -> Common.PropertyKey.newBuilder().setNameId(Integer.valueOf(k)).build())
-                            .collect(Collectors.toList()));
-                } else {
-                    keysBuilder.addAllPropKeys(Arrays.stream(propertyKeys)
-                            .map(k -> Common.PropertyKey.newBuilder().setName(k).build())
-                            .collect(Collectors.toList()));
-                }
-                builder.setPropKeys(keysBuilder);
-            }
+            builder.setPropKeys(PlanUtils.convertFrom(Arrays.asList(propertyKeys)));
         } else if (value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof PropertiesStep) {
             PropertiesStep propertiesStep = (PropertiesStep) value.getStartStep();
             // always add first from values(p1,p2)
