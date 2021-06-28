@@ -7,9 +7,9 @@ pub fn initialize_job_compiler<V, VI, E, EI>(_graph_query: Arc<dyn GlobalGraphQu
                                              _graph_partitioner: Arc<dyn GraphPartitionManager>)
     -> GremlinJobCompiler
     where V: Vertex + 'static,
-          VI: Iterator<Item = V> + Send + 'static,
+          VI: Iterator<Item=V> + Send + 'static,
           E: Edge + 'static,
-          EI: Iterator<Item = E> + Send + 'static, {
+          EI: Iterator<Item=E> + Send + 'static, {
     // TODO should be implement in integration
     unimplemented!()
 }
