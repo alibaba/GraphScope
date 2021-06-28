@@ -10,6 +10,7 @@ extern crate log4rs;
 extern crate grpcio;
 #[macro_use]
 extern crate lazy_static;
+extern crate gremlin_core;
 
 mod executor;
 mod store;
