@@ -67,8 +67,8 @@ public class Store extends NodeBase {
         this.rpcServer = new RpcServer(configs, localNodeProvider, storeWriteService, storeSchemaService,
                 storeIngestService);
         this.executorService = new ExecutorService(configs, storeService, discoveryFactory);
-        ExecutorEngine executorEngine = new GaiaEngine(configs, discoveryFactory);
-        this.gaiaService = new GaiaService(executorEngine, this.storeService);
+//        ExecutorEngine executorEngine = new GaiaEngine(configs, discoveryFactory);
+//        this.gaiaService = new GaiaService(executorEngine, this.storeService);
     }
 
     @Override
@@ -95,12 +95,12 @@ public class Store extends NodeBase {
         this.discovery.start();
         this.channelManager.start();
         this.executorService.start();
-        this.gaiaService.start();
+//        this.gaiaService.start();
     }
 
     @Override
     public void close() throws IOException {
-        this.gaiaService.stop();
+//        this.gaiaService.stop();
         this.executorService.close();
         this.rpcServer.stop();
         this.writerAgent.stop();

@@ -540,7 +540,7 @@ jobs:
         source ~/.bashrc
 
         cd interactive_engine
-        mvn clean package -Pv2 -Drust.compile.mode=release -DskipTests --quiet
+        mvn clean package -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
@@ -632,7 +632,7 @@ jobs:
         python3 -m pytest -s -vvv graphscope/deploy/tests/test_store_service.py
 
     - name: Clean
-      if: false
+      if: always()
       run: |
         export JAVA_HOME=/usr/lib/jvm/default-java/
         HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
