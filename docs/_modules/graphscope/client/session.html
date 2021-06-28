@@ -105,8 +105,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
@@ -206,6 +206,7 @@
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">threading</span>
@@ -242,6 +243,7 @@
 <span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="k">import</span> <span class="n">decode_dataframe</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="k">import</span> <span class="n">decode_numpy</span>
 <span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="k">import</span> <span class="n">InteractiveQuery</span>
+<span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="k">import</span> <span class="n">InteractiveQueryDAGNode</span>
 <span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="k">import</span> <span class="n">InteractiveQueryStatus</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">graph_def_pb2</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="k">import</span> <span class="n">message_pb2</span>
@@ -300,6 +302,38 @@
         <span class="n">g</span><span class="o">.</span><span class="n">update_from_graph_def</span><span class="p">(</span><span class="n">op_result</span><span class="o">.</span><span class="n">graph_def</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">g</span>
 
+    <span class="k">def</span> <span class="nf">_rebuild_learning_graph</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span>
+    <span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">graphscope.learning.graph</span> <span class="k">import</span> <span class="n">Graph</span> <span class="k">as</span> <span class="n">LearningGraph</span>
+
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">op_result</span><span class="o">.</span><span class="n">handle</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">op_result</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">handle</span><span class="p">[</span><span class="s2">&quot;server&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">handle</span><span class="p">[</span><span class="s2">&quot;client_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
+        <span class="c1"># construct learning graph</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="p">(</span>
+            <span class="n">graph_dag_node</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">op_result</span><span class="o">.</span><span class="n">extra_info</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">g</span>
+
+    <span class="k">def</span> <span class="nf">_rebuild_interactive_query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span>
+    <span class="p">):</span>
+        <span class="c1"># get interactive query dag node as base</span>
+        <span class="n">interactive_query_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
+        <span class="c1"># construct interactive query</span>
+        <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">(</span>
+            <span class="n">interactive_query_node</span><span class="p">,</span>
+            <span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span>
+            <span class="n">op_result</span><span class="o">.</span><span class="n">extra_info</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span>
+        <span class="k">return</span> <span class="n">interactive_query</span>
+
     <span class="k">def</span> <span class="nf">_rebuild_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="k">import</span> <span class="n">App</span>
 
@@ -319,11 +353,18 @@
         <span class="n">context_type</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_type&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;dynamic_vertex_data&quot;</span><span class="p">:</span>
             <span class="c1"># for nx</span>
-            <span class="k">return</span> <span class="n">DynamicVertexDataContext</span><span class="p">(</span>
-                <span class="n">context_dag_node</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">],</span> <span class="n">context_type</span>
-            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">DynamicVertexDataContext</span><span class="p">(</span><span class="n">context_dag_node</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">context_dag_node</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">],</span> <span class="n">context_type</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">context_dag_node</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="s2">&quot;context_key&quot;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_rebuild_gremlin_results</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">op_result</span><span class="p">:</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpResult</span>
+    <span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">graphscope.interactive.query</span> <span class="k">import</span> <span class="n">ResultSet</span>
+
+        <span class="c1"># get result set node as base</span>
+        <span class="n">result_set_dag_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">ResultSet</span><span class="p">(</span><span class="n">result_set_dag_node</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">wrapper_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">message_pb2</span><span class="o">.</span><span class="n">RunStepResponse</span><span class="p">):</span>
         <span class="n">rets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
@@ -333,11 +374,17 @@
                     <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">RUN_APP</span><span class="p">:</span>
                             <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rebuild_context</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">op_result</span><span class="p">))</span>
+                        <span class="k">elif</span> <span class="n">op</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">FETCH_GREMLIN_RESULT</span><span class="p">:</span>
+                            <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="p">))</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="c1"># for nx Graph</span>
                             <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">GREMLIN_RESULTS</span><span class="p">:</span>
+                        <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rebuild_gremlin_results</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">op_result</span><span class="p">))</span>
                     <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">:</span>
                         <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rebuild_graph</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">op_result</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">LEARNING_GRAPH</span><span class="p">:</span>
+                        <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rebuild_learning_graph</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">op_result</span><span class="p">))</span>
                     <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">APP</span><span class="p">:</span>
                         <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">BOUND_APP</span><span class="p">:</span>
@@ -360,6 +407,8 @@
                             <span class="ow">or</span> <span class="n">op</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_TO_NUMPY</span>
                         <span class="p">):</span>
                             <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decode_numpy</span><span class="p">(</span><span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">INTERACTIVE_QUERY</span><span class="p">:</span>
+                        <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rebuild_interactive_query</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">op_result</span><span class="p">))</span>
                     <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">output_types</span> <span class="o">==</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">:</span>
                         <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
                     <span class="k">break</span>
@@ -467,6 +516,7 @@
         <span class="n">timeout_seconds</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="p">,</span>
         <span class="n">dangling_timeout_seconds</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">dangling_timeout_seconds</span><span class="p">,</span>
         <span class="n">with_mars</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">with_mars</span><span class="p">,</span>
+        <span class="n">enable_gaia</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">enable_gaia</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kw</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Construct a new GraphScope session.</span>
@@ -568,6 +618,9 @@
 
 <span class="sd">            with_mars (bool, optional):</span>
 <span class="sd">                Launch graphscope with mars. Defaults to False.</span>
+
+<span class="sd">            enable_gaia (bool, optional):</span>
+<span class="sd">                Launch graphscope with gaia enabled. Defaults to False.</span>
 
 <span class="sd">            k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the</span>
 <span class="sd">                containers in a pod. Defaults to {}.</span>
@@ -689,6 +742,7 @@
             <span class="s2">&quot;k8s_mars_scheduler_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_mars_scheduler_mem&quot;</span><span class="p">,</span>
             <span class="s2">&quot;with_mars&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;enable_gaia&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_volumes&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_waiting_for_delete&quot;</span><span class="p">,</span>
             <span class="s2">&quot;timeout_seconds&quot;</span><span class="p">,</span>
@@ -875,6 +929,10 @@
         <span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span>
         <span class="k">return</span> <span class="n">info</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">closed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span>
+
     <span class="k">def</span> <span class="nf">eager</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;mode&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;eager&quot;</span>
 
@@ -938,20 +996,21 @@
 
         <span class="c1"># clean up</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;addr&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_launcher</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span> <span class="o">=</span> <span class="p">[]</span></div>
 
     <span class="k">def</span> <span class="nf">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Close a interactive instance.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">close_interactive_engine</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">object_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">instance</span><span class="o">.</span><span class="n">object_id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_close_learning_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Close a learning instance.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">close_learning_engine</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">object_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">instance</span><span class="o">.</span><span class="n">object_id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -960,6 +1019,30 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
             <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_check_closed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal: raise a ValueError if session is closed&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Operation on closed session.&quot;</span> <span class="k">if</span> <span class="n">msg</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># Context manager</span>
+<div class="viewcode-block" id="Session.__enter__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__enter__">[docs]</a>    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Context management protocol.</span>
+<span class="sd">        Returns self and register self as default session.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_closed</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">as_default</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="Session.__exit__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__exit__">[docs]</a>    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deregister self from the default session,</span>
+<span class="sd">        close the session and release the resources, ignore all exceptions in close().</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_deregister_default</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="Session.as_default"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.as_default">[docs]</a>    <span class="k">def</span> <span class="nf">as_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Obtain a context manager that make this object as default session.</span>
@@ -1115,163 +1198,48 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_get_gl_handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Dump a handler for GraphLearn for interaction.</span>
-
-<span class="sd">        Fields in :code:`schema` are:</span>
-
-<span class="sd">        + the name of node type or edge type</span>
-<span class="sd">        + whether the graph is weighted graph</span>
-<span class="sd">        + whether the graph is labeled graph</span>
-<span class="sd">        + the number of int attributes</span>
-<span class="sd">        + the number of float attributes</span>
-<span class="sd">        + the number of string attributes</span>
-
-<span class="sd">        An example of the graph handle:</span>
-
-<span class="sd">        .. code:: python</span>
-
-<span class="sd">            {</span>
-<span class="sd">                &quot;server&quot;: &quot;127.0.0.1:8888,127.0.0.1:8889&quot;,</span>
-<span class="sd">                &quot;client_count&quot;: 1,</span>
-<span class="sd">                &quot;vineyard_socket&quot;: &quot;/var/run/vineyard.sock&quot;,</span>
-<span class="sd">                &quot;vineyard_id&quot;: 13278328736,</span>
-<span class="sd">                &quot;node_schema&quot;: [</span>
-<span class="sd">                    &quot;user:false:false:10:0:0&quot;,</span>
-<span class="sd">                    &quot;item:true:false:0:0:5&quot;</span>
-<span class="sd">                ],</span>
-<span class="sd">                &quot;edge_schema&quot;: [</span>
-<span class="sd">                    &quot;user:click:item:true:false:0:0:0&quot;,</span>
-<span class="sd">                    &quot;user:buy:item:true:true:0:0:0&quot;,</span>
-<span class="sd">                    &quot;item:similar:item:false:false:10:0:0&quot;</span>
-<span class="sd">                ],</span>
-<span class="sd">                &quot;node_attribute_types&quot;: {</span>
-<span class="sd">                    &quot;person&quot;: {</span>
-<span class="sd">                        &quot;age&quot;: &quot;i&quot;,</span>
-<span class="sd">                        &quot;name&quot;: &quot;s&quot;,</span>
-<span class="sd">                    },</span>
-<span class="sd">                },</span>
-<span class="sd">                &quot;edge_attribute_types&quot;: {</span>
-<span class="sd">                    &quot;knows&quot;: {</span>
-<span class="sd">                        &quot;weight&quot;: &quot;f&quot;,</span>
-<span class="sd">                    },</span>
-<span class="sd">                },</span>
-<span class="sd">            }</span>
-
-<span class="sd">        The handle can be decoded using:</span>
-
-<span class="sd">        .. code:: python</span>
-
-<span class="sd">           base64.b64decode(handle.encode(&#39;ascii&#39;)).decode(&#39;ascii&#39;)</span>
-
-<span class="sd">        Note that the ports are selected from a range :code:`(8000, 9000)`.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            graph (:class:`Graph`): A Property Graph.</span>
-<span class="sd">            client_number (int): Number of client.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            str: Base64 encoded handle</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            InvalidArgumentError: If the graph is not loaded, or graph_type isn&#39;t</span>
-<span class="sd">                `ARROW_PROPERTY`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph has already been unloaded&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph should be a property graph.&quot;</span><span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">group_property_types</span><span class="p">(</span><span class="n">props</span><span class="p">):</span>
-            <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span> <span class="o">=</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">prop</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">STRING</span><span class="p">]:</span>
-                    <span class="n">s</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="n">attr_types</span><span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;s&quot;</span>
-                <span class="k">elif</span> <span class="n">prop</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">(</span><span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DOUBLE</span><span class="p">):</span>
-                    <span class="n">f</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="n">attr_types</span><span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;f&quot;</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="n">attr_types</span><span class="p">[</span><span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;i&quot;</span>
-                <span class="k">if</span> <span class="n">prop</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span>
-                    <span class="n">weighted</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
-                <span class="k">elif</span> <span class="n">prop</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span>
-                    <span class="n">labeled</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
-            <span class="k">return</span> <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span>
-
-        <span class="n">node_schema</span><span class="p">,</span> <span class="n">node_attribute_types</span> <span class="o">=</span> <span class="p">[],</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">vertex_labels</span><span class="p">:</span>
-            <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span> <span class="o">=</span> <span class="n">group_property_types</span><span class="p">(</span>
-                <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_vertex_properties</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">node_schema</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">node_attribute_types</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr_types</span>
-
-        <span class="n">edge_schema</span><span class="p">,</span> <span class="n">edge_attribute_types</span> <span class="o">=</span> <span class="p">[],</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">edge_labels</span><span class="p">:</span>
-            <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">attr_types</span> <span class="o">=</span> <span class="n">group_property_types</span><span class="p">(</span>
-                <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_edge_properties</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get_relationships</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
-                <span class="n">edge_schema</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">rel</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="p">,</span> <span class="n">rel</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">weighted</span><span class="p">,</span> <span class="n">labeled</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-            <span class="n">edge_attribute_types</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr_types</span>
-
-        <span class="n">handle</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;hosts&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">],</span>
-            <span class="s2">&quot;client_count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-            <span class="s2">&quot;vineyard_id&quot;</span><span class="p">:</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span>
-            <span class="s2">&quot;vineyard_socket&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">],</span>
-            <span class="s2">&quot;node_schema&quot;</span><span class="p">:</span> <span class="n">node_schema</span><span class="p">,</span>
-            <span class="s2">&quot;edge_schema&quot;</span><span class="p">:</span> <span class="n">edge_schema</span><span class="p">,</span>
-            <span class="s2">&quot;node_attribute_types&quot;</span><span class="p">:</span> <span class="n">node_attribute_types</span><span class="p">,</span>
-            <span class="s2">&quot;edge_attribute_types&quot;</span><span class="p">:</span> <span class="n">edge_attribute_types</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="n">handle_json_string</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">handle_json_string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-
 <div class="viewcode-block" id="Session.gremlin"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.gremlin">[docs]</a>    <span class="nd">@set_defaults</span><span class="p">(</span><span class="n">gs_config</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get a interactive engine handler to execute gremlin queries.</span>
 
-<span class="sd">        Note that this method will be executed implicitly when a property graph created</span>
-<span class="sd">        and cache a instance of InteractiveQuery in session if `initializing_interactive_engine`</span>
-<span class="sd">        is True. If you want to create a new instance under the same graph by different params,</span>
-<span class="sd">        you should close the instance first.</span>
+<span class="sd">        It will return a instance of :class:`graphscope.interactive.query.InteractiveQueryDAGNode`,</span>
+<span class="sd">        that will be evaluated by :method:`sess.run` in eager mode.</span>
+
+<span class="sd">        Note that this method will be executed implicitly in eager mode when a property graph created</span>
+<span class="sd">        and cache a instance of InteractiveQuery in session if `initializing_interactive_engine` is True.</span>
+<span class="sd">        If you want to create a new instance under the same graph by different params, you should close</span>
+<span class="sd">        the instance first.</span>
 
 <span class="sd">        .. code:: python</span>
 
-<span class="sd">            &gt;&gt;&gt; # close and recreate InteractiveQuery.</span>
+<span class="sd">            &gt;&gt;&gt; # close and recreate InteractiveQuery in eager mode.</span>
 <span class="sd">            &gt;&gt;&gt; interactive_query = sess.gremlin(g)</span>
 <span class="sd">            &gt;&gt;&gt; interactive_query.close()</span>
 <span class="sd">            &gt;&gt;&gt; interactive_query = sess.gremlin(g, engine_params={&quot;xxx&quot;:&quot;xxx&quot;})</span>
 
-
 <span class="sd">        Args:</span>
-<span class="sd">            graph (:class:`Graph`): Use the graph to create interactive instance.</span>
+<span class="sd">            graph (:class:`graphscope.framework.graph.GraphDAGNode`):</span>
+<span class="sd">                The graph to create interactive instance.</span>
 <span class="sd">            engine_params (dict, optional): Configure startup parameters of interactive engine.</span>
 <span class="sd">                You can also configure this param by `graphscope.set_option(engine_params={})`.</span>
 <span class="sd">                See a list of configurable keys in</span>
 <span class="sd">                `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            InvalidArgumentError: :code:`graph` is not a property graph or unloaded.</span>
+<span class="sd">            InvalidArgumentError:</span>
+<span class="sd">                - :code:`graph` is not a property graph.</span>
+<span class="sd">                - :code:`graph` is unloaded in eager mode.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            :class:`InteractiveQuery`</span>
+<span class="sd">            :class:`graphscope.interactive.query.InteractiveQueryDAGNode`:</span>
+<span class="sd">                InteractiveQuery to execute gremlin queries, evaluated in eager mode.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># self._interactive_instance_dict[graph.vineyard_id] will be None if</span>
-        <span class="c1"># InteractiveQuery closed</span>
+        <span class="c1"># Interactive query instance won&#39;t add to self._interactive_instance_dict in lazy mode.</span>
+        <span class="c1"># self._interactive_instance_dict[graph.vineyard_id] will be None if InteractiveQuery closed</span>
         <span class="k">if</span> <span class="p">(</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">()</span>
+            <span class="ow">and</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span>
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="p">):</span>
             <span class="n">interactive_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span>
@@ -1291,41 +1259,31 @@
                             <span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span>
                         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph has already been unloaded&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph should be a property graph.&quot;</span><span class="p">)</span>
 
-        <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">object_id</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactive_query</span>
-
-        <span class="k">if</span> <span class="n">engine_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">engine_params</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">):</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">engine_params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="p">}</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">engine_params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph has already been unloaded&quot;</span><span class="p">)</span>
+            <span class="c1"># cache the instance of interactive query in eager mode</span>
+            <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactive_query</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_interactive_engine</span><span class="p">(</span>
-                <span class="n">object_id</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span>
-                <span class="n">schema_path</span><span class="o">=</span><span class="n">graph</span><span class="o">.</span><span class="n">schema_path</span><span class="p">,</span>
-                <span class="n">gremlin_server_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_gremlin_server_cpu</span><span class="p">,</span>
-                <span class="n">gremlin_server_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_gie_gremlin_server_mem</span><span class="p">,</span>
-                <span class="n">engine_params</span><span class="o">=</span><span class="n">engine_params</span><span class="p">,</span>
+            <span class="n">enable_gaia</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;enable_gaia&quot;</span><span class="p">]</span>
+            <span class="n">_wrapper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+                <span class="n">InteractiveQueryDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="p">,</span> <span class="n">enable_gaia</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span>
-            <span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
+                <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Failed</span>
+                <span class="n">interactive_query</span><span class="o">.</span><span class="n">error_msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">InteractiveEngineInternalError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">interactive_query</span><span class="o">.</span><span class="n">set_frontend</span><span class="p">(</span>
-                <span class="n">front_ip</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">frontend_host</span><span class="p">,</span> <span class="n">front_port</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">frontend_port</span>
-            <span class="p">)</span>
-            <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">_attach_interactive_instance</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">interactive_query</span></div>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
+                <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">_wrapper</span>
+                <span class="n">graph</span><span class="o">.</span><span class="n">_attach_interactive_instance</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_wrapper</span></div>
 
 <div class="viewcode-block" id="Session.learning"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.learning">[docs]</a>    <span class="k">def</span> <span class="nf">learning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Start a graph learning engine.</span>
@@ -1336,11 +1294,12 @@
 <span class="sd">            gen_labels (list): Extra node and edge labels on original graph for gnn training.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            `graphscope.learning.Graph`: An instance of `graphscope.learning.Graph`</span>
-<span class="sd">                that could be feed to the learning engine.</span>
+<span class="sd">            :class:`graphscope.learning.GraphDAGNode`:</span>
+<span class="sd">                An instance of learning graph that could be feed to the learning engine, evaluated in eager node.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="p">(</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">()</span>
+            <span class="ow">and</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span>
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span>
@@ -1351,28 +1310,22 @@
                 <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph has already been unloaded&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph should be a property graph.&quot;</span><span class="p">)</span>
 
-        <span class="kn">from</span> <span class="nn">graphscope.learning.graph</span> <span class="k">import</span> <span class="n">Graph</span> <span class="k">as</span> <span class="n">LearningGraph</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;The graph has already been unloaded&quot;</span><span class="p">)</span>
 
-        <span class="n">handle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_gl_handle</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="o">.</span><span class="n">preprocess_args</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">)</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-        <span class="n">endpoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_learning_engine</span><span class="p">(</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">config</span>
+        <span class="kn">from</span> <span class="nn">graphscope.learning.graph</span> <span class="k">import</span> <span class="n">GraphDAGNode</span> <span class="k">as</span> <span class="n">LearningGraphDAGNode</span>
+
+        <span class="n">_wrapper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+            <span class="n">LearningGraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">)</span>
         <span class="p">)</span>
-
-        <span class="n">handle</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">handle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
-        <span class="n">handle</span><span class="p">[</span><span class="s2">&quot;server&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">endpoints</span>
-        <span class="n">handle</span><span class="p">[</span><span class="s2">&quot;client_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-
-        <span class="n">learning_graph</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">learning_graph</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">_attach_learning_instance</span><span class="p">(</span><span class="n">learning_graph</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">learning_graph</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">_wrapper</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">_attach_learning_instance</span><span class="p">(</span><span class="n">_wrapper</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_wrapper</span></div>
 
     <span class="k">def</span> <span class="nf">nx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
@@ -1429,6 +1382,7 @@
 <span class="sd">        - k8s_mars_scheduler_cpu</span>
 <span class="sd">        - k8s_mars_scheduler_mem</span>
 <span class="sd">        - with_mars</span>
+<span class="sd">        - enable_gaia</span>
 <span class="sd">        - k8s_waiting_for_delete</span>
 <span class="sd">        - engine_params</span>
 <span class="sd">        - initializing_interactive_engine</span>
@@ -1482,6 +1436,7 @@
 <span class="sd">        - k8s_mars_scheduler_cpu</span>
 <span class="sd">        - k8s_mars_scheduler_mem</span>
 <span class="sd">        - with_mars</span>
+<span class="sd">        - enable_gaia</span>
 <span class="sd">        - k8s_waiting_for_delete</span>
 <span class="sd">        - engine_params</span>
 <span class="sd">        - initializing_interactive_engine</span>
@@ -1652,6 +1607,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.6.0/index.html">v0.6.0</a></dd>
               
             
 

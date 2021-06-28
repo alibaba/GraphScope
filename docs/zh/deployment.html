@@ -107,13 +107,14 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">部署</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#helmgraphscope">使用Helm部署GraphScope</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#aws">在AWS/阿里云上部署集群</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#graphscope">本地部署GraphScope</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">入门教程</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">载图</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">图的变换操作</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
@@ -231,7 +232,7 @@ $ helm <span class="nb">test</span> <span class="o">[</span>RELEASE_NAME<span cl
 <section id="aws">
 <h2>在AWS/阿里云上部署集群<a class="headerlink" href="#aws" title="Permalink to this headline">¶</a></h2>
 <p>我们提供了一个可在AWS或阿里云上创建 Kubernetes 集群的交互式脚本。这一脚本可以帮助用户使用已有的集群或创建新的 Kubernetes 集群，然后输出集群的配置文件。
-用法如下。你也可以通过 <cite>./script/launch_cluster.py –help</cite> 获得更详细的帮助信息。</p>
+用法如下。你也可以通过 <cite>./scripts/launch_cluster.py –help</cite> 获得更详细的帮助信息。</p>
 <ul class="simple">
 <li><p>AWS</p></li>
 </ul>
@@ -244,6 +245,26 @@ $ helm <span class="nb">test</span> <span class="o">[</span>RELEASE_NAME<span cl
 </ul>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip3 install click PyYAML alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
 ./scripts/launch_cluster.py --type aliyun --id your_access_key_id --secret your_access_key_secret --region your_region_id --output kube_config_path
+</pre></div>
+</div>
+</section>
+<section id="graphscope">
+<h2>本地部署GraphScope<a class="headerlink" href="#graphscope" title="Permalink to this headline">¶</a></h2>
+<p>我们提供了一个可在本地安装GraphScope相关依赖以及部署GraphScope的脚本，这一脚本可以运行在
+Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 <cite>./scripts/deploy_local.sh -h</cite>
+获取更详细的帮助信息。</p>
+<ul class="simple">
+<li><p>使用`deploy_local.sh`安装GraphScope相关依赖</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./scripts/deploy_local.sh install_deps
+<span class="nb">source</span> ~/.graphscope_env
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>使用`deploy_local.sh`本地部署GraphScope</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./scripts/deploy_local.sh build_and_deploy
+<span class="nb">export</span> <span class="nv">GRAPHSCOPE_HOME</span><span class="o">=</span>/usr/local
 </pre></div>
 </div>
 </section>
@@ -334,6 +355,16 @@ $ helm <span class="nb">test</span> <span class="o">[</span>RELEASE_NAME<span cl
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/zh/index.html">v0.6.0</a></dd>
               
             
 

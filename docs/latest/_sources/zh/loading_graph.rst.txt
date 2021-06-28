@@ -264,7 +264,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。
 
     ds1 = Loader("file:///var/datafiles/group.e")
     ds2 = Loader("oss://graphscope_bucket/datafiles/group.e", key='access-id', secret='secret-access-key', endpoint='oss-cn-hangzhou.aliyuncs.com')
-    ds3 = Loader("hdfs://datafiles/group.e", host='localhost', port='9000', extra_conf={'conf1': 'value1'})
+    ds3 = Loader("hdfs:///datafiles/group.e", host='localhost', port='9000', extra_conf={'conf1': 'value1'})
     d34 = Loader("s3://datafiles/group.e", key='access-id', secret='secret-access-key', client_kwargs={'region_name': 'us-east-1'})
 
 用户可以方便的实现自己的driver来支持更多的数据源，比如参照 `ossfs <https://github.com/alibaba/libvineyard/blob/main/modules/io/adaptors/ossfs.py>`_ driver的实现方式。

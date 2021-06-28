@@ -108,8 +108,8 @@
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Developer Guide</a><ul>
@@ -199,7 +199,7 @@ Any contributions from the open-source community to improve this project are  gr
 <section id="building-and-testing">
 <h2>Building and Testing<a class="headerlink" href="#building-and-testing" title="Permalink to this headline">¶</a></h2>
 <p>GraphScope has many dependencies.</p>
-<p>To make life easier, we provide two docker images with all needed dependencies
+<p>To make life easier, we provide two docker images with all required dependencies
 installed.</p>
 <blockquote>
 <div><ul class="simple">
@@ -276,6 +276,10 @@ GraphScope repository:</p>
 </div>
 <p>Note that if you want to build wheel packages for different Python versions, you may need to install multiple
 version of Python using <cite>conda</cite> or <cite>pyenv</cite>.</p>
+<p>The GraphScope analytical engine and interactive engine could be built locally on mac with script.</p>
+<p>If GraphScope’s dependencies are not satisfied，you could use the to install
+dependencies of GraphScope.</p>
+<p>Deploy the GraphScope with the script</p>
 </section>
 </section>
 <section id="code-format">
@@ -371,6 +375,16 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
               
             
 

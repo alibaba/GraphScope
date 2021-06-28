@@ -108,8 +108,8 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">入门教程</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">载图</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">图的变换操作</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
@@ -218,6 +218,7 @@ GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">部署</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="deployment.html#helmgraphscope">使用Helm部署GraphScope</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment.html#aws">在AWS/阿里云上部署集群</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#graphscope">本地部署GraphScope</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">入门教程</a><ul>
@@ -245,6 +246,14 @@ GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。
 <li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#id5">将计算结果作为新的属性加入图中</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">图分析引擎</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#id2">内置算法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#id3">对计算结果的处理</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#pie">使用 PIE 编程模型自定义算法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#pregel">使用 Pregel 编程模型自定义算法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#id5">运行自定义算法</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#apache-tinkerpop">Apache TinkerPop</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#python-gremlin-graphscope">利用Python（Gremlin）连接GraphScope</a></li>
@@ -252,14 +261,6 @@ GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#id5">Gremlin Console（开发控制台）</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#gremlin-101">Gremlin编程入门–101</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#gremlin-tinkerpop">Gremlin兼容性（对比TinkerPop）</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">图分析引擎</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#id2">内置算法</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#id3">对计算结果的处理</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#pie">使用 PIE 编程模型自定义算法</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#pregel">使用 Pregel 编程模型自定义算法</a></li>
-<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#id5">运行自定义算法</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a><ul>
@@ -378,6 +379,16 @@ GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。
             
               
                 <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.0/zh/index.html">v0.6.0</a></dd>
               
             
 

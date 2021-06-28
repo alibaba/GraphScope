@@ -105,8 +105,8 @@
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
@@ -214,6 +214,10 @@
         <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.__contains__">(graphscope.nx.Graph method)</a>
 </li>
       </ul></li>
+      <li><a href="reference/session.html#graphscope.Session.__enter__">__enter__() (graphscope.Session method)</a>
+</li>
+      <li><a href="reference/session.html#graphscope.Session.__exit__">__exit__() (graphscope.Session method)</a>
+</li>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.__getitem__">__getitem__() (graphscope.nx.DiGraph method)</a>
 
       <ul>
@@ -226,6 +230,8 @@
         <li><a href="reference/app.html#graphscope.framework.app.AppAssets.__init__">(graphscope.framework.app.AppAssets method)</a>
 </li>
         <li><a href="reference/graph.html#graphscope.framework.graph.Graph.__init__">(graphscope.framework.graph.Graph method)</a>
+</li>
+        <li><a href="reference/graph.html#graphscope.framework.graph.GraphDAGNode.__init__">(graphscope.framework.graph.GraphDAGNode method)</a>
 </li>
         <li><a href="reference/graph.html#graphscope.framework.loader.Loader.__init__">(graphscope.framework.loader.Loader method)</a>
 </li>
@@ -260,18 +266,18 @@
         <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.__len__">(graphscope.nx.Graph method)</a>
 </li>
       </ul></li>
-      <li><a href="reference/app.html#graphscope.framework.app.AppAssets.__repr__">__repr__() (graphscope.framework.app.AppAssets method)</a>
-</li>
-      <li><a href="reference/app.html#graphscope.framework.app.App.__weakref__">__weakref__ (graphscope.framework.app.App attribute)</a>
-</li>
   </ul></td>
 </tr></table>
 
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/generated/graphscope.framework.dag_utils.add_column.html#graphscope.framework.dag_utils.add_column">add_column() (in module graphscope.framework.dag_utils)</a>
+      <li><a href="reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_column">add_column() (graphscope.framework.graph.GraphDAGNode method)</a>
+
+      <ul>
+        <li><a href="reference/generated/graphscope.framework.dag_utils.add_column.html#graphscope.framework.dag_utils.add_column">(in module graphscope.framework.dag_utils)</a>
 </li>
+      </ul></li>
       <li><a href="reference/networkx/generated/graphscope.nx.classes.function.add_cycle.html#graphscope.nx.classes.function.add_cycle">add_cycle() (in module graphscope.nx.classes.function)</a>
 </li>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.add_edge">add_edge() (graphscope.nx.DiGraph method)</a>
@@ -280,6 +286,8 @@
         <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.add_edge">(graphscope.nx.Graph method)</a>
 </li>
       </ul></li>
+      <li><a href="reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_edges">add_edges() (graphscope.framework.graph.GraphDAGNode method)</a>
+</li>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.add_edges_from">add_edges_from() (graphscope.nx.DiGraph method)</a>
 
       <ul>
@@ -302,14 +310,16 @@
 </li>
       <li><a href="reference/networkx/generated/graphscope.nx.classes.function.add_star.html#graphscope.nx.classes.function.add_star">add_star() (in module graphscope.nx.classes.function)</a>
 </li>
+      <li><a href="reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_vertices">add_vertices() (graphscope.framework.graph.GraphDAGNode method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.add_weighted_edges_from">add_weighted_edges_from() (graphscope.nx.DiGraph method)</a>
 
       <ul>
         <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.add_weighted_edges_from">(graphscope.nx.Graph method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.adj">adj() (graphscope.nx.DiGraph property)</a>
 
       <ul>
@@ -322,15 +332,15 @@
         <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.adjacency">(graphscope.nx.Graph method)</a>
 </li>
       </ul></li>
-      <li><a href="reference/app.html#graphscope.framework.app.AppAssets.algo">algo (graphscope.framework.app.AppAssets attribute)</a>
-</li>
-      <li><a href="reference/app.html#id0">algo() (graphscope.framework.app.AppAssets property)</a>
+      <li><a href="reference/app.html#graphscope.framework.app.AppAssets.algo">algo() (graphscope.framework.app.AppAssets property)</a>
 </li>
       <li><a href="reference/networkx/generated/graphscope.nx.classes.function.all_neighbors.html#graphscope.nx.classes.function.all_neighbors">all_neighbors() (in module graphscope.nx.classes.function)</a>
 </li>
       <li><a href="reference/app.html#graphscope.framework.app.App">App (class in graphscope.framework.app)</a>
 </li>
       <li><a href="reference/app.html#graphscope.framework.app.AppAssets">AppAssets (class in graphscope.framework.app)</a>
+</li>
+      <li><a href="reference/app.html#graphscope.framework.app.AppDAGNode">AppDAGNode (class in graphscope.framework.app)</a>
 </li>
       <li><a href="reference/generated/graphscope.framework.dag_utils.arrow_to_dynamic.html#graphscope.framework.dag_utils.arrow_to_dynamic">arrow_to_dynamic() (in module graphscope.framework.dag_utils)</a>
 </li>
@@ -348,10 +358,12 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/app.html#graphscope.bfs">bfs() (in module graphscope)</a>
+      <li><a href="reference/context.html#graphscope.framework.context.BaseContextDAGNode">BaseContextDAGNode (class in graphscope.framework.context)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/app.html#graphscope.bfs">bfs() (in module graphscope)</a>
+</li>
       <li><a href="reference/networkx/builtin.html#graphscope.nx.builtin.bfs_edges">bfs_edges() (in module graphscope.nx.builtin)</a>
 </li>
   </ul></td>
@@ -374,6 +386,8 @@
         <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.clear_edges">(graphscope.nx.Graph method)</a>
 </li>
       </ul></li>
+      <li><a href="reference/interactive.html#graphscope.interactive.query.InteractiveQuery.clone">clone() (graphscope.interactive.query.InteractiveQuery method)</a>
+</li>
       <li><a href="reference/interactive.html#graphscope.interactive.query.InteractiveQuery.close">close() (graphscope.interactive.query.InteractiveQuery method)</a>
 
       <ul>
@@ -394,9 +408,13 @@
 </li>
       <li><a href="reference/networkx/generated/graphscope.nx.generators.classic.complete_graph.html#graphscope.nx.generators.classic.complete_graph">complete_graph() (in module graphscope.nx.generators.classic)</a>
 </li>
+      <li><a href="reference/context.html#graphscope.framework.context.Context">Context (class in graphscope.framework.context)</a>
+</li>
       <li><a href="reference/generated/graphscope.framework.dag_utils.context_to_dataframe.html#graphscope.framework.dag_utils.context_to_dataframe">context_to_dataframe() (in module graphscope.framework.dag_utils)</a>
 </li>
       <li><a href="reference/generated/graphscope.framework.dag_utils.context_to_numpy.html#graphscope.framework.dag_utils.context_to_numpy">context_to_numpy() (in module graphscope.framework.dag_utils)</a>
+</li>
+      <li><a href="reference/app.html#graphscope.framework.app.AppAssets.context_type">context_type() (graphscope.framework.app.AppAssets property)</a>
 </li>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.copy">copy() (graphscope.nx.DiGraph method)</a>
 
@@ -445,6 +463,8 @@
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph">DiGraph (class in graphscope.nx)</a>
 </li>
       <li><a href="reference/generated/graphscope.framework.dag_utils.dynamic_to_arrow.html#graphscope.framework.dag_utils.dynamic_to_arrow">dynamic_to_arrow() (in module graphscope.framework.dag_utils)</a>
+</li>
+      <li><a href="reference/context.html#graphscope.framework.context.DynamicVertexDataContext">DynamicVertexDataContext (class in graphscope.framework.context)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -510,9 +530,9 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/app.html#graphscope.framework.app.AppAssets.gar">gar (graphscope.framework.app.AppAssets attribute)</a>
+      <li><a href="reference/interactive.html#graphscope.interactive.query.InteractiveQuery.gaia">gaia() (graphscope.interactive.query.InteractiveQuery method)</a>
 </li>
-      <li><a href="reference/app.html#id1">gar() (graphscope.framework.app.AppAssets property)</a>
+      <li><a href="reference/app.html#graphscope.framework.app.AppAssets.gar">gar() (graphscope.framework.app.AppAssets property)</a>
 </li>
       <li><a href="reference/session.html#graphscope.Session.get_config">get_config() (graphscope.Session method)</a>
 </li>
@@ -553,6 +573,8 @@
 </li>
       </ul></li>
       <li><a href="reference/interactive.html#graphscope.interactive.query.InteractiveQuery.graph_url">graph_url() (graphscope.interactive.query.InteractiveQuery property)</a>
+</li>
+      <li><a href="reference/graph.html#graphscope.framework.graph.GraphDAGNode">GraphDAGNode (class in graphscope.framework.graph)</a>
 </li>
       <li>
     graphscope.framework.dag_utils
@@ -904,10 +926,10 @@
 </li>
       <li><a href="reference/analytical_engine_index.html#_CPPv4NK2gs22ArrowProjectedFragment7IEDestsERK8vertex_t">gs::ArrowProjectedFragment::IEDests (C++ function)</a>
 </li>
-      <li><a href="reference/analytical_engine_index.html#_CPPv4NK2gs22ArrowProjectedFragment21InnerVertexGid2VertexERK5vid_tR8vertex_t">gs::ArrowProjectedFragment::InnerVertexGid2Vertex (C++ function)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/analytical_engine_index.html#_CPPv4NK2gs22ArrowProjectedFragment21InnerVertexGid2VertexERK5vid_tR8vertex_t">gs::ArrowProjectedFragment::InnerVertexGid2Vertex (C++ function)</a>
+</li>
       <li><a href="reference/analytical_engine_index.html#_CPPv4NK2gs22ArrowProjectedFragment13InnerVerticesEv">gs::ArrowProjectedFragment::InnerVertices (C++ function)</a>
 </li>
       <li><a href="reference/analytical_engine_index.html#_CPPv4N2gs22ArrowProjectedFragment14internal_oid_tE">gs::ArrowProjectedFragment::internal_oid_t (C++ type)</a>
@@ -1404,12 +1426,18 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/context.html#graphscope.framework.context.LabeledVertexDataContextDAGNode">LabeledVertexDataContextDAGNode (class in graphscope.framework.context)</a>
+</li>
+      <li><a href="reference/context.html#graphscope.framework.context.LabeledVertexPropertyContextDAGNode">LabeledVertexPropertyContextDAGNode (class in graphscope.framework.context)</a>
+</li>
       <li><a href="reference/session.html#graphscope.Session.learning">learning() (graphscope.Session method)</a>
 </li>
       <li><a href="reference/networkx/generated/graphscope.nx.generators.social.les_miserables_graph.html#graphscope.nx.generators.social.les_miserables_graph">les_miserables_graph() (in module graphscope.nx.generators.social)</a>
 </li>
       <li><a href="reference/generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app">load_app() (in module graphscope.framework.app)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/graph.html#graphscope.framework.graph.Graph.load_from">load_from() (graphscope.framework.graph.Graph class method)</a>
 
       <ul>
@@ -1418,8 +1446,6 @@
         <li><a href="reference/graph.html#graphscope.framework.graph_builder.load_from">(in module graphscope.framework.graph_builder)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/graph.html#graphscope.framework.loader.Loader">Loader (class in graphscope.framework.loader)</a>
 </li>
       <li><a href="reference/app.html#graphscope.louvain">louvain() (in module graphscope)</a>
@@ -1551,9 +1577,11 @@
 </li>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.pred">pred() (graphscope.nx.DiGraph property)</a>
 </li>
+      <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.predecessors">predecessors() (graphscope.nx.DiGraph method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.predecessors">predecessors() (graphscope.nx.DiGraph method)</a>
+      <li><a href="reference/graph.html#graphscope.framework.graph.GraphDAGNode.project">project() (graphscope.framework.graph.GraphDAGNode method)</a>
 </li>
       <li><a href="reference/generated/graphscope.framework.dag_utils.project_arrow_property_graph.html#graphscope.framework.dag_utils.project_arrow_property_graph">project_arrow_property_graph() (in module graphscope.framework.dag_utils)</a>
 </li>
@@ -1583,14 +1611,14 @@
         <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.remove_edges_from">(graphscope.nx.Graph method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.remove_node">remove_node() (graphscope.nx.DiGraph method)</a>
 
       <ul>
         <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.remove_node">(graphscope.nx.Graph method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.remove_nodes_from">remove_nodes_from() (graphscope.nx.DiGraph method)</a>
 
       <ul>
@@ -1598,6 +1626,8 @@
 </li>
       </ul></li>
       <li><a href="reference/generated/graphscope.framework.dag_utils.report_graph.html#graphscope.framework.dag_utils.report_graph">report_graph() (in module graphscope.framework.dag_utils)</a>
+</li>
+      <li><a href="reference/context.html#graphscope.framework.context.ResultDAGNode">ResultDAGNode (class in graphscope.framework.context)</a>
 </li>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.reverse">reverse() (graphscope.nx.DiGraph method)</a>
 </li>
@@ -1647,8 +1677,6 @@
         <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.set_edge_data">(graphscope.nx.Graph method)</a>
 </li>
       </ul></li>
-      <li><a href="reference/interactive.html#graphscope.interactive.query.InteractiveQuery.set_frontend">set_frontend() (graphscope.interactive.query.InteractiveQuery method)</a>
-</li>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.set_node_data">set_node_data() (graphscope.nx.DiGraph method)</a>
 
       <ul>
@@ -1659,12 +1687,10 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/generated/graphscope.set_option.html#graphscope.set_option">set_option() (in module graphscope)</a>
 </li>
-      <li><a href="reference/app.html#graphscope.framework.app.AppAssets.signature">signature (graphscope.framework.app.AppAssets attribute)</a>
-</li>
       <li><a href="reference/app.html#graphscope.framework.app.App.signature">signature() (graphscope.framework.app.App property)</a>
 
       <ul>
-        <li><a href="reference/app.html#id2">(graphscope.framework.app.AppAssets property)</a>
+        <li><a href="reference/app.html#graphscope.framework.app.AppAssets.signature">(graphscope.framework.app.AppAssets property)</a>
 </li>
         <li><a href="reference/generated/graphscope.framework.operation.Operation.signature.html#graphscope.framework.operation.Operation.signature">(graphscope.framework.operation.Operation property)</a>
 </li>
@@ -1705,8 +1731,14 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/graph.html#graphscope.framework.graph.Graph.to_dataframe">to_dataframe() (graphscope.framework.graph.Graph method)</a>
+      <li><a href="reference/context.html#graphscope.framework.context.TensorContextDAGNode">TensorContextDAGNode (class in graphscope.framework.context)</a>
 </li>
+      <li><a href="reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_dataframe">to_dataframe() (graphscope.framework.context.BaseContextDAGNode method)</a>
+
+      <ul>
+        <li><a href="reference/graph.html#graphscope.framework.graph.Graph.to_dataframe">(graphscope.framework.graph.Graph method)</a>
+</li>
+      </ul></li>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.to_directed">to_directed() (graphscope.nx.DiGraph method)</a>
 
       <ul>
@@ -1721,8 +1753,12 @@
         <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.to_directed_class">(graphscope.nx.Graph method)</a>
 </li>
       </ul></li>
-      <li><a href="reference/graph.html#graphscope.framework.graph.Graph.to_numpy">to_numpy() (graphscope.framework.graph.Graph method)</a>
+      <li><a href="reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_numpy">to_numpy() (graphscope.framework.context.BaseContextDAGNode method)</a>
+
+      <ul>
+        <li><a href="reference/graph.html#graphscope.framework.graph.Graph.to_numpy">(graphscope.framework.graph.Graph method)</a>
 </li>
+      </ul></li>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.to_undirected">to_undirected() (graphscope.nx.DiGraph method)</a>
 
       <ul>
@@ -1739,8 +1775,14 @@
         <li><a href="reference/networkx/graphs.html#graphscope.nx.Graph.to_undirected_class">(graphscope.nx.Graph method)</a>
 </li>
       </ul></li>
-      <li><a href="reference/generated/graphscope.framework.dag_utils.to_vineyard_tensor.html#graphscope.framework.dag_utils.to_vineyard_tensor">to_vineyard_tensor() (in module graphscope.framework.dag_utils)</a>
+      <li><a href="reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_vineyard_dataframe">to_vineyard_dataframe() (graphscope.framework.context.BaseContextDAGNode method)</a>
 </li>
+      <li><a href="reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_vineyard_tensor">to_vineyard_tensor() (graphscope.framework.context.BaseContextDAGNode method)</a>
+
+      <ul>
+        <li><a href="reference/generated/graphscope.framework.dag_utils.to_vineyard_tensor.html#graphscope.framework.dag_utils.to_vineyard_tensor">(in module graphscope.framework.dag_utils)</a>
+</li>
+      </ul></li>
       <li><a href="reference/interactive.html#graphscope.interactive.query.InteractiveQuery.traversal_source">traversal_source() (graphscope.interactive.query.InteractiveQuery method)</a>
 </li>
       <li><a href="reference/app.html#graphscope.triangles">triangles() (in module graphscope)</a>
@@ -1749,9 +1791,7 @@
         <li><a href="reference/networkx/builtin.html#graphscope.nx.builtin.triangles">(in module graphscope.nx.builtin)</a>
 </li>
       </ul></li>
-      <li><a href="reference/app.html#graphscope.framework.app.AppAssets.type">type (graphscope.framework.app.AppAssets attribute)</a>
-</li>
-      <li><a href="reference/app.html#id3">type() (graphscope.framework.app.AppAssets property)</a>
+      <li><a href="reference/app.html#graphscope.framework.app.AppAssets.type">type() (graphscope.framework.app.AppAssets property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1762,13 +1802,17 @@
       <li><a href="reference/app.html#graphscope.framework.app.App.unload">unload() (graphscope.framework.app.App method)</a>
 
       <ul>
+        <li><a href="reference/app.html#graphscope.framework.app.AppDAGNode.unload">(graphscope.framework.app.AppDAGNode method)</a>
+</li>
         <li><a href="reference/graph.html#graphscope.framework.graph.Graph.unload">(graphscope.framework.graph.Graph method)</a>
 </li>
-      </ul></li>
-      <li><a href="reference/generated/graphscope.framework.dag_utils.unload_app.html#graphscope.framework.dag_utils.unload_app">unload_app() (in module graphscope.framework.dag_utils)</a>
+        <li><a href="reference/graph.html#graphscope.framework.graph.GraphDAGNode.unload">(graphscope.framework.graph.GraphDAGNode method)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/generated/graphscope.framework.dag_utils.unload_app.html#graphscope.framework.dag_utils.unload_app">unload_app() (in module graphscope.framework.dag_utils)</a>
+</li>
       <li><a href="reference/generated/graphscope.framework.dag_utils.unload_graph.html#graphscope.framework.dag_utils.unload_graph">unload_graph() (in module graphscope.framework.dag_utils)</a>
 </li>
       <li><a href="reference/networkx/graphs.html#graphscope.nx.DiGraph.update">update() (graphscope.nx.DiGraph method)</a>
@@ -1785,8 +1829,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/learning.html#graphscope.learning.graph.Graph.V">V() (graphscope.learning.graph.Graph method)</a>
 </li>
+      <li><a href="reference/context.html#graphscope.framework.context.VertexDataContextDAGNode">VertexDataContextDAGNode (class in graphscope.framework.context)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/context.html#graphscope.framework.context.VertexPropertyContextDAGNode">VertexPropertyContextDAGNode (class in graphscope.framework.context)</a>
+</li>
       <li><a href="reference/graph.html#graphscope.framework.graph.Graph.vineyard_id">vineyard_id() (graphscope.framework.graph.Graph property)</a>
 </li>
   </ul></td>
@@ -1877,6 +1925,16 @@
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
               
             
 

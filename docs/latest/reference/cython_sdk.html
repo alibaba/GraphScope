@@ -108,8 +108,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
@@ -1100,7 +1100,7 @@ non-deterministic.</p>
 <dt>
 <code class="sig-name descname">inner_nodes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; VertexRange</dt>
 <dd><blockquote>
-<div><p>Get inner vertex range of this fragment by label id.</p>
+<div><p>Get inner vertex range in this fragment by label id.</p>
 </div></blockquote>
 </dd></dl>
 
@@ -1108,7 +1108,7 @@ non-deterministic.</p>
 <dt>
 <code class="sig-name descname">outer_nodes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertex_label_id</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; VertexRange</dt>
 <dd><blockquote>
-<div><p>Get outer vertex range of this fragment by label id.</p>
+<div><p>Get outer vertex range in this fragment by label id.</p>
 </div></blockquote>
 </dd></dl>
 
@@ -1116,7 +1116,7 @@ non-deterministic.</p>
 <dt>
 <code class="sig-name descname">get_node_fid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em><span class="sig-paren">)</span> &#x2192; int</dt>
 <dd><blockquote>
-<div><p>Get vertex fragment id.</p>
+<div><p>Get fragment id of the <cite>v</cite>.</p>
 </div></blockquote>
 </dd></dl>
 
@@ -1124,7 +1124,7 @@ non-deterministic.</p>
 <dt>
 <code class="sig-name descname">is_inner_node</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em><span class="sig-paren">)</span> &#x2192; bool</dt>
 <dd><blockquote>
-<div><p>Return True if inner vertex of this fragment.</p>
+<div><p>Return True if <cite>v</cite> is the inner vertex of this fragment.</p>
 </div></blockquote>
 </dd></dl>
 
@@ -1132,7 +1132,7 @@ non-deterministic.</p>
 <dt>
 <code class="sig-name descname">is_outer_node</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em><span class="sig-paren">)</span> &#x2192; bool</dt>
 <dd><blockquote>
-<div><p>Return False if outer vertex of this fragment.</p>
+<div><p>Return False if <cite>v</cite> is the outer vertex of this fragment.</p>
 </div></blockquote>
 </dd></dl>
 
@@ -1140,7 +1140,7 @@ non-deterministic.</p>
 <dt>
 <code class="sig-name descname">get_node</code><span class="sig-paren">(</span><em class="sig-param">label_id: int</em>, <em class="sig-param">oid: int64_t</em>, <em class="sig-param">v: Vertex&amp;</em><span class="sig-paren">)</span> &#x2192; bool</dt>
 <dd><blockquote>
-<div><p>Return True if oid exist in this fragment.</p>
+<div><p>Return True if oid exists in this fragment.</p>
 </div></blockquote>
 </dd></dl>
 
@@ -1148,7 +1148,7 @@ non-deterministic.</p>
 <dt>
 <code class="sig-name descname">get_inner_node</code><span class="sig-paren">(</span><em class="sig-param">label_id: int</em>, <em class="sig-param">oid: int64_t</em>, <em class="sig-param">v: Vertex&amp;</em><span class="sig-paren">)</span> &#x2192; bool</dt>
 <dd><blockquote>
-<div><p>Return True if oid exist of inner vertex in this fragment.</p>
+<div><p>Return True if oid exists in the inner vertex in this fragment, and assign the node to <cite>v</cite>.</p>
 </div></blockquote>
 </dd></dl>
 
@@ -1156,7 +1156,7 @@ non-deterministic.</p>
 <dt>
 <code class="sig-name descname">get_outer_node</code><span class="sig-paren">(</span><em class="sig-param">label_id: int</em>, <em class="sig-param">oid: int64_t</em>, <em class="sig-param">v: Vertex&amp;</em><span class="sig-paren">)</span> &#x2192; bool</dt>
 <dd><blockquote>
-<div><p>Return True if oid exist of outer vertex in this fragment.</p>
+<div><p>Return True if oid exists in the outer vertex in this fragment, and assign the node to <cite>v</cite>.</p>
 </div></blockquote>
 </dd></dl>
 
@@ -1164,7 +1164,7 @@ non-deterministic.</p>
 <dt>
 <code class="sig-name descname">get_node_id</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">v</span><span class="p">:</span> <span class="n">Vertex</span></em><span class="sig-paren">)</span> &#x2192; int64_t</dt>
 <dd><blockquote>
-<div><p>Get vertex oid.</p>
+<div><p>Return vertex oid of <cite>v</cite>.</p>
 </div></blockquote>
 </dd></dl>
 
@@ -1572,6 +1572,16 @@ non-deterministic.</p>
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.0/index.html">v0.6.0</a></dd>
               
             
 

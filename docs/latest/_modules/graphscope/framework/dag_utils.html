@@ -105,8 +105,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
@@ -195,6 +195,9 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -1002,16 +1005,14 @@
     <span class="sd">&quot;&quot;&quot;Retrieve graph raw data as a numpy ndarray.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`Graph`): Source graph.</span>
+<span class="sd">        graph (:class:`graphscope.framework.graph.GraphDAGNode`): Source graph.</span>
 <span class="sd">        selector (str): Select the type of data to retrieve.</span>
 <span class="sd">        vertex_range (str): Specify a range to retrieve.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        An op to convert a graph&#39;s data to numpy ndarray.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
-    <span class="p">}</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">SELECTOR</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">vertex_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1020,6 +1021,7 @@
         <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_TO_NUMPY</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">TENSOR</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">op</span></div>
@@ -1029,16 +1031,14 @@
     <span class="sd">&quot;&quot;&quot;Retrieve graph raw data as a pandas DataFrame.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`Graph`): Source graph.</span>
+<span class="sd">        graph (:class:`graphscope.framework.graph.GraphDAGNode`): Source graph.</span>
 <span class="sd">        selector (str): Select the type of data to retrieve.</span>
 <span class="sd">        vertex_range (str): Specify a range to retrieve.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        An op to convert a graph&#39;s data to pandas DataFrame.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
-    <span class="p">}</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">SELECTOR</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">vertex_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1047,9 +1047,206 @@
         <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_TO_DATAFRAME</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">DATAFRAME</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">op</span></div>
+
+
+<span class="k">def</span> <span class="nf">create_interactive_query</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="p">,</span> <span class="n">cpu</span><span class="p">,</span> <span class="n">mem</span><span class="p">,</span> <span class="n">enable_gaia</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a interactive engine that query on the :code:`graph`</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        graph (:class:`graphscope.framework.graph.GraphDAGNode`):</span>
+<span class="sd">            Source property graph.</span>
+<span class="sd">        engine_params (dict, optional):</span>
+<span class="sd">            Configuration to startup the interactive engine. See detail in:</span>
+<span class="sd">            `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`</span>
+<span class="sd">        cpu (float): The number of CPU cores for gremlin server.</span>
+<span class="sd">        mem (str): The number of mem  for gremlin server.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An op to create a interactive engine based on a graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_SERVER_CPU</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">f_to_attr</span><span class="p">(</span><span class="n">cpu</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_SERVER_MEM</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">mem</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">engine_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_ENGINE_PARAMS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">engine_params</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_ENABLE_GAIA</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">enable_gaia</span><span class="p">)</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">CREATE_INTERACTIVE_QUERY</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">INTERACTIVE_QUERY</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<span class="k">def</span> <span class="nf">create_learning_instance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an engine for graph learning.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        graph (:class:`graphscope.framework.graph.GraphDAGNode`):</span>
+<span class="sd">            Source property graph.</span>
+<span class="sd">        nodes (list): The node types that will be used for gnn training.</span>
+<span class="sd">        edges (list): The edge types that will be used for gnn training.</span>
+<span class="sd">        gen_labels (list): Extra node and edge labels on original graph for gnn training.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An op to create a learning engine based on a graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NODES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">bytes_to_attr</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">nodes</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">bytes_to_attr</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">edges</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">gen_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GLE_GEN_LABELS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">bytes_to_attr</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">gen_labels</span><span class="p">))</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">CREATE_LEARNING_INSTANCE</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">LEARNING_GRAPH</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<span class="k">def</span> <span class="nf">close_interactive_query</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Close the interactive instance.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):</span>
+<span class="sd">            The GIE instance holds the graph that gremlin query on.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        An op to close the instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">interactive_query</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">CLOSE_INTERACTIVE_QUERY</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<span class="k">def</span> <span class="nf">close_learning_instance</span><span class="p">(</span><span class="n">learning_instance</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Close the learning instance.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        learning_instance (:class:`graphscope.learning.graph.GraphDAGNode`):</span>
+<span class="sd">            The learning instance.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        An op to close the instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">learning_instance</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">CLOSE_LEARNING_INSTANCE</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">learning_instance</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<span class="k">def</span> <span class="nf">gremlin_query</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">query_gaia</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Execute a gremlin query.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):</span>
+<span class="sd">            The GIE instance holds the graph that gremlin query on.</span>
+<span class="sd">        query (str):</span>
+<span class="sd">            Scripts that written in gremlin quering language.</span>
+<span class="sd">        request_options (dict, optional): gremlin request options. format:</span>
+<span class="sd">            {</span>
+<span class="sd">                &quot;engine&quot;: &quot;gae&quot;</span>
+<span class="sd">            }</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An op to execute a gremlin query on the GIE instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_QUERY_MESSAGE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request_options</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_REQUEST_OPTIONS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request_options</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_QUERY_GAIA</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">query_gaia</span><span class="p">)</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">interactive_query</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GREMLIN_QUERY</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GREMLIN_RESULTS</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<span class="k">def</span> <span class="nf">gremlin_to_subgraph</span><span class="p">(</span>
+    <span class="n">interactive_query</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a subgraph from gremlin output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):</span>
+<span class="sd">            The GIE instance holds the graph that gremlin query on.</span>
+<span class="sd">        gremlin_script (str):</span>
+<span class="sd">            gremlin script to be executed.</span>
+<span class="sd">        request_options (dict, optional): gremlin request options. format:</span>
+<span class="sd">            {</span>
+<span class="sd">                &quot;engine&quot;: &quot;gae&quot;</span>
+<span class="sd">            }</span>
+<span class="sd">        oid_type (str, optional):</span>
+<span class="sd">            Type of vertex original id. Defaults to &quot;int64&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An op to create the subgraph from gremlin script</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_QUERY_MESSAGE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">gremlin_script</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">OID_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">oid_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request_options</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_REQUEST_OPTIONS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request_options</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">interactive_query</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">SUBGRAPH</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<span class="k">def</span> <span class="nf">fetch_gremlin_result</span><span class="p">(</span><span class="n">result_set</span><span class="p">,</span> <span class="n">fetch_type</span><span class="o">=</span><span class="s2">&quot;one&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fetch the gremlin query result.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        result_set (:class:`raphscope.interactive.query.ResultSetDAGNode`):</span>
+<span class="sd">            The instance holds the resultSet in coordinator that can fetch the gremlin result from.</span>
+<span class="sd">        fetch_type (str): &quot;one&quot; or &quot;all&quot;. Defaults to &quot;one&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An op to fetch the gremlin result.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_FETCH_RESULT_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">fetch_type</span><span class="p">)</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">result_set</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">FETCH_GREMLIN_RESULT</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">result_set</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
 </pre></div>
 
            </div>
@@ -1127,6 +1324,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.0/index.html">v0.6.0</a></dd>
               
             
 

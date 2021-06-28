@@ -113,8 +113,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
@@ -252,21 +252,20 @@ You can use the script as follows or use <cite>./script/launch_cluster.py –hel
 </section>
 <section id="deployment-on-local">
 <h2>Deployment on local<a class="headerlink" href="#deployment-on-local" title="Permalink to this headline">¶</a></h2>
-<p>we provide scripts to install dependencies and build GraphScope on local.</p>
+<p>We provide script to install dependencies and deploy GraphScope locally on
+Ubuntu 20.04+ or MacOS.</p>
 <ul class="simple">
-<li><p>install independencies</p></li>
+<li><p>install independencies of GraphScope</p></li>
 </ul>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./script/install_denpendencies.sh
-<span class="nb">export</span> <span class="nv">JAVA_HOME</span><span class="o">=</span>/usr/lib/jvm/java-8-openjdk-amd64
-<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="si">${</span><span class="nv">JAVA_HOME</span><span class="si">}</span>/bin:<span class="si">${</span><span class="nv">PATH</span><span class="si">}</span>:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
-<span class="nb">export</span> <span class="nv">GRAPHSCOPE_PREFIX</span><span class="o">=</span>/tmp/graphscope_prefix
-<span class="nb">export</span> <span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="si">${</span><span class="nv">LD_LIBRARY_PATH</span><span class="si">}</span>:/usr/local/lib
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./scripts/deploy_local.sh install_deps
+<span class="nb">source</span> ~/.graphscope_env
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>build GraphScope on local</p></li>
+<li><p>build and deploy GraphScope locally</p></li>
 </ul>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./script/build.sh
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>./scripts/deploy_local.sh build_and_deploy
+<span class="nb">export</span> <span class="nv">GRAPHSCOPE_HOME</span><span class="o">=</span>/usr/local
 </pre></div>
 </div>
 </section>
@@ -357,6 +356,16 @@ You can use the script as follows or use <cite>./script/launch_cluster.py –hel
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.6.0/index.html">v0.6.0</a></dd>
               
             
 

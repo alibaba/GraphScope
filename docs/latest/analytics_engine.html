@@ -30,8 +30,8 @@
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="GraphScope Learning Engine" href="learning_engine.html" />
-    <link rel="prev" title="GraphScope Interactive Engine" href="interactive_engine.html" />
+    <link rel="next" title="GraphScope Interactive Engine" href="interactive_engine.html" />
+    <link rel="prev" title="Graph Transformations" href="graph_transformation.html" />
 
  
 
@@ -108,15 +108,45 @@
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">GraphScope Analytical Engine</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#built-in-algorithms">Built-in Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#result-processing">Result Processing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#writing-your-own-algorithms-in-pie">Writing Your Own Algorithms in PIE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#writing-algorithms-in-pregel">Writing Algorithms in Pregel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#run-your-own-algorithms">Run Your Own Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glossory">Glossory</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loadstrategy">LoadStrategy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#onlyout">OnlyOut</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#onlyin">OnlyIn</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bothinout">BothInOut</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#partitionstrategy">PartitionStrategy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edge-cut">Edge Cut</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#vertex-cut">Vertex Cut</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#vertices-on-graphscope-analytical-engine">Vertices on GraphScope analytical engine</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#outervertex">OuterVertex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#innervertex">InnerVertex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#innervertexwithoutgoingedge">InnerVertexWithOutgoingEdge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#innervertexwithincomingedge">InnerVertexWithIncomingEdge</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#messagestrategy">MessageStrategy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#alongoutgoingedgetooutervertex">AlongOutgoingEdgeToOuterVertex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#alongincomingedgetooutervertex">AlongIncomingEdgeToOuterVertex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#alongedgetooutervertex">AlongEdgeToOuterVertex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#synconoutervertexastarget">SyncOnOuterVertexAsTarget</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#synconoutervertexassource">SyncOnOuterVertexAsSource</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#synconoutervertex">SyncOnOuterVertex</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
@@ -491,6 +521,99 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
 <li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang, Zeyu Zheng, Bohan Zhang, Yang Cao, and Chao Tian. <a class="reference external" href="https://dl.acm.org/doi/10.1145/3035918.3035942">Parallelizing Sequential Graph Computations.</a>, ACM SIG Conference on Management of Data (SIGMOD), 2017 (the Best Paper Award).</p></li>
 </ul>
 </section>
+<section id="glossory">
+<h2>Glossory<a class="headerlink" href="#glossory" title="Permalink to this headline">¶</a></h2>
+<section id="loadstrategy">
+<h3>LoadStrategy<a class="headerlink" href="#loadstrategy" title="Permalink to this headline">¶</a></h3>
+<p>There are three ways to maintain the nodes crossing different fragments in GraphScope analytical engine.</p>
+<section id="onlyout">
+<h4>OnlyOut<a class="headerlink" href="#onlyout" title="Permalink to this headline">¶</a></h4>
+<p>Each fragment Fi maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v, v’). For instance, in addition to local nodes {4, 5, 6, 7}, F1 in graph G also stores a “mirror” node 3 and the edge (5, 3) when using OnlyOut strategy, as shown below.</p>
+<img alt="OnlyOut" src="_images/onlyout.png" />
+</section>
+<section id="onlyin">
+<h4>OnlyIn<a class="headerlink" href="#onlyin" title="Permalink to this headline">¶</a></h4>
+<p>Under this case, each fragment Fi maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v’, v). In graph G, F1 maintains “mirror” nodes {1, 9, 12} besides its local nodes.</p>
+<img alt="OnlyIn" src="_images/onlyin.png" />
+</section>
+<section id="bothinout">
+<h4>BothInOut<a class="headerlink" href="#bothinout" title="Permalink to this headline">¶</a></h4>
+<p>Each fragment Fi maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v, v’) or (v’, v). Hence, in graph G, “mirror” nodes {1, 3, 9, 12} are stored in F1 when BothInOut is applied.</p>
+<img alt="BothInOut" src="_images/inandout.png" />
+</section>
+</section>
+<section id="partitionstrategy">
+<h3>PartitionStrategy<a class="headerlink" href="#partitionstrategy" title="Permalink to this headline">¶</a></h3>
+<section id="edge-cut">
+<h4>Edge Cut<a class="headerlink" href="#edge-cut" title="Permalink to this headline">¶</a></h4>
+<p>An <em>edge cut</em> partitioning splits vertices of a graph into roughly equal size clusters. The edges are stored in the same cluster as one or both of its endpoints. Edges with endpoints distributed across different clusters are <em>crossing edges</em>.</p>
+<img alt="Edge Cut" src="_images/ecut.png" />
+</section>
+<section id="vertex-cut">
+<h4>Vertex Cut<a class="headerlink" href="#vertex-cut" title="Permalink to this headline">¶</a></h4>
+<p>A <em>vertex-cut</em> partitioning divides edges of a graph into roughly equal size fragments. The vertices that hold the endpoints of an edge are also placed in the same fragment as the edge itself. A vertex has to be replicated when its adjacent edges are distributed across different fragments.</p>
+<img alt="Vertex Cut" src="_images/vcut.png" />
+</section>
+</section>
+<section id="vertices-on-graphscope-analytical-engine">
+<h3>Vertices on GraphScope analytical engine<a class="headerlink" href="#vertices-on-graphscope-analytical-engine" title="Permalink to this headline">¶</a></h3>
+<p>A node v is referred to as an</p>
+<section id="outervertex">
+<h4>OuterVertex<a class="headerlink" href="#outervertex" title="Permalink to this headline">¶</a></h4>
+<p>OuterVertex of fragment Fi if it resides at another fragment Fj and there exists a node v’ in Fi such that (v, v’) or (v’, v) is an edge; e.g., nodes {1, 3, 9, 12} are OuterVertex of fragment F1 in graph G;</p>
+<img alt="OuterVertex" src="_images/outvertex.png" />
+</section>
+<section id="innervertex">
+<h4>InnerVertex<a class="headerlink" href="#innervertex" title="Permalink to this headline">¶</a></h4>
+<p>InnerVertex of fragment Fi if it is distributed to Fi; e.g. nodes {4, 5, 6, 7} are InnerVertex of fragment F1 in G;</p>
+<img alt="InnerVertex" src="_images/invertex.png" />
+</section>
+<section id="innervertexwithoutgoingedge">
+<h4>InnerVertexWithOutgoingEdge<a class="headerlink" href="#innervertexwithoutgoingedge" title="Permalink to this headline">¶</a></h4>
+<p>InnerVertexWithOutgoingEdge of fragment Fi if it is stored in Fi and has an adjacent edge (v, v’) outcoming to a node v’ in another fragment Fj; e.g., node 5 is an InnerVertexWithOutgoingEdge of F1 in G with the outgoing edge (5, 3);</p>
+<img alt="InnerVertexWithOutgoingEdge" src="_images/invertexout.png" />
+</section>
+<section id="innervertexwithincomingedge">
+<h4>InnerVertexWithIncomingEdge<a class="headerlink" href="#innervertexwithincomingedge" title="Permalink to this headline">¶</a></h4>
+<p>InnerVertexWithIncomingEdge of fragment Fi if it is maintained in Fi has an adjacent edge (v’, v) incoming from a node v’ in another fragment Fj; e.g., nodes {4, 5, 7} are InnerVertexWithIncomingEdge of F1 in G, and (1, 4), (9, 5), and (12, 7) are corresponding incoming edges.</p>
+<img alt="InnerVertexWithIncomingEdge" src="_images/invertexin.png" />
+</section>
+</section>
+<section id="messagestrategy">
+<h3>MessageStrategy<a class="headerlink" href="#messagestrategy" title="Permalink to this headline">¶</a></h3>
+<p>Below are some message passing and synchronization strategies adopted by GraphScope analytical engine.</p>
+<section id="alongoutgoingedgetooutervertex">
+<h4>AlongOutgoingEdgeToOuterVertex<a class="headerlink" href="#alongoutgoingedgetooutervertex" title="Permalink to this headline">¶</a></h4>
+<p>Here the message is passed along crossing edges from InnerVertexWithOutgoingEdge to OuterVertex. For instance, the message is passed from node 5 to 3 in graph G.</p>
+<img alt="AlongOutgoingEdgeToOuterVertex" src="_images/intoout.png" />
+</section>
+<section id="alongincomingedgetooutervertex">
+<h4>AlongIncomingEdgeToOuterVertex<a class="headerlink" href="#alongincomingedgetooutervertex" title="Permalink to this headline">¶</a></h4>
+<p>Under this case, the message is passed along crossing edges from InnerVertexWithIncomingEdge to OuterVertex. For example, the message is passed from node 5 to 9 in graph G.</p>
+<img alt="AlongIncomingEdgeToOuterVertex" src="_images/intoout2.png" />
+</section>
+<section id="alongedgetooutervertex">
+<h4>AlongEdgeToOuterVertex<a class="headerlink" href="#alongedgetooutervertex" title="Permalink to this headline">¶</a></h4>
+<p>Each message is passed along crossing edges from nodes that are both  InnerVertexWithIncomingEdge and InnerVertexWithOutgoingEdge to OuterVertex, e.g., messages are passed from node 5 to 3 and 9 and vice versa in graph G.</p>
+<img alt="AlongEdgeToOuterVertex" src="_images/intoout3.png" />
+</section>
+<section id="synconoutervertexastarget">
+<h4>SyncOnOuterVertexAsTarget<a class="headerlink" href="#synconoutervertexastarget" title="Permalink to this headline">¶</a></h4>
+<p>It is applied in company with the OnlyOut loading strategy. Here each fragment Fi sends the states of its “mirror” node of OuterVertex v to Fj that v resides, if there exists edge (v’, v) and v’ is “local” node of Fi, for synchronizing different states of v. For instance, the state of “mirror” node 3 is sent from F1 to F0 for synchronization at F0.</p>
+<img alt="SyncOnOuterVertexAsTarget" src="_images/sync1.png" />
+</section>
+<section id="synconoutervertexassource">
+<h4>SyncOnOuterVertexAsSource<a class="headerlink" href="#synconoutervertexassource" title="Permalink to this headline">¶</a></h4>
+<p>It is applied together with the OnlyIn loading strategy. Similar to <strong>SyncStateOnOuterVertexAsTarget</strong>, each fragment Fi sends the states of its “mirror” nodes v to the corresponding fragments for synchronization. The difference is that for each such “mirror”, there exists outgoing edge (v, v’) to certain “local” node v’ of Fi. For example, the states of “mirror” nodes 1, 9, and 12 are sent from F1 to F0 and F2 for synchronization with other states.</p>
+<img alt="SyncOnOuterVertexAsSource" src="_images/sync2.png" />
+</section>
+<section id="synconoutervertex">
+<h4>SyncOnOuterVertex<a class="headerlink" href="#synconoutervertex" title="Permalink to this headline">¶</a></h4>
+<p>This is applied together with the BothInOut loading strategy. Under this case, each fragment Fi sends the states of all its “mirror” nodes v to the corresponding fragments for synchronization, regardless of the directions of edges adjacent to v, e.g., the states of “mirror” nodes 1, 3, 9 and 12 are sent from F1 to F0 and F2 for further synchronization.</p>
+<img alt="SyncOnOuterVertex" src="_images/sync3.png" />
+</section>
+</section>
+</section>
 </section>
 
 
@@ -501,10 +624,10 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="learning_engine.html" class="btn btn-neutral float-right" title="GraphScope Learning Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="interactive_engine.html" class="btn btn-neutral float-right" title="GraphScope Interactive Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="interactive_engine.html" class="btn btn-neutral" title="GraphScope Interactive Engine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="graph_transformation.html" class="btn btn-neutral" title="Graph Transformations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -578,6 +701,16 @@ Take SSSP as example, the algorithm in Pregel model looks like this.</p>
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
               
             
 

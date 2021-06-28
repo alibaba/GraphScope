@@ -69,6 +69,8 @@
 
     sess = graphscope.session(k8s_volumes=k8s_volumes, k8s_service_type="LoadBalancer")
 
+另外，注意 `data.field.path` 是 Kubernetes 主机上的路径，当在 Mac 上使用 Docker-Desktop 时，需要首先将此路径加入到 Docker
+的共享目录中，通常为 `/Users`。更详细的指引请参看 `how to mount hostpath using docker for mac kubernetes <https://forums.docker.com/t/how-to-mount-hostpath-using-docker-for-mac-kubernetes/44083/5>`_.
 
 会话（:ref:`Session`）的建立过程中，首选会在背后尝试拉起一个 `coordinator` 作为后端引擎的入口。
 该 `coordinator` 负责管理该次会话的所有资源（k8s pods），以及交互式查询、图分析、图学习引擎的生命周期。

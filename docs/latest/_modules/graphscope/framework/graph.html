@@ -105,8 +105,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
@@ -361,7 +361,7 @@
         <span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">GraphDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">,</span> <span class="n">GraphInterface</span><span class="p">):</span>
+<div class="viewcode-block" id="GraphDAGNode"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode">[docs]</a><span class="k">class</span> <span class="nc">GraphDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">,</span> <span class="n">GraphInterface</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class represents a graph node in a DAG.</span>
 
 <span class="sd">    In GraphScope, all operations that generate a new graph will return</span>
@@ -390,7 +390,7 @@
 <span class="sd">        &gt;&gt;&gt; g1.unload()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="GraphDAGNode.__init__"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">session</span><span class="p">,</span>
         <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -431,7 +431,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># add op to dag</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_op</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">v_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -502,7 +502,50 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Not supported incoming data.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">add_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vid_field</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Select some elements of the graph and output to numpy.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            selector (str): Select a portion of graph as a numpy.ndarray.</span>
+<span class="sd">            vertex_range(dict, optional): Slice vertices. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`:</span>
+<span class="sd">                A result holds the `numpy.ndarray`, evaluated in eager mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># avoid circular import</span>
+        <span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="k">import</span> <span class="n">ResultDAGNode</span>
+
+        <span class="n">check_argument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">)</span>
+        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">graph_to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Select some elements of the graph and output as a pandas.DataFrame</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            selector (dict): Select some portions of graph.</span>
+<span class="sd">            vertex_range (dict, optional): Slice vertices. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`:</span>
+<span class="sd">                A result holds the `pandas.DataFrame`, evaluated in eager mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># avoid circular import</span>
+        <span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="k">import</span> <span class="n">ResultDAGNode</span>
+
+        <span class="n">check_argument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">)</span>
+        <span class="n">check_argument</span><span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">),</span>
+            <span class="s2">&quot;selector of to dataframe must be a dict&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">selector</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">graph_to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GraphDAGNode.add_vertices"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_vertices">[docs]</a>    <span class="k">def</span> <span class="nf">add_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vid_field</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add vertices to the graph, and return a new graph.</span>
 
 <span class="sd">        Args:</span>
@@ -547,9 +590,9 @@
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_e_relationships</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_e_relationships</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_unsealed_vertices_and_edges</span> <span class="o">=</span> <span class="n">unsealed_vertices_and_edges</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
-        <span class="k">return</span> <span class="n">graph_dag_node</span>
+        <span class="k">return</span> <span class="n">graph_dag_node</span></div>
 
-    <span class="k">def</span> <span class="nf">add_edges</span><span class="p">(</span>
+<div class="viewcode-block" id="GraphDAGNode.add_edges"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_edges">[docs]</a>    <span class="k">def</span> <span class="nf">add_edges</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">edges</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span>
@@ -691,7 +734,7 @@
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_e_relationships</span> <span class="o">=</span> <span class="n">relations</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_unsealed_vertices_and_edges</span> <span class="o">=</span> <span class="n">unsealed_vertices_and_edges</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="n">parent</span>
-        <span class="k">return</span> <span class="n">graph_dag_node</span>
+        <span class="k">return</span> <span class="n">graph_dag_node</span></div>
 
     <span class="k">def</span> <span class="nf">_backtrack_graph_dag_node_by_op_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">key</span> <span class="o">==</span> <span class="n">key</span><span class="p">:</span>
@@ -702,11 +745,11 @@
                 <span class="k">return</span> <span class="n">graph_dag_node</span>
             <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span>
 
-    <span class="k">def</span> <span class="nf">add_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+<div class="viewcode-block" id="GraphDAGNode.add_column"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_column">[docs]</a>    <span class="k">def</span> <span class="nf">add_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add the results as a column to the graph. Modification rules are given by the selector.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            results (:class:`graphscope.framework.context.ContextDAGNode`):</span>
+<span class="sd">            results: A instance of concrete class derive from (:class:`graphscope.framework.context.BaseContextDAGNode`):</span>
 <span class="sd">                A context that created by doing an app query on a graph, and holds the corresponding results.</span>
 <span class="sd">            selector (dict): Select results to add as column.</span>
 <span class="sd">                Format is similar to selectors in :class:`graphscope.framework.context.Context`</span>
@@ -718,22 +761,24 @@
         <span class="n">check_argument</span><span class="p">(</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">),</span> <span class="s2">&quot;selector of add column must be a dict&quot;</span>
         <span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">selector</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">_check_selector</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="n">selector</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">)</span>
         <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
-        <span class="k">return</span> <span class="n">graph_dag_node</span>
+        <span class="k">return</span> <span class="n">graph_dag_node</span></div>
 
-    <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GraphDAGNode.unload"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.unload">[docs]</a>    <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unload this graph from graphscope engine.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            :class:`graphscope.framework.graph.UnloadedGraph`: Evaluated in eager mode.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">unload_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">UnloadedGraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">UnloadedGraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span>
+<div class="viewcode-block" id="GraphDAGNode.project"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">vertices</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]],</span>
         <span class="n">edges</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]],</span>
@@ -761,7 +806,7 @@
         <span class="c1"># construct dag node</span>
         <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
-        <span class="k">return</span> <span class="n">graph_dag_node</span>
+        <span class="k">return</span> <span class="n">graph_dag_node</span></div></div>
 
 
 <div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph">[docs]</a><span class="k">class</span> <span class="nc">Graph</span><span class="p">(</span><span class="n">GraphInterface</span><span class="p">):</span>
@@ -901,6 +946,10 @@
         <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">op</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">template_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># transform str/string to std::string</span>
         <span class="n">oid_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">normalize_data_type_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">)</span>
@@ -1010,18 +1059,12 @@
 <span class="sd">        Args:</span>
 <span class="sd">            selector (str): Select a portion of graph as a numpy.ndarray.</span>
 <span class="sd">            vertex_range(dict, optional): Slice vertices. Defaults to None.</span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            `numpy.ndarray`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">check_argument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
-        <span class="n">selector</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_labeled_vertex_property_data_selector</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">selector</span>
-        <span class="p">)</span>
-        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">graph_to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">ret</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="Graph.to_dataframe"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.to_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Select some elements of the graph and output as a pandas.DataFrame</span>
@@ -1033,24 +1076,10 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            `pandas.DataFrame`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">check_argument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
-        <span class="n">check_argument</span><span class="p">(</span>
-            <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">),</span>
-            <span class="s2">&quot;selector of to_vineyard_dataframe must be a dict&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">selector</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">key</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_labeled_vertex_property_data_selector</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">value</span>
-            <span class="p">)</span>
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">selector</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="p">}</span>
-        <span class="n">selector</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
-        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
-
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">graph_to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">ret</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">is_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span>
@@ -1273,6 +1302,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.0/index.html">v0.6.0</a></dd>
               
             
 

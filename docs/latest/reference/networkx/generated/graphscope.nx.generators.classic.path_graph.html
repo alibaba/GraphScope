@@ -108,8 +108,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
@@ -220,8 +220,8 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em><em> or </em><em>iterable</em>) – If an integer, node labels are 0 to n with center 0.
-If an iterable of nodes, the center is the first.</p></li>
+<li><p><strong>n</strong> (<em>int</em><em> or </em><em>iterable</em>) – If an integer, nodes are 0 to n - 1.
+If an iterable of nodes, in the order they appear in the path.</p></li>
 <li><p><strong>create_using</strong> (<em>NetworkX graph constructor</em><em>, </em><em>optional</em><em> (</em><em>default=nx.Graph</em><em>)</em>) – Graph type to create. If graph instance, then cleared before populated.</p></li>
 </ul>
 </dd>
@@ -315,6 +315,16 @@ If an iterable of nodes, the center is the first.</p></li>
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.0/index.html">v0.6.0</a></dd>
               
             
 

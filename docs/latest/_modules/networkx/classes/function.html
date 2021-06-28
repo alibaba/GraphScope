@@ -105,8 +105,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
@@ -256,7 +256,7 @@
 
 
 <div class="viewcode-block" id="neighbors"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.neighbors.html#graphscope.nx.classes.function.neighbors">[docs]</a><span class="k">def</span> <span class="nf">neighbors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns a list of nodes connected to node n. &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of nodes connected to node n.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></div>
 
 
@@ -266,7 +266,7 @@
 
 
 <div class="viewcode-block" id="number_of_edges"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.number_of_edges.html#graphscope.nx.classes.function.number_of_edges">[docs]</a><span class="k">def</span> <span class="nf">number_of_edges</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns the number of edges in the graph. &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Returns the number of edges in the graph.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span></div>
 
 
@@ -329,7 +329,7 @@
 
 
 <div class="viewcode-block" id="is_directed"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_directed.html#graphscope.nx.classes.function.is_directed">[docs]</a><span class="k">def</span> <span class="nf">is_directed</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Return True if graph is directed.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Return True if graph is directed.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span></div>
 
 
@@ -720,7 +720,7 @@
 <span class="sd">       Propagate Graph and Nodes data to the new graph.</span>
 
 <span class="sd">    See Also</span>
-<span class="sd">    -----</span>
+<span class="sd">    --------</span>
 <span class="sd">    empty_graph</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -734,8 +734,8 @@
 <div class="viewcode-block" id="info"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.info.html#graphscope.nx.classes.function.info">[docs]</a><span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return a summary of information for the graph G or a single node n.</span>
 
-<span class="sd">    The summary includes the number of nodes and edges (or neighbours for a single</span>
-<span class="sd">    node), and their average degree.</span>
+<span class="sd">    The summary includes the number of nodes and edges, or neighbours for a single</span>
+<span class="sd">    node.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -755,30 +755,15 @@
 <span class="sd">        If n is not in the graph G</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">info</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># append this all to a string</span>
     <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">info</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;Name: </span><span class="si">{G.name}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">type_name</span> <span class="o">=</span> <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span>
-        <span class="n">info</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;Type: {&#39;,&#39;.join(type_name)}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">info</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;Number of nodes: {G.number_of_nodes()}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">info</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;Number of edges: {G.number_of_edges()}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">nnodes</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
-                <span class="n">deg</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">in_degree</span><span class="p">())</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)</span>
-                <span class="n">info</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;Average in degree: </span><span class="si">{deg:8.4f}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                <span class="n">deg</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">out_degree</span><span class="p">())</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nnodes</span><span class="p">)</span>
-                <span class="n">info</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;Average out degree: </span><span class="si">{deg:8.4f}</span><span class="s2">&quot;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-                <span class="n">info</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;Average degree: {(float(s) / float(nnodes)):8.4f}&quot;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;node </span><span class="si">{n}</span><span class="s2"> not in graph&quot;</span><span class="p">)</span>
-        <span class="n">info</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;Node </span><span class="si">{n}</span><span class="s2"> has the following properties:</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">info</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;Degree: {G.degree(n)}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="n">info</span> <span class="o">+=</span> <span class="s2">&quot;Neighbors: &quot;</span>
-        <span class="n">info</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">nbr</span><span class="p">)</span> <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;node </span><span class="si">{n}</span><span class="s2"> not in graph&quot;</span><span class="p">)</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># append this all to a string</span>
+    <span class="n">info</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;Node </span><span class="si">{n}</span><span class="s2"> has the following properties:</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="n">info</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;Degree: {G.degree(n)}</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="n">info</span> <span class="o">+=</span> <span class="s2">&quot;Neighbors: &quot;</span>
+    <span class="n">info</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">nbr</span><span class="p">)</span> <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">info</span></div>
 
 
@@ -850,6 +835,17 @@
 <span class="sd">        3</span>
 <span class="sd">        &gt;&gt;&gt; G.nodes[2]</span>
 <span class="sd">        {}</span>
+
+<span class="sd">    Note that if the dictionary contains nodes that are not in `G`, the</span>
+<span class="sd">    values are silently ignored::</span>
+
+<span class="sd">        &gt;&gt;&gt; G = nx.Graph()</span>
+<span class="sd">        &gt;&gt;&gt; G.add_node(0)</span>
+<span class="sd">        &gt;&gt;&gt; nx.set_node_attributes(G, {0: &quot;red&quot;, 1: &quot;blue&quot;}, name=&quot;color&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; G.nodes[0][&quot;color&quot;]</span>
+<span class="sd">        &#39;red&#39;</span>
+<span class="sd">        &gt;&gt;&gt; 1 in G.nodes</span>
+<span class="sd">        False</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Set node attributes based on type of `values`</span>
@@ -959,6 +955,14 @@
 <span class="sd">        &#39;nothing&#39;</span>
 <span class="sd">        &gt;&gt;&gt; G[1][2][&quot;attr2&quot;]</span>
 <span class="sd">        3</span>
+
+<span class="sd">    Note that if the dict contains edges that are not in `G`, they are</span>
+<span class="sd">    silently ignored::</span>
+
+<span class="sd">        &gt;&gt;&gt; G = nx.Graph([(0, 1)])</span>
+<span class="sd">        &gt;&gt;&gt; nx.set_edge_attributes(G, {(1, 2): {&quot;weight&quot;: 2.0}})</span>
+<span class="sd">        &gt;&gt;&gt; (1, 2) in G.edges()</span>
+<span class="sd">        False</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1299,6 +1303,8 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        A NetworkX graph.</span>
 <span class="sd">    data : string or bool, optional (default=False)</span>
 <span class="sd">        Return selfloop edges as two tuples (u, v) (data=False)</span>
 <span class="sd">        or three-tuples (u, v, datadict) (data=True)</span>
@@ -1550,6 +1556,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.0/index.html">v0.6.0</a></dd>
               
             
 
