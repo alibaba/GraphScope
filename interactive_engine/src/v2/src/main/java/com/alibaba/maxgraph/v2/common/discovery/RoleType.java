@@ -28,7 +28,9 @@ public enum RoleType {
     EXECUTOR_GRAPH("executor_graph"),
     EXECUTOR_QUERY("executor_query"),
     EXECUTOR_MANAGE("executor_manage"),
-    EXECUTOR_ENGINE("executor_engine");
+    EXECUTOR_ENGINE("executor_engine"),
+    GAIA_ENGINE("gaia_engine"),
+    GAIA_RPC("gaia_rpc");
 
     private final String name;
 
