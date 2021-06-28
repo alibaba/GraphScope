@@ -41,7 +41,7 @@ impl GaiaServer {
                 .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?,
         };
         let worker_num = match self.config.get_storage_option("worker.num") {
-            None => 0,
+            None => 1,
             Some(worker_num_string) => worker_num_string.parse()
                 .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?,
         };
@@ -63,15 +63,15 @@ impl GaiaServer {
         let (tx, rx) = oneshot::channel();
         let rt = Runtime::new().map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
         rt.block_on(async {
-            // TODO
+            // TODO: later integrate with new store
             let partition = Partition { num_servers: 0, };
             let factory = GremlinJobCompiler::new(partition, worker_num, server_id);
             let service = Service::new(factory);
             let local_addr = start_rpc_server(addr, service, report).await.unwrap();
             tx.send(local_addr.port()).unwrap();
         });
-        let server_port = futures::executor::block_on(rx).unwrap();
-        Ok((socket_addr.port(), server_port))
+        let rpc_port = futures::executor::block_on(rx).unwrap();
+        Ok((socket_addr.port(), rpc_port))
     }
 
     pub fn update_peer_view(&self, peer_view: Vec<(u64, SocketAddr)>) {
@@ -89,38 +89,22 @@ fn make_gaia_config(graph_config: Arc<GraphConfig>) -> Configuration {
     let ip = "0.0.0.0".to_string();
     let port = graph_config.get_storage_option("gaia.engine.port").expect("required config gaia.engine.port is missing")
         .parse().expect("parse gaia.engine.port failed");
-    let nonblocking = match graph_config.get_storage_option("gaia.nonblocking") {
-        None => None,
-        Some(nonblocking_string) => Some(nonblocking_string.parse().expect("parse gaia.nonblocking failed")),
-    };
-    let read_timeout_ms = match graph_config.get_storage_option("gaia.read.timeout.ms") {
-        None => None,
-        Some(read_timeout_ms_string) => Some(read_timeout_ms_string.parse().expect("parse gaia.read.timeout.ms failed")),
-    };
-    let write_timeout_ms = match graph_config.get_storage_option("gaia.write.timeout.ms") {
-        None => None,
-        Some(write_timeout_ms_string) => Some(write_timeout_ms_string.parse().expect("parse gaia.write.timeout.ms failed")),
-    };
-    let read_slab_size = match graph_config.get_storage_option("gaia.read.slab.size") {
-        None => None,
-        Some(read_slab_size_string) => Some(read_slab_size_string.parse().expect("parse gaia.read.slab.size failed")),
-    };
-    let no_delay = match graph_config.get_storage_option("gaia.no.delay") {
-        None => None,
-        Some(no_delay_string) => Some(no_delay_string.parse().expect("parse gaia.no.delay failed")),
-    };
-    let send_buffer = match graph_config.get_storage_option("gaia.send.buffer") {
-        None => None,
-        Some(send_buffer_string) => Some(send_buffer_string.parse().expect("parse gaia.send.buffer failed")),
-    };
-    let heartbeat_sec = match graph_config.get_storage_option("gaia.heartbeat.sec") {
-        None => None,
-        Some(heartbeat_sec_string) => Some(heartbeat_sec_string.parse().expect("parse gaia.heartbeat.sec failed")),
-    };
-    let max_pool_size = match graph_config.get_storage_option("gaia.max.pool.size") {
-        None => None,
-        Some(max_pool_size_string) => Some(max_pool_size_string.parse().expect("parse gaia.max.pool.size failed")),
-    };
+    let nonblocking = graph_config.get_storage_option("gaia.nonblocking")
+        .map(|config_str| config_str.parse().expect("parse gaia.nonblocking failed"));
+    let read_timeout_ms = graph_config.get_storage_option("gaia.read.timeout.ms")
+        .map(|config_str| config_str.parse().expect("parse gaia.read.timeout.ms failed"));
+    let write_timeout_ms = graph_config.get_storage_option("gaia.write.timeout.ms")
+        .map(|config_str| config_str.parse().expect("parse gaia.read.timeout.ms failed"));
+    let read_slab_size = graph_config.get_storage_option("gaia.read.slab.size")
+        .map(|config_str| config_str.parse().expect("parse gaia.read.timeout.ms failed"));
+    let no_delay = graph_config.get_storage_option("gaia.no.delay")
+        .map(|config_str| config_str.parse().expect("parse gaia.read.timeout.ms failed"));
+    let send_buffer = graph_config.get_storage_option("gaia.send.buffer")
+        .map(|config_str| config_str.parse().expect("parse gaia.read.timeout.ms failed"));
+    let heartbeat_sec = graph_config.get_storage_option("gaia.heartbeat.sec")
+        .map(|config_str| config_str.parse().expect("parse gaia.read.timeout.ms failed"));
+    let max_pool_size = graph_config.get_storage_option("gaia.max.pool.size")
+        .map(|config_str| config_str.parse().expect("parse gaia.read.timeout.ms failed"));
     let network_config = NetworkConfig {
         server_id,
         ip,
