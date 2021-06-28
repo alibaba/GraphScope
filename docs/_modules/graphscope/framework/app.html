@@ -105,8 +105,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
@@ -196,6 +196,7 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
+<span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">hashlib</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -206,7 +207,7 @@
 <span class="kn">import</span> <span class="nn">yaml</span>
 
 <span class="kn">import</span> <span class="nn">graphscope</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="k">import</span> <span class="n">ContextDAGNode</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="k">import</span> <span class="n">create_context_node</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="k">import</span> <span class="n">DAGNode</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="k">import</span> <span class="n">bind_app</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="k">import</span> <span class="n">create_app</span>
@@ -222,6 +223,7 @@
 
 
 <span class="k">def</span> <span class="nf">project_to_simple</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">graph</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;graph_type&quot;</span><span class="p">):</span>
@@ -258,6 +260,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_not_compatible_for</span><span class="p">(</span><span class="n">not_compatible_for_func</span><span class="p">):</span>
+        <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">not_compatible_for_func</span><span class="p">)</span>
         <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="n">graph</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;graph_type&quot;</span><span class="p">):</span>
@@ -295,40 +298,73 @@
 <div class="viewcode-block" id="AppAssets"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets">[docs]</a><span class="k">class</span> <span class="nc">AppAssets</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class represents a app assert node in a DAG that holds the bytes of the gar resource.</span>
 
-<span class="sd">    Assets includes name (for builtin algorithm), and gar (for user defined algorithm),</span>
-<span class="sd">    and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`.</span>
+<span class="sd">    Assets includes an algorithm name, and gar (for user defined algorithm),</span>
+<span class="sd">    a context type (one of &#39;tensor&#39;, &#39;vertex_data&#39;, &#39;vertex_property&#39;,</span>
+<span class="sd">    &#39;labeled_vertex_data&#39;, &#39;dynamic_vertex_data&#39;, &#39;labeled_vertex_property&#39;),</span>
+<span class="sd">    and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`),</span>
 
-<span class="sd">    The instance of this class can be passed to init :class:`graphscope.framework.app.AppDAGNode`.</span>
-
-<span class="sd">    Attributes:</span>
-<span class="sd">        algo (str): Name of the algorithm</span>
-<span class="sd">        type (str): Type of the algorithm</span>
-<span class="sd">        gar (bytes): Byte content of user defined algorithm</span>
-<span class="sd">        signature (str): Unique identifier of this assets.</span>
+<span class="sd">    The instance of this class can be passed to init :class:`graphscope.framework.app.AppDAGNode`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="AppAssets.__init__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">algo</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">_support_context_type</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;tensor&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;vertex_data&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;vertex_property&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;labeled_vertex_data&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;dynamic_vertex_data&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;labeled_vertex_property&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+<div class="viewcode-block" id="AppAssets.__init__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">algo</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Init assets of the algorithm.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            algo (str): Represent specific algo inside resource.</span>
+<span class="sd">            context (str): Type of context that hold the calculation results.</span>
+<span class="sd">            It will get from gar if param is None. Defaults to None.</span>
 <span class="sd">            gar (bytes or BytesIO, optional): The bytes that encodes the application&#39;s source code.</span>
-<span class="sd">                Default to None</span>
-<span class="sd">            kwargs: Other params, e.g. vd_type and md_type in cython app.</span>
+<span class="sd">                Defaults to None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span> <span class="o">=</span> <span class="n">algo</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;cpp_pie&quot;</span>  <span class="c1"># default is built_in app with `built_in` type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context_type</span> <span class="o">=</span> <span class="n">context</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;cpp_pie&quot;</span>  <span class="c1"># default is builtin app with `built_in` type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1"># used for gar resource</span>
         <span class="k">if</span> <span class="n">gar</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="p">(</span><span class="n">BytesIO</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="o">=</span> <span class="n">gar</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">gar</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_extract_meta_info</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># built_in apps has no gar resource.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_support_context_type</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
+                <span class="s2">&quot;Unsupport context type: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_context_type</span><span class="p">)</span>
+            <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="AppAssets.__repr__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;graphscope.framework.app.AppAssets &lt;type: </span><span class="si">{self._type}</span><span class="s2">, algorithm: </span><span class="si">{self._algo}</span><span class="s2">&gt;&quot;</span></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;graphscope.framework.app.AppAssets &lt;type: </span><span class="si">{self._type}</span><span class="s2">, algo: </span><span class="si">{self._algo}</span><span class="s2">, context: </span><span class="si">{self._context_type}</span><span class="s2">&gt;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_extract_meta_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extract app meta info from gar resource.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            InvalidArgumentError:</span>
+<span class="sd">                - :code:`gs_conf.yaml` not exist in gar resource.</span>
+<span class="sd">                - Algo not found in gar resource.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gar</span><span class="p">)</span>
+        <span class="n">archive</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">DEFAULT_GS_CONFIG_FILE</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">meta</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span> <span class="o">==</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;algo&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_context_type</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;context_type&quot;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">meta</span>
+                <span class="k">return</span>
+        <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;App not found in gar: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_algo</span><span class="p">))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">algo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -338,6 +374,15 @@
 <span class="sd">            str: Algorithm name of this asset.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Context type, e.g. vertex_property, labeled_vertex_data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Type of the app context.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_type</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -391,33 +436,21 @@
 
 <span class="sd">        Raises:</span>
 <span class="sd">            InvalidArgumentError:</span>
-<span class="sd">                - :code:`gs_conf.yaml` not exist in gar resource.</span>
-<span class="sd">                - App is not compatible with graph or</span>
-<span class="sd">                - Algo not found in gar resource.</span>
+<span class="sd">                - App is not compatible with graph</span>
 
 <span class="sd">            ScannerError:</span>
 <span class="sd">                - Yaml file format is incorrect.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># builtin app</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;cpp_pie&quot;</span>
             <span class="k">return</span>
         <span class="c1"># check yaml file</span>
-        <span class="n">fp</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gar</span><span class="p">)</span>
-        <span class="n">archive</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">DEFAULT_GS_CONFIG_FILE</span><span class="p">))</span>
-
-        <span class="c1"># check the compatibility with graph</span>
-        <span class="k">for</span> <span class="n">application</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span> <span class="o">==</span> <span class="n">application</span><span class="p">[</span><span class="s2">&quot;algo&quot;</span><span class="p">]:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="n">application</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
-                <span class="n">graph_type</span> <span class="o">=</span> <span class="n">graph_type_to_cpp_class</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">graph_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">application</span><span class="p">[</span><span class="s2">&quot;compatible_graph&quot;</span><span class="p">]:</span>
-                    <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
-                        <span class="s2">&quot;App is uncompatible with graph </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">graph_type</span><span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;App not found in gar: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_algo</span><span class="p">))</span></div>
+        <span class="n">graph_type</span> <span class="o">=</span> <span class="n">graph_type_to_cpp_class</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">graph_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">[</span><span class="s2">&quot;compatible_graph&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
+                <span class="s2">&quot;App is uncompatible with graph </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">graph_type</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
     <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Instantiate an App and do queries over it.&quot;&quot;&quot;</span>
@@ -425,22 +458,10 @@
         <span class="k">return</span> <span class="n">app_</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<span class="k">class</span> <span class="nc">AppDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+<div class="viewcode-block" id="AppDAGNode"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppDAGNode">[docs]</a><span class="k">class</span> <span class="nc">AppDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class represents a app node in a DAG.</span>
 
-<span class="sd">    An application that can run on graphs and produce results.</span>
-
-<span class="sd">    Analytical engine will build the app dynamic library when instantiate a app instance.</span>
-<span class="sd">    The dynamic library will be reused if subsequent app&#39;s signature matches one of previous ones.</span>
-
-<span class="sd">    Attributes:</span>
-<span class="sd">        key (str): Identifier of the app, associated with the dynamic library path.</span>
-<span class="sd">            set by analytical engine after library is built.</span>
-<span class="sd">        signature (str): Combination of app_assets&#39;s and graph&#39;s signature.</span>
-<span class="sd">        session_id (str): Session id of the session that associated with the app.</span>
-<span class="sd">        algo (str): Algorithm name of app_assets.</span>
-<span class="sd">        gar (str): Gar content of app_assets.</span>
-
+<span class="sd">    In GraphScope, an app node binding a concrete graph node that query executed on.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">app_assets</span><span class="p">:</span> <span class="n">AppAssets</span><span class="p">):</span>
@@ -497,6 +518,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">app_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">type</span>
         <span class="n">check_argument</span><span class="p">(</span><span class="n">app_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">context_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">context_type</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">DAGNode</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The graph is not loaded&quot;</span><span class="p">)</span>
@@ -506,21 +528,30 @@
             <span class="n">check_argument</span><span class="p">(</span>
                 <span class="ow">not</span> <span class="n">args</span><span class="p">,</span> <span class="s2">&quot;Only support using keyword arguments in cython app.&quot;</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="n">ContextDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">create_context_node</span><span class="p">(</span>
+                <span class="n">context_type</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">ContextDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">create_context_node</span><span class="p">(</span><span class="n">context_type</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="AppDAGNode.unload"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppDAGNode.unload">[docs]</a>    <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unload this app from graphscope engine.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            :class:`graphscope.framework.app.UnloadedApp`: Evaluated in eager mode.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">unload_app</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">UnloadedApp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">UnloadedApp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="App"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App">[docs]</a><span class="k">class</span> <span class="nc">App</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An application that can run on graphs and produce results.</span>
+
+<span class="sd">    Analytical engine will build the app dynamic library when instantiate a app instance.</span>
+<span class="sd">    And the dynamic library will be reused if subsequent app&#39;s signature matches one of</span>
+<span class="sd">    previous ones.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 <div class="viewcode-block" id="App.__init__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_node</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span> <span class="o">=</span> <span class="n">app_node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="o">.</span><span class="n">session</span>
@@ -574,7 +605,7 @@
 
 <div class="viewcode-block" id="load_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app">[docs]</a><span class="k">def</span> <span class="nf">load_app</span><span class="p">(</span><span class="n">algo</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Load an app from gar.</span>
-<span class="sd">    bytes orthe resource of the specified path or bytes.</span>
+<span class="sd">    bytes or the resource of the specified path or bytes.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        algo: str</span>
@@ -604,13 +635,13 @@
 <span class="sd">                - gs::ArrowProjectedFragment</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="p">(</span><span class="n">BytesIO</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)):</span>
-        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">algo</span><span class="p">),</span> <span class="n">gar</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">algo</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="n">gar</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">is_zipfile</span><span class="p">(</span><span class="n">gar</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a zip file.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gar</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">algo</span><span class="p">),</span> <span class="n">content</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">algo</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Wrong type with </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gar</span><span class="p">))</span></div>
 </pre></div>

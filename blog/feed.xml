@@ -9,6 +9,15 @@
     <lastBuildDate>Mon, 31 May 2021 15:01:12 +0800</lastBuildDate>
     <generator>Jekyll v4.1.1</generator>
     
+    <item>
+<title>Release Notes: v0.5.0</title>
+<description><p><img src="/blog/assets/images/release_note_t.png" alt="release-note" /> We are glad to announce the GraphScope 0.5 release. As the first step towards the ease of deployment in production, this major release includes two new features, namely <strong>a persistent graph store</strong> to enable a “service mode” for real-time graph computing, and <strong>lazy evaluation</strong> of GraphScope programs–an execution strategy which delays the execution of a GraphScope program until later when needed for efficiency. In addition, we improve the compatibility with NetworkX.​We highlight the following improvements included in this release:​</p> <ol> <li> <p>GraphScope-Store: A persistent store for mutable graphs. Currently, it has supported the following features/functions:</p> <ul> <li>A bulk-load tool to import a property graph from files to the GraphScope-Store instance.</li> <li>Helm support to launch GraphScope as a service with a store.</li> <li>Support for multiple session connections to a store.</li> <li>Interactive queries on graphs in the store with Gremlin.</li> </ul> </li> <li> <p>Lazy evaluation</p> <ul> <li>Support to switch between lazy-mode and eager-mode by just setting the value of <code class="language-plaintext highlighter-rouge">mode</code> as <code class="language-plaintext highlighter-rouge">lazy</code> or <code class="language-plaintext highlighter-rouge">eager</code> when creating a session <code class="language-plaintext highlighter-rouge">graphscope.session(mode='lazy'or 'eager')</code>.</li> <li>Adapt the NetworkX interfaces to switch between eager and lazy modes.</li> </ul> </li> <li> <p>Enhanced NetworkX compatibility</p> <ul> <li>Support for multi-queries on duplications of the whole graph.</li> <li>Add all-pairs shortest paths and closeness centrality algorithms.</li> </ul> </li> <li> <p>Provide a <a href="https://graphscope.io/docs/frequently_asked_questions.html">Q&amp;A page</a> for beginners</p> </li> </ol> <p>For more detailed improvements that have been made in this release, please refer to the complete <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.5.0">changelog</a>.</p> </description>
+<pubDate>Tue, 15 Jun 2021 03:33:20 +0000</pubDate>
+<link>https://graphscope.io/blog/releasenotes/2021/06/15/release-notes-0.5.0.html</link>
+<guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2021/06/15/release-notes-0.5.0.html</guid>
+<category>ReleaseNotes</category>
+</item>
+    
       <item>
         <title>Towards a Swiss Army Knife for a Continuous Life Cycle of Big Graph Analytics</title>
         <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/knife.png&quot; alt=&quot;knife&quot; /&gt;

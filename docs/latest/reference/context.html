@@ -108,8 +108,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
@@ -203,6 +203,343 @@
 <span id="id1"></span><h1>Context<a class="headerlink" href="#context" title="Permalink to this headline">¶</a></h1>
 <section id="context-object">
 <h2>Context object<a class="headerlink" href="#context-object" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="graphscope.framework.context.BaseContextDAGNode">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">BaseContextDAGNode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bound_app</span></em>, <em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContextDAGNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.BaseContextDAGNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class of concrete context DAG node.</p>
+<p>In GraphScope, it will return a instance of concrete class <cite>ContextDAGNode</cite>
+after evaluating an app, that will be automatically executed by <a href="#id2"><span class="problematic" id="id3">:method:`sess.run`</span></a>
+in eager mode and return a instance of <a class="reference internal" href="#graphscope.framework.context.Context" title="graphscope.framework.context.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.Context</span></code></a></p>
+<dl class="simple">
+<dt>We can further use the handle to retrieve data:</dt><dd><ul class="simple">
+<li><p>as a numpy.ndarray( <cite>to_numpy()</cite> ),</p></li>
+<li><p>as a pandas.DataFrame( <cite>to_dataframe()</cite> ),</p></li>
+<li><p>as a vineyard tensor ( <cite>to_vineyard_tensor()</cite> ),</p></li>
+<li><p>or as a vineyard dataframe ( <cite>to_vineyard_dataframe()</cite> ).</p></li>
+</ul>
+</dd>
+</dl>
+<p>The following example demonstrates its usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># lazy mode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lazy&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">arrow_property_graph</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">property_sssp</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.context.LabeledVertexDataContextDAGNode&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r1</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s2">&quot;r:v0.dist_0&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">r1</span><span class="p">)</span> <span class="c1"># &lt;graphscope.ramework.context.ResultDAGNode&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r2</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;v:v0.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r:v0.dist_0&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r3</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">to_vineyard_tensor</span><span class="p">(</span><span class="s2">&quot;v:v0.id&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r4</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;v:v0.id&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="s2">&quot;v:v0.dist&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r:v0.dist_0&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span><span class="p">,</span> <span class="n">r4</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(40521,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(40521, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="c1"># return an object id</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="c1"># return an object id</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># eager mode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">arrow_property_graph</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;person&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;knows&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">sssp</span><span class="p">(</span><span class="n">sg</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.context.Context&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r1</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r1</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(20345,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r2</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;v.id&#39;</span><span class="p">,</span> <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r2</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(20345, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r3</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">to_vineyard_tensor</span><span class="p">()</span> <span class="c1"># return an object id</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r4</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">()</span> <span class="c1"># return an object id</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="graphscope.framework.context.BaseContextDAGNode.to_dataframe">
+<code class="sig-name descname">to_dataframe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selector</span></em>, <em class="sig-param"><span class="n">vertex_range</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContextDAGNode.to_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.BaseContextDAGNode.to_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the context data as a pandas DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selector</strong> – dict
+The key is column name in dataframe, and the value describes how to select
+values of context. See more details in derived context DAG node class.</p></li>
+<li><p><strong>vertex_range</strong> – dict, optional, default to None.
+Works as slicing. The expression {‘begin’: m, ‘end’: n} select a portion
+of vertices from <cite>m</cite> to, but not including <cite>n</cite>. Type of <cite>m</cite>, <cite>n</cite> must be
+identical with vertices’ oid type.
+Only the sub-ranges of vertices data will be retrieved.
+Note the comparision is not based on numeric order, but on alphabetic order.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A result holds the <cite>pandas.DataFrame</cite>, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.context.ResultDAGNode" title="graphscope.framework.context.ResultDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.ResultDAGNode</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.context.BaseContextDAGNode.to_numpy">
+<code class="sig-name descname">to_numpy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selector</span></em>, <em class="sig-param"><span class="n">vertex_range</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContextDAGNode.to_numpy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.BaseContextDAGNode.to_numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the context data as a numpy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selector</strong> (<em>str</em>) – Describes how to select values of context.
+See more details in derived context DAG node class.</p></li>
+<li><p><strong>vertex_range</strong> (<em>dict</em>) – optional, default to None.
+Works as slicing. The expression {‘begin’: m, ‘end’: n} select a portion
+of vertices from <cite>m</cite> to, but not including <cite>n</cite>. Type of <cite>m</cite>, <cite>n</cite> must be
+identical with vertices’ oid type.
+Omitting the first index starts the slice at the beginning of the vertices,
+and omitting the second index extends the slice to the end of the vertices.
+Note the comparision is not based on numeric order, but on alphabetic order.</p></li>
+<li><p><strong>axis</strong> (<em>int</em>) – optional, default to 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A result holds the <cite>numpy.ndarray</cite>, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.context.ResultDAGNode" title="graphscope.framework.context.ResultDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.ResultDAGNode</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.context.BaseContextDAGNode.to_vineyard_dataframe">
+<code class="sig-name descname">to_vineyard_dataframe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selector</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vertex_range</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContextDAGNode.to_vineyard_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.BaseContextDAGNode.to_vineyard_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the context data as a vineyard dataframe and return the vineyard object id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>selector</strong> – dict
+Key is used as column name of the dataframe, and the value describes how to
+select values of context. See more details in derived context DAG node class.</p></li>
+<li><p><strong>vertex_range</strong> – dict, optional, default to None
+Works as slicing. The expression {‘begin’: m, ‘end’: n} select a portion
+of vertices from <cite>m</cite> to, but not including <cite>n</cite>. Type of <cite>m</cite>, <cite>n</cite> must be
+identical with vertices’ oid type.
+Only the sub-ranges of vertices data will be retrieved.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A result hold the object id of vineyard dataframe, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.context.ResultDAGNode" title="graphscope.framework.context.ResultDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.ResultDAGNode</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.context.BaseContextDAGNode.to_vineyard_tensor">
+<code class="sig-name descname">to_vineyard_tensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">selector</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vertex_range</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContextDAGNode.to_vineyard_tensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.BaseContextDAGNode.to_vineyard_tensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the context data as a vineyard tensor and return the vineyard object id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A result hold the object id of vineyard tensor, evaluated in eager mode.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.context.ResultDAGNode" title="graphscope.framework.context.ResultDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.ResultDAGNode</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.TensorContextDAGNode">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">TensorContextDAGNode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bound_app</span></em>, <em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#TensorContextDAGNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.TensorContextDAGNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tensor context DAG node holds a tensor.
+Only axis is meaningful when considering a TensorContext.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.VertexDataContextDAGNode">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">VertexDataContextDAGNode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bound_app</span></em>, <em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#VertexDataContextDAGNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.VertexDataContextDAGNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>The most simple kind of context.
+A vertex has a single value as results.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The syntax of selector on vertex is:</dt><dd><ul>
+<li><p><cite>v.id</cite>: Get the Id of vertices</p></li>
+<li><dl class="simple">
+<dt><cite>v.data</cite>: Get the data of vertices</dt><dd><p>If there is any, means origin data on the graph, not results.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of edge is (not supported yet):</dt><dd><ul>
+<li><p><cite>e.src</cite>: Get the source Id of edges</p></li>
+<li><p><cite>e.dst</cite>: Get the destination Id of edges</p></li>
+<li><dl class="simple">
+<dt><cite>e.data</cite>: Get the edge data on the edges</dt><dd><p>If there is any, means origin data on the graph</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of results is:</dt><dd><ul>
+<li><p><cite>r</cite>: Get quering results of algorithms. e.g. Rankings of vertices after doing PageRank.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.LabeledVertexDataContextDAGNode">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">LabeledVertexDataContextDAGNode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bound_app</span></em>, <em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#LabeledVertexDataContextDAGNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.LabeledVertexDataContextDAGNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>The labeled kind of context.
+This context has several vertex labels and edge labels, and each label has several properties.
+Selection are performed on labels first, then on properties.</p>
+<p>We use <cite>:</cite> to filter labels, and <cite>.</cite> to select properties. And the results has no property,
+only have labels.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The syntax of selector of vertex is:</dt><dd><ul>
+<li><p><cite>v:label_name.id</cite>: Get Id that belongs to a specific vertex label.</p></li>
+<li><p><cite>v:label_name.property_name</cite>: Get data that on a specific property of a specific vertex label.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of edge is (not supported yet):</dt><dd><ul>
+<li><p><cite>e:label_name.src</cite>: Get source Id of a specific edge label.</p></li>
+<li><p><cite>e:label_name.dst</cite>: Get destination Id of a specific edge label.</p></li>
+<li><p><cite>e:label_name.property_name</cite>: Get data on a specific property of a specific edge label.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of results is:</dt><dd><ul>
+<li><p><cite>r:label_name</cite>: Get results data of a vertex label.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.VertexPropertyContextDAGNode">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">VertexPropertyContextDAGNode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bound_app</span></em>, <em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#VertexPropertyContextDAGNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.VertexPropertyContextDAGNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>The simple kind of context with property.
+A vertex can have multiple values (a.k.a. properties) as results.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The syntax of selector on vertex is:</dt><dd><ul>
+<li><p><cite>v.id</cite>: Get the Id of vertices</p></li>
+<li><dl class="simple">
+<dt><cite>v.data</cite>: Get the data of vertices</dt><dd><p>If there is any, means origin data on the graph, not results</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of edge is (not supported yet):</dt><dd><ul>
+<li><p><cite>e.src</cite>: Get the source Id of edges</p></li>
+<li><p><cite>e.dst</cite>: Get the destination Id of edges</p></li>
+<li><dl class="simple">
+<dt><cite>e.data</cite>: Get the edge data on the edges</dt><dd><p>If there is any, means origin data on the graph</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of results is:</dt><dd><ul>
+<li><dl class="simple">
+<dt><cite>r.column_name</cite>: Get the property named <cite>column_name</cite> in results.</dt><dd><p>e.g. <cite>r.hub</cite> in <a class="reference internal" href="app.html#graphscope.hits" title="graphscope.hits"><code class="xref py py-func docutils literal notranslate"><span class="pre">graphscope.hits()</span></code></a>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.LabeledVertexPropertyContextDAGNode">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">LabeledVertexPropertyContextDAGNode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bound_app</span></em>, <em class="sig-param"><span class="n">graph</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#LabeledVertexPropertyContextDAGNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.LabeledVertexPropertyContextDAGNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>The labeld kind of context with properties.
+This context has several vertex labels and edge labels, And each label has several properties.
+Selection are performed on labels first, then on properties.</p>
+<p>We use <cite>:</cite> to filter labels, and <cite>.</cite> to select properties.
+And the results can have several properties.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The syntax of selector of vertex is:</dt><dd><ul>
+<li><p><cite>v:label_name.id</cite>: Get Id that belongs to a specific vertex label.</p></li>
+<li><p><cite>v:label_name.property_name</cite>: Get data that on a specific property of a specific vertex label.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of edge is (not supported yet):</dt><dd><ul>
+<li><p><cite>e:label_name.src</cite>: Get source Id of a specific edge label.</p></li>
+<li><p><cite>e:label_name.dst</cite>: Get destination Id of a specific edge label.</p></li>
+<li><p><cite>e:label_name.property_name</cite>: Get data on a specific property of a specific edge label.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>The syntax of selector of results is:</dt><dd><ul>
+<li><p><cite>r:label_name.column_name</cite>: Get the property named <cite>column_name</cite> of <cite>label_name</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.Context">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">Context</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context_node</span></em>, <em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#Context"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.Context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hold a handle of app querying context.</p>
+<p>After evaluating an app, the context (vertex data, partial results, etc.) are preserved,
+and can be referenced through a handle.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.DynamicVertexDataContext">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">DynamicVertexDataContext</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context_node</span></em>, <em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#DynamicVertexDataContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.DynamicVertexDataContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vertex data context for complicated result store.
+A vertex has a single value as results.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="graphscope.framework.context.ResultDAGNode">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.context.</code><code class="sig-name descname">ResultDAGNode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dag_node</span></em>, <em class="sig-param"><span class="n">op</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#ResultDAGNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.context.ResultDAGNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class represents a result node in a DAG.</p>
+<p>In GraphScope, result node is always a leaf node in a DAG.</p>
+</dd></dl>
+
 </section>
 </section>
 

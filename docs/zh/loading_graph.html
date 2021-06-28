@@ -113,8 +113,8 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">图的变换操作</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
@@ -402,7 +402,7 @@ GraphScope 将会推断起始点标签和终点标签为这一个点标签。</p
 
 <span class="n">ds1</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;file:///var/datafiles/group.e&quot;</span><span class="p">)</span>
 <span class="n">ds2</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;oss://graphscope_bucket/datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;access-id&#39;</span><span class="p">,</span> <span class="n">secret</span><span class="o">=</span><span class="s1">&#39;secret-access-key&#39;</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="s1">&#39;oss-cn-hangzhou.aliyuncs.com&#39;</span><span class="p">)</span>
-<span class="n">ds3</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;hdfs://datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="s1">&#39;9000&#39;</span><span class="p">,</span> <span class="n">extra_conf</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;conf1&#39;</span><span class="p">:</span> <span class="s1">&#39;value1&#39;</span><span class="p">})</span>
+<span class="n">ds3</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;hdfs:///datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="s1">&#39;9000&#39;</span><span class="p">,</span> <span class="n">extra_conf</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;conf1&#39;</span><span class="p">:</span> <span class="s1">&#39;value1&#39;</span><span class="p">})</span>
 <span class="n">d34</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;s3://datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;access-id&#39;</span><span class="p">,</span> <span class="n">secret</span><span class="o">=</span><span class="s1">&#39;secret-access-key&#39;</span><span class="p">,</span> <span class="n">client_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region_name&#39;</span><span class="p">:</span> <span class="s1">&#39;us-east-1&#39;</span><span class="p">})</span>
 </pre></div>
 </div>

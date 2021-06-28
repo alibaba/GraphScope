@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~session.closed
       ~session.dag
       ~session.engine_config
       ~session.info

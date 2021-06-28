@@ -117,8 +117,8 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">入门教程</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">载图</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">图的变换操作</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
@@ -248,6 +248,8 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">k8s_volumes</span><span class="o">=</span><span class="n">k8s_volumes</span><span class="p">,</span> <span class="n">k8s_service_type</span><span class="o">=</span><span class="s2">&quot;LoadBalancer&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>另外，注意 <cite>data.field.path</cite> 是 Kubernetes 主机上的路径，当在 Mac 上使用 Docker-Desktop 时，需要首先将此路径加入到 Docker
+的共享目录中，通常为 <cite>/Users</cite>。更详细的指引请参看 <a class="reference external" href="https://forums.docker.com/t/how-to-mount-hostpath-using-docker-for-mac-kubernetes/44083/5">how to mount hostpath using docker for mac kubernetes</a>.</p>
 <p>会话（<a class="reference internal" href="../reference/session.html#session"><span class="std std-ref">Session</span></a>）的建立过程中，首选会在背后尝试拉起一个 <cite>coordinator</cite> 作为后端引擎的入口。
 该 <cite>coordinator</cite> 负责管理该次会话的所有资源（k8s pods），以及交互式查询、图分析、图学习引擎的生命周期。
 在 <cite>coordinator</cite> 后续拉起的其他每个 pod 中，都有一个 vineyard 实例作为内存管理层，分布式的管理图数据。</p>

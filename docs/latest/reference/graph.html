@@ -108,8 +108,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
@@ -205,6 +205,197 @@
 <span id="id1"></span><h1>Graph<a class="headerlink" href="#graph" title="Permalink to this headline">¶</a></h1>
 <section id="graph-object">
 <h2>Graph object<a class="headerlink" href="#graph-object" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="graphscope.framework.graph.GraphDAGNode">
+<em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.graph.</code><code class="sig-name descname">GraphDAGNode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session</span></em>, <em class="sig-param"><span class="n">incoming_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">oid_type</span><span class="o">=</span><span class="default_value">'int64'</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">generate_eid</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class represents a graph node in a DAG.</p>
+<p>In GraphScope, all operations that generate a new graph will return
+a instance of <a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code></a>, which will be automatically
+executed by <a href="#id2"><span class="problematic" id="id3">:method:`sess.run`</span></a> in <cite>eager</cite> mode.</p>
+<p>The following example demonstrates its usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># lazy mode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;lazy&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s2">&quot;person.csv&quot;</span><span class="p">,</span><span class="s2">&quot;person&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.graph.GraphDAGNode object&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g2</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">g2</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.graph.Graph object&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># eager mode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="kn">as</span> <span class="nn">gs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s2">&quot;person.csv&quot;</span><span class="p">,</span><span class="s2">&quot;person&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.graph.Graph object&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="o">.</span><span class="n">unload</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="graphscope.framework.graph.GraphDAGNode.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session</span></em>, <em class="sig-param"><span class="n">incoming_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">oid_type</span><span class="o">=</span><span class="default_value">'int64'</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">generate_eid</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a <a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code></a> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>session</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code>) – A graphscope session instance.</p></li>
+<li><p><strong>incoming_data</strong> – <p>Graph can be initialized through various type of sources,
+which can be one of:</p>
+<blockquote>
+<div><ul>
+<li><p><a class="reference internal" href="operation.html#graphscope.framework.operation.Operation" title="graphscope.framework.operation.Operation"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.operation.Operation</span></code></a></p></li>
+<li><p><a class="reference internal" href="networkx/graphs.html#graphscope.nx.Graph" title="graphscope.nx.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.Graph</span></code></a></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.Object</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.ObjectId</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.ObjectName</span></code></p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>oid_type</strong> – (str, optional): Type of vertex original id. Defaults to “int64”.</p></li>
+<li><p><strong>directed</strong> – (bool, optional): Directed graph or not. Defaults to True.</p></li>
+<li><p><strong>generate_eid</strong> – (bool, optional): Generate id for each edge when setted True. Defaults to True.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.graph.GraphDAGNode.add_column">
+<code class="sig-name descname">add_column</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">results</span></em>, <em class="sig-param"><span class="n">selector</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_column"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_column" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the results as a column to the graph. Modification rules are given by the selector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results</strong> – A instance of concrete class derive from (<a class="reference internal" href="context.html#graphscope.framework.context.BaseContextDAGNode" title="graphscope.framework.context.BaseContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.BaseContextDAGNode</span></code></a>):
+A context that created by doing an app query on a graph, and holds the corresponding results.</p></li>
+<li><p><strong>selector</strong> (<em>dict</em>) – Select results to add as column.
+Format is similar to selectors in <a class="reference internal" href="context.html#graphscope.framework.context.Context" title="graphscope.framework.context.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.Context</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new graph with new columns, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.graph.GraphDAGNode.add_edges">
+<code class="sig-name descname">add_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">edges</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">'_'</span></em>, <em class="sig-param"><span class="n">properties</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">src_label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dst_label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">src_field</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">dst_field</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_edges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add edges to the graph, and return a new graph.</p>
+<ol class="arabic">
+<li><p>Add edges to a uninitialized graph.</p>
+<blockquote>
+<div><ol class="lowerroman simple">
+<li><p>src_label and dst_label both unspecified. In this case, current graph must
+has 0 (we deduce vertex label from edge table, and set vertex label name to ‘_’),
+or 1 vertex label (we set src_label and dst label to this).</p></li>
+<li><p>src_label and dst_label both specified and existed in current graph’s vertex labels.</p></li>
+<li><p>src_label and dst_label both specified and there is no vertex labels in current graph.
+we deduce all vertex labels from edge tables.
+Note that you either provide all vertex labels, or let graphscope deduce all vertex labels.
+We don’t support mixed style.</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><dl class="simple">
+<dt>Add edges to a existed graph.</dt><dd><p>Must add a new kind of edge label, not a new relation to builded graph.
+But you can add a new relation to uninitialized part of the graph.
+src_label and dst_label must be specified and existed in current graph.</p>
+</dd>
+</dl>
+</li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>edges</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><em>Loader</em></a><em>]</em>) – Edge data source.</p></li>
+<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – Edge label name. Defaults to “_”.</p></li>
+<li><p><strong>properties</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names loaded as properties. Defaults to None.</p></li>
+<li><p><strong>src_label</strong> (<em>str</em><em>, </em><em>optional</em>) – Source vertex label. Defaults to None.</p></li>
+<li><p><strong>dst_label</strong> (<em>str</em><em>, </em><em>optional</em>) – Destination vertex label. Defaults to None.</p></li>
+<li><p><strong>src_field</strong> (<em>int</em><em>, </em><em>optional</em>) – Column index or name used as src field. Defaults to 0.</p></li>
+<li><p><strong>dst_field</strong> (<em>int</em><em>, </em><em>optional</em>) – Column index or name used as dst field. Defaults to 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the given value is invalid or conflict with current graph.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A new graph with edge added, evaluated in eager mode.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.graph.GraphDAGNode.add_vertices">
+<code class="sig-name descname">add_vertices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertices</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">'_'</span></em>, <em class="sig-param"><span class="n">properties</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vid_field</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_vertices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add vertices to the graph, and return a new graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vertices</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><em>Loader</em></a><em>]</em>) – Vertex data source.</p></li>
+<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – Vertex label name. Defaults to “_”.</p></li>
+<li><p><strong>properties</strong> (<em>list</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of column names loaded as properties. Defaults to None.</p></li>
+<li><p><strong>vid_field</strong> (<em>int</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – Column index or property name used as id field. Defaults to 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the given value is invalid or conflict with current graph.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A new graph with vertex added, evaluated in eager mode.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.graph.GraphDAGNode.project">
+<code class="sig-name descname">project</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vertices</span><span class="p">:</span> <span class="n">Mapping<span class="p">[</span>str<span class="p">, </span>Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">edges</span><span class="p">:</span> <span class="n">Mapping<span class="p">[</span>str<span class="p">, </span>Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Project a subgraph from the property graph, and return a new graph.
+A graph produced by project just like a normal property graph, and can be projected further.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vertices</strong> (<em>dict</em>) – key is the vertex label name, the value is a list of str, which represents the
+name of properties. Specifically, it will select all properties if value is None.
+Note that, the label of the vertex in all edges you want to project should be included.</p></li>
+<li><p><strong>edges</strong> (<em>dict</em>) – key is the edge label name, the value is a list of str, which represents the
+name of properties. Specifically, it will select all properties if value is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new graph projected from the property graph, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="graphscope.framework.graph.GraphDAGNode.unload">
+<code class="sig-name descname">unload</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.unload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.unload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unload this graph from graphscope engine.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Evaluated in eager mode.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.UnloadedGraph</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt id="graphscope.framework.graph.Graph">
 <em class="property">class </em><code class="sig-prename descclassname">graphscope.framework.graph.</code><code class="sig-name descname">Graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">graph_node</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.framework.graph.Graph" title="Permalink to this definition">¶</a></dt>

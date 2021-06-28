@@ -113,8 +113,8 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
@@ -407,7 +407,7 @@ directly be passed to corresponding storage class. Like <cite>host</cite> and <c
 
 <span class="n">ds1</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;file:///var/datafiles/group.e&quot;</span><span class="p">)</span>
 <span class="n">ds2</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;oss://graphscope_bucket/datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;access-id&#39;</span><span class="p">,</span> <span class="n">secret</span><span class="o">=</span><span class="s1">&#39;secret-access-key&#39;</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="s1">&#39;oss-cn-hangzhou.aliyuncs.com&#39;</span><span class="p">)</span>
-<span class="n">ds3</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;hdfs://datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="s1">&#39;9000&#39;</span><span class="p">,</span> <span class="n">extra_conf</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;conf1&#39;</span><span class="p">:</span> <span class="s1">&#39;value1&#39;</span><span class="p">})</span>
+<span class="n">ds3</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;hdfs:///datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="s1">&#39;9000&#39;</span><span class="p">,</span> <span class="n">extra_conf</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;conf1&#39;</span><span class="p">:</span> <span class="s1">&#39;value1&#39;</span><span class="p">})</span>
 <span class="n">d34</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;s3://datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;access-id&#39;</span><span class="p">,</span> <span class="n">secret</span><span class="o">=</span><span class="s1">&#39;secret-access-key&#39;</span><span class="p">,</span> <span class="n">client_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region_name&#39;</span><span class="p">:</span> <span class="s1">&#39;us-east-1&#39;</span><span class="p">})</span>
 </pre></div>
 </div>

@@ -8,7 +8,7 @@ GraphScope 被设计为运行在 Kubernetes 管理的群集上。
 本地运行 GraphScope 需要预先安装以下依赖。
 
 - Docker
-- Python 3.8 (with pip)
+- Python 3.6+ (with pip)
 - Local Kubernetes cluster set-up tool (e.g. `Kind <https://kind.sigs.k8s.io>`_)
 
 对于 Windows 和 MacOS 的用户，可通过官方文档来安装上述依赖, 并在Docker中开启Kubernetes功能。

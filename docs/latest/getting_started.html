@@ -117,8 +117,8 @@
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
@@ -252,6 +252,8 @@ Step 6. Close the session.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">k8s_volumes</span><span class="o">=</span><span class="n">k8s_volumes</span><span class="p">,</span> <span class="n">k8s_service_type</span><span class="o">=</span><span class="s2">&quot;LoadBalancer&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>Also note that the value <cite>data.field.path</cite> is the hostpath in your Kubernetes hosts. With Docker-Desktop on Mac, you need to first add the path into the shared directories of the docker, which is normally the <cite>/Users</cite>.
+For more detailed instructions, please refer to <a class="reference external" href="https://forums.docker.com/t/how-to-mount-hostpath-using-docker-for-mac-kubernetes/44083/5">how to mount hostpath using docker for mac kubernetes</a>.</p>
 <p>A <a class="reference internal" href="reference/session.html#session"><span class="std std-ref">Session</span></a> tries to launch a coordinator,
 which is the entry for the back-end engines.
 The coordinator manages a cluster of resources (k8s pods),
