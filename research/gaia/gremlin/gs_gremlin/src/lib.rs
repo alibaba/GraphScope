@@ -14,4 +14,5 @@
 //! limitations under the License.
 
 extern crate log;
-pub mod store;
+mod graph_proxy;
+pub use graph_proxy::{create_gs_store, MultiPartition};

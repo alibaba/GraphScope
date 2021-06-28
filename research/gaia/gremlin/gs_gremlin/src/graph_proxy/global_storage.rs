@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::store::util::{str_to_dyn_error, IterList};
+use crate::graph_proxy::util::{str_to_dyn_error, IterList};
 use dyn_type::{Object, Primitives};
 use gremlin_core::graph_proxy::from_fn;
 use gremlin_core::structure::LabelId as RuntimeLabelId;

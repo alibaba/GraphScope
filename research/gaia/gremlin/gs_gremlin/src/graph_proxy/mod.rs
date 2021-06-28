@@ -13,6 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub mod global_storage;
-pub mod mg_mock;
+mod global_storage;
+pub use global_storage::{create_gs_store, MultiPartition};
 mod util;
