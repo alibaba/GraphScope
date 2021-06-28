@@ -403,7 +403,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
     Distances are calculated as sums of weighted edges traversed.
 
     """
-    ctx = AppAssets(algo="sssp_projected")(G, source)
+    ctx = graphscope.sssp(G, source)
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 
