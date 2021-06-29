@@ -15,6 +15,7 @@ public interface GaiaConfig {
 
     String LABEL_PATH_REQUIREMENT = "label_path_requirement";
     String REMOVE_TAG = "remove_tag";
+    String PROPERTY_CACHE = "property_cache";
 
     int getPegasusWorkerNum();
 

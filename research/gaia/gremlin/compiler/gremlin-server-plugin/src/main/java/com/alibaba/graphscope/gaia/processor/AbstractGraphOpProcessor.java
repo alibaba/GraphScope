@@ -28,6 +28,8 @@ import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.idmaker.IncrementalQueryIdMaker;
 import com.alibaba.graphscope.gaia.plan.strategy.GraphTraversalStrategies;
+import com.alibaba.graphscope.gaia.plan.strategy.OrderGuaranteeStrategy;
+import com.alibaba.graphscope.gaia.plan.strategy.PropertyShuffleStrategy;
 import com.alibaba.graphscope.gaia.plan.strategy.global.PathHistoryStrategy;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.codahale.metrics.Timer;
@@ -183,7 +185,15 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
         GraphTraversalStrategies traversalStrategies = new GraphTraversalStrategies(config, graphStore);
         boolean removeTagOn = config.getOptimizationStrategyFlag(GaiaConfig.REMOVE_TAG);
         boolean labelPathRequireOn = config.getOptimizationStrategyFlag(GaiaConfig.LABEL_PATH_REQUIREMENT);
+        boolean propertyCacheOn = config.getOptimizationStrategyFlag(GaiaConfig.PROPERTY_CACHE);
         logger.debug("remove {}, require {}", removeTagOn, labelPathRequireOn);
+        if (propertyCacheOn) {
+            traversalStrategies.removeStrategies(PropertyShuffleStrategy.class);
+            traversalStrategies.removeStrategies(OrderGuaranteeStrategy.class);
+        } else {
+            traversalStrategies.addStrategyByPriority(GraphTraversalStrategies.PROPERTY_SHUFFLE_PRIORITY, PropertyShuffleStrategy.instance());
+            traversalStrategies.addStrategyByPriority(GraphTraversalStrategies.ORDER_GUARANTEE_PRIORITY, OrderGuaranteeStrategy.instance());
+        }
         traversal.asAdmin().setStrategies(traversalStrategies);
         traversal.asAdmin().applyStrategies();
         if (removeTagOn || labelPathRequireOn) {
@@ -191,6 +201,8 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
             PathHistoryStrategy.setIsRemoveTagOn(removeTagOn);
             PathHistoryStrategy.instance().apply(traversal.asAdmin());
         }
-        PreCachePropertyStrategy.instance().apply(traversal.asAdmin());
+        if (propertyCacheOn) {
+            PreCachePropertyStrategy.instance().apply(traversal.asAdmin());
+        }
     }
 }

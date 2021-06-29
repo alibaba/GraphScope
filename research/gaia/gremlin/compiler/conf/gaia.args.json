@@ -6,6 +6,7 @@
   "time_limit": 240000,
   "optimizations": {
     "label_path_requirement": true,
-    "remove_tag": false
+    "remove_tag": false,
+    "property_cache": true
   }
 }

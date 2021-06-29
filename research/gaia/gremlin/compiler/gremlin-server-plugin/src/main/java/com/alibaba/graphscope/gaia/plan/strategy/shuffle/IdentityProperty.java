@@ -26,4 +26,9 @@ public class IdentityProperty extends PropertyShuffler {
     protected boolean match() {
         return true;
     }
+
+    @Override
+    public int transform() {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class PropertyShuffler {
-    private static final Logger logger = LoggerFactory.getLogger(PropertyShuffler.class);
+    private static final Logger logger = LoggerFactory.getLogger(HasStepProperty.class);
     protected Step step;
     protected final int stepIdx;
 
@@ -56,6 +56,13 @@ public abstract class PropertyShuffler {
         }
         return true;
     }
+
+    /**
+     * transform traversal for shuffle convenience, including current step
+     *
+     * @return next step index
+     */
+    public abstract int transform();
 
     /**
      * @param inclusive
