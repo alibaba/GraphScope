@@ -19,6 +19,7 @@ RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
         sh -s -- -y --profile minimal --default-toolchain 1.48.0 && \
     echo "source ~/.cargo/env" >> ~/.bashrc \
     && source ~/.bashrc \
+    && rustup component add rustfmt \
     && echo "build with profile: $profile" \
     && cd /root/gs/interactive_engine \
     && export CMAKE_PREFIX_PATH=/opt/graphscope \

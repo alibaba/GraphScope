@@ -12,6 +12,7 @@ maxgraph-store = { path = "../store" }
 maxgraph-common = { path = "../../common/rust/common" }
 maxgraph-server = { path = "../server" }
 pegasus = { path = "../Pegasus" }
+gremlin_core = { path = "../../../../research/gaia/gremlin/gremlin_core" }
 itertools = "0.7.8"
 log = "0.3"
 log4rs = "0.8.0"

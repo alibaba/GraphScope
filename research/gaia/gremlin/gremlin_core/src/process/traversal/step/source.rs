@@ -70,8 +70,7 @@ impl GraphVertexStep {
         let mut partitions = HashMap::new();
         for id in ids {
             let wid = partitioner.get_partition(&id, self.workers);
-            let partition = partitions.entry(wid).or_insert(vec![]);
-            (*partition).push(id);
+            partitions.entry(wid).or_insert_with(Vec::new).push(id);
         }
 
         self.src = Some(partitions);
