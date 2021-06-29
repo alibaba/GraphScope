@@ -63,16 +63,8 @@ class PageRankNetworkx
 
     // assign initial ranks
     ForEach(inner_vertices, [&ctx, &frag, p, &messages](int tid, vertex_t u) {
-      if (std::is_same<edata_t, grape::EmptyType>::value) {
-        // use original degree
-        ctx.degree[u] = static_cast<double>(frag.GetOutgoingAdjList(u).Size());
-      } else {
-        // use weigted degree
-        for (auto& e : frag.GetOutgoingAdjList(u)) {
-          ctx.degree[u] += static_cast<double>(e.get_data());
-        }
-      }
       ctx.result[u] = p;
+      ctx.degree[u] = static_cast<double>(frag.GetOutgoingAdjList(u).Size());
       if (ctx.degree[u] != 0.0) {
         messages.SendMsgThroughOEdges<fragment_t, double>(
             frag, u, ctx.result[u] / ctx.degree[u], tid);
@@ -120,7 +112,6 @@ class PageRankNetworkx
     });
 
     double base = (1.0 - ctx.alpha) / graph_vnum + dangling_sum / graph_vnum;
-    // pull ranks from neighbors
     ForEach(inner_vertices, [&ctx, base, &frag](int tid, vertex_t u) {
       double cur = 0;
       auto es = frag.GetIncomingAdjList(u);

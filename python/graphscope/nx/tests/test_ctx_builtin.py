@@ -121,6 +121,14 @@ class TestBuiltInApp:
         cls.p2p_hits_ans = pd.read_csv(
             "{}/p2p-31-hits-directed".format(data_dir), sep="\t", header=None, prefix=""
         )
+        cls.p2p_pagerank_ans = dict(
+            pd.read_csv(
+                "{}/p2p-31-pagerank_nx".format(data_dir),
+                sep="\t",
+                header=None,
+                prefix="",
+            ).values
+        )
         cls.p2p_clus_ans = dict(
             pd.read_csv(
                 "{}/p2p-31-clustering".format(data_dir), sep=" ", header=None, prefix=""
@@ -231,3 +239,7 @@ class TestBuiltInApp:
 
     def test_average_clustering(self):
         ret = nx.builtin.average_clustering(self.p2p_undirected)
+
+    def test_pagerank(self):
+        ans = dict(nx.builtin.pagerank(self.p2p).values)
+        self.assert_result_almost_equal(ans, self.p2p_pagerank_ans)

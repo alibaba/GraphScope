@@ -265,7 +265,7 @@ class Context(object):
         import vineyard.io
 
         df = self.to_vineyard_dataframe(selector, vertex_range)
-        sess = get_session_by_id(self.session_id)
+        sess = self._session
         deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
         conf = sess.info["engine_config"]
         vineyard_endpoint = conf["vineyard_rpc_endpoint"]
