@@ -118,6 +118,7 @@ message GraphStep {
   FilterChain predicates = 4;
   // to initialize a traverser type
   repeated TraverserRequirement traverser_requirements = 5;
+  PropKeys fetch_properties = 6;
 }
 
 // decide a new traverser type with the requirements
@@ -140,6 +141,7 @@ message VertexStep {
   EntityType return_type = 3;
   // To filter vertices based on some predicates, e.g. has("name", eq("John"))
   FilterChain predicates = 4;
+  PropKeys fetch_properties = 5;
 }
 
 message HasStep {
@@ -175,9 +177,8 @@ message RangeGlobalStep {
 // ordering by or projecting certain properties of some entities.
 message IdentityStep {
   // The properties of the entities that need to be collected to the traversal path
-  PropKeys properties = 1;
-  // Whether we need to collect all properties
-  bool is_all = 2 ;
+  // null -> all properties, empty_list -> none property, non_empty_list -> partial properties
+  PropKeys fetch_properties = 1;
 }
 
 message WhereJoiner {}
@@ -294,6 +295,8 @@ message EdgeVertexStep {
       OTHER = 2;
     }
     EndpointOpt endpoint_opt = 1;
+    // todo: fetch properties from local worker without streaming
+    PropKeys fetch_properties = 2;
 }
 
 // flatmap
