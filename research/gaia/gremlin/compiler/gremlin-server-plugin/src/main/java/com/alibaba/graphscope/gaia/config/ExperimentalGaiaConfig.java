@@ -95,6 +95,10 @@ public final class ExperimentalGaiaConfig implements GaiaConfig {
 
     @Override
     public boolean getOptimizationStrategyFlag(String strategyFlagName) {
+        String sysVal = System.getProperty(strategyFlagName);
+        if (sysVal != null) {
+            return Boolean.valueOf(sysVal);
+        }
         if (variables != null && variables.get(strategyFlagName).isPresent()) {
             return (boolean) variables.get(strategyFlagName).get();
         }
