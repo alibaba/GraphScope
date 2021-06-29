@@ -58,7 +58,6 @@ use maxgraph_runtime::utils::get_lambda_service_client;
 use maxgraph_runtime::store::remote_store_service::RemoteStoreServiceManager;
 use maxgraph_store::api::graph_partition::{GraphPartitionManager};
 use maxgraph_server::StoreContext;
-use maxgraph_runtime::store::v2::create_global_graph;
 
 fn main() {
     if let Some(_) = env::args().find(|arg| arg == "--show-build-info") {
