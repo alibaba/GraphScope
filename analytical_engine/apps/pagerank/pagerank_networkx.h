@@ -35,7 +35,7 @@ namespace gs {
 
 template <typename FRAG_T>
 class PageRankNetworkX
-    : public grape::ParallelAppBase<FRAG_T, PageRankNetworkxContext<FRAG_T>>,
+    : public grape::ParallelAppBase<FRAG_T, PageRankNetworkXContext<FRAG_T>>,
       public grape::Communicator,
       public grape::ParallelEngine {
  public:
