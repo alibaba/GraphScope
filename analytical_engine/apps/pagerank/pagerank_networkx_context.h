@@ -27,14 +27,14 @@ namespace gs {
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
-class PageRankNetworkxContext
+class PageRankNetworkXContext
     : public grape::VertexDataContext<FRAG_T, double> {
   using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
   using vertex_t = typename FRAG_T::vertex_t;
 
  public:
-  explicit PageRankNetworkxContext(const FRAG_T& fragment)
+  explicit PageRankNetworkXContext(const FRAG_T& fragment)
       : grape::VertexDataContext<FRAG_T, double>(fragment, true),
         result(this->data()) {}
 

@@ -176,7 +176,7 @@ app:
       - gs::DynamicProjectedFragment
   - algo: pagerank_nx
     type: cpp_pie
-    class_name: gs::PageRankNetworkx
+    class_name: gs::PageRankNetworkX
     src: apps/pagerank/pagerank_networkx.h
     compatible_graph:
       - grape::ImmutableEdgecutFragment

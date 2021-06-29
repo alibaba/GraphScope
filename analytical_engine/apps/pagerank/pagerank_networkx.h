@@ -34,7 +34,7 @@ namespace gs {
  */
 
 template <typename FRAG_T>
-class PageRankNetworkx
+class PageRankNetworkX
     : public grape::ParallelAppBase<FRAG_T, PageRankNetworkxContext<FRAG_T>>,
       public grape::Communicator,
       public grape::ParallelEngine {
@@ -44,13 +44,13 @@ class PageRankNetworkx
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
 
-  INSTALL_PARALLEL_WORKER(PageRankNetworkx<FRAG_T>,
-                          PageRankNetworkxContext<FRAG_T>, FRAG_T)
+  INSTALL_PARALLEL_WORKER(PageRankNetworkX<FRAG_T>,
+                          PageRankNetworkXContext<FRAG_T>, FRAG_T)
 
   using vertex_t = typename fragment_t::vertex_t;
   using vid_t = typename fragment_t::vid_t;
   using edata_t = typename fragment_t::edata_t;
-  PageRankNetworkx() {}
+  PageRankNetworkX() {}
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     auto inner_vertices = frag.InnerVertices();

@@ -53,12 +53,14 @@ class DegreeCentrality
       case DegreeCentralityType::OUT: {
         ctx.centrality[v] =
             static_cast<double>(frag.GetLocalOutDegree(v)) / max_degree;
-      } break;
+        break;
+      }
       case DegreeCentralityType::BOTH: {
         double degree = static_cast<double>(frag.GetLocalInDegree(v) +
                                             frag.GetLocalOutDegree(v));
         ctx.centrality[v] = degree / max_degree;
-      } break;
+        break;
+      }
       }
     });
   }
