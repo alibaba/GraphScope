@@ -20,7 +20,7 @@ use gremlin_core::structure::LabelId as RuntimeLabelId;
 use gremlin_core::structure::{
     DefaultDetails, Direction, DynDetails, Edge, Label, PropKey, QueryParams, Statement, Vertex,
 };
-use gremlin_core::{filter_limit, filter_limit_ok, limit_n};
+use gremlin_core::{filter_limit, filter_limit_ok, limit_n, ID_MASK};
 use gremlin_core::{register_graph, DynResult, GraphProxy, Partitioner, ID};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::graph_schema::Schema;
@@ -467,10 +467,9 @@ impl Partitioner for MultiPartition {
         // 3. `worker_index = partition_id % worker_num_per_server` picks up one worker to do the computation.
         // 4. `server_index * worker_num_per_server + worker_index` computes the worker index in server R
         // to do the computation.
+        let vid = (*id & (ID_MASK)) as VertexId;
         let worker_num_per_server = worker_num_per_server as u64;
-        let partition_id = self
-            .graph_partition_manager
-            .get_partition_id(*id as VertexId) as u64;
+        let partition_id = self.graph_partition_manager.get_partition_id(vid) as u64;
         let server_index = self
             .graph_partition_manager
             .get_server_id(partition_id as PropId) as u64;
