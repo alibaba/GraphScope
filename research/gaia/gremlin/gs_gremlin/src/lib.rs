@@ -15,4 +15,4 @@
 
 extern crate log;
 mod graph_proxy;
-pub use graph_proxy::{create_gs_store, MultiPartition};
+pub use graph_proxy::initialize_job_compiler;

@@ -485,9 +485,9 @@ impl Partitioner for MultiPartition {
 }
 
 impl MultiPartition {
-    pub fn new<P: GraphPartitionManager + 'static>(p: P) -> Self {
+    pub fn new(graph_partition_manager: Arc<dyn GraphPartitionManager>) -> Self {
         MultiPartition {
-            graph_partition_manager: Arc::new(p),
+            graph_partition_manager,
         }
     }
 }
