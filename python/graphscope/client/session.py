@@ -781,6 +781,21 @@ class Session(object):
         except Exception:  # pylint: disable=broad-except
             pass
 
+    def __enter__(self):
+        """Register self as default session"""
+        self.as_default()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        """Deregister self from the default session,
+        close the session and release the resources.
+        """
+        try:
+            self._deregister_default()
+            self.close()
+        except Exception:
+            pass
+
     def as_default(self):
         """Obtain a context manager that make this object as default session.
 
