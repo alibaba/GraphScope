@@ -695,6 +695,10 @@ class Session(object):
         info["engine_config"] = self._engine_config
         return info
 
+    @property
+    def closed(self):
+        return self._closed
+
     def eager(self):
         return self._config_params["mode"] == "eager"
 
@@ -781,14 +785,23 @@ class Session(object):
         except Exception:  # pylint: disable=broad-except
             pass
 
+    def _check_closed(self, msg=None):
+        """Internal: raise a ValueError if session is closed"""
+        if self.closed:
+            raise ValueError("Operation on closed session." if msg is None else msg)
+
+    # Context manager
     def __enter__(self):
-        """Register self as default session"""
+        """Context management protocol.
+        Returns self and register self as default session.
+        """
+        self._check_closed()
         self.as_default()
         return self
 
     def __exit__(self, type, value, traceback):
         """Deregister self from the default session,
-        close the session and release the resources.
+        close the session and release the resources, ignore all exceptions in close().
         """
         try:
             self._deregister_default()
