@@ -64,4 +64,8 @@ data:
     executor.graph.port=55556
     executor.query.port=55557
     executor.engine.port=55558
+
+    ## GAIA Config
+    gaia.rpc.port=60000
+    gaia.engine.port=60001
 {{- end -}}
