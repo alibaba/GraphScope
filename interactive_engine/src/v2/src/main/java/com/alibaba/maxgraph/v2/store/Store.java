@@ -65,7 +65,7 @@ public class Store extends NodeBase {
                 storeIngestService);
         this.executorService = new ExecutorService(configs, storeService, discoveryFactory, this.metaService);
         ExecutorEngine executorEngine = new GaiaEngine(configs, discoveryFactory);
-        this.gaiaService = new GaiaService(configs, executorEngine, this.storeService);
+        this.gaiaService = new GaiaService(configs, executorEngine, this.storeService, this.metaService);
     }
 
     @Override
