@@ -68,4 +68,12 @@ data:
     ## GAIA Config
     gaia.rpc.port=60000
     gaia.engine.port=60001
+
+    ## Extra Config
+    {{- if .Values.extraConfig }}
+    {{- $config_list := regexSplit ":" .Values.extraConfig -1 }}
+    {{- range $config_list }}
+    {{ . }}
+    {{- end }}
+    {{- end }}
 {{- end -}}

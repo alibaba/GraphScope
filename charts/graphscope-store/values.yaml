@@ -77,6 +77,9 @@ executorQueryStoreThreadCount: 2
 log4rsConfig: "./conf/log4rs.yml"
 
 
+
+extraConfig: ""
+
 ## Role Based Access
 ## ref: https://kubernetes.io/docs/admin/authorization/rbac/
 ##
