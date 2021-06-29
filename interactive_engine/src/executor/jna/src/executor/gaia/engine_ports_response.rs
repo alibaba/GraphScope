@@ -6,17 +6,17 @@ use std::ffi::CString;
 pub struct EnginePortsResponse {
     success: bool,
     errMsg: *const c_char,
-    engine_port: i32,
-    server_port: i32,
+    enginePort: i32,
+    rpcPort: i32,
 }
 
 impl EnginePortsResponse {
-    pub fn new_success(engine_port: i32, server_port: i32) -> Box<EnginePortsResponse> {
+    pub fn new_success(engine_port: i32, rpc_port: i32) -> Box<EnginePortsResponse> {
         Box::new(EnginePortsResponse {
             success: true,
             errMsg: std::ptr::null(),
-            engine_port,
-            server_port,
+            enginePort: engine_port,
+            rpcPort: rpc_port,
         })
     }
 
@@ -25,8 +25,8 @@ impl EnginePortsResponse {
         let response = EnginePortsResponse {
             success: false,
             errMsg: msg.as_ptr(),
-            engine_port: 0,
-            server_port: 0,
+            enginePort: 0,
+            rpcPort: 0,
         };
         ::std::mem::forget(msg);
         Box::new(response)

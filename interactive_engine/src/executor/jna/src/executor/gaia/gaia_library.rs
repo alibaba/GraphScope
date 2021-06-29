@@ -33,7 +33,15 @@ pub extern fn addPartition(engine_handle: EngineHandle, partition_id: i32, graph
     let graph_ptr = unsafe {
         Arc::from_raw(&*(graph_handle as *const GraphStore))
     };
-    engine_ptr.add_partition(partition_id, graph_ptr);
+    engine_ptr.add_partition(partition_id as u32, graph_ptr);
+}
+
+#[no_mangle]
+pub extern fn updatePartitionRouting(engine_handle: EngineHandle, partition_id: i32, server_id: i32) {
+    let engine_ptr = unsafe {
+        to_mut(&*(engine_handle as *const GaiaServer))
+    };
+    engine_ptr.update_partition_routing(partition_id as u32, server_id as u32);
 }
 
 #[no_mangle]

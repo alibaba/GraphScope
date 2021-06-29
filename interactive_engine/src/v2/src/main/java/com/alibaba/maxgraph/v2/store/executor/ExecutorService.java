@@ -41,16 +41,18 @@ public class ExecutorService implements Cloneable {
     private static final Logger logger = LoggerFactory.getLogger(ExecutorService.class);
 
     private Configs configs;
-    private CuratorFramework curator;
     private StoreService storeService;
     private ExecutorManager executorManager;
+    private MetaService metaService;
     private Executor executor = new ThreadPoolExecutor(1, 1, 0L,
             TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
             ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler("executor-service-pool", logger));
 
-    public ExecutorService(Configs configs, StoreService storeService, DiscoveryFactory discoveryFactory) {
+    public ExecutorService(Configs configs, StoreService storeService, DiscoveryFactory discoveryFactory,
+                           MetaService metaService) {
         this.configs = configs;
         this.storeService = storeService;
+        this.metaService = metaService;
 
         LocalNodeProvider engineServerProvider = new LocalNodeProvider(RoleType.EXECUTOR_ENGINE, configs);
         LocalNodeProvider storeQueryProvider = new LocalNodeProvider(RoleType.EXECUTOR_GRAPH, configs);
@@ -102,7 +104,6 @@ public class ExecutorService implements Cloneable {
             }
         }
         // Assign partition id to each worker id
-        MetaService metaService = this.storeService.getMetaService();
         for (int i = 0; i < nodeCount; i++) {
             List<Integer> partitionIdList = metaService.getPartitionsByStoreId(i);
             logger.info("Get partition id list " + partitionIdList + " for store index " + i);

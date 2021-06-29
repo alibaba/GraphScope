@@ -92,8 +92,7 @@ fn main() {
             unimplemented!("Mac not support vineyard graph")
         }
     } else {
-        let graph = Arc::new(create_global_graph(&store_config, &partitions));
-        run_main(store_config, graph.clone(), graph.clone());
+        unimplemented!("only start vineyard graph from executor")
     }
 }
 

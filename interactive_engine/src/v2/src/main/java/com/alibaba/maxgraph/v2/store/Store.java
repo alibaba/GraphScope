@@ -19,20 +19,17 @@ import com.alibaba.maxgraph.v2.common.DefaultMetaService;
 import com.alibaba.maxgraph.v2.common.MetaService;
 import com.alibaba.maxgraph.v2.common.NodeBase;
 import com.alibaba.maxgraph.v2.common.NodeLauncher;
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
 import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.discovery.*;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.rpc.ChannelManager;
 import com.alibaba.maxgraph.v2.common.rpc.MaxGraphNameResolverFactory;
 import com.alibaba.maxgraph.v2.common.rpc.RpcServer;
-import com.alibaba.maxgraph.v2.common.util.CuratorUtils;
 import com.alibaba.maxgraph.v2.store.executor.ExecutorEngine;
 import com.alibaba.maxgraph.v2.store.executor.ExecutorService;
 import com.alibaba.maxgraph.v2.store.executor.gaia.GaiaEngine;
 import com.alibaba.maxgraph.v2.store.executor.gaia.GaiaService;
 import io.grpc.NameResolver;
-import org.apache.curator.framework.CuratorFramework;
 
 import java.io.IOException;
 
@@ -66,9 +63,9 @@ public class Store extends NodeBase {
         StoreIngestService storeIngestService = new StoreIngestService(this.storeService);
         this.rpcServer = new RpcServer(configs, localNodeProvider, storeWriteService, storeSchemaService,
                 storeIngestService);
-        this.executorService = new ExecutorService(configs, storeService, discoveryFactory);
-//        ExecutorEngine executorEngine = new GaiaEngine(configs, discoveryFactory);
-//        this.gaiaService = new GaiaService(executorEngine, this.storeService);
+        this.executorService = new ExecutorService(configs, storeService, discoveryFactory, this.metaService);
+        ExecutorEngine executorEngine = new GaiaEngine(configs, discoveryFactory);
+        this.gaiaService = new GaiaService(configs, executorEngine, this.storeService);
     }
 
     @Override
@@ -95,12 +92,12 @@ public class Store extends NodeBase {
         this.discovery.start();
         this.channelManager.start();
         this.executorService.start();
-//        this.gaiaService.start();
+        this.gaiaService.start();
     }
 
     @Override
     public void close() throws IOException {
-//        this.gaiaService.stop();
+        this.gaiaService.stop();
         this.executorService.close();
         this.rpcServer.stop();
         this.writerAgent.stop();

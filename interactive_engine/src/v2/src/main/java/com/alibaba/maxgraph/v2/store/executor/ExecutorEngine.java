@@ -9,9 +9,9 @@ public interface ExecutorEngine extends NodeDiscovery.Listener {
 
     void addPartition(GraphPartition partition);
 
-    void start();
+    void updatePartitionRouting(int partitionId, int serverId);
 
-//    void updateClusterView(Map<Integer, MaxGraphNode> idToNode);
+    void start();
 
     void stop();
 }

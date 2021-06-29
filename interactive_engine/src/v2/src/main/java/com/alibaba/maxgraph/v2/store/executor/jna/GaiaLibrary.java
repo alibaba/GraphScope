@@ -24,12 +24,15 @@ public interface GaiaLibrary extends Library {
 
     Pointer initialize(byte[] config, int len);
 
-    int startEngine(Pointer engine);
+    GaiaPortsResponse startEngine(Pointer engine);
 
     void addPartition(Pointer engine, int partitionId, Pointer graph);
+
+    void updatePartitionRouting(Pointer engine, int partitionId, int serverId);
 
     void stopEngine(Pointer engine);
 
     void updatePeerView(Pointer pointer, String peerViewString);
 
+    void dropEnginePortsResponse(GaiaPortsResponse response);
 }
