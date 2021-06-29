@@ -13,14 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::structure::{Direction, Edge, ElementFilter, Filter, Label, Vertex, ID};
+use crate::structure::{Direction, Edge, ElementFilter, Filter, Label, PropKey, Vertex, ID};
 use crate::{DynIter, DynResult, Element};
 
 #[derive(Clone)]
 pub struct QueryParams<E: Element + Send + Sync> {
     pub labels: Vec<Label>,
     pub limit: Option<usize>,
-    pub props: Option<Vec<String>>,
+    pub props: Option<Vec<PropKey>>,
     pub filter: Option<Arc<Filter<E, ElementFilter>>>,
 }
 
@@ -31,6 +31,10 @@ impl<E: Element + Send + Sync> QueryParams<E> {
 
     pub fn set_filter(&mut self, filter: Filter<E, ElementFilter>) {
         self.filter = Some(Arc::new(filter))
+    }
+
+    pub fn set_props(&mut self, props: Vec<PropKey>) {
+        self.props = Some(props)
     }
 }
 

@@ -13,8 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::generated::common as common_pb;
+use crate::structure::codec::ParseError;
 use crate::structure::element::{read_id, write_id, Label};
-use crate::ID;
+use crate::{FromPb, ID};
 use dyn_type::{BorrowObject, Object};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
@@ -59,6 +61,21 @@ impl From<&str> for PropKey {
 impl From<PropId> for PropKey {
     fn from(prop_id: PropId) -> Self {
         PropKey::Id(prop_id)
+    }
+}
+
+impl FromPb<common_pb::PropertyKey> for PropKey {
+    fn from_pb(prop_key: common_pb::PropertyKey) -> Result<Self, ParseError>
+    where
+        Self: Sized,
+    {
+        match prop_key.item {
+            Some(common_pb::property_key::Item::Name(name)) => Ok(PropKey::Str(name)),
+            Some(common_pb::property_key::Item::NameId(name_id)) => {
+                Ok(PropKey::Id(name_id as PropId))
+            }
+            _ => Err(ParseError::InvalidData),
+        }
     }
 }
 

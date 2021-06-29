@@ -65,10 +65,10 @@ impl FromPb<pb::ByKey> for ByStepOption {
         match by_key_pb.item {
             Some(pb::by_key::Item::Key(key)) => Ok(ByStepOption::OptToken(Token::from_pb(key)?)),
             // TODO(bingqing): should be prop_name or prop_id
-            Some(pb::by_key::Item::Name(properties_pb)) => {
+            Some(pb::by_key::Item::PropKeys(properties_pb)) => {
                 let mut properties = vec![];
-                for prop_name in properties_pb.item {
-                    properties.push(prop_name.into());
+                for prop_key_pb in properties_pb.prop_keys {
+                    properties.push(PropKey::from_pb(prop_key_pb)?)
                 }
                 Ok(ByStepOption::OptProperties(properties))
             }

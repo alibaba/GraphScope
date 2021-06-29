@@ -21,7 +21,6 @@ import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.translator.builder.ConfigBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
-import com.alibaba.graphscope.gaia.store.StaticGraphStore;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
 import org.slf4j.Logger;
@@ -32,11 +31,12 @@ import java.util.*;
 
 public class DefaultResultParser implements ResultParser {
     private static final Logger logger = LoggerFactory.getLogger(DefaultResultParser.class);
-    private TagIdMaker tagIdMaker;
-    protected final GraphStoreService graphStore = StaticGraphStore.INSTANCE;
+    protected TagIdMaker tagIdMaker;
+    protected GraphStoreService graphStore;
 
-    public DefaultResultParser(ConfigBuilder builder) {
+    public DefaultResultParser(ConfigBuilder builder, GraphStoreService graphStore) {
         this.tagIdMaker = (TagIdMaker) builder.getConfig(PlanConfig.TAG_ID_MAKER);
+        this.graphStore = graphStore;
     }
 
     @Override
@@ -185,7 +185,15 @@ public class DefaultResultParser implements ResultParser {
 
     protected Map<String, Object> parseValueMap(GremlinResult.ValueMapEntries entries) {
         Map<String, Object> result = new HashMap<>();
-        entries.getPropertyList().forEach(p -> result.put(p.getKey(), parseValue(p.getValue())));
+        entries.getPropertyList().forEach(p -> {
+            String propertyName;
+            if (p.getKey().getItemCase() == Common.PropertyKey.ItemCase.NAME_ID) {
+                propertyName = graphStore.getPropertyName(p.getKey().getNameId());
+            } else {
+                propertyName = p.getKey().getName();
+            }
+            result.put(propertyName, parseValue(p.getValue()));
+        });
         return result;
     }
 

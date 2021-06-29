@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.gaia.plan.strategy;
 
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
@@ -29,26 +31,18 @@ import java.util.List;
 
 public class GraphTraversalStrategies extends DefaultTraversalStrategies {
     public static List<TraversalStrategy> strategies;
-    private static GraphTraversalStrategies INSTANCE = new GraphTraversalStrategies();
 
     public static int PROPERTY_SHUFFLE_PRIORITY = 7;
     public static int ORDER_GUARANTEE_PRIORITY = 11;
 
-    private GraphTraversalStrategies() {
-    }
-
-    public static GraphTraversalStrategies instance() {
-        return INSTANCE;
-    }
-
-    static {
+    public GraphTraversalStrategies(GaiaConfig config, GraphStoreService graphStore) {
         strategies = new ArrayList<>();
         strategies.add(RemoveUselessStepStrategy.instance());
         // strategies.add(RepeatUnrollStrategy.instance());
         strategies.add(PathLocalCountStrategy.instance());
         strategies.add(WhereTraversalStrategy.instance());
-        strategies.add(SchemaIdMakerStrategy.instance());
-        strategies.add(MaxGraphStepStrategy.instance());
+        strategies.add(SchemaIdMakerStrategy.instance(config, graphStore));
+        strategies.add(GaiaGraphStepStrategy.instance(graphStore));
         strategies.add(IncidentToAdjacentStrategy.instance());
         strategies.add(OrderGlobalLimitStrategy.instance());
         strategies.add(PropertyShuffleStrategy.instance());

@@ -85,7 +85,7 @@ jobs:
 
     - name: Install libvineyard
       run: |
-        git clone -b main-v0.2.3 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
+        git clone -b v0.2.4 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
         cd libvineyard
         git submodule update --init
         mkdir build && pushd build

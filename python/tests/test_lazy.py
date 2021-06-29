@@ -33,6 +33,9 @@ graphscope.set_option(show_log=True)
 
 from graphscope import property_sssp
 from graphscope import sssp
+from graphscope.framework.app import AppAssets
+from graphscope.framework.app import AppDAGNode
+from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.loader import Loader
 
 test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
@@ -90,6 +93,91 @@ def test_vertices_omitted_form_loader(sess, student_group_e):
     g1 = g.add_edges(student_group_e)
     g2 = sess.run(g1)  # g2 is a Graph instance
     assert g2.loaded()
+
+
+def test_construct_graph_step_by_step(sess):
+    _g = sess.g(generate_eid=False)
+    g = sess.run(_g)
+    _g1 = g.add_vertices(f"{new_property_dir}/twitter_v_0", "v0")
+    g1 = sess.run(_g1)
+    _g2 = g1.add_vertices(f"{new_property_dir}/twitter_v_1", "v1")
+    g2 = sess.run(_g2)
+    ug = g.unload()
+    ug1 = g1.unload()
+    ug2 = g2.unload()
+    sess.run([ug, ug1, ug2])
+
+
+def test_unload_graph(sess, student_v, teacher_v, student_group_e):
+    # case 1
+    # 1. load empty g
+    # 2. unload g
+    g = sess.g()
+    ug = g.unload()
+    assert sess.run(ug) is None
+
+    # case 2
+    g = sess.g()
+    g1 = g.add_vertices(student_v, "student")
+    g2 = g.add_vertices(teacher_v, "teacher")
+    ug1 = g1.unload()
+    ug2 = g2.unload()
+    assert sess.run(ug1) is None
+    assert sess.run(ug2) is None
+
+    # case 3
+    g = sess.g()
+    g1 = g.add_vertices(student_v, "student")
+    g2 = g1.add_vertices(teacher_v, "teacher")
+    g3 = g2.add_edges(
+        student_group_e, "group", src_label="student", dst_label="student"
+    )
+    ug = g.unload()
+    ug1 = g1.unload()
+    ug2 = g2.unload()
+    ug3 = g3.unload()
+    sess.run([ug, ug1, ug2, ug3])
+
+    # case 4
+    # test unload twice
+    g = sess.g()
+    ug = g.unload()
+    assert sess.run(ug) is None
+    assert sess.run(ug) is None
+
+
+def test_error_using_unload_graph(sess, student_v):
+    with pytest.raises(AnalyticalEngineInternalError):
+        g = sess.g()
+        ug = g.unload()
+        g1 = g.add_vertices(student_v, "student")
+        sess.run([ug, g1])
+
+
+def test_unload_app(sess):
+    g = arrow_property_graph(sess)
+
+    # case 1
+    a1 = AppDAGNode(g, AppAssets(algo="property_sssp"))
+    ua1 = a1.unload()
+    assert sess.run(ua1) is None
+
+    # case 2
+    # unload app twice
+    a1 = AppDAGNode(g, AppAssets(algo="property_sssp"))
+    ua1 = a1.unload()
+    assert sess.run(ua1) is None
+    assert sess.run(ua1) is None
+
+    # case 3
+    # load app after unload
+    a1 = AppDAGNode(g, AppAssets(algo="property_sssp"))
+    ua1 = a1.unload()
+    assert sess.run(ua1) is None
+    c1 = a1(src=20)
+    r1 = c1.to_numpy("r:v0.dist_0")
+    r = sess.run(r1)
+    assert r.shape == (40521,)
 
 
 def test_context(sess):

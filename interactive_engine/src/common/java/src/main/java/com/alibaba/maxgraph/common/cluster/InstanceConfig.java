@@ -49,6 +49,11 @@ public class InstanceConfig extends MaxGraphConfiguration {
     private static final String RESOURCE_CPU = "resource.%s.cpu.cores";
     private static final String RESOURCE_DISK = "resource.%s.disk.mb";
 
+    /**
+     * pegasus config per query
+     */
+    public static final String PEGASUS_WORKER_NUM = "pegasus.worker.num";
+    public static final String PEGASUS_TIMEOUT = "pegasus.timeout";
 
     /**
      * machine count
@@ -368,6 +373,14 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public InstanceConfig(Properties properties) {
         super(properties);
+    }
+
+    public int getPegasusTimeoutMS() {
+        return getInt(PEGASUS_TIMEOUT, 60000);
+    }
+
+    public int getPegasusWorkerNum() {
+        return getInt(PEGASUS_WORKER_NUM, 1);
     }
 
     public String getJuteMaxbuffer() {
@@ -957,7 +970,9 @@ public class InstanceConfig extends MaxGraphConfiguration {
         return getString(ALB_URL, null);
     }
 
-    public boolean getBulkLoadSubmitByFrontend() { return getBoolean(BULKLOAD_SUBMIT_BY_FRONTEND, false); }
+    public boolean getBulkLoadSubmitByFrontend() {
+        return getBoolean(BULKLOAD_SUBMIT_BY_FRONTEND, false);
+    }
 
     public boolean getLambdaEnableFlag() {
         return getBoolean(QUERY_LAMBDA_FLAG_ENABLE, false);
