@@ -15,21 +15,19 @@
  */
 package com.alibaba.graphscope.gaia;
 
+import com.alibaba.graphscope.gaia.config.ExperimentalGaiaConfig;
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
-import com.alibaba.graphscope.gaia.processor.LogicPlanProcessor;
-import com.alibaba.graphscope.gaia.processor.MaxGraphOpProcessor;
-import com.alibaba.graphscope.gaia.processor.TraversalOpProcessor;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.ImmutableMap;
+import com.alibaba.graphscope.gaia.processor.GaiaProcessorLoader;
+import com.alibaba.graphscope.gaia.store.ExperimentalGraphStore;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
-import org.apache.tinkerpop.gremlin.server.op.OpLoader;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
-import java.util.Map;
 
 public class GremlinServiceMain {
     private static final Logger logger = LoggerFactory.getLogger(GremlinServiceMain.class);
@@ -37,21 +35,22 @@ public class GremlinServiceMain {
     public static void main(String[] args) throws Exception {
         logger.info("start server");
         Settings settings = load();
-        // read default engine conf
-        GlobalEngineConf.setDefaultSysConf(JsonUtils.fromJson(
-                PlanUtils.readJsonFromFile("conf/gaia.args.json"), new TypeReference<Map<String, Object>>() {
-                })
-        );
         GremlinServer server = new GremlinServer(settings);
-        // todo: better way to modify op loader
-        PlanUtils.setFinalStaticField(OpLoader.class, "processors",
-                ImmutableMap.of("", new MaxGraphOpProcessor(), "plan", new LogicPlanProcessor(), "traversal", new TraversalOpProcessor()));
-        // todo: better way to set global bindings {graph, g}
-        Bindings globalBindings = PlanUtils.getGlobalBindings(server.getServerGremlinExecutor().getGremlinExecutor());
-        Graph traversalGraph = server.getServerGremlinExecutor().getGraphManager().getGraph("graph");
-        globalBindings.put("g", traversalGraph.traversal());
+
+        // create graph
+        GaiaConfig gaiaConfig = new ExperimentalGaiaConfig("conf");
+        GraphStoreService storeService = new ExperimentalGraphStore(gaiaConfig);
+        GaiaProcessorLoader.load(gaiaConfig, storeService);
+
         // set global variables
+        Graph traversalGraph = server.getServerGremlinExecutor().getGraphManager().getGraph("graph");
         GlobalEngineConf.setGlobalVariables(traversalGraph.variables());
+
+        // bind g to traversal source
+        Bindings globalBindings = PlanUtils.getGlobalBindings(server.getServerGremlinExecutor().getGremlinExecutor());
+        globalBindings.put("g", traversalGraph.traversal());
+
+        // start gremlin server
         server.start().exceptionally(t -> {
             logger.error("Gremlin Server was unable to start and will now begin shutdown {}", t);
             server.stop().join();

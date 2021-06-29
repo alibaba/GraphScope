@@ -80,15 +80,15 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
                 } else {
                     selectResult = Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue(), false, args[2]);
                 }
-                if (selectResult.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.NAME) {
-                    throw new UnsupportedOperationException("value map not support in order by step " + selectResult.getByKey().getName());
+                if (selectResult.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.PROP_KEYS) {
+                    throw new UnsupportedOperationException("value map not support in order by step " + selectResult.getByKey().getPropKeys());
                 }
                 return selectResult;
             } else if (super.isSimpleValue(orderBy)) {
                 Gremlin.TagKey.Builder tagKeyBuilder = Gremlin.TagKey.newBuilder();
                 Gremlin.ByKey byKey = modulateBy(orderBy);
-                if (byKey.getItemCase() == Gremlin.ByKey.ItemCase.NAME) {
-                    throw new UnsupportedOperationException("value map not support in order by step " + byKey.getName());
+                if (byKey.getItemCase() == Gremlin.ByKey.ItemCase.PROP_KEYS) {
+                    throw new UnsupportedOperationException("value map not support in order by step " + byKey.getPropKeys());
                 }
                 if (byKey.getItemCase() != Gremlin.ByKey.ItemCase.ITEM_NOT_SET) {
                     tagKeyBuilder.setByKey(byKey);

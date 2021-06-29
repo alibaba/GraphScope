@@ -15,16 +15,19 @@
  */
 package com.alibaba.graphscope.gaia;
 
+import com.alibaba.graphscope.gaia.config.ExperimentalGaiaConfig;
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.idmaker.IncrementalQueryIdMaker;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
-import com.alibaba.graphscope.gaia.processor.MaxGraphOpProcessor;
+import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
+import com.alibaba.graphscope.gaia.store.ExperimentalGraphStore;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.TraversalTranslator;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Scope;
@@ -36,33 +39,26 @@ import org.apache.tinkerpop.gremlin.structure.util.empty.EmptyGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
 public class QueryTest {
     private static Logger logger = LoggerFactory.getLogger(QueryTest.class);
     private static final GraphTraversalSource g = EmptyGraph.instance().traversal();
 
-    public static void main(String[] args) throws Exception {
-        // read default engine conf
-        GlobalEngineConf.setDefaultSysConf(JsonUtils.fromJson(
-                PlanUtils.readJsonFromFile("conf/gaia.args.json"), new TypeReference<Map<String, Object>>() {
-                })
-        );
+    public static void main(String[] args) {
+        GaiaConfig config = new ExperimentalGaiaConfig("conf");
+        GraphStoreService graphStore = new ExperimentalGraphStore(config);
         IdMaker queryIdMaker = new IncrementalQueryIdMaker();
-        Traversal testTraversal = getTestTraversal();
+        Traversal testTraversal = getTestTraversal(config, graphStore);
         long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
         AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
                 .addConfig(PlanConfig.QUERY_ID, queryId)
                 .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
-                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId))).translate();
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
         PlanUtils.print(job);
     }
 
-    public static Traversal getTestTraversal() {
-        Traversal traversal = g.V().hasLabel("person");
-                // g.V().in().as("a").select("a").by(__.unfold().values("name").fold());
-                // CR_12();
-        MaxGraphOpProcessor.applyStrategy(traversal);
+    public static Traversal getTestTraversal(GaiaConfig config, GraphStoreService storeService) {
+        Traversal traversal = CR_1_1();
+        GaiaGraphOpProcessor.applyStrategy(traversal, config, storeService);
         return traversal;
     }
 

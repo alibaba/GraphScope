@@ -21,8 +21,7 @@ option java_outer_classname = "GremlinResult";
 import "common.proto";
 
 message Property {
-  // TODO(bingqing): property key could be string or int
-  string key = 1;
+  common.PropertyKey key = 1;
   common.Value value = 2;
 }
 

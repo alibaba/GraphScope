@@ -16,50 +16,35 @@
 package com.alibaba.graphscope.gaia.store;
 
 import com.alibaba.graphscope.gaia.JsonUtils;
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class StaticGraphStore implements GraphStoreService {
-    private static final Logger logger = LoggerFactory.getLogger(StaticGraphStore.class);
+public class ExperimentalGraphStore extends GraphStoreService {
+    private static final Logger logger = LoggerFactory.getLogger(ExperimentalGraphStore.class);
 
     public static final String VERTEX_TYPE_MAP = "vertex_type_map";
     public static final String EDGE_TYPE_MAP = "edge_type_map";
-    public static final long INVALID_ID = -1L;
-    public static final StaticGraphStore INSTANCE = new StaticGraphStore("conf/graph.properties");
+    public static final String MODERN_PROPERTY_RESOURCE = "modern.properties.json";
 
     private Map<String, Object> graphSchema;
     private IdMaker idMaker;
-    private Map<String, Map<String, Map<String, Object>>> propertyData;
 
-    private StaticGraphStore(String graphConfig) {
+    public ExperimentalGraphStore(GaiaConfig config) {
+        super(MODERN_PROPERTY_RESOURCE);
         try {
-            Properties properties = new Properties();
-            properties.load(new FileInputStream(graphConfig));
-            String schemaFromSys = System.getProperty("gremlin.graph.schema");
-            if (schemaFromSys != null) {
-                properties.put("gremlin.graph.schema", schemaFromSys);
-            }
-            File configF = new File((String) properties.get("gremlin.graph.schema"));
+            File configF = new File(config.getSchemaFilePath());
             String schemaJson = FileUtils.readFileToString(configF, StandardCharsets.UTF_8);
             this.graphSchema = JsonUtils.fromJson(schemaJson, new TypeReference<Map<String, Object>>() {
             });
-            this.idMaker = new GlobalIdMaker(Collections.EMPTY_LIST);
-            // init properties from file under resources
-            InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("modern.properties.json");
-            String propertiesJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-            this.propertyData = JsonUtils.fromJson(propertiesJson, new TypeReference<Map<String, Map<String, Map<String, Object>>>>() {
-            });
+            this.idMaker = new GlobalIdMaker();
         } catch (Exception e) {
             throw new RuntimeException("exception is ", e);
         }
@@ -83,36 +68,6 @@ public class StaticGraphStore implements GraphStoreService {
     @Override
     public long getGlobalId(long labelId, long propertyId) {
         return (Long) idMaker.getId(Arrays.asList(labelId, propertyId));
-    }
-
-    @Override
-    public <P> Optional<P> getVertexProperty(BigInteger id, String key) {
-        String idStr = String.valueOf(id);
-        if (getVertexKeys(id).isEmpty()) return Optional.empty();
-        return Optional.ofNullable((P) propertyData.get("vertex_properties").get(idStr).get(key));
-    }
-
-    @Override
-    public Set<String> getVertexKeys(BigInteger id) {
-        String idStr = String.valueOf(id);
-        Map<String, Object> result = propertyData.get("vertex_properties").get(idStr);
-        if (result == null) return Collections.EMPTY_SET;
-        return result.keySet();
-    }
-
-    @Override
-    public <P> Optional<P> getEdgeProperty(BigInteger id, String key) {
-        String idStr = String.valueOf(id);
-        if (getEdgeKeys(id).isEmpty()) return Optional.empty();
-        return Optional.ofNullable((P) propertyData.get("edge_properties").get(idStr).get(key));
-    }
-
-    @Override
-    public Set<String> getEdgeKeys(BigInteger id) {
-        String idStr = String.valueOf(id);
-        Map<String, Object> result = propertyData.get("edge_properties").get(idStr);
-        if (result == null) return Collections.EMPTY_SET;
-        return result.keySet();
     }
 
     @Override

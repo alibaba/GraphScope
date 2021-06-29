@@ -40,12 +40,6 @@ lazy_static! {
     static ref GRAPH_PROXY: Arc<DemoGraph> = initialize();
 }
 
-#[allow(dead_code)]
-pub fn create_demo_graph() {
-    lazy_static::initialize(&GRAPH_PROXY);
-    register_graph(GRAPH_PROXY.clone());
-}
-
 pub struct DemoGraph {
     store: &'static LargeGraphDB<DefaultId, InternalId>,
 }
@@ -292,33 +286,41 @@ impl GraphProxy for DemoGraph {
     }
 }
 
+#[allow(dead_code)]
+pub fn create_demo_graph() {
+    lazy_static::initialize(&GRAPH_PROXY);
+    register_graph(GRAPH_PROXY.clone());
+}
+
 #[inline]
 fn to_runtime_vertex(
     v: LocalVertex<DefaultId>, store: &'static LargeGraphDB<DefaultId, InternalId>,
 ) -> Vertex {
     // For vertices, we query properties via vid
     let details = LazyVertexDetails::new(v.get_id(), store);
-    let id = v.get_id() as ID;
-    let label = Some(Label::Id(v.get_label()[0]));
+    let id = encode_runtime_v_id(&v);
+    let label = encode_runtime_v_label(&v);
     Vertex::new(id, label, details)
 }
 
-#[inline]
-fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<String>) -> Vertex {
-    let id = v.get_id() as ID;
-    let label = Some(Label::Id(v.get_label()[0]));
+fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<PropKey>) -> Vertex {
+    let id = encode_runtime_v_id(&v);
+    let label = encode_runtime_v_label(&v);
     let mut properties = HashMap::new();
     if props.is_empty() {
         if let Some(mut prop_vals) = v.clone_all_properties() {
+            // TODO: shall we directly return PropKey?
             for (prop, obj) in prop_vals.drain() {
                 properties.insert(prop.into(), obj);
             }
         }
     } else {
         for prop in props {
-            if let Some(val) = v.get_property(prop) {
-                if let Some(obj) = val.try_to_owned() {
-                    properties.insert(prop.into(), obj);
+            if let PropKey::Str(prop) = prop {
+                if let Some(val) = v.get_property(prop) {
+                    if let Some(obj) = val.try_to_owned() {
+                        properties.insert(prop.into(), obj);
+                    }
                 }
             }
         }
@@ -333,12 +335,11 @@ fn to_runtime_edge(
     e: LocalEdge<DefaultId, InternalId>, _store: &'static LargeGraphDB<DefaultId, InternalId>,
 ) -> Edge {
     // TODO: For edges, we clone all properties by default for now. But we'd better get properties on demand
-    // Edge's ID is encoded by the source vertex's `ID`, and its internal index
-    let ei = e.get_edge_id();
-    let id = ((ei.1 as ID) << ID_SHIFT_BITS) | (ei.0 as ID);
-    let label = Some(Label::Id(e.get_label()));
+    let id = encode_runtime_e_id(&e);
+    let label = encode_runtime_e_label(&e);
     let mut properties = HashMap::new();
     if let Some(mut prop_vals) = e.clone_all_properties() {
+        // TODO: shall we directly return PropKey?
         for (prop, obj) in prop_vals.drain() {
             properties.insert(prop.into(), obj);
         }
@@ -437,6 +438,10 @@ impl Details for LazyEdgeDetails {
     }
 }
 
+fn encode_runtime_v_id(v: &LocalVertex<DefaultId>) -> ID {
+    v.get_id() as ID
+}
+
 pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
 
 /// Given the encoding of an edge, the `ID_MASK` is used to get the lower half part of an edge, which is
@@ -444,10 +449,24 @@ pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
 /// machine of the edge.
 pub const ID_MASK: ID = ((1 as ID) << (ID_SHIFT_BITS as ID)) - (1 as ID);
 
+/// Edge's ID is encoded by the source vertex's `ID`, and its internal index
+fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
+    let ei = e.get_edge_id();
+    ((ei.1 as ID) << ID_SHIFT_BITS) | (ei.0 as ID)
+}
+
 pub fn encode_store_e_id(e: &ID) -> EdgeId<DefaultId> {
     let index = (*e >> ID_SHIFT_BITS) as usize;
     let start_id = (*e & ID_MASK) as DefaultId;
     (start_id, index)
+}
+
+fn encode_runtime_v_label(v: &LocalVertex<DefaultId>) -> Option<Label> {
+    Some(Label::Id(v.get_label()[0]))
+}
+
+fn encode_runtime_e_label(e: &LocalEdge<DefaultId, InternalId>) -> Option<Label> {
+    Some(Label::Id(e.get_label()))
 }
 
 /// Transform string-typed labels into a id-typed labels.

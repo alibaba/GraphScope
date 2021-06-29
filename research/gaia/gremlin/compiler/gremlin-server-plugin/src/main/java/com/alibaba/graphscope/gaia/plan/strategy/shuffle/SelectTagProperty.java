@@ -68,7 +68,7 @@ public class SelectTagProperty extends PropertyShuffler {
                 // valueMap / by(property) / values("p1")
                 // todo: values()
                 Gremlin.TagKey keys = TagKeyExtractorFactory.Select.extractFrom(tag, value);
-                if (keys.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.NAME || keys.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.KEY
+                if (keys.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.PROP_KEYS || keys.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.KEY
                         && keys.getByKey().getKey().getItemCase() == Common.Key.ItemCase.NAME) {
                     return true;
                 }
@@ -118,7 +118,7 @@ public class SelectTagProperty extends PropertyShuffler {
                 Gremlin.TagKey tagKey = TagKeyExtractorFactory.Select.extractFrom(selectOne.getKey(), selectOne.getValue());
                 if (tagKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.KEY
                         && tagKey.getByKey().getKey().getItemCase() == Common.Key.ItemCase.NAME
-                        || tagKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.NAME) {
+                        || tagKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.PROP_KEYS) {
                     return true;
                 }
             }
