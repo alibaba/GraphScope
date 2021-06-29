@@ -476,11 +476,6 @@ impl Partitioner for MultiPartition {
         let worker_index = partition_id % worker_num_per_server;
         server_index * worker_num_per_server + worker_index as u64
     }
-
-    fn get_partition_num(&self) -> usize {
-        // TODO(bingqing): confirm with haixia
-        unimplemented!()
-    }
 }
 
 impl MultiPartition {
