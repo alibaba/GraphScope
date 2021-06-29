@@ -17,7 +17,9 @@ package com.alibaba.graphscope.gaia.plan.extractor;
 
 import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
+import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.plan.strategy.PreBySubTraversal;
+import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ElementValueTraversal;
@@ -38,7 +40,12 @@ public interface TagKeyExtractor {
         if (value == null || value instanceof IdentityTraversal) {
             return Gremlin.ByKey.newBuilder().build();
         } else if (value instanceof ElementValueTraversal) {
-            builder.setKey(Common.Key.newBuilder().setName(((ElementValueTraversal) value).getPropertyKey()));
+            String propertyKey = ((ElementValueTraversal) value).getPropertyKey();
+            if (StringUtils.isNumeric(propertyKey)) {
+                builder.setKey(Common.Key.newBuilder().setNameId(Integer.valueOf(propertyKey)));
+            } else {
+                builder.setKey(Common.Key.newBuilder().setName(propertyKey));
+            }
         } else if (value instanceof TokenTraversal) {
             // resultKeys.add(((TokenTraversal) value).getToken().getAccessor());
             T token = ((TokenTraversal) value).getToken();
@@ -59,15 +66,18 @@ public interface TagKeyExtractor {
         } else if (value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof PropertyMapStep) {
             PropertyMapStep propertyMapStep = (PropertyMapStep) value.getStartStep();
             String[] propertyKeys = propertyMapStep.getPropertyKeys();
-            if (propertyKeys != null) {
-                builder.setName(Common.StringArray.newBuilder().addAllItem(Arrays.asList(propertyMapStep.getPropertyKeys())));
-            }
+            builder.setPropKeys(PlanUtils.convertFrom(Arrays.asList(propertyKeys)));
         } else if (value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof PropertiesStep) {
             PropertiesStep propertiesStep = (PropertiesStep) value.getStartStep();
             // always add first from values(p1,p2)
             // todo: if value() -> fetch first from all properties (support by runtime)
-            if (propertiesStep.getPropertyKeys() != null) {
-                builder.setKey(Common.Key.newBuilder().setName((propertiesStep.getPropertyKeys())[0]));
+            if (propertiesStep.getPropertyKeys() != null && propertiesStep.getPropertyKeys().length > 0) {
+                String propertyKey = (propertiesStep.getPropertyKeys())[0];
+                if (StringUtils.isNumeric(propertyKey)) {
+                    builder.setKey(Common.Key.newBuilder().setNameId(Integer.valueOf(propertyKey)));
+                } else {
+                    builder.setKey(Common.Key.newBuilder().setName(propertyKey));
+                }
             }
         } else if (value != null && value instanceof PreBySubTraversal) {
             builder.setComputed(Gremlin.SubValue.newBuilder());

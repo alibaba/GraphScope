@@ -15,8 +15,10 @@
  */
 package com.alibaba.graphscope.gaia.processor;
 
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.TraversalTranslator;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
@@ -39,6 +41,10 @@ import java.util.function.Supplier;
 public class LogicPlanProcessor extends AbstractGraphOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(LogicPlanProcessor.class);
 
+    public LogicPlanProcessor(GaiaConfig config, GraphStoreService graphStore) {
+        super(config, graphStore);
+    }
+
     @Override
     protected GremlinExecutor.LifeCycle createLifeCycle(Context ctx, Supplier<GremlinExecutor> gremlinExecutorSupplier, BindingSupplier bindingsSupplier) {
         final RequestMessage msg = ctx.getRequestMessage();
@@ -57,7 +63,7 @@ public class LogicPlanProcessor extends AbstractGraphOpProcessor {
                 })
                 .transformResult(o -> {
                     if (o != null && o instanceof Traversal) {
-                        applyStrategy((Traversal) o);
+                        applyStrategy((Traversal) o, config, graphStore);
                     }
                     return o;
                 })
@@ -67,7 +73,7 @@ public class LogicPlanProcessor extends AbstractGraphOpProcessor {
                         AbstractBuilder jobReqBuilder = new TraversalTranslator((new TraversalBuilder((Traversal.Admin) o))
                                 .addConfig(PlanConfig.QUERY_ID, queryId)
                                 .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) o))
-                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId)))
+                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config)))
                                 .translate();
                         String content = new String(jobReqBuilder.build().toByteArray(), StandardCharsets.ISO_8859_1);
                         AbstractGraphOpProcessor.writeResultList(ctx, Arrays.asList(content), ResponseStatusCode.SUCCESS);

@@ -63,7 +63,7 @@ public class GroupByProperty extends PropertyShuffler {
             Gremlin.TagKey tagKey = TagKeyExtractorFactory.GroupKeyBy.extractFrom(keyTraversal, true);
             if (PlanUtils.isNotSet(tagKey.getTag()) && (tagKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.KEY
                     && tagKey.getByKey().getKey().getItemCase() == Common.Key.ItemCase.NAME
-                    || tagKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.NAME)) {
+                    || tagKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.PROP_KEYS)) {
                 return true;
             }
         }

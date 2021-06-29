@@ -17,8 +17,6 @@ package com.alibaba.graphscope.gaia;
 
 import org.apache.tinkerpop.gremlin.structure.Graph.Variables;
 
-import java.util.Map;
-
 public class GlobalEngineConf {
     private static Variables globalVariables;
 
@@ -28,15 +26,5 @@ public class GlobalEngineConf {
 
     public static Variables getGlobalVariables() {
         return globalVariables;
-    }
-
-    private static Map<String, Object> defaultSysConf;
-
-    public static Map<String, Object> getDefaultSysConf() {
-        return defaultSysConf;
-    }
-
-    public static void setDefaultSysConf(Map<String, Object> defaultSysConf) {
-        GlobalEngineConf.defaultSysConf = defaultSysConf;
     }
 }

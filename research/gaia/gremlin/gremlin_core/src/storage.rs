@@ -353,7 +353,7 @@ fn to_runtime_vertex(
     Vertex::new(id, label, details)
 }
 
-fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<String>) -> Vertex {
+fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<PropKey>) -> Vertex {
     let id = encode_runtime_v_id(&v);
     let label = encode_runtime_v_label(&v);
     let mut properties = HashMap::new();
@@ -366,9 +366,11 @@ fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<String
         }
     } else {
         for prop in props {
-            if let Some(val) = v.get_property(prop) {
-                if let Some(obj) = val.try_to_owned() {
-                    properties.insert(prop.into(), obj);
+            if let PropKey::Str(prop) = prop {
+                if let Some(val) = v.get_property(prop) {
+                    if let Some(obj) = val.try_to_owned() {
+                        properties.insert(prop.into(), obj);
+                    }
                 }
             }
         }

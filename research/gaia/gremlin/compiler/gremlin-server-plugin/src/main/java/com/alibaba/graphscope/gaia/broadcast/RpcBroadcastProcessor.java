@@ -21,7 +21,6 @@ import com.alibaba.pegasus.intf.CloseableIterator;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import io.grpc.Status;
-import org.apache.tinkerpop.gremlin.server.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +44,7 @@ public class RpcBroadcastProcessor extends AbstractBroadcastProcessor {
     }
 
     @Override
-    public void broadcast(PegasusClient.JobRequest request, Context writeResult, ResultProcessor processor) {
+    public void broadcast(PegasusClient.JobRequest request, ResultProcessor processor) {
         CloseableIterator<PegasusClient.JobResponse> iterator = null;
         // ResultProcessor processor = new GremlinResultProcessor(writeResult);
         try {

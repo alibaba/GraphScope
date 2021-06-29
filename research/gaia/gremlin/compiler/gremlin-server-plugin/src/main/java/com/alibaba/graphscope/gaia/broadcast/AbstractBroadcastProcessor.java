@@ -18,7 +18,6 @@ package com.alibaba.graphscope.gaia.broadcast;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.tinkerpop.gremlin.server.Context;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +25,7 @@ import java.util.List;
 public abstract class AbstractBroadcastProcessor implements AutoCloseable {
     protected List<Pair<String, Integer>> hostAddresses = new ArrayList<>();
 
-    public abstract void broadcast(PegasusClient.JobRequest request, Context writeResult, ResultProcessor resultProcessor);
+    public abstract void broadcast(PegasusClient.JobRequest request, ResultProcessor resultProcessor);
 
     public AbstractBroadcastProcessor(List<String> hostInfo) {
         hostInfo.forEach(s -> {

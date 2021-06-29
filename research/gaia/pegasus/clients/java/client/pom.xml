@@ -12,17 +12,17 @@
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>
-            <version>1.35.0</version>
+            <version>1.30.0</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
-            <version>1.35.0</version>
+            <version>1.30.0</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
-            <version>1.35.0</version>
+            <version>1.30.0</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

@@ -24,10 +24,6 @@ public class GlobalIdMaker implements IdMaker<Long, List<Long>> {
     public static final Pair<Long, Long> propertyIdRange = Pair.of(0L, 0x00ffffffffffffffL);
     public static final Pair<Long, Long> labelIdRange = Pair.of(0L, 255L);
 
-    public GlobalIdMaker(List<Long> format) {
-        // todo: dynamic generate id with format, such as [56L, 8L]
-    }
-
     public Long getId(List<Long> ids) {
         long labelId = ids.get(0);
         long propertyId = ids.get(1);

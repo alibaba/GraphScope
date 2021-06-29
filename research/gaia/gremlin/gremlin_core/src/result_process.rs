@@ -96,13 +96,18 @@ fn property_to_pb(result_property: &ResultProperty) -> result_pb::TagEntries {
             for (prop_name, prop_val) in value_map {
                 let pb_value = object_to_pb_value(prop_val);
                 let property = match prop_name {
-                    PropKey::Str(prop_name) => {
-                        result_pb::Property { key: prop_name.to_string(), value: Some(pb_value) }
-                    }
-                    PropKey::Id(_prop_id) => {
-                        // TODO(bingqing): should be prop_name or prop_id in proto
-                        unimplemented!()
-                    }
+                    PropKey::Str(prop_name) => result_pb::Property {
+                        key: Some(common_pb::PropertyKey {
+                            item: Some(common_pb::property_key::Item::Name(prop_name.to_string())),
+                        }),
+                        value: Some(pb_value),
+                    },
+                    PropKey::Id(prop_id) => result_pb::Property {
+                        key: Some(common_pb::PropertyKey {
+                            item: Some(common_pb::property_key::Item::NameId(*prop_id as i32)),
+                        }),
+                        value: Some(pb_value),
+                    },
                 };
 
                 props_pb.push(property);
