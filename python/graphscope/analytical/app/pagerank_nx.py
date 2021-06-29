@@ -27,12 +27,13 @@ __all__ = ["pagerank_nx"]
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def pagerank_nx(graph, alpha=0.85, max_iter=100, tol=1e-06):
-    """Evalute PageRank on a graph.
+    """Evalute PageRank on a graph in NetworkX version.
 
     Args:
         graph (Graph): A projected simple graph.
-        delta (float, optional): Dumping factor. Defaults to 0.85.
-        max_round (int, optional): Maximum number of rounds. Defaults to 100.
+        alpha (float, optional): Dumping factor. Defaults to 0.85.
+        max_iter (int, optional): Maximum number of iteration. Defaults to 100.
+        tol (float, optional): Error tolerance used to check convergence in power method solver.
 
     Returns:
         :class:`VertexDataContext`: A context with each vertex assigned with the pagerank value.
@@ -45,7 +46,7 @@ def pagerank_nx(graph, alpha=0.85, max_iter=100, tol=1e-06):
         sess = gs.session()
         g = sess.g()
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.pagerank(pg, delta=0.85, max_round=10)
+        r = gs.pagerank(pg, alpha=0.85, max_iter=10)
         s.close()
 
     """
