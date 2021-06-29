@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::generated::gremlin as pb;
 use crate::structure::{Direction, Edge, ElementFilter, Filter, Label, PropKey, Vertex, ID};
-use crate::{DynIter, DynResult, Element};
+use crate::{DynIter, DynResult, Element, FromPb};
 
 #[derive(Clone)]
 pub struct QueryParams<E: Element + Send + Sync> {
@@ -33,8 +34,21 @@ impl<E: Element + Send + Sync> QueryParams<E> {
         self.filter = Some(Arc::new(filter))
     }
 
-    pub fn set_props(&mut self, props: Vec<PropKey>) {
-        self.props = Some(props)
+    // fetch_properties specify the properties we query for, e.g.,
+    // Some(vec![prop1, prop2]) indicates we need prop1 and prop2,
+    // Some(vec![]) indicates we do not need any property,
+    // and None indicates we need all properties
+    pub fn set_props_with(&mut self, fetch_properties: Option<pb::PropKeys>) {
+        let props = if let Some(prop_pbs) = fetch_properties {
+            let mut prop_keys = vec![];
+            for prop_key in prop_pbs.prop_keys {
+                prop_keys.push(PropKey::from_pb(prop_key).unwrap());
+            }
+            Some(prop_keys)
+        } else {
+            None
+        };
+        self.props = props
     }
 }
 

@@ -64,17 +64,19 @@ impl MapFuncGen for EdgeVertexStep {
         let step = self.step;
         let opt_pb = unsafe { std::mem::transmute(step.endpoint_opt) };
         let opt = EndPointOpt::from_pb(opt_pb)?;
+        let mut params = QueryParams::new();
+        params.set_props_with(step.fetch_properties);
         match opt {
             EndPointOpt::Out => Ok(Box::new(EdgeVertexFunc {
                 tags: self.tags,
                 remove_tags: self.remove_tags,
-                params: QueryParams::new(),
+                params,
                 get_src: true,
             }) as Box<dyn MapFunction<Traverser, Traverser>>),
             EndPointOpt::In => Ok(Box::new(EdgeVertexFunc {
                 tags: self.tags,
                 remove_tags: self.remove_tags,
-                params: QueryParams::new(),
+                params,
                 get_src: false,
             }) as Box<dyn MapFunction<Traverser, Traverser>>),
             EndPointOpt::Other => Err(str_to_dyn_error("`otherV()` has not been supported")),
