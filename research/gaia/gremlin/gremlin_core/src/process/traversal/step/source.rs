@@ -26,6 +26,7 @@ use graph_store::common::LabelId;
 use pegasus::BuildJobError;
 use pegasus_common::downcast::*;
 use prost::alloc::str::FromStr;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 /// V(), E()
@@ -33,7 +34,7 @@ pub struct GraphVertexStep {
     pub symbol: StepSymbol,
     pub v_params: QueryParams<Vertex>,
     pub e_params: QueryParams<Edge>,
-    src: Option<Vec<Vec<ID>>>,
+    src: Option<HashMap<u64, Vec<ID>>>,
     as_tags: BitSet,
     requirement: Requirement,
     return_type: EntityType,
@@ -67,14 +68,11 @@ impl GraphVertexStep {
     }
 
     pub fn set_src(&mut self, ids: Vec<ID>, partitioner: Arc<dyn Partitioner>) {
-        let partition_num = partitioner.get_partition_num();
-        let mut partitions = Vec::with_capacity(partition_num);
-        for _ in 0..partition_num {
-            partitions.push(vec![]);
-        }
+        let mut partitions = HashMap::new();
         for id in ids {
-            let pid = partitioner.get_partition(&id, self.workers) as usize;
-            partitions[pid].push(id);
+            let wid = partitioner.get_partition(&id, self.workers);
+            let partition = partitions.entry(wid).or_insert(vec![]);
+            (*partition).push(id);
         }
 
         self.src = Some(partitions);
@@ -102,7 +100,7 @@ impl GraphVertexStep {
 
         if self.return_type == EntityType::Vertex {
             if let Some(ref seeds) = self.src {
-                if let Some(src) = seeds.get(worker_index) {
+                if let Some(src) = seeds.get(&(worker_index as u64)) {
                     if !src.is_empty() {
                         v_source = graph
                             .get_vertex(src, &self.v_params)
@@ -118,7 +116,7 @@ impl GraphVertexStep {
             };
         } else {
             if let Some(ref seeds) = self.src {
-                if let Some(src) = seeds.get(worker_index) {
+                if let Some(src) = seeds.get(&(worker_index as u64)) {
                     if !src.is_empty() {
                         e_source = graph
                             .get_edge(src, &self.e_params)
