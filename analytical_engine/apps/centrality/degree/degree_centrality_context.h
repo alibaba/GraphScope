@@ -35,7 +35,7 @@ class DegreeCentralityContext
       : grape::VertexDataContext<FRAG_T, double>(fragment),
         centrality(this->data()) {}
 
-  void Init(grape::DefaultMessageManager& messages,
+  void Init(grape::ParallelMessageManager& messages,
             const std::string& centrality_type) {
     auto& frag = this->fragment();
     auto inner_vertices = frag.InnerVertices();

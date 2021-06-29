@@ -174,3 +174,11 @@ app:
     src: apps/apsp/all_pairs_shortest_path_length.h
     compatible_graph:
       - gs::DynamicProjectedFragment
+  - algo: pagerank_nx
+    type: cpp_pie
+    class_name: gs::PageRankNetworkX
+    src: apps/pagerank/pagerank_networkx.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
