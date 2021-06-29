@@ -1,7 +1,8 @@
-package com.alibaba.maxgraph.v2.common.rpc;
+package com.alibaba.maxgraph.v2.frontend.gaia.adaptor;
 
 import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.maxgraph.v2.common.discovery.RoleType;
+import com.alibaba.maxgraph.v2.common.rpc.ChannelManager;
 import com.alibaba.pegasus.RpcChannel;
 
 import java.util.ArrayList;

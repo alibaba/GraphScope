@@ -1,5 +1,6 @@
-package com.alibaba.graphscope.gaia.store;
+package com.alibaba.maxgraph.v2.frontend.gaia.adaptor;
 
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 
@@ -10,21 +11,18 @@ public class VineyardGraphStore extends GraphStoreService {
 
     public VineyardGraphStore(SchemaFetcher schemaFetcher) {
         super(MODERN_PROPERTY_RESOURCE);
-//        this.graphSchema = schemaFetcher.getSchemaSnapshotPair().getLeft();
-//        this.snapshotId = schemaFetcher.getSchemaSnapshotPair().getRight();
+        this.graphSchema = schemaFetcher.getSchemaSnapshotPair().getLeft();
+        this.snapshotId = schemaFetcher.getSchemaSnapshotPair().getRight();
     }
 
     @Override
     public long getLabelId(String label) {
-        // mock for test
-        return 1000L;
-        //graphSchema.getElement(label).getLabelId();
+        return graphSchema.getElement(label).getLabelId();
     }
 
     @Override
     public String getLabel(long labelId) {
-        return "mock_label";
-        // graphSchema.getElement((int) labelId).getLabel();
+        return graphSchema.getElement((int) labelId).getLabel();
     }
 
     @Override
@@ -34,19 +32,16 @@ public class VineyardGraphStore extends GraphStoreService {
 
     @Override
     public int getPropertyId(String propertyName) {
-        return 1001;
-        // graphSchema.getPropertyId(propertyName);
+        return graphSchema.getPropertyId(propertyName);
     }
 
     @Override
     public String getPropertyName(int propertyId) {
-        return "mock_property";
-        // graphSchema.getPropertyName(propertyId);
+        return graphSchema.getPropertyName(propertyId);
     }
 
     @Override
     public long getSnapShotId() {
-        return 0L;
-//        return this.snapshotId;
+        return this.snapshotId;
     }
 }

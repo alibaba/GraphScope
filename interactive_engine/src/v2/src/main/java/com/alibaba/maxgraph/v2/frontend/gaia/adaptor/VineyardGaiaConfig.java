@@ -1,5 +1,6 @@
-package com.alibaba.graphscope.gaia.config;
+package com.alibaba.maxgraph.v2.frontend.gaia.adaptor;
 
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.store.GraphType;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 

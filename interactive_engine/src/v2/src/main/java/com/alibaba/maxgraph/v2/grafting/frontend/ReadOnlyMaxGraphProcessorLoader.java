@@ -17,7 +17,7 @@ package com.alibaba.maxgraph.v2.grafting.frontend;
 
 import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
-import com.alibaba.graphscope.gaia.config.VineyardGaiaConfig;
+import com.alibaba.maxgraph.v2.frontend.gaia.adaptor.VineyardGaiaConfig;
 import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
 import com.alibaba.graphscope.gaia.processor.TraversalOpProcessor;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
