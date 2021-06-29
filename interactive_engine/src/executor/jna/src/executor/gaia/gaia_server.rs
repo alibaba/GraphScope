@@ -4,11 +4,9 @@ use maxgraph_store::db::graph::store::GraphStore;
 use std::net::SocketAddr;
 use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
 use gaia_pegasus::Configuration;
-use gremlin_core::register_gremlin_types;
 use maxgraph_store::db::api::GraphErrorCode::EngineError;
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot;
-use gremlin_core::compiler::GremlinJobCompiler;
 use pegasus_server::service::Service;
 use pegasus_server::rpc::start_rpc_server;
 use pegasus_network::manager::SimpleServerDetector;
@@ -21,7 +19,6 @@ pub struct GaiaServer {
     config: Arc<GraphConfig>,
     graph: Arc<GlobalGraph>,
     detector: Arc<SimpleServerDetector>,
-    partition_to_worker: HashMap<PartitionId, u32>,
 }
 
 impl GaiaServer {
@@ -31,7 +28,6 @@ impl GaiaServer {
             config,
             graph: Arc::new(GlobalGraph::empty(partition_count)),
             detector: Arc::new(SimpleServerDetector::new()),
-            partition_to_worker: HashMap::new(),
         })
     }
 
