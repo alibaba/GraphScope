@@ -143,7 +143,9 @@ class TestBuiltInApp:
             assert almost_equal(r1[k], r2[k])
 
     def test_single_source_dijkstra_path_length(self):
-        ret = nx.builtin.single_source_dijkstra_path_length(self.grid, 1)
+        ret = nx.builtin.single_source_dijkstra_path_length(
+            self.grid, 1, weight="weight"
+        )
         ans = dict(ret.astype(np.int64).values)
         assert ans == self.grid_ans
 
