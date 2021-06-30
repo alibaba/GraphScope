@@ -34,21 +34,21 @@ impl<E: Element + Send + Sync> QueryParams<E> {
         self.filter = Some(Arc::new(filter))
     }
 
-    // fetch_properties specify the properties we query for, e.g.,
+    // props specify the properties we query for, e.g.,
     // Some(vec![prop1, prop2]) indicates we need prop1 and prop2,
-    // Some(vec![]) indicates we do not need any property,
-    // and None indicates we need all properties
+    // Some(vec![]) indicates we need all properties
+    // and None indicates we do not need any property,
     pub fn set_props_with(&mut self, fetch_properties: Option<pb::PropKeys>) {
-        let props = if let Some(prop_pbs) = fetch_properties {
+        if let Some(fetch_props) = fetch_properties {
             let mut prop_keys = vec![];
-            for prop_key in prop_pbs.prop_keys {
+            for prop_key in fetch_props.prop_keys {
                 prop_keys.push(PropKey::from_pb(prop_key).unwrap());
             }
-            Some(prop_keys)
-        } else {
-            None
-        };
-        self.props = props
+            // the cases of we need all properties or some specific properties
+            if fetch_props.is_all || !prop_keys.is_empty() {
+                self.props = Some(prop_keys)
+            }
+        }
     }
 }
 

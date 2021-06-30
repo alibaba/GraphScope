@@ -256,10 +256,10 @@ impl GraphProxy for DemoGraph {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
             if let Some(local_vertex) = self.store.get_vertex(*id as DefaultId) {
-                let v = if params.props.is_some() && params.props.as_ref().unwrap().is_empty() {
-                    to_runtime_vertex(local_vertex, self.store)
+                let v = if let Some(props) = params.props.as_ref() {
+                    to_runtime_vertex_with_property(local_vertex, props)
                 } else {
-                    to_runtime_vertex_with_property(local_vertex, params.props.as_ref())
+                    to_runtime_vertex(local_vertex, self.store)
                 };
                 if let Some(ref filter) = params.filter {
                     if filter.test(&v).unwrap_or(false) {
@@ -353,20 +353,18 @@ fn to_runtime_vertex(
     Vertex::new(id, label, details)
 }
 
-fn to_runtime_vertex_with_property(
-    v: LocalVertex<DefaultId>, props: Option<&Vec<PropKey>>,
-) -> Vertex {
+fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<PropKey>) -> Vertex {
     let id = encode_runtime_v_id(&v);
     let label = encode_runtime_v_label(&v);
     let mut properties = HashMap::new();
-    if props.is_none() {
+    if props.is_empty() {
         if let Some(mut prop_vals) = v.clone_all_properties() {
             for (prop, obj) in prop_vals.drain() {
                 properties.insert(prop.into(), obj);
             }
         }
     } else {
-        for prop in props.unwrap() {
+        for prop in props {
             if let PropKey::Str(prop) = prop {
                 if let Some(val) = v.get_property(prop) {
                     if let Some(obj) = val.try_to_owned() {
