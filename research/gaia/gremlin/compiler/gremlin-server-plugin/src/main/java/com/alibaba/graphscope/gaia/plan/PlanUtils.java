@@ -354,13 +354,8 @@ public class PlanUtils {
     public static Gremlin.PropKeys convertFrom(ToFetchProperties toFetchProperties) {
         Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
         if (toFetchProperties.isAll()) {
-            // do nothing
-            logger.info("all -> all properties");
-        } else if (toFetchProperties.getProperties() == null || toFetchProperties.getProperties().isEmpty()) {
-            keysBuilder.addAllPropKeys(Collections.EMPTY_LIST);
-            logger.info("empty_list -> none property");
-        } else {
-            logger.info("non_empty_list -> partial properties");
+            keysBuilder.setIsAll(true);
+        } else if (toFetchProperties.getProperties() != null && !toFetchProperties.getProperties().isEmpty()) {
             List<String> properties = toFetchProperties.getProperties();
             if (StringUtils.isNumeric(properties.get(0))) {
                 keysBuilder.addAllPropKeys(properties.stream()
