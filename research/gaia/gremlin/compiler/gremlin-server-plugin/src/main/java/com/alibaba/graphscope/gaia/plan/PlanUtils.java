@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.JsonUtils;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
-import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.PropertiesCache;
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
@@ -356,9 +355,12 @@ public class PlanUtils {
         Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
         if (toFetchProperties.isAll()) {
             // do nothing
+            logger.info("all -> all properties");
         } else if (toFetchProperties.getProperties() == null || toFetchProperties.getProperties().isEmpty()) {
             keysBuilder.addAllPropKeys(Collections.EMPTY_LIST);
+            logger.info("empty_list -> none property");
         } else {
+            logger.info("non_empty_list -> partial properties");
             List<String> properties = toFetchProperties.getProperties();
             if (StringUtils.isNumeric(properties.get(0))) {
                 keysBuilder.addAllPropKeys(properties.stream()

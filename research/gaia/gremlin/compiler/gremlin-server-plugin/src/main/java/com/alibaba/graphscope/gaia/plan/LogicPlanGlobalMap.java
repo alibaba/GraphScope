@@ -15,7 +15,6 @@
  */
 package com.alibaba.graphscope.gaia.plan;
 
-import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.plan.extractor.PropertyExtractor;
@@ -38,7 +37,6 @@ import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
 import com.google.protobuf.ByteString;
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -91,7 +89,9 @@ public class LogicPlanGlobalMap {
         TransformTraverserStep,
         HasAnyStep,
         IsStep,
-        FoldStep
+        FoldStep,
+        CachePropGaiaGraphStep,
+        CachePropVertexStep
     }
 
     public static STEP stepType(Step t) {
@@ -120,6 +120,22 @@ public class LogicPlanGlobalMap {
                         .setPredicates(new PredicateTranslator(new HasContainerP((GaiaGraphStep) t)).translate())
                         .addTraverserRequirements(Gremlin.TraverserRequirement.valueOf(((GaiaGraphStep) t).getTraverserRequirement().name()));
                 List<String> edgeLabels = ((GaiaGraphStep) t).getGraphLabels();
+                if (!edgeLabels.isEmpty()) {
+                    edgeLabels.forEach(l -> builder.addLabels(Integer.valueOf(l)));
+                }
+                return builder.build();
+            }
+        });
+        stepPlanMap.put(STEP.CachePropGaiaGraphStep, new GremlinStepResource() {
+            @Override
+            protected Object getStepResource(Step t, Configuration conf) {
+                Gremlin.GraphStep.Builder builder = Gremlin.GraphStep.newBuilder()
+                        .addAllIds(PlanUtils.extractIds(((CachePropGaiaGraphStep) t).getIds()))
+                        .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
+                        .setPredicates(new PredicateTranslator(new HasContainerP((CachePropGaiaGraphStep) t)).translate())
+                        .addTraverserRequirements(Gremlin.TraverserRequirement.valueOf(((CachePropGaiaGraphStep) t).getTraverserRequirement().name()))
+                        .setFetchProperties(((CachePropGaiaGraphStep) t).cacheProperties());
+                List<String> edgeLabels = ((CachePropGaiaGraphStep) t).getGraphLabels();
                 if (!edgeLabels.isEmpty()) {
                     edgeLabels.forEach(l -> builder.addLabels(Integer.valueOf(l)));
                 }
@@ -184,6 +200,20 @@ public class LogicPlanGlobalMap {
                         .setReturnType(((VertexStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
                         .setDirection(Gremlin.Direction.valueOf(((VertexStep) t).getDirection().name()));
                 List<String> edgeLabels = Arrays.asList(((VertexStep) t).getEdgeLabels());
+                if (!edgeLabels.isEmpty()) {
+                    edgeLabels.forEach(l -> builder.addEdgeLabels(Integer.valueOf(l)));
+                }
+                return builder.build();
+            }
+        });
+        stepPlanMap.put(STEP.CachePropVertexStep, new GremlinStepResource() {
+            @Override
+            protected Object getStepResource(Step t, Configuration conf) {
+                Gremlin.VertexStep.Builder builder = Gremlin.VertexStep.newBuilder()
+                        .setReturnType(((CachePropVertexStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
+                        .setDirection(Gremlin.Direction.valueOf(((CachePropVertexStep) t).getDirection().name()))
+                        .setFetchProperties(((CachePropVertexStep) t).cacheProperties());
+                List<String> edgeLabels = Arrays.asList(((CachePropVertexStep) t).getEdgeLabels());
                 if (!edgeLabels.isEmpty()) {
                     edgeLabels.forEach(l -> builder.addEdgeLabels(Integer.valueOf(l)));
                 }

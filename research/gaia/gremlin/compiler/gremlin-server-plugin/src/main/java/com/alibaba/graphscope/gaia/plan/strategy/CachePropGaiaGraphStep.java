@@ -2,18 +2,20 @@ package com.alibaba.graphscope.gaia.plan.strategy;
 
 import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
-import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.PropertiesCache;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.PropertiesCacheStep;
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.structure.T;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CachePropGraphStep extends GaiaGraphStep implements PropertiesCache {
-    public CachePropGraphStep(GraphStep originalGraphStep) {
+public class CachePropGaiaGraphStep extends GaiaGraphStep implements PropertiesCacheStep {
+    public CachePropGaiaGraphStep(GaiaGraphStep originalGraphStep) {
         super(originalGraphStep);
+        originalGraphStep.getGraphLabels().forEach(k -> this.addGraphLabels((String) k));
+        originalGraphStep.getHasContainers().forEach(k -> this.addHasContainer((HasContainer) k));
+        this.setTraverserRequirement(originalGraphStep.getTraverserRequirement());
     }
 
     @Override
