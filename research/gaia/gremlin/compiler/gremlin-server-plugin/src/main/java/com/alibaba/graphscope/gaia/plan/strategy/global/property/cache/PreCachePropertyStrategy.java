@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.gaia.plan.strategy.global;
+package com.alibaba.graphscope.gaia.plan.strategy.global.property.cache;
 
 import com.alibaba.graphscope.gaia.plan.meta.PropertiesMapMeta;
 import com.alibaba.graphscope.gaia.plan.meta.StepPropertiesMeta;
@@ -7,6 +7,7 @@ import com.alibaba.graphscope.gaia.plan.strategy.PropertyIdentityStep;
 import com.alibaba.graphscope.gaia.plan.meta.TraversalsMeta;
 import com.alibaba.graphscope.gaia.plan.meta.object.StepId;
 import com.alibaba.graphscope.gaia.plan.meta.object.TraversalId;
+import com.alibaba.graphscope.gaia.plan.strategy.global.GlobalTraversalStrategy;
 import com.alibaba.graphscope.gaia.plan.translator.TraversalMetaCollector;
 import com.alibaba.graphscope.gaia.plan.translator.builder.MetaConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalMetaBuilder;
@@ -19,9 +20,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class PreCachePropertyStrategy implements GlobalTraversalStrategy {
     private static final PreCachePropertyStrategy INSTANCE = new PreCachePropertyStrategy();
@@ -103,12 +102,11 @@ public class PreCachePropertyStrategy implements GlobalTraversalStrategy {
             if (!(t instanceof PropertyIdentityStep)) {
                 StepPropertiesMeta stepPropertiesMeta = findStepPropertiesMeta(stepPropertiesMetas, stepId);
                 if (stepPropertiesMeta != null) {
+                    ToFetchProperties toFetch = stepPropertiesMeta.getProperties();
                     // dedup
-                    List<String> properties = stepPropertiesMeta.getProperties().stream().distinct().collect(Collectors.toList());
+                    toFetch.dedupProperties();
                     // add IdentityStep before this step
-                    if (properties != null && !properties.isEmpty()) {
-                        traversal.addStep(stepId.getStepId(), new PropertyIdentityStep(traversal, properties, false));
-                    }
+                    traversal.addStep(stepId.getStepId(), new PropertyIdentityStep(traversal, toFetch));
                 }
             }
             t = t.getPreviousStep();

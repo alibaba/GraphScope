@@ -20,6 +20,8 @@ import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.JsonUtils;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.PropertiesCache;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
@@ -350,9 +352,14 @@ public class PlanUtils {
         }
     }
 
-    public static Gremlin.PropKeys convertFrom(List<String> properties) {
+    public static Gremlin.PropKeys convertFrom(ToFetchProperties toFetchProperties) {
         Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
-        if (properties != null && properties.size() > 0) {
+        if (toFetchProperties.isAll()) {
+            // do nothing
+        } else if (toFetchProperties.getProperties() == null || toFetchProperties.getProperties().isEmpty()) {
+            keysBuilder.addAllPropKeys(Collections.EMPTY_LIST);
+        } else {
+            List<String> properties = toFetchProperties.getProperties();
             if (StringUtils.isNumeric(properties.get(0))) {
                 keysBuilder.addAllPropKeys(properties.stream()
                         .map(k -> Common.PropertyKey.newBuilder().setNameId(Integer.valueOf(k)).build())

@@ -151,13 +151,13 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
                 // use properties patten
                 if (step instanceof HasStep) {
                     elementProperties.add(head.getObject().getElement(),
-                            new StepPropertiesMeta(PropertyExtractorFactory.Has.extractProperties(step), stepId, traversalIdStep));
+                            new StepPropertiesMeta(PropertyExtractorFactory.Has.extractProperties(step), stepId));
                 } else if (step instanceof PropertiesStep) {
                     elementProperties.add(head.getObject().getElement(),
-                            new StepPropertiesMeta(PropertyExtractorFactory.Values.extractProperties(step), stepId, traversalIdStep));
+                            new StepPropertiesMeta(PropertyExtractorFactory.Values.extractProperties(step), stepId));
                 } else if (step instanceof PropertyMapStep) {
                     elementProperties.add(head.getObject().getElement(),
-                            new StepPropertiesMeta(PropertyExtractorFactory.ValueMap.extractProperties(step), stepId, traversalIdStep));
+                            new StepPropertiesMeta(PropertyExtractorFactory.ValueMap.extractProperties(step), stepId));
                 } else {
                     LogicPlanGlobalMap.STEP stepType = LogicPlanGlobalMap.stepType(step);
                     Optional<StepMetaRequiredInfo> metaInfoOpt = LogicPlanGlobalMap.getStepMetaRequiredInfo(stepType);
@@ -165,7 +165,7 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
                         Optional<PropertyExtractor> extractorOpt = metaInfoOpt.get().getExtractor();
                         if (extractorOpt.isPresent()) {
                             elementProperties.add(head.getObject().getElement(),
-                                    new StepPropertiesMeta(extractorOpt.get().extractProperties(step), stepId, traversalIdStep));
+                                    new StepPropertiesMeta(extractorOpt.get().extractProperties(step), stepId));
                         }
                     }
                 }

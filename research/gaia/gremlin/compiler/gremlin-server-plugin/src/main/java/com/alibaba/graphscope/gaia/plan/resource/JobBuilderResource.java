@@ -16,10 +16,14 @@
 package com.alibaba.graphscope.gaia.plan.resource;
 
 import com.alibaba.graphscope.common.proto.Gremlin;
+import com.alibaba.graphscope.gaia.plan.PlanUtils;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.pegasus.builder.JobBuilder;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
+
+import java.util.Collections;
 
 public abstract class JobBuilderResource implements StepResource {
     protected abstract void buildJob(StepBuilder stepBuilder);
@@ -31,8 +35,11 @@ public abstract class JobBuilderResource implements StepResource {
         buildJob(stepBuilder);
         if (!step.getLabels().isEmpty() && target instanceof JobBuilder) {
             // do nothing just as(tag)
+            Gremlin.IdentityStep.Builder identityStep = Gremlin.IdentityStep.newBuilder()
+                    .setFetchProperties(PlanUtils.convertFrom(new ToFetchProperties(false, Collections.EMPTY_LIST)));
             ((JobBuilder) target).map(GremlinStepResource.createResourceBuilder(step, stepBuilder.getConf())
-                    .setIdentityStep(Gremlin.IdentityStep.newBuilder().setIsAll(false)).build().toByteString());
+                    .setIdentityStep(identityStep).build().toByteString());
+
         }
     }
 }

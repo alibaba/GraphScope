@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public final class GaiaGraphStep<S, E extends Element> extends GraphStep<S, E> implements HasContainerHolder, AutoCloseable {
+public class GaiaGraphStep<S, E extends Element> extends GraphStep<S, E> implements HasContainerHolder, AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(GaiaGraphStep.class);
     private final List<HasContainer> hasContainers = new ArrayList<>();
     private final List<String> graphLabels = new ArrayList<>();

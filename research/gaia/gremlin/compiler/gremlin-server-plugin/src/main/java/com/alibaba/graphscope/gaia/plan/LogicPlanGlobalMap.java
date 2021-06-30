@@ -23,6 +23,7 @@ import com.alibaba.graphscope.gaia.plan.meta.object.*;
 import com.alibaba.graphscope.gaia.plan.strategy.*;
 import com.alibaba.graphscope.gaia.plan.strategy.global.TransformTraverserStep;
 import com.alibaba.graphscope.gaia.FilterHelper;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 import com.alibaba.pegasus.builder.JobBuilder;
 import com.alibaba.pegasus.builder.ReduceBuilder;
 import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
@@ -274,8 +275,8 @@ public class LogicPlanGlobalMap {
         stepPlanMap.put(STEP.PropertyIdentityStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
-                return Gremlin.IdentityStep.newBuilder().setIsAll(((PropertyIdentityStep) t).isNeedAll())
-                        .setProperties(PlanUtils.convertFrom(((PropertyIdentityStep) t).getAttachProperties()))
+                return Gremlin.IdentityStep.newBuilder()
+                        .setFetchProperties(PlanUtils.convertFrom(((PropertyIdentityStep) t).getAttachProperties()))
                         .build();
             }
         });
@@ -362,7 +363,9 @@ public class LogicPlanGlobalMap {
         stepPlanMap.put(STEP.IdentityStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
-                return Gremlin.IdentityStep.newBuilder().setIsAll(false).build();
+                return Gremlin.IdentityStep.newBuilder()
+                        .setFetchProperties(PlanUtils.convertFrom(new ToFetchProperties(false, Collections.EMPTY_LIST)))
+                        .build();
             }
         });
         stepPlanMap.put(STEP.TraversalMapStep, new GremlinStepResource() {
@@ -378,9 +381,10 @@ public class LogicPlanGlobalMap {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
                 String[] properties = ((PropertiesStep) t).getPropertyKeys();
-                Gremlin.PropertiesStep.Builder builder = Gremlin.PropertiesStep.newBuilder()
-                        .setPropKeys(PlanUtils.convertFrom(Arrays.asList(properties)));
-                return builder.build();
+                boolean needAll = (properties == null || properties.length == 0) ? true : false;
+                return Gremlin.PropertiesStep.newBuilder()
+                        .setPropKeys(PlanUtils.convertFrom(new ToFetchProperties(needAll, Arrays.asList(properties))))
+                        .build();
             }
         });
         stepPlanMap.put(STEP.EdgeVertexStep, new GremlinStepResource() {
@@ -464,13 +468,10 @@ public class LogicPlanGlobalMap {
                 .setTraverserMapFunc((stepEle) -> new TraverserElement(new CompositeObject(String.class)))
                 .setExtractor(new PropertyExtractor() {
                     @Override
-                    public List<String> extractProperties(Step step) {
-                        List<String> properties = new ArrayList<>();
-                        PropertiesStep step1 = (PropertiesStep) step;
-                        if (step1.getPropertyKeys() != null) {
-                            properties.addAll(Arrays.asList(step1.getPropertyKeys()));
-                        }
-                        return properties;
+                    public ToFetchProperties extractProperties(Step step) {
+                        String[] properties = ((PropertiesStep) step).getPropertyKeys();
+                        boolean needAll = (properties == null || properties.length == 0) ? true : false;
+                        return new ToFetchProperties(needAll, Arrays.asList(properties));
                     }
                 }).build()
         );

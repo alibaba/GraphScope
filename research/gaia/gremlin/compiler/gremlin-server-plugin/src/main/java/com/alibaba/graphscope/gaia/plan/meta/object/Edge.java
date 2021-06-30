@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.gaia.plan.meta.object;
 
+import org.apache.tinkerpop.gremlin.process.traversal.Step;
+
 import java.util.UUID;
 
 public class Edge extends GraphElement {
