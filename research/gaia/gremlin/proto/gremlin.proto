@@ -118,6 +118,8 @@ message GraphStep {
   FilterChain predicates = 4;
   // to initialize a traverser type
   repeated TraverserRequirement traverser_requirements = 5;
+  // The properties of the entities that need to be saved
+  PropKeys required_properties = 6;
 }
 
 // decide a new traverser type with the requirements
@@ -140,6 +142,8 @@ message VertexStep {
   EntityType return_type = 3;
   // To filter vertices based on some predicates, e.g. has("name", eq("John"))
   FilterChain predicates = 4;
+  // The properties of the entities that need to be saved
+  PropKeys required_properties = 5;
 }
 
 message HasStep {
@@ -174,10 +178,8 @@ message RangeGlobalStep {
 // We further use it to get properties from the graph properties, which is useful when
 // ordering by or projecting certain properties of some entities.
 message IdentityStep {
-  // The properties of the entities that need to be collected to the traversal path
-  PropKeys properties = 1;
-  // Whether we need to collect all properties
-  bool is_all = 2 ;
+  // The properties of the entities that need to be saved
+  PropKeys required_properties = 1;
 }
 
 message WhereJoiner {}
@@ -206,6 +208,7 @@ message SubValue {}
 
 message PropKeys {
  repeated common.PropertyKey prop_keys = 1;
+ bool is_all = 2;
 }
 
 // we try to unify the by key for select, group, and order
@@ -294,6 +297,9 @@ message EdgeVertexStep {
       OTHER = 2;
     }
     EndpointOpt endpoint_opt = 1;
+    // The properties of the entities that need to be saved
+    // todo: get properties locally without shuffle if store supports
+    PropKeys required_properties = 2;
 }
 
 // flatmap

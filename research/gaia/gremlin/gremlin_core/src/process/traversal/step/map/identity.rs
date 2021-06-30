@@ -16,8 +16,8 @@
 use crate::generated::gremlin as pb;
 use crate::process::traversal::step::MapFuncGen;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::{PropKey, QueryParams, Vertex, VertexOrEdge};
-use crate::{str_to_dyn_error, DynResult, FromPb};
+use crate::structure::{QueryParams, Vertex, VertexOrEdge};
+use crate::{str_to_dyn_error, DynResult};
 use bit_set::BitSet;
 use pegasus::api::function::{FnResult, MapFunction};
 
@@ -87,18 +87,8 @@ pub struct IdentityStep {
 impl MapFuncGen for IdentityStep {
     fn gen_map(self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>> {
         let step = self.step;
-        let is_all = step.is_all;
         let mut params = QueryParams::new();
-        let mut prop_keys = vec![];
-        if let Some(prop_step_keys) = step.properties {
-            for prop_key in prop_step_keys.prop_keys {
-                prop_keys.push(PropKey::from_pb(prop_key)?);
-            }
-        };
-        if is_all || !prop_keys.is_empty() {
-            // the case when we need all properties or given properties
-            params.set_props(prop_keys);
-        }
+        params.set_props(step.required_properties);
         Ok(Box::new(IdentityFunc { params, tags: self.tags, remove_tags: self.remove_tags }))
     }
 }

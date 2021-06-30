@@ -49,9 +49,61 @@ def project_to_simple(func):
     return wrapper
 
 
-@patch_docstring(nxa.pagerank)
+@project_to_simple
 def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6):
-    raise NotImplementedError
+    """Returns the PageRank of the nodes in the graph.
+
+    PageRank computes a ranking of the nodes in the graph G based on
+    the structure of the incoming links. It was originally designed as
+    an algorithm to rank web pages.
+
+    Parameters
+    ----------
+    G : graph
+      A networkx directed graph.
+
+    alpha : float, optional
+      Damping parameter for PageRank, default=0.85.
+
+    max_iter : integer, optional
+      Maximum number of iterations in power method eigenvalue solver.
+
+    tol : float, optional
+      Error tolerance used to check convergence in power method solver.
+
+    Returns
+    -------
+    pagerank : dataframe
+       Dataframe of nodes with PageRank as the value.
+
+    Examples
+    --------
+    >>> G = nx.DiGraph(nx.path_graph(4))
+    >>> pr = nx.pagerank(G, alpha=0.9)
+
+    Notes
+    -----
+    The eigenvector calculation is done by the power iteration method
+    and has no guarantee of convergence.  The iteration will stop after
+    an error tolerance of ``len(G) * tol`` has been reached. If the
+    number of iterations exceed `max_iter`, computation just complete and
+    return the current result.
+
+    The PageRank algorithm was designed for directed graphs but this
+    algorithm does not check if the input graph is directed.
+
+    References
+    ----------
+    .. [1] A. Langville and C. Meyer,
+       "A survey of eigenvector methods of web information retrieval."
+       http://citeseer.ist.psu.edu/713792.html
+    .. [2] Page, Lawrence; Brin, Sergey; Motwani, Rajeev and Winograd, Terry,
+       The PageRank citation ranking: Bringing order to the Web. 1999
+       http://dbpubs.stanford.edu:8090/pub/showDoc.Fulltext?lang=en&doc=1999-66&format=pdf
+
+    """
+    ctx = graphscope.pagerank_nx(G, alpha, max_iter, tol)
+    return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 
 @project_to_simple
@@ -403,7 +455,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
     Distances are calculated as sums of weighted edges traversed.
 
     """
-    ctx = AppAssets(algo="sssp_projected")(G, source)
+    ctx = graphscope.sssp(G, source)
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 

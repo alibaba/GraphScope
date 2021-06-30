@@ -52,6 +52,7 @@ public class GraphTraversalStrategies extends DefaultTraversalStrategies {
         strategies.add(OrderGuaranteeStrategy.instance());
         strategies.add(PhysicalPlanUnfoldStrategy.instance());
         strategies.add(ValueTraversalParentStrategy.instance());
+        strategies.add(CachePropStepStrategy.instance(config));
     }
 
     @Override

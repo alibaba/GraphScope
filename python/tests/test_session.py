@@ -255,3 +255,13 @@ def test_border_cases():
                 "e0": "twitter_property_e_0#header_row=true",
             }
         )
+
+
+def test_with():
+    with graphscope.session(cluster_type="hosts") as sess:
+        assert graphscope.get_default_session() == sess
+
+    sess = graphscope.session(cluster_type="hosts")
+    with sess:
+        pass
+    assert sess.info["status"] == "closed"

@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.gaia.plan.extractor;
 
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesStep;
@@ -17,7 +18,7 @@ public enum PropertyExtractorFactory implements PropertyExtractor {
      */
     Has {
         @Override
-        public List<String> extractProperties(Step step) {
+        public ToFetchProperties extractProperties(Step step) {
             List<String> properties = new ArrayList<>();
             List<HasContainer> containerList = ((HasStep) step).getHasContainers();
             for (HasContainer container : containerList) {
@@ -25,7 +26,7 @@ public enum PropertyExtractorFactory implements PropertyExtractor {
                     properties.add(container.getKey());
                 }
             }
-            return properties;
+            return new ToFetchProperties(false, properties);
         }
     },
     /**
@@ -33,13 +34,10 @@ public enum PropertyExtractorFactory implements PropertyExtractor {
      */
     Values {
         @Override
-        public List<String> extractProperties(Step step) {
-            List<String> properties = new ArrayList<>();
-            PropertiesStep step1 = (PropertiesStep) step;
-            if (step1.getPropertyKeys() != null) {
-                properties.addAll(Arrays.asList(step1.getPropertyKeys()));
-            }
-            return properties;
+        public ToFetchProperties extractProperties(Step step) {
+            String[] properties = ((PropertiesStep) step).getPropertyKeys();
+            boolean needAll = (properties == null || properties.length == 0) ? true : false;
+            return new ToFetchProperties(needAll, Arrays.asList(properties));
         }
     },
     /**
@@ -47,13 +45,10 @@ public enum PropertyExtractorFactory implements PropertyExtractor {
      */
     ValueMap {
         @Override
-        public List<String> extractProperties(Step step) {
-            List<String> properties = new ArrayList<>();
-            PropertyMapStep step1 = (PropertyMapStep) step;
-            if (step1.getPropertyKeys() != null) {
-                properties.addAll(Arrays.asList(step1.getPropertyKeys()));
-            }
-            return properties;
+        public ToFetchProperties extractProperties(Step step) {
+            String[] properties = ((PropertyMapStep) step).getPropertyKeys();
+            boolean needAll = (properties == null || properties.length == 0) ? true : false;
+            return new ToFetchProperties(needAll, Arrays.asList(properties));
         }
     }
 }
