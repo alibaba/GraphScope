@@ -19,4 +19,5 @@ public class PlanConfig {
     public static String QUERY_ID = "query_id";
     public static String TAG_ID_MAKER = "tag_id_maker";
     public static String QUERY_CONFIG = "query_config";
+    public static String SNAPSHOT_ID_FETCHER = "snapshot_id_fetcher";
 }

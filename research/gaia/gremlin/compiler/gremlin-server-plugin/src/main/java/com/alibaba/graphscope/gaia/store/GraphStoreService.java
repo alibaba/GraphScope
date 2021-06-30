@@ -27,8 +27,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public abstract class GraphStoreService {
+public abstract class GraphStoreService implements SnapshotIdFetcher {
     protected Map<String, Map<String, Map<String, Object>>> cachedPropertyForTest;
+    public static final long INVALID = -1L;
 
     public GraphStoreService(String propertyResourceName) {
         try {
@@ -56,8 +57,9 @@ public abstract class GraphStoreService {
         throw new UnsupportedOperationException();
     }
 
-    public long getSnapShotId() {
-        throw new UnsupportedOperationException();
+    @Override
+    public long getSnapshotId() {
+        return INVALID;
     }
 
     public <P> Optional<P> getVertexProperty(BigInteger id, String key) {

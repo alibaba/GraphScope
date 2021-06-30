@@ -15,7 +15,6 @@
  */
 package com.alibaba.graphscope.gaia.plan;
 
-import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.plan.extractor.PropertyExtractor;
@@ -23,6 +22,8 @@ import com.alibaba.graphscope.gaia.plan.meta.object.*;
 import com.alibaba.graphscope.gaia.plan.strategy.*;
 import com.alibaba.graphscope.gaia.plan.strategy.global.TransformTraverserStep;
 import com.alibaba.graphscope.gaia.FilterHelper;
+import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
+import com.alibaba.graphscope.gaia.store.SnapshotIdFetcher;
 import com.alibaba.pegasus.builder.JobBuilder;
 import com.alibaba.pegasus.builder.ReduceBuilder;
 import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
@@ -37,7 +38,6 @@ import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
 import com.google.protobuf.ByteString;
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -113,6 +113,7 @@ public class LogicPlanGlobalMap {
         stepPlanMap.put(STEP.GaiaGraphStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
+
                 Gremlin.GraphStep.Builder builder = Gremlin.GraphStep.newBuilder()
                         .addAllIds(PlanUtils.extractIds(((GaiaGraphStep) t).getIds()))
                         .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
@@ -121,6 +122,10 @@ public class LogicPlanGlobalMap {
                 List<String> edgeLabels = ((GaiaGraphStep) t).getGraphLabels();
                 if (!edgeLabels.isEmpty()) {
                     edgeLabels.forEach(l -> builder.addLabels(Integer.valueOf(l)));
+                }
+                SnapshotIdFetcher fetcher = (SnapshotIdFetcher) conf.getProperty(PlanConfig.SNAPSHOT_ID_FETCHER);
+                if (fetcher != null) {
+                    builder.setSnapshotId(Gremlin.SnapShotId.newBuilder().setId(fetcher.getSnapshotId()));
                 }
                 return builder.build();
             }
@@ -185,6 +190,10 @@ public class LogicPlanGlobalMap {
                 List<String> edgeLabels = Arrays.asList(((VertexStep) t).getEdgeLabels());
                 if (!edgeLabels.isEmpty()) {
                     edgeLabels.forEach(l -> builder.addEdgeLabels(Integer.valueOf(l)));
+                }
+                SnapshotIdFetcher fetcher = (SnapshotIdFetcher) conf.getProperty(PlanConfig.SNAPSHOT_ID_FETCHER);
+                if (fetcher != null) {
+                    builder.setSnapshotId(Gremlin.SnapShotId.newBuilder().setId(fetcher.getSnapshotId()));
                 }
                 return builder.build();
             }
@@ -274,9 +283,13 @@ public class LogicPlanGlobalMap {
         stepPlanMap.put(STEP.PropertyIdentityStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
-                return Gremlin.IdentityStep.newBuilder().setIsAll(((PropertyIdentityStep) t).isNeedAll())
-                        .setProperties(PlanUtils.convertFrom(((PropertyIdentityStep) t).getAttachProperties()))
-                        .build();
+                Gremlin.IdentityStep.Builder builder = Gremlin.IdentityStep.newBuilder().setIsAll(((PropertyIdentityStep) t).isNeedAll())
+                        .setProperties(PlanUtils.convertFrom(((PropertyIdentityStep) t).getAttachProperties()));
+                SnapshotIdFetcher fetcher = (SnapshotIdFetcher) conf.getProperty(PlanConfig.SNAPSHOT_ID_FETCHER);
+                if (fetcher != null) {
+                    builder.setSnapshotId(Gremlin.SnapShotId.newBuilder().setId(fetcher.getSnapshotId()));
+                }
+                return builder.build();
             }
         });
         stepPlanMap.put(STEP.OrderGlobalStep, new JobBuilderResource() {
