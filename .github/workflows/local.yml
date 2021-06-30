@@ -1,4 +1,4 @@
-name: GraphScope CI on Local 
+name: GraphScope CI on Local
 
 on:
   # Trigger the workflow on push or pull request, but only for the main branch
@@ -85,7 +85,7 @@ jobs:
 
     - name: Install libvineyard
       run: |
-        git clone -b v0.2.4 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
+        git clone -b main-v0.2.3 --single-branch --depth=1 https://github.com/alibaba/libvineyard.git
         cd libvineyard
         git submodule update --init
         mkdir build && pushd build
@@ -119,7 +119,7 @@ jobs:
         pip3 install pytest tensorflow --user
 
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
-        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR} 
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         cp ${GITHUB_WORKSPACE}/python/tests/test_run_locally.py /tmp/test_run_locally.py
         rm -rf ~/.ccache
         rm -rf ~/.m2

@@ -101,12 +101,17 @@ void LoadGraph(
           gs::ArrowFragmentLoader<oid_t, vid_t> loader(client, comm_spec,
                                                        graph_info);
 
+          MPI_Barrier(comm_spec.comm());
+          VINEYARD_DISCARD(client.SyncMetaData());
+
           BOOST_LEAF_AUTO(frag_group_id, loader.LoadFragmentAsFragmentGroup());
           MPI_Barrier(comm_spec.comm());
 
           LOG(INFO) << "[worker-" << comm_spec.worker_id()
                     << "] loaded graph to vineyard ...";
 
+          MPI_Barrier(comm_spec.comm());
+          VINEYARD_DISCARD(client.SyncMetaData());
           auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
               client.GetObject(frag_group_id));
           auto fid = comm_spec.WorkerToFrag(comm_spec.worker_id());

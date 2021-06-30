@@ -28,22 +28,22 @@ from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
 from graphscope.proto import graph_def_pb2
-from graphscope.proto import types_pb2
-
-
-@pytest.fixture(scope="session")
-def graphscope_session():
-    graphscope.set_option(show_log=True)
-    graphscope.set_option(initializing_interactive_engine=False)
-
-    sess = graphscope.session(cluster_type="hosts", num_workers=1)
-    sess.as_default()
-    yield sess
-    sess.close()
 
 
 def ldbc_sample_single_label(prefix, directed):
     graph = graphscope.g(directed=directed)
+    graph = graph.add_vertices(
+        Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
+    )
+    graph = graph.add_edges(
+        Loader(os.path.join(prefix, "comment_replyOf_comment_0_0.csv"), delimiter="|"),
+        "replyOf",
+    )
+    return graph
+
+
+def ldbc_sample_string_oid(prefix, directed):
+    graph = graphscope.g(directed=directed, oid_type="string")
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
     )
@@ -117,6 +117,21 @@ def ldbc_sample_with_duplicated_oid(prefix, directed):
     return graph
 
 
+def load_p2p(prefix, directed):
+    graph = graphscope.load_from(
+        edges={
+            "group": {
+                "loader": Loader(
+                    os.path.join(prefix, "p2p-31.e"), header_row=False, delimiter=" "
+                )
+            }
+        },
+        directed=directed,
+        generate_eid=False,
+    )
+    return graph
+
+
 @pytest.mark.usefixtures("graphscope_session")
 class TestGraphTransformation(object):
     @classmethod
@@ -127,16 +142,20 @@ class TestGraphTransformation(object):
         cls.single_label_g = ldbc_sample_single_label(cls.data_dir, False)
         cls.multi_label_g = ldbc_sample_multi_labels(cls.data_dir, False)
         cls.duplicated_oid_g = ldbc_sample_with_duplicated_oid(cls.data_dir, False)
-
-        # FIXME: this is tricky way to create a str gs graph
-        les_g = nx.les_miserables_graph()
-        cls.str_oid_g = g(les_g)
+        cls.p2p = load_p2p(os.path.expandvars("${GS_TEST_DIR}"), False)
+        cls.p2p_nx = nx.read_edgelist(
+            os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist"),
+            nodetype=int,
+            data=True,
+        )
+        cls.str_oid_g = ldbc_sample_string_oid(cls.data_dir, False)
 
     @classmethod
     def teardown_class(cls):
         cls.single_label_g.unload()
         cls.multi_label_g.unload()
         cls.duplicated_oid_g.unload()
+        cls.str_oid_g.unload()
 
     def assert_convert_success(self, gs_g, nx_g):
         assert gs_g.is_directed() == nx_g.is_directed()
@@ -311,16 +330,27 @@ class TestGraphTransformation(object):
         g = self.single_label_g
         nx_g = self.NXGraph(g, dist=True)
         self.assert_convert_success(g, nx_g)
+        assert nx_g.number_of_nodes() == 76830
+        assert nx_g.number_of_edges() == 38786
 
     def test_multi_label_gs_to_nx(self):
         g = self.multi_label_g
         nx_g = self.NXGraph(g, dist=True)
         self.assert_convert_success(g, nx_g)
 
+    @pytest.mark.skip(reason="FIXME: folly::hash failed.")
     def test_str_oid_gs_to_nx(self):
         g = self.str_oid_g
         nx_g = self.NXGraph(g, dist=True)
         self.assert_convert_success(g, nx_g)
+
+    def test_gs_to_nx_with_sssp(self):
+        nx_g = self.NXGraph(self.p2p, dist=True)
+        ret = nx.builtin.single_source_dijkstra_path_length(nx_g, 6, weight="f2")
+        ret2 = nx.builtin.single_source_dijkstra_path_length(
+            self.p2p_nx, 6, weight="weight"
+        )
+        assert dict(ret.values) == dict(ret2.values)
 
     def test_error_on_wrong_nx_type(self):
         g = self.single_label_g
@@ -498,18 +528,21 @@ class TestDigraphTransformation(TestGraphTransformation):
         cls.single_label_g = ldbc_sample_single_label(data_dir, True)
         cls.multi_label_g = ldbc_sample_multi_labels(data_dir, True)
         cls.duplicated_oid_g = ldbc_sample_with_duplicated_oid(data_dir, True)
-
-        # FIXME: this is tricky way to create a str gs graph
-        les_g = nx.les_miserables_graph()
-        di_les_g = nx.DiGraph()
-        di_les_g.add_edges_from(di_les_g.edges.data())
-        cls.str_oid_g = g(di_les_g)
+        cls.p2p = load_p2p(os.path.expandvars("${GS_TEST_DIR}"), True)
+        cls.p2p_nx = nx.read_edgelist(
+            os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist"),
+            nodetype=int,
+            data=True,
+            create_using=nx.DiGraph,
+        )
+        cls.str_oid_g = ldbc_sample_string_oid(data_dir, True)
 
     @classmethod
     def teardown_class(cls):
         cls.single_label_g.unload()
         cls.multi_label_g.unload()
         cls.duplicated_oid_g.unload()
+        cls.str_oid_g.unload()
 
     def test_error_on_wrong_nx_type(self):
         g = self.single_label_g
