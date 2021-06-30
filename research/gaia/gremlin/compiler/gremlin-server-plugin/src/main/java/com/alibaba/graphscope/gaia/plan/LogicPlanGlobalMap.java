@@ -133,8 +133,8 @@ public class LogicPlanGlobalMap {
                         .addAllIds(PlanUtils.extractIds(((CachePropGaiaGraphStep) t).getIds()))
                         .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
                         .setPredicates(new PredicateTranslator(new HasContainerP((CachePropGaiaGraphStep) t)).translate())
-                        .addTraverserRequirements(Gremlin.TraverserRequirement.valueOf(((CachePropGaiaGraphStep) t).getTraverserRequirement().name()));
-//                        .setFetchProperties(((CachePropGaiaGraphStep) t).cacheProperties());
+                        .addTraverserRequirements(Gremlin.TraverserRequirement.valueOf(((CachePropGaiaGraphStep) t).getTraverserRequirement().name()))
+                        .setFetchProperties(((CachePropGaiaGraphStep) t).cacheProperties());
                 List<String> edgeLabels = ((CachePropGaiaGraphStep) t).getGraphLabels();
                 if (!edgeLabels.isEmpty()) {
                     edgeLabels.forEach(l -> builder.addLabels(Integer.valueOf(l)));

@@ -177,7 +177,6 @@ message RangeGlobalStep {
 // ordering by or projecting certain properties of some entities.
 message IdentityStep {
   // The properties of the entities that need to be collected to the traversal path
-  // null -> all properties, empty_list -> none property, non_empty_list -> partial properties
   PropKeys fetch_properties = 1;
 }
 
@@ -207,6 +206,7 @@ message SubValue {}
 
 message PropKeys {
  repeated common.PropertyKey prop_keys = 1;
+ bool is_all = 2;
 }
 
 // we try to unify the by key for select, group, and order
