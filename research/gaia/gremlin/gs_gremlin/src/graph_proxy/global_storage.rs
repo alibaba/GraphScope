@@ -78,9 +78,7 @@ where
             .get_schema(MAX_SNAPSHOT_ID)
             .ok_or(str_to_dyn_error("get schema failed"))?;
         let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-        // TODO(bingqing): Compiler will give the needed props in params. We clone all props for test now.
-        let _prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
-        let prop_ids = None;
+        let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
         let filter = params.filter.clone();
         let result = store
             .get_all_vertices(
@@ -116,7 +114,6 @@ where
                 None,
                 prop_ids.as_ref(),
                 params.limit.unwrap_or(0),
-                // TODO: partition ids
                 &vec![],
             )
             .map(move |e| to_runtime_edge(&e));
@@ -133,9 +130,7 @@ where
         let schema = store
             .get_schema(MAX_SNAPSHOT_ID)
             .ok_or(str_to_dyn_error("get schema failed"))?;
-        // TODO(bingqing): Compiler will give the needed props in params. We clone all props for test now.
-        let _prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
-        let prop_ids = None;
+        let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
         let filter = params.filter.clone();
         let partition_label_vertex_ids =
             build_partition_label_vertex_ids(ids, self.partition_manager.clone());
@@ -250,9 +245,7 @@ where
         let filter = params.filter.clone();
         let limit = params.limit.clone();
         let edge_label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-        // TODO(bingqing): Compiler will give the needed props in params. We clone all props for test now.
-        let _prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
-        let prop_ids = None;
+        let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
 
         let stmt = from_fn(move |v: ID| {
             let src_id = build_partition_vertex_ids(&[v], partition_manager.clone());
