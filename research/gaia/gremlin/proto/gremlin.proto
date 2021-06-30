@@ -60,6 +60,10 @@ message StepTag {
     }
 }
 
+message SnapShotId {
+  int64 id = 1;
+}
+
 message GremlinStep {
   // Every gremlin step can potentially carry tags
   repeated StepTag tags = 1;
@@ -118,6 +122,7 @@ message GraphStep {
   FilterChain predicates = 4;
   // to initialize a traverser type
   repeated TraverserRequirement traverser_requirements = 5;
+  SnapShotId snapshot_id = 6;
 }
 
 // decide a new traverser type with the requirements
@@ -140,6 +145,7 @@ message VertexStep {
   EntityType return_type = 3;
   // To filter vertices based on some predicates, e.g. has("name", eq("John"))
   FilterChain predicates = 4;
+  SnapShotId snapshot_id = 5;
 }
 
 message HasStep {
@@ -178,6 +184,7 @@ message IdentityStep {
   PropKeys properties = 1;
   // Whether we need to collect all properties
   bool is_all = 2 ;
+  SnapShotId snapshot_id = 3;
 }
 
 message WhereJoiner {}
@@ -294,6 +301,7 @@ message EdgeVertexStep {
       OTHER = 2;
     }
     EndpointOpt endpoint_opt = 1;
+  SnapShotId snapshot_id = 2;
 }
 
 // flatmap
