@@ -11,7 +11,7 @@ pub struct EnginePortsResponse {
 }
 
 impl EnginePortsResponse {
-    pub fn new_success(engine_port: i32, rpc_port: i32) -> Box<EnginePortsResponse> {
+    pub fn new(engine_port: i32, rpc_port: i32) -> Box<EnginePortsResponse> {
         Box::new(EnginePortsResponse {
             success: true,
             errMsg: std::ptr::null(),
@@ -20,7 +20,7 @@ impl EnginePortsResponse {
         })
     }
 
-    pub fn new_error(err_msg: &str) -> Box<EnginePortsResponse> {
+    pub fn new_with_error(err_msg: &str) -> Box<EnginePortsResponse> {
         let msg = CString::new(err_msg).unwrap();
         let response = EnginePortsResponse {
             success: false,

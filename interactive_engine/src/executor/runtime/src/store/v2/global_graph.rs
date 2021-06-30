@@ -485,8 +485,8 @@ impl GraphPartitionManager for GlobalGraph {
         floor_mod(vid, partition_count as i64) as i32
     }
 
-    fn get_server_id(&self, pid: u32) -> Option<u32> {
-        self.partition_to_server.get(&pid).map(|x| *x)
+    fn get_server_id(&self, partition_id: u32) -> Option<u32> {
+        self.partition_to_server.get(&partition_id).map(|x| *x)
     }
 
     fn get_process_partition_list(&self) -> Vec<u32> {

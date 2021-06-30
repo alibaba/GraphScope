@@ -20,9 +20,8 @@ pub extern fn initialize(config_bytes: *const u8, len: usize) -> EngineHandle {
     let mut config_builder = GraphConfigBuilder::new();
     config_builder.set_storage_options(config_pb.get_configs().clone());
     let config = Arc::new(config_builder.build());
-    let handle = Box::new(GaiaServer::new(config).unwrap());
-    let ret = Box::into_raw(handle);
-    ret as EngineHandle
+    let handle = Box::new(GaiaServer::new(config));
+    Box::into_raw(handle) as EngineHandle
 }
 
 #[no_mangle]
@@ -51,11 +50,11 @@ pub extern fn startEngine(engine_handle: EngineHandle) -> Box<EnginePortsRespons
     };
     match engine_ptr.start() {
         Ok((engine_port, server_port)) => {
-            EnginePortsResponse::new_success(engine_port as i32, server_port as i32)
+            EnginePortsResponse::new(engine_port as i32, server_port as i32)
         },
         Err(e) => {
             let msg = format!("{:?}", e);
-            EnginePortsResponse::new_error(&msg)
+            EnginePortsResponse::new_with_error(&msg)
         },
     }
 }
@@ -73,7 +72,7 @@ pub extern fn updatePeerView(engine_handle: EngineHandle, peer_view_string_raw: 
     let slice =  unsafe { CStr::from_ptr(peer_view_string_raw) }.to_bytes();
     let peer_view_string = std::str::from_utf8(slice).unwrap();
     let peer_view = peer_view_string.split(",").map(|item| {
-        let mut fields = item.split(":");
+        let mut fields = item.split("#");
         let id = fields.next().unwrap().parse::<u64>().unwrap();
         let host = fields.next().unwrap().parse().unwrap();
         let port = fields.next().unwrap().parse().unwrap();

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use maxgraph_store::db::graph::store::GraphStore;
 use std::net::SocketAddr;
 use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
-use gaia_pegasus::Configuration;
+use gaia_pegasus::Configuration as GaiaConfig;
 use maxgraph_store::db::api::GraphErrorCode::EngineError;
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot;
@@ -22,13 +22,14 @@ pub struct GaiaServer {
 }
 
 impl GaiaServer {
-    pub fn new(config: Arc<GraphConfig>) -> GraphResult<Self> {
-        let partition_count = config.get_storage_option("partition.count").unwrap().parse().unwrap();
-        Ok(GaiaServer {
+    pub fn new(config: Arc<GraphConfig>) -> Self {
+        let partition_count = config.get_storage_option("partition.count")
+            .expect("required config partition.count is missing").parse().expect("parse partition.count failed");
+        GaiaServer {
             config,
             graph: Arc::new(GlobalGraph::empty(partition_count)),
             detector: Arc::new(SimpleServerDetector::new()),
-        })
+        }
     }
 
     pub fn add_partition(&mut self, partition_id: PartitionId, graph_partition: Arc<GraphStore>) {
@@ -85,7 +86,7 @@ impl GaiaServer {
     }
 }
 
-fn make_gaia_config(graph_config: Arc<GraphConfig>) -> Configuration {
+fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
     let server_id = graph_config.get_storage_option("node.idx").expect("required config node.idx is missing")
         .parse().expect("parse node.idx failed");
     let ip = "0.0.0.0".to_string();

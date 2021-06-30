@@ -87,7 +87,7 @@ public class GaiaEngine implements ExecutorEngine {
             this.engineNodes.putAll(nodes);
             if (this.engineNodes.size() == this.nodeCount) {
                 String peerViewString = nodes.values().stream()
-                        .map(n -> String.format("%s:%s:%s", n.getIdx(), n.getHost(), n.getPort()))
+                        .map(n -> String.format("%s#%s#%s", n.getIdx(), n.getHost(), n.getPort()))
                         .collect(Collectors.joining(","));
                 GaiaLibrary.INSTANCE.updatePeerView(this.pointer, peerViewString);
             }
