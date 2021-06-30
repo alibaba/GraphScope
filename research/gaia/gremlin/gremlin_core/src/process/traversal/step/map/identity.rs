@@ -99,6 +99,7 @@ impl MapFuncGen for IdentityStep {
             // the case when we need all properties or given properties
             params.set_props(prop_keys);
         }
+        params.snapshot_id = if let Some(si) = step.snapshot_id { Some(si.id) } else { None };
         Ok(Box::new(IdentityFunc { params, tags: self.tags, remove_tags: self.remove_tags }))
     }
 }

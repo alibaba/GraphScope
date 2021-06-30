@@ -178,12 +178,16 @@ pub fn graph_step_from(
                         if let Some(filter) = pb_chain_to_filter(test)? {
                             step.v_params.set_filter(filter);
                         }
+                        step.v_params.snapshot_id =
+                            if let Some(si) = opt.snapshot_id { Some(si.id) } else { None };
                     } else {
                         step.e_params.labels =
                             labels.into_iter().map(|id| Label::Id(id as LabelId)).collect();
                         if let Some(filter) = pb_chain_to_filter(test)? {
                             step.e_params.set_filter(filter);
                         }
+                        step.v_params.snapshot_id =
+                            if let Some(si) = opt.snapshot_id { Some(si.id) } else { None };
                     }
                 }
                 return Ok(step);

@@ -22,11 +22,12 @@ pub struct QueryParams<E: Element + Send + Sync> {
     pub limit: Option<usize>,
     pub props: Option<Vec<PropKey>>,
     pub filter: Option<Arc<Filter<E, ElementFilter>>>,
+    pub snapshot_id: Option<i64>,
 }
 
 impl<E: Element + Send + Sync> QueryParams<E> {
     pub fn new() -> Self {
-        QueryParams { labels: vec![], limit: None, props: None, filter: None }
+        QueryParams { labels: vec![], limit: None, props: None, filter: None, snapshot_id: None }
     }
 
     pub fn set_filter(&mut self, filter: Filter<E, ElementFilter>) {
