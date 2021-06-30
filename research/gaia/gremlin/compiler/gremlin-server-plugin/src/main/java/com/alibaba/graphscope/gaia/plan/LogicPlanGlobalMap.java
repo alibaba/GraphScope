@@ -134,7 +134,7 @@ public class LogicPlanGlobalMap {
                         .setReturnType(((GraphStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
                         .setPredicates(new PredicateTranslator(new HasContainerP((CachePropGaiaGraphStep) t)).translate())
                         .addTraverserRequirements(Gremlin.TraverserRequirement.valueOf(((CachePropGaiaGraphStep) t).getTraverserRequirement().name()))
-                        .setFetchProperties(((CachePropGaiaGraphStep) t).cacheProperties());
+                        .setRequiredProperties(((CachePropGaiaGraphStep) t).cacheProperties());
                 List<String> edgeLabels = ((CachePropGaiaGraphStep) t).getGraphLabels();
                 if (!edgeLabels.isEmpty()) {
                     edgeLabels.forEach(l -> builder.addLabels(Integer.valueOf(l)));
@@ -212,7 +212,7 @@ public class LogicPlanGlobalMap {
                 Gremlin.VertexStep.Builder builder = Gremlin.VertexStep.newBuilder()
                         .setReturnType(((CachePropVertexStep) t).returnsVertex() ? Gremlin.EntityType.VERTEX : Gremlin.EntityType.EDGE)
                         .setDirection(Gremlin.Direction.valueOf(((CachePropVertexStep) t).getDirection().name()))
-                        .setFetchProperties(((CachePropVertexStep) t).cacheProperties());
+                        .setRequiredProperties(((CachePropVertexStep) t).cacheProperties());
                 List<String> edgeLabels = Arrays.asList(((CachePropVertexStep) t).getEdgeLabels());
                 if (!edgeLabels.isEmpty()) {
                     edgeLabels.forEach(l -> builder.addEdgeLabels(Integer.valueOf(l)));
@@ -306,7 +306,7 @@ public class LogicPlanGlobalMap {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
                 return Gremlin.IdentityStep.newBuilder()
-                        .setFetchProperties(PlanUtils.convertFrom(((PropertyIdentityStep) t).getAttachProperties()))
+                        .setRequiredProperties(PlanUtils.convertFrom(((PropertyIdentityStep) t).getAttachProperties()))
                         .build();
             }
         });
@@ -394,7 +394,7 @@ public class LogicPlanGlobalMap {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
                 return Gremlin.IdentityStep.newBuilder()
-                        .setFetchProperties(PlanUtils.convertFrom(new ToFetchProperties(false, Collections.EMPTY_LIST)))
+                        .setRequiredProperties(PlanUtils.convertFrom(new ToFetchProperties(false, Collections.EMPTY_LIST)))
                         .build();
             }
         });

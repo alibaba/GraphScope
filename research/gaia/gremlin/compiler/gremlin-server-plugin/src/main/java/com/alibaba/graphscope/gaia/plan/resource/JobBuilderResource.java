@@ -36,7 +36,7 @@ public abstract class JobBuilderResource implements StepResource {
         if (!step.getLabels().isEmpty() && target instanceof JobBuilder) {
             // do nothing just as(tag)
             Gremlin.IdentityStep.Builder identityStep = Gremlin.IdentityStep.newBuilder()
-                    .setFetchProperties(PlanUtils.convertFrom(new ToFetchProperties(false, Collections.EMPTY_LIST)));
+                    .setRequiredProperties(PlanUtils.convertFrom(new ToFetchProperties(false, Collections.EMPTY_LIST)));
             ((JobBuilder) target).map(GremlinStepResource.createResourceBuilder(step, stepBuilder.getConf())
                     .setIdentityStep(identityStep).build().toByteString());
 
