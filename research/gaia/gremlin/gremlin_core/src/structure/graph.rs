@@ -38,11 +38,15 @@ impl<E: Element + Send + Sync> QueryParams<E> {
     // Some(vec![prop1, prop2]) indicates we need prop1 and prop2,
     // Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
-    pub fn set_props_with(&mut self, fetch_properties: Option<pb::PropKeys>) {
-        if let Some(fetch_props) = fetch_properties {
+    pub fn set_props(&mut self, required_properties: Option<pb::PropKeys>) {
+        if let Some(fetch_props) = required_properties {
             let mut prop_keys = vec![];
             for prop_key in fetch_props.prop_keys {
-                prop_keys.push(PropKey::from_pb(prop_key).unwrap());
+                if let Ok(prop_key) = PropKey::from_pb(prop_key) {
+                    prop_keys.push(prop_key);
+                } else {
+                    debug!("Parse prop key failed");
+                }
             }
             // the cases of we need all properties or some specific properties
             if fetch_props.is_all || !prop_keys.is_empty() {

@@ -64,7 +64,7 @@ impl FlatMapFuncGen for VertexStep {
         if step.return_type == 0 {
             let mut params = QueryParams::new();
             params.labels = labels;
-            params.set_props_with(step.fetch_properties);
+            params.set_props(step.required_properties);
             if let Some(test) = step.predicates.take() {
                 if let Some(filter) = pb_chain_to_filter(&test)? {
                     params.set_filter(filter);
@@ -75,7 +75,7 @@ impl FlatMapFuncGen for VertexStep {
         } else if step.return_type == 1 {
             let mut params = QueryParams::new();
             params.labels = labels;
-            params.set_props_with(step.fetch_properties);
+            params.set_props(step.required_properties);
             if let Some(test) = step.predicates.take() {
                 if let Some(filter) = pb_chain_to_filter(&test)? {
                     params.set_filter(filter);
