@@ -90,10 +90,9 @@ where
                 None,
                 prop_ids.as_ref(),
                 params.limit.unwrap_or(0),
-                // TODO: partition ids
                 &vec![],
             )
-            .map(move |v| to_runtime_vertex(&v, schema.clone()));
+            .map(move |v| to_runtime_vertex(&v));
 
         Ok(filter_limit!(result, filter, None))
     }
@@ -120,7 +119,7 @@ where
                 // TODO: partition ids
                 &vec![],
             )
-            .map(move |e| to_runtime_edge(&e, schema.clone()));
+            .map(move |e| to_runtime_edge(&e));
 
         Ok(filter_limit!(result, filter, None))
     }
@@ -146,7 +145,7 @@ where
                 partition_label_vertex_ids,
                 prop_ids.as_ref(),
             )
-            .map(move |v| to_runtime_vertex(&v, schema.clone()));
+            .map(move |v| to_runtime_vertex(&v));
 
         Ok(filter_limit!(result, filter, None))
     }
@@ -170,7 +169,7 @@ where
                 partition_label_vertex_ids,
                 prop_ids.as_ref(),
             )
-            .map(move |e| to_runtime_edge(&e, schema.clone()));
+            .map(move |e| to_runtime_edge(&e));
 
         Ok(filter_limit!(result, filter, None))
     }
@@ -232,9 +231,7 @@ where
                 }
             };
             let iters = iter.map(|(_src, vi)| vi).collect();
-            let schema = schema.clone();
-            let iter_list =
-                IterList::new(iters).map(move |v| to_runtime_vertex(&v, schema.clone()));
+            let iter_list = IterList::new(iters).map(move |v| to_runtime_vertex(&v));
             Ok(filter_limit_ok!(iter_list, filter, None))
         });
         Ok(stmt)
@@ -303,9 +300,8 @@ where
                     Box::new(IterList::new(iter))
                 }
             };
-            let schema = schema.clone();
             let iters = iter.map(|(_src, ei)| ei).collect();
-            let iter_list = IterList::new(iters).map(move |e| to_runtime_edge(&e, schema.clone()));
+            let iter_list = IterList::new(iters).map(move |e| to_runtime_edge(&e));
             Ok(filter_limit_ok!(iter_list, filter, None))
         });
         Ok(stmt)
@@ -313,24 +309,24 @@ where
 }
 
 #[inline]
-fn to_runtime_vertex<V: StoreVertex>(v: &V, schema: Arc<dyn Schema>) -> Vertex {
+fn to_runtime_vertex<V: StoreVertex>(v: &V) -> Vertex {
     let id = v.get_id() as ID;
     let label = Some(Label::Id(v.get_label_id() as RuntimeLabelId));
     let properties = v
         .get_properties()
-        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val, schema.clone()))
+        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
         .collect();
     let details = DefaultDetails::new_with_prop(id, label.clone().unwrap(), properties);
     Vertex::new(id, label, details)
 }
 
 #[inline]
-fn to_runtime_edge<E: StoreEdge>(e: &E, schema: Arc<dyn Schema>) -> Edge {
+fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
     let id = ((e.get_dst_id() as ID) << 64) | (e.get_src_id() as ID);
     let label = Some(Label::Id(e.get_label_id() as RuntimeLabelId));
     let properties = e
         .get_properties()
-        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val, schema.clone()))
+        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
         .collect();
     Edge::new(
         id,
@@ -347,9 +343,10 @@ fn to_runtime_edge<E: StoreEdge>(e: &E, schema: Arc<dyn Schema>) -> Edge {
 
 /// in maxgraph store, Option<Vec<PropId>>: None means we need all properties, and Some means we need given properties (and Some(vec![]) means we do not need any property)
 /// while in gaia, None means we do not need any properties, and Some means we need given properties (and Some(vec![]) means we need all properties)
+// TODO(bingqing): To confirm, and make it in consistent with maxgraph
 #[inline]
 fn encode_storage_prop_key(
-    prop_names: Option<&Vec<String>>,
+    prop_names: Option<&Vec<PropKey>>,
     schema: Arc<dyn Schema>,
 ) -> Option<Vec<PropId>> {
     if let Some(prop_names) = prop_names {
@@ -359,7 +356,12 @@ fn encode_storage_prop_key(
             Some(
                 prop_names
                     .iter()
-                    .map(|prop_name| schema.get_prop_id(prop_name).unwrap_or(INVALID_PROP_ID))
+                    .map(|prop_key| match prop_key {
+                        PropKey::Str(prop_name) => {
+                            schema.get_prop_id(prop_name).unwrap_or(INVALID_PROP_ID)
+                        }
+                        PropKey::Id(prop_id) => (*prop_id),
+                    })
                     .collect(),
             )
         }
@@ -380,25 +382,22 @@ fn encode_storage_label(labels: &Vec<Label>, schema: Arc<dyn Schema>) -> Vec<Lab
 }
 
 #[inline]
-fn encode_runtime_property(
-    prop_id: PropId,
-    prop_val: Property,
-    schema: Arc<dyn Schema>,
-) -> (PropKey, Object) {
-    let prop_key = if let Some(prop_name) = schema.get_prop_name(prop_id) {
-        // TODO(bingqing): store prop_name just for test now, will only store prop_id when compiler supports prop_id
-        PropKey::Str(prop_name)
-    } else {
-        PropKey::Id(prop_id)
-    };
+fn encode_runtime_property(prop_id: PropId, prop_val: Property) -> (PropKey, Object) {
+    let prop_key = PropKey::Id(prop_id);
     let prop_val = match prop_val {
         Property::Bool(b) => b.into(),
-        Property::Char(c) => Object::Primitive(Primitives::Byte(c as i8)),
+        Property::Char(c) => {
+            if c <= (i8::MAX as u8) {
+                Object::Primitive(Primitives::Byte(c as i8))
+            } else {
+                Object::Primitive(Primitives::Integer(c as i32))
+            }
+        }
         Property::Short(s) => Object::Primitive(Primitives::Integer(s as i32)),
-        Property::Int(i) => Object::Primitive(Primitives::Integer(i as i32)),
+        Property::Int(i) => Object::Primitive(Primitives::Integer(i)),
         Property::Long(l) => Object::Primitive(Primitives::Long(l)),
         Property::Float(f) => Object::Primitive(Primitives::Float(f as f64)),
-        Property::Double(d) => Object::Primitive(Primitives::Float(d as f64)),
+        Property::Double(d) => Object::Primitive(Primitives::Float(d)),
         Property::Bytes(v) => Object::Blob(v.into_boxed_slice()),
         Property::String(s) => Object::String(s),
         _ => unimplemented!(),
@@ -423,15 +422,10 @@ fn build_partition_label_vertex_ids(
             .push(*vid as VertexId);
     }
 
-    let mut partition_label_vid_list = vec![];
-    for (k, v) in partition_label_vid_map {
-        let mut label_vid_list = vec![];
-        for (kk, vv) in v {
-            label_vid_list.push((kk, vv));
-        }
-        partition_label_vid_list.push((k, label_vid_list));
-    }
-    partition_label_vid_list
+    partition_label_vid_map
+        .into_iter()
+        .map(|(pid, label_vid_map)| (pid, label_vid_map.into_iter().collect()))
+        .collect()
 }
 
 fn build_partition_vertex_ids(
@@ -442,14 +436,12 @@ fn build_partition_vertex_ids(
     for vid in ids {
         let partition_id =
             graph_partition_manager.get_partition_id(*vid as VertexId) as PartitionId;
-        let vid_list = partition_vid_map.entry(partition_id).or_insert(Vec::new());
-        vid_list.push(*vid as VertexId);
+        partition_vid_map
+            .entry(partition_id)
+            .or_insert(Vec::new())
+            .push(*vid as VertexId);
     }
-    let mut partition_vid_list = vec![];
-    for (k, v) in partition_vid_map {
-        partition_vid_list.push((k, v));
-    }
-    partition_vid_list
+    partition_vid_map.into_iter().collect()
 }
 
 /// A simple partition utility, that one server contains multiple graph partitions
