@@ -359,7 +359,6 @@ fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<PropKe
     let mut properties = HashMap::new();
     if props.is_empty() {
         if let Some(mut prop_vals) = v.clone_all_properties() {
-            // TODO: shall we directly return PropKey?
             for (prop, obj) in prop_vals.drain() {
                 properties.insert(prop.into(), obj);
             }
@@ -389,7 +388,6 @@ fn to_runtime_edge(
     let label = encode_runtime_e_label(&e);
     let mut properties = HashMap::new();
     if let Some(mut prop_vals) = e.clone_all_properties() {
-        // TODO: shall we directly return PropKey?
         for (prop, obj) in prop_vals.drain() {
             properties.insert(prop.into(), obj);
         }

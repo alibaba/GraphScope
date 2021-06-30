@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.gaia.plan.strategy;
 
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
@@ -22,21 +23,18 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.AbstractStep;
 import org.apache.tinkerpop.gremlin.structure.Element;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 public class PropertyIdentityStep<S, E extends Element> extends AbstractStep<S, E> {
-    private List<String> attachProperties;
-    private boolean needAll;
+    private ToFetchProperties attachProperties;
 
-    public PropertyIdentityStep(Traversal.Admin traversal, List<String> properties, boolean needAll) {
+    public PropertyIdentityStep(Traversal.Admin traversal, ToFetchProperties properties) {
         super(traversal);
         this.attachProperties = properties;
-        this.needAll = needAll;
     }
 
     public static PropertyIdentityStep createDefault(Step step) {
-        return new PropertyIdentityStep(step.getTraversal(), Collections.EMPTY_LIST, true);
+        return new PropertyIdentityStep(step.getTraversal(), new ToFetchProperties(true, Collections.EMPTY_LIST));
     }
 
     @Override
@@ -44,11 +42,7 @@ public class PropertyIdentityStep<S, E extends Element> extends AbstractStep<S, 
         throw new UnsupportedOperationException();
     }
 
-    public List<String> getAttachProperties() {
+    public ToFetchProperties getAttachProperties() {
         return attachProperties;
-    }
-
-    public boolean isNeedAll() {
-        return needAll;
     }
 }

@@ -19,6 +19,7 @@ import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.plan.strategy.PreBySubTraversal;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
@@ -66,7 +67,8 @@ public interface TagKeyExtractor {
         } else if (value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof PropertyMapStep) {
             PropertyMapStep propertyMapStep = (PropertyMapStep) value.getStartStep();
             String[] propertyKeys = propertyMapStep.getPropertyKeys();
-            builder.setPropKeys(PlanUtils.convertFrom(Arrays.asList(propertyKeys)));
+            boolean needAllProps = (propertyKeys == null || propertyKeys.length == 0) ? true : false;
+            builder.setPropKeys(PlanUtils.convertFrom(new ToFetchProperties(needAllProps, Arrays.asList(propertyKeys))));
         } else if (value != null && value.getSteps().size() == 1 && value.getStartStep() instanceof PropertiesStep) {
             PropertiesStep propertiesStep = (PropertiesStep) value.getStartStep();
             // always add first from values(p1,p2)

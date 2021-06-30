@@ -175,12 +175,14 @@ pub fn graph_step_from(
                     if return_type == EntityType::Vertex {
                         step.v_params.labels =
                             labels.into_iter().map(|id| Label::Id(id as LabelId)).collect();
+                        step.v_params.set_props(opt.required_properties);
                         if let Some(filter) = pb_chain_to_filter(test)? {
                             step.v_params.set_filter(filter);
                         }
                     } else {
                         step.e_params.labels =
                             labels.into_iter().map(|id| Label::Id(id as LabelId)).collect();
+                        step.e_params.set_props(opt.required_properties);
                         if let Some(filter) = pb_chain_to_filter(test)? {
                             step.e_params.set_filter(filter);
                         }

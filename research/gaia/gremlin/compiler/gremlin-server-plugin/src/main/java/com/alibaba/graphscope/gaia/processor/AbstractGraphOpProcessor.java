@@ -33,7 +33,7 @@ import com.alibaba.graphscope.gaia.plan.strategy.PropertyShuffleStrategy;
 import com.alibaba.graphscope.gaia.plan.strategy.global.PathHistoryStrategy;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.codahale.metrics.Timer;
-import com.alibaba.graphscope.gaia.plan.strategy.global.PreCachePropertyStrategy;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.PreCachePropertyStrategy;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
 import org.apache.tinkerpop.gremlin.driver.Tokens;

@@ -15,10 +15,23 @@
  */
 package com.alibaba.graphscope.gaia.plan.meta.object;
 
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.PropertiesCacheStep;
+
 import java.util.UUID;
 
 public class Edge extends GraphElement {
+    private PropertiesCacheStep outputStep;
+
     public Edge() {
         super(UUID.randomUUID());
+    }
+
+    public Edge(PropertiesCacheStep step) {
+        super(UUID.randomUUID());
+        this.outputStep = step;
+    }
+
+    public PropertiesCacheStep getOutputStep() {
+        return outputStep;
     }
 }

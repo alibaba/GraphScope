@@ -25,6 +25,7 @@ import com.alibaba.graphscope.gaia.plan.meta.object.*;
 import com.alibaba.graphscope.gaia.plan.strategy.*;
 import com.alibaba.graphscope.gaia.plan.strategy.global.RemovePathHistoryStep;
 import com.alibaba.graphscope.gaia.plan.strategy.global.TransformTraverserStep;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.PropertiesCacheStep;
 import com.alibaba.graphscope.gaia.plan.translator.builder.MetaConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepMetaBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalMetaBuilder;
@@ -151,13 +152,13 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
                 // use properties patten
                 if (step instanceof HasStep) {
                     elementProperties.add(head.getObject().getElement(),
-                            new StepPropertiesMeta(PropertyExtractorFactory.Has.extractProperties(step), stepId, traversalIdStep));
+                            new StepPropertiesMeta(PropertyExtractorFactory.Has.extractProperties(step), stepId));
                 } else if (step instanceof PropertiesStep) {
                     elementProperties.add(head.getObject().getElement(),
-                            new StepPropertiesMeta(PropertyExtractorFactory.Values.extractProperties(step), stepId, traversalIdStep));
+                            new StepPropertiesMeta(PropertyExtractorFactory.Values.extractProperties(step), stepId));
                 } else if (step instanceof PropertyMapStep) {
                     elementProperties.add(head.getObject().getElement(),
-                            new StepPropertiesMeta(PropertyExtractorFactory.ValueMap.extractProperties(step), stepId, traversalIdStep));
+                            new StepPropertiesMeta(PropertyExtractorFactory.ValueMap.extractProperties(step), stepId));
                 } else {
                     LogicPlanGlobalMap.STEP stepType = LogicPlanGlobalMap.stepType(step);
                     Optional<StepMetaRequiredInfo> metaInfoOpt = LogicPlanGlobalMap.getStepMetaRequiredInfo(stepType);
@@ -165,7 +166,7 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
                         Optional<PropertyExtractor> extractorOpt = metaInfoOpt.get().getExtractor();
                         if (extractorOpt.isPresent()) {
                             elementProperties.add(head.getObject().getElement(),
-                                    new StepPropertiesMeta(extractorOpt.get().extractProperties(step), stepId, traversalIdStep));
+                                    new StepPropertiesMeta(extractorOpt.get().extractProperties(step), stepId));
                         }
                     }
                 }
@@ -191,12 +192,32 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
         Step step = metaBuilder.getStep();
         TraversalId metaId = stepId.getTraversalId();
         // V()/E()
+        if (step instanceof CachePropGaiaGraphStep) {
+            TraverserElement element;
+            if (((GraphStep) step).returnsVertex()) {
+                element = new TraverserElement(new CompositeObject(new Vertex()));
+            } else {
+                element = new TraverserElement(new CompositeObject(new Edge((PropertiesCacheStep) step)));
+            }
+            return element;
+        }
+        // V()/E()
         if (step instanceof GraphStep) {
             TraverserElement element;
             if (((GraphStep) step).returnsVertex()) {
                 element = new TraverserElement(new CompositeObject(new Vertex()));
             } else {
                 element = new TraverserElement(new CompositeObject(new Edge()));
+            }
+            return element;
+        }
+        // out/in/both
+        if (step instanceof CachePropVertexStep) {
+            TraverserElement element;
+            if (((VertexStep) step).returnsVertex()) {
+                element = new TraverserElement(new CompositeObject(new Vertex()));
+            } else {
+                element = new TraverserElement(new CompositeObject(new Edge((PropertiesCacheStep) step)));
             }
             return element;
         }
@@ -210,6 +231,7 @@ public class StepMetaCollector extends AttributeTranslator<StepMetaBuilder, Trav
             }
             return element;
         }
+
         if (step instanceof TraversalFilterStep || step instanceof BySubTaskStep) {
             // create sub traversal
             Traversal.Admin sub = ((TraversalParent) step).getLocalChildren().get(0);
