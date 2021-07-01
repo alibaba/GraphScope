@@ -118,6 +118,10 @@ spec:
               containerPort: 55555
             - name: gremlin
               containerPort: 12312
+            - name: gaia-rpc
+              containerPort: 60000
+            - name: gaia-engine
+              containerPort: 60001
           {{- if .Values.frontend.resources }}
           resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
           {{- end }}

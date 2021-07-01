@@ -15,10 +15,7 @@
  */
 package com.alibaba.maxgraph.v2.common.discovery;
 
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.config.DiscoveryConfig;
-import com.alibaba.maxgraph.v2.common.config.StoreConfig;
+import com.alibaba.maxgraph.v2.common.config.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +52,16 @@ public class FileDiscovery implements NodeDiscovery {
         Map<Integer, MaxGraphNode> engineNodes = makeRoleNodes(storeCount, storeNamePrefix,
                 RoleType.EXECUTOR_ENGINE.getName(), enginePort);
         this.allNodes.put(RoleType.EXECUTOR_ENGINE, engineNodes);
+
+        int gaiaRpcPort = GaiaConfig.GAIA_RPC_PORT.get(this.configs);
+        Map<Integer, MaxGraphNode> gaiaRpcNodes = makeRoleNodes(storeCount, storeNamePrefix,
+                RoleType.GAIA_RPC.getName(), gaiaRpcPort);
+        this.allNodes.put(RoleType.GAIA_RPC, gaiaRpcNodes);
+
+        int gaiaEnginePort = GaiaConfig.GAIA_ENGINE_PORT.get(this.configs);
+        Map<Integer, MaxGraphNode> gaiaEngineNodes = makeRoleNodes(storeCount, storeNamePrefix,
+                RoleType.GAIA_ENGINE.getName(), gaiaEnginePort);
+        this.allNodes.put(RoleType.GAIA_ENGINE, gaiaEngineNodes);
 
         int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(this.configs);
         String frontendNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(this.configs);

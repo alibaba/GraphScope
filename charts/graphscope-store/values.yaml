@@ -77,6 +77,9 @@ executorQueryStoreThreadCount: 2
 log4rsConfig: "./conf/log4rs.yml"
 
 
+
+extraConfig: ""
+
 ## Role Based Access
 ## ref: https://kubernetes.io/docs/admin/authorization/rbac/
 ##
@@ -240,6 +243,8 @@ store:
     graph: 55556
     query: 55557
     engine: 55558
+    gaiaRpc: 60000
+    gaiaEngine: 60001
 
     annotations: {}
 
@@ -349,6 +354,13 @@ frontend:
     ## Gremlin console port
     ##
     gremlinPort: 12312
+
+    ## Gaia rpc port
+    ##
+    gaiaRpc: 60000
+    ## Gaia engine port
+    ##
+    gaiaEngine: 60001
 
     ## Specify the nodePort value for the LoadBalancer and NodePort service types.
     ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
@@ -483,7 +495,12 @@ ingestor:
     ## Service port
     ##
     port: 55555
-
+    ## Gaia rpc port
+    ##
+    gaiaRpc: 60000
+    ## Gaia engine port
+    ##
+    gaiaEngine: 60001
     annotations: {}
 
   ## GraphScope store Pod Disruption Budget configuration
@@ -626,7 +643,12 @@ coordinator:
     ## Service port
     ##
     port: 55555
-
+    ## Gaia rpc port
+    ##
+    gaiaRpc: 60000
+    ## Gaia engine port
+    ##
+    gaiaEngine: 60001
     annotations: {}
 
   ## GraphScope store Pod Disruption Budget configuration

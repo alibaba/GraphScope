@@ -19,7 +19,7 @@ use std::sync::Arc;
 // Partition manager for graph query
 pub trait GraphPartitionManager: Send + Sync {
     fn get_partition_id(&self, vid: VertexId) -> i32;
-    fn get_server_id(&self, pid: PartitionId) -> i32;
+    fn get_server_id(&self, pid: PartitionId) -> Option<u32>;
     fn get_process_partition_list(&self) -> Vec<PartitionId>;
     fn get_vertex_id_by_primary_key(&self, label_id: LabelId, key: &String) -> Option<(PartitionId, VertexId)>;
 }
@@ -51,7 +51,7 @@ impl GraphPartitionManager for ConstantPartitionManager {
         self.partition_id as i32
     }
 
-    fn get_server_id(&self, _pid: u32) -> i32 {
+    fn get_server_id(&self, _pid: u32) -> Option<u32> {
         //TODO(bingqing)
         unimplemented!()
     }
@@ -97,7 +97,7 @@ impl<V, VI, E, EI> GraphPartitionManager for FixedStorePartitionManager<V, VI, E
         self.graph.as_ref().get_partition_id(vid) as i32
     }
 
-    fn get_server_id(&self, _pid: u32) -> i32 {
+    fn get_server_id(&self, _pid: u32) -> Option<u32> {
         // TODO(bingqing)
         unimplemented!()
     }
