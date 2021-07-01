@@ -1,22 +1,21 @@
 package com.alibaba.graphscope.gaia.plan.meta;
 
 import com.alibaba.graphscope.gaia.plan.meta.object.StepId;
-import org.apache.tinkerpop.gremlin.process.traversal.Step;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class StepPropertiesMeta {
-    private List<String> properties;
+    private ToFetchProperties properties;
     private StepId stepId;
-    private Step step;
 
-    public StepPropertiesMeta(List<String> properties, StepId stepId, Step step) {
+    public StepPropertiesMeta(ToFetchProperties properties, StepId stepId) {
         this.properties = properties;
         this.stepId = stepId;
-        this.step = step;
     }
 
-    public List<String> getProperties() {
+    public ToFetchProperties getProperties() {
         return properties;
     }
 
@@ -24,12 +23,14 @@ public class StepPropertiesMeta {
         return stepId;
     }
 
-    public Step getStep() {
-        return step;
-    }
-
-    public void addProperties(List<String> properties) {
-        this.properties.addAll(properties);
+    public void addProperties(ToFetchProperties properties) {
+        boolean isAll = properties.isAll() || this.properties.isAll();
+        List<String> add = new ArrayList<>();
+        if (!isAll) {
+            add.addAll(this.properties.getProperties());
+            add.addAll(properties.getProperties());
+        }
+        this.properties = new ToFetchProperties(isAll, add);
     }
 
     public void setStepId(StepId stepId) {

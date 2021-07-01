@@ -35,6 +35,7 @@ use store::v2::global_graph_schema::GlobalGraphSchema;
 pub struct GlobalGraph {
     graph_partitions: HashMap<PartitionId, Arc<GraphStore>>,
     total_partition: u32,
+    partition_to_server: HashMap<PartitionId, u32>,
 }
 
 unsafe impl Send for GlobalGraph {}
@@ -45,6 +46,7 @@ impl GlobalGraph {
         GlobalGraph {
             graph_partitions: HashMap::new(),
             total_partition,
+            partition_to_server: HashMap::new(),
         }
     }
 
@@ -52,18 +54,8 @@ impl GlobalGraph {
         self.graph_partitions.insert(partition_id, graph_store);
     }
 
-    pub fn new(disks: Vec<String>, graph_config: &GraphConfig, partition_ids: &Vec<PartitionId>) -> GraphResult<Self> {
-        let mut graph_partitions = HashMap::new();
-        for partition_id in partition_ids {
-            let disk_idx = *partition_id as usize % disks.len();
-            let disk = &disks[disk_idx];
-            let partition = GraphStore::open(graph_config, disk.as_str())?;
-            graph_partitions.insert(*partition_id, Arc::new(partition));
-        }
-        Ok(GlobalGraph {
-            graph_partitions,
-            total_partition: graph_config.get_storage_option("partition.count").unwrap().parse().unwrap(),
-        })
+    pub fn update_partition_routing(&mut self, partition_id: PartitionId, server_id: u32) {
+        self.partition_to_server.insert(partition_id, server_id);
     }
 
     fn convert_label_id(label_id: Option<LabelId>) -> Option<i32> {
@@ -493,9 +485,8 @@ impl GraphPartitionManager for GlobalGraph {
         floor_mod(vid, partition_count as i64) as i32
     }
 
-    // TODO(haixia): impl for v2 store
-    fn get_server_id(&self, _pid: u32) -> i32 {
-        unimplemented!()
+    fn get_server_id(&self, partition_id: u32) -> Option<u32> {
+        self.partition_to_server.get(&partition_id).map(|x| *x)
     }
 
     fn get_process_partition_list(&self) -> Vec<u32> {

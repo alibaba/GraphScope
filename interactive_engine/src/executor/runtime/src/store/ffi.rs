@@ -1412,7 +1412,7 @@ impl GraphPartitionManager for VineyardPartitionManager {
     }
 
     // TODO(bingqing): check with vineyard
-    fn get_server_id(&self, _pid: u32) -> i32 {
+    fn get_server_id(&self, _pid: u32) -> Option<u32> {
         unimplemented!()
     }
 

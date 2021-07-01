@@ -540,7 +540,7 @@ jobs:
         source ~/.bashrc
 
         cd interactive_engine
-        mvn clean package -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
+        mvn clean package -Pv2 -Drust.compile.mode=release -DskipTests --quiet
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope

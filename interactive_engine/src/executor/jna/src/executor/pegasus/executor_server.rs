@@ -1,33 +1,29 @@
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 use maxgraph_store::config::StoreConfig;
 use std::net::TcpListener;
 use maxgraph_store::db::api::{GraphResult, GraphError, GraphConfig};
 use maxgraph_store::db::api::GraphErrorCode::InvalidOperation;
 use std::collections::HashMap;
 use maxgraph_store::api::PartitionId;
-use maxgraph_common::util::get_local_ip;
 
 use maxgraph_runtime::rpc::rpc_pegasus::ctrl_service::MaxGraphCtrlServiceImpl as PegasusCtrlService;
 use maxgraph_runtime::rpc::rpc_pegasus::async_maxgraph_service::AsyncMaxGraphServiceImpl as PegasusAsyncService;
-use maxgraph_runtime::rpc::rpc_pegasus::maxgraph_service::MaxGraphServiceImpl as PegasusService;
 use std::sync::atomic::AtomicBool;
-use grpcio::{Environment, ServerBuilder, ChannelBuilder, Server};
+use grpcio::{Environment, ServerBuilder, ChannelBuilder};
 use maxgraph_server::service::GremlinRpcService;
 use maxgraph_server::StoreContext;
 use maxgraph_common::proto::gremlin_query_grpc;
 use maxgraph_store::db::graph::store::GraphStore;
-use std::borrow::BorrowMut;
 use std::sync::mpsc::channel;
 use std::time::Duration;
 use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
-use executor::pegasus::pegasus_server_manager::PegasusServerManager;
 use maxgraph_runtime::server::manager::ManagerGuards;
 use maxgraph_runtime::store::task_partition_manager::TaskPartitionManager;
 use maxgraph_runtime::server::query_manager::QueryManager;
 use maxgraph_runtime::store::remote_store_service::RemoteStoreServiceManager;
+use crate::executor::pegasus::pegasus_server_manager::PegasusServerManager;
 
 pub struct ExecutorServer {
-    graph_config: Arc<GraphConfig>,
     store_config: Arc<StoreConfig>,
     graph: Arc<GlobalGraph>,
     listener: Option<TcpListener>,
@@ -44,7 +40,6 @@ impl ExecutorServer {
         let partition = store_config.partition_num;
         info!("store config created {:?}",store_config);
         Ok(ExecutorServer {
-            graph_config,
             store_config,
             graph: Arc::new(GlobalGraph::empty(partition)),
             listener: None,
@@ -93,7 +88,6 @@ impl ExecutorServer {
     pub fn start_rpc(&self) -> (u16, u16) {
         let task_partition_manager = Arc::new(RwLock::new(Some(self.build_task_partition_manager())));
         let signal = Arc::new(AtomicBool::new(false));
-        // TODO: initiate remote_store_service_manager?
         let remote_store_service_manager = Arc::new(RwLock::new(Some(RemoteStoreServiceManager::empty())));
         let query_manager = QueryManager::new();
         let pegasus_runtime = self.engine_server_manager.as_ref().unwrap().get_server();
@@ -108,7 +102,6 @@ impl ExecutorServer {
             self.graph.clone(),
             self.graph.clone(),
             task_partition_manager);
-        let maxgraph_service = PegasusService::new_service(self.store_config.clone(), query_manager.clone());
         let ctrl_and_async_service_port = Self::start_ctrl_and_async_service(self.store_config.query_port as u16, ctrl_service, async_maxgraph_service);
         info!("async maxgraph service and control service bind to port: {:?}", ctrl_and_async_service_port);
 
@@ -121,7 +114,7 @@ impl ExecutorServer {
         let rpc_port = self.store_config.graph_port as u16;
         std::thread::spawn(move || {
             let env = Arc::new(Environment::new(rpc_thread_count as usize));
-            let mut server_builder = ServerBuilder::new(env.clone())
+            let server_builder = ServerBuilder::new(env.clone())
                 .channel_args(ChannelBuilder::new(env).reuse_port(false).build_args())
                 .register_service(gremlin_service)
                 .bind("0.0.0.0", rpc_port);

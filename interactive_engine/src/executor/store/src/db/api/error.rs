@@ -65,6 +65,8 @@ pub enum GraphErrorCode {
     MetaNotFound,
     // operations or features is not supported
     NotSupported,
+    // engine error
+    EngineError,
 }
 
 

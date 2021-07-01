@@ -64,4 +64,16 @@ data:
     executor.graph.port=55556
     executor.query.port=55557
     executor.engine.port=55558
+
+    ## GAIA Config
+    gaia.rpc.port=60000
+    gaia.engine.port=60001
+
+    ## Extra Config
+    {{- if .Values.extraConfig }}
+    {{- $config_list := regexSplit ":" .Values.extraConfig -1 }}
+    {{- range $config_list }}
+    {{ . }}
+    {{- end }}
+    {{- end }}
 {{- end -}}
