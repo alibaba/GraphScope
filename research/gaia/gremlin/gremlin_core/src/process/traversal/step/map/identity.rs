@@ -89,7 +89,7 @@ impl MapFuncGen for IdentityStep {
         let step = self.step;
         let mut params = QueryParams::new();
         params.set_props(step.required_properties);
-        params.snapshot_id = if let Some(si) = step.snapshot_id { Some(si.id) } else { None };
+        params.snapshot_id = step.snapshot_id.map(|si| si.id);
         Ok(Box::new(IdentityFunc { params, tags: self.tags, remove_tags: self.remove_tags }))
     }
 }

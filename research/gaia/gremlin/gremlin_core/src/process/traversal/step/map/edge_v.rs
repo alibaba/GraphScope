@@ -66,7 +66,7 @@ impl MapFuncGen for EdgeVertexStep {
         let opt = EndPointOpt::from_pb(opt_pb)?;
         let mut params = QueryParams::new();
         params.set_props(step.required_properties);
-        params.snapshot_id = if let Some(si) = step.snapshot_id { Some(si.id) } else { None };
+        params.snapshot_id = step.snapshot_id.map(|si| si.id);
         match opt {
             EndPointOpt::Out => Ok(Box::new(EdgeVertexFunc {
                 tags: self.tags,
