@@ -122,6 +122,10 @@ spec:
               containerPort: 55557
             - name: engine
               containerPort: 55558
+            - name: gaia-rpc
+              containerPort: 60000
+            - name: gaia-engine
+              containerPort: 60001
           {{- if .Values.store.resources }}
           resources: {{- toYaml .Values.store.resources | nindent 12 }}
           {{- end }}

@@ -1,15 +1,12 @@
-use std::sync::{Arc, RwLock};
-use maxgraph_store::config::StoreConfig;
+use std::sync::Arc;
 use pegasus::{Pegasus, ConfigArgs};
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::{thread, time};
 use pegasus::network::reconnect;
 use pegasus::network_connection::Connection;
 use std::sync::atomic::AtomicBool;
 use maxgraph_store::db::api::{GraphResult, GraphError};
 use maxgraph_store::db::api::GraphErrorCode::InvalidOperation;
-use maxgraph_runtime::store::task_partition_manager::TaskPartitionManager;
-use maxgraph_runtime::server::allocate::register_tcp_listener;
 use maxgraph_runtime::server::manager::ManagerGuards;
 
 pub struct PegasusServerManager {
@@ -32,17 +29,8 @@ impl PegasusServerManager {
     }
 
     #[inline]
-    pub fn get_task_partition_manager(&self) -> Arc<RwLock<Option<TaskPartitionManager>>> {
-        unimplemented!()
-    }
-
-    #[inline]
     pub fn get_server(&self) -> Arc<Option<Pegasus>> {
         self.pegasus_runtime.clone()
-    }
-
-    pub fn register_listener(&self) -> TcpListener {
-        register_tcp_listener()
     }
 
     pub fn start_server(&self, listener: TcpListener, ip_list: Vec<String>, retry_times: u64) -> GraphResult<ManagerGuards<()>> {

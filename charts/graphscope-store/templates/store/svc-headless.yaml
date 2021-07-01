@@ -29,6 +29,11 @@ spec:
     - name: engine
       port: {{ .Values.store.service.engine }}
       targetPort: engine
-
+    - name: gaia-rpc
+      port: {{ .Values.store.service.gaiaRpc }}
+      targetPort: gaia-rpc
+    - name: gaia-engine
+      port: {{ .Values.store.service.gaiaEngine }}
+      targetPort: gaia-engine
   selector: {{- include "graphscope-store.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: store
