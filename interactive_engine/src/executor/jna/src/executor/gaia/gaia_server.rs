@@ -6,7 +6,6 @@ use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
 use gaia_pegasus::Configuration as GaiaConfig;
 use maxgraph_store::db::api::GraphErrorCode::EngineError;
 use tokio::runtime::Runtime;
-use tokio::sync::oneshot;
 use pegasus_server::service::Service;
 use pegasus_server::rpc::start_rpc_server;
 use pegasus_network::manager::SimpleServerDetector;
@@ -65,15 +64,13 @@ impl GaiaServer {
             .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?
             .ok_or(GraphError::new(EngineError, "gaia engine return None addr".to_string()))?;
 
-        let (tx, rx) = oneshot::channel();
         let rt = Runtime::new().map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
-        rt.block_on(async {
+        let rpc_port = rt.block_on(async {
             let job_compiler = initialize_job_compiler(self.graph.clone(), self.graph.clone(), worker_num, server_id);
             let service = Service::new(job_compiler);
-            let local_addr = start_rpc_server(addr, service, report).await.unwrap();
-            tx.send(local_addr.port()).unwrap();
+            let local_addr = start_rpc_server(addr, service, report, false).await.unwrap();
+            local_addr.port()
         });
-        let rpc_port = futures::executor::block_on(rx).unwrap();
         Ok((socket_addr.port(), rpc_port))
     }
 
@@ -90,8 +87,12 @@ fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
     let server_id = graph_config.get_storage_option("node.idx").expect("required config node.idx is missing")
         .parse().expect("parse node.idx failed");
     let ip = "0.0.0.0".to_string();
-    let port = graph_config.get_storage_option("gaia.engine.port").expect("required config gaia.engine.port is missing")
-        .parse().expect("parse gaia.engine.port failed");
+    let port = match graph_config.get_storage_option("gaia.engine.port") {
+        None => { 0 },
+        Some(server_port_string) => {
+            server_port_string.parse().expect("parse gaia.engine.port failed")
+        },
+    };
     let nonblocking = graph_config.get_storage_option("gaia.nonblocking")
         .map(|config_str| config_str.parse().expect("parse gaia.nonblocking failed"));
     let read_timeout_ms = graph_config.get_storage_option("gaia.read.timeout.ms")
