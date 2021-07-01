@@ -457,7 +457,9 @@ impl Partitioner for MultiPartition {
         let partition_id = self.graph_partition_manager.get_partition_id(vid) as u64;
         let server_index = self
             .graph_partition_manager
-            .get_server_id(partition_id as PropId) as u64;
+            .get_server_id(partition_id as PropId)
+            // TODO(bingqing): what if the result is None?
+            .unwrap_or(0) as u64;
         let worker_index = partition_id % worker_num_per_server;
         server_index * worker_num_per_server + worker_index as u64
     }
@@ -468,30 +470,5 @@ impl MultiPartition {
         MultiPartition {
             graph_partition_manager,
         }
-    }
-}
-
-impl<V, VI, E, EI> GraphPartitionManager for GraphScopeStore<V, VI, E, EI>
-where
-    V: StoreVertex + 'static,
-    VI: Iterator<Item = V> + Send + 'static,
-    E: StoreEdge + 'static,
-    EI: Iterator<Item = E> + Send + 'static,
-{
-    fn get_partition_id(&self, vid: VertexId) -> i32 {
-        self.partition_manager.get_partition_id(vid)
-    }
-
-    fn get_server_id(&self, pid: PartitionId) -> i32 {
-        self.partition_manager.get_server_id(pid)
-    }
-
-    fn get_process_partition_list(&self) -> Vec<u32> {
-        self.partition_manager.get_process_partition_list()
-    }
-
-    fn get_vertex_id_by_primary_key(&self, label_id: u32, key: &String) -> Option<(u32, i64)> {
-        self.partition_manager
-            .get_vertex_id_by_primary_key(label_id, key)
     }
 }
