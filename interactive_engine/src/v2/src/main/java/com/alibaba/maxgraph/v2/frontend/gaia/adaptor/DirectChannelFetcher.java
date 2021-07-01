@@ -21,7 +21,7 @@ public class DirectChannelFetcher implements RpcChannelFetcher {
     public List<RpcChannel> fetch() {
         List<RpcChannel> channels = new ArrayList<>();
         for (int i = 0; i < pegasusServerNum; ++i) {
-            channels.add(new RpcChannel(manager.getChannel(RoleType.EXECUTOR_ENGINE, i)));
+            channels.add(new RpcChannel(manager.getChannel(RoleType.GAIA_RPC, i)));
         }
         return channels;
     }
