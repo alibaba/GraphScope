@@ -26,6 +26,7 @@
         <module>executor</module>
         <module>v2</module>
         <module>data_load_tools</module>
+        <module>../../research/gaia/gremlin/compiler</module>
     </modules>
 
     <profiles>

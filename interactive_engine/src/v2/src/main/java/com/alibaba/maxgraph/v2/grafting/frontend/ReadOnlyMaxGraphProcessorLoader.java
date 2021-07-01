@@ -15,6 +15,12 @@
  */
 package com.alibaba.maxgraph.v2.grafting.frontend;
 
+import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
+import com.alibaba.maxgraph.v2.frontend.gaia.adaptor.VineyardGaiaConfig;
+import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
+import com.alibaba.graphscope.gaia.processor.TraversalOpProcessor;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.api.query.QueryCallbackManager;
 import com.alibaba.maxgraph.api.query.QueryStatus;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
@@ -36,14 +42,19 @@ public class ReadOnlyMaxGraphProcessorLoader implements ProcessorLoader {
     private SchemaFetcher schemaFetcher;
     private RpcAddressFetcher rpcAddressFetcher;
     private InstanceConfig instanceConfig;
+    private GraphStoreService gaiaStoreService;
+    private RpcChannelFetcher gaiaRpcFetcher;
 
     public ReadOnlyMaxGraphProcessorLoader(Configs configs, TinkerMaxGraph graph, SchemaFetcher schemaFetcher,
-                                           RpcAddressFetcher rpcAddressFetcher) {
+                                           RpcAddressFetcher rpcAddressFetcher, RpcChannelFetcher gaiaRpcFetcher,
+                                           GraphStoreService gaiaStoreService) {
         this.graph = graph;
         this.schemaFetcher = schemaFetcher;
         this.rpcAddressFetcher = rpcAddressFetcher;
         this.instanceConfig = new InstanceConfig(configs.getInnerProperties());
         CostDataStatistics.initialize(schemaFetcher);
+        this.gaiaStoreService = gaiaStoreService;
+        this.gaiaRpcFetcher = gaiaRpcFetcher;
     }
 
     @Override
@@ -78,5 +89,14 @@ public class ReadOnlyMaxGraphProcessorLoader implements ProcessorLoader {
                 queryCallbackManager);
         mixedTraversalOpProcessor.init(settings);
         MaxGraphOpLoader.addOpProcessor(mixedTraversalOpProcessor.getName(), mixedTraversalOpProcessor);
+
+        // add gaia compiler
+        GaiaConfig gaiaConfig = new VineyardGaiaConfig(this.instanceConfig);
+        GaiaGraphOpProcessor gaiaGraphOpProcessor = new GaiaGraphOpProcessor(gaiaConfig, this.gaiaStoreService, this.gaiaRpcFetcher);
+        MaxGraphOpLoader.addOpProcessor("gaia", gaiaGraphOpProcessor);
+
+        // add gaia traversal compiler
+        TraversalOpProcessor traversalOpProcessor = new TraversalOpProcessor(gaiaConfig, this.gaiaStoreService, this.gaiaRpcFetcher);
+        MaxGraphOpLoader.addOpProcessor(traversalOpProcessor.getName(), traversalOpProcessor);
     }
 }

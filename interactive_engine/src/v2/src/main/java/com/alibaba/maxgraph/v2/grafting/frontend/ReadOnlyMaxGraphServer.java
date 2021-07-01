@@ -15,6 +15,8 @@
  */
 package com.alibaba.maxgraph.v2.grafting.frontend;
 
+import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.server.MaxGraphWsAndHttpSocketChannelizer;
@@ -57,13 +59,18 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
     private TinkerMaxGraph graph;
     private SchemaFetcher schemaFetcher;
     private RpcAddressFetcher rpcAddressFetcher;
+    private RpcChannelFetcher gaiaRpcFetcher;
+    private GraphStoreService gaiaStoreService;
 
     public ReadOnlyMaxGraphServer(Configs configs, TinkerMaxGraph graph, SchemaFetcher schemaFetcher,
-                                  RpcAddressFetcher rpcAddressFetcher) {
+                                  RpcAddressFetcher rpcAddressFetcher, RpcChannelFetcher gaiaRpcFetcher,
+                                  GraphStoreService gaiaStoreService) {
         this.configs = configs;
         this.graph = graph;
         this.schemaFetcher = schemaFetcher;
         this.rpcAddressFetcher = rpcAddressFetcher;
+        this.gaiaRpcFetcher = gaiaRpcFetcher;
+        this.gaiaStoreService = gaiaStoreService;
     }
 
     @Override
@@ -94,7 +101,7 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
         globalBindings.put("g", graph.traversal());
 
         ProcessorLoader processorLoader = new ReadOnlyMaxGraphProcessorLoader(this.configs,
-                this.graph, this.schemaFetcher, this.rpcAddressFetcher);
+                this.graph, this.schemaFetcher, this.rpcAddressFetcher, this.gaiaRpcFetcher, this.gaiaStoreService);
         processorLoader.loadProcessor(settings);
         try {
             this.server.start().exceptionally(t -> {
