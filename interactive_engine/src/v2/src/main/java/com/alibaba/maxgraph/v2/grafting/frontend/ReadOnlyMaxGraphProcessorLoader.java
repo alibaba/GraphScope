@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.v2.grafting.frontend;
 
 import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
+import com.alibaba.maxgraph.v2.frontend.gaia.adaptor.ExtGaiaGraphOpProcessor;
 import com.alibaba.maxgraph.v2.frontend.gaia.adaptor.VineyardGaiaConfig;
 import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
 import com.alibaba.graphscope.gaia.processor.TraversalOpProcessor;
@@ -93,7 +94,7 @@ public class ReadOnlyMaxGraphProcessorLoader implements ProcessorLoader {
         // add gaia compiler
         GaiaConfig gaiaConfig = new VineyardGaiaConfig(this.instanceConfig);
         GaiaGraphOpProcessor gaiaGraphOpProcessor = new GaiaGraphOpProcessor(gaiaConfig, this.gaiaStoreService, this.gaiaRpcFetcher);
-        MaxGraphOpLoader.addOpProcessor("gaia", gaiaGraphOpProcessor);
+        MaxGraphOpLoader.addOpProcessor(gaiaGraphOpProcessor.getName(), gaiaGraphOpProcessor);
 
         // add gaia traversal compiler
         TraversalOpProcessor traversalOpProcessor = new TraversalOpProcessor(gaiaConfig, this.gaiaStoreService, this.gaiaRpcFetcher);
