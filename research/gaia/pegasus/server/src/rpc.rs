@@ -163,11 +163,11 @@ pub struct RpcServer<S: pb::job_service_server::JobService> {
 }
 
 pub async fn start_rpc_server<D: AnyData>(
-    addr: SocketAddr, service: Service<D>, report: bool,
+    addr: SocketAddr, service: Service<D>, report: bool, blocking: bool,
 ) -> Result<SocketAddr, Box<dyn std::error::Error>> {
     let rpc_service = RpcService { inner: service, report };
     let server = RpcServer::new(addr, rpc_service);
-    let local_addr = server.run().await?;
+    let local_addr = server.run(blocking).await?;
     Ok(local_addr)
 }
 
@@ -176,7 +176,7 @@ pub async fn start_debug_rpc_server<D: AnyData>(
 ) -> Result<SocketAddr, Box<dyn std::error::Error>> {
     let rpc_service = DebugRpcService { inner: service, report };
     let server = RpcServer::new(addr, rpc_service);
-    let local_addr = server.run().await?;
+    let local_addr = server.run(true).await?;
     Ok(local_addr)
 }
 
@@ -185,15 +185,21 @@ impl<S: pb::job_service_server::JobService> RpcServer<S> {
         RpcServer { service, addr }
     }
 
-    pub async fn run(self) -> Result<SocketAddr, Box<dyn std::error::Error>> {
+    pub async fn run(self, blocking: bool) -> Result<SocketAddr, Box<dyn std::error::Error>> {
         let RpcServer { service, addr } = self;
         let listener = TcpListener::bind(addr).await?;
         let local_addr = listener.local_addr()?;
         info!("Rpc server started on {}", local_addr);
-        Server::builder()
+        let serve = Server::builder()
             .add_service(pb::job_service_server::JobServiceServer::new(service))
-            .serve_with_incoming(tokio_stream::wrappers::TcpListenerStream::new(listener))
-            .await?;
+            .serve_with_incoming(tokio_stream::wrappers::TcpListenerStream::new(listener));
+        if blocking {
+            serve.await?;
+        } else {
+            tokio::spawn(async move {
+                serve.await;
+            });
+        }
         Ok(local_addr)
     }
 }
