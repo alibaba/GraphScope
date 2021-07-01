@@ -43,10 +43,6 @@ from string import Template
 import yaml
 from graphscope.framework import utils
 from graphscope.framework.graph_schema import GraphSchema
-from graphscope.framework.utils import transform_labeled_vertex_data_selector
-from graphscope.framework.utils import transform_labeled_vertex_property_data_selector
-from graphscope.framework.utils import transform_vertex_data_selector
-from graphscope.framework.utils import transform_vertex_property_data_selector
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
@@ -685,6 +681,137 @@ def _tranform_dataframe_selector(context_type, schema, selector):
             for key, value in selector.items()
         }
     return json.dumps(selector)
+
+
+def _transform_vertex_data_v(selector):
+    if selector not in ("v.id", "v.data"):
+        raise SyntaxError("selector of v must be 'id' or 'data'")
+    return selector
+
+
+def _transform_vertex_data_e(selector):
+    if selector not in ("e.src", "e.dst", "e.data"):
+        raise SyntaxError("selector of e must be 'src', 'dst' or 'data'")
+    return selector
+
+
+def _transform_vertex_data_r(selector):
+    if selector != "r":
+        raise SyntaxError("selector of r must be 'r'")
+    return selector
+
+
+def _transform_vertex_property_data_r(selector):
+    # The second part of selector or r is user defined name.
+    # So we will allow any str
+    return selector
+
+
+def _transform_labeled_vertex_data_v(schema, label, prop):
+    label_id = schema.get_vertex_label_id(label)
+    if prop == "id":
+        return "label{}.{}".format(label_id, prop)
+    else:
+        prop_id = schema.get_vertex_property_id(label, prop)
+        return "label{}.property{}".format(label_id, prop_id)
+
+
+def _transform_labeled_vertex_data_e(schema, label, prop):
+    label_id = schema.get_edge_label_id(label)
+    if prop in ("src", "dst"):
+        return "label{}.{}".format(label_id, prop)
+    else:
+        prop_id = schema.get_vertex_property_id(label, prop)
+        return "label{}.property{}".format(label_id, prop_id)
+
+
+def _transform_labeled_vertex_data_r(schema, label):
+    label_id = schema.get_vertex_label_id(label)
+    return "label{}".format(label_id)
+
+
+def _transform_labeled_vertex_property_data_r(schema, label, prop):
+    label_id = schema.get_vertex_label_id(label)
+    return "label{}.{}".format(label_id, prop)
+
+
+def transform_vertex_data_selector(selector):
+    if selector is None:
+        raise RuntimeError("selector cannot be None")
+    segments = selector.split(".")
+    if len(segments) > 2:
+        raise SyntaxError("Invalid selector: %s." % selector)
+    if segments[0] == "v":
+        selector = _transform_vertex_data_v(selector)
+    elif segments[0] == "e":
+        selector = _transform_vertex_data_e(selector)
+    elif segments[0] == "r":
+        selector = _transform_vertex_data_r(selector)
+    else:
+        raise SyntaxError("Invalid selector: %s, choose from v / e / r." % selector)
+    return selector
+
+
+def transform_vertex_property_data_selector(selector):
+    if selector is None:
+        raise RuntimeError("selector cannot be None")
+    segments = selector.split(".")
+    if len(segments) != 2:
+        raise SyntaxError("Invalid selector: %s." % selector)
+    if segments[0] == "v":
+        selector = _transform_vertex_data_v(selector)
+    elif segments[0] == "e":
+        selector = _transform_vertex_data_e(selector)
+    elif segments[0] == "r":
+        selector = _transform_vertex_property_data_r(selector)
+    else:
+        raise SyntaxError("Invalid selector: %s, choose from v / e / r." % selector)
+    return selector
+
+
+def transform_labeled_vertex_data_selector(schema, selector):
+    """Formats: 'v:x.y/id', 'e:x.y/src/dst', 'r:label',
+                x denotes label name, y denotes property name.
+    Returned selector will change label name to 'label{id}', where id is x's id in labels.
+    And change property name to 'property{id}', where id is y's id in properties.
+    """
+    if selector is None:
+        raise RuntimeError("selector cannot be None")
+
+    ret_type, segments = selector.split(":")
+    if ret_type not in ("v", "e", "r"):
+        raise SyntaxError("Invalid selector: " + selector)
+    segments = segments.split(".")
+    ret = ""
+    if ret_type == "v":
+        ret = _transform_labeled_vertex_data_v(schema, *segments)
+    elif ret_type == "e":
+        ret = _transform_labeled_vertex_data_e(schema, *segments)
+    elif ret_type == "r":
+        ret = _transform_labeled_vertex_data_r(schema, *segments)
+    return "{}:{}".format(ret_type, ret)
+
+
+def transform_labeled_vertex_property_data_selector(schema, selector):
+    """Formats: 'v:x.y/id', 'e:x.y/src/dst', 'r:x.y',
+                x denotes label name, y denotes property name.
+    Returned selector will change label name to 'label{id}', where id is x's id in labels.
+    And change property name to 'property{id}', where id is y's id in properties.
+    """
+    if selector is None:
+        raise RuntimeError("selector cannot be None")
+    ret_type, segments = selector.split(":")
+    if ret_type not in ("v", "e", "r"):
+        raise SyntaxError("Invalid selector: " + selector)
+    segments = segments.split(".")
+    ret = ""
+    if ret_type == "v":
+        ret = _transform_labeled_vertex_data_v(schema, *segments)
+    elif ret_type == "e":
+        ret = _transform_labeled_vertex_data_e(schema, *segments)
+    elif ret_type == "r":
+        ret = _transform_labeled_vertex_property_data_r(schema, *segments)
+    return "{}:{}".format(ret_type, ret)
 
 
 def _extract_gar(app_dir: str, attr):

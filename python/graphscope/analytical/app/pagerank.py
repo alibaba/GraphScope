@@ -35,7 +35,8 @@ def pagerank(graph, delta=0.85, max_round=10):
         max_round (int, optional): Maximum number of rounds. Defaults to 10.
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with the pagerank value.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with the pagerank value, evaluated in eager mode.
 
     Examples:
 
@@ -51,4 +52,4 @@ def pagerank(graph, delta=0.85, max_round=10):
     """
     delta = float(delta)
     max_round = int(max_round)
-    return AppAssets(algo="pagerank")(graph, delta, max_round)
+    return AppAssets(algo="pagerank", context="vertex_data")(graph, delta, max_round)

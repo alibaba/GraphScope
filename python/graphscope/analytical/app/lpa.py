@@ -32,7 +32,8 @@ def lpa(graph, max_round=10):
         max_round (int, optional): Maximum number of rounds. Defaults to 10.
 
     Returns:
-        :class:`LabeledVertexPropertyContext`: A context with each vertex, following an array of propagated labels.
+        :class:`graphscope.framework.context.LabeledVertexPropertyContextDAGNode`:
+            A context with each vertex, following an array of propagated labels, evaluated in eager mode.
 
     Examples:
 
@@ -46,4 +47,4 @@ def lpa(graph, max_round=10):
 
     """
     max_round = int(max_round)
-    return AppAssets(algo="lpau2i")(graph, max_round)
+    return AppAssets(algo="lpau2i", context="labeled_vertex_property")(graph, max_round)

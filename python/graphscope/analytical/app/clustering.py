@@ -35,7 +35,8 @@ def clustering(graph):
         graph (:class:`Graph`): A projected simple graph.
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned the computed clustering value.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned the computed clustering value, evaluated in eager mode.
 
     Examples:
 
@@ -49,4 +50,4 @@ def clustering(graph):
         s.close()
 
     """
-    return AppAssets(algo="clustering")(graph)
+    return AppAssets(algo="clustering", context="vertex_data")(graph)

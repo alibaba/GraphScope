@@ -26,7 +26,7 @@ from io import BytesIO
 import yaml
 
 import graphscope
-from graphscope.framework.context import ContextDAGNode
+from graphscope.framework.context import create_context_node
 from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import bind_app
 from graphscope.framework.dag_utils import create_app
@@ -122,33 +122,71 @@ class AppAssets(DAGNode):
 
     Attributes:
         algo (str): Name of the algorithm
+        context (str): Type of the context
         type (str): Type of the algorithm
         gar (bytes): Byte content of user defined algorithm
         signature (str): Unique identifier of this assets.
     """
 
-    def __init__(self, algo, gar=None, **kwargs):
+    _support_context_type = [
+        "tensor",
+        "vertex_data",
+        "vertex_property",
+        "labeled_vertex_data",
+        "dynamic_vertex_data",
+        "labeled_vertex_property",
+    ]
+
+    def __init__(self, algo, context=None, gar=None):
         """Init assets of the algorithm.
 
         Args:
             algo (str): Represent specific algo inside resource.
+            context (str): Type of context that hold the calculation results.
+            It will get from gar if param is None. Defaults to None.
             gar (bytes or BytesIO, optional): The bytes that encodes the application's source code.
-                Default to None
-            kwargs: Other params, e.g. vd_type and md_type in cython app.
+                Defaults to None.
         """
         self._algo = algo
-        self._type = "cpp_pie"  # default is built_in app with `built_in` type
+        self._context_type = context
+        self._type = "cpp_pie"  # default is builtin app with `built_in` type
+        self._meta = {}
 
         # used for gar resource
         if gar and isinstance(gar, (BytesIO, bytes)):
             self._gar = gar if isinstance(gar, bytes) else gar.getvalue()
+            self._extract_meta_info()
         else:
             # built_in apps has no gar resource.
             self._gar = None
+
+        if self._context_type not in self._support_context_type:
+            raise InvalidArgumentError(
+                "Unsupport context type: {0}".format(self._context_type)
+            )
+
         self._op = create_app(self)
 
     def __repr__(self) -> str:
-        return f"graphscope.framework.app.AppAssets <type: {self._type}, algorithm: {self._algo}>"
+        return f"graphscope.framework.app.AppAssets <type: {self._type}, algo: {self._algo}, context: {self._context_type}>"
+
+    def _extract_meta_info(self):
+        """Extract app meta info from gar resource.
+        Raises:
+            InvalidArgumentError:
+                - :code:`gs_conf.yaml` not exist in gar resource.
+                - Algo not found in gar resource.
+        """
+        fp = BytesIO(self._gar)
+        archive = zipfile.ZipFile(fp, "r")
+        config = yaml.safe_load(archive.read(DEFAULT_GS_CONFIG_FILE))
+        for meta in config["app"]:
+            if self._algo == meta["algo"]:
+                self._context_type = meta["context_type"]
+                self._type = meta["type"]
+                self._meta = meta
+                return
+        raise InvalidArgumentError("App not found in gar: {}".format(self._algo))
 
     @property
     def algo(self):
@@ -158,6 +196,15 @@ class AppAssets(DAGNode):
             str: Algorithm name of this asset.
         """
         return self._algo
+
+    @property
+    def context_type(self):
+        """Context type, e.g. vertex_property, labeled_vertex_data.
+
+        Returns:
+            str: Type of the app context.
+        """
+        return self._context_type
 
     @property
     def type(self):
@@ -211,33 +258,21 @@ class AppAssets(DAGNode):
 
         Raises:
             InvalidArgumentError:
-                - :code:`gs_conf.yaml` not exist in gar resource.
-                - App is not compatible with graph or
-                - Algo not found in gar resource.
+                - App is not compatible with graph
 
             ScannerError:
                 - Yaml file format is incorrect.
         """
         # builtin app
         if self._gar is None:
-            self._type = "cpp_pie"
             return
         # check yaml file
-        fp = BytesIO(self._gar)
-        archive = zipfile.ZipFile(fp, "r")
-        config = yaml.safe_load(archive.read(DEFAULT_GS_CONFIG_FILE))
-
-        # check the compatibility with graph
-        for application in config["app"]:
-            if self._algo == application["algo"]:
-                self._type = application["type"]
-                graph_type = graph_type_to_cpp_class(graph.graph_type)
-                if graph_type not in application["compatible_graph"]:
-                    raise InvalidArgumentError(
-                        "App is uncompatible with graph {}".format(graph_type)
-                    )
-                return True
-        raise InvalidArgumentError("App not found in gar: {}".format(self._algo))
+        graph_type = graph_type_to_cpp_class(graph.graph_type)
+        if graph_type not in self._meta["compatible_graph"]:
+            raise InvalidArgumentError(
+                "App is uncompatible with graph {}".format(graph_type)
+            )
+        return True
 
     def __call__(self, graph, *args, **kwargs):
         """Instantiate an App and do queries over it."""
@@ -317,6 +352,7 @@ class AppDAGNode(DAGNode):
         """
         app_type = self._app_assets.type
         check_argument(app_type is not None)
+        context_type = self._app_assets.context_type
 
         if not isinstance(self._graph, DAGNode) and not self._graph.loaded():
             raise RuntimeError("The graph is not loaded")
@@ -326,9 +362,11 @@ class AppDAGNode(DAGNode):
             check_argument(
                 not args, "Only support using keyword arguments in cython app."
             )
-            return ContextDAGNode(self, self._graph, json.dumps(kwargs))
+            return create_context_node(
+                context_type, self, self._graph, json.dumps(kwargs)
+            )
 
-        return ContextDAGNode(self, self._graph, *args, **kwargs)
+        return create_context_node(context_type, self, self._graph, *args, **kwargs)
 
     def unload(self):
         """Unload this app from graphscope engine.
@@ -394,7 +432,7 @@ class UnloadedApp(DAGNode):
 
 def load_app(algo, gar=None, **kwargs):
     """Load an app from gar.
-    bytes orthe resource of the specified path or bytes.
+    bytes or the resource of the specified path or bytes.
 
     Args:
         algo: str

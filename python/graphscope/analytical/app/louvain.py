@@ -42,7 +42,8 @@ def louvain(graph, min_progress=1000, progress_tries=1):
 
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with id of community it belongs to.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with id of community it belongs to, evaluated in eager mode.
 
     References:
         [1] Blondel, V.D. et al. Fast unfolding of communities in large networks. J. Stat. Mech 10008, 1-12(2008).
@@ -71,4 +72,6 @@ def louvain(graph, min_progress=1000, progress_tries=1):
     """
     if graph.is_directed():
         raise InvalidArgumentError("Louvain not support directed graph.")
-    return AppAssets(algo="louvain")(graph, min_progress, progress_tries)
+    return AppAssets(algo="louvain", context="vertex_data")(
+        graph, min_progress, progress_tries
+    )

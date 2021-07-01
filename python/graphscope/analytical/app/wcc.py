@@ -33,7 +33,8 @@ def wcc(graph):
         graph (:class:`Graph`): A projected simple graph.
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with the component ID.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with the component ID, evaluated in eager mode.
 
     Examples:
 
@@ -47,4 +48,4 @@ def wcc(graph):
         s.close()
 
     """
-    return AppAssets(algo="wcc")(graph)
+    return AppAssets(algo="wcc", context="vertex_data")(graph)

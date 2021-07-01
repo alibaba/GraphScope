@@ -36,7 +36,8 @@ def pagerank_nx(graph, alpha=0.85, max_iter=100, tol=1e-06):
         tol (float, optional): Error tolerance used to check convergence in power method solver.
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with the pagerank value.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with the pagerank value, evaluated in eager mode.
 
     Examples:
 
@@ -52,4 +53,6 @@ def pagerank_nx(graph, alpha=0.85, max_iter=100, tol=1e-06):
     """
     alpha = float(alpha)
     max_iter = int(max_iter)
-    return AppAssets(algo="pagerank_nx")(graph, alpha, max_iter, tol)
+    return AppAssets(algo="pagerank_nx", context="vertex_data")(
+        graph, alpha, max_iter, tol
+    )

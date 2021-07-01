@@ -37,7 +37,8 @@ def degree_centrality(graph, centrality_type="both"):
             Defaults to "both".
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with the computed degree centrality.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with the computed degree centrality, evaluated in eager mode.
 
     Examples:
 
@@ -52,4 +53,6 @@ def degree_centrality(graph, centrality_type="both"):
 
     """
     centrality_type = str(centrality_type)
-    return AppAssets(algo="degree_centrality")(graph, centrality_type)
+    return AppAssets(algo="degree_centrality", context="vertex_data")(
+        graph, centrality_type
+    )

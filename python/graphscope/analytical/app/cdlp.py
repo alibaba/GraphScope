@@ -34,7 +34,8 @@ def cdlp(graph, max_round=10):
         max_round (int, optional): Maximum rounds. Defaults to 10.
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with a community ID.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with a community ID, evaluated in eager mode.
 
     Examples:
 
@@ -49,4 +50,4 @@ def cdlp(graph, max_round=10):
 
     """
     max_round = int(max_round)
-    return AppAssets(algo="cdlp")(graph, max_round)
+    return AppAssets(algo="cdlp", context="vertex_data")(graph, max_round)

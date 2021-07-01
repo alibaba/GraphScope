@@ -36,6 +36,7 @@ from graphscope import sssp
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import AppDAGNode
 from graphscope.framework.errors import AnalyticalEngineInternalError
+from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
 
 test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
@@ -158,20 +159,20 @@ def test_unload_app(sess):
     g = arrow_property_graph(sess)
 
     # case 1
-    a1 = AppDAGNode(g, AppAssets(algo="property_sssp"))
+    a1 = AppDAGNode(g, AppAssets(algo="property_sssp", context="labeled_vertex_data"))
     ua1 = a1.unload()
     assert sess.run(ua1) is None
 
     # case 2
     # unload app twice
-    a1 = AppDAGNode(g, AppAssets(algo="property_sssp"))
+    a1 = AppDAGNode(g, AppAssets(algo="property_sssp", context="labeled_vertex_data"))
     ua1 = a1.unload()
     assert sess.run(ua1) is None
     assert sess.run(ua1) is None
 
     # case 3
     # load app after unload
-    a1 = AppDAGNode(g, AppAssets(algo="property_sssp"))
+    a1 = AppDAGNode(g, AppAssets(algo="property_sssp", context="labeled_vertex_data"))
     ua1 = a1.unload()
     assert sess.run(ua1) is None
     c1 = a1(src=20)
@@ -194,6 +195,36 @@ def test_context(sess):
     assert r[1].shape == (40521, 2)
     assert r[2] is not None
     assert r[3] is not None
+
+
+def test_error_selector_context(sess):
+    # case 1
+    # labeled vertex data context
+    g = arrow_property_graph(sess)
+    c = property_sssp(g, 20)
+    with pytest.raises(
+        InvalidArgumentError,
+        match="Selector in labeled vertex data context cannot be None",
+    ):
+        r = c.to_numpy(selector=None)
+    with pytest.raises(ValueError, match="not enough values to unpack"):
+        # missing ":" in selectot
+        r = c.to_numpy("r.v0.dist_0")
+    with pytest.raises(SyntaxError, match="Invalid selector"):
+        # must be "v/e/r:xxx"
+        r = c.to_numpy("c:v0.dist_0")
+    with pytest.raises(SyntaxError, match="Invalid selector"):
+        # format error
+        c.to_numpy("r:v0.dist_0.dist_1")
+
+    # case 2
+    # vertex data context
+    pg = g.project(vertices={"v0": ["id"]}, edges={"e0": ["weight"]})
+    c = sssp(pg, 20)
+    with pytest.raises(SyntaxError, match="Selector of v must be 'v.id' or 'v.data'"):
+        r = c.to_dataframe({"id": "v.ID"})
+    with pytest.raises(ValueError, match="selector of to_dataframe must be a dict"):
+        r = c.to_dataframe("id")
 
 
 def test_query_after_project(sess):
@@ -244,3 +275,21 @@ def test_multi_src_dst_edge_loader(
         dst_field="member_teacher_id",
     )
     g = sess.run(graph)
+
+
+def test_simulate_eager(sess):
+    g1_node = arrow_property_graph(sess)
+    g1 = sess.run(g1_node)
+    c_node = property_sssp(g1, 20)
+    c = sess.run(c_node)
+    r_node = c.to_numpy("r:v0.dist_0")
+    r = sess.run(r_node)
+    assert r.shape == (40521,)
+    pg_node = g1.project(vertices={"v0": ["id"]}, edges={"e0": ["weight"]})
+    pg = sess.run(pg_node)
+    c_node = sssp(pg, 20)
+    c = sess.run(c_node)
+    g2_node = g1.add_column(
+        c, {"id_col": "v.id", "data_col": "v.data", "result_col": "r"}
+    )
+    g2 = sess.run(g2_node)
