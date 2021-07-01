@@ -10,7 +10,28 @@ AppAssets
 .. autoclass:: graphscope.framework.app.AppAssets
    :special-members:
    :members:
-   :exclude-members: __call__
+   :exclude-members: __call__, __repr__
+
+
+App object
+----------
+
+.. currentmodule:: graphscope
+.. autoclass:: graphscope.framework.app.AppDAGNode
+   :members: unload
+
+.. autoclass:: graphscope.framework.app.App
+   :special-members:
+   :members:
+   :exclude-members: __repr__, __call__, _query, __weakref__
+
+Functions
+---------
+.. autosummary::
+   :toctree: generated/
+
+   graphscope.framework.app.load_app
+
 
 BuiltIn apps
 ------------
@@ -29,20 +50,4 @@ BuiltIn apps
 .. autofunction:: graphscope.lpa
 .. autofunction:: graphscope.triangles
 .. autofunction:: graphscope.louvain
-
-App object
-----------
-
-.. currentmodule:: graphscope
-.. autoclass:: graphscope.framework.app.App
-   :special-members:
-   :members:
-   :exclude-members: __repr__, __call__, _query
-
-Functions
----------
-.. autosummary::
-   :toctree: generated/
-
-   graphscope.framework.app.load_app
 

@@ -7,16 +7,22 @@ Context object
 --------------
 .. currentmodule:: graphscope.framework.context
 
-.. autoclass:: BaseContext
+.. autoclass:: BaseContextDAGNode
    :special-members:
-   :members: to_numpy, to_dataframe, to_vineyard_tensor, to_vineyard_dataframe, output
+   :members: to_numpy, to_dataframe, to_vineyard_tensor, to_vineyard_dataframe
 
-.. autoclass:: TensorContext
+.. autoclass:: TensorContextDAGNode
 
-.. autoclass:: VertexDataContext
+.. autoclass:: VertexDataContextDAGNode
 
-.. autoclass:: LabeledVertexDataContext
+.. autoclass:: LabeledVertexDataContextDAGNode
 
-.. autoclass:: VertexPropertyContext
+.. autoclass:: VertexPropertyContextDAGNode
 
-.. autoclass:: LabeledVertexPropertyContext
+.. autoclass:: LabeledVertexPropertyContextDAGNode
+
+.. autoclass:: Context
+
+.. autoclass:: DynamicVertexDataContext
+
+.. autoclass:: ResultDAGNode

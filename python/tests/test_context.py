@@ -55,7 +55,7 @@ def test_simple_context_to_vineyard_tensor(simple_context, p2p_project_directed_
     out = simple_context.to_vineyard_tensor("r")
     assert out is not None
 
-    has_path = AppAssets(algo="sssp_has_path")
+    has_path = AppAssets(algo="sssp_has_path", context="tensor")
     ctx = has_path(
         p2p_project_directed_graph._project_to_simple(), source=6, target=3728
     )

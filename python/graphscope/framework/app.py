@@ -119,13 +119,6 @@ class AppAssets(DAGNode):
     and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`.
 
     The instance of this class can be passed to init :class:`graphscope.framework.app.AppDAGNode`.
-
-    Attributes:
-        algo (str): Name of the algorithm
-        context (str): Type of the context
-        type (str): Type of the algorithm
-        gar (bytes): Byte content of user defined algorithm
-        signature (str): Unique identifier of this assets.
     """
 
     _support_context_type = [
@@ -287,15 +280,6 @@ class AppDAGNode(DAGNode):
 
     Analytical engine will build the app dynamic library when instantiate a app instance.
     The dynamic library will be reused if subsequent app's signature matches one of previous ones.
-
-    Attributes:
-        key (str): Identifier of the app, associated with the dynamic library path.
-            set by analytical engine after library is built.
-        signature (str): Combination of app_assets's and graph's signature.
-        session_id (str): Session id of the session that associated with the app.
-        algo (str): Algorithm name of app_assets.
-        gar (str): Gar content of app_assets.
-
     """
 
     def __init__(self, graph, app_assets: AppAssets):
