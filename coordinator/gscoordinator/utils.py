@@ -736,6 +736,11 @@ def _transform_labeled_vertex_property_data_r(schema, label, prop):
 
 
 def transform_vertex_data_selector(selector):
+    """Optional values:
+    vertex selector: 'v.id', 'v.data'
+    edge selector: 'e.src', 'e.dst', 'e.data'
+    result selector: 'r'
+    """
     if selector is None:
         raise RuntimeError("selector cannot be None")
     segments = selector.split(".")
@@ -753,6 +758,11 @@ def transform_vertex_data_selector(selector):
 
 
 def transform_vertex_property_data_selector(selector):
+    """Optional values:
+    vertex selector: 'v.id', 'v.data'
+    edge selector: 'e.src', 'e.dst', 'e.data'
+    result selector format: 'r.y', y  denotes property name.
+    """
     if selector is None:
         raise RuntimeError("selector cannot be None")
     segments = selector.split(".")
