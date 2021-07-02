@@ -88,10 +88,10 @@ function check_dependencies_version() {
   fi
 }
 
-# export OPENSSL lib
 if [[ "${platform}" == *"Darwin"* ]]; then
+  # export OPENSSL lib
   export OPENSSL_ROOT_DIR="/usr/local/opt/openssl"
-  export OPENSSL_LIBRARIES="/usr/local/opt/openssl"
+  export OPENSSL_LIBRARIES="/usr/local/opt/openssl/lib"
   export OPENSSL_SSL_LIBRARY="/usr/local/opt/openssl/lib/libssl.dylib"
 fi
 
@@ -186,7 +186,9 @@ function build_graphscope_gle() {
 function install_client_and_coordinator() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') install graphscope coordinator and client"
   # install GraphScope client
-  export WITH_LEARNING_ENGINE=ON
+  if [[ "${platform}" != *"Darwin"* ]]; then
+    export WITH_LEARNING_ENGINE=ON
+  fi
   cd ${graphscope_src}
   pushd python
   pip3 install -U setuptools
@@ -215,13 +217,11 @@ install_vineyard
 
 build_graphscope_gae
 
-if [[ "${platform}" == *"Darwin"* ]]; then
-  exit 0
-fi
-
 build_graphscope_gie
 
-build_graphscope_gle
+if [[ "${platform}" != *"Darwin"* ]]; then
+  build_graphscope_gle
+fi
 
 install_client_and_coordinator
 

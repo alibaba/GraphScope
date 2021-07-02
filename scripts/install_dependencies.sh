@@ -135,11 +135,16 @@ function install_dependencies() {
   fi
 
   if [[ "${platform}" == *"Darwin"* ]]; then
+    git config --global http.postBuffer 1048576000
+
     brew install cmake double-conversion etcd protobuf apache-arrow openmpi boost glog gflags \
-      zstd snappy lz4 openssl@1.1 libevent fmt clang autoconf
+      zstd snappy lz4 openssl@1.1 libevent fmt clang autoconf go maven
+
+    brew tap adoptopenjdk/openjdk
+    brew install --cask adoptopenjdk8
 
     export OPENSSL_ROOT_DIR="/usr/local/opt/openssl"
-    export OPENSSL_LIBRARIES="/usr/local/opt/openssl"
+    export OPENSSL_LIBRARIES="/usr/local/opt/openssl/lib"
     export OPENSSL_SSL_LIBRARY="/usr/local/opt/openssl/lib/libssl.dylib"
 
     # install folly
@@ -150,6 +155,15 @@ function install_dependencies() {
     cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
     make install -j
     popd
+
+    # install zookeeper
+    wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz -P /tmp
+    tar xf /tmp/zookeeper-3.4.14.tar.gz -C /tmp/
+    cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
+    sudo cp -r /tmp/zookeeper-3.4.14 /usr/local/zookeeper || true
+
+    # rust
+    curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
 
     # install python packages for vineyard codegen
     pip3 install -U pip --user
