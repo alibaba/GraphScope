@@ -15,8 +15,11 @@
  */
 package com.alibaba.maxgraph.v2.grafting.frontend;
 
+import com.alibaba.graphscope.gaia.GlobalEngineConf;
+import com.alibaba.graphscope.gaia.TraversalSourceGraph;
 import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
+import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
@@ -27,6 +30,7 @@ import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
 import com.alibaba.maxgraph.v2.frontend.server.gremlin.channelizer.MaxGraphWsAndHttpSocketChannelizer;
 import com.alibaba.maxgraph.v2.frontend.server.loader.ProcessorLoader;
 import io.netty.channel.Channel;
+import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
@@ -34,6 +38,7 @@ import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.channel.WsAndHttpChannelizer;
 import org.apache.tinkerpop.gremlin.server.util.ServerGremlinExecutor;
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,8 +102,16 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
         serverGremlinExecutor.getGraphManager().putTraversalSource("g", graph.traversal());
         GremlinExecutor gremlinExecutor = Utils.getFieldValue(ServerGremlinExecutor.class, serverGremlinExecutor, "gremlinExecutor");
         Bindings globalBindings = Utils.getFieldValue(GremlinExecutor.class, gremlinExecutor, "globalBindings");
-        globalBindings.put("graph", graph);
-        globalBindings.put("g", graph.traversal());
+
+        boolean gaiaEnable = Boolean.valueOf(configs.get(InstanceConfig.GAIA_ENABLE, "false"));
+        if (gaiaEnable) {
+            Graph gaiaTraversalGraph = TraversalSourceGraph.open(new BaseConfiguration());
+            globalBindings.put("graph", gaiaTraversalGraph);
+            GlobalEngineConf.setGlobalVariables(gaiaTraversalGraph.variables());
+        } else {
+            globalBindings.put("graph", graph);
+            globalBindings.put("g", graph.traversal());
+        }
 
         ProcessorLoader processorLoader = new ReadOnlyMaxGraphProcessorLoader(this.configs,
                 this.graph, this.schemaFetcher, this.rpcAddressFetcher, this.gaiaRpcFetcher, this.gaiaStoreService);
