@@ -44,8 +44,8 @@ function check_os_compatibility() {
     exit 1
   fi
 
-  if [[ "${platform}" != *"Ubuntu"* ]]; then
-    echo "This script is only available on Ubuntu"
+  if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"Darwin"* ]]; then
+    echo "This script is only available on Ubuntu or MacOs"
     exit 1
   fi
 
@@ -59,10 +59,6 @@ function check_os_compatibility() {
 
 function check_dependencies_version() {
   err_msg="could not be found, you can install it manually, or via install_dependencies.sh."
-  if ! command -v mvn &> /dev/null; then
-      echo "maven ${err_msg}"
-      exit
-  fi
   if ! hash python3; then
     echo "Python3 is not installed"
     exit 1
@@ -72,15 +68,32 @@ function check_dependencies_version() {
     echo "GraphScope requires python 3.6 or greater."
     exit 1
   fi
-  if ! command -v cargo &> /dev/null; then
+  if [[ "${platform}" != *"Darwin"* ]]; then
+    if ! command -v mvn &> /dev/null; then
+      echo "maven ${err_msg}"
+      exit
+    fi
+  fi
+  if [[ "${platform}" != *"Darwin"* ]]; then
+    if ! command -v cargo &> /dev/null; then
       echo "cargo ${err_msg} or source ~/.cargo/env"
       exit
+    fi
   fi
-  if ! command -v go &> /dev/null; then
+  if [[ "${platform}" != *"Darwin"* ]]; then
+    if ! command -v go &> /dev/null; then
       echo "go ${err_msg}"
       exit
+    fi
   fi
 }
+
+# export OPENSSL lib
+if [[ "${platform}" == *"Darwin"* ]]; then
+  export OPENSSL_ROOT_DIR="/usr/local/opt/openssl"
+  export OPENSSL_LIBRARIES="/usr/local/opt/openssl"
+  export OPENSSL_SSL_LIBRARY="/usr/local/opt/openssl/lib/libssl.dylib"
+fi
 
 graphscope_src="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
 
@@ -120,7 +133,7 @@ function build_graphscope_gae() {
   cd ${graphscope_src}
   mkdir analytical_engine/build && pushd analytical_engine/build
   cmake ..
-  make -j`nproc`
+  sudo make -j`nproc`
   sudo make install
   popd
 }
@@ -201,6 +214,10 @@ install_libgrape-lite
 install_vineyard
 
 build_graphscope_gae
+
+if [[ "${platform}" == *"Darwin"* ]]; then
+  exit 0
+fi
 
 build_graphscope_gie
 

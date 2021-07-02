@@ -45,14 +45,21 @@ function check_os_compatibility() {
     exit 1
   fi
 
-  if [[ "${platform}" != *"Ubuntu"* ]]; then
-    echo "This script is only available on Ubuntu"
+  if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"Darwin"* ]]; then
+    echo "This script is only available on Ubuntu or MacOs"
     exit 1
   fi
 
   if [[ "${platform}" == *"Ubuntu"* && "$(echo ${os_version} | sed 's/\([0-9]\)\([0-9]\).*/\1\2/')" -lt "20" ]]; then
     echo "This script requires Ubuntu 20 or greater."
     exit 1
+  fi
+
+  if [[ "${platform}" == *"Darwin"* ]]; then
+    if ! hash brew; then
+      echo "Homebrew not installed. Install Homebrew: https://docs.brew.sh/Installation."
+      exit 1
+    fi
   fi
 
   echo "$(date '+%Y-%m-%d %H:%M:%S') preparing environment on '${platform}' '${os_version}'"
@@ -125,6 +132,28 @@ function install_dependencies() {
     # install python packages for vineyard codegen
     pip3 install -U pip --user
     pip3 install libclang parsec setuptools wheel twine --user
+  fi
+
+  if [[ "${platform}" == *"Darwin"* ]]; then
+    brew install cmake double-conversion etcd protobuf apache-arrow openmpi boost glog gflags \
+      zstd snappy lz4 openssl@1.1 libevent fmt clang autoconf
+
+    export OPENSSL_ROOT_DIR="/usr/local/opt/openssl"
+    export OPENSSL_LIBRARIES="/usr/local/opt/openssl"
+    export OPENSSL_SSL_LIBRARY="/usr/local/opt/openssl/lib/libssl.dylib"
+
+    # install folly
+    wget https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz -P /tmp
+    tar xf /tmp/v2020.10.19.00.tar.gz -C /tmp/
+    pushd /tmp/folly-2020.10.19.00
+    mkdir _build && cd _build
+    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
+    make install -j
+    popd
+
+    # install python packages for vineyard codegen
+    pip3 install -U pip --user
+    pip3 install grpc-tools libclang parsec setuptools wheel twine --user
   fi
 
   check_dependencies_version
