@@ -37,9 +37,9 @@ class ResultDAGNode(DAGNode):
     In GraphScope, result node is always a leaf node in a DAG.
     """
 
-    def __init__(self, context, op):
-        self._context = context
-        self._session = self._context.session
+    def __init__(self, dag_node, op):
+        self._base_dag_node = dag_node
+        self._session = self._base_dag_node.session
         self._op = op
         # add op to dag
         self._session.dag.add_op(self._op)

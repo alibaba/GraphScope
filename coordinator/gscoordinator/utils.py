@@ -359,6 +359,8 @@ def op_pre_process(op, op_result_pool, key_to_op):
         types_pb2.TO_VINEYARD_DATAFRAME,
     ):
         _pre_process_for_context_op(op, op_result_pool, key_to_op)
+    if op.op in (types_pb2.GRAPH_TO_NUMPY, types_pb2.GRAPH_TO_DATAFRAME):
+        _pre_process_for_output_graph_op(op, op_result_pool, key_to_op)
     if op.op == types_pb2.UNLOAD_APP:
         _pre_process_for_unload_app_op(op, op_result_pool, key_to_op)
 
@@ -516,6 +518,30 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op):
         op.attr[types_pb2.SELECTOR].CopyFrom(
             attr_value_pb2.AttrValue(s=selector.encode("utf-8"))
         )
+
+
+def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    r = op_result_pool[key_of_parent_op]
+    schema = GraphSchema()
+    schema.from_graph_def(r.graph_def)
+    graph_name = r.graph_def.key
+    selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
+    if op.op == types_pb2.GRAPH_TO_DATAFRAME:
+        selector = _tranform_dataframe_selector(
+            "labeled_vertex_property", schema, selector
+        )
+    else:
+        # to numpy
+        selector = _tranform_numpy_selector("labeled_vertex_property", schema, selector)
+    if selector is not None:
+        op.attr[types_pb2.SELECTOR].CopyFrom(
+            attr_value_pb2.AttrValue(s=selector.encode("utf-8"))
+        )
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+    )
 
 
 def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op):

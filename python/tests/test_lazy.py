@@ -181,6 +181,34 @@ def test_unload_app(sess):
     assert r.shape == (40521,)
 
 
+def test_graph_to_numpy(sess):
+    g = arrow_property_graph(sess)
+    c = property_sssp(g, 20)
+    ctx_out_np = c.to_numpy("r:v0.dist_0")
+    g2 = g.add_column(c, {"result_0": "r:v0.dist_0"})
+    graph_out_np = g2.to_numpy("v:v0.result_0")
+    r = sess.run([ctx_out_np, graph_out_np])
+    assert np.all(r[0] == r[1])
+    # unload graph
+    ug = g.unload()
+    ug2 = g2.unload()
+    sess.run([ug, ug2])
+
+
+def test_graph_to_dataframe(sess):
+    g = arrow_property_graph(sess)
+    c = property_sssp(g, 20)
+    ctx_out_df = c.to_dataframe({"result": "r:v0.dist_0"})
+    g2 = g.add_column(c, {"result_0": "r:v0.dist_0"})
+    graph_out_df = g2.to_dataframe({"result": "v:v0.result_0"})
+    r = sess.run([ctx_out_df, graph_out_df])
+    assert r[0].equals(r[1])
+    # unload graph
+    ug = g.unload()
+    ug2 = g2.unload()
+    sess.run([ug, ug2])
+
+
 def test_context(sess):
     g = arrow_property_graph(sess)
     c = property_sssp(g, 20)

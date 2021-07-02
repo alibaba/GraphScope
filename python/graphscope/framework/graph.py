@@ -322,6 +322,49 @@ class GraphDAGNode(DAGNode, GraphInterface):
         else:
             raise RuntimeError("Not supported incoming data.")
 
+    def to_numpy(self, selector, vertex_range=None):
+        """Select some elements of the graph and output to numpy.
+
+        Args:
+            selector (str): Select a portion of graph as a numpy.ndarray.
+            vertex_range(dict, optional): Slice vertices. Defaults to None.
+
+        Returns:
+            :class:`graphscope.framework.context.ResultDAGNode`:
+                A result holds the `numpy.ndarray`, evaluated in eager mode.
+        """
+        # avoid circular import
+        from graphscope.framework.context import ResultDAGNode
+
+        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
+        vertex_range = utils.transform_vertex_range(vertex_range)
+        op = dag_utils.graph_to_numpy(self, selector, vertex_range)
+        return ResultDAGNode(self, op)
+
+    def to_dataframe(self, selector, vertex_range=None):
+        """Select some elements of the graph and output as a pandas.DataFrame
+
+        Args:
+            selector (dict): Select some portions of graph.
+            vertex_range (dict, optional): Slice vertices. Defaults to None.
+
+        Returns:
+            :class:`graphscope.framework.context.ResultDAGNode`:
+                A result holds the `pandas.DataFrame`, evaluated in eager mode.
+        """
+        # avoid circular import
+        from graphscope.framework.context import ResultDAGNode
+
+        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
+        check_argument(
+            isinstance(selector, Mapping),
+            "selector of to dataframe must be a dict",
+        )
+        selector = json.dumps(selector)
+        vertex_range = utils.transform_vertex_range(vertex_range)
+        op = dag_utils.graph_to_dataframe(self, selector, vertex_range)
+        return ResultDAGNode(self, op)
+
     def add_vertices(self, vertices, label="_", properties=None, vid_field=0):
         """Add vertices to the graph, and return a new graph.
 
@@ -832,18 +875,12 @@ class Graph(GraphInterface):
         Args:
             selector (str): Select a portion of graph as a numpy.ndarray.
             vertex_range(dict, optional): Slice vertices. Defaults to None.
+
         Returns:
             `numpy.ndarray`
         """
-        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
         self._check_unmodified()
-        selector = utils.transform_labeled_vertex_property_data_selector(
-            self.schema, selector
-        )
-        vertex_range = utils.transform_vertex_range(vertex_range)
-        op = dag_utils.graph_to_numpy(self, selector, vertex_range)
-        ret = op.eval()
-        return ret
+        return self._session._wrapper(self._graph_node.to_numpy(selector, vertex_range))
 
     def to_dataframe(self, selector, vertex_range=None):
         """Select some elements of the graph and output as a pandas.DataFrame
@@ -855,24 +892,10 @@ class Graph(GraphInterface):
         Returns:
             `pandas.DataFrame`
         """
-        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
         self._check_unmodified()
-        check_argument(
-            isinstance(selector, Mapping),
-            "selector of to_vineyard_dataframe must be a dict",
+        return self._session._wrapper(
+            self._graph_node.to_dataframe(selector, vertex_range)
         )
-        selector = {
-            key: utils.transform_labeled_vertex_property_data_selector(
-                self.schema, value
-            )
-            for key, value in selector.items()
-        }
-        selector = json.dumps(selector)
-        vertex_range = utils.transform_vertex_range(vertex_range)
-
-        op = dag_utils.graph_to_dataframe(self, selector, vertex_range)
-        ret = op.eval()
-        return ret
 
     def is_directed(self):
         return self._directed
