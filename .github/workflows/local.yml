@@ -126,6 +126,13 @@ jobs:
         rm -rf ~/.cargo
         python3 -m pytest -s -v /tmp/test_run_locally.py
 
+    - name: Upload GIE Log
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: gie-log
+        path: /tmp/graphscope/
+
     - name: Setup tmate session debug
       if: false
       uses: mxschmitt/action-tmate@v2

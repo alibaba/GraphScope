@@ -455,12 +455,12 @@ def load_app(algo, gar=None, **kwargs):
                 - gs::ArrowProjectedFragment
     """
     if isinstance(gar, (BytesIO, bytes)):
-        return AppAssets(str(algo), gar, **kwargs)
+        return AppAssets(str(algo), None, gar, **kwargs)
     elif isinstance(gar, str):
         with open(gar, "rb") as f:
             content = f.read()
         if not zipfile.is_zipfile(gar):
             raise InvalidArgumentError("{} is not a zip file.".format(gar))
-        return AppAssets(str(algo), content, **kwargs)
+        return AppAssets(str(algo), None, content, **kwargs)
     else:
         raise InvalidArgumentError("Wrong type with {}".format(gar))
