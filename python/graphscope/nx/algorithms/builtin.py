@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import functools
 import inspect
 
 import networkx.algorithms as nxa
@@ -32,6 +33,7 @@ from graphscope.proto import types_pb2
 
 # decorator function
 def project_to_simple(func):
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         graph = args[0]
         if not hasattr(graph, "graph_type"):

@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import functools
 import hashlib
 import json
 import os
@@ -42,6 +43,7 @@ DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
 
 def project_to_simple(func):
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
@@ -78,6 +80,7 @@ def not_compatible_for(*graph_types):
     """
 
     def _not_compatible_for(not_compatible_for_func):
+        @functools.wraps(not_compatible_for_func)
         def wrapper(*args, **kwargs):
             graph = args[0]
             if not hasattr(graph, "graph_type"):
