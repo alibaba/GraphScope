@@ -107,6 +107,7 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
         if (gaiaEnable) {
             Graph gaiaTraversalGraph = TraversalSourceGraph.open(new BaseConfiguration());
             globalBindings.put("graph", gaiaTraversalGraph);
+            globalBindings.put("g", gaiaTraversalGraph.traversal());
             GlobalEngineConf.setGlobalVariables(gaiaTraversalGraph.variables());
         } else {
             globalBindings.put("graph", graph);
