@@ -29,6 +29,7 @@ from graphscope import property_bfs
 from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.framework.app import AppAssets
+from graphscope.framework.errors import InvalidArgumentError
 
 
 def test_simple_context_to_numpy(simple_context):
@@ -160,7 +161,10 @@ def test_error_on_selector(property_context):
         out = property_context.to_numpy("v:non_exist_label.id")
     with pytest.raises(KeyError, match="non_exist_prop"):
         out = property_context.to_numpy("v:v0.non_exist_prop")
-    with pytest.raises(RuntimeError, match="selector cannot be None"):
+    with pytest.raises(
+        InvalidArgumentError,
+        match="Selector in labeled vertex data context cannot be None",
+    ):
         out = property_context.to_numpy(selector=None)
     with pytest.raises(ValueError, match="not enough values to unpack"):
         out = property_context.to_numpy("xxx")

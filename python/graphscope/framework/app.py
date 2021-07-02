@@ -118,10 +118,12 @@ def not_compatible_for(*graph_types):
 class AppAssets(DAGNode):
     """A class represents a app assert node in a DAG that holds the bytes of the gar resource.
 
-    Assets includes name (for builtin algorithm), and gar (for user defined algorithm),
-    and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`.
+    Assets includes an algorithm name, and gar (for user defined algorithm),
+    a context type (one of 'tensor', 'vertex_data', 'vertex_property',
+    'labeled_vertex_data', 'dynamic_vertex_data', 'labeled_vertex_property'),
+    and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`),
 
-    The instance of this class can be passed to init :class:`graphscope.framework.app.AppDAGNode`.
+    The instance of this class can be passed to init :class:`graphscope.framework.app.AppDAGNode`
     """
 
     _support_context_type = [
@@ -279,10 +281,7 @@ class AppAssets(DAGNode):
 class AppDAGNode(DAGNode):
     """A class represents a app node in a DAG.
 
-    An application that can run on graphs and produce results.
-
-    Analytical engine will build the app dynamic library when instantiate a app instance.
-    The dynamic library will be reused if subsequent app's signature matches one of previous ones.
+    In GraphScope, an app node binding a concrete graph node that query executed on.
     """
 
     def __init__(self, graph, app_assets: AppAssets):
@@ -366,6 +365,13 @@ class AppDAGNode(DAGNode):
 
 
 class App(object):
+    """An application that can run on graphs and produce results.
+
+    Analytical engine will build the app dynamic library when instantiate a app instance.
+    And the dynamic library will be reused if subsequent app's signature matches one of
+    previous ones.
+    """
+
     def __init__(self, app_node, key):
         self._app_node = app_node
         self._session = self._app_node.session
