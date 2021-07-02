@@ -23,7 +23,8 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FrontendSnapshotService extends FrontendSnapshotGrpc.FrontendSnapshotImplBase {
+public class
+FrontendSnapshotService extends FrontendSnapshotGrpc.FrontendSnapshotImplBase {
 
     private static final Logger logger = LoggerFactory.getLogger(FrontendSnapshotService.class);
 

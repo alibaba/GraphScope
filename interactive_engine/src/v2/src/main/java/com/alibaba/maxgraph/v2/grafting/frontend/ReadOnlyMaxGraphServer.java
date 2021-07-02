@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,12 +19,12 @@ import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
-import com.alibaba.maxgraph.server.MaxGraphWsAndHttpSocketChannelizer;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.tinkerpop.Utils;
 import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
 import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
+import com.alibaba.maxgraph.v2.frontend.server.gremlin.channelizer.MaxGraphWsAndHttpSocketChannelizer;
 import com.alibaba.maxgraph.v2.frontend.server.loader.ProcessorLoader;
 import io.netty.channel.Channel;
 import org.apache.commons.io.IOUtils;

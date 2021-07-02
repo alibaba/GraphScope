@@ -69,7 +69,7 @@ public class MaxGraphOpSelectorHandler extends OpSelectorHandler {
                 String errorMessage = String.format("Invalid OpProcessor requested [%s]", msg.getProcessor());
                 throw new OpProcessorException(errorMessage, ResponseMessage.build(msg).code(ResponseStatusCode.REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS).statusMessage(errorMessage).create());
             }
-
+            logger.info("select processor is {}", processor.get().getClass().getName());
             objects.add(Pair.with(msg, ((OpProcessor) processor.get()).select(gremlinServerContext)));
         } catch (OpProcessorException var7) {
             logger.warn(var7.getMessage(), var7);

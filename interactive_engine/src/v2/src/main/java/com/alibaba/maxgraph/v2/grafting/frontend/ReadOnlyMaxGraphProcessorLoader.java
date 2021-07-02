@@ -27,13 +27,14 @@ import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.compiler.cost.statistics.CostDataStatistics;
-import com.alibaba.maxgraph.server.MaxGraphOpLoader;
 import com.alibaba.maxgraph.server.processor.MixedOpProcessor;
 import com.alibaba.maxgraph.server.processor.MixedTraversalOpProcessor;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.v2.common.config.Configs;
+import com.alibaba.maxgraph.v2.frontend.server.gremlin.loader.MaxGraphOpLoader;
 import com.alibaba.maxgraph.v2.frontend.server.loader.ProcessorLoader;
 import org.apache.tinkerpop.gremlin.server.Settings;
+
 import org.apache.tinkerpop.gremlin.server.op.OpLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,26 +75,27 @@ public class ReadOnlyMaxGraphProcessorLoader implements ProcessorLoader {
 
             }
         };
-//        MixedOpProcessor mixedOpProcessor = new MixedOpProcessor(this.graph,
-//                this.instanceConfig,
-//                this.rpcAddressFetcher,
-//                this.schemaFetcher,
-//                null,
-//                null,
-//                queryCallbackManager);
-//        mixedOpProcessor.init(settings);
-//        MaxGraphOpLoader.addOpProcessor(mixedOpProcessor.getName(), mixedOpProcessor);
-//
-//        MixedTraversalOpProcessor mixedTraversalOpProcessor = new MixedTraversalOpProcessor(this.graph,
-//                this.instanceConfig,
-//                this.rpcAddressFetcher,
-//                this.schemaFetcher,
-//                null,
-//                queryCallbackManager);
-//        mixedTraversalOpProcessor.init(settings);
-//        MaxGraphOpLoader.addOpProcessor(mixedTraversalOpProcessor.getName(), mixedTraversalOpProcessor);
+        MixedOpProcessor mixedOpProcessor = new MixedOpProcessor(this.graph,
+                this.instanceConfig,
+                this.rpcAddressFetcher,
+                this.schemaFetcher,
+                null,
+                null,
+                queryCallbackManager);
+        mixedOpProcessor.init(settings);
+        MaxGraphOpLoader.addOpProcessor(mixedOpProcessor.getName(), mixedOpProcessor);
+
+        MixedTraversalOpProcessor mixedTraversalOpProcessor = new MixedTraversalOpProcessor(this.graph,
+                this.instanceConfig,
+                this.rpcAddressFetcher,
+                this.schemaFetcher,
+                null,
+                queryCallbackManager);
+        mixedTraversalOpProcessor.init(settings);
+        MaxGraphOpLoader.addOpProcessor(mixedTraversalOpProcessor.getName(), mixedTraversalOpProcessor);
+
         logger.info("gaia.enable is {}", instanceConfig.getGaiaIsEnable());
-        if(instanceConfig.getGaiaIsEnable()) {
+        if (instanceConfig.getGaiaIsEnable()) {
             logger.info("start to load gaia compiler");
             // add gaia compiler
             GaiaConfig gaiaConfig = new VineyardGaiaConfig(this.instanceConfig);
