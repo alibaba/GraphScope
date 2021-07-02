@@ -115,7 +115,7 @@ public class Frontend extends NodeBase {
         TinkerMaxGraph graph = new TinkerMaxGraph(new InstanceConfig(configs.getInnerProperties()), maxGraphImpl,
                 new DefaultGraphDfs());
         // add gaia compiler
-        RpcChannelFetcher gaiaRpcFetcher = new DirectChannelFetcher(this.channelManager, executorCount);
+        RpcChannelFetcher gaiaRpcFetcher = new DirectChannelFetcher(this.channelManager, executorCount, RoleType.GAIA_RPC);
         GraphStoreService gaiaStoreService = new VineyardGraphStore(wrappedSchemaFetcher);
         this.maxGraphServer = new ReadOnlyMaxGraphServer(configs, graph, wrappedSchemaFetcher,
                 new DiscoveryAddressFetcher(this.discovery), gaiaRpcFetcher, gaiaStoreService);
