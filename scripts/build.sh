@@ -217,10 +217,12 @@ install_vineyard
 
 build_graphscope_gae
 
-build_graphscope_gie
-
 if [[ "${platform}" != *"Darwin"* ]]; then
+  build_graphscope_gie
+
   build_graphscope_gle
+else
+  echo "${platform} not support deploy interactive engine and learning engine on local."
 fi
 
 install_client_and_coordinator
