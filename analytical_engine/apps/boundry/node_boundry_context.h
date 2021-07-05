@@ -23,8 +23,7 @@
 
 namespace gs {
 template <typename FRAG_T>
-class NodeBoundryContext
-    : public TensorContext<FRAG_T, std::string> {
+class NodeBoundryContext : public TensorContext<FRAG_T, std::string> {
  public:
   using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
@@ -33,8 +32,8 @@ class NodeBoundryContext
   explicit NodeBoundryContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, std::string>(fragment) {}
 
-  void Init(grape::ParallelMessageManager& messages,
-            const std::string& nbunch1, const std::string& nbunch2) {
+  void Init(grape::ParallelMessageManager& messages, const std::string& nbunch1,
+            const std::string& nbunch2) {
     this->nbunch1 = nbunch1;
     this->nbunch2 = nbunch2;
   }
