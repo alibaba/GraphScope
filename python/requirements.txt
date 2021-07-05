@@ -11,5 +11,5 @@ pandas
 protobuf>=3.12.0
 PyYAML
 scipy
-vineyard>=0.2.0
-vineyard-io>=0.2.0
+vineyard==0.2.3
+vineyard-io==0.2.3

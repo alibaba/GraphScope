@@ -83,6 +83,7 @@ def gs_session():
     sess.close()
 
 
+@pytest.mark.skip(reason="TODO: the mars integration with vineyard will be revisited.")
 def test_mars_session(gs_session):
     from mars import dataframe as md
     from mars import tensor as mt

@@ -2100,7 +2100,7 @@ class DynamicFragment {
       break;
     }
     default:
-      assert(false);
+      CHECK(false);
     }
     return outer_vertices;
   }
