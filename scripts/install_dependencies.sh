@@ -83,10 +83,10 @@ function install_dependencies() {
       openjdk-8-jdk perl protobuf-compiler-grpc python3-pip uuid-dev wget zip zlib1g-dev
 
     # install apache-arrow
-    wget https://apache.bintray.com/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb -P /tmp
-    sudo apt install -y -V /tmp/apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb
-    sudo apt update
-    sudo apt install -y libarrow-dev=1.0.1-1 libarrow-python-dev=1.0.1-1
+    wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+    sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+    sudo apt update -y
+    sudo apt install -y libarrow-dev=3.0.0-1 libarrow-python-dev=3.0.0-1
 
     # intall fmt, required by folly
     wget https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz -P /tmp
