@@ -21,6 +21,10 @@
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-common</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.alibaba.graphscope</groupId>
+                    <artifactId>gremlin-server-plugin</artifactId>
+                </exclusion>
             </exclusions>
             <version>${project.parent.version}</version>
         </dependency>
