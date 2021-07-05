@@ -18,12 +18,12 @@ RUN apt update -y && apt install -y \
     perl protobuf-compiler-grpc python3-pip sudo telnet uuid-dev vim wget zip zlib1g-dev && \
   rm -fr /var/lib/apt/lists/*
 
-# apache arrow 1.0.1
-RUN wget https://apache.bintray.com/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb && \
-  apt install -y -V ./apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb && \
-  apt update -y && \
-  apt install -y libarrow-dev=1.0.1-1 libarrow-python-dev=1.0.1-1 && \
-  rm -f ./apache-arrow-archive-keyring-latest-$(lsb_release --codename --short).deb
+# apache arrow 3.0.0
+RUN wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
+    apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
+    apt update -y && \
+    apt install -y libarrow-dev=3.0.0-1 libarrow-python-dev=3.0.0-1 && \
+    rm ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
 
 # fmt v7.0.3, required by folly
 RUN cd /tmp && \
