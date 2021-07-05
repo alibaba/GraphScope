@@ -102,7 +102,11 @@ void LoadGraph(
                                                        graph_info);
 
           MPI_Barrier(comm_spec.comm());
-          VINEYARD_DISCARD(client.SyncMetaData());
+          {
+            vineyard::json __dummy;
+            VINEYARD_DISCARD(client.GetData(vineyard::InvalidObjectID(),
+                                            __dummy, true, false));
+          }
 
           BOOST_LEAF_AUTO(frag_group_id, loader.LoadFragmentAsFragmentGroup());
           MPI_Barrier(comm_spec.comm());
@@ -111,7 +115,12 @@ void LoadGraph(
                     << "] loaded graph to vineyard ...";
 
           MPI_Barrier(comm_spec.comm());
-          VINEYARD_DISCARD(client.SyncMetaData());
+          {
+            vineyard::json __dummy;
+            VINEYARD_DISCARD(client.GetData(vineyard::InvalidObjectID(),
+                                            __dummy, true, false));
+          }
+
           auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
               client.GetObject(frag_group_id));
           auto fid = comm_spec.WorkerToFrag(comm_spec.worker_id());
