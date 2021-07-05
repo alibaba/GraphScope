@@ -34,7 +34,8 @@ def bfs(graph, src=0):
         src (int, optional): Source vertex of breadth first search. Defaults to 0.
 
     Returns:
-        :class:`VertexDataContext`: a context with each vertex with a distance from the source.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex with a distance from the source, evaluated in eager mode.
 
     Examples:
 
@@ -48,7 +49,7 @@ def bfs(graph, src=0):
         s.close()
 
     """
-    return AppAssets(algo="bfs")(graph, src)
+    return AppAssets(algo="bfs", context="vertex_data")(graph, src)
 
 
 @not_compatible_for("dynamic_property", "arrow_projected", "dynamic_projected")
@@ -60,7 +61,8 @@ def property_bfs(graph, src=0):
         src (int, optional): Source vertex of breadth first search. Defaults to 0.
 
     Returns:
-        :class:`LabeledVertexPropertyContext`: A context with each vertex with a distance from the source.
+        :class:`graphscope.framework.context.LabeledVertexDataContextDAGNode`:
+            A context with each vertex with a distance from the source, evaluated in eager mode.
 
     Examples:
 
@@ -73,4 +75,4 @@ def property_bfs(graph, src=0):
         s.close()
 
     """
-    return AppAssets(algo="property_bfs")(graph, src)
+    return AppAssets(algo="property_bfs", context="labeled_vertex_data")(graph, src)

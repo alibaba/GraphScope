@@ -37,6 +37,8 @@ class DAGManager(object):
         types_pb2.RUN_APP,  # need loaded app
         types_pb2.CONTEXT_TO_NUMPY,  # need loaded graph to transform selector
         types_pb2.CONTEXT_TO_DATAFRAME,  # need loaded graph to transform selector
+        types_pb2.GRAPH_TO_NUMPY,  # need loaded graph to transform selector
+        types_pb2.GRAPH_TO_DATAFRAME,  # need loaded graph to transform selector
         types_pb2.TO_VINEYARD_TENSOR,  # need loaded graph to transform selector
         types_pb2.TO_VINEYARD_DATAFRAME,  # need loaded graph to transform selector
         types_pb2.PROJECT_GRAPH,  # need loaded graph to transform selector

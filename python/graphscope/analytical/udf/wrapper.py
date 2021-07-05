@@ -35,6 +35,7 @@ def wrap_init(
         "app": [
             {
                 "algo": algo_name,
+                "context_type": "labeled_vertex_data",
                 "type": "cython_pie"
                 if program_model == ProgramModel.PIE
                 else "cython_pregel",

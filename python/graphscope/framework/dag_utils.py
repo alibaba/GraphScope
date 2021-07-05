@@ -822,16 +822,14 @@ def graph_to_numpy(graph, selector=None, vertex_range=None):
     """Retrieve graph raw data as a numpy ndarray.
 
     Args:
-        graph (:class:`Graph`): Source graph.
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`): Source graph.
         selector (str): Select the type of data to retrieve.
         vertex_range (str): Specify a range to retrieve.
 
     Returns:
         An op to convert a graph's data to numpy ndarray.
     """
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
@@ -840,6 +838,7 @@ def graph_to_numpy(graph, selector=None, vertex_range=None):
         graph.session_id,
         types_pb2.GRAPH_TO_NUMPY,
         config=config,
+        inputs=[graph.op],
         output_types=types_pb2.TENSOR,
     )
     return op
@@ -849,16 +848,14 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
     """Retrieve graph raw data as a pandas DataFrame.
 
     Args:
-        graph (:class:`Graph`): Source graph.
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`): Source graph.
         selector (str): Select the type of data to retrieve.
         vertex_range (str): Specify a range to retrieve.
 
     Returns:
         An op to convert a graph's data to pandas DataFrame.
     """
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
@@ -867,6 +864,7 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
         graph.session_id,
         types_pb2.GRAPH_TO_DATAFRAME,
         config=config,
+        inputs=[graph.op],
         output_types=types_pb2.DATAFRAME,
     )
     return op

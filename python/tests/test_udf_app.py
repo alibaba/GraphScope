@@ -922,17 +922,17 @@ def test_load_app_from_gar(
 ):
     # file not exist, also works with permission denied
     with pytest.raises(FileNotFoundError, match="No such file or directory"):
-        ast1 = load_app("sssp", not_exist_gar)
+        ast1 = load_app("SSSP_Pregel", not_exist_gar)
     # not a zip file
     with pytest.raises(ValueError, match="not a zip file"):
-        ast2 = load_app("sssp", non_zipfile_gar)
+        ast2 = load_app("SSSP_Pregel", non_zipfile_gar)
     # type error
     with pytest.raises(ValueError, match="Wrong type"):
-        ast3 = load_app("sssp", [1, 2, 3, 4])
+        ast3 = load_app("SSSP_Pregel", [1, 2, 3, 4])
     with pytest.raises(ValueError, match="Wrong type"):
-        ast4 = load_app("sssp", gar=None)
+        ast4 = load_app("SSSP_Pregel", gar=None)
     SSSP_Pregel.to_gar(random_gar)
-    ast1 = load_app("sssp", random_gar)
+    ast1 = load_app("SSSP_Pregel", random_gar)
     assert isinstance(ast1, AppAssets)
 
 

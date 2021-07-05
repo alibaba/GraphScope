@@ -40,7 +40,8 @@ def hits(graph, tolerance=0.01, max_round=100, normalized=True):
         normalized (bool, optional): Whether to normalize the result to 0-1. Defaults to True.
 
     Returns:
-        :class:`VertexPropertyContext`: A context with each vertex assigned with the HITS value.
+        :class:`graphscope.framework.context.VertexPropertyContextDAGNode`:
+            A context with each vertex assigned with the HITS value, evaluated in eager mode.
 
     Examples:
 
@@ -57,4 +58,6 @@ def hits(graph, tolerance=0.01, max_round=100, normalized=True):
     tolerance = float(tolerance)
     max_round = int(max_round)
     normalized = bool(normalized)
-    return AppAssets(algo="hits")(graph, tolerance, max_round, normalized)
+    return AppAssets(algo="hits", context="vertex_property")(
+        graph, tolerance, max_round, normalized
+    )

@@ -35,8 +35,10 @@ def k_core(graph, k: int):
         k (int): The `k` for k-core.
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with a boolean:
-        1 if the vertex satisfies k-core, otherwise 0.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with a boolean:
+                1 if the vertex satisfies k-core, otherwise 0.
+            Evaluated in eager mode.
 
     Examples:
 
@@ -50,4 +52,4 @@ def k_core(graph, k: int):
         s.close()
 
     """
-    return AppAssets(algo="kcore")(graph, k=k)
+    return AppAssets(algo="kcore", context="vertex_data")(graph, k=k)

@@ -139,11 +139,9 @@ class _FetchHandler(object):
         context_type = ret["context_type"]
         if context_type == "dynamic_vertex_data":
             # for nx
-            return DynamicVertexDataContext(
-                context_dag_node, ret["context_key"], context_type
-            )
+            return DynamicVertexDataContext(context_dag_node, ret["context_key"])
         else:
-            return Context(context_dag_node, ret["context_key"], context_type)
+            return Context(context_dag_node, ret["context_key"])
 
     def wrapper_results(self, response: message_pb2.RunStepResponse):
         rets = list()

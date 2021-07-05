@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import functools
 import inspect
 
 import networkx.algorithms as nxa
@@ -32,6 +33,7 @@ from graphscope.proto import types_pb2
 
 # decorator function
 def project_to_simple(func):
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
@@ -411,13 +413,13 @@ def has_path(G, source, target):
     target : node
        Ending node for path
     """
-    return AppAssets(algo="sssp_has_path")(G, source, target)
+    return AppAssets(algo="sssp_has_path", context="tensor")(G, source, target)
 
 
 @project_to_simple
 @patch_docstring(nxa.shortest_path)
 def shortest_path(G, source=None, target=None, weight=None):
-    return AppAssets(algo="sssp_path")(G, source)
+    return AppAssets(algo="sssp_path", context="tensor")(G, source)
 
 
 @project_to_simple
@@ -489,7 +491,7 @@ def average_shortest_path_length(G, weight=None):
     2.0
 
     """
-    ctx = AppAssets(algo="sssp_average_length")(G)
+    ctx = AppAssets(algo="sssp_average_length", context="tensor")(G)
     return ctx.to_numpy("r", axis=0)[0]
 
 
@@ -526,20 +528,26 @@ def bfs_edges(G, source, depth_limit=None):
 
     """
     # FIXME: reverse not support.
-    ctx = AppAssets(algo="bfs_generic")(G, source, depth_limit, format="edges")
+    ctx = AppAssets(algo="bfs_generic", context="tensor")(
+        G, source, depth_limit, format="edges"
+    )
     return ctx.to_numpy("r", axis=0).tolist()
 
 
 @project_to_simple
 @patch_docstring(nxa.bfs_predecessors)
 def bfs_predecessors(G, source, depth_limit=None):
-    return AppAssets(algo="bfs_generic")(G, source, depth_limit, format="predecessors")
+    return AppAssets(algo="bfs_generic", context="tensor")(
+        G, source, depth_limit, format="predecessors"
+    )
 
 
 @project_to_simple
 @patch_docstring(nxa.bfs_successors)
 def bfs_successors(G, source, depth_limit=None):
-    return AppAssets(algo="bfs_generic")(G, source, depth_limit, format="successors")
+    return AppAssets(algo="bfs_generic", context="tensor")(
+        G, source, depth_limit, format="successors"
+    )
 
 
 @project_to_simple
@@ -582,7 +590,7 @@ def all_pairs_shortest_path_length(G, weight=None):
     Distances are calculated as sums of weighted edges traversed.
 
     """
-    return AppAssets(algo="all_pairs_shortest_path_length")(G)
+    return AppAssets(algo="all_pairs_shortest_path_length", context="vertex_data")(G)
 
 
 @project_to_simple
@@ -642,7 +650,7 @@ def closeness_centrality(G, weight=None, wf_improved=True):
        Social Network Analysis: Methods and Applications, 1994,
        Cambridge University Press.
     """
-    ctx = AppAssets(algo="closeness_centrality")(G, wf_improved)
+    ctx = AppAssets(algo="closeness_centrality", context="vertex_data")(G, wf_improved)
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 
@@ -817,7 +825,7 @@ def triangles(G, nodes=None):
 @patch_docstring(nxa.transitivity)
 def transitivity(G):
     # FIXME: nodes not support.
-    return AppAssets(algo="transitivity")(G)
+    return AppAssets(algo="transitivity", context="tensor")(G)
 
 
 @project_to_simple
@@ -866,7 +874,7 @@ def average_clustering(G, nodes=None, count_zeros=True):
        https://arxiv.org/abs/0802.2512
     """
     # FIXME: nodes, weight, count_zeros not support.
-    ctx = AppAssets(algo="avg_clustering")(G)
+    ctx = AppAssets(algo="avg_clustering", context="tensor")(G)
     return ctx.to_numpy("r")[0]
 
 
@@ -885,4 +893,4 @@ def weakly_connected_components(G):
         1 if the vertex satisfies k-core, otherwise 0.
 
     """
-    return AppAssets(algo="wcc_projected")(G)
+    return AppAssets(algo="wcc_projected", context="vertex_data")(G)

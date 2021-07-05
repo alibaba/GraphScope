@@ -37,7 +37,8 @@ def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
         max_round (int, optional): Defaults to 100.
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with a gv-centrality.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with a gv-centrality, evaluated in eager mode.
 
     Examples:
 
@@ -53,4 +54,6 @@ def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
     """
     tolerance = float(tolerance)
     max_round = int(max_round)
-    return AppAssets(algo="eigenvector_centrality")(graph, tolerance, max_round)
+    return AppAssets(algo="eigenvector_centrality", context="vertex_data")(
+        graph, tolerance, max_round
+    )
