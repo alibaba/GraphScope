@@ -45,7 +45,7 @@ function check_os_compatibility() {
   fi
 
   if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"Darwin"* ]]; then
-    echo "This script is only available on Ubuntu or MacOs"
+    echo "This script is only available on Ubuntu or MacOS"
     exit 1
   fi
 
@@ -68,32 +68,40 @@ function check_dependencies_version() {
     echo "GraphScope requires python 3.6 or greater."
     exit 1
   fi
-  if [[ "${platform}" != *"Darwin"* ]]; then
-    if ! command -v mvn &> /dev/null; then
-      echo "maven ${err_msg}"
-      exit
-    fi
+  if ! command -v mvn &> /dev/null; then
+    echo "maven ${err_msg}"
+    exit 1
   fi
-  if [[ "${platform}" != *"Darwin"* ]]; then
-    if ! command -v cargo &> /dev/null; then
-      echo "cargo ${err_msg} or source ~/.cargo/env"
-      exit
-    fi
+  if ! command -v cargo &> /dev/null; then
+    echo "cargo ${err_msg} or source ~/.cargo/env"
+    exit 1
   fi
-  if [[ "${platform}" != *"Darwin"* ]]; then
-    if ! command -v go &> /dev/null; then
-      echo "go ${err_msg}"
-      exit
+  if ! command -v go &> /dev/null; then
+    echo "go ${err_msg}"
+    exit 1
+  fi
+  if [[ "${platform}" == *"Darwin"* ]]; then
+    if ! command -v clang &> /dev/null; then
+      echo "clang could not be found, GraphScope support clang9 or clang10, you can install it manually."
+      exit 1
+    fi
+    ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9][0-9]\).*/\1/')
+    if [[ "$ver" -lt "9" || "$ver" -gt "10" ]]; then
+      echo "GraphScope requires clang 9 or clang 10 on MacOS, current version is $ver."
+      exit 1
+    fi
+
+    # check openssl library is installed
+    if [ -d "/usr/local/opt/openssl"]; then
+      export OPENSSL_ROOT_DIR="/usr/local/opt/openssl"
+      export OPENSSL_LIBRARIES="/usr/local/opt/openssl/lib"
+      export OPENSSL_SSL_LIBRARY="/usr/local/opt/openssl/lib/libssl.dylib"
+    else
+      echo "openssl library ${err_msg}"
+      exit 1
     fi
   fi
 }
-
-if [[ "${platform}" == *"Darwin"* ]]; then
-  # export OPENSSL lib
-  export OPENSSL_ROOT_DIR="/usr/local/opt/openssl"
-  export OPENSSL_LIBRARIES="/usr/local/opt/openssl/lib"
-  export OPENSSL_SSL_LIBRARY="/usr/local/opt/openssl/lib/libssl.dylib"
-fi
 
 graphscope_src="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
 
@@ -133,8 +141,8 @@ function build_graphscope_gae() {
   cd ${graphscope_src}
   mkdir analytical_engine/build && pushd analytical_engine/build
   cmake ..
-  sudo make -j`nproc`
-  sudo make install
+  make -j`nproc`
+  make install
   popd
 }
 
@@ -217,12 +225,12 @@ install_vineyard
 
 build_graphscope_gae
 
-if [[ "${platform}" != *"Darwin"* ]]; then
-  build_graphscope_gie
+build_graphscope_gie
 
+if [[ "${platform}" != *"Darwin"* ]]; then
   build_graphscope_gle
 else
-  echo "${platform} not support deploy interactive engine and learning engine on local."
+  echo "Warning: ${platform} not support deploy learning engine on local."
 fi
 
 install_client_and_coordinator

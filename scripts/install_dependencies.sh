@@ -46,7 +46,7 @@ function check_os_compatibility() {
   fi
 
   if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"Darwin"* ]]; then
-    echo "This script is only available on Ubuntu or MacOs"
+    echo "This script is only available on Ubuntu or MacOS"
     exit 1
   fi
 
@@ -57,7 +57,16 @@ function check_os_compatibility() {
 
   if [[ "${platform}" == *"Darwin"* ]]; then
     if ! hash brew; then
-      echo "Homebrew not installed. Install Homebrew: https://docs.brew.sh/Installation."
+      echo "Homebrew is not installed. Please install Homebrew: https://docs.brew.sh/Installation."
+      exit 1
+    fi
+    if ! command -v clang &> /dev/null; then
+      echo "clang could not be found, GraphScope support clang9 or clang10, you can install it manually."
+      exit 1
+    fi
+    ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9][0-9]\).*/\1/')
+    if [[ "$ver" -lt "9" || "$ver" -gt "10" ]]; then
+      echo "GraphScope requires clang 9 or clang 10 on MacOS, current version is $ver."
       exit 1
     fi
   fi
@@ -135,11 +144,10 @@ function install_dependencies() {
   fi
 
   if [[ "${platform}" == *"Darwin"* ]]; then
-    git config --global http.postBuffer 1048576000
+    brew install llvm@9 cmake double-conversion etcd protobuf apache-arrow openmpi boost glog gflags \
+      zstd snappy lz4 openssl@1.1 libevent fmt autoconf go maven
 
-    brew install cmake double-conversion etcd protobuf apache-arrow openmpi boost glog gflags \
-      zstd snappy lz4 openssl@1.1 libevent fmt clang autoconf go maven
-
+    # export openssl library
     export OPENSSL_ROOT_DIR="/usr/local/opt/openssl"
     export OPENSSL_LIBRARIES="/usr/local/opt/openssl/lib"
     export OPENSSL_SSL_LIBRARY="/usr/local/opt/openssl/lib/libssl.dylib"

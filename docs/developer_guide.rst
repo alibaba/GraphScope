@@ -11,7 +11,7 @@ Building and Testing
 
 GraphScope has many dependencies.
 
-To make life easier, we provide two docker images with all needed dependencies
+To make life easier, we provide two docker images with all required dependencies
 installed.
 
     - `graphscope-vineyard` as the builder, and
@@ -110,16 +110,19 @@ To make sure the maximum compatibility you may need:
 Note that if you want to build wheel packages for different Python versions, you may need to install multiple
 version of Python using `conda` or `pyenv`.
 
-The GraphScope analytical engine could be build on local on Mac with script.
+The GraphScope analytical engine and interactive engine could be built locally on mac with script.
 
-If GraphScope's dependencies not satisfied，you could use install_denpendencies
+If GraphScope's dependencies are not satisfied，you could use the install_denpendencies
 script to install dependencies.
 
 .. code::shell
+
     ./script/install_denpendencies.sh
 
-build the analytical engine with script on Mac.
+build the analytical engine and interactive engine with script.
+
 .. code::shell
+
     ./script/build.sh
 
 
