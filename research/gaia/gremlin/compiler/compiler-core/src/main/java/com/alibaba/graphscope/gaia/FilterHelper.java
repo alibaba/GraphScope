@@ -152,6 +152,21 @@ public class FilterHelper {
         }
     }
 
+    public Gremlin.FilterExp propertyPredicate(final int name, final Number value, final BiPredicate predicate) {
+        Gremlin.Compare compare = convertFromBiPredicate(predicate);
+        if (value == null) {
+            return hasProperty(name, compare, EncodeValue.fromNull());
+        } else if (value instanceof Long) {
+            return hasProperty(name, compare, EncodeValue.fromLong(value.longValue()));
+        } else if (value instanceof Integer) {
+            return hasProperty(name, compare, EncodeValue.fromInt(value.intValue()));
+        } else if (value instanceof Double || value instanceof Float || value instanceof BigDecimal) {
+            return hasProperty(name, compare, EncodeValue.fromDouble(value.doubleValue()));
+        } else {
+            throw new UnsupportedOperationException("number type not supported " + value.getClass());
+        }
+    }
+
     public Gremlin.FilterExp propertyPredicate(final String name, final List<Object> value, final BiPredicate predicate) {
         Gremlin.Compare compare = convertFromBiPredicate(predicate);
         if (value == null || value.isEmpty()) {
@@ -169,7 +184,30 @@ public class FilterHelper {
         }
     }
 
+    public Gremlin.FilterExp propertyPredicate(final int name, final List<Object> value, final BiPredicate predicate) {
+        Gremlin.Compare compare = convertFromBiPredicate(predicate);
+        if (value == null || value.isEmpty()) {
+            return hasProperty(name, compare, EncodeValue.fromNull());
+        } else if (value.get(0) instanceof String) {
+            return hasProperty(name, compare, EncodeValue.fromStrArray(value.stream().map(k -> (String) k).collect(Collectors.toList())));
+        } else if (value.get(0) instanceof Integer) {
+            return hasProperty(name, compare, EncodeValue.fromIntArray(value.stream().map(k -> (Integer) k).collect(Collectors.toList())));
+        } else if (value.get(0) instanceof Long) {
+            return hasProperty(name, compare, EncodeValue.fromLongArray(value.stream().map(k -> (Long) k).collect(Collectors.toList())));
+        } else if (value.get(0) instanceof Double || value.get(0) instanceof Float) {
+            return hasProperty(name, compare, EncodeValue.fromDoubleArray(value.stream().map(k -> Double.valueOf(((Number) value).doubleValue())).collect(Collectors.toList())));
+        } else {
+            throw new UnsupportedOperationException("cannot support other list value type " + value.get(0).getClass());
+        }
+    }
+
     public Gremlin.FilterExp propertyPredicate(final String name, final String value, final BiPredicate predicate) {
+        Gremlin.Compare compare = convertFromBiPredicate(predicate);
+        Common.Value stringVal = (value == null) ? EncodeValue.fromNull() : EncodeValue.fromString(value);
+        return hasProperty(name, compare, stringVal);
+    }
+
+    public Gremlin.FilterExp propertyPredicate(final int name, final String value, final BiPredicate predicate) {
         Gremlin.Compare compare = convertFromBiPredicate(predicate);
         Common.Value stringVal = (value == null) ? EncodeValue.fromNull() : EncodeValue.fromString(value);
         return hasProperty(name, compare, stringVal);
