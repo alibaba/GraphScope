@@ -1,12 +1,12 @@
-/*
+/**
  * Copyright 2020 Alibaba Group Holding Limited.
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,22 +15,16 @@
  */
 package com.alibaba.maxgraph.v2.grafting.frontend;
 
-import com.alibaba.graphscope.gaia.GlobalEngineConf;
-import com.alibaba.graphscope.gaia.TraversalSourceGraph;
-import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
-import com.alibaba.graphscope.gaia.store.GraphStoreService;
-import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
+import com.alibaba.maxgraph.server.MaxGraphWsAndHttpSocketChannelizer;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.tinkerpop.Utils;
 import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
 import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
-import com.alibaba.maxgraph.v2.frontend.server.gremlin.channelizer.MaxGraphWsAndHttpSocketChannelizer;
 import com.alibaba.maxgraph.v2.frontend.server.loader.ProcessorLoader;
 import io.netty.channel.Channel;
-import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
@@ -38,7 +32,6 @@ import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.channel.WsAndHttpChannelizer;
 import org.apache.tinkerpop.gremlin.server.util.ServerGremlinExecutor;
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,18 +57,13 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
     private TinkerMaxGraph graph;
     private SchemaFetcher schemaFetcher;
     private RpcAddressFetcher rpcAddressFetcher;
-    private RpcChannelFetcher gaiaRpcFetcher;
-    private GraphStoreService gaiaStoreService;
 
     public ReadOnlyMaxGraphServer(Configs configs, TinkerMaxGraph graph, SchemaFetcher schemaFetcher,
-                                  RpcAddressFetcher rpcAddressFetcher, RpcChannelFetcher gaiaRpcFetcher,
-                                  GraphStoreService gaiaStoreService) {
+                                  RpcAddressFetcher rpcAddressFetcher) {
         this.configs = configs;
         this.graph = graph;
         this.schemaFetcher = schemaFetcher;
         this.rpcAddressFetcher = rpcAddressFetcher;
-        this.gaiaRpcFetcher = gaiaRpcFetcher;
-        this.gaiaStoreService = gaiaStoreService;
     }
 
     @Override
@@ -102,20 +90,11 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
         serverGremlinExecutor.getGraphManager().putTraversalSource("g", graph.traversal());
         GremlinExecutor gremlinExecutor = Utils.getFieldValue(ServerGremlinExecutor.class, serverGremlinExecutor, "gremlinExecutor");
         Bindings globalBindings = Utils.getFieldValue(GremlinExecutor.class, gremlinExecutor, "globalBindings");
-
-        boolean gaiaEnable = Boolean.valueOf(configs.get(InstanceConfig.GAIA_ENABLE, "false"));
-        if (gaiaEnable) {
-            Graph gaiaTraversalGraph = TraversalSourceGraph.open(new BaseConfiguration());
-            globalBindings.put("graph", gaiaTraversalGraph);
-            globalBindings.put("g", gaiaTraversalGraph.traversal());
-            GlobalEngineConf.setGlobalVariables(gaiaTraversalGraph.variables());
-        } else {
-            globalBindings.put("graph", graph);
-            globalBindings.put("g", graph.traversal());
-        }
+        globalBindings.put("graph", graph);
+        globalBindings.put("g", graph.traversal());
 
         ProcessorLoader processorLoader = new ReadOnlyMaxGraphProcessorLoader(this.configs,
-                this.graph, this.schemaFetcher, this.rpcAddressFetcher, this.gaiaRpcFetcher, this.gaiaStoreService);
+                this.graph, this.schemaFetcher, this.rpcAddressFetcher);
         processorLoader.loadProcessor(settings);
         try {
             this.server.start().exceptionally(t -> {

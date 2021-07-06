@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public abstract class GraphStoreService implements SnapshotIdFetcher {
+public abstract class GraphStoreService {
     protected Map<String, Map<String, Map<String, Object>>> cachedPropertyForTest;
 
     public GraphStoreService(String propertyResourceName) {
@@ -56,7 +56,6 @@ public abstract class GraphStoreService implements SnapshotIdFetcher {
         throw new UnsupportedOperationException();
     }
 
-    @Override
     public long getSnapshotId() {
         throw new UnsupportedOperationException();
     }

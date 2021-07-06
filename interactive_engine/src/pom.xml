@@ -27,6 +27,7 @@
         <module>v2</module>
         <module>data_load_tools</module>
         <module>../../research/gaia/gremlin/compiler</module>
+        <module>gaia-adaptor</module>
     </modules>
 
     <profiles>

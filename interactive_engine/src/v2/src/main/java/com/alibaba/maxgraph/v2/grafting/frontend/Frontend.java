@@ -15,10 +15,6 @@
  */
 package com.alibaba.maxgraph.v2.grafting.frontend;
 
-import com.alibaba.maxgraph.v2.frontend.gaia.adaptor.DirectChannelFetcher;
-import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
-import com.alibaba.graphscope.gaia.store.GraphStoreService;
-import com.alibaba.maxgraph.v2.frontend.gaia.adaptor.VineyardGraphStore;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.compiler.dfs.DefaultGraphDfs;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
@@ -114,11 +110,8 @@ public class Frontend extends NodeBase {
                 graphWriter);
         TinkerMaxGraph graph = new TinkerMaxGraph(new InstanceConfig(configs.getInnerProperties()), maxGraphImpl,
                 new DefaultGraphDfs());
-        // add gaia compiler
-        RpcChannelFetcher gaiaRpcFetcher = new DirectChannelFetcher(this.channelManager, executorCount, RoleType.GAIA_RPC);
-        GraphStoreService gaiaStoreService = new VineyardGraphStore(wrappedSchemaFetcher);
         this.maxGraphServer = new ReadOnlyMaxGraphServer(configs, graph, wrappedSchemaFetcher,
-                new DiscoveryAddressFetcher(this.discovery), gaiaRpcFetcher, gaiaStoreService);
+                new DiscoveryAddressFetcher(this.discovery));
     }
 
     @Override
