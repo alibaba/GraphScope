@@ -61,10 +61,10 @@ function check_os_compatibility() {
       exit 1
     fi
     if ! command -v clang &> /dev/null; then
-      echo "clang could not be found, GraphScope support clang 9 or clang 10, you can install it manually."
+      echo "clang could not be found, GraphScope require clang 9 or clang 10, you can install it manually."
       exit 1
     fi
-    ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9][0-9]\).*/\1/')
+    ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')
     if [[ "$ver" -lt "9" || "$ver" -gt "10" ]]; then
       echo "GraphScope requires clang 9 or clang 10 on MacOS, current version is $ver."
       exit 1
