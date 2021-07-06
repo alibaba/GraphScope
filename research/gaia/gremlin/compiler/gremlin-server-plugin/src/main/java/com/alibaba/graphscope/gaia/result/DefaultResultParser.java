@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.proto.GremlinResult;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.translator.builder.ConfigBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
+import com.alibaba.graphscope.gaia.store.ExperimentalGraphStore;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
@@ -88,9 +89,13 @@ public class DefaultResultParser implements ResultParser {
     }
 
     protected String extractVertexLabel(long vertexId) {
-        // pre 8 bits
-        long labelId = (vertexId >> 56) & 0xff;
-        return graphStore.getLabel(labelId);
+        if (graphStore instanceof ExperimentalGraphStore) {
+            // pre 8 bits
+            long labelId = (vertexId >> 56) & 0xff;
+            return graphStore.getLabel(labelId);
+        } else {
+            return "";
+        }
     }
 
     protected BigInteger extractEdgeId(GremlinResult.Edge edge) {
