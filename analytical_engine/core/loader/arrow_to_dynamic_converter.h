@@ -154,7 +154,6 @@ class ArrowToDynamicConverter {
         }
       }
     }
-    dst_vm_ptr->Construct();
 
     return dst_vm_ptr;
   }
