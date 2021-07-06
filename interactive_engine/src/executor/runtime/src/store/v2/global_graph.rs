@@ -247,11 +247,11 @@ impl GlobalGraph {
             if labels.is_empty() {
                 if let Some(iter) = self.scan_vertex_iter(si, partition_id, None, condition)? {
                     res.push(iter);
-                } else {
-                    for label_id in labels {
-                        if let Some(iter) = self.scan_vertex_iter(si, partition_id, Some(*label_id), condition)? {
-                            res.push(iter);
-                        }
+                }
+            } else {
+                for label_id in labels {
+                    if let Some(iter) = self.scan_vertex_iter(si, partition_id, Some(*label_id), condition)? {
+                        res.push(iter);
                     }
                 }
             }
@@ -283,11 +283,11 @@ impl GlobalGraph {
             if labels.is_empty() {
                 if let Some(iter) = self.scan_edge_iter(si, partition_id, None, condition)? {
                     res.push(iter);
-                } else {
-                    for label_id in labels {
-                        if let Some(iter) = self.scan_edge_iter(si, partition_id, Some(*label_id), condition)? {
-                            res.push(iter);
-                        }
+                }
+            } else {
+                for label_id in labels {
+                    if let Some(iter) = self.scan_edge_iter(si, partition_id, Some(*label_id), condition)? {
+                        res.push(iter);
                     }
                 }
             }
