@@ -150,6 +150,8 @@ function build_graphscope_gie() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') build and install graphscope interactive engine"
   # build GraphScope GIE
   source ~/.cargo/env
+  rustup component add rustfmt
+
   cd ${graphscope_src}
   # build frontend coordinator graph-manager
   pushd interactive_engine
