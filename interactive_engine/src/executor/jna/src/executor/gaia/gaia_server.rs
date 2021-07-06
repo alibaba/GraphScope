@@ -18,6 +18,7 @@ pub struct GaiaServer {
     config: Arc<GraphConfig>,
     graph: Arc<GlobalGraph>,
     detector: Arc<SimpleServerDetector>,
+    rpc_runtime: Runtime,
 }
 
 impl GaiaServer {
@@ -28,6 +29,7 @@ impl GaiaServer {
             config,
             graph: Arc::new(GlobalGraph::empty(partition_count)),
             detector: Arc::new(SimpleServerDetector::new()),
+            rpc_runtime: Runtime::new().unwrap(),
         }
     }
 
@@ -64,8 +66,7 @@ impl GaiaServer {
             .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?
             .ok_or(GraphError::new(EngineError, "gaia engine return None addr".to_string()))?;
 
-        let rt = Runtime::new().map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
-        let rpc_port = rt.block_on(async {
+        let rpc_port = self.rpc_runtime.block_on(async {
             let job_compiler = initialize_job_compiler(self.graph.clone(), self.graph.clone(), worker_num, server_id);
             let service = Service::new(job_compiler);
             let local_addr = start_rpc_server(addr, service, report, false).await.unwrap();
