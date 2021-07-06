@@ -21,22 +21,22 @@ import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 
 public class VineyardGraphStore extends GraphStoreService {
     public static final String MODERN_PROPERTY_RESOURCE = "modern.properties.json";
-    private GraphSchema graphSchema;
-    private long snapshotId;
+    private SchemaFetcher schemaFetcher;
 
     public VineyardGraphStore(SchemaFetcher schemaFetcher) {
         super(MODERN_PROPERTY_RESOURCE);
-        this.graphSchema = schemaFetcher.getSchemaSnapshotPair().getLeft();
-        this.snapshotId = schemaFetcher.getSchemaSnapshotPair().getRight();
+        this.schemaFetcher = schemaFetcher;
     }
 
     @Override
     public long getLabelId(String label) {
+        GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
         return graphSchema.getElement(label).getLabelId();
     }
 
     @Override
     public String getLabel(long labelId) {
+        GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
         return graphSchema.getElement((int) labelId).getLabel();
     }
 
@@ -47,15 +47,18 @@ public class VineyardGraphStore extends GraphStoreService {
 
     @Override
     public int getPropertyId(String propertyName) {
+        GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
         return graphSchema.getPropertyId(propertyName);
     }
 
     @Override
     public String getPropertyName(int propertyId) {
+        GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
         return graphSchema.getPropertyName(propertyId);
     }
 
     public long getSnapshotId() {
-        return this.snapshotId;
+        long snapshotId = this.schemaFetcher.getSchemaSnapshotPair().getRight();
+        return snapshotId;
     }
 }
