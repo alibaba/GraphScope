@@ -61,7 +61,7 @@ function check_os_compatibility() {
       exit 1
     fi
     if ! command -v clang &> /dev/null; then
-      echo "clang could not be found, GraphScope support clang9 or clang10, you can install it manually."
+      echo "clang could not be found, GraphScope support clang 9 or clang 10, you can install it manually."
       exit 1
     fi
     ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9][0-9]\).*/\1/')
@@ -144,7 +144,7 @@ function install_dependencies() {
   fi
 
   if [[ "${platform}" == *"Darwin"* ]]; then
-    brew install llvm@9 cmake double-conversion etcd protobuf apache-arrow openmpi boost glog gflags \
+    brew install cmake double-conversion etcd protobuf apache-arrow openmpi boost glog gflags \
       zstd snappy lz4 openssl@1.1 libevent fmt autoconf go maven
 
     # export openssl library
