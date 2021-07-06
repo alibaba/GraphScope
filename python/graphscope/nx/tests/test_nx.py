@@ -338,7 +338,6 @@ class TestGraphTransformation(object):
         nx_g = self.NXGraph(g, dist=True)
         self.assert_convert_success(g, nx_g)
 
-    @pytest.mark.skip(reason="FIXME: folly::hash failed.")
     def test_str_oid_gs_to_nx(self):
         g = self.str_oid_g
         nx_g = self.NXGraph(g, dist=True)
