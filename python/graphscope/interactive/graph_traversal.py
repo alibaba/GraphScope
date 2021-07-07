@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+from gremlin_python import statics
 from gremlin_python.process import anonymous_traversal
 from gremlin_python.process import graph_traversal
 from gremlin_python.process.traversal import Bytecode
@@ -454,6 +455,196 @@ def range(*args):
 def sum(*args):
     return __.sum_(*args)
 
+
+statics.add_static("V", V)
+
+statics.add_static("addE", addE)
+
+statics.add_static("addV", addV)
+
+statics.add_static("aggregate", aggregate)
+
+statics.add_static("and_", and_)
+
+statics.add_static("as_", as_)
+
+statics.add_static("barrier", barrier)
+
+statics.add_static("both", both)
+
+statics.add_static("bothE", bothE)
+
+statics.add_static("bothV", bothV)
+
+statics.add_static("branch", branch)
+
+statics.add_static("cap", cap)
+
+statics.add_static("choose", choose)
+
+statics.add_static("coalesce", coalesce)
+
+statics.add_static("coin", coin)
+
+statics.add_static("constant", constant)
+
+statics.add_static("count", count)
+
+statics.add_static("cyclicPath", cyclicPath)
+
+statics.add_static("dedup", dedup)
+
+statics.add_static("drop", drop)
+
+statics.add_static("elementMap", elementMap)
+
+statics.add_static("emit", emit)
+
+statics.add_static("filter_", filter_)
+
+statics.add_static("flatMap", flatMap)
+
+statics.add_static("fold", fold)
+
+statics.add_static("group", group)
+
+statics.add_static("groupCount", groupCount)
+
+statics.add_static("has", has)
+
+statics.add_static("hasId", hasId)
+
+statics.add_static("hasKey", hasKey)
+
+statics.add_static("hasLabel", hasLabel)
+
+statics.add_static("hasNot", hasNot)
+
+statics.add_static("hasValue", hasValue)
+
+statics.add_static("id_", id_)
+
+statics.add_static("identity", identity)
+
+statics.add_static("inE", inE)
+
+statics.add_static("inV", inV)
+
+statics.add_static("in_", in_)
+
+statics.add_static("index", index)
+
+statics.add_static("inject", inject)
+
+statics.add_static("is_", is_)
+
+statics.add_static("key", key)
+
+statics.add_static("label", label)
+
+statics.add_static("limit", limit)
+
+statics.add_static("local", local)
+
+statics.add_static("loops", loops)
+
+statics.add_static("map", map)
+
+statics.add_static("match", match)
+
+statics.add_static("math", math)
+
+statics.add_static("max_", max_)
+
+statics.add_static("mean", mean)
+
+statics.add_static("min_", min_)
+
+statics.add_static("not_", not_)
+
+statics.add_static("optional", optional)
+
+statics.add_static("or_", or_)
+
+statics.add_static("order", order)
+
+statics.add_static("otherV", otherV)
+
+statics.add_static("out", out)
+
+statics.add_static("outE", outE)
+
+statics.add_static("outV", outV)
+
+statics.add_static("path", path)
+
+statics.add_static("project", project)
+
+statics.add_static("properties", properties)
+
+statics.add_static("property", property)
+
+statics.add_static("propertyMap", propertyMap)
+
+statics.add_static("range_", range_)
+
+statics.add_static("repeat", repeat)
+
+statics.add_static("sack", sack)
+
+statics.add_static("sample", sample)
+
+statics.add_static("select", select)
+
+statics.add_static("sideEffect", sideEffect)
+
+statics.add_static("simplePath", simplePath)
+
+statics.add_static("skip", skip)
+
+statics.add_static("store", store)
+
+statics.add_static("subgraph", subgraph)
+
+statics.add_static("sum_", sum_)
+
+statics.add_static("tail", tail)
+
+statics.add_static("timeLimit", timeLimit)
+
+statics.add_static("times", times)
+
+statics.add_static("to", to)
+
+statics.add_static("toE", toE)
+
+statics.add_static("toV", toV)
+
+statics.add_static("tree", tree)
+
+statics.add_static("unfold", unfold)
+
+statics.add_static("union", union)
+
+statics.add_static("until", until)
+
+statics.add_static("value", value)
+
+statics.add_static("valueMap", valueMap)
+
+statics.add_static("values", values)
+
+statics.add_static("where", where)
+
+
+# Deprecated - prefer the underscore suffixed versions e.g filter_()
+
+statics.add_static("filter", filter)
+statics.add_static("id", id)
+statics.add_static("max", max)
+statics.add_static("min", min)
+statics.add_static("range", range)
+statics.add_static("sum", sum)
 
 """
 from gremlin_python.process.traversal import Operator
