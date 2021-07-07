@@ -76,3 +76,7 @@ def __inject_graphscope_extensions():
 
 __inject_graphscope_extensions()
 del __inject_graphscope_extensions
+
+from graphscope.interactive import graph_traversal
+
+del graph_traversal
