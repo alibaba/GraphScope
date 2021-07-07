@@ -1,7 +1,7 @@
 Developer Guide
 ===============
 
-GraphScope has been developed by an active team of software engineers and researchers. 
+GraphScope has been developed by an active team of software engineers and researchers.
 Any contributions from the open-source community to improve this project are  greatly appreciated!
 
 GraphScope is licensed under Apache License 2.0.
@@ -9,15 +9,15 @@ GraphScope is licensed under Apache License 2.0.
 Building and Testing
 --------------------
 
-GraphScope has many dependencies. 
+GraphScope has many dependencies.
 
-To make life easier, we provide two docker images with all needed dependencies 
-installed. 
+To make life easier, we provide two docker images with all required dependencies
+installed.
 
-    - `graphscope-vineyard` as the builder, and 
+    - `graphscope-vineyard` as the builder, and
     - `graphscope-runtime` as the base image for runtime.
 
-For developers, they just need to ``git clone`` the latest version of code from 
+For developers, they just need to ``git clone`` the latest version of code from
 our `repo <https://github.com/alibaba/GraphScope>`_,
 make their changes to the code and build with command in the root:
 
@@ -30,8 +30,8 @@ It will build the current source code in a container with image `graphscope-vine
 and copy built binaries into a new image based from `graphscope-runtime`.
 The generated releasing image is tagged as ``graphscope/graphscope:SHORTSHA``
 
-GraphScope python client is separate with the engines image. 
-If you are developing python client and not modifying the proto files, 
+GraphScope python client is separate with the engines image.
+If you are developing python client and not modifying the proto files,
 the engines image doesn't need to rebuild.
 You may want to re-install the python client on local.
 
@@ -46,11 +46,11 @@ To test the newly built binaries, manually open a session and assigned your imag
 .. code:: python
 
     import graphscope
-    
+
     sess = graphscope.session(k8s_gs_image='graphscope/graphscope:SHORTSHA')
-    
+
     # ...
-    
+
 
 Or use the test script to pass all test cases.
 
@@ -110,10 +110,26 @@ To make sure the maximum compatibility you may need:
 Note that if you want to build wheel packages for different Python versions, you may need to install multiple
 version of Python using `conda` or `pyenv`.
 
+The GraphScope analytical engine and interactive engine could be built locally on mac with script.
+
+If GraphScope's dependencies are not satisfied，you could use the install_denpendencies
+script to install dependencies.
+
+.. code::shell
+
+    ./script/install_denpendencies.sh
+
+build the analytical engine and interactive engine with script.
+
+.. code::shell
+
+    ./script/build.sh
+
+
 Code Format
 -----------
 
-GraphScope follows the `Google Style Guide <https://google.github.io/styleguide/cppguide.html>`_ 
+GraphScope follows the `Google Style Guide <https://google.github.io/styleguide/cppguide.html>`_
 for C++ and `black <https://github.com/psf/black#the-black-code-style>`_ for python.
 
 Please reformat your code with ``clang-format`` and ``black`` if your Pull Request violates the CI.
