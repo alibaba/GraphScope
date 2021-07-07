@@ -35,10 +35,6 @@ class GraphScopeGraphTraversal(graph_traversal.GraphTraversal):
             graph, traversal_strategies, bytecode
         )
 
-    def V(self, *args):
-        self.bytecode.add_step("V", *args)
-        return self
-
     def process(self, *args):
         self.bytecode.add_step("process", *args)
         return self
