@@ -24,12 +24,9 @@ from enum import Enum
 
 from gremlin_python.driver.client import Client
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
+from gremlin_python.process.anonymous_traversal import traversal
 
 from graphscope.framework.loader import Loader
-from graphscope.interactive.graph_traversal import traversal
-
-# from gremlin_python.process.anonymous_traversal import traversal
-
 
 logger = logging.getLogger("graphscope")
 
