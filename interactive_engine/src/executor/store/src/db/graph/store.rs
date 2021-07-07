@@ -381,19 +381,22 @@ impl GraphStore {
     }
 
     fn do_query_vertices<'a>(&'a self, si: SnapshotId, label: LabelId, condition: Option<Arc<Condition>>) -> GraphResult<Box<dyn VertexResultIter<V=VertexImpl> + 'a>> {
-        let res = match self.vertex_manager.get_type(si, label) {
-            Ok(type_info) => SingleLabelVertexIter::create(si, type_info, self.storage.as_ref(), condition),
+        let res = self.vertex_manager.get_type(si, label)
+            .and_then(|type_info| SingleLabelVertexIter::create(si, type_info, self.storage.as_ref(), condition));
+        match res_unwrap!(res, do_query_vertices, si, label) {
+            Ok(iter_option) => {
+                match iter_option {
+                    Some(iter) => Ok(Box::new(iter)),
+                    None => Ok(Box::new(EmptyResultIter)),
+                }
+            },
             Err(e) => {
                 if let TypeNotFound = e.get_error_code()  {
-                    Ok(None)
+                    Ok(Box::new(EmptyResultIter))
                 } else {
                     Err(e)
                 }
             },
-        };
-        match res_unwrap!(res, do_query_vertices, si, label)? {
-            Some(iter) => Ok(Box::new(iter)),
-            None => Ok(Box::new(EmptyResultIter)),
         }
     }
 
