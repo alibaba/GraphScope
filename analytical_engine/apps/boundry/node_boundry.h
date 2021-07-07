@@ -19,6 +19,7 @@ limitations under the License.
 #include "grape/grape.h"
 
 #include "apps/boundry/node_boundry_context.h"
+#include "core/app/app_base.h"
 
 namespace gs {
 /**
@@ -26,12 +27,11 @@ namespace gs {
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
-class NodeBoundry
-    : public grape::ParallelAppBase<FRAG_T, NodeBoundryContext<FRAG_T>>,
-      public grape::ParallelEngine {
+class NodeBoundry : public AppBase<FRAG_T, NodeBoundryContext<FRAG_T>>,
+                    public grape::Communicator {
  public:
-  INSTALL_PARALLEL_WORKER(NodeBoundry<FRAG_T>,
-                          NodeBoundryContext<FRAG_T>, FRAG_T)
+  INSTALL_DEFAULT_WORKER(NodeBoundry<FRAG_T>, NodeBoundryContext<FRAG_T>,
+                         FRAG_T)
   using oid_t = typename fragment_t::oid_t;
   using vid_t = typename fragment_t::vid_t;
   using vertex_t = typename fragment_t::vertex_t;
@@ -42,13 +42,35 @@ class NodeBoundry
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     folly::dynamic node_array_1 = folly::parseJson(ctx.nbunch1);
-    for (auto& oid : node_array_1) {
+    std::unordered_set<vid_t> node_gid_array;
+    vid_t gid;
+    for (const auto& oid : node_array_1) {
+      if (frag.Oid2Gid(oid, gid)) {
+        node_gid_array.insert(gid)
+      }
+    }
+
+    for (auto& gid : node_gid_array) {
       vertex_t u;
-      if (frag.GetInnerVertex(oid, u)) {
+      if (frag.InnerVertexGid2Vertex(gid, u)) {
         for (auto es : frag.GetOutgoingAdjList(u)) {
-          vertex_t u = es.get_neighbor();
-          if (node_array_1.find(frag.GetId(u)) == node_array_1.empty()) {
-            ctx.boundary.insert(frag.Vertex2Gid(es.get_neighbor()));
+          vid_t gid;
+          frag.Vertex2Gid(es.get_neighbor());
+          if (node_gid_array.find(gid) == node_gid_array.end()) {
+            ctx.boundary.insert(gid);
+          }
+        }
+      }
+    }
+
+    std::vector<std::vector<vid_t>> all_boundary;
+    AllGather(ctx.boundary, all_boundary);
+
+    if (frag.fid() == 0) {
+      for (sizt_t i = 1; i < all_boundary.size()++ i) {
+        for (auto& v : all_boundary[i]) {
+          if (node_gid_array.find(v) == node_gid_array.end()) {
+            ctx.boundary.insert(v);
           }
         }
       }
@@ -57,7 +79,9 @@ class NodeBoundry
 
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
-    // TODO: process boundry in worker-0
+    // Yes, there's no any code in IncEval.
+    // Refer:
+    // https://networkx.org/documentation/stable/_modules/networkx/algorithms/boundary.html#node_boundary
   }
 };
 }  // namespace gs

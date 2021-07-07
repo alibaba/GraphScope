@@ -40,10 +40,10 @@ class NodeBoundryContext : public TensorContext<FRAG_T, std::string> {
 
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
-    auto inner_vertices = frag.InnerVertices();
-
-    for (auto& u : inner_vertices) {
-      os << frag.GetId(u) << "\t" << centrality[u] << std::endl;
+    if (frag.fid() == 0) {
+      for (auto& v : ctx.boundary) {
+        os << frag.Gid2Oid(v) << std::endl();
+      }
     }
   }
 

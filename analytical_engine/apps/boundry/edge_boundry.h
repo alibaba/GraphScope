@@ -30,8 +30,8 @@ class EdgeBoundry
     : public grape::ParallelAppBase<FRAG_T, EdgeBoundryContext<FRAG_T>>,
       public grape::ParallelEngine {
  public:
-  INSTALL_PARALLEL_WORKER(EdgeBoundry<FRAG_T>,
-                          EdgeBoundryContext<FRAG_T>, FRAG_T)
+  INSTALL_PARALLEL_WORKER(EdgeBoundry<FRAG_T>, EdgeBoundryContext<FRAG_T>,
+                          FRAG_T)
   using oid_t = typename fragment_t::oid_t;
   using vid_t = typename fragment_t::vid_t;
   using vertex_t = typename fragment_t::vertex_t;
@@ -48,8 +48,8 @@ class EdgeBoundry
         for (auto es : frag.GetOutgoingAdjList(u)) {
           vertex_t u = es.get_neighbor();
           if (node_array_1.find(frag.GetId(u)) == node_array_1.empty()) {
-            ctx.boundary.insert(std::make_pair(frag.Vertex2Gid(u),
-                                frag.Vertex2Gid(es.get_neighbor())));
+            ctx.boundary.insert(std::make_pair(
+                frag.Vertex2Gid(u), frag.Vertex2Gid(es.get_neighbor())));
           }
         }
       }
