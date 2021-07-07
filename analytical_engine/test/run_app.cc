@@ -79,6 +79,9 @@ DEFINE_int32(app_concurrency, -1, "concurrency of application");
 DEFINE_int64(dfs_source, 0, "source vertex of dfs.");
 DEFINE_string(dfs_format, "edges", "output format of dfs.");
 
+DEFINE_string(source_degree_type, "out", "The degree type for source node (directed graphs only).");
+DEFINE_string(target_degree_type, "in", "The degree type for target node (directed graphs only).");
+
 int main(int argc, char* argv[]) {
   FLAGS_stderrthreshold = 0;
 
