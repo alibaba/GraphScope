@@ -901,9 +901,9 @@ def weakly_connected_components(G):
 def node_boundry(G, nbunch1, nbunch2=None):
     n1json = json.dumps(nbunch1)
     if nbunch2:
-      n2json = json.dumps(nbunch2)
+        n2json = json.dumps(nbunch2)
     else:
-      n2json = ""
+        n2json = ""
     return AppAssets(algo="node_boundry", context="tensor")(G, n1json, n2json)
 
 
@@ -911,7 +911,7 @@ def node_boundry(G, nbunch1, nbunch2=None):
 def edge_boundry(G, nbunch1, nbunch2=None):
     n1json = json.dumps(nbunch1)
     if nbunch2:
-      n2json = json.dumps(nbunch2)
+        n2json = json.dumps(nbunch2)
     else:
-      n2json = ""
+        n2json = ""
     return AppAssets(algo="edge_boundry", context="tensor")(G, n1json, n2json)
