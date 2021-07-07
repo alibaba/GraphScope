@@ -14,7 +14,7 @@ use super::property::*;
 use super::meta::*;
 use super::bin::*;
 use protobuf::Message;
-use crate::db::api::GraphErrorCode::InvalidData;
+use crate::db::api::GraphErrorCode::{InvalidData, TypeNotFound};
 use crate::db::graph::table_manager::Table;
 
 pub struct GraphStore {
@@ -381,23 +381,40 @@ impl GraphStore {
     }
 
     fn do_query_vertices<'a>(&'a self, si: SnapshotId, label: LabelId, condition: Option<Arc<Condition>>) -> GraphResult<Box<dyn VertexResultIter<V=VertexImpl> + 'a>> {
-        let res = self.vertex_manager.get_type(si, label).and_then(|type_info| {
-            SingleLabelVertexIter::create(si, type_info, self.storage.as_ref(), condition)
-        });
-        match res_unwrap!(res, do_query_vertices, si, label)? {
-            Some(iter) => Ok(Box::new(iter)),
-            None => Ok(Box::new(EmptyResultIter)),
+        let res = self.vertex_manager.get_type(si, label)
+            .and_then(|type_info| SingleLabelVertexIter::create(si, type_info, self.storage.as_ref(), condition));
+        match res_unwrap!(res, do_query_vertices, si, label) {
+            Ok(iter_option) => {
+                match iter_option {
+                    Some(iter) => Ok(Box::new(iter)),
+                    None => Ok(Box::new(EmptyResultIter)),
+                }
+            },
+            Err(e) => {
+                if let TypeNotFound = e.get_error_code()  {
+                    Ok(Box::new(EmptyResultIter))
+                } else {
+                    Err(e)
+                }
+            },
         }
     }
 
     fn do_query_edges<'a>(&'a self, si: SnapshotId, id: VertexId, label: Option<LabelId>, direction: EdgeDirection, condition: Option<Arc<Condition>>) -> GraphResult<Box<dyn EdgeResultIter<E=EdgeImpl> + 'a>> {
         let storage = self.storage.as_ref();
         if let Some(label) = label {
-            let res = self.edge_manager.get_edge(si, label).and_then(|info| {
-                SingleLabelEdgeIter::create(si, id, direction, info, storage, condition)
-            });
-            let iter = res_unwrap!(res, do_query_edges, si, id, label, direction)?;
-            Ok(Box::new(iter))
+            let res = self.edge_manager.get_edge(si, label)
+                .and_then(|info| SingleLabelEdgeIter::create(si, id, direction, info, storage, condition));
+            match res_unwrap!(res, do_query_edges, si, id, label, direction) {
+                Ok(iter) => Ok(Box::new(iter)),
+                Err(e) => {
+                    if let TypeNotFound = e.get_error_code() {
+                        Ok(Box::new(EmptyResultIter))
+                    } else {
+                        Err(e)
+                    }
+                },
+            }
         } else {
             let info_iter = self.edge_manager.get_all_edges(si);
             let res = MultiLabelsEdgeIter::create(si, id, direction, info_iter, storage, condition);
