@@ -16,22 +16,26 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_BOUNDRY_EDGE_BOUNDRY_H_
 #define ANALYTICAL_ENGINE_APPS_BOUNDRY_EDGE_BOUNDRY_H_
 
+#include <set>
+#include <utility>
+#include <vector>
+
 #include "grape/grape.h"
 
-#include "apps/boundry/node_boundry_context.h"
+#include "apps/boundry/edge_boundry_context.h"
+#include "core/app/app_base.h"
 
 namespace gs {
 /**
- * @brief Compute the node boundry for given vertices.
+ * @brief Compute the edge boundry for given vertices.
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
-class EdgeBoundry
-    : public grape::ParallelAppBase<FRAG_T, EdgeBoundryContext<FRAG_T>>,
-      public grape::ParallelEngine {
+class EdgeBoundry : public AppBase<FRAG_T, EdgeBoundryContext<FRAG_T>>,
+                    public grape::Communicator {
  public:
-  INSTALL_PARALLEL_WORKER(EdgeBoundry<FRAG_T>, EdgeBoundryContext<FRAG_T>,
-                          FRAG_T)
+  INSTALL_DEFAULT_WORKER(EdgeBoundry<FRAG_T>, EdgeBoundryContext<FRAG_T>,
+                         FRAG_T)
   using oid_t = typename fragment_t::oid_t;
   using vid_t = typename fragment_t::vid_t;
   using vertex_t = typename fragment_t::vertex_t;
@@ -42,23 +46,57 @@ class EdgeBoundry
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     folly::dynamic node_array_1 = folly::parseJson(ctx.nbunch1);
-    for (auto& oid : node_array_1) {
-      vertex_t u;
-      if (frag.GetInnerVertex(oid, u)) {
-        for (auto es : frag.GetOutgoingAdjList(u)) {
-          vertex_t u = es.get_neighbor();
-          if (node_array_1.find(frag.GetId(u)) == node_array_1.empty()) {
-            ctx.boundary.insert(std::make_pair(
-                frag.Vertex2Gid(u), frag.Vertex2Gid(es.get_neighbor())));
+    std::set<vid_t> node_gid_set, node_gid_set_2;
+    vid_t gid;
+    vertex_t u;
+    for (const auto& oid : node_array_1) {
+      if (frag.Oid2Gid(oid, gid)) {
+        node_gid_set.insert(gid);
+      }
+    }
+    if (!ctx.nbunch2.empty()) {
+      auto node_array_2 = folly::parseJson(ctx.nbunch2);
+      for (const auto& oid : node_array_2) {
+        if (frag.Oid2Gid(oid, gid)) {
+          node_gid_set_2.insert(gid);
+        }
+      }
+    }
+
+    for (auto& gid : node_gid_set) {
+      if (frag.InnerVertexGid2Vertex(gid, u)) {
+        for (auto e : frag.GetOutgoingAdjList(u)) {
+          vid_t vgid = frag.Vertex2Gid(e.get_neighbor());
+          if (node_gid_set.find(vgid) == node_gid_set.end() &&
+              (node_gid_set_2.empty() ||
+               node_gid_set_2.find(vgid) != node_gid_set_2.end())) {
+            ctx.boundry.insert(std::make_pair(gid, vgid));
           }
         }
+      }
+    }
+
+    std::vector<std::set<std::pair<vid_t, vid_t>>> all_boundry;
+    AllGather(ctx.boundry, all_boundry);
+
+    if (frag.fid() == 0) {
+      for (size_t i = 1; i < all_boundry.size(); ++i) {
+        for (auto& v : all_boundry[i]) {
+          ctx.boundry.insert(v);
+        }
+      }
+      for (auto& e : ctx.boundry) {
+        LOG(INFO) << frag.Gid2Oid(e.first) << " " << frag.Gid2Oid(e.second)
+                  << "\n";
       }
     }
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
-    // TODO: process boundry in worker-0
+    // Yes, there's no any code in IncEval.
+    // Refer:
+    // https://networkx.org/documentation/stable/_modules/networkx/algorithms/boundary.html#edge_boundary
   }
 };
 }  // namespace gs

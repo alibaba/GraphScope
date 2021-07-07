@@ -16,6 +16,10 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_BOUNDRY_NODE_BOUNDRY_H_
 #define ANALYTICAL_ENGINE_APPS_BOUNDRY_NODE_BOUNDRY_H_
 
+#include <set>
+#include <vector>
+
+#include "folly/json.h"
 #include "grape/grape.h"
 
 #include "apps/boundry/node_boundry_context.h"
@@ -42,37 +46,47 @@ class NodeBoundry : public AppBase<FRAG_T, NodeBoundryContext<FRAG_T>>,
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     folly::dynamic node_array_1 = folly::parseJson(ctx.nbunch1);
-    std::unordered_set<vid_t> node_gid_array;
+    std::set<vid_t> node_gid_set, node_gid_set_2;
     vid_t gid;
+    vertex_t v;
     for (const auto& oid : node_array_1) {
       if (frag.Oid2Gid(oid, gid)) {
-        node_gid_array.insert(gid)
+        node_gid_set.insert(gid);
+      }
+    }
+    if (!ctx.nbunch2.empty()) {
+      auto node_array_2 = folly::parseJson(ctx.nbunch2);
+      for (const auto& oid : node_array_2) {
+        if (frag.Oid2Gid(oid, gid)) {
+          node_gid_set_2.insert(gid);
+        }
       }
     }
 
-    for (auto& gid : node_gid_array) {
-      vertex_t u;
-      if (frag.InnerVertexGid2Vertex(gid, u)) {
-        for (auto es : frag.GetOutgoingAdjList(u)) {
-          vid_t gid;
-          frag.Vertex2Gid(es.get_neighbor());
-          if (node_gid_array.find(gid) == node_gid_array.end()) {
-            ctx.boundary.insert(gid);
+    for (auto& gid : node_gid_set) {
+      if (frag.InnerVertexGid2Vertex(gid, v)) {
+        for (auto e : frag.GetOutgoingAdjList(v)) {
+          vid_t gid = frag.Vertex2Gid(e.get_neighbor());
+          if (node_gid_set.find(gid) == node_gid_set.end() &&
+              (node_gid_set_2.empty() ||
+               node_gid_set_2.find(gid) != node_gid_set_2.end())) {
+            ctx.boundry.insert(gid);
           }
         }
       }
     }
 
-    std::vector<std::vector<vid_t>> all_boundary;
-    AllGather(ctx.boundary, all_boundary);
+    std::vector<std::set<vid_t>> all_boundry;
+    AllGather(ctx.boundry, all_boundry);
 
     if (frag.fid() == 0) {
-      for (sizt_t i = 1; i < all_boundary.size()++ i) {
-        for (auto& v : all_boundary[i]) {
-          if (node_gid_array.find(v) == node_gid_array.end()) {
-            ctx.boundary.insert(v);
-          }
+      for (size_t i = 1; i < all_boundry.size(); ++i) {
+        for (auto& v : all_boundry[i]) {
+          ctx.boundry.insert(v);
         }
+      }
+      for (auto& v : ctx.boundry) {
+        LOG(INFO) << frag.Gid2Oid(v) << "\n";
       }
     }
   }

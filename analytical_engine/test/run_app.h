@@ -50,6 +50,7 @@ limitations under the License.
 #include "wcc/wcc_auto.h"
 
 #include "apps/bfs/bfs_generic.h"
+#include "apps/boundry/edge_boundry.h"
 #include "apps/centrality/degree/degree_centrality.h"
 #include "apps/centrality/eigenvector/eigenvector_centrality.h"
 #include "apps/centrality/katz/katz_centrality.h"
@@ -421,6 +422,10 @@ void Run() {
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
                                        FLAGS_bfs_source);
+  } else if (name == "edge_boundry") {
+    using GraphType = DynamicProjectedFragment<VDATA_T, EDATA_T>;
+    using AppType = EdgeBoundry<GraphType>;
+    auto app = std::make_shared<AppType>();
   } else {
     LOG(FATAL) << "No available application named [" << name << "].";
   }

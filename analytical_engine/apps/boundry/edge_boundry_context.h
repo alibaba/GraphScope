@@ -17,7 +17,9 @@
 #define ANALYTICAL_ENGINE_APPS_BOUNDRY_EDGE_BOUNDRY_CONTEXT_H_
 
 #include <limits>
+#include <set>
 #include <string>
+#include <utility>
 
 #include "grape/grape.h"
 
@@ -32,7 +34,7 @@ class EdgeBoundryContext : public TensorContext<FRAG_T, std::string> {
   explicit EdgeBoundryContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, std::string>(fragment) {}
 
-  void Init(grape::ParallelMessageManager& messages, const std::string& nbunch1,
+  void Init(grape::DefaultMessageManager& messages, const std::string& nbunch1,
             const std::string& nbunch2) {
     this->nbunch1 = nbunch1;
     this->nbunch2 = nbunch2;
@@ -40,15 +42,16 @@ class EdgeBoundryContext : public TensorContext<FRAG_T, std::string> {
 
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
-    auto inner_vertices = frag.InnerVertices();
 
-    for (auto& u : inner_vertices) {
-      os << frag.GetId(u) << "\t" << centrality[u] << std::endl;
+    if (frag.fid() == 0) {
+      for (auto& e : boundry) {
+        os << frag.Gid2Oid(e.first) << " " << frag.Gid2Oid(e.second) << "\n";
+      }
     }
   }
 
   std::string nbunch1, nbunch2;
-  std::unordered_set<std::pair<vid_t, vid_t>> boundary;
+  std::set<std::pair<vid_t, vid_t>> boundry;
 };
 }  // namespace gs
 

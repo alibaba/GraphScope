@@ -17,6 +17,7 @@
 #define ANALYTICAL_ENGINE_APPS_BOUNDRY_NODE_BOUNDRY_CONTEXT_H_
 
 #include <limits>
+#include <set>
 #include <string>
 
 #include "grape/grape.h"
@@ -32,7 +33,7 @@ class NodeBoundryContext : public TensorContext<FRAG_T, std::string> {
   explicit NodeBoundryContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, std::string>(fragment) {}
 
-  void Init(grape::ParallelMessageManager& messages, const std::string& nbunch1,
+  void Init(grape::DefaultMessageManager& messages, const std::string& nbunch1,
             const std::string& nbunch2) {
     this->nbunch1 = nbunch1;
     this->nbunch2 = nbunch2;
@@ -41,14 +42,14 @@ class NodeBoundryContext : public TensorContext<FRAG_T, std::string> {
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
     if (frag.fid() == 0) {
-      for (auto& v : ctx.boundary) {
-        os << frag.Gid2Oid(v) << std::endl();
+      for (auto& v : boundry) {
+        os << frag.Gid2Oid(v) << "\n";
       }
     }
   }
 
   std::string nbunch1, nbunch2;
-  std::unordered_set<vid_t> boundary;
+  std::set<vid_t> boundry;
 };
 }  // namespace gs
 
