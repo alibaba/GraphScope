@@ -76,7 +76,7 @@ impl RangeManager {
             if self.end - self.start < bulk {
                 return self.end - self.start;
             } else if self.curr - self.end < bulk {
-                return bulk - self.curr + self.end;
+                return bulk - (self.curr - self.end);
             } else {
                 return 0;
             }
