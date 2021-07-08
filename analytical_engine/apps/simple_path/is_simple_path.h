@@ -19,7 +19,7 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
-#include "is_simple_path/is_simple_path_context.h"
+#include "simple_path/is_simple_path_context.h"
 
 #include "core/app/app_base.h"
 #include "core/worker/default_worker.h"
