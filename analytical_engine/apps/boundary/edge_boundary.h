@@ -45,6 +45,7 @@ class EdgeBoundary : public AppBase<FRAG_T, EdgeBoundaryContext<FRAG_T>>,
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
+    // parse input node array from json
     folly::dynamic node_array_1 = folly::parseJson(ctx.nbunch1);
     std::set<vid_t> node_gid_set, node_gid_set_2;
     vid_t gid;
@@ -63,6 +64,7 @@ class EdgeBoundary : public AppBase<FRAG_T, EdgeBoundaryContext<FRAG_T>>,
       }
     }
 
+    // get the boundary
     for (auto& gid : node_gid_set) {
       if (frag.InnerVertexGid2Vertex(gid, u)) {
         for (auto e : frag.GetOutgoingAdjList(u)) {
@@ -80,6 +82,7 @@ class EdgeBoundary : public AppBase<FRAG_T, EdgeBoundaryContext<FRAG_T>>,
       }
     }
 
+    // gather and process boundary on worker-0
     std::vector<std::set<std::pair<vid_t, vid_t>>> all_boundary;
     AllGather(ctx.boundary, all_boundary);
 

@@ -899,9 +899,45 @@ def weakly_connected_components(G):
 
 @project_to_simple
 def node_boundary(G, nbunch1, nbunch2=None):
-    n1json = json.dumps(nbunch1)
+    """Returns the node boundary of `nbunch1`.
+
+    The *node boundary* of a set *S* with respect to a set *T* is the
+    set of nodes *v* in *T* such that for some *u* in *S*, there is an
+    edge joining *u* to *v*. If *T* is not specified, it is assumed to
+    be the set of all nodes not in *S*.
+
+    Parameters
+    ----------
+    G : networkx graph
+
+    nbunch1 : iterable
+        Iterable of nodes in the graph representing the set of nodes
+        whose node boundary will be returned. (This is the set *S* from
+        the definition above.)
+
+    nbunch2 : iterable
+        Iterable of nodes representing the target (or "exterior") set of
+        nodes. (This is the set *T* from the definition above.) If not
+        specified, this is assumed to be the set of all nodes in `G`
+        not in `nbunch1`.
+
+    Returns
+    -------
+    list
+        The node boundary of `nbunch1` with respect to `nbunch2`.
+
+    Notes
+    -----
+    Any element of `nbunch` that is not in the graph `G` will be
+    ignored.
+
+    `nbunch1` and `nbunch2` are usually meant to be disjoint, but in
+    the interest of speed and generality, that is not required here.
+
+    """
+    n1json = json.dumps(list(nbunch1))
     if nbunch2:
-        n2json = json.dumps(nbunch2)
+        n2json = json.dumps(list(nbunch2))
     else:
         n2json = ""
     ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
@@ -910,9 +946,46 @@ def node_boundary(G, nbunch1, nbunch2=None):
 
 @project_to_simple
 def edge_boundary(G, nbunch1, nbunch2=None):
-    n1json = json.dumps(nbunch1)
+    """Returns the edge boundary of `nbunch1`.
+
+    The *edge boundary* of a set *S* with respect to a set *T* is the
+    set of edges (*u*, *v*) such that *u* is in *S* and *v* is in *T*.
+    If *T* is not specified, it is assumed to be the set of all nodes
+    not in *S*.
+
+    Parameters
+    ----------
+    G : networkx graph
+
+    nbunch1 : iterable
+        Iterable of nodes in the graph representing the set of nodes
+        whose edge boundary will be returned. (This is the set *S* from
+        the definition above.)
+
+    nbunch2 : iterable
+        Iterable of nodes representing the target (or "exterior") set of
+        nodes. (This is the set *T* from the definition above.) If not
+        specified, this is assumed to be the set of all nodes in `G`
+        not in `nbunch1`.
+
+    Returns
+    -------
+    list
+        An list of the edges in the boundary of `nbunch1` with
+        respect to `nbunch2`.
+
+    Notes
+    -----
+    Any element of `nbunch` that is not in the graph `G` will be
+    ignored.
+
+    `nbunch1` and `nbunch2` are usually meant to be disjoint, but in
+    the interest of speed and generality, that is not required here.
+
+    """
+    n1json = json.dumps(list(nbunch1))
     if nbunch2:
-        n2json = json.dumps(nbunch2)
+        n2json = json.dumps(list(nbunch2))
     else:
         n2json = ""
     ctx = AppAssets(algo="edge_boundary", context="tensor")(G, n1json, n2json)
