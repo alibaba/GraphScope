@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ANALYTICAL_ENGINE_APPS_BOUNDRY_EDGE_BOUNDRY_CONTEXT_H_
-#define ANALYTICAL_ENGINE_APPS_BOUNDRY_EDGE_BOUNDRY_CONTEXT_H_
+#ifndef ANALYTICAL_ENGINE_APPS_BOUNDARY_EDGE_BOUNDARY_CONTEXT_H_
+#define ANALYTICAL_ENGINE_APPS_BOUNDARY_EDGE_BOUNDARY_CONTEXT_H_
 
 #include <limits>
 #include <set>
@@ -25,14 +25,15 @@
 
 namespace gs {
 template <typename FRAG_T>
-class EdgeBoundryContext : public TensorContext<FRAG_T, std::string> {
+class EdgeBoundaryContext
+    : public TensorContext<FRAG_T, typename FRAG_T::oid_t> {
  public:
   using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
   using vertex_t = typename FRAG_T::vertex_t;
 
-  explicit EdgeBoundryContext(const FRAG_T& fragment)
-      : TensorContext<FRAG_T, std::string>(fragment) {}
+  explicit EdgeBoundaryContext(const FRAG_T& fragment)
+      : TensorContext<FRAG_T, typename FRAG_T::oid_t>(fragment) {}
 
   void Init(grape::DefaultMessageManager& messages, const std::string& nbunch1,
             const std::string& nbunch2) {
@@ -44,15 +45,15 @@ class EdgeBoundryContext : public TensorContext<FRAG_T, std::string> {
     auto& frag = this->fragment();
 
     if (frag.fid() == 0) {
-      for (auto& e : boundry) {
+      for (auto& e : boundary) {
         os << frag.Gid2Oid(e.first) << " " << frag.Gid2Oid(e.second) << "\n";
       }
     }
   }
 
   std::string nbunch1, nbunch2;
-  std::set<std::pair<vid_t, vid_t>> boundry;
+  std::set<std::pair<vid_t, vid_t>> boundary;
 };
 }  // namespace gs
 
-#endif  // ANALYTICAL_ENGINE_APPS_BOUNDRY_EDGE_BOUNDRY_CONTEXT_H_
+#endif  // ANALYTICAL_ENGINE_APPS_BOUNDARY_EDGE_BOUNDARY_CONTEXT_H_

@@ -898,20 +898,22 @@ def weakly_connected_components(G):
 
 
 @project_to_simple
-def node_boundry(G, nbunch1, nbunch2=None):
+def node_boundary(G, nbunch1, nbunch2=None):
     n1json = json.dumps(nbunch1)
     if nbunch2:
         n2json = json.dumps(nbunch2)
     else:
         n2json = ""
-    return AppAssets(algo="node_boundry", context="tensor")(G, n1json, n2json)
+    ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
+    return ctx.to_numpy("r", axis=0).tolist()
 
 
 @project_to_simple
-def edge_boundry(G, nbunch1, nbunch2=None):
+def edge_boundary(G, nbunch1, nbunch2=None):
     n1json = json.dumps(nbunch1)
     if nbunch2:
         n2json = json.dumps(nbunch2)
     else:
         n2json = ""
-    return AppAssets(algo="edge_boundry", context="tensor")(G, n1json, n2json)
+    ctx = AppAssets(algo="edge_boundary", context="tensor")(G, n1json, n2json)
+    return ctx.to_numpy("r", axis=0).tolist()

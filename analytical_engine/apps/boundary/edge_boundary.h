@@ -13,28 +13,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef ANALYTICAL_ENGINE_APPS_BOUNDRY_NODE_BOUNDRY_H_
-#define ANALYTICAL_ENGINE_APPS_BOUNDRY_NODE_BOUNDRY_H_
+#ifndef ANALYTICAL_ENGINE_APPS_BOUNDARY_EDGE_BOUNDARY_H_
+#define ANALYTICAL_ENGINE_APPS_BOUNDARY_EDGE_BOUNDARY_H_
 
 #include <set>
+#include <utility>
 #include <vector>
 
-#include "folly/json.h"
 #include "grape/grape.h"
 
-#include "apps/boundry/node_boundry_context.h"
+#include "apps/boundary/edge_boundary_context.h"
 #include "core/app/app_base.h"
 
 namespace gs {
 /**
- * @brief Compute the node boundry for given vertices.
+ * @brief Compute the edge boundary for given vertices.
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
-class NodeBoundry : public AppBase<FRAG_T, NodeBoundryContext<FRAG_T>>,
-                    public grape::Communicator {
+class EdgeBoundary : public AppBase<FRAG_T, EdgeBoundaryContext<FRAG_T>>,
+                     public grape::Communicator {
  public:
-  INSTALL_DEFAULT_WORKER(NodeBoundry<FRAG_T>, NodeBoundryContext<FRAG_T>,
+  INSTALL_DEFAULT_WORKER(EdgeBoundary<FRAG_T>, EdgeBoundaryContext<FRAG_T>,
                          FRAG_T)
   using oid_t = typename fragment_t::oid_t;
   using vid_t = typename fragment_t::vid_t;
@@ -48,7 +48,7 @@ class NodeBoundry : public AppBase<FRAG_T, NodeBoundryContext<FRAG_T>>,
     folly::dynamic node_array_1 = folly::parseJson(ctx.nbunch1);
     std::set<vid_t> node_gid_set, node_gid_set_2;
     vid_t gid;
-    vertex_t v;
+    vertex_t u;
     for (const auto& oid : node_array_1) {
       if (frag.Oid2Gid(oid, gid)) {
         node_gid_set.insert(gid);
@@ -64,30 +64,32 @@ class NodeBoundry : public AppBase<FRAG_T, NodeBoundryContext<FRAG_T>>,
     }
 
     for (auto& gid : node_gid_set) {
-      if (frag.InnerVertexGid2Vertex(gid, v)) {
-        for (auto e : frag.GetOutgoingAdjList(v)) {
-          vid_t gid = frag.Vertex2Gid(e.get_neighbor());
-          if (node_gid_set.find(gid) == node_gid_set.end() &&
-              (node_gid_set_2.empty() ||
-               node_gid_set_2.find(gid) != node_gid_set_2.end())) {
-            ctx.boundry.insert(gid);
+      if (frag.InnerVertexGid2Vertex(gid, u)) {
+        for (auto e : frag.GetOutgoingAdjList(u)) {
+          vid_t vgid = frag.Vertex2Gid(e.get_neighbor());
+          if (node_gid_set_2.empty()) {
+            if (node_gid_set.find(vgid) == node_gid_set.end()) {
+              ctx.boundary.insert(std::make_pair(gid, vgid));
+            }
+          } else {
+            if (node_gid_set_2.find(vgid) != node_gid_set_2.end()) {
+              ctx.boundary.insert(std::make_pair(gid, vgid));
+            }
           }
         }
       }
     }
 
-    std::vector<std::set<vid_t>> all_boundry;
-    AllGather(ctx.boundry, all_boundry);
+    std::vector<std::set<std::pair<vid_t, vid_t>>> all_boundary;
+    AllGather(ctx.boundary, all_boundary);
 
     if (frag.fid() == 0) {
-      for (size_t i = 1; i < all_boundry.size(); ++i) {
-        for (auto& v : all_boundry[i]) {
-          ctx.boundry.insert(v);
+      for (size_t i = 1; i < all_boundary.size(); ++i) {
+        for (auto& v : all_boundary[i]) {
+          ctx.boundary.insert(v);
         }
       }
-      for (auto& v : ctx.boundry) {
-        LOG(INFO) << frag.Gid2Oid(v) << "\n";
-      }
+      writeToCtx(frag, ctx);
     }
   }
 
@@ -95,9 +97,20 @@ class NodeBoundry : public AppBase<FRAG_T, NodeBoundryContext<FRAG_T>>,
                message_manager_t& messages) {
     // Yes, there's no any code in IncEval.
     // Refer:
-    // https://networkx.org/documentation/stable/_modules/networkx/algorithms/boundary.html#node_boundary
+    // https://networkx.org/documentation/stable/_modules/networkx/algorithms/boundary.html#edge_boundary
+  }
+
+ private:
+  void writeToCtx(const fragment_t& frag, context_t& ctx) {
+    std::vector<typename fragment_t::oid_t> data;
+    for (auto& e : ctx.boundary) {
+      data.push_back(frag.Gid2Oid(e.first));
+      data.push_back(frag.Gid2Oid(e.second));
+    }
+    std::vector<size_t> shape{data.size() / 2, 2};
+    ctx.assign(data, shape);
   }
 };
 }  // namespace gs
 
-#endif  // ANALYTICAL_ENGINE_APPS_BOUNDRY_NODE_BOUNDRY_H_
+#endif  // ANALYTICAL_ENGINE_APPS_BOUNDARY_EDGE_BOUNDARY_H_
