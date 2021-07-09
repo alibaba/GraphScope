@@ -16,6 +16,7 @@
 package com.alibaba.maxgraph.v2.common.operation.dml;
 
 import com.alibaba.maxgraph.proto.v2.DataOperationPb;
+import com.alibaba.maxgraph.proto.v2.EdgeLocationPb;
 import com.alibaba.maxgraph.v2.common.operation.EdgeId;
 import com.alibaba.maxgraph.v2.common.schema.EdgeKind;
 import com.alibaba.maxgraph.v2.common.operation.Operation;
@@ -26,23 +27,32 @@ public class DeleteEdgeOperation extends Operation {
 
     private EdgeId edgeId;
     private EdgeKind edgeKind;
+    private boolean forward;
 
-    public DeleteEdgeOperation(EdgeId edgeId, EdgeKind edgeKind) {
+    public DeleteEdgeOperation(EdgeId edgeId, EdgeKind edgeKind, boolean forward) {
         super(OperationType.DELETE_EDGE);
         this.edgeId = edgeId;
         this.edgeKind = edgeKind;
+        this.forward = forward;
     }
 
     @Override
     protected long getPartitionKey() {
-        return edgeId.getSrcId().getId();
+        if (forward) {
+            return edgeId.getSrcId().getId();
+        } else {
+            return edgeId.getDstId().getId();
+        }
     }
 
     @Override
     protected ByteString getBytes() {
         DataOperationPb.Builder builder = DataOperationPb.newBuilder();
         builder.setKeyBlob(edgeId.toProto().toByteString());
-        builder.setLocationBlob(edgeKind.toOperationProto().toByteString());
+        builder.setLocationBlob(EdgeLocationPb.newBuilder()
+                .setEdgeKind(edgeKind.toOperationProto())
+                .setForward(this.forward)
+                .build().toByteString());
         return builder.build().toByteString();
     }
 }

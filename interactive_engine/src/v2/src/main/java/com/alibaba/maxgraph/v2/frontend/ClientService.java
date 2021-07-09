@@ -231,7 +231,8 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                     .setDstVertexLabelId(dstLabelId)
                     .build();
             Map<Integer, PropertyValue> operationProperties = buildPropertiesMap(typeDef, properties);
-            batchBuilder.addOperation(new OverwriteEdgeOperation(edgeId, edgeKind, operationProperties));
+            batchBuilder.addOperation(new OverwriteEdgeOperation(edgeId, edgeKind, operationProperties, true));
+            batchBuilder.addOperation(new OverwriteEdgeOperation(edgeId, edgeKind, operationProperties, false));
         }
         BatchId batchId = this.realtimeWriter.writeOperations(UuidUtils.getBase64UUIDString(), session,
                 batchBuilder.build());
