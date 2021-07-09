@@ -31,12 +31,12 @@ namespace gs {
 
 template <typename FRAG_T>
 class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
-public:
+ public:
   using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
   using vertex_t = typename FRAG_T::vertex_t;
 
-  explicit IsSimplePathContext(const FRAG_T &fragment)
+  explicit IsSimplePathContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, typename FRAG_T::oid_t>(fragment) {}
 
   /**
@@ -47,8 +47,8 @@ public:
    * @param nodes_json
    */
 
-  void Init(grape::DefaultMessageManager &messages,
-            const std::string &nodes_json) {
+  void Init(grape::DefaultMessageManager& messages,
+            const std::string& nodes_json) {
     std::set<oid_t> visit;
     is_simple_path = true;
     int counter = 0;
@@ -56,7 +56,7 @@ public:
 
     folly::dynamic::array nodes_array = folly::json(nodes_json);
     for (auto val : nodes_array) {
-      oid_t key = (oid_t)val;
+      oid_t key = (oid_t) val;
       if (!visit.count(key)) {
         visit.insert(key);
       } else {
@@ -72,8 +72,8 @@ public:
     }
   }
 
-  void Output(std::ostream &os) override {
-    auto &frag = this->fragment();
+  void Output(std::ostream& os) override {
+    auto& frag = this->fragment();
     os << is_simple_path << std::endl;
   }
 
@@ -81,6 +81,6 @@ public:
   int true_counter = 0;
   bool is_simple_path;
 };
-} // namespace gs
+}  // namespace gs
 
-#endif // ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PTAH_CONTEXT_H_
+#endif  // ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PTAH_CONTEXT_H_
