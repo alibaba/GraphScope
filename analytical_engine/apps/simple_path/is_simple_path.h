@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PTAH_H_
-#define ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PTAH_H_
+#ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PATH_H_
+#define ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PATH_H_
 
 #include <utility>
 #include <vector>
@@ -45,9 +45,9 @@ class IsSimplePath : public AppBase<FRAG_T, IsSimplePathContext<FRAG_T>>,
     vertex_t source;
     oid_t first_v, second_v;
     int true_counter = 0;
-    if (ctx.is_simple_path == false)
+    if (ctx.is_simple_path == false) {
       true_counter = 1;
-    else {
+    } else {
       for (auto pl : ctx.pair_list) {
         first_v = pl.first;
         second_v = pl.second;
@@ -82,4 +82,4 @@ class IsSimplePath : public AppBase<FRAG_T, IsSimplePathContext<FRAG_T>>,
 
 }  // namespace gs
 
-#endif  // ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PTAH_H_
+#endif  // ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PATH_H_
