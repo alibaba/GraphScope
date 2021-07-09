@@ -28,10 +28,10 @@ namespace gs {
 
 template <typename FRAG_T>
 class IsSimplePath : public AppBase<FRAG_T, IsSimplePathContext<FRAG_T>>,
-                      public grape::Communicator {
+                     public grape::Communicator {
  public:
-  INSTALL_DEFAULT_WORKER(IsSimplePath<FRAG_T>, IsSimplePathContext<FRAG_T>, 
-                          FRAG_T)
+  INSTALL_DEFAULT_WORKER(IsSimplePath<FRAG_T>, IsSimplePathContext<FRAG_T>,
+                         FRAG_T)
   static constexpr grape::MessageStrategy message_strategy =
       grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
   static constexpr grape::LoadStrategy load_strategy =
@@ -43,44 +43,41 @@ class IsSimplePath : public AppBase<FRAG_T, IsSimplePathContext<FRAG_T>>,
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     vertex_t source;
-    oid_t first_v,second_v;
+    oid_t first_v, second_v;
     int true_counter = 0;
-    if(ctx.is_simple_path == false)
+    if (ctx.is_simple_path == false)
       true_counter = 1;
-    else{
-      for(auto pl :ctx.pair_list){                             
+    else {
+      for (auto pl : ctx.pair_list) {
         first_v = pl.first;
         second_v = pl.second;
-        if(frag.GetInnerVertex(first_v, source)){                                     
+        if (frag.GetInnerVertex(first_v, source)) {
           auto oes = frag.GetOutgoingAdjList(source);
           bool has_pair = false;
-          for (auto& e : oes){                                 
+          for (auto& e : oes) {
             vertex_t u = e.get_neighbor();
-            oid_t compare_node=GetId(u);
-            if(compare_node == second_v){             
+            oid_t compare_node = GetId(u);
+            if (compare_node == second_v) {
               has_pair = true;
               break;
             }
           }
-          if(!has_pair){                                       
+          if (!has_pair) {
             true_counter = 1;
-            break ;
+            break;
           }
         }
       }
     }
     Sum(true_counter, ctx.true_counter);
-    if(ctx.true_counter == 0)
+    if (ctx.true_counter == 0)
       ctx.is_simple_path = true;
-    else 
+    else
       ctx.is_simple_path = false;
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
-               message_manager_t& messages) {
-   
-  }
- 
+               message_manager_t& messages) {}
 };
 
 }  // namespace gs
