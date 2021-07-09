@@ -24,7 +24,7 @@ pub struct QueryParams<E: Element + Send + Sync> {
     pub limit: Option<usize>,
     pub props: Option<Vec<PropKey>>,
     pub filter: Option<Arc<Filter<E, ElementFilter>>>,
-    extra_params: Option<HashMap<String, Object>>,
+    pub extra_params: Option<HashMap<String, Object>>,
 }
 
 impl<E: Element + Send + Sync> QueryParams<E> {
@@ -79,7 +79,7 @@ impl<E: Element + Send + Sync> QueryParams<E> {
         }
     }
 
-    pub fn get_extra_params(&self, key: &str) -> Option<&Object> {
+    pub fn get_extra_param(&self, key: &str) -> Option<&Object> {
         if let Some(ref extra_params) = self.extra_params {
             extra_params.get(key)
         } else {
