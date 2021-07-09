@@ -530,6 +530,12 @@ class Context(object):
                     key, secret, client_kwargs for s3,
                     host, port for hdfs,
                     None for local.
+
+        Examples:
+            context.output('s3://test-bucket/res.csv', selector={'id': 'v.id', 'rank': 'r'},
+                           key='access-key', secret='access-secret', client_kwargs={})
+            context.output('hdfs:///output/res.csv', selector={'id': 'v.id', 'rank': 'r'},
+                           host='localhost', port=9000)
         """
         import vineyard
         import vineyard.io
