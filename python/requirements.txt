@@ -1,11 +1,11 @@
 Cython==3.0a6
-decorator
+decorator>=5.0.5
 gremlinpython
 grpcio
 grpcio-tools
 kubernetes
 nest_asyncio
-networkx<=2.5.1
+networkx
 numpy
 pandas
 protobuf>=3.12.0
