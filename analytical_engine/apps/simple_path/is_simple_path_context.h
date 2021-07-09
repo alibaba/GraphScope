@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PTAH_CONTEXT_H_
-#define ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PTAH_CONTEXT_H_
+#ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PATH_CONTEXT_H_
+#define ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PATH_CONTEXT_H_
 
 #include <limits>
 #include <set>
@@ -83,4 +83,4 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
 };
 }  // namespace gs
 
-#endif  // ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PTAH_CONTEXT_H_
+#endif  // ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_IS_SIMPLE_PATH_CONTEXT_H_
