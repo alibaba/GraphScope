@@ -13,6 +13,8 @@ RUN yum install -y epel-release && \
     yum clean all && \
     rm -fr /var/cache/yum
 
+RUN yum install -y https://packages.endpoint.com/rhel/7/os/x86_64/endpoint-repo-1.7-1.x86_64.rpm
+
 # yum install dependencies
 RUN yum install -y autoconf automake double-conversion-devel git \
         libcurl-devel libevent-devel libgsasl-devel librdkafka-devel libunwind-devel.x86_64 \
