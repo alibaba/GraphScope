@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <limits>
 #include <set>
+#include <string>
 #include <utility>
 #include <vector>
 
