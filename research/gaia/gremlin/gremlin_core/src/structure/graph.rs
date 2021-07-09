@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::generated::common as pb_common;
 use crate::generated::gremlin as pb;
 use crate::structure::{Direction, Edge, ElementFilter, Filter, Label, PropKey, Vertex, ID};
 use crate::{DynIter, DynResult, Element, FromPb};
@@ -23,11 +24,12 @@ pub struct QueryParams<E: Element + Send + Sync> {
     pub limit: Option<usize>,
     pub props: Option<Vec<PropKey>>,
     pub filter: Option<Arc<Filter<E, ElementFilter>>>,
+    extra_params: Option<HashMap<String, Object>>,
 }
 
 impl<E: Element + Send + Sync> QueryParams<E> {
     pub fn new() -> Self {
-        QueryParams { labels: vec![], limit: None, props: None, filter: None }
+        QueryParams { labels: vec![], limit: None, props: None, filter: None, extra_params: None }
     }
 
     pub fn set_filter(&mut self, filter: Filter<E, ElementFilter>) {
@@ -52,6 +54,36 @@ impl<E: Element + Send + Sync> QueryParams<E> {
             if fetch_props.is_all || !prop_keys.is_empty() {
                 self.props = Some(prop_keys)
             }
+        }
+    }
+
+    // Extra query params for different storages
+    pub fn set_extra_params(&mut self, extra_params_pb: Option<pb::ExtraParams>) {
+        if let Some(extra_params_pb) = extra_params_pb {
+            let mut extra_params = HashMap::new();
+            for param in extra_params_pb.params {
+                let param_value = match param.value.unwrap().item.unwrap() {
+                    pb_common::value::Item::Boolean(b) => b.into(),
+                    pb_common::value::Item::I32(i) => i.into(),
+                    pb_common::value::Item::I64(i) => i.into(),
+                    pb_common::value::Item::F64(f) => f.into(),
+                    pb_common::value::Item::Str(s) => s.into(),
+                    pb_common::value::Item::Blob(b) => b.into(),
+                    _ => {
+                        unimplemented!()
+                    }
+                };
+                extra_params.insert(param.key, param_value);
+            }
+            self.extra_params = Some(extra_params);
+        }
+    }
+
+    pub fn get_extra_params(&self, key: &str) -> Option<&Object> {
+        if let Some(ref extra_params) = self.extra_params {
+            extra_params.get(key)
+        } else {
+            None
         }
     }
 }
@@ -95,6 +127,8 @@ pub trait GraphProxy: Send + Sync {
     ) -> DynResult<Box<dyn Statement<ID, Edge>>>;
 }
 
+use dyn_type::Object;
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
