@@ -28,9 +28,10 @@ namespace gs {
 
 template <typename FRAG_T>
 class IsSimplePath : public AppBase<FRAG_T, IsSimplePathContext<FRAG_T>>,
-                   public grape::Communicator {
+                      public grape::Communicator {
  public:
-  INSTALL_DEFAULT_WORKER(IsSimplePath<FRAG_T>, IsSimplePathContext<FRAG_T>, FRAG_T)
+  INSTALL_DEFAULT_WORKER(IsSimplePath<FRAG_T>, IsSimplePathContext<FRAG_T>, 
+                          FRAG_T)
   static constexpr grape::MessageStrategy message_strategy =
       grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
   static constexpr grape::LoadStrategy load_strategy =
