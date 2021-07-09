@@ -5,7 +5,7 @@ grpcio
 grpcio-tools
 kubernetes
 nest_asyncio
-networkx<2.6
+networkx<=2.5.1
 numpy
 pandas
 protobuf>=3.12.0
