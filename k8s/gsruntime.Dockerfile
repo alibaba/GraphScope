@@ -4,8 +4,13 @@
 FROM centos:7
 
 # yum install gcc7, cat not merge in one layer
-RUN yum install -y centos-release-scl && yum clean all && rm -fr /var/cache/yum
-RUN yum install -y devtoolset-7-gcc-* && yum clean all && rm -fr /var/cache/yum
+RUN yum install -y centos-release-scl && \
+    yum clean all && \
+    rm -fr /var/cache/yum
+RUN yum install -y devtoolset-7-gcc-* \
+                   devtoolset-7-libasan-devel.x86_64 && \
+    yum clean all && \
+    rm -fr /var/cache/yum
 RUN echo "source scl_source enable devtoolset-7" >> /etc/bashrc && source /etc/bashrc
 SHELL ["/usr/bin/scl", "enable", "devtoolset-7"]
 
