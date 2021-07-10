@@ -43,7 +43,7 @@ class IsSimplePath : public AppBase<FRAG_T, IsSimplePathContext<FRAG_T>>,
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     vertex_t source;
-    oid_t first_v, second_v;
+    vid_t first_v, second_v;
     int true_counter = 0;
     if (ctx.is_simple_path == false) {
       true_counter = 1;
@@ -51,21 +51,24 @@ class IsSimplePath : public AppBase<FRAG_T, IsSimplePathContext<FRAG_T>>,
       for (auto pl : ctx.pair_list) {
         first_v = pl.first;
         second_v = pl.second;
-        if (frag.GetInnerVertex(first_v, source)) {
-          auto oes = frag.GetOutgoingAdjList(source);
-          bool has_pair = false;
-          for (auto& e : oes) {
-            vertex_t u = e.get_neighbor();
-            oid_t compare_node = GetId(u);
-            if (compare_node == second_v) {
-              has_pair = true;
-              break;
-            }
-          }
-          if (!has_pair) {
-            true_counter = 1;
+        if (!frag.InnerVertexGid2Vertex(first_v, source)) {
+          LOG(ERROR) << "Make pair error : p1 is not a innervertex"
+                     << std::endl;
+          break;
+        }
+        auto oes = frag.GetOutgoingAdjList(source);
+        bool has_pair = false;
+        for (auto& e : oes) {
+          vertex_t u = e.get_neighbor();
+          vid_t compare_node = frag.Vertex2Gid(u);
+          if (compare_node == second_v) {
+            has_pair = true;
             break;
           }
+        }
+        if (!has_pair) {
+          true_counter = 1;
+          break;
         }
       }
     }

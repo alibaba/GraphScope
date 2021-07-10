@@ -38,7 +38,7 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
   using vertex_t = typename FRAG_T::vertex_t;
 
   explicit IsSimplePathContext(const FRAG_T& fragment)
-      : TensorContext<FRAG_T, typename FRAG_T::oid_t>(fragment) {}
+      : TensorContext<FRAG_T, bool>(fragment) {}
 
   /**
    * @brief json formate
@@ -50,14 +50,17 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
 
   void Init(grape::DefaultMessageManager& messages,
             const std::string& nodes_json) {
+    auto& frag = this->fragment();
     std::set<oid_t> visit;
     is_simple_path = true;
+    vertex_t source;
     int counter = 0;
-    oid_t pair_1;
+    oid_t pair_1 = 0;
+    vid_t p1, p2;
 
-    folly::dynamic::array nodes_array = folly::json(nodes_json);
+    folly::dynamic nodes_array = folly::parseJson(nodes_json);
     for (auto val : nodes_array) {
-      oid_t key = (oid_t) val;
+      oid_t key = val.getInt();
       if (!visit.count(key)) {
         visit.insert(key);
       } else {
@@ -67,18 +70,21 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
       counter++;
       if (counter == 1) {
       } else {
-        pair_list.push_back(make_pair(pair_1, key));
+        if (frag.GetInnerVertex(pair_1, source)) {
+          if (!frag.Oid2Gid(pair_1, p1) || !frag.Oid2Gid(key, p2)) {
+            LOG(ERROR) << "Input oid error" << std::endl;
+            break;
+          }
+          pair_list.push_back(std::make_pair(p1, p2));
+        }
       }
       pair_1 = key;
     }
   }
 
-  void Output(std::ostream& os) override {
-    auto& frag = this->fragment();
-    os << is_simple_path << std::endl;
-  }
+  void Output(std::ostream& os) override { os << is_simple_path << std::endl; }
 
-  std::vector<std::pair<oid_t, oid_t>> pair_list;
+  std::vector<std::pair<vid_t, vid_t>> pair_list;
   int true_counter = 0;
   bool is_simple_path;
 };
