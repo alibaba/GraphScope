@@ -19,6 +19,7 @@ limitations under the License.
 #include <numeric>
 #include <unordered_map>
 #include <vector>
+#include <utility>
 
 #include "grape/grape.h"
 
@@ -57,6 +58,7 @@ class DegreeAssortativity
     // w of type: Vertex
     for (auto w : inner_vertices) {
       source_degree = GetDegreeByType(frag, w, ctx.source_degree_type_);
+      VLOG(0) << "fid: " << frag.fid() << ", vid: " << frag.Vertex2Gid(w) << std::endl;
       // update max degree
       ctx.max_degree =
           ctx.max_degree > source_degree ? ctx.max_degree : source_degree;
@@ -69,6 +71,7 @@ class DegreeAssortativity
         vertex_t neighbor = e.get_neighbor();
         if (frag.IsOuterVertex(neighbor)) {
           vid_t dest_vid = frag.Vertex2Gid(neighbor);
+          VLOG(0) << "fid: " << frag.fid() << ", target_vid: " << dest_vid << std::endl;
           fid_t fid = frag.GetFragId(neighbor);
           std::pair<vid_t, int> send_msg(dest_vid, source_degree);
           messages.SendToFragment(fid, send_msg);

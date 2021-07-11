@@ -19,14 +19,16 @@
 #include <limits>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "grape/grape.h"
 
 #include "core/app/app_base.h"
 #include "core/context/tensor_context.h"
+#include "apps/assortativity/utils.h"
 
 namespace gs {
-enum class DegreeType { IN, OUT };
+
 template <typename FRAG_T>
 class DegreeAssortativityContext : public TensorContext<FRAG_T, double> {
  public:
