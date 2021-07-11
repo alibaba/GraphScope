@@ -50,6 +50,7 @@ limitations under the License.
 #include "wcc/wcc_auto.h"
 
 #include "apps/assortativity/attribute/attribute_assortativity.h"
+#include "apps/assortativity/average_degree_connectivity/average_degree_connectivity.h"
 #include "apps/assortativity/degree/degree_assortativity_coefficient.h"
 #include "apps/bfs/bfs_generic.h"
 #include "apps/centrality/degree/degree_centrality.h"
@@ -441,6 +442,14 @@ void Run() {
     using AppType = AttributeAssortativity<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
+  } else if (name == "average_degree_connectivity") {
+    using GraphType =
+        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, int64_t,
+                                        grape::LoadStrategy::kBothOutIn>;
+    using AppType = AverageDegreeConnectivity<GraphType>;
+    CreateAndQuery<GraphType, AppType>(
+        comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec,
+        FLAGS_source_degree_type, FLAGS_target_degree_type, FLAGS_directed);
   } else {
     LOG(FATAL) << "No available application named [" << name << "].";
   }
