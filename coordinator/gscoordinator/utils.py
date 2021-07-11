@@ -17,6 +17,7 @@
 #
 
 
+import base64
 import copy
 import datetime
 import glob
@@ -26,6 +27,7 @@ import json
 import logging
 import numbers
 import os
+import pickle
 import random
 import shutil
 import socket
@@ -334,46 +336,138 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     return lib_path
 
 
-def op_pre_process(op, op_result_pool, key_to_op):
+def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
     if op.op == types_pb2.REPORT_GRAPH:
         # do nothing for nx report graph
         return
     if op.op == types_pb2.ADD_LABELS:
-        _pre_process_for_add_labels_op(op, op_result_pool, key_to_op)
+        _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.RUN_APP:
-        _pre_process_for_run_app_op(op, op_result_pool, key_to_op)
+        _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.BIND_APP:
-        _pre_process_for_bind_app_op(op, op_result_pool, key_to_op)
+        _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.PROJECT_GRAPH:
-        _pre_process_for_project_op(op, op_result_pool, key_to_op)
+        _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.PROJECT_TO_SIMPLE:
-        _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op)
+        _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.ADD_COLUMN:
-        _pre_process_for_add_column_op(op, op_result_pool, key_to_op)
+        _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.UNLOAD_GRAPH:
-        _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op)
+        _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op in (
         types_pb2.CONTEXT_TO_NUMPY,
         types_pb2.CONTEXT_TO_DATAFRAME,
         types_pb2.TO_VINEYARD_TENSOR,
         types_pb2.TO_VINEYARD_DATAFRAME,
     ):
-        _pre_process_for_context_op(op, op_result_pool, key_to_op)
+        _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op in (types_pb2.GRAPH_TO_NUMPY, types_pb2.GRAPH_TO_DATAFRAME):
-        _pre_process_for_output_graph_op(op, op_result_pool, key_to_op)
+        _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.UNLOAD_APP:
-        _pre_process_for_unload_app_op(op, op_result_pool, key_to_op)
+        _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.CREATE_INTERACTIVE_QUERY:
+        _pre_process_for_create_interactive_query_op(
+            op, op_result_pool, key_to_op, **kwargs
+        )
+    if op.op == types_pb2.GREMLIN_QUERY:
+        _pre_process_for_gremlin_query_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.FETCH_GREMLIN_RESULT:
+        _pre_process_for_fetch_gremlin_result(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.CLOSE_INTERACTIVE_QUERY:
+        _pre_process_for_close_interactive_query_op(
+            op, op_result_pool, key_to_op, **kwargs
+        )
+    if op.op == types_pb2.SUBGRAPH:
+        _pre_process_for_gremlin_to_subgraph_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.CREATE_LEARNING_INSTANCE:
+        _pre_process_for_create_learning_graph_op(
+            op, op_result_pool, key_to_op, **kwargs
+        )
+    if op.op == types_pb2.CLOSE_LEARNING_INSTANCE:
+        _pre_process_for_close_learning_instance_op(
+            op, op_result_pool, key_to_op, **kwargs
+        )
 
 
-def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op):
+def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     result = op_result_pool[key_of_parent_op]
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
 
 
+def _pre_process_for_close_interactive_query_op(
+    op, op_result_pool, key_to_op, **kwargs
+):
+    assert len(op.parents) == 1
+    assert op.parents[0] in op_result_pool
+
+
+def _pre_process_for_gremlin_to_subgraph_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    assert op.parents[0] in op_result_pool
+
+
+def _pre_process_for_gremlin_query_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    assert op.parents[0] in op_result_pool
+
+
+def _pre_process_for_fetch_gremlin_result(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    assert op.parents[0] in op_result_pool
+
+
+def _pre_process_for_create_interactive_query_op(
+    op, op_result_pool, key_to_op, **kwargs
+):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
+    vy_info = graph_def_pb2.VineyardInfoPb()
+    result.graph_def.extension.Unpack(vy_info)
+    op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
+    op.attr[types_pb2.SCHEMA_PATH].CopyFrom(utils.s_to_attr(vy_info.schema_path))
+
+
+def _pre_process_for_close_learning_instance_op(
+    op, op_result_pool, key_to_op, **kwargs
+):
+    assert len(op.parents) == 1
+    assert op.parents[0] in op_result_pool
+
+
+def _pre_process_for_create_learning_graph_op(op, op_result_pool, key_to_op, **kwargs):
+    from graphscope.learning.graph import Graph as LearningGraph
+
+    nodes = pickle.loads(op.attr[types_pb2.NODES].s)
+    edges = pickle.loads(op.attr[types_pb2.EDGES].s)
+    gen_labels = pickle.loads(op.attr[types_pb2.GLE_GEN_LABELS].s)
+    # get graph schema
+    op, op_result_pool, key_to_op
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
+    schema = GraphSchema()
+    schema.from_graph_def(result.graph_def)
+    # get graph vineyard id
+    vy_info = graph_def_pb2.VineyardInfoPb()
+    result.graph_def.extension.Unpack(vy_info)
+    vineyard_id = vy_info.vineyard_id
+    # gle handle
+    engine_hosts = kwargs.pop("engine_hosts")
+    engine_config = kwargs.pop("engine_config")
+    handle = get_gl_handle(schema, vineyard_id, engine_hosts, engine_config)
+    config = LearningGraph.preprocess_args(handle, nodes, edges, gen_labels)
+    config = base64.b64encode(json.dumps(config).encode("utf-8")).decode("utf-8")
+    op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vineyard_id))
+    op.attr[types_pb2.GLE_HANDLE].CopyFrom(utils.s_to_attr(handle))
+    op.attr[types_pb2.GLE_CONFIG].CopyFrom(utils.s_to_attr(config))
+
+
 # get `bind_app` runtime informarion in lazy mode
-def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op):
+def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs):
     for key_of_parent_op in op.parents:
         parent_op = key_to_op[key_of_parent_op]
         if parent_op.op == types_pb2.CREATE_APP:
@@ -414,7 +508,7 @@ def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op):
 
 
 # get `run_app` runtime informarion in lazy mode
-def _pre_process_for_run_app_op(op, op_result_pool, key_to_op):
+def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
     # run_app op has only one parent
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
@@ -429,7 +523,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op):
     )
 
 
-def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op):
+def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     result = op_result_pool[key_of_parent_op]
@@ -440,14 +534,14 @@ def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op):
     op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
 
 
-def _pre_process_for_unload_app_op(op, op_result_pool, key_to_op):
+def _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     result = op_result_pool[key_of_parent_op]
     op.attr[types_pb2.APP_NAME].CopyFrom(utils.s_to_attr(result.result.decode("utf-8")))
 
 
-def _pre_process_for_add_column_op(op, op_result_pool, key_to_op):
+def _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs):
     for key_of_parent_op in op.parents:
         parent_op = key_to_op[key_of_parent_op]
         if parent_op.op != types_pb2.RUN_APP:
@@ -472,7 +566,7 @@ def _pre_process_for_add_column_op(op, op_result_pool, key_to_op):
     op.attr[types_pb2.SELECTOR].CopyFrom(utils.s_to_attr(selector))
 
 
-def _pre_process_for_context_op(op, op_result_pool, key_to_op):
+def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
     def __backtrack_key_of_graph_op(key):
         bfs_queue = Queue()
         bfs_queue.put(key)
@@ -520,7 +614,7 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op):
         )
 
 
-def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op):
+def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     r = op_result_pool[key_of_parent_op]
@@ -544,7 +638,7 @@ def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op):
     )
 
 
-def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op):
+def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwargs):
     # for nx graph
     if op.attr[types_pb2.GRAPH_TYPE].graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
         return
@@ -604,7 +698,7 @@ def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op):
     )
 
 
-def _pre_process_for_project_op(op, op_result_pool, key_to_op):
+def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
     def _get_all_v_props_id(schema, label):
         props = schema.get_vertex_properties(label)
         return [schema.get_vertex_property_id(label, prop.name) for prop in props]
@@ -1163,6 +1257,123 @@ class ResolveMPICmdPrefix(object):
         logger.debug("Resolve mpi cmd prefix: {}".format(cmd))
         logger.debug("Resolve mpi env: {}".format(env))
         return (cmd, env)
+
+
+def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config):
+    """Dump a handler for GraphLearn for interaction.
+
+    Fields in :code:`schema` are:
+
+    + the name of node type or edge type
+    + whether the graph is weighted graph
+    + whether the graph is labeled graph
+    + the number of int attributes
+    + the number of float attributes
+    + the number of string attributes
+
+    An example of the graph handle:
+
+    .. code:: python
+
+        {
+            "server": "127.0.0.1:8888,127.0.0.1:8889",
+            "client_count": 1,
+            "vineyard_socket": "/var/run/vineyard.sock",
+            "vineyard_id": 13278328736,
+            "node_schema": [
+                "user:false:false:10:0:0",
+                "item:true:false:0:0:5"
+            ],
+            "edge_schema": [
+                "user:click:item:true:false:0:0:0",
+                "user:buy:item:true:true:0:0:0",
+                "item:similar:item:false:false:10:0:0"
+            ],
+            "node_attribute_types": {
+                "person": {
+                    "age": "i",
+                    "name": "s",
+                },
+            },
+            "edge_attribute_types": {
+                "knows": {
+                    "weight": "f",
+                },
+            },
+        }
+
+    The handle can be decoded using:
+
+    .. code:: python
+
+       base64.b64decode(handle.encode('ascii')).decode('ascii')
+
+    Note that the ports are selected from a range :code:`(8000, 9000)`.
+
+    Args:
+        schema: The graph schema.
+        vineyard_id: The object id of graph stored in vineyard.
+        engine_hosts: A list of hosts for GraphScope engine workers.
+        engine_config: dict of config for GAE engine.
+
+    Returns:
+        str: Base64 encoded handle
+
+    """
+
+    def group_property_types(props):
+        weighted, labeled, i, f, s, attr_types = "false", "false", 0, 0, 0, {}
+        for prop in props:
+            if prop.type in [graph_def_pb2.STRING]:
+                s += 1
+                attr_types[prop.name] = "s"
+            elif prop.type in (graph_def_pb2.FLOAT, graph_def_pb2.DOUBLE):
+                f += 1
+                attr_types[prop.name] = "f"
+            else:
+                i += 1
+                attr_types[prop.name] = "i"
+            if prop.name == "weight":
+                weighted = "true"
+            elif prop.name == "label":
+                labeled = "true"
+        return weighted, labeled, i, f, s, attr_types
+
+    node_schema, node_attribute_types = [], dict()
+    for label in schema.vertex_labels:
+        weighted, labeled, i, f, s, attr_types = group_property_types(
+            schema.get_vertex_properties(label)
+        )
+        node_schema.append(
+            "{}:{}:{}:{}:{}:{}".format(label, weighted, labeled, i, f, s)
+        )
+        node_attribute_types[label] = attr_types
+
+    edge_schema, edge_attribute_types = [], dict()
+    for label in schema.edge_labels:
+        weighted, labeled, i, f, s, attr_types = group_property_types(
+            schema.get_edge_properties(label)
+        )
+        for rel in schema.get_relationships(label):
+            edge_schema.append(
+                "{}:{}:{}:{}:{}:{}:{}:{}".format(
+                    rel[0], label, rel[1], weighted, labeled, i, f, s
+                )
+            )
+        edge_attribute_types[label] = attr_types
+
+    handle = {
+        "hosts": engine_hosts,
+        "client_count": 1,
+        "vineyard_id": vineyard_id,
+        "vineyard_socket": engine_config["vineyard_socket"],
+        "node_schema": node_schema,
+        "edge_schema": edge_schema,
+        "node_attribute_types": node_attribute_types,
+        "edge_attribute_types": edge_attribute_types,
+    }
+    handle_json_string = json.dumps(handle)
+    return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")
 
 
 # In Analytical engine, assume label ids of vertex entries are continuous

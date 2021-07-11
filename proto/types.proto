@@ -68,6 +68,9 @@ enum OutputType {
   DATAFRAME = 5;
   VINEYARD_TENSOR = 6;
   VINEYARD_DATAFRAME = 7;
+  INTERACTIVE_QUERY = 8;
+  GREMLIN_RESULTS = 9;
+  LEARNING_GRAPH = 10;
   NULL_OUTPUT = 101;
 };
 
@@ -99,8 +102,12 @@ enum OperationType {
 
   CREATE_INTERACTIVE_QUERY = 31;  // interactive query
   SUBGRAPH = 32;  // subgraph in interactive query
+  GREMLIN_QUERY = 33;  // queries on gremlin engine
+  FETCH_GREMLIN_RESULT = 34;
+  CLOSE_INTERACTIVE_QUERY = 35;
 
-  CREATE_LEARNING = 41;  // learning graph
+  CREATE_LEARNING_INSTANCE = 41;  // learning graph
+  CLOSE_LEARNING_INSTANCE = 42;
 
   // data
   CONTEXT_TO_NUMPY = 50;
@@ -163,6 +170,9 @@ enum ParamKey {
   GIE_GREMLIN_SERVER_CPU = 32;
   GIE_GREMLIN_SERVER_MEM = 33;
   GIE_GREMLIN_ENGINE_PARAMS = 34;
+  GIE_GREMLIN_QUERY_MESSAGE = 35;
+  GIE_GREMLIN_REQUEST_OPTIONS = 36;
+  GIE_GREMLIN_FETCH_RESULT_TYPE = 37;
 
   APP_SIGNATURE = 40;
   GRAPH_SIGNATURE = 41;
@@ -173,6 +183,11 @@ enum ParamKey {
   // project
   VERTEX_COLLECTIONS = 51;
   EDGE_COLLECTIONS = 52;
+
+  // learning graph
+  GLE_HANDLE = 60;
+  GLE_CONFIG = 61;
+  GLE_GEN_LABELS = 62;
 
   APP_NAME = 100;
   APP_ALGO = 101;

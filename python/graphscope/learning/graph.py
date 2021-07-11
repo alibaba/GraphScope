@@ -19,19 +19,73 @@
 import base64
 import collections
 import json
+from copy import deepcopy
 
 try:
     from graphlearn import Graph as GLGraph
 except ImportError:
     GLGraph = object
 
+from graphscope.framework.dag import DAGNode
+from graphscope.framework.dag_utils import close_learning_instance
+from graphscope.framework.dag_utils import create_learning_instance
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 
 
+class GraphDAGNode(DAGNode):
+    """A class represents a learning instance in a DAG.
+
+    The following example demonstrates its usage:
+
+    .. code:: python
+
+        >>> # lazy mode
+        >>> import graphscope as gs
+        >>> sess = gs.session(mode="lazy")
+        >>> g = sess.g() # <graphscope.framework.graph.GraphDAGNode object>
+        >>> lg = sess.learning(g)
+        >>> print(lg) # <graphscope.learning.graph.GraphDAGNode object>
+        >>> lg_graph = sess.run(lg)
+        >>> print(lg) # <graphscope.learning.grapg.Graph object>
+    """
+
+    def __init__(self, session, graph, nodes=None, edges=None, gen_labels=None):
+        """
+        Args:
+            session (:class:`Session`): instance of GraphScope session.
+            graph (:class:`graphscope.framework.graph.GraphDAGNode`):
+                Source property graph.
+            nodes (list): The node types that will be used for gnn training.
+            edges (list): The edge types that will be used for gnn training.
+            gen_labels (list): Extra node and edge labels on original graph for gnn training.
+        """
+        self._session = session
+        self._graph = graph
+        self._op = create_learning_instance(self._graph, nodes, edges, gen_labels)
+        # add op to dag
+        self._session.dag.add_op(self._op)
+
+    def close(self):
+        """Close learning instance and release the resources.
+
+        Returns:
+            :class:`graphscope.learning.graph.ClosedLearningInstance`
+        """
+        op = close_learning_instance(self)
+        return ClosedLearningInstance(self._session, op)
+
+
 class Graph(GLGraph):
-    def __init__(self, handle, config=None, object_id=None, graphscope_session=None):
+    def __init__(self, graph_node, handle, config=None, object_id=None):
         """Initialize a graph for the learning engine using a handle."""
+        self.graph_node = graph_node
+        self.graphscope_session = self.graph_node.session
+        # copy and set op evaluated
+        self.graph_node.op = deepcopy(self.graph_node.op)
+        self.graph_node.evaluated = True
+        self.graphscope_session.dag.add_op(self.graph_node.op)
+
         handle = self.decode_arg(handle)
         config = self.decode_arg(config)
 
@@ -48,7 +102,6 @@ class Graph(GLGraph):
         self.config = config
         self.object_id = object_id
         self.closed = False
-        self.graphscope_session = graphscope_session
         super(Graph, self).__init__()
 
         self.vineyard(handle, config["nodes"], config["edges"])
@@ -85,6 +138,7 @@ class Graph(GLGraph):
             super(Graph, self).close()  # close client first
             # close server instance
             if self.graphscope_session is not None:
+                self.graphscope_session._wrapper(self.graph_node.close())
                 self.graphscope_session._close_learning_instance(self)
 
     @staticmethod  # noqa: C901
@@ -271,3 +325,13 @@ class Graph(GLGraph):
             >>> g.E("buy", feed=gen)
         """
         return super(Graph, self).E(edge_type, feed, reverse)
+
+
+class ClosedLearningInstance(DAGNode):
+    """Closed learning instance node in a DAG."""
+
+    def __init__(self, session, op):
+        self._session = session
+        self._op = op
+        # add op to dag
+        self._session.dag.add_op(self._op)
