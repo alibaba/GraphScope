@@ -23,9 +23,9 @@
 
 #include "grape/grape.h"
 
+#include "apps/assortativity/utils.h"
 #include "core/app/app_base.h"
 #include "core/context/tensor_context.h"
-#include "apps/assortativity/utils.h"
 
 namespace gs {
 
