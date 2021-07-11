@@ -36,7 +36,8 @@ def sssp(graph, src=0):
         src (int, optional): The source vertex. Defaults to 0.
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with the shortest distance from the src.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with the shortest distance from the src, evaluated in eager mode.
 
     Examples:
 
@@ -50,7 +51,7 @@ def sssp(graph, src=0):
         s.close()
 
     """
-    return AppAssets(algo="sssp")(graph, src)
+    return AppAssets(algo="sssp", context="vertex_data")(graph, src)
 
 
 @not_compatible_for("dynamic_property", "arrow_projected", "dynamic_projected")
@@ -62,6 +63,7 @@ def property_sssp(graph, src=0):
         src (int, optional): the source. Defaults to 0.
 
     Returns:
-        A context with each vertex assigned with the shortest distance from the src.
+        :class:`graphscope.framework.context.LabeledVertexDataContext`:
+            A context with each vertex assigned with the shortest distance from the src, evaluated in eager mode.
     """
-    return AppAssets(algo="property_sssp")(graph, src)
+    return AppAssets(algo="property_sssp", context="labeled_vertex_data")(graph, src)

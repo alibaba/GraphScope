@@ -89,6 +89,9 @@ GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
 ENGINE_CONTAINER = "engine"
 VINEYARD_CONTAINER = "vineyard"
 
+# 2 GB
+GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
+
 logger = logging.getLogger("graphscope")
 
 
@@ -753,8 +756,8 @@ class CoordinatorServiceServicer(
 
     def _create_grpc_stub(self):
         options = [
-            ("grpc.max_send_message_length", 2147483647),
-            ("grpc.max_receive_message_length", 2147483647),
+            ("grpc.max_send_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
+            ("grpc.max_receive_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
         ]
 
         channel = grpc.insecure_channel(
@@ -1123,7 +1126,13 @@ def launch_graphscope():
     )
 
     # register gRPC server
-    server = grpc.server(futures.ThreadPoolExecutor(os.cpu_count() or 1))
+    server = grpc.server(
+        futures.ThreadPoolExecutor(os.cpu_count() or 1),
+        options=[
+            ("grpc.max_send_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
+            ("grpc.max_receive_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
+        ],
+    )
     coordinator_service_pb2_grpc.add_CoordinatorServiceServicer_to_server(
         coordinator_service_servicer, server
     )

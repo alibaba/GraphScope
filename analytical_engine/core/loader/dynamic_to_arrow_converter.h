@@ -147,6 +147,19 @@ struct EdgeArrayBuilder<arrow::Int64Builder> {
           ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asInt()));
         }
       }
+      if (src_frag->directed()) {
+        for (auto& e : src_frag->GetIncomingAdjList(u)) {
+          auto& v = e.neighbor();
+          if (src_frag->IsOuterVertex(v)) {
+            auto& data = e.data();
+            if (data.count(prop_key) == 0) {
+              ARROW_OK_OR_RAISE(builder.AppendNull());
+            } else {
+              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asInt()));
+            }
+          }
+        }
+      }
     }
 
     ARROW_OK_OR_RAISE(builder.Finish(&array));
@@ -175,6 +188,19 @@ struct EdgeArrayBuilder<arrow::DoubleBuilder> {
           ARROW_OK_OR_RAISE(builder.AppendNull());
         } else {
           ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asDouble()));
+        }
+      }
+      if (src_frag->directed()) {
+        for (auto& e : src_frag->GetIncomingAdjList(u)) {
+          auto& v = e.neighbor();
+          if (src_frag->IsOuterVertex(v)) {
+            auto& data = e.data();
+            if (data.count(prop_key) == 0) {
+              ARROW_OK_OR_RAISE(builder.AppendNull());
+            } else {
+              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asDouble()));
+            }
+          }
         }
       }
     }
@@ -206,6 +232,19 @@ struct EdgeArrayBuilder<arrow::LargeStringBuilder> {
           ARROW_OK_OR_RAISE(builder.AppendNull());
         } else {
           ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asString()));
+        }
+      }
+      if (src_frag->directed()) {
+        for (auto& e : src_frag->GetIncomingAdjList(u)) {
+          auto& v = e.neighbor();
+          if (src_frag->IsOuterVertex(v)) {
+            auto& data = e.data();
+            if (data.count(prop_key) == 0) {
+              ARROW_OK_OR_RAISE(builder.AppendNull());
+            } else {
+              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asString()));
+            }
+          }
         }
       }
     }
@@ -262,6 +301,19 @@ struct COOBuilder<DST_FRAG_T, int64_t> {
         ARROW_OK_OR_RAISE(src_builder.Append(u_gid));
         ARROW_OK_OR_RAISE(dst_builder.Append(v_gid));
       }
+      if (src_frag->directed()) {
+        for (auto& e : src_frag->GetIncomingAdjList(u)) {
+          auto& v = e.neighbor();
+          if (src_frag->IsOuterVertex(v)) {
+            auto v_oid = src_frag->GetId(v);
+            vineyard::property_graph_types::VID_TYPE v_gid;
+
+            CHECK(dst_vm->GetGid(0, v_oid.asInt(), v_gid));
+            ARROW_OK_OR_RAISE(src_builder.Append(v_gid));
+            ARROW_OK_OR_RAISE(dst_builder.Append(u_gid));
+          }
+        }
+      }
     }
 
     ARROW_OK_OR_RAISE(src_builder.Finish(&src_array));
@@ -309,6 +361,19 @@ struct COOBuilder<DST_FRAG_T, std::string> {
         CHECK(dst_vm->GetGid(0, v_oid.asString(), v_gid));
         ARROW_OK_OR_RAISE(src_builder.Append(u_gid));
         ARROW_OK_OR_RAISE(dst_builder.Append(v_gid));
+      }
+      if (src_frag->directed()) {
+        for (auto& e : src_frag->GetIncomingAdjList(u)) {
+          auto& v = e.neighbor();
+          if (src_frag->IsOuterVertex(v)) {
+            auto v_oid = src_frag->GetId(v);
+            vineyard::property_graph_types::VID_TYPE v_gid;
+
+            CHECK(dst_vm->GetGid(0, v_oid.asString(), v_gid));
+            ARROW_OK_OR_RAISE(src_builder.Append(v_gid));
+            ARROW_OK_OR_RAISE(dst_builder.Append(u_gid));
+          }
+        }
       }
     }
 

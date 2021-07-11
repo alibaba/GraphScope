@@ -154,7 +154,6 @@ class ArrowToDynamicConverter {
         }
       }
     }
-    dst_vm_ptr->Construct();
 
     return dst_vm_ptr;
   }
@@ -246,6 +245,25 @@ class ArrowToDynamicConverter {
               BOOST_LEAF_CHECK(extractProperty(e_data, e_id, col_id, data));
             }
             processed_edges.emplace_back(u_gid, v_gid, data);
+          }
+
+          if (src_frag->directed()) {
+            auto ie = src_frag->GetIncomingAdjList(u, e_label);
+            for (auto& e : ie) {
+              auto v = e.neighbor();
+              if (src_frag->IsOuterVertex(v)) {
+                auto e_id = e.edge_id();
+                auto v_oid = src_frag->GetId(v);
+                vid_t v_gid;
+                CHECK(dst_vm->GetGid(v_oid, v_gid));
+                folly::dynamic data = folly::dynamic::object();
+                for (auto col_id = 0; col_id < e_data->num_columns();
+                     col_id++) {
+                  BOOST_LEAF_CHECK(extractProperty(e_data, e_id, col_id, data));
+                }
+                processed_edges.emplace_back(v_gid, u_gid, data);
+              }
+            }
           }
         }
       }

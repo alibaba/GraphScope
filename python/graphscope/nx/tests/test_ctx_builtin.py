@@ -240,6 +240,9 @@ class TestBuiltInApp:
     def test_average_clustering(self):
         ret = nx.builtin.average_clustering(self.p2p_undirected)
 
+    def test_weakly_connected_components(self):
+        ret = nx.builtin.weakly_connected_components(self.p2p_undirected)
+
     def test_pagerank(self):
         ans = dict(nx.builtin.pagerank(self.p2p).values)
         self.assert_result_almost_equal(ans, self.p2p_pagerank_ans)

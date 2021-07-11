@@ -47,11 +47,11 @@ def test_create_app():
     # builtin-ldbc compatible graph: arrow_projected dynamic_projected
     # builtin-property compatible graph: arrow_property, append_only
     # builtin-property app on property graph
-    a1 = AppAssets(algo="property_sssp")
+    a1 = AppAssets(algo="property_sssp", context="labeled_vertex_data")
     # builtin app on arrow projected graph
-    a2 = AppAssets(algo="sssp")
+    a2 = AppAssets(algo="sssp", context="vertex_data")
     # on dynamic projected graph
-    a3 = AppAssets(algo="sssp_has_path")
+    a3 = AppAssets(algo="sssp_has_path", context="tensor")
 
 
 @pytest.mark.skipif(
@@ -69,13 +69,13 @@ def test_compatible_with_dynamic_graph(dynamic_property_graph):
 def test_errors_on_create_app(arrow_property_graph, arrow_project_graph):
     # builtin-property app is incompatible with projected graph
     with pytest.raises(graphscope.CompilationError):
-        a = AppAssets(algo="property_sssp")
+        a = AppAssets(algo="property_sssp", context="labeled_vertex_data")
         pg = arrow_project_graph._project_to_simple()
         a(pg, 4)
 
     # builtin app is incompatible with property graph
     with pytest.raises(graphscope.CompilationError):
-        a = AppAssets(algo="sssp")
+        a = AppAssets(algo="sssp", context="vertex_data")
         a(arrow_property_graph, 4)
 
     # algo not exist
@@ -83,7 +83,7 @@ def test_errors_on_create_app(arrow_property_graph, arrow_project_graph):
         graphscope.CompilationError,
         match="Algorithm does not exist in the gar resource",
     ):
-        a = AppAssets(algo="invalid")
+        a = AppAssets(algo="invalid", context="vertex_data")
         a(arrow_property_graph, 4)
 
 
@@ -92,7 +92,7 @@ def test_errors_on_create_app(arrow_property_graph, arrow_project_graph):
 )
 def test_errors_on_create_app_with_dynamic(dynamic_project_graph):
     with pytest.raises(graphscope.CompilationError):
-        a = AppAssets(algo="property_sssp")
+        a = AppAssets(algo="property_sssp", context="labeled_vertex_data")
         a(dynamic_project_graph, 4)
 
 

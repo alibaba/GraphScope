@@ -21,7 +21,7 @@ endif
 VERSION ?= latest
 PROFILE ?= release
 
-DOCKER_BUILD_PROGRESS  	= auto
+BUILD_PROGRESS  	= auto
 
 submodule:
 	cd ../ && git submodule update --init

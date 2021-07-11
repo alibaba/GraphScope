@@ -19,6 +19,10 @@ impl GraphError {
     pub fn add_backtrace(&mut self, function: String, code_info: String) {
         self.backtrace.push((function, code_info));
     }
+
+    pub fn get_error_code(&self) -> GraphErrorCode {
+        self.err_code
+    }
 }
 
 impl Debug for GraphError {

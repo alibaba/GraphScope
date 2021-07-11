@@ -30,6 +30,13 @@ app:
     compatible_graph:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
+  - algo: wcc_projected
+    type: cpp_pie
+    class_name: gs::WCCProjected
+    src: apps/projected/wcc_projected.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
   - algo: cdlp
     type: cpp_pie

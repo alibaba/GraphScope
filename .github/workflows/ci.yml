@@ -32,7 +32,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.3
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
       options:
         --shm-size 4096m
     strategy:
@@ -40,11 +40,6 @@ jobs:
         networkx: [ON, OFF]
 
     steps:
-    - name: Install Dependencies
-      run: |
-        yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm
-        yum install -y git
-
     - uses: actions/checkout@v2.3.2
 
     - name: Cpp Format And Lint Check
@@ -138,12 +133,10 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.3
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
     steps:
     - name: Install Dependencies
       run: |
-        yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm
-        yum install -y git
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
         tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
@@ -179,13 +172,8 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.3
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
     steps:
-    - name: Install Dependencies
-      run: |
-        yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm
-        yum install -y git
-
     - uses: actions/checkout@v2.3.2
       with:
         submodules: true
@@ -244,11 +232,6 @@ jobs:
     container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
     steps:
-    - name: Install Dependencies
-      run: |
-        yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm
-        yum install -y git
-
     - uses: actions/checkout@v2.3.2
 
     - name: Build
@@ -282,11 +265,6 @@ jobs:
       matrix:
         networkx: [ON, OFF]
     steps:
-    - name: Install Dependencies
-      run: |
-        yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm
-        yum install -y git
-
     - uses: actions/checkout@v2.3.2
 
     - uses: actions/download-artifact@v2
@@ -516,12 +494,10 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.3
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
     steps:
     - name: Install Dependencies
       run: |
-        yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm
-        yum install -y git
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
         tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0

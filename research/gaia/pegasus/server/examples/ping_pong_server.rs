@@ -203,7 +203,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = format!("{}:{}", "0.0.0.0", server_config.rpc_port);
     println!("pegasus service start at {}", addr);
     let socket_addr: SocketAddr = addr.parse().unwrap();
-    start_rpc_server(socket_addr, service, server_config.report).await?;
+    start_rpc_server(socket_addr, service, server_config.report, true).await?;
     Ok(())
 }
 
