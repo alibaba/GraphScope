@@ -65,8 +65,8 @@ class AverageDegreeConnectivityContext : public TensorContext<FRAG_T, double> {
 
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
-    if(frag.fid() == 0){
-      for(auto& a : degree_connectivity_map){
+    if (frag.fid() == 0) {
+      for (auto& a : degree_connectivity_map) {
         os << a.first << ": " << a.second.first << std::endl;
       }
     }
