@@ -60,6 +60,15 @@ message StepTag {
     }
 }
 
+// Extra params for specific storages, e.g., snapshot id etc.
+message ExtraParams {
+  message Params {
+    string key = 1;
+    common.Value value = 2;
+  }
+  repeated Params params = 1;
+}
+
 message GremlinStep {
   // Every gremlin step can potentially carry tags
   repeated StepTag tags = 1;
@@ -120,6 +129,8 @@ message GraphStep {
   repeated TraverserRequirement traverser_requirements = 5;
   // The properties of the entities that need to be saved
   PropKeys required_properties = 6;
+  // Extra params for specific storages, e.g., snapshot id etc.
+  ExtraParams extra_params = 7;
 }
 
 // decide a new traverser type with the requirements
@@ -144,6 +155,8 @@ message VertexStep {
   FilterChain predicates = 4;
   // The properties of the entities that need to be saved
   PropKeys required_properties = 5;
+  // Extra params for specific storages, e.g., snapshot id etc.
+  ExtraParams extra_params = 6;
 }
 
 message HasStep {
@@ -180,6 +193,8 @@ message RangeGlobalStep {
 message IdentityStep {
   // The properties of the entities that need to be saved
   PropKeys required_properties = 1;
+  // Extra params for specific storages, e.g., snapshot id etc.
+  ExtraParams extra_params = 2;
 }
 
 message WhereJoiner {}
@@ -300,6 +315,8 @@ message EdgeVertexStep {
     // The properties of the entities that need to be saved
     // todo: get properties locally without shuffle if store supports
     PropKeys required_properties = 2;
+    // Extra params for specific storages, e.g., snapshot id etc.
+    ExtraParams extra_params = 3;
 }
 
 // flatmap

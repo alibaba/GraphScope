@@ -52,8 +52,8 @@ impl GraphVertexStep {
             src: None,
             as_tags: BitSet::new(),
             requirement: req,
-            v_params: QueryParams::new(),
-            e_params: QueryParams::new(),
+            v_params: QueryParams::default(),
+            e_params: QueryParams::default(),
             return_type,
             workers: 1,
         }
@@ -179,6 +179,7 @@ pub fn graph_step_from(
                         if let Some(filter) = pb_chain_to_filter(test)? {
                             step.v_params.set_filter(filter);
                         }
+                        step.v_params.set_extra_params(opt.extra_params);
                     } else {
                         step.e_params.labels =
                             labels.into_iter().map(|id| Label::Id(id as LabelId)).collect();
@@ -186,6 +187,7 @@ pub fn graph_step_from(
                         if let Some(filter) = pb_chain_to_filter(test)? {
                             step.e_params.set_filter(filter);
                         }
+                        step.e_params.set_extra_params(opt.extra_params);
                     }
                 }
                 return Ok(step);
