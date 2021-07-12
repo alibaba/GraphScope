@@ -62,7 +62,7 @@ impl FlatMapFuncGen for VertexStep {
         let labels = step.edge_labels.iter().map(|id| Label::Id(*id as LabelId)).collect();
         let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
         if step.return_type == 0 {
-            let mut params = QueryParams::new();
+            let mut params = QueryParams::default();
             params.labels = labels;
             params.set_props(step.required_properties);
             if let Some(test) = step.predicates.take() {
@@ -74,7 +74,7 @@ impl FlatMapFuncGen for VertexStep {
             let stmt = graph.prepare_explore_vertex(direction, &params)?;
             Ok(Box::new(FlatMapStatement { tags: Arc::new(self.tags), stmt }))
         } else if step.return_type == 1 {
-            let mut params = QueryParams::new();
+            let mut params = QueryParams::default();
             params.labels = labels;
             params.set_props(step.required_properties);
             if let Some(test) = step.predicates.take() {

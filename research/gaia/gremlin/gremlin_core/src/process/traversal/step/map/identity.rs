@@ -87,7 +87,7 @@ pub struct IdentityStep {
 impl MapFuncGen for IdentityStep {
     fn gen_map(self) -> DynResult<Box<dyn MapFunction<Traverser, Traverser>>> {
         let step = self.step;
-        let mut params = QueryParams::new();
+        let mut params = QueryParams::default();
         params.set_props(step.required_properties);
         params.set_extra_params(step.extra_params);
         Ok(Box::new(IdentityFunc { params, tags: self.tags, remove_tags: self.remove_tags }))

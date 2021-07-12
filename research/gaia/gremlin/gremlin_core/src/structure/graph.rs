@@ -27,11 +27,13 @@ pub struct QueryParams<E: Element + Send + Sync> {
     pub extra_params: Option<HashMap<String, Object>>,
 }
 
-impl<E: Element + Send + Sync> QueryParams<E> {
-    pub fn new() -> Self {
+impl<E: Element + Send + Sync> Default for QueryParams<E> {
+    fn default() -> Self {
         QueryParams { labels: vec![], limit: None, props: None, filter: None, extra_params: None }
     }
+}
 
+impl<E: Element + Send + Sync> QueryParams<E> {
     pub fn set_filter(&mut self, filter: Filter<E, ElementFilter>) {
         self.filter = Some(Arc::new(filter))
     }

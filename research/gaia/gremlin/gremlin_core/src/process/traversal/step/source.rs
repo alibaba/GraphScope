@@ -52,8 +52,8 @@ impl GraphVertexStep {
             src: None,
             as_tags: BitSet::new(),
             requirement: req,
-            v_params: QueryParams::new(),
-            e_params: QueryParams::new(),
+            v_params: QueryParams::default(),
+            e_params: QueryParams::default(),
             return_type,
             workers: 1,
         }

@@ -64,7 +64,7 @@ impl MapFuncGen for EdgeVertexStep {
         let step = self.step;
         let opt_pb = unsafe { std::mem::transmute(step.endpoint_opt) };
         let opt = EndPointOpt::from_pb(opt_pb)?;
-        let mut params = QueryParams::new();
+        let mut params = QueryParams::default();
         params.set_props(step.required_properties);
         params.set_extra_params(step.extra_params);
         match opt {
