@@ -87,10 +87,15 @@ message EdgeKindPb {
     LabelIdPb dstVertexLabelId = 6;
 }
 
+message EdgeLocationPb {
+    EdgeKindPb edgeKind = 1;
+    bool forward = 2;
+}
+
 message DataOperationPb {
     // One of [VertexIdPb, EdgeIdPb]
     bytes keyBlob = 1;
-    // One of [LabelIdPb, EdgeKindPb]
+    // One of [LabelIdPb, EdgeLocation]
     bytes locationBlob = 2;
     map<int32, PropertyValuePb> props = 3;
 }

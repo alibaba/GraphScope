@@ -52,7 +52,7 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
         let type_def = self.edge_type_manager.get_type_def(si, edge_kind.edge_label_id).unwrap();
         for id in list {
             let properties = data::gen_edge_properties(si, edge_kind, &id, type_def);
-            self.graph.insert_overwrite_edge(si, id, edge_kind, &properties)?;
+            self.graph.insert_overwrite_edge(si, id, edge_kind, true, &properties)?;
             self.edge_data.insert(si, id, edge_kind, properties);
         }
         Ok(())
@@ -64,7 +64,7 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
         let type_def = self.edge_type_manager.get_type_def(si, edge_kind.edge_label_id).unwrap();
         for id in list {
             let properties = data::gen_edge_update_properties(si, edge_kind, &id, &type_def);
-            self.graph.insert_update_edge(si, id, edge_kind, &properties)?;
+            self.graph.insert_update_edge(si, id, edge_kind,  true, &properties)?;
             self.edge_data.update(si, id, edge_kind, properties);
         }
         Ok(())
@@ -85,7 +85,7 @@ impl<'a, G: GraphStorage> GraphTestHelper<'a, G> {
         assert!(self.edge_type_manager.edge_type_alive_at(si, edge_kind));
         for id in list {
             self.edge_data.delete(si, id, edge_kind);
-            self.graph.delete_edge(si, id, edge_kind)?;
+            self.graph.delete_edge(si, id, edge_kind, true)?;
         }
         Ok(())
     }

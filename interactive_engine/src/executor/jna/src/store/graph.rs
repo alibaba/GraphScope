@@ -4,7 +4,7 @@ use std::ffi::CStr;
 use std::str;
 use maxgraph_store::db::api::{GraphConfigBuilder, SnapshotId, GraphResult, GraphStorage, TypeDef, EdgeId, EdgeKind, DataLoadTarget};
 use maxgraph_store::db::api::PropertyMap;
-use maxgraph_store::db::proto::common::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, PrepareDataLoadPb, CommitDataLoadPb};
+use maxgraph_store::db::proto::common::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, PrepareDataLoadPb, CommitDataLoadPb, EdgeLocationPb};
 use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::db::common::bytes::util::parse_pb;
 use std::sync::Once;
@@ -287,11 +287,11 @@ fn overwrite_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb
     let edge_id_pb = parse_pb::<EdgeIdPb>(data_operation_pb.get_keyBlob())?;
     let edge_id = EdgeId::from_proto(&edge_id_pb);
 
-    let edge_kind_pb = parse_pb::<EdgeKindPb>(data_operation_pb.get_locationBlob())?;
-    let edge_kind = EdgeKind::from_proto(&edge_kind_pb);
-
+    let edge_location_pb = parse_pb::<EdgeLocationPb>(data_operation_pb.get_locationBlob())?;
+    let edge_kind_pb = edge_location_pb.get_edgeKind();
+    let edge_kind = EdgeKind::from_proto(edge_kind_pb);
     let property_map = PropertyMap::from_proto(data_operation_pb.get_props());
-    graph.insert_overwrite_edge(snapshot_id, edge_id, &edge_kind, &property_map)
+    graph.insert_overwrite_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward(), &property_map)
 }
 
 fn update_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
@@ -300,11 +300,11 @@ fn update_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -
     let edge_id_pb = parse_pb::<EdgeIdPb>(data_operation_pb.get_keyBlob())?;
     let edge_id = EdgeId::from_proto(&edge_id_pb);
 
-    let edge_kind_pb = parse_pb::<EdgeKindPb>(data_operation_pb.get_locationBlob())?;
-    let edge_kind = EdgeKind::from_proto(&edge_kind_pb);
-
+    let edge_location_pb = parse_pb::<EdgeLocationPb>(data_operation_pb.get_locationBlob())?;
+    let edge_kind_pb = edge_location_pb.get_edgeKind();
+    let edge_kind = EdgeKind::from_proto(edge_kind_pb);
     let property_map = PropertyMap::from_proto(data_operation_pb.get_props());
-    graph.insert_update_edge(snapshot_id, edge_id, &edge_kind, &property_map)
+    graph.insert_update_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward(), &property_map)
 }
 
 fn delete_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
@@ -313,8 +313,8 @@ fn delete_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -
     let edge_id_pb = parse_pb::<EdgeIdPb>(data_operation_pb.get_keyBlob())?;
     let edge_id = EdgeId::from_proto(&edge_id_pb);
 
-    let edge_kind_pb = parse_pb::<EdgeKindPb>(data_operation_pb.get_locationBlob())?;
-    let edge_kind = EdgeKind::from_proto(&edge_kind_pb);
-
-    graph.delete_edge(snapshot_id, edge_id, &edge_kind)
+    let edge_location_pb = parse_pb::<EdgeLocationPb>(data_operation_pb.get_locationBlob())?;
+    let edge_kind_pb = edge_location_pb.get_edgeKind();
+    let edge_kind = EdgeKind::from_proto(edge_kind_pb);
+    graph.delete_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward())
 }
