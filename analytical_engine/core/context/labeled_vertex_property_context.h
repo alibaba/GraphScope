@@ -120,7 +120,7 @@ class LabeledVertexPropertyContext : public grape::ContextBase {
   template <typename DATA_T>
   std::shared_ptr<Column<fragment_t, DATA_T>> get_typed_column(
       label_id_t label, const std::string& name) {
-    if (label >= properties_map_.size()) {
+    if (static_cast<size_t>(label) >= properties_map_.size()) {
       return nullptr;
     }
     auto& map = properties_map_[label];
