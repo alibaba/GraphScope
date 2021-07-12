@@ -94,6 +94,17 @@ class GatherScatterContext
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
     label_id_t v_label_num = frag.vertex_label_num();
+
+    for (label_id_t i = 0; i < v_label_num; ++i) {
+      os << "label-" << i << ":\n";
+      for (auto& pair : this->properties_map()[i]) {
+        os << "\t"
+           << "column_name: " << pair.first
+           << ", column_type: " << static_cast<int>(pair.second->type())
+           << "\n";
+      }
+    }
+
     for (label_id_t i = 0; i < v_label_num; ++i) {
       std::shared_ptr<Column<fragment_t, double>> column =
           base_t::template get_typed_column<double>(i, "$pr");
