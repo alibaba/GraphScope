@@ -16,8 +16,10 @@
 package com.alibaba.graphscope.gaia.plan.strategy;
 
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
+import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.GraphType;
+import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -115,11 +117,7 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                     if (step instanceof HasContainerHolder) {
                         List<HasContainer> containers = ((HasContainerHolder) step).getHasContainers();
                         for (HasContainer container : containers) {
-                            if (!container.getKey().equals(T.label.getAccessor()) &&
-                                    !container.getKey().equals(T.id.getAccessor())) {
-                                int propertyId = graphStore.getPropertyId(container.getKey());
-                                container.setKey(String.valueOf(propertyId));
-                            }
+                            container.setKey(PlanUtils.convertToPropertyId(graphStore, container.getKey()));
                         }
                     } else if (step instanceof PropertiesStep || step instanceof PropertyMapStep) {
                         String[] oldKeys;
@@ -128,23 +126,23 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                         } else {
                             oldKeys = ((PropertyMapStep) step).getPropertyKeys();
                         }
-                        String[] newKeys = Arrays.stream(oldKeys).map(k -> {
-                            int propertyId = graphStore.getPropertyId(k);
-                            return String.valueOf(propertyId);
-                        }).toArray(String[]::new);
+                        String[] newKeys = Arrays.stream(oldKeys).map(k -> PlanUtils.convertToPropertyId(graphStore, k))
+                                .toArray(String[]::new);
                         FieldUtils.writeField(step, "propertyKeys", newKeys, true);
                     } else if (step instanceof ByModulating) {
                         TraversalParent byParent = (TraversalParent) step;
                         for (Traversal.Admin k : byParent.getLocalChildren()) {
                             if (k instanceof ElementValueTraversal) {
                                 ElementValueTraversal value = (ElementValueTraversal) k;
-                                int propertyId = graphStore.getPropertyId(value.getPropertyKey());
-                                FieldUtils.writeField(value, "propertyKey", String.valueOf(propertyId), true);
+                                String propertyId = PlanUtils.convertToPropertyId(graphStore, value.getPropertyKey());
+                                FieldUtils.writeField(value, "propertyKey", propertyId, true);
                             }
                         }
                     }
                 }
             }
+        } catch (SchemaNotFoundException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

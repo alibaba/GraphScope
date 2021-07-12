@@ -16,22 +16,31 @@
 package com.alibaba.maxgraph.gaia;
 
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
+import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class VineyardGraphStore extends GraphStoreService {
-    public static final String MODERN_PROPERTY_RESOURCE = "modern.properties.json";
+    private static final Logger logger = LoggerFactory.getLogger(VineyardGraphStore.class);
+    public static final String VINEYARD_MODERN_PROPERTY_RESOURCE = "vineyard.modern.properties.json";
     private SchemaFetcher schemaFetcher;
 
     public VineyardGraphStore(SchemaFetcher schemaFetcher) {
-        super(MODERN_PROPERTY_RESOURCE);
+        super(VINEYARD_MODERN_PROPERTY_RESOURCE);
         this.schemaFetcher = schemaFetcher;
     }
 
     @Override
     public long getLabelId(String label) {
-        GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
-        return graphSchema.getElement(label).getLabelId();
+        try {
+            GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
+            return graphSchema.getElement(label).getLabelId();
+        } catch (Exception e) {
+            logger.error("label " + label + " is invalid, please check schema");
+            throw new SchemaNotFoundException("label " + label + " is invalid, please check schema");
+        }
     }
 
     @Override
@@ -47,8 +56,13 @@ public class VineyardGraphStore extends GraphStoreService {
 
     @Override
     public int getPropertyId(String propertyName) {
-        GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
-        return graphSchema.getPropertyId(propertyName);
+        try {
+            GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
+            return graphSchema.getPropertyId(propertyName);
+        } catch (Exception e) {
+            logger.error("property " + propertyName + " is invalid, please check schema");
+            throw new SchemaNotFoundException("property " + propertyName + " is invalid, please check schema");
+        }
     }
 
     @Override

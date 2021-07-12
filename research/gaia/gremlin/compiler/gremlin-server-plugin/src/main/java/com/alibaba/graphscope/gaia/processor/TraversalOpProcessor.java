@@ -14,10 +14,12 @@ import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
 import com.alibaba.graphscope.gaia.result.GremlinResultProcessor;
 import com.alibaba.graphscope.gaia.result.RemoteTraverserResultParser;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
+import com.alibaba.graphscope.gaia.store.GraphType;
+import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
 import com.alibaba.pegasus.builder.AbstractBuilder;
-import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
+import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
@@ -30,8 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.SimpleBindings;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 
@@ -67,20 +67,28 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
         switch (message.getOp()) {
             case Tokens.OPS_BYTECODE:
                 op = (context -> {
-                    Object byteCode = message.getArgs().get(Tokens.ARGS_GREMLIN);
-                    Traversal traversal = executor.eval((Bytecode) byteCode, new SimpleBindings(), null, traversalSourceName);
-                    GaiaGraphOpProcessor.applyStrategy(traversal, config, graphStore);
-                    long queryId = (long) queryIdMaker.getId(traversal);
-                    TraversalBuilder traversalBuilder = new TraversalBuilder((Traversal.Admin) traversal)
-                            .addConfig(PlanConfig.QUERY_ID, queryId)
-                            .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) traversal))
-                            .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config));
-                    AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
-                    FileUtils.writeStringToFile(new File("plan.log"), String.format("query-%d", queryId), StandardCharsets.UTF_8, true);
-                    PlanUtils.print(jobReqBuilder);
-                    broadcastProcessor.broadcast(jobReqBuilder.build(),
-                            new GremlinResultProcessor(ctx, new RemoteTraverserResultParser(traversalBuilder, graphStore)));
-                    logger.info("query-{} finish", queryId);
+                    try {
+                        Object byteCode = message.getArgs().get(Tokens.ARGS_GREMLIN);
+                        Traversal traversal = executor.eval((Bytecode) byteCode, new SimpleBindings(), null, traversalSourceName);
+                        GaiaGraphOpProcessor.applyStrategy(traversal, config, graphStore);
+                        long queryId = (long) queryIdMaker.getId(traversal);
+                        TraversalBuilder traversalBuilder = new TraversalBuilder((Traversal.Admin) traversal)
+                                .addConfig(PlanConfig.QUERY_ID, queryId)
+                                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) traversal))
+                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config));
+                        if (config.getGraphType() == GraphType.VINEYARD) {
+                            traversalBuilder.addConfig(PlanConfig.SNAPSHOT_ID_FETCHER, graphStore);
+                        }
+                        AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
+                        // FileUtils.writeStringToFile(new File("plan.log"), String.format("query-%d", queryId), StandardCharsets.UTF_8, true);
+                        PlanUtils.print(jobReqBuilder);
+                        broadcastProcessor.broadcast(jobReqBuilder.build(),
+                                new GremlinResultProcessor(ctx, new RemoteTraverserResultParser(traversalBuilder, graphStore)));
+                        logger.info("query-{} finish", queryId);
+                    } catch (SchemaNotFoundException e) {
+                        throw new OpProcessorException("schema not found error",
+                                ResponseMessage.build(message).code(ResponseStatusCode.SUCCESS).result(Collections.EMPTY_LIST).create());
+                    }
                 });
                 return op;
             case Tokens.OPS_KEYS:

@@ -62,7 +62,8 @@ public class ExperimentalGraphStore extends GraphStoreService {
         if (edgeTypeMap != null && (edgeTypeId = edgeTypeMap.get(label)) != null) {
             return edgeTypeId;
         }
-        throw new RuntimeException("label " + label + " is invalid, please check schema");
+        logger.error("label " + label + " is invalid, please check schema");
+        throw new SchemaNotFoundException("label " + label + " is invalid, please check schema");
     }
 
     @Override
