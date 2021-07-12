@@ -17,10 +17,11 @@ use super::FlatMapFuncGen;
 use crate::generated::gremlin as pb;
 use crate::process::traversal::traverser::{Traverser, TraverserSplitIter};
 use crate::structure::codec::pb_chain_to_filter;
-use crate::structure::{Direction, Element, GraphElement, Label, QueryParams, Statement, ID};
+use crate::structure::{
+    Direction, Element, GraphElement, Label, LabelId, QueryParams, Statement, ID,
+};
 use crate::{str_to_dyn_error, DynIter, DynResult, FromPb};
 use bit_set::BitSet;
-use graph_store::prelude::LabelId;
 use pegasus::api::function::FlatMapFunction;
 use std::sync::Arc;
 
