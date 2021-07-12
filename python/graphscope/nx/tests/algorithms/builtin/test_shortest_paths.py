@@ -4,6 +4,7 @@ from graphscope import nx
 from graphscope.nx.tests.utils import replace_with_inf
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestRunGenericPath:
     def setup_method(self):
         self.edges = [(0, 1), (0, 2), (1, 2), (2, 3), (1, 4)]
