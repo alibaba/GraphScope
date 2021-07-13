@@ -155,7 +155,7 @@ where
         let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
         let filter = params.filter.clone();
         let partition_label_vertex_ids =
-            build_partition_label_vertex_ids(ids, self.partition_manager.clone());
+            get_partition_label_vertex_ids(ids, self.partition_manager.clone());
         let result = store
             .get_vertex_properties(si, partition_label_vertex_ids, prop_ids.as_ref())
             .map(move |v| to_runtime_vertex(&v));
@@ -194,7 +194,7 @@ where
         let edge_label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
 
         let stmt = from_fn(move |v: ID| {
-            let src_id = build_partition_vertex_ids(&v, partition_manager.clone());
+            let src_id = get_partition_vertex_ids(v, partition_manager.clone());
             let iter = match direction {
                 Direction::Out => store.get_out_vertex_ids(
                     si,
@@ -263,7 +263,7 @@ where
         let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
 
         let stmt = from_fn(move |v: ID| {
-            let src_id = build_partition_vertex_ids(&v, partition_manager.clone());
+            let src_id = get_partition_vertex_ids(v, partition_manager.clone());
             let iter = match direction {
                 Direction::Out => store.get_out_edges(
                     si,
@@ -419,7 +419,7 @@ fn encode_runtime_property(prop_id: PropId, prop_val: Property) -> (PropKey, Obj
 
 /// Transform type of ids to PartitionLabeledVertexIds as required by graphscope store,
 /// which consists of (PartitionId, Vec<(Option<LabelId>, Vec<VertexId>)>)
-fn build_partition_label_vertex_ids(
+fn get_partition_label_vertex_ids(
     ids: &[ID],
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
 ) -> Vec<PartitionLabeledVertexIds> {
@@ -444,11 +444,10 @@ fn build_partition_label_vertex_ids(
 
 /// Transform type of ids to PartitionVertexIds as required by graphscope store,
 /// which consists of (PartitionId,Vec<VertexId>)
-fn build_partition_vertex_ids(
-    id: &ID,
+fn get_partition_vertex_ids(
+    id: ID,
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
 ) -> Vec<PartitionVertexIds> {
-    let vid = *id as VertexId;
-    let partition_id = graph_partition_manager.get_partition_id(vid) as PartitionId;
-    vec![(partition_id, vec![vid])]
+    let partition_id = graph_partition_manager.get_partition_id(id as VertexId) as PartitionId;
+    vec![(partition_id, vec![id as VertexId])]
 }
