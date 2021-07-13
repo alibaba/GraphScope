@@ -321,7 +321,7 @@ main() {
 
   msg="The script has successfully prepared an environment for GraphScope.
   Now you are ready to have fun with GraphScope."
-  log msg
+  log ${msg}
 }
 
 # parse argv
