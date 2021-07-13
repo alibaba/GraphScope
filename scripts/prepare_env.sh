@@ -4,7 +4,7 @@
 
 set -e
 # set -x
-# set -o pipefail
+set -o pipefail
 
 # define color
 RED='\033[0;31m'
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 GRAPHSCOPE_DIR="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
-VRESION=$(cat ${graphscope_home}/VERSION)
+VERSION=$(cat ${GRAPHSCOPE_DIR}/VERSION)
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 PLATFORM=
 OS_VERSION=
@@ -36,12 +36,16 @@ cat <<END
 END
 }
 
-err() {
-  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: ${RED}ERROR${NC}$*" >&2
+version() {
+  echo "${VERSION}"
 }
 
-warning()
-  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: ${YELLOW}WARNING${NC}$*" >&1
+err() {
+  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${RED}ERROR${NC}] $*" >&2
+}
+
+warning() {
+  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${YELLOW}WARNING${NC}] $*" >&1
 }
 
 log() {
@@ -62,34 +66,34 @@ get_os_version() {
   if [ -f /etc/os-release ]; then
     # freedesktop.org and systemd
     . /etc/os-release
-    platform="${NAME}"
-    os_version="${VERSION_ID}"
+    PLATFORM="${NAME}"
+    OS_VERSION="${VERSION_ID}"
   elif type lsb_release >/dev/null 2>&1; then
     # linuxbase.org
-    platform=$(lsb_release -si)
-    os_version=$(lsb_release -sr)
+    PLATFORM=$(lsb_release -si)
+    OS_VERSION=$(lsb_release -sr)
   elif [ -f /etc/lsb-release ]; then
     # For some versions of Debian/Ubuntu without lsb_release command
     . /etc/lsb-release
-    platform="${DISTRIB_ID}"
-    os_version="${DISTRIB_RELEASE}"
+    PLATFORM="${DISTRIB_ID}"
+    OS_VERSION="${DISTRIB_RELEASE}"
   elif [ -f /etc/debian_version ]; then
     # Older Debian/Ubuntu/etc.
-    platform=Debian
-    os_version=$(cat /etc/debian_version)
+    PLATFORM=Debian
+    OS_VERSION=$(cat /etc/debian_version)
   elif [ -f /etc/centos-release ]; then
     # Older Red Hat, CentOS, etc.
-    platform=CentOS
-    os_version=$(cat /etc/centos-release | sed 's/.* \([0-9]\).*/\1/')
+    PLATFORM=CentOS
+    OS_VERSION=$(cat /etc/centos-release | sed 's/.* \([0-9]\).*/\1/')
   else
     # Fall back to uname, e.g. "Linux <version>", also works for BSD, Darwin, etc.
-    platform=$(uname -s)
-    os_version=$(uname -r)
+    PLATFORM=$(uname -s)
+    OS_VERSION=$(uname -r)
   fi
 }
 
 ##########################
-# Check the compatibility of platform and script.
+# Check the compatibility of PLATFORM and script.
 # Globals:
 #   None
 # Arguments:
@@ -100,27 +104,27 @@ get_os_version() {
 #   non-zero on error.
 ##########################
 check_os_compatibility() {
-  if [[ "${is_in_wsl}" == true && -z "${WSL_INTEROP}" ]]; then
-    err "The platfrom is WSL1. GraphScope not support to run on WSL1, please use WSL2."
+  if [[ "${IS_IN_WSL}" == true && -z "${WSL_INTEROP}" ]]; then
+    err "The platform is WSL1. GraphScope not support to run on WSL1, please use WSL2."
     exit 1
   fi
 
-  if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"CentOS"* ]]; then
+  if [[ "${PLATFORM}" != *"Ubuntu"* && "${PLATFORM}" != *"CentOS"* ]]; then
     err "The platform is not Ubuntu or CentOs. This script is only available on Ubuntu/CentOS"
     exit 1
   fi
 
-  if [[ "${platform}" == *"Ubuntu"* && "$(echo ${os_version} | sed 's/\([0-9]\)\([0-9]\).*/\1\2/')" -lt "18" ]]; then
-    err "The version of Ubuntu is ${os_version}. this script requires Ubuntu 18 or greater."
+  if [[ "${PLATFORM}" == *"Ubuntu"* && "$(echo ${OS_VERSION} | sed 's/\([0-9]\)\([0-9]\).*/\1\2/')" -lt "18" ]]; then
+    err "The version of Ubuntu is ${OS_VERSION}. this script requires Ubuntu 18 or greater."
     exit 1
   fi
 
-  if [[ "${platform}" == *"CentOS"* && "${os_version}" -lt "7" ]]; then
-    err "The version of CentOS is ${os_version}. this script requires CentOS 7 or greater."
+  if [[ "${PLATFORM}" == *"CentOS"* && "${OS_VERSION}" -lt "7" ]]; then
+    err "The version of CentOS is ${OS_VERSION}. this script requires CentOS 7 or greater."
     exit
   fi
 
-  log "Preparing environment on '${platform}' '${os_version}'"
+  log "Preparing environment on '${PLATFORM}' '${OS_VERSION}'"
 }
 
 ##########################
@@ -158,14 +162,14 @@ check_dependencies_version() {
 ##########################
 install_dependencies() {
   log "Install dependencies."
-  if [[ "${platform}" == *"Ubuntu"* ]]; then
+  if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     sudo apt-get update -y
     sudo apt-get install -y git
     sudo apt-get install -y docker.io
     sudo apt-get install -y conntrack curl lsof
     sudo apt-get install -y python3-pip
     sudo apt-get clean
-  elif [[ "${platform}" == *"CentOS"* ]]; then
+  elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     sudo yum install -y git
     sudo yum install -y python3-pip
     sudo yum install -y yum-utils curl conntrack-tools lsof
@@ -203,7 +207,7 @@ start_docker() {
   log "Starting doker daemon."
   # start docker daemon if docker not running.
   if ! sudo docker info >/dev/null 2>&1; then
-    if [[ "${is_in_wsl}" = false ]]; then
+    if [[ "${IS_IN_WSL}" = false ]]; then
       sudo systemctl start docker
     else
       sudo dockerd > /dev/null&
@@ -257,17 +261,16 @@ pull_images() {
 }
 
 main() {
-  if [[ !${OVERWRITE} && -f "${HOME}/.kube/config" ]]; then
-    warning_msg="We found existing kubernetes config, seems that you already
-    have a ready kubernetes cluster. If you do want to reset the kubernetes
-    environment, please delete the existing config by 'rm -rf ${HOME}/.kube'
-    and retry this script again, or retry script with '--overwrite'"
-    warning ${warning_msg}
-    exit 0
+  if [ ${VERBOSE} = true ]; then
+    set -e
   fi
 
-  if [ ${VERBOSE} ]; then
-    set -e
+  if [[ ${OVERWRITE} = false && -f "${HOME}/.kube/config" ]]; then
+    warning_msg="We found existing kubernetes config, seems that you already
+    have a ready kubernetes cluster. If you do want to reset the kubernetes
+    environment, please retry the script with '--overwrite' option."
+    warning ${warning_msg}
+    exit 0
   fi
 
   get_os_version
@@ -282,7 +285,7 @@ main() {
 
   pull_images
 
-  if [ ${VERBOSE} ]; then
+  if [ ${VERBOSE} = true ]; then
     set +e
   fi
 
@@ -296,14 +299,13 @@ while test $# -ne 0; do
   case $arg in
     -h|--help) usage; exit ;;
     -V|--version) version; exit ;;
-    --verbose) VERBOSE=true; shift ;;
-    --overwrite) OVERWRITE=true; shift ;;
+    --verbose) VERBOSE=true; ;;
+    --overwrite) OVERWRITE=true; ;;
     *)
       ;;
   esac
 done
 
 main
-set +x
-# set +e
-# set +o pipefail
+# set +x
+set +o pipefail
