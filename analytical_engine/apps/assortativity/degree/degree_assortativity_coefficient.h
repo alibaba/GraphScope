@@ -54,35 +54,11 @@ class DegreeAssortativity
     ctx.merge_stage = false;
     // vid
     auto inner_vertices = frag.InnerVertices();
-    int source_degree, dest_degree;
-    // w of type: Vertex
-    for (auto w : inner_vertices) {
-      source_degree = GetDegreeByType(frag, w, ctx.source_degree_type_);
-      VLOG(0) << "fid: " << frag.fid() << ", vid: " << frag.Vertex2Gid(w)
-              << std::endl;
-      // update max degree
-      ctx.max_degree =
-          ctx.max_degree > source_degree ? ctx.max_degree : source_degree;
-      // vid_t source_vid = frag.Vertex2Gid(w);
-      VLOG(0) << "vertex " << frag.GetId(w) << " InDegree:" << source_degree
-              << std::endl;
-      // get all neighbors of vertex w
-      auto oes = frag.GetOutgoingAdjList(w);
-      for (auto& e : oes) {
-        vertex_t neighbor = e.get_neighbor();
-        if (frag.IsOuterVertex(neighbor)) {
-          vid_t dest_vid = frag.Vertex2Gid(neighbor);
-          VLOG(0) << "fid: " << frag.fid() << ", target_vid: " << dest_vid
-                  << std::endl;
-          fid_t fid = frag.GetFragId(neighbor);
-          std::pair<vid_t, int> send_msg(dest_vid, source_degree);
-          messages.SendToFragment(fid, send_msg);
-        } else {
-          dest_degree =
-              GetDegreeByType(frag, neighbor, ctx.target_degree_type_);
-          DegreeMixingCount(source_degree, dest_degree, ctx);
-        }
-      }
+    // v of type: Vertex
+    for (auto v : inner_vertices) {
+      vid_t vid = frag.Vertex2Gid(v);
+      VLOG(0) << "peval: " << frag.fid() << ": " << vid << std::endl;
+      ProcessVertex(v, frag, ctx, messages);
     }
     messages.ForceContinue();
   }
@@ -90,19 +66,14 @@ class DegreeAssortativity
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
     if (!ctx.merge_stage) {
-      std::pair<vid_t, int> msg;
-      while (messages.GetMessage(msg)) {
-        int source_degree = msg.second;
-        vertex_t vertex;
-        frag.Gid2Vertex(msg.first, vertex);
-        int dest_degree =
-            GetDegreeByType(frag, vertex, ctx.target_degree_type_);
-        DegreeMixingCount(source_degree, dest_degree, ctx);
-      }
-      for (auto& a : ctx.degree_mixing_map) {
-        VLOG(0) << std::to_string(a.first.first) + "-"
-                << std::to_string(a.first.second) + ": " << a.second
+      vertex_t v;
+      int source_degree;
+      while (messages.GetMessage<fragment_t, int>(frag, v, source_degree)) {
+        VLOG(0) << "inceval: " << frag.fid() << ": " << frag.Vertex2Gid(v)
                 << std::endl;
+        int target_degree =
+            GetDegreeByType(frag, v, ctx.target_degree_type_, ctx.directed);
+        DegreeMixingCount(source_degree, target_degree, ctx);
       }
       ctx.merge_stage = true;
       if (frag.fid() != 0) {
@@ -112,14 +83,17 @@ class DegreeAssortativity
     } else {
       // merge in work 0
       if (frag.fid() == 0) {
+        // {{source_degree, target_degree}, num}
         std::unordered_map<std::pair<int, int>, int> msg;
         while (messages.GetMessage(msg)) {
           for (auto& a : msg) {
             // update max degree
-            ctx.max_degree =
-                ctx.max_degree > a.first.first ? ctx.max_degree : a.first.first;
-            ctx.max_degree = ctx.max_degree > a.first.second ? ctx.max_degree
-                                                             : a.first.second;
+            if (ctx.max_degree < a.first.first) {
+              ctx.max_degree = a.first.first;
+            }
+            if (ctx.max_degree < a.first.second) {
+              ctx.max_degree = a.first.second;
+            }
             // merge
             if (ctx.degree_mixing_map.count(a.first) != 0) {
               ctx.degree_mixing_map[a.first] += a.second;
@@ -130,6 +104,7 @@ class DegreeAssortativity
         }
         std::vector<std::vector<double>> degree_mixing_matrix(
             ctx.max_degree + 1, std::vector<double>(ctx.max_degree + 1, 0.0));
+        // get degree mixing matrix
         GetDegreeMixingMatrix(ctx, degree_mixing_matrix);
         ctx.degree_assortativity = ProcessMatrix(degree_mixing_matrix);
 
@@ -140,6 +115,37 @@ class DegreeAssortativity
                 << std::endl;
       }
     }
+  }
+
+  void ProcessVertex(const vertex_t& v, const fragment_t& frag, context_t& ctx,
+                     message_manager_t& messages) {
+    int source_degree, target_degree;
+    source_degree =
+        GetDegreeByType(frag, v, ctx.source_degree_type_, ctx.directed);
+    // update max degree
+    if (ctx.max_degree < source_degree) {
+      ctx.max_degree = source_degree;
+    }
+    // bool need_sync = false;
+    // get all neighbors of vertex v
+    auto oes = frag.GetOutgoingAdjList(v);
+    for (auto& e : oes) {
+      vertex_t neighbor = e.get_neighbor();
+      VLOG(0) << frag.Vertex2Gid(v) << "-->" << frag.Vertex2Gid(neighbor)
+              << std::endl;
+      if (frag.IsOuterVertex(neighbor)) {
+        messages.SyncStateOnOuterVertex(frag, neighbor, source_degree);
+        // need_sync = true;
+      } else {
+        target_degree = GetDegreeByType(frag, neighbor, ctx.target_degree_type_,
+                                        ctx.directed);
+        DegreeMixingCount(source_degree, target_degree, ctx);
+      }
+    }
+    // if (need_sync) {
+    //   VLOG(0) << "source vertex: " << frag.Vertex2Gid(v) << std::endl;
+    //   messages.SendMsgThroughOEdges<fragment_t, int>(frag, v, source_degree);
+    // }
   }
   double ProcessMatrix(std::vector<std::vector<double>>& degree_mixing_matrix) {
     int n = degree_mixing_matrix.size();
@@ -178,7 +184,11 @@ class DegreeAssortativity
     return sqrt(sum1 - sum2 * sum2);
   }
   int GetDegreeByType(const fragment_t& frag, const vertex_t& vertex,
-                      DegreeType type) {
+                      DegreeType type, bool directed) {
+    // For GraphScope, the inDegree of the undirected graph may be 0
+    if (!directed) {
+      return frag.GetLocalOutDegree(vertex);
+    }
     if (type == DegreeType::IN) {
       return frag.GetLocalInDegree(vertex);
     }

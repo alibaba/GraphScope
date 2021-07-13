@@ -63,7 +63,8 @@ class DegreeAssortativityContext : public TensorContext<FRAG_T, double> {
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
     if (frag.fid() == 0) {
-      os << degree_assortativity << std::endl;
+      os << std::scientific << std::setprecision(15) << degree_assortativity
+         << std::endl;
     }
   }
   std::unordered_map<std::pair<int, int>, int> degree_mixing_map;
