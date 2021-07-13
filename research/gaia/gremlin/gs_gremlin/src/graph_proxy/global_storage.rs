@@ -1,5 +1,5 @@
 //
-//! Copyright 2020 Alibaba Group Holding Limited.
+//! Copyright 2021 Alibaba Group Holding Limited.
 //!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
@@ -91,11 +91,15 @@ where
             .get_all_vertices(
                 si,
                 label_ids.as_ref(),
+                // None means no filter condition pushed down to storage as not supported yet. Same as follows.
                 None,
+                // None means no need to dedup by properties. Same as follows.
                 None,
                 prop_ids.as_ref(),
+                // Zero limit means no limit. Same as follows.
                 params.limit.unwrap_or(0),
-                // TODO(bingqing): optimization here, each worker may scan some partitions on current server; We use worker 0 to scan all partitions for now
+                // TODO(bingqing): optimization, each worker may scan some partitions on current server.
+                // Empty vector means all partitions, since we use worker 0 to scan all for now.
                 &vec![],
             )
             .map(move |v| to_runtime_vertex(&v));
@@ -127,7 +131,7 @@ where
                 None,
                 prop_ids.as_ref(),
                 params.limit.unwrap_or(0),
-                // TODO(bingqing): optimization here, each worker may scan some partitions on current server; We use worker 0 to scan all partitions for now
+                // TODO(bingqing): optimization, each worker may scan some partitions on current server.
                 &vec![],
             )
             .map(move |e| to_runtime_edge(&e));
