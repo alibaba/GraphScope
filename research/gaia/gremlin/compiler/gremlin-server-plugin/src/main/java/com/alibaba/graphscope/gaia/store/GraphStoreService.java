@@ -56,7 +56,7 @@ public abstract class GraphStoreService {
         throw new UnsupportedOperationException();
     }
 
-    public long getSnapshotId() {
+    public long getSnapShotId() {
         throw new UnsupportedOperationException();
     }
 
