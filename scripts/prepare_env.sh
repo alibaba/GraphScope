@@ -18,10 +18,13 @@ OVERWRITE=false
 PLATFORM=
 OS_VERSION=
 
-#
-# Output usage information.
-#
-
+##########################
+# Output useage information.
+# Globals:
+#   None
+# Arguments:
+#   None
+##########################
 usage() {
 cat <<END
   Usage: prepare_env [options]
@@ -35,20 +38,48 @@ cat <<END
 END
 }
 
+##########################
+# Output version.
+# Globals:
+#   None
+# Arguments:
+#   None
+##########################
 version() {
   echo "${VERSION}"
 }
 
+##########################
+# Output error message to stderr.
+# Globals:
+#   None
+# Arguments:
+#   None
+##########################
 err() {
   echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${RED}ERROR${NC}] $*" >&2
 }
 
+##########################
+# Output warning message.
+# Globals:
+#   None
+# Arguments:
+#   None
+##########################
 warning() {
   echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${YELLOW}WARNING${NC}] $*" >&1
 }
 
+##########################
+# Output logging message.
+# Globals:
+#   None
+# Arguments:
+#   None
+##########################
 log() {
-  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${ARROWS_RIGHT}] $*" >&1
+  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${ARROWS_RIGHT}] $*" >&1
 }
 
 ##########################
