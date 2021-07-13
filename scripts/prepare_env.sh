@@ -3,24 +3,62 @@
 # A script to install dependencies for GraphScope user
 
 set -e
-set -x
-set -o pipefail
+# set -x
+# set -o pipefail
 
-graphscope_home="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
-version=$(cat ${graphscope_home}/VERSION)
+# define color
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-is_in_wsl=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && is_in_wsl=true
+GRAPHSCOPE_DIR="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
+VRESION=$(cat ${graphscope_home}/VERSION)
+IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
+PLATFORM=
+OS_VERSION=
+VERBOSE=false
+OVERWRITE=false
+
+#
+# Output usage information.
+#
+
+usage() {
+cat <<END
+  Usage: prepare_env [options]
+  Options:
+    -V, --version        output program version
+    -h, --help           output help information
+    --verbose            output the debug log
+    --overwrite          overwrite the existed kube config
+  Notes:
+    The script can only available on Ubuntu 18+ or CenOS 7+.
+END
+}
+
+err() {
+  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: ${RED}ERROR${NC}$*" >&2
+}
+
+warning()
+  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: ${YELLOW}WARNING${NC}$*" >&1
+}
+
+log() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&1
+}
 
 ##########################
-# Install packages
+# Get os platform and version
 # Globals:
-#   platform
+#   PLATFORM
+#   OS_VERSION
 # Arguments:
 #   None
-##########################
-
+# Refer:
 # https://unix.stackexchange.com/questions/6345/how-can-i-get-distribution-name-and-version-number-in-a-simple-shell-script
-function get_os_version() {
+##########################
+get_os_version() {
   if [ -f /etc/os-release ]; then
     # freedesktop.org and systemd
     . /etc/os-release
@@ -50,45 +88,76 @@ function get_os_version() {
   fi
 }
 
-function check_os_compatibility() {
+##########################
+# Check the compatibility of platform and script.
+# Globals:
+#   None
+# Arguments:
+#   None
+# Outputs:
+#   Writes error message to stderr
+# Returns:
+#   non-zero on error.
+##########################
+check_os_compatibility() {
   if [[ "${is_in_wsl}" == true && -z "${WSL_INTEROP}" ]]; then
-    echo "GraphScope not support to run on WSL1, please use WSL2."
+    err "The platfrom is WSL1. GraphScope not support to run on WSL1, please use WSL2."
     exit 1
   fi
 
   if [[ "${platform}" != *"Ubuntu"* && "${platform}" != *"CentOS"* ]]; then
-    echo "This script is only available on Ubuntu/CentOS"
+    err "The platform is not Ubuntu or CentOs. This script is only available on Ubuntu/CentOS"
     exit 1
   fi
 
   if [[ "${platform}" == *"Ubuntu"* && "$(echo ${os_version} | sed 's/\([0-9]\)\([0-9]\).*/\1\2/')" -lt "18" ]]; then
-    echo "This script requires Ubuntu 18 or greater."
+    err "The version of Ubuntu is ${os_version}. this script requires Ubuntu 18 or greater."
     exit 1
   fi
 
   if [[ "${platform}" == *"CentOS"* && "${os_version}" -lt "7" ]]; then
-    echo "This script requires CentOS 7 or greater."
-    exit 1
+    err "The version of CentOS is ${os_version}. this script requires CentOS 7 or greater."
+    exit
   fi
 
-  echo "$(date '+%Y-%m-%d %H:%M:%S') preparing environment on '${platform}' '${os_version}'"
+  log "Preparing environment on '${platform}' '${os_version}'"
 }
 
-function check_dependencies_version() {
+##########################
+# Check the version of dependency.
+# Globals:
+#   None
+# Arguments:
+#   None
+# Outputs:
+#   Writes error message to stderr
+# Returns:
+#   non-zero on error.
+##########################
+check_dependencies_version() {
   # python
   if ! hash python3; then
-    echo "Python3 is not installed"
+    err "Python3 is not installed"
     exit 1
   fi
   ver=$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
   if [ "$ver" -lt "36" ]; then
-    echo "GraphScope requires python 3.6 or greater."
+    err "GraphScope requires python 3.6 or greater. Current version is ${python3 -V}"
     exit 1
   fi
 }
 
-function install_dependencies() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') install dependencies."
+##########################
+# Install dependencies of GraphScope.
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   0 if install successfully, non-zero on error.
+##########################
+install_dependencies() {
+  log "Install dependencies."
   if [[ "${platform}" == *"Ubuntu"* ]]; then
     sudo apt-get update -y
     sudo apt-get install -y git
@@ -110,19 +179,28 @@ function install_dependencies() {
   pip3 install -U pip --user
   pip3 install graphscope vineyard wheel --user
 
+  log "Install kubectl."
   K8S_VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
 
   curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/"${K8S_VERSION}"/bin/linux/amd64/kubectl && \
   chmod +x kubectl && sudo mv kubectl /usr/local/bin/ && sudo ln /usr/local/bin/kubectl /usr/bin/kubectl || true
-  echo "$(date '+%Y-%m-%d %H:%M:%S') kubectl ${K8S_VERSION} installed."
 
+  log "Install kind."
   curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.10.0/kind-linux-amd64
   chmod +x kind && sudo mv kind /usr/local/bin/ && sudo ln /usr/local/bin/kind /usr/bin/kind || true
-  echo "$(date '+%Y-%m-%d %H:%M:%S') kind v0.10.0 installed."
 }
 
-function start_docker() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') starting doker daemon."
+##########################
+# Start docker daemon.
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   0 if start successfully, non-zero on error.
+##########################
+start_docker() {
+  log "Starting doker daemon."
   # start docker daemon if docker not running.
   if ! sudo docker info >/dev/null 2>&1; then
     if [[ "${is_in_wsl}" = false ]]; then
@@ -131,62 +209,97 @@ function start_docker() {
       sudo dockerd > /dev/null&
     fi
   fi
-  echo "$(date '+%Y-%m-%d %H:%M:%S') docker started."
+  log "Docker started successfully."
 }
 
-function launch_k8s_cluster() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') launching k8s cluster"
+##########################
+# Launch kubenetes cluster with kind.
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   0 if launched successfully, non-zero on error.
+##########################
+launch_k8s_cluster() {
+  log "Launching k8s cluster"
   curl -Lo config-with-mounts.yaml https://kind.sigs.k8s.io/examples/config-with-mounts.yaml
   # mount $HOME dir to cluster container, which is kind-control-plane
   sed -i 's@/path/to/my/files/@'"${HOME}"'@g; s@/files@'"${HOME}"'@g' ./config-with-mounts.yaml  || true
   sudo kind create cluster --config config-with-mounts.yaml
   sudo chown -R "$(id -u)":"$(id -g)" "${HOME}"/.kube || true
-  echo "$(date '+%Y-%m-%d %H:%M:%S') cluster is lauched successfully."
+  log "Cluster is launched successfully."
 }
 
-function pull_images() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') pulling GraphScope images."
+##########################
+# Pull and load the GraphScope images to kind cluster.
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   0 if successful, non-zero on error.
+##########################
+pull_images() {
+  log "Pulling GraphScope images."
   sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${version} || true
   sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${version} || true
   sudo docker pull zookeeper:3.4.14 || true
   sudo docker pull quay.io/coreos/etcd:v3.4.13 || true
-  echo "$(date '+%Y-%m-%d %H:%M:%S') images pulled successfully."
+  log "GraphScope images pulled successfully."
 
-  echo "$(date '+%Y-%m-%d %H:%M:%S') loading images into kind cluster."
+  log "Loading images into kind cluster."
   sudo kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${version} || true
   sudo kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${version} || true
   sudo kind load docker-image zookeeper:3.4.14 || true
   sudo kind load docker-image quay.io/coreos/etcd:v3.4.13 || true
-  echo "$(date '+%Y-%m-%d %H:%M:%S') images loaded."
-
+  log "GraphScope images loaded into kind cluster successfully."
 }
 
-if [ -f "${HOME}/.kube/config" ];
-then
-    echo "We found existing kubernetes config, seems that you already have a ready kubernetes cluster"
-    echo "WARNING: If you do want to reset the kubernetes environment, please delete the existing config by"
-    echo ""
-    echo "    rm -rf ${HOME}/.kube"
-    echo ""
-    echo "and retry this script again."
+main() {
+  if [[ !${OVERWRITE} && -f "${HOME}/.kube/config" ]]; then
+    warning_msg="We found existing kubernetes config, seems that you already
+    have a ready kubernetes cluster. If you do want to reset the kubernetes
+    environment, please delete the existing config by 'rm -rf ${HOME}/.kube'
+    and retry this script again, or retry script with '--overwrite'"
+    warning ${warning_msg}
     exit 0
-fi
+  fi
 
-get_os_version
+  if [ ${VERBOSE} ]; then
+    set +e
+  fi
 
-check_os_compatibility
+  get_os_version
 
-install_dependencies
+  check_os_compatibility
 
-start_docker
+  install_dependencies
 
-launch_k8s_cluster
+  start_docker
 
-pull_images
+  launch_k8s_cluster
 
-echo "The script has successfully prepared an environment for GraphScope."
-echo "Now you are ready to have fun with GraphScope."
+  pull_images
 
+  log "The script has successfully prepared an environment for GraphScope."
+  log "Now you are ready to have fun with GraphScope."
+}
+
+# parse argv
+while test $# -ne 0; do
+  arg=$1; shift
+  case $arg in
+    -h|--help) usage; exit ;;
+    -V|--version) version; exit ;;
+    --verbose) VERBOSE=true; shift ;;
+    --overwrite) OVERWRITE=true; shift ;;
+    *)
+      ;;
+  esac
+done
+
+main
 set +x
-set +e
-set +o pipefail
+# set +e
+# set +o pipefail
