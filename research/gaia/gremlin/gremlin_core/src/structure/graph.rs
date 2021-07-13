@@ -15,8 +15,15 @@
 
 use crate::generated::common as pb_common;
 use crate::generated::gremlin as pb;
-use crate::structure::{Direction, Edge, ElementFilter, Filter, Label, PropKey, Vertex, ID};
+use crate::structure::codec::{pb_chain_to_filter, ParseError};
+use crate::structure::{
+    Direction, Edge, ElementFilter, Filter, Label, LabelId, PropKey, Vertex, ID,
+};
 use crate::{DynIter, DynResult, Element, FromPb};
+use dyn_type::Object;
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicPtr, Ordering};
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct QueryParams<E: Element + Send + Sync> {
@@ -33,8 +40,38 @@ impl<E: Element + Send + Sync> Default for QueryParams<E> {
     }
 }
 
+impl<E: Element + Send + Sync> FromPb<Option<pb::QueryParams>> for QueryParams<E> {
+    fn from_pb(query_params_pb: Option<pb::QueryParams>) -> Result<Self, ParseError>
+    where
+        Self: Sized,
+    {
+        let mut query_params = QueryParams::default();
+        if let Some(query_params_pb) = query_params_pb {
+            if let Some(labels) = query_params_pb.labels {
+                query_params.labels =
+                    labels.labels.into_iter().map(|l| Label::Id(l as LabelId)).collect();
+            }
+            if let Some(limit) = query_params_pb.limit {
+                query_params.limit = Some(limit.limit as usize);
+            }
+            if let Some(required_properties) = query_params_pb.required_properties {
+                query_params.set_props(required_properties);
+            }
+            if let Some(ref predicates) = query_params_pb.predicates {
+                if let Some(filter) = pb_chain_to_filter(predicates)? {
+                    query_params.set_filter(filter);
+                }
+            }
+            if let Some(extra_params) = query_params_pb.extra_params {
+                query_params.set_extra_params(extra_params)
+            }
+        }
+        Ok(query_params)
+    }
+}
+
 impl<E: Element + Send + Sync> QueryParams<E> {
-    pub fn set_filter(&mut self, filter: Filter<E, ElementFilter>) {
+    fn set_filter(&mut self, filter: Filter<E, ElementFilter>) {
         self.filter = Some(Arc::new(filter))
     }
 
@@ -42,43 +79,39 @@ impl<E: Element + Send + Sync> QueryParams<E> {
     // Some(vec![prop1, prop2]) indicates we need prop1 and prop2,
     // Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
-    pub fn set_props(&mut self, required_properties: Option<pb::PropKeys>) {
-        if let Some(fetch_props) = required_properties {
-            let mut prop_keys = vec![];
-            for prop_key in fetch_props.prop_keys {
-                if let Ok(prop_key) = PropKey::from_pb(prop_key) {
-                    prop_keys.push(prop_key);
-                } else {
-                    debug!("Parse prop key failed");
-                }
+    fn set_props(&mut self, required_properties: pb::PropKeys) {
+        let mut prop_keys = vec![];
+        for prop_key in required_properties.prop_keys {
+            if let Ok(prop_key) = PropKey::from_pb(prop_key) {
+                prop_keys.push(prop_key);
+            } else {
+                debug!("Parse prop key failed");
             }
-            // the cases of we need all properties or some specific properties
-            if fetch_props.is_all || !prop_keys.is_empty() {
-                self.props = Some(prop_keys)
-            }
+        }
+        // the cases of we need all properties or some specific properties
+        if required_properties.is_all || !prop_keys.is_empty() {
+            self.props = Some(prop_keys)
         }
     }
 
     // Extra query params for different storages
-    pub fn set_extra_params(&mut self, extra_params_pb: Option<pb::ExtraParams>) {
-        if let Some(extra_params_pb) = extra_params_pb {
-            let mut extra_params = HashMap::new();
-            for param in extra_params_pb.params {
-                let param_value = match param.value.unwrap().item.unwrap() {
-                    pb_common::value::Item::Boolean(b) => b.into(),
-                    pb_common::value::Item::I32(i) => i.into(),
-                    pb_common::value::Item::I64(i) => i.into(),
-                    pb_common::value::Item::F64(f) => f.into(),
-                    pb_common::value::Item::Str(s) => s.into(),
-                    pb_common::value::Item::Blob(b) => b.into(),
-                    _ => {
-                        unimplemented!()
-                    }
-                };
-                extra_params.insert(param.key, param_value);
-            }
-            self.extra_params = Some(extra_params);
+    fn set_extra_params(&mut self, extra_params_pb: pb::query_params::ExtraParams) {
+        let mut extra_params = HashMap::new();
+        for param in extra_params_pb.params {
+            let param_value = match param.value.unwrap().item.unwrap() {
+                pb_common::value::Item::Boolean(b) => b.into(),
+                pb_common::value::Item::I32(i) => i.into(),
+                pb_common::value::Item::I64(i) => i.into(),
+                pb_common::value::Item::F64(f) => f.into(),
+                pb_common::value::Item::Str(s) => s.into(),
+                pb_common::value::Item::Blob(b) => b.into(),
+                _ => {
+                    unimplemented!()
+                }
+            };
+            extra_params.insert(param.key, param_value);
         }
+        self.extra_params = Some(extra_params);
     }
 
     pub fn get_extra_param(&self, key: &str) -> Option<&Object> {
@@ -128,11 +161,6 @@ pub trait GraphProxy: Send + Sync {
         &self, direction: Direction, params: &QueryParams<Edge>,
     ) -> DynResult<Box<dyn Statement<ID, Edge>>>;
 }
-
-use dyn_type::Object;
-use std::collections::HashMap;
-use std::sync::atomic::{AtomicPtr, Ordering};
-use std::sync::Arc;
 
 lazy_static! {
     pub static ref GRAPH_PROXY: AtomicPtr<Arc<dyn GraphProxy>> = AtomicPtr::default();

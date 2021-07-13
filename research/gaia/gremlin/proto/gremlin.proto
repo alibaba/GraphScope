@@ -69,14 +69,14 @@ message QueryParams {
     }
     repeated Params params = 1;
   }
-  message EdgeLabels {
-    repeated int32 edge_labels = 1;
+  message Labels {
+    repeated int32 labels = 1;
   }
   message Limit {
       int32 limit = 1;
   }
-  // To filter based on the edge labels, e.g. g.out("knows")
-  EdgeLabels edge_labels = 1;
+  // To filter based on the labels, e.g. g.out("knows")
+  Labels labels = 1;
   // To filter the number of results, e.g., g.V().limit(10)
   Limit limit = 2;
   // The properties of the entities that need to be saved

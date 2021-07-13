@@ -18,8 +18,7 @@ use crate::generated::gremlin::EntityType;
 use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::{Requirement, Traverser};
-use crate::structure::codec::pb_chain_to_filter;
-use crate::structure::{Edge, Label, LabelId, QueryParams, Vertex, ID};
+use crate::structure::{Edge, QueryParams, Vertex, ID};
 use crate::{FromPb, Partitioner};
 use bit_set::BitSet;
 use pegasus::BuildJobError;
@@ -155,7 +154,7 @@ pub fn graph_step_from(
 ) -> Result<GraphVertexStep, BuildJobError> {
     if let Some(option) = gremlin_step.step.take() {
         match option {
-            pb::gremlin_step::Step::GraphStep(mut opt) => {
+            pb::gremlin_step::Step::GraphStep(opt) => {
                 let requirements_pb = unsafe { std::mem::transmute(opt.traverser_requirements) };
                 let requirements = Requirement::from_pb(requirements_pb)?;
                 let return_type = unsafe { std::mem::transmute(opt.return_type) };
@@ -169,25 +168,10 @@ pub fn graph_step_from(
                 if !ids.is_empty() {
                     step.set_src(ids, partitioner);
                 }
-                let labels = std::mem::replace(&mut opt.labels, vec![]);
-                if let Some(ref test) = opt.predicates {
-                    if return_type == EntityType::Vertex {
-                        step.v_params.labels =
-                            labels.into_iter().map(|id| Label::Id(id as LabelId)).collect();
-                        step.v_params.set_props(opt.required_properties);
-                        if let Some(filter) = pb_chain_to_filter(test)? {
-                            step.v_params.set_filter(filter);
-                        }
-                        step.v_params.set_extra_params(opt.extra_params);
-                    } else {
-                        step.e_params.labels =
-                            labels.into_iter().map(|id| Label::Id(id as LabelId)).collect();
-                        step.e_params.set_props(opt.required_properties);
-                        if let Some(filter) = pb_chain_to_filter(test)? {
-                            step.e_params.set_filter(filter);
-                        }
-                        step.e_params.set_extra_params(opt.extra_params);
-                    }
+                if return_type == EntityType::Vertex {
+                    step.v_params = QueryParams::from_pb(opt.query_params)?;
+                } else {
+                    step.e_params = QueryParams::from_pb(opt.query_params)?;
                 }
                 return Ok(step);
             }
