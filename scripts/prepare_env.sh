@@ -7,6 +7,8 @@
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+#emoji
+ARROWS_RIGHT="\U27a1\Ufe0f"
 
 GRAPHSCOPE_DIR="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
 VERSION=$(cat ${GRAPHSCOPE_DIR}/VERSION)
@@ -29,7 +31,7 @@ cat <<END
     --verbose            output the debug log
     --overwrite          overwrite the existed kube config
   Note:
-    The script can only available on Ubuntu 18+ or CenOS 7+.
+    The script only available on Ubuntu 18+ or CenOS 7+.
 END
 }
 
@@ -46,7 +48,7 @@ warning() {
 }
 
 log() {
-  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&1
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${ARROWS_RIGHT}] $*" >&1
 }
 
 ##########################
