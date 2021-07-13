@@ -55,7 +55,6 @@ public class VineyardGraphStore extends GraphStoreService {
         return graphSchema.getPropertyName(propertyId);
     }
 
-    @Override
     public long getSnapshotId() {
         return this.snapshotId;
     }

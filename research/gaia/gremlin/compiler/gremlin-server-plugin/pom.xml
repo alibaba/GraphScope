@@ -7,7 +7,6 @@
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>gremlin-compiler</artifactId>
         <version>1.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>gremlin-server-plugin</artifactId>
@@ -62,7 +61,6 @@
         <dependency>
             <groupId>com.alibaba.pegasus</groupId>
             <artifactId>pegasus-client</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
