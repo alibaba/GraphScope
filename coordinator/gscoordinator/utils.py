@@ -146,6 +146,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     Returns:
         str: Path of the built library.
     """
+    algo = attr[types_pb2.APP_ALGO].s.decode("utf-8")
     app_dir = os.path.join(workspace, library_name)
     os.makedirs(app_dir, exist_ok=True)
 
@@ -181,7 +182,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         ".",
         "-DNETWORKX=" + engine_config["networkx"],
     ]
-    if app_type != "cpp_pie":
+    if app_type in ("cython_pregel", "cython_pie"):
         if app_type == "cython_pregel":
             pxd_name = "pregel"
             cmake_commands += ["-DCYTHON_PREGEL_APP=True"]
@@ -202,6 +203,9 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
             cc_file = os.path.join(app_dir, module_name + ".cc")
             subprocess.check_call(["cython", "-3", "--cplus", "-o", cc_file, pyx_file])
         app_header = "{}.h".format(module_name)
+    elif app_type == "cpp_gas":
+        app_header = "{0}.h".format(algo)
+        cmake_commands += ["-DCPP_GAS=True"]
 
     # replace and generate cmakelist
     cmakelists_file_tmp = os.path.join(TEMPLATE_DIR, "CMakeLists.template")
@@ -1003,6 +1007,15 @@ def _codegen_app_info(attr, meta_file: str):
                     app["vd_type"],
                     app["md_type"],
                     app["pregel_combine"],
+                )
+            if app_type == "cpp_gas":
+                return (
+                    app_type,
+                    "",
+                    "gs::GatherScatter<{0}>".format(app["class_name"]),
+                    None,
+                    None,
+                    None,
                 )
 
     raise KeyError("Algorithm does not exist in the gar resource.")
