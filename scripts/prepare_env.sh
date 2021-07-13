@@ -2,9 +2,6 @@
 #
 # A script to install dependencies for GraphScope user
 
-set -e
-# set -x
-set -o pipefail
 
 # define color
 RED='\033[0;31m'
@@ -14,10 +11,10 @@ NC='\033[0m' # No Color
 GRAPHSCOPE_DIR="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
 VERSION=$(cat ${GRAPHSCOPE_DIR}/VERSION)
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
-PLATFORM=
-OS_VERSION=
 VERBOSE=false
 OVERWRITE=false
+PLATFORM=
+OS_VERSION=
 
 #
 # Output usage information.
@@ -31,7 +28,7 @@ cat <<END
     -h, --help           output help information
     --verbose            output the debug log
     --overwrite          overwrite the existed kube config
-  Notes:
+  Note:
     The script can only available on Ubuntu 18+ or CenOS 7+.
 END
 }
@@ -121,7 +118,7 @@ check_os_compatibility() {
 
   if [[ "${PLATFORM}" == *"CentOS"* && "${OS_VERSION}" -lt "7" ]]; then
     err "The version of CentOS is ${OS_VERSION}. this script requires CentOS 7 or greater."
-    exit
+    exit 1
   fi
 
   log "Preparing environment on '${PLATFORM}' '${OS_VERSION}'"
@@ -262,7 +259,7 @@ pull_images() {
 
 main() {
   if [ ${VERBOSE} = true ]; then
-    set -e
+    set -x
   fi
 
   if [[ ${OVERWRITE} = false && -f "${HOME}/.kube/config" ]]; then
@@ -286,11 +283,12 @@ main() {
   pull_images
 
   if [ ${VERBOSE} = true ]; then
-    set +e
+    set +x
   fi
 
-  log "The script has successfully prepared an environment for GraphScope."
-  log "Now you are ready to have fun with GraphScope."
+  msg="The script has successfully prepared an environment for GraphScope.
+  Now you are ready to have fun with GraphScope."
+  log msg
 }
 
 # parse argv
@@ -306,6 +304,8 @@ while test $# -ne 0; do
   esac
 done
 
+set -e
+set -o pipefail
 main
-# set +x
+set +e
 set +o pipefail
