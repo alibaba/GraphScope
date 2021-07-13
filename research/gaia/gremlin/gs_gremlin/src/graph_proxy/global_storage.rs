@@ -13,14 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::graph_proxy::util::{str_to_dyn_error, IterList};
 use dyn_type::{Object, Primitives};
 use gremlin_core::graph_proxy::from_fn;
 use gremlin_core::structure::LabelId as RuntimeLabelId;
 use gremlin_core::structure::{
     DefaultDetails, Direction, DynDetails, Edge, Label, PropKey, QueryParams, Statement, Vertex,
 };
-use gremlin_core::{filter_limit, filter_limit_ok, limit_n};
+use gremlin_core::{filter_limit, filter_limit_ok, limit_n, str_to_dyn_error, IterList};
 use gremlin_core::{register_graph, DynResult, GraphProxy, ID};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::graph_schema::Schema;

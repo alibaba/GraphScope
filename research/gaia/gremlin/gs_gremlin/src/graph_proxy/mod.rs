@@ -14,7 +14,6 @@
 //! limitations under the License.
 
 mod global_storage;
-mod util;
 use gremlin_core::{Partitioner, ID, ID_MASK};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::{PropId, VertexId};

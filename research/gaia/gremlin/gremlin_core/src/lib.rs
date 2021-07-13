@@ -51,6 +51,7 @@ use crate::result_process::result_to_pb;
 use crate::structure::filter::codec::ParseError;
 pub use generated::gremlin::GremlinStep as GremlinStepPb;
 pub use graph_proxy::{create_demo_graph, ID_MASK};
+pub use graph_store::utils::IterList;
 use std::io;
 
 #[cfg(feature = "proto_inplace")]
@@ -91,7 +92,7 @@ impl From<ParseError> for DynError {
 
 /// A tricky bypassing of Rust's compiler. It is useful to simplify throwing a `DynError`
 /// from a `&str` as `Err(str_to_dyn_err('some str'))`
-fn str_to_dyn_error(str: &str) -> DynError {
+pub fn str_to_dyn_error(str: &str) -> DynError {
     let err: Box<dyn std::error::Error + Send + Sync> = str.into();
     err
 }
