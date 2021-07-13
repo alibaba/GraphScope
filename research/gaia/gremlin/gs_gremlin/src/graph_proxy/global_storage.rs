@@ -195,7 +195,7 @@ where
         let edge_label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
 
         let stmt = from_fn(move |v: ID| {
-            let src_id = build_partition_vertex_ids(&[v], partition_manager.clone());
+            let src_id = build_partition_vertex_ids(&v, partition_manager.clone());
             let iter = match direction {
                 Direction::Out => store.get_out_vertex_ids(
                     si,
@@ -264,7 +264,7 @@ where
         let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
 
         let stmt = from_fn(move |v: ID| {
-            let src_id = build_partition_vertex_ids(&[v], partition_manager.clone());
+            let src_id = build_partition_vertex_ids(&v, partition_manager.clone());
             let iter = match direction {
                 Direction::Out => store.get_out_edges(
                     si,
@@ -446,17 +446,10 @@ fn build_partition_label_vertex_ids(
 /// Transform type of ids to PartitionVertexIds as required by graphscope store,
 /// which consists of (PartitionId,Vec<VertexId>)
 fn build_partition_vertex_ids(
-    ids: &[ID],
+    id: &ID,
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
 ) -> Vec<PartitionVertexIds> {
-    let mut partition_vid_map = HashMap::new();
-    for vid in ids {
-        let partition_id =
-            graph_partition_manager.get_partition_id(*vid as VertexId) as PartitionId;
-        partition_vid_map
-            .entry(partition_id)
-            .or_insert(Vec::new())
-            .push(*vid as VertexId);
-    }
-    partition_vid_map.into_iter().collect()
+    let vid = *id as VertexId;
+    let partition_id = graph_partition_manager.get_partition_id(vid) as PartitionId;
+    vec![(partition_id, vec![vid])]
 }
