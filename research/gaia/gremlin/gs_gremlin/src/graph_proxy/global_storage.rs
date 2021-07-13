@@ -33,8 +33,8 @@ use std::sync::Arc;
 
 static INVALID_LABEL_ID: LabelId = 0xffffffff;
 static INVALID_PROP_ID: PropId = 0xffffffff;
-// TODO(bingqing): confirm with compiler, compiler should set the param_key as "sid"
-const SNAPSHOT_ID: &str = "sid";
+// TODO(bingqing): confirm with compiler, compiler should set the param_key as "SID"
+const SNAPSHOT_ID: &str = "SID";
 
 pub struct GraphScopeStore<V, VI, E, EI>
 where
@@ -162,27 +162,13 @@ where
 
     fn get_edge(
         &self,
-        ids: &[ID],
-        params: &QueryParams<Edge>,
+        _ids: &[ID],
+        _params: &QueryParams<Edge>,
     ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        let store = self.store.clone();
-        let si = params
-            .get_extra_param(SNAPSHOT_ID)
-            .ok_or(str_to_dyn_error("get snapshot_id failed"))?
-            .as_i64()
-            .map_err(|e| str_to_dyn_error(&e.to_string()))? as SnapshotId;
-        let schema = store
-            .get_schema(si)
-            .ok_or(str_to_dyn_error("get schema failed"))?;
-        let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
-        let partition_label_vertex_ids =
-            build_partition_label_vertex_ids(ids, self.partition_manager.clone());
-        let filter = params.filter.clone();
-        let result = store
-            .get_edge_properties(si, partition_label_vertex_ids, prop_ids.as_ref())
-            .map(move |e| to_runtime_edge(&e));
-
-        Ok(filter_limit!(result, filter, None))
+        // TODO(bingqing): adapt get_edge when graphscope support this
+        Err(str_to_dyn_error(
+            "GraphScope storage does not support get_edge for now",
+        ))
     }
 
     fn prepare_explore_vertex(
@@ -365,7 +351,6 @@ fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
 
 /// in maxgraph store, Option<Vec<PropId>>: None means we need all properties, and Some means we need given properties (and Some(vec![]) means we do not need any property)
 /// while in gaia, None means we do not need any properties, and Some means we need given properties (and Some(vec![]) means we need all properties)
-// TODO(bingqing): To confirm, and make it in consistent with maxgraph
 #[inline]
 fn encode_storage_prop_key(
     prop_names: Option<&Vec<PropKey>>,
@@ -427,6 +412,7 @@ fn encode_runtime_property(prop_id: PropId, prop_val: Property) -> (PropKey, Obj
     (prop_key, prop_val)
 }
 
+/// Transform type of ids to PartitionLabeledVertexIds, which consists of (PartitionId, Vec<(Option<LabelId>, Vec<VertexId>)>), as required by graphscope store
 fn build_partition_label_vertex_ids(
     ids: &[ID],
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
@@ -450,6 +436,7 @@ fn build_partition_label_vertex_ids(
         .collect()
 }
 
+/// Transform type of ids to PartitionVertexIds, which consists of (PartitionId,Vec<VertexId>), as required by graphscope store
 fn build_partition_vertex_ids(
     ids: &[ID],
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
