@@ -69,8 +69,11 @@ impl GraphVertexStep {
     pub fn set_src(&mut self, ids: Vec<ID>, partitioner: Arc<dyn Partitioner>) {
         let mut partitions = HashMap::new();
         for id in ids {
-            let wid = partitioner.get_partition(&id, self.workers);
-            partitions.entry(wid).or_insert_with(Vec::new).push(id);
+            if let Ok(wid) = partitioner.get_partition(&id, self.workers) {
+                partitions.entry(wid).or_insert_with(Vec::new).push(id);
+            } else {
+                debug!("get server id failed in graph_partition_manager in source op");
+            }
         }
 
         self.src = Some(partitions);

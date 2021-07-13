@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 mod global_storage;
-use gremlin_core::{Partitioner, ID, ID_MASK};
+use gremlin_core::{str_to_dyn_error, DynResult, Partitioner, ID, ID_MASK};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::{PropId, VertexId};
 use std::sync::Arc;
@@ -33,7 +33,7 @@ impl MultiPartition {
 }
 
 impl Partitioner for MultiPartition {
-    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> u64 {
+    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> DynResult<u64> {
         // The partitioning logics is as follows:
         // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id
         // to the partition that holds its data.
@@ -48,11 +48,10 @@ impl Partitioner for MultiPartition {
         let server_index = self
             .graph_partition_manager
             .get_server_id(partition_id as PropId)
-            .unwrap_or_else(|| {
-                log::debug!("get server id failed in graph_partition_manager");
-                0
-            }) as u64;
+            .ok_or(str_to_dyn_error(
+                "get server id failed in graph_partition_manager",
+            ))? as u64;
         let worker_index = partition_id % worker_num_per_server;
-        server_index * worker_num_per_server + worker_index as u64
+        Ok(server_index * worker_num_per_server + worker_index as u64)
     }
 }

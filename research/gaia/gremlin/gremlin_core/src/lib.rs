@@ -22,7 +22,6 @@ extern crate enum_dispatch;
 extern crate lazy_static;
 #[macro_use]
 extern crate pegasus_common;
-#[macro_use]
 extern crate pegasus;
 #[macro_use]
 extern crate pegasus_config;
@@ -108,7 +107,7 @@ pub trait FromPb<T> {
 }
 
 pub trait Partitioner: Send + Sync + 'static {
-    fn get_partition(&self, id: &ID, job_workers: usize) -> u64;
+    fn get_partition(&self, id: &ID, job_workers: usize) -> DynResult<u64>;
 }
 
 /// A simple partition utility
@@ -117,7 +116,7 @@ pub struct Partition {
 }
 
 impl Partitioner for Partition {
-    fn get_partition(&self, id: &ID, workers: usize) -> u64 {
+    fn get_partition(&self, id: &ID, workers: usize) -> DynResult<u64> {
         let id_usize = (*id & (ID_MASK)) as usize;
         let magic_num = id_usize / self.num_servers;
         // The partitioning logics is as follows:
@@ -126,7 +125,7 @@ impl Partitioner for Partition {
         // 2. `R * workers` shifts the worker's id in the machine R.
         // 3. `magic_num % workers` then picks up one of the workers in the machine R
         // to do the computation.
-        ((id_usize - magic_num * self.num_servers) * workers + magic_num % workers) as u64
+        Ok(((id_usize - magic_num * self.num_servers) * workers + magic_num % workers) as u64)
     }
 }
 
