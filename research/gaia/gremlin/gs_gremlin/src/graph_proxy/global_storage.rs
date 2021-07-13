@@ -353,8 +353,10 @@ fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
     edge
 }
 
-/// in maxgraph store, Option<Vec<PropId>>: None means we need all properties, and Some means we need given properties (and Some(vec![]) means we do not need any property)
-/// while in gaia, None means we do not need any properties, and Some means we need given properties (and Some(vec![]) means we need all properties)
+/// in maxgraph store, Option<Vec<PropId>>: None means we need all properties,
+/// and Some means we need given properties (and Some(vec![]) means we do not need any property)
+/// while in gaia, None means we do not need any properties,
+/// and Some means we need given properties (and Some(vec![]) means we need all properties)
 #[inline]
 fn encode_storage_prop_key(
     prop_names: Option<&Vec<PropKey>>,
@@ -416,7 +418,8 @@ fn encode_runtime_property(prop_id: PropId, prop_val: Property) -> (PropKey, Obj
     (prop_key, prop_val)
 }
 
-/// Transform type of ids to PartitionLabeledVertexIds, which consists of (PartitionId, Vec<(Option<LabelId>, Vec<VertexId>)>), as required by graphscope store
+/// Transform type of ids to PartitionLabeledVertexIds as required by graphscope store,
+/// which consists of (PartitionId, Vec<(Option<LabelId>, Vec<VertexId>)>)
 fn build_partition_label_vertex_ids(
     ids: &[ID],
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
@@ -440,7 +443,8 @@ fn build_partition_label_vertex_ids(
         .collect()
 }
 
-/// Transform type of ids to PartitionVertexIds, which consists of (PartitionId,Vec<VertexId>), as required by graphscope store
+/// Transform type of ids to PartitionVertexIds as required by graphscope store,
+/// which consists of (PartitionId,Vec<VertexId>)
 fn build_partition_vertex_ids(
     ids: &[ID],
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
