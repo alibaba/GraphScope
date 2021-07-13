@@ -267,7 +267,7 @@ main() {
   fi
 
   if [ ${VERBOSE} ]; then
-    set +e
+    set -e
   fi
 
   get_os_version
@@ -281,6 +281,10 @@ main() {
   launch_k8s_cluster
 
   pull_images
+
+  if [ ${VERBOSE} ]; then
+    set +e
+  fi
 
   log "The script has successfully prepared an environment for GraphScope."
   log "Now you are ready to have fun with GraphScope."
