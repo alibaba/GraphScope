@@ -65,6 +65,7 @@ mod order_by;
 mod sink;
 mod source;
 mod sub_traversal;
+mod traverser_router;
 mod util;
 
 use crate::structure::{Tag, INIT_TAG_NUM};
@@ -82,4 +83,5 @@ pub use sink::SinkFuncGen;
 pub use source::graph_step_from;
 pub use source::GraphVertexStep;
 pub use sub_traversal::{BySubJoin, GroupBySubJoin, HasAnyJoin, JoinFuncGen, SelectBySubJoin};
+pub use traverser_router::Router;
 pub use util::result_downcast;
