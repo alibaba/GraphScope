@@ -2,6 +2,7 @@ package com.alibaba.graphscope.gaia.processor;
 
 import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
 import com.alibaba.graphscope.gaia.broadcast.RpcBroadcastProcessor;
+import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.idmaker.IncrementalQueryIdMaker;
@@ -15,7 +16,6 @@ import com.alibaba.graphscope.gaia.result.RemoteTraverserResultParser;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.GraphType;
 import com.alibaba.pegasus.builder.AbstractBuilder;
-import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -30,8 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.SimpleBindings;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 
@@ -42,12 +40,12 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
     private GaiaConfig config;
     private GraphStoreService graphStore;
 
-    public TraversalOpProcessor(GaiaConfig config, GraphStoreService graphStore) {
+    public TraversalOpProcessor(GaiaConfig config, GraphStoreService graphStore, RpcChannelFetcher fetcher) {
         super(false);
         this.config = config;
         this.graphStore = graphStore;
         this.queryIdMaker = new IncrementalQueryIdMaker();
-        this.broadcastProcessor = new RpcBroadcastProcessor(config.getPegasusPhysicalHosts());
+        this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
     }
 
     @Override

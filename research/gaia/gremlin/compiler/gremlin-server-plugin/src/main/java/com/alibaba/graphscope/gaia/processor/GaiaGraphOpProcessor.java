@@ -15,6 +15,7 @@
  */
 package com.alibaba.graphscope.gaia.processor;
 
+import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
@@ -48,9 +49,9 @@ public class GaiaGraphOpProcessor extends AbstractGraphOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(GaiaGraphOpProcessor.class);
     private AbstractBroadcastProcessor broadcastProcessor;
 
-    public GaiaGraphOpProcessor(GaiaConfig config, GraphStoreService graphStore) {
+    public GaiaGraphOpProcessor(GaiaConfig config, GraphStoreService graphStore, RpcChannelFetcher fetcher) {
         super(config, graphStore);
-        this.broadcastProcessor = new RpcBroadcastProcessor(config.getPegasusPhysicalHosts());
+        this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
     }
 
     @Override
