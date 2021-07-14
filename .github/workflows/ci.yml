@@ -279,7 +279,7 @@ jobs:
         python3 -m pip install pytest-cov
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
-        cp -R -n /opt/graphscope/* /usr/local/
+        cp -R -n opt/graphscope/* /usr/local/
         ls -la /usr/local/bin/
         pushd /usr/local/dist/ && pip3 install ./*.whl && popd
         python3 -m pip install -r python/requirements.txt
