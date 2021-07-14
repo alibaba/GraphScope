@@ -83,13 +83,13 @@ impl EdgeRelation {
         }
     }
 
-    pub fn edge_label_id(&self) -> LabelId {
+    pub fn get_edge_label_id(&self) -> LabelId {
         self.edge_label_id
     }
-    pub fn src_vertex_label_id(&self) -> LabelId {
+    pub fn get_src_vertex_label_id(&self) -> LabelId {
         self.src_vertex_label_id
     }
-    pub fn dst_vertex_label_id(&self) -> LabelId {
+    pub fn get_dst_vertex_label_id(&self) -> LabelId {
         self.dst_vertex_label_id
     }
 }
