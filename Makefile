@@ -10,6 +10,9 @@ NETWORKX                    ?= OFF
 # client build options
 WITH_LEARNING_ENGINE        ?= OFF
 
+# testing build option
+BUILD_TEST					?= OFF
+
 .PHONY: all
 all: graphscope
 
@@ -52,7 +55,7 @@ coordinator: client
 gae:
 	mkdir -p $(WORKING_DIR)/analytical_engine/build
 	cd $(WORKING_DIR)/analytical_engine/build && \
-	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) .. && \
+	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) -DBUILD_TESTS=${BUILD_TEST} .. && \
 	make -j`nproc` && \
 	sudo make install
 
@@ -81,7 +84,7 @@ gle:
 	cd $(WORKING_DIR)/learning_engine/graph-learn && \
 	git submodule update --init third_party/pybind11 && \
 	mkdir -p cmake-build && cd cmake-build && \
-	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
+	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DWITH_VINEYARD=ON -DTESTING=${BUILD_TEST} .. && \
 	make -j`nproc` && \
 	sudo make install
 
