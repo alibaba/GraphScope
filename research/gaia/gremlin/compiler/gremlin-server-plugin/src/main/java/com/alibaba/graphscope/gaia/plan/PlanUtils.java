@@ -369,4 +369,14 @@ public class PlanUtils {
         }
         return keysBuilder.build();
     }
+
+    public static boolean getIsSimple(Step step) {
+        String field = "isSimple";
+        try {
+            return (boolean) FieldUtils.readField(step, field, true);
+            // return getPrivateField(step.getClass(), field);
+        } catch (Exception e) {
+            throw new RuntimeException("field " + field + " not exist in step " + step.getClass(), e);
+        }
+    }
 }
