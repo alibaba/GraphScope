@@ -45,73 +45,85 @@ impl<E: Element + Send + Sync> FromPb<Option<pb::QueryParams>> for QueryParams<E
     where
         Self: Sized,
     {
-        let mut query_params = QueryParams::default();
-        if let Some(query_params_pb) = query_params_pb {
-            if let Some(labels) = query_params_pb.labels {
-                query_params.labels =
-                    labels.labels.into_iter().map(|l| Label::Id(l as LabelId)).collect();
-            }
-            if let Some(limit) = query_params_pb.limit {
-                query_params.limit = Some(limit.limit as usize);
-            }
-            if let Some(required_properties) = query_params_pb.required_properties {
-                query_params.set_props(required_properties);
-            }
-            if let Some(ref predicates) = query_params_pb.predicates {
-                if let Some(filter) = pb_chain_to_filter(predicates)? {
-                    query_params.set_filter(filter);
-                }
-            }
-            if let Some(extra_params) = query_params_pb.extra_params {
-                query_params.set_extra_params(extra_params)
-            }
-        }
-        Ok(query_params)
+        query_params_pb.map_or(Ok(QueryParams::default()), |query_params_pb| {
+            QueryParams::default()
+                .with_labels(query_params_pb.labels)?
+                .with_filter(query_params_pb.predicates)?
+                .with_limit(query_params_pb.limit)?
+                .with_props(query_params_pb.required_properties)?
+                .with_extra_params(query_params_pb.extra_params)
+        })
     }
 }
 
 impl<E: Element + Send + Sync> QueryParams<E> {
-    fn set_filter(&mut self, filter: Filter<E, ElementFilter>) {
-        self.filter = Some(Arc::new(filter))
+    fn with_labels(
+        mut self, labels_pb: Option<pb::query_params::Labels>,
+    ) -> Result<Self, ParseError> {
+        if let Some(labels_pb) = labels_pb {
+            self.labels = labels_pb.labels.into_iter().map(|l| Label::Id(l as LabelId)).collect();
+        }
+        Ok(self)
+    }
+
+    fn with_filter(mut self, filter_chain_pb: Option<pb::FilterChain>) -> Result<Self, ParseError> {
+        if let Some(ref filter_chain_pb) = filter_chain_pb {
+            if let Some(filter) = pb_chain_to_filter(filter_chain_pb)? {
+                self.filter = Some(Arc::new(filter));
+            }
+        }
+        Ok(self)
+    }
+
+    fn with_limit(mut self, limit_pb: Option<pb::query_params::Limit>) -> Result<Self, ParseError> {
+        if let Some(limit_pb) = limit_pb {
+            self.limit = Some(limit_pb.limit as usize);
+        }
+        Ok(self)
     }
 
     // props specify the properties we query for, e.g.,
     // Some(vec![prop1, prop2]) indicates we need prop1 and prop2,
     // Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
-    fn set_props(&mut self, required_properties: pb::PropKeys) {
-        let mut prop_keys = vec![];
-        for prop_key in required_properties.prop_keys {
-            if let Ok(prop_key) = PropKey::from_pb(prop_key) {
+    fn with_props(
+        mut self, required_properties_pb: Option<pb::PropKeys>,
+    ) -> Result<Self, ParseError> {
+        if let Some(required_properties_pb) = required_properties_pb {
+            let mut prop_keys = vec![];
+            for prop_key in required_properties_pb.prop_keys {
+                let prop_key = PropKey::from_pb(prop_key)?;
                 prop_keys.push(prop_key);
-            } else {
-                debug!("Parse prop key failed");
+            }
+            // the cases of we need all properties or some specific properties
+            if required_properties_pb.is_all || !prop_keys.is_empty() {
+                self.props = Some(prop_keys)
             }
         }
-        // the cases of we need all properties or some specific properties
-        if required_properties.is_all || !prop_keys.is_empty() {
-            self.props = Some(prop_keys)
-        }
+        Ok(self)
     }
 
     // Extra query params for different storages
-    fn set_extra_params(&mut self, extra_params_pb: pb::query_params::ExtraParams) {
-        let mut extra_params = HashMap::new();
-        for param in extra_params_pb.params {
-            let param_value = match param.value.unwrap().item.unwrap() {
-                pb_common::value::Item::Boolean(b) => b.into(),
-                pb_common::value::Item::I32(i) => i.into(),
-                pb_common::value::Item::I64(i) => i.into(),
-                pb_common::value::Item::F64(f) => f.into(),
-                pb_common::value::Item::Str(s) => s.into(),
-                pb_common::value::Item::Blob(b) => b.into(),
-                _ => {
-                    unimplemented!()
-                }
-            };
-            extra_params.insert(param.key, param_value);
+    fn with_extra_params(
+        mut self, extra_params_pb: Option<pb::query_params::ExtraParams>,
+    ) -> Result<Self, ParseError> {
+        if let Some(extra_params_pb) = extra_params_pb {
+            let mut extra_params = HashMap::new();
+            for param in extra_params_pb.params {
+                let param_value = match param.value.unwrap().item.unwrap() {
+                    pb_common::value::Item::Boolean(b) => Ok(b.into()),
+                    pb_common::value::Item::I32(i) => Ok(i.into()),
+                    pb_common::value::Item::I64(i) => Ok(i.into()),
+                    pb_common::value::Item::F64(f) => Ok(f.into()),
+                    pb_common::value::Item::Str(s) => Ok(s.into()),
+                    pb_common::value::Item::Blob(b) => Ok(b.into()),
+                    _ => Err(ParseError::OtherErr("Unsupported extra params".to_string())),
+                }?;
+                extra_params.insert(param.key, param_value);
+            }
+            self.extra_params = Some(extra_params);
         }
-        self.extra_params = Some(extra_params);
+        Ok(self)
     }
 
     pub fn get_extra_param(&self, key: &str) -> Option<&Object> {
