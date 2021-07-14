@@ -14,10 +14,29 @@
 //! limitations under the License.
 
 mod global_storage;
+use global_storage::create_gs_store;
+use gremlin_core::compiler::GremlinJobCompiler;
 use gremlin_core::{str_to_dyn_error, DynResult, Partitioner, ID, ID_MASK};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
-use maxgraph_store::api::{PropId, VertexId};
+use maxgraph_store::api::{Edge, GlobalGraphQuery, PropId, Vertex, VertexId};
 use std::sync::Arc;
+
+pub fn initialize_job_compiler<V, VI, E, EI>(
+    graph_query: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
+    graph_partitioner: Arc<dyn GraphPartitionManager>,
+    num_servers: usize,
+    server_index: u64,
+) -> GremlinJobCompiler
+where
+    V: Vertex + 'static,
+    VI: Iterator<Item = V> + Send + 'static,
+    E: Edge + 'static,
+    EI: Iterator<Item = E> + Send + 'static,
+{
+    create_gs_store(graph_query, graph_partitioner.clone());
+    let partition = MultiPartition::new(graph_partitioner);
+    GremlinJobCompiler::new(partition, num_servers, server_index)
+}
 
 /// A partition utility that one server contains multiple graph partitions
 pub struct MultiPartition {
