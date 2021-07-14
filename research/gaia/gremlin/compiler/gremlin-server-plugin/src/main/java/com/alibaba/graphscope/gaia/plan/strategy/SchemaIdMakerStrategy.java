@@ -109,7 +109,7 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
             }
             GraphType graphType = config.getGraphType();
             // property string -> property id
-            if (graphType == GraphType.VINEYARD) {
+            if (graphType == GraphType.MAXGRAPH) {
                 for (int i = 0; i < steps.size(); ++i) {
                     Step step = steps.get(i);
                     if (step instanceof HasContainerHolder) {
