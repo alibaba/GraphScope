@@ -50,7 +50,7 @@ impl<E: Element + Send + Sync> FromPb<Option<pb::QueryParams>> for QueryParams<E
                 .with_labels(query_params_pb.labels)?
                 .with_filter(query_params_pb.predicates)?
                 .with_limit(query_params_pb.limit)?
-                .with_props(query_params_pb.required_properties)?
+                .with_required_properties(query_params_pb.required_properties)?
                 .with_extra_params(query_params_pb.extra_params)
         })
     }
@@ -86,7 +86,7 @@ impl<E: Element + Send + Sync> QueryParams<E> {
     // Some(vec![prop1, prop2]) indicates we need prop1 and prop2,
     // Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
-    fn with_props(
+    fn with_required_properties(
         mut self, required_properties_pb: Option<pb::PropKeys>,
     ) -> Result<Self, ParseError> {
         if let Some(required_properties_pb) = required_properties_pb {
