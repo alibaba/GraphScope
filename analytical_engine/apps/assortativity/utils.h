@@ -15,7 +15,9 @@ limitations under the License.
 
 #ifndef ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_UTILS_H_
 #define ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_UTILS_H_
+
 namespace gs {
 enum class DegreeType { IN, OUT, INANDOUT };
-}
-#endif
+}  // namespace gs
+
+#endif  // ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_UTILS_H_
