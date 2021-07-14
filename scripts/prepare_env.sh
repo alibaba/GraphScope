@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
 #
-# A script to install dependencies for GraphScope user
+# A script to prepare an local Kubernetes environment for GraphScope users.
 
 
-# define color
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-#emoji
-ARROWS_RIGHT="\U27a1\Ufe0f"
+# color
+RED="\033[0;31m"
+YELLOW="\033[1;33m"
+NC="\033[0m" # No Color
+# emoji
+MUSCLE="\U1f4aa"
 
-GRAPHSCOPE_DIR="$( cd "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P )"
-VERSION=$(cat ${GRAPHSCOPE_DIR}/VERSION)
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 VERBOSE=false
 OVERWRITE=false
@@ -27,12 +25,13 @@ OS_VERSION=
 ##########################
 usage() {
 cat <<END
+  A script to prepare a local Kubernetes environment for GraphScope users.
+
   Usage: prepare_env [options]
   Options:
-    -V, --version        output program version
     -h, --help           output help information
     --verbose            output the debug log
-    --overwrite          overwrite the existed kube config
+    --overwrite          overwrite the existed kubernetes config
   Note:
     The script only available on Ubuntu 18+ or CenOS 7+.
 END
@@ -79,7 +78,7 @@ warning() {
 #   None
 ##########################
 log() {
-  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${ARROWS_RIGHT}] $*" >&1
+  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${MUSCLE}] $*" >&1
 }
 
 ##########################
@@ -315,13 +314,13 @@ main() {
 
   pull_images
 
-  if [ ${VERBOSE} = true ]; then
-    set +x
-  fi
-
   msg="The script has successfully prepared an environment for GraphScope.
   Now you are ready to have fun with GraphScope."
   log ${msg}
+
+  if [ ${VERBOSE} = true ]; then
+    set +x
+  fi
 }
 
 # parse argv
