@@ -38,17 +38,6 @@ END
 }
 
 ##########################
-# Output version.
-# Globals:
-#   None
-# Arguments:
-#   None
-##########################
-version() {
-  echo "${VERSION}"
-}
-
-##########################
 # Output error message to stderr.
 # Globals:
 #   None
