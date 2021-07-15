@@ -19,6 +19,7 @@ import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.GraphType;
+import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -140,6 +141,8 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                     }
                 }
             }
+        } catch (SchemaNotFoundException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
