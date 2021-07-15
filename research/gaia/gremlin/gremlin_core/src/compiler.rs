@@ -16,7 +16,6 @@
 use crate::process::traversal::step::*;
 use crate::process::traversal::step::{BySubJoin, HasAnyJoin};
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::Element;
 use crate::Partitioner;
 use crate::{generated as pb, TraverserSinkEncoder};
 use pegasus::api::function::*;
@@ -55,13 +54,7 @@ impl JobCompiler<Traverser> for GremlinJobCompiler {
         let p = self.partitioner.clone();
         if let Some(worker_id) = pegasus::get_current_worker() {
             let num_workers = worker_id.peers as usize / self.num_servers;
-            Ok(box_route!(move |t: &Traverser| -> u64 {
-                if let Some(e) = t.get_element() {
-                    p.get_partition(&e.id(), num_workers)
-                } else {
-                    0
-                }
-            }))
+            Ok(Box::new(Router { p, num_workers }))
         } else {
             Err("worker id not found")?
         }

@@ -16,6 +16,7 @@
 package com.alibaba.maxgraph.v2.common.operation.dml;
 
 import com.alibaba.maxgraph.proto.v2.DataOperationPb;
+import com.alibaba.maxgraph.proto.v2.EdgeLocationPb;
 import com.alibaba.maxgraph.v2.common.operation.EdgeId;
 import com.alibaba.maxgraph.v2.common.schema.EdgeKind;
 import com.alibaba.maxgraph.v2.common.operation.Operation;
@@ -30,24 +31,34 @@ public class UpdateEdgeOperation extends Operation {
     private EdgeId edgeId;
     private EdgeKind edgeKind;
     private Map<Integer, PropertyValue> properties;
+    private boolean forward;
 
-    public UpdateEdgeOperation(EdgeId edgeId, EdgeKind edgeKind, Map<Integer, PropertyValue> properties) {
+    public UpdateEdgeOperation(EdgeId edgeId, EdgeKind edgeKind, Map<Integer, PropertyValue> properties,
+                               boolean forward) {
         super(OperationType.UPDATE_EDGE);
         this.edgeId = edgeId;
         this.edgeKind = edgeKind;
         this.properties = properties;
+        this.forward = forward;
     }
 
     @Override
     protected long getPartitionKey() {
-        return edgeId.getSrcId().getId();
+        if (forward) {
+            return edgeId.getSrcId().getId();
+        } else {
+            return edgeId.getDstId().getId();
+        }
     }
 
     @Override
     protected ByteString getBytes() {
         DataOperationPb.Builder builder = DataOperationPb.newBuilder();
         builder.setKeyBlob(edgeId.toProto().toByteString());
-        builder.setLocationBlob(edgeKind.toOperationProto().toByteString());
+        builder.setLocationBlob(EdgeLocationPb.newBuilder()
+                .setEdgeKind(edgeKind.toOperationProto())
+                .setForward(this.forward)
+                .build().toByteString());
         properties.forEach((propertyId, val) -> builder.putProps(propertyId, val.toProto()));
         return builder.build().toByteString();
     }

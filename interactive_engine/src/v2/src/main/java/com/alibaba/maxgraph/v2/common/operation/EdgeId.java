@@ -33,6 +33,10 @@ public class EdgeId {
         return srcId;
     }
 
+    public VertexId getDstId() {
+        return dstId;
+    }
+
     public EdgeIdPb toProto() {
         return EdgeIdPb.newBuilder()
                 .setSrcId(srcId.toProto())

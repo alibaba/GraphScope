@@ -10,7 +10,7 @@ use pegasus_server::service::Service;
 use pegasus_server::rpc::start_rpc_server;
 use pegasus_network::manager::SimpleServerDetector;
 use pegasus_network::config::NetworkConfig;
-use crate::executor::gaia::initialize_job_compiler;
+use gs_gremlin::initialize_job_compiler;
 use std::collections::HashMap;
 use maxgraph_store::api::PartitionId;
 
