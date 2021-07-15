@@ -13,8 +13,8 @@ import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
 import com.alibaba.graphscope.gaia.result.GremlinResultProcessor;
 import com.alibaba.graphscope.gaia.result.RemoteTraverserResultParser;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
+import com.alibaba.graphscope.gaia.store.GraphType;
 import com.alibaba.pegasus.builder.AbstractBuilder;
-import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -29,8 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.SimpleBindings;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 
@@ -63,6 +61,9 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
         final Map<String, String> aliases = (Map<String, String>) message.optionalArgs(Tokens.ARGS_ALIASES).get();
         final String traversalSourceName = aliases.entrySet().iterator().next().getValue();
         logger.info("tokens ops is {}", message.getOp());
+        if (config.getGraphType() == GraphType.MAXGRAPH) {
+            graphStore.updateSnapShotId();
+        }
         switch (message.getOp()) {
             case Tokens.OPS_BYTECODE:
                 op = (context -> {
@@ -74,8 +75,10 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
                             .addConfig(PlanConfig.QUERY_ID, queryId)
                             .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) traversal))
                             .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config));
+                    if (config.getGraphType() == GraphType.MAXGRAPH) {
+                        traversalBuilder.addConfig(PlanConfig.SNAPSHOT_ID, Long.valueOf(graphStore.getSnapShotId()));
+                    }
                     AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
-                    FileUtils.writeStringToFile(new File("plan.log"), String.format("query-%d", queryId), StandardCharsets.UTF_8, true);
                     PlanUtils.print(jobReqBuilder);
                     broadcastProcessor.broadcast(jobReqBuilder.build(),
                             new GremlinResultProcessor(ctx, new RemoteTraverserResultParser(traversalBuilder, graphStore)));

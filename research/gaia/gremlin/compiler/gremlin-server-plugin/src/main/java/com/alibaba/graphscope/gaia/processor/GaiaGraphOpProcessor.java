@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.result.DefaultResultParser;
 import com.alibaba.graphscope.gaia.result.GremlinResultProcessor;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
+import com.alibaba.graphscope.gaia.store.GraphType;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
 import com.alibaba.graphscope.gaia.broadcast.RpcBroadcastProcessor;
@@ -59,6 +60,9 @@ public class GaiaGraphOpProcessor extends AbstractGraphOpProcessor {
         final Map<String, Object> args = msg.getArgs();
         final long seto = args.containsKey(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT) ?
                 ((Number) args.get(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT)).longValue() : settings.scriptEvaluationTimeout;
+        if (config.getGraphType() == GraphType.MAXGRAPH) {
+            graphStore.updateSnapShotId();
+        }
         return GremlinExecutor.LifeCycle.build()
                 .scriptEvaluationTimeoutOverride(seto)
                 .beforeEval(b -> {
@@ -81,6 +85,9 @@ public class GaiaGraphOpProcessor extends AbstractGraphOpProcessor {
                                 .addConfig(PlanConfig.QUERY_ID, queryId)
                                 .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) o))
                                 .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config));
+                        if (config.getGraphType() == GraphType.MAXGRAPH) {
+                            traversalBuilder.addConfig(PlanConfig.SNAPSHOT_ID, Long.valueOf(graphStore.getSnapShotId()));
+                        }
                         AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
                         PlanUtils.print(jobReqBuilder);
                         broadcastProcessor.broadcast(jobReqBuilder.build(), new GremlinResultProcessor(ctx, new DefaultResultParser(traversalBuilder, graphStore)));
