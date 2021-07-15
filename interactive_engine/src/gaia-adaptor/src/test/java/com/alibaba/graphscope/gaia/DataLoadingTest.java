@@ -48,7 +48,9 @@ public class DataLoadingTest {
     }
 
     @Test
-    public void testAddData() throws Exception {
+    public void testZddData() throws Exception {
+        Thread.sleep(5000);
+
         Map<String, String> v1 = new HashMap<>();
         v1.put("id", "1");
         v1.put("name", "marko");
@@ -85,7 +87,7 @@ public class DataLoadingTest {
         v5.put("lang", "java");
         client.addVertex("software", v5);
 
-        Thread.sleep(1000);
+        Thread.sleep(5000);
 
         client.addEdge("knows",
                 "person",
