@@ -36,8 +36,7 @@ from graphscope.framework.loader import Loader
 
 if sys.platform == "linux":
     from graphscope.learning.examples import GCN
-    from graphscope.learning.graphlearn.python.model.tf.optimizer import \
-        get_tf_optimizer
+    from graphscope.learning.graphlearn.python.model.tf import optimizer
     from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
 
 graphscope.set_option(show_log=True)
@@ -68,7 +67,7 @@ def train(config, graph):
     trainer = LocalTFTrainer(
         model_fn,
         epoch=config["epoch"],
-        optimizer=get_tf_optimizer(
+        optimizer=optimizer.get_tf_optimizer(
             config["learning_algo"], config["learning_rate"], config["weight_decay"]
         ),
     )

@@ -11,7 +11,7 @@ NETWORKX                    ?= OFF
 WITH_LEARNING_ENGINE        ?= OFF
 
 # testing build option
-BUILD_TEST					?= OFF
+BUILD_TEST                  ?= OFF
 
 .PHONY: all
 all: graphscope

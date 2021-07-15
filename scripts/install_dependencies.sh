@@ -110,7 +110,7 @@ function install_dependencies() {
     pushd /tmp/fmt-7.0.3
     mkdir build && cd build
     cmake .. -DBUILD_SHARED_LIBS=ON
-    make install -j
+    make install -j`nporc`
     popd
 
     # install folly
@@ -119,7 +119,7 @@ function install_dependencies() {
     pushd /tmp/folly-2020.10.19.00
     mkdir _build && cd _build
     cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
-    make install -j
+    make install -j`nproc`
     popd
 
     # install zookeeper
@@ -158,7 +158,7 @@ function install_dependencies() {
     pushd /tmp/folly-2020.10.19.00
     mkdir _build && cd _build
     cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
-    make install -j
+    make install -j$(sysctl -n hw.physicalcpu)
     popd
 
     # install zookeeper
