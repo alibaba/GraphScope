@@ -24,6 +24,7 @@ limitations under the License.
 #include "grape/grape.h"
 
 #include "apps/assortativity/degree/degree_assortativity_coefficient_context.h"
+#include "apps/assortativity/utils.h"
 #include "core/app/app_base.h"
 #include "core/worker/default_worker.h"
 
@@ -84,21 +85,25 @@ class DegreeAssortativity
       // merge in work 0
       if (frag.fid() == 0) {
         // {{source_degree, target_degree}, num}
-        std::unordered_map<std::pair<int, int>, int> msg;
+        // std::unordered_map<std::pair<int, int>, int, pair_hash> msg;
+        std::unordered_map<int, std::unordered_map<int, int>> msg;
         while (messages.GetMessage(msg)) {
-          for (auto& a : msg) {
-            // update max degree
-            if (ctx.max_degree < a.first.first) {
-              ctx.max_degree = a.first.first;
-            }
-            if (ctx.max_degree < a.first.second) {
-              ctx.max_degree = a.first.second;
-            }
-            // merge
-            if (ctx.degree_mixing_map.count(a.first) != 0) {
-              ctx.degree_mixing_map[a.first] += a.second;
-            } else {
-              ctx.degree_mixing_map[a.first] = a.second;
+          for (auto& pair1 : msg) {
+            for (auto& pair2 : pair1.second) {
+              // update max degree
+              if (ctx.max_degree < pair1.first) {
+                ctx.max_degree = pair1.first;
+              }
+              if (ctx.max_degree < pair2.first) {
+                ctx.max_degree = pair2.first;
+              }
+              // merge
+              if (ctx.degree_mixing_map.count(pair1.first) == 0 ||
+                  ctx.degree_mixing_map[pair1.first].count(pair2.first) == 0) {
+                ctx.degree_mixing_map[pair1.first][pair2.first] = pair2.second;
+              } else {
+                ctx.degree_mixing_map[pair1.first][pair2.first] += pair2.second;
+              }
             }
           }
         }
@@ -194,25 +199,29 @@ class DegreeAssortativity
     }
     return frag.GetLocalOutDegree(vertex);
   }
-  void DegreeMixingCount(int source_degree, int dest_degree, context_t& ctx) {
-    if (ctx.degree_mixing_map.count({source_degree, dest_degree}) == 0) {
-      ctx.degree_mixing_map[{source_degree, dest_degree}] = 1;
+  void DegreeMixingCount(int source_degree, int target_degree, context_t& ctx) {
+    if (ctx.degree_mixing_map.count(source_degree) == 0 ||
+        ctx.degree_mixing_map[source_degree].count(target_degree) == 0) {
+      ctx.degree_mixing_map[source_degree][target_degree] = 1;
     } else {
-      ctx.degree_mixing_map[{source_degree, dest_degree}] += 1;
+      ctx.degree_mixing_map[source_degree][target_degree] += 1;
     }
   }
   void GetDegreeMixingMatrix(
       context_t& ctx, std::vector<std::vector<double>>& degree_mixing_matrix) {
     int total_edge_num = 0;
-    for (auto& a : ctx.degree_mixing_map) {
-      total_edge_num += a.second;
+    for (auto& pair1 : ctx.degree_mixing_map) {
+      for (auto& pair2 : pair1.second) {
+        total_edge_num += pair2.second;
+      }
     }
     int n = degree_mixing_matrix.size();
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
-        if (ctx.degree_mixing_map.count({i, j}) != 0) {
-          degree_mixing_matrix[i][j] = ctx.degree_mixing_map[{i, j}] /
-                                       static_cast<double>(total_edge_num);
+        if (ctx.degree_mixing_map.count(i) != 0 &&
+            ctx.degree_mixing_map[i].count(j) != 0) {
+          degree_mixing_matrix[i][j] =
+              ctx.degree_mixing_map[i][j] / static_cast<double>(total_edge_num);
         }
       }
     }

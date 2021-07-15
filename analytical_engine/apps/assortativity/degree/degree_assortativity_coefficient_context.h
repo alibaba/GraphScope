@@ -67,7 +67,9 @@ class DegreeAssortativityContext : public TensorContext<FRAG_T, double> {
          << std::endl;
     }
   }
-  std::unordered_map<std::pair<int, int>, int> degree_mixing_map;
+  // std::unordered_map<std::pair<int, int>, int, pair_hash> degree_mixing_map;
+  // {source_degree: {target_degree: num}}
+  std::unordered_map<int, std::unordered_map<int, int>> degree_mixing_map;
   bool merge_stage;
   int max_degree;
   bool directed;
