@@ -195,3 +195,16 @@ app:
     src: apps/assortativity/degree/degree_assortativity_coefficient.h
     compatible_graph:
       - grape::ImmutableEdgecutFragment
+  - algo: node_boundary
+    type: cpp_pie
+    class_name: gs::NodeBoundary
+    src: apps/boundary/node_boundary.h
+    compatible_graph:
+      - gs::DynamicProjectedFragment
+
+  - algo: edge_boundary
+    type: cpp_pie
+    class_name: gs::EdgeBoundary
+    src: apps/boundary/edge_boundary.h
+    compatible_graph:
+      - gs::DynamicProjectedFragment

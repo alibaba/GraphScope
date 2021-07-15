@@ -133,12 +133,12 @@ pub trait GraphStorage {
     /// If vertex type of `label` not found, storage error or other errors, `GraphError` will be returned.
     fn delete_vertex(&self, si: SnapshotId, id: VertexId, label: LabelId) -> GraphResult<()>;
 
-    /// Insert an edge with `id`, `edge_kind` and `properties` at `si`. It'll overwrite the edge with
+    /// Insert an edge with `id`, `edge_kind`, `forward` and `properties` at `si`. It'll overwrite the edge with
     /// `id` no matter whether it exits. This interface is thread safe.
     ///
     /// If edge kind of `edge_kind` not found, storage error, encoding error, meta error or other errors,
     /// `GraphError` will be returned.
-    fn insert_overwrite_edge(&self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, properties: &dyn PropertyMap) -> GraphResult<()>;
+    fn insert_overwrite_edge(&self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool, properties: &dyn PropertyMap) -> GraphResult<()>;
 
     /// Insert or update an edge with `id` and `edge_kind` at `si`. If the edge already exists, merge its
     /// properties with the provided `properties` and create a new version of this edge. Otherwise
@@ -146,12 +146,12 @@ pub trait GraphStorage {
     ///
     /// If edge kind of `edge_kind` not found, storage error, encoding error, meta error or other errors,
     /// `GraphError` will be returned.
-    fn insert_update_edge(&self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, properties: &dyn PropertyMap) -> GraphResult<()>;
+    fn insert_update_edge(&self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool, properties: &dyn PropertyMap) -> GraphResult<()>;
 
     /// Delete an edge with `id` and `edge_kind` at `si`. The existence will not be checked. This interface is thread safe.
     ///
     /// If edge kind of `edge_kind` not found, storage error or other errors, `GraphError` will be returned.
-    fn delete_edge(&self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind) -> GraphResult<()>;
+    fn delete_edge(&self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool) -> GraphResult<()>;
 
     /// garbage collection at `si`
     fn gc(&self, si: SnapshotId);

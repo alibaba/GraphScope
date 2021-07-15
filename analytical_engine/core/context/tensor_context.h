@@ -527,7 +527,7 @@ class TensorContextWrapper<
           "Only support folly::dynamic::INT64 or folly::dynamic::DOUBLE");
     }
 
-    int64_t local_num = shape[axis], total_num;
+    int64_t local_num = shape.empty() ? 0 : shape[axis], total_num;
 
     if (comm_spec.fid() == 0) {
       MPI_Reduce(&local_num, &total_num, 1, MPI_INT64_T, MPI_SUM,

@@ -18,11 +18,9 @@ use crate::generated::gremlin::EntityType;
 use crate::process::traversal::step::util::StepSymbol;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::{Requirement, Traverser};
-use crate::structure::codec::pb_chain_to_filter;
-use crate::structure::{Edge, Label, QueryParams, Vertex, ID};
+use crate::structure::{Edge, QueryParams, Vertex, ID};
 use crate::{FromPb, Partitioner};
 use bit_set::BitSet;
-use graph_store::common::LabelId;
 use pegasus::BuildJobError;
 use pegasus_common::downcast::*;
 use prost::alloc::str::FromStr;
@@ -52,8 +50,8 @@ impl GraphVertexStep {
             src: None,
             as_tags: BitSet::new(),
             requirement: req,
-            v_params: QueryParams::new(),
-            e_params: QueryParams::new(),
+            v_params: QueryParams::default(),
+            e_params: QueryParams::default(),
             return_type,
             workers: 1,
         }
@@ -70,8 +68,11 @@ impl GraphVertexStep {
     pub fn set_src(&mut self, ids: Vec<ID>, partitioner: Arc<dyn Partitioner>) {
         let mut partitions = HashMap::new();
         for id in ids {
-            let wid = partitioner.get_partition(&id, self.workers);
-            partitions.entry(wid).or_insert_with(Vec::new).push(id);
+            if let Ok(wid) = partitioner.get_partition(&id, self.workers) {
+                partitions.entry(wid).or_insert_with(Vec::new).push(id);
+            } else {
+                debug!("get server id failed in graph_partition_manager in source op");
+            }
         }
 
         self.src = Some(partitions);
@@ -156,7 +157,7 @@ pub fn graph_step_from(
 ) -> Result<GraphVertexStep, BuildJobError> {
     if let Some(option) = gremlin_step.step.take() {
         match option {
-            pb::gremlin_step::Step::GraphStep(mut opt) => {
+            pb::gremlin_step::Step::GraphStep(opt) => {
                 let requirements_pb = unsafe { std::mem::transmute(opt.traverser_requirements) };
                 let requirements = Requirement::from_pb(requirements_pb)?;
                 let return_type = unsafe { std::mem::transmute(opt.return_type) };
@@ -170,23 +171,10 @@ pub fn graph_step_from(
                 if !ids.is_empty() {
                     step.set_src(ids, partitioner);
                 }
-                let labels = std::mem::replace(&mut opt.labels, vec![]);
-                if let Some(ref test) = opt.predicates {
-                    if return_type == EntityType::Vertex {
-                        step.v_params.labels =
-                            labels.into_iter().map(|id| Label::Id(id as LabelId)).collect();
-                        step.v_params.set_props(opt.required_properties);
-                        if let Some(filter) = pb_chain_to_filter(test)? {
-                            step.v_params.set_filter(filter);
-                        }
-                    } else {
-                        step.e_params.labels =
-                            labels.into_iter().map(|id| Label::Id(id as LabelId)).collect();
-                        step.e_params.set_props(opt.required_properties);
-                        if let Some(filter) = pb_chain_to_filter(test)? {
-                            step.e_params.set_filter(filter);
-                        }
-                    }
+                if return_type == EntityType::Vertex {
+                    step.v_params = QueryParams::from_pb(opt.query_params)?;
+                } else {
+                    step.e_params = QueryParams::from_pb(opt.query_params)?;
                 }
                 return Ok(step);
             }

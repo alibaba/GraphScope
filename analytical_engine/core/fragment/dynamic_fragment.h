@@ -1135,7 +1135,7 @@ class DynamicFragment {
   inline virtual bool InnerVertexGid2Vertex(const vid_t& gid,
                                             vertex_t& v) const {
     vid_t lid = gid & id_mask_;
-    if (lid < ivnum_ && isAlive(lid)) {
+    if ((gid >> fid_offset_) == fid_ && lid < ivnum_ && isAlive(lid)) {
       assert(isAlive(lid));
       v.SetValue(gid & id_mask_);
       return true;

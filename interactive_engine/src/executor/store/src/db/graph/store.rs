@@ -53,7 +53,7 @@ impl GraphStorage for GraphStore {
     fn get_edge(&self, si: SnapshotId, id: EdgeId, edge_kind: Option<&EdgeKind>) -> GraphResult<Option<EdgeWrapper<Self::E>>> {
         if let Some(t) = edge_kind {
             let res = self.edge_manager.get_edge_kind(si, t).and_then(|info| {
-                self.do_get_edge(si, id, info)
+                self.do_get_edge(si, id, info, EdgeDirection::Out)
             });
             res_unwrap!(res, get_edge, si, id, edge_kind)
         } else {
@@ -61,7 +61,7 @@ impl GraphStorage for GraphStore {
             while let Some(info) = iter.next() {
                 let mut type_iter = info.into_iter();
                 while let Some(t) = type_iter.next() {
-                    let res = self.do_get_edge(si, id, t);
+                    let res = self.do_get_edge(si, id, t, EdgeDirection::Out);
                     if let Some(e) = res_unwrap!(res, get_edge, si, id, edge_kind)? {
                         return Ok(Some(e));
                     }
@@ -234,42 +234,55 @@ impl GraphStorage for GraphStore {
         Ok(())
     }
 
-    fn insert_overwrite_edge(&self, si: i64, id: EdgeId, edge_kind: &EdgeKind, properties: &dyn PropertyMap) -> GraphResult<()> {
+    fn insert_overwrite_edge(&self, si: i64, id: EdgeId, edge_kind: &EdgeKind, forward: bool, properties: &dyn PropertyMap) -> GraphResult<()> {
         self.check_si_guard(si)?;
+        let direction = if forward {
+            EdgeDirection::Out
+        } else {
+            EdgeDirection::In
+        };
         let res = self.edge_manager.get_edge_kind(si, edge_kind).and_then(|info| {
-            self.do_insert_edge_data(si, id, info, properties)
+            self.do_insert_edge_data(si, id, info, direction, properties)
         }).map(|_| self.update_si_guard(si));
         res_unwrap!(res, insert_overwrite_edge, si, id, edge_kind)
     }
 
-    fn insert_update_edge(&self, si: i64, id: EdgeId, edge_kind: &EdgeKind, properties: &dyn PropertyMap) -> GraphResult<()> {
+    fn insert_update_edge(&self, si: i64, id: EdgeId, edge_kind: &EdgeKind, forward: bool, properties: &dyn PropertyMap) -> GraphResult<()> {
         self.check_si_guard(si)?;
         let info = res_unwrap!(self.edge_manager.get_edge_kind(si, edge_kind), insert_update_edge, si, id, edge_kind)?;
-        let data_res = self.get_edge_data(si, id, &info);
+        let direction = if forward {
+            EdgeDirection::Out
+        } else {
+            EdgeDirection::In
+        };
+        let data_res = self.get_edge_data(si, id, &info, direction);
         match res_unwrap!(data_res, insert_update_edge, si, id, edge_kind)? {
             Some(data) => {
                 let version = get_codec_version(data);
                 let decoder = info.get_decoder(si, version)?;
                 let mut old = decoder.decode_all(data);
                 merge_updates(&mut old, properties);
-                let res = self.do_insert_edge_data(si, id, info, &old).map(|_| self.update_si_guard(si));
+                let res = self.do_insert_edge_data(si, id, info, direction, &old).map(|_| self.update_si_guard(si));
                 res_unwrap!(res, insert_update_edge, si, id, edge_kind)
             }
             None => {
-                let res = self.do_insert_edge_data(si, id, info, properties).map(|_| self.update_si_guard(si));
+                let res = self.do_insert_edge_data(si, id, info, direction, properties).map(|_| self.update_si_guard(si));
                 res_unwrap!(res, insert_update_edge, si, id, edge_kind)
             }
         }
     }
 
-    fn delete_edge(&self, si: i64, id: EdgeId, edge_kind: &EdgeKind) -> GraphResult<()> {
+    fn delete_edge(&self, si: i64, id: EdgeId, edge_kind: &EdgeKind, forward: bool) -> GraphResult<()> {
         self.check_si_guard(si)?;
         let info = res_unwrap!(self.edge_manager.get_edge_kind(si, edge_kind), si, id, edge_kind)?;
+        let direction = if forward {
+            EdgeDirection::Out
+        } else {
+            EdgeDirection::In
+        };
         if let Some(table) = info.get_table(si) {
             let ts = si - table.start_si;
-            let key = edge_key(table.id, id, EdgeDirection::Out, ts);
-            res_unwrap!(self.storage.put(&key, &[]), delete_edge, si, id, edge_kind)?;
-            let key = edge_key(table.id, id, EdgeDirection::In, ts);
+            let key = edge_key(table.id, id, direction, ts);
             res_unwrap!(self.storage.put(&key, &[]), delete_edge, si, id, edge_kind)?;
         }
         self.update_si_guard(si);
@@ -423,10 +436,10 @@ impl GraphStore {
         }
     }
 
-    fn get_edge_data(&self, si: SnapshotId, id: EdgeId, info: &EdgeKindInfoRef) -> GraphResult<Option<&[u8]>> {
+    fn get_edge_data(&self, si: SnapshotId, id: EdgeId, info: &EdgeKindInfoRef, direction: EdgeDirection) -> GraphResult<Option<&[u8]>> {
         if let Some(table) = info.get_table(si) {
             let ts = si - table.start_si;
-            let key = edge_key(table.id, id, EdgeDirection::Out, ts);
+            let key = edge_key(table.id, id, direction, ts);
             let mut iter = self.storage.scan_from(&key)?;
             if let Some((k, v)) = iter.next() {
                 if k[0..32] == key[0..32] && v.len() >= 4 {
@@ -438,8 +451,8 @@ impl GraphStore {
         Ok(None)
     }
 
-    fn do_get_edge(&self, si: SnapshotId, id: EdgeId, info: EdgeKindInfoRef) -> GraphResult<Option<EdgeWrapper<EdgeImpl>>> {
-        let data = self.get_edge_data(si, id, &info)?;
+    fn do_get_edge(&self, si: SnapshotId, id: EdgeId, info: EdgeKindInfoRef, direction: EdgeDirection) -> GraphResult<Option<EdgeWrapper<EdgeImpl>>> {
+        let data = self.get_edge_data(si, id, &info, direction)?;
         if let Some(v) = data {
             let version = get_codec_version(v);
             let decoder = res_unwrap!(info.get_decoder(si, version))?;
@@ -465,15 +478,13 @@ impl GraphStore {
         Err(err)
     }
 
-    fn do_insert_edge_data(&self, si: SnapshotId, edge_id: EdgeId, info: EdgeKindInfoRef, properties: &dyn PropertyMap) -> GraphResult<()> {
+    fn do_insert_edge_data(&self, si: SnapshotId, edge_id: EdgeId, info: EdgeKindInfoRef, direction: EdgeDirection, properties: &dyn PropertyMap) -> GraphResult<()> {
         if let Some(table) = info.get_table(si) {
             let encoder = res_unwrap!(info.get_encoder(si), do_insert_edge_data)?;
             let mut buf = Vec::new();
             return encoder.encode(properties, &mut buf).and_then(|_| {
                 let ts = si - table.start_si;
-                let key = edge_key(table.id, edge_id, EdgeDirection::Out, ts);
-                self.storage.put(&key, &buf)?;
-                let key = edge_key(table.id, edge_id, EdgeDirection::In, ts);
+                let key = edge_key(table.id, edge_id, direction, ts);
                 self.storage.put(&key, &buf)
             });
         }
