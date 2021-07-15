@@ -39,21 +39,21 @@ jobs:
         submodules: true
 
     - name: Setup tmate session
-      if: true
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Install Dependencies for MacOS
       run: |
         pushd ${GITHUB_WORKSPACE}
-        brew install llvm@9
+        brew install llvm@8
 
         # write out envs to .env
         {
-          echo "export CC=/usr/local/opt/llvm@11/bin/clang"
-          echo "export CXX=/usr/local/opt/llvm@11/bin/clang++"
-          echo "export LDFLAGS=-L/usr/local/opt/llvm@11/lib"
-          echo "export CPPFLAGS=-I/usr/local/opt/llvm@11/include"
-          echo "export PATH=/usr/local/opt/llvm@11/bin:${JAVA_HOME}/bin:$PATH"
+          echo "export CC=/usr/local/opt/llvm@8/bin/clang"
+          echo "export CXX=/usr/local/opt/llvm@8/bin/clang++"
+          echo "export LDFLAGS=-L/usr/local/opt/llvm@8/lib"
+          echo "export CPPFLAGS=-I/usr/local/opt/llvm@8/include"
+          echo "export PATH=/usr/local/opt/llvm@8/bin:${JAVA_HOME}/bin:$PATH"
         } >> .env
 
         # install dependency
