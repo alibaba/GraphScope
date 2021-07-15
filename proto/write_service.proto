@@ -20,19 +20,19 @@ option java_package = "com.alibaba.graphscope.proto.write";
 option java_multiple_files = true;
 
 service ClientWrite {
-  rpc getWriteSession(GetWriteSessionRequest) returns(GetWriteSessionResponse);
+  rpc getClientId(GetClientIdRequest) returns(GetClientIdResponse);
   rpc batchWrite(BatchWriteRequest) returns(BatchWriteResponse);
 }
 
-message GetWriteSessionRequest {
+message GetClientIdRequest {
 }
 
-message GetWriteSessionResponse {
-  string session = 1;
+message GetClientIdResponse {
+  string client_id = 1;
 }
 
 message BatchWriteRequest {
-  string session = 1;
+  string client_id = 1;
   repeated DataRecordPb data_records = 2;
 }
 
