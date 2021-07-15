@@ -15,7 +15,6 @@ import com.alibaba.graphscope.gaia.result.RemoteTraverserResultParser;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.GraphType;
 import com.alibaba.pegasus.builder.AbstractBuilder;
-import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -30,8 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.SimpleBindings;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 
@@ -64,6 +61,9 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
         final Map<String, String> aliases = (Map<String, String>) message.optionalArgs(Tokens.ARGS_ALIASES).get();
         final String traversalSourceName = aliases.entrySet().iterator().next().getValue();
         logger.info("tokens ops is {}", message.getOp());
+        if (config.getGraphType() == GraphType.MAXGRAPH) {
+            graphStore.updateSnapShotId();
+        }
         switch (message.getOp()) {
             case Tokens.OPS_BYTECODE:
                 op = (context -> {

@@ -10,17 +10,17 @@ import org.slf4j.LoggerFactory;
 public class MaxGraphStore extends GraphStoreService {
     private static final Logger logger = LoggerFactory.getLogger(MaxGraphStore.class);
     public static final String MAXGRAPH_MODERN_PROPERTY_RESOURCE = "maxgraph.modern.properties.json";
-    private SchemaFetcher schemaFetcher;
+    private CachedGraphSchemaPair cachedGraphSchemaPair;
 
     public MaxGraphStore(SchemaFetcher schemaFetcher) {
         super(MAXGRAPH_MODERN_PROPERTY_RESOURCE);
-        this.schemaFetcher = schemaFetcher;
+        this.cachedGraphSchemaPair = new CachedGraphSchemaPair(schemaFetcher);
     }
 
     @Override
     public long getLabelId(String label) {
         try {
-            GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
+            GraphSchema graphSchema = this.cachedGraphSchemaPair.get().getLeft();
             return graphSchema.getElement(label).getLabelId();
         } catch (Exception e) {
             logger.error("label " + label + " is invalid, please check schema");
@@ -30,7 +30,7 @@ public class MaxGraphStore extends GraphStoreService {
 
     @Override
     public String getLabel(long labelId) {
-        GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
+        GraphSchema graphSchema = this.cachedGraphSchemaPair.get().getLeft();
         return graphSchema.getElement((int) labelId).getLabel();
     }
 
@@ -42,7 +42,7 @@ public class MaxGraphStore extends GraphStoreService {
     @Override
     public int getPropertyId(String propertyName) {
         try {
-            GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
+            GraphSchema graphSchema = this.cachedGraphSchemaPair.get().getLeft();
             return graphSchema.getPropertyId(propertyName);
         } catch (Exception e) {
             logger.error("property " + propertyName + " is invalid, please check schema");
@@ -52,12 +52,17 @@ public class MaxGraphStore extends GraphStoreService {
 
     @Override
     public String getPropertyName(int propertyId) {
-        GraphSchema graphSchema = this.schemaFetcher.getSchemaSnapshotPair().getLeft();
+        GraphSchema graphSchema = this.cachedGraphSchemaPair.get().getLeft();
         return graphSchema.getPropertyName(propertyId);
     }
 
+    @Override
     public long getSnapShotId() {
-        long snapshotId = this.schemaFetcher.getSchemaSnapshotPair().getRight();
-        return snapshotId;
+        return this.cachedGraphSchemaPair.get().getRight();
+    }
+
+    @Override
+    public synchronized void updateSnapShotId() {
+        this.cachedGraphSchemaPair.update();
     }
 }

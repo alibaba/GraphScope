@@ -60,6 +60,9 @@ public class GaiaGraphOpProcessor extends AbstractGraphOpProcessor {
         final Map<String, Object> args = msg.getArgs();
         final long seto = args.containsKey(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT) ?
                 ((Number) args.get(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT)).longValue() : settings.scriptEvaluationTimeout;
+        if (config.getGraphType() == GraphType.MAXGRAPH) {
+            graphStore.updateSnapShotId();
+        }
         return GremlinExecutor.LifeCycle.build()
                 .scriptEvaluationTimeoutOverride(seto)
                 .beforeEval(b -> {
