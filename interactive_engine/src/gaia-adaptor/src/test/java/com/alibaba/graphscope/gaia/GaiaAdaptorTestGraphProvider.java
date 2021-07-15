@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class GaiaTestGraphProvider extends AbstractGraphProvider {
+public class GaiaAdaptorTestGraphProvider extends AbstractGraphProvider {
     public static String MODERN_GRAPH_ENDPOINT = "localhost:12312";
 
     @Override
