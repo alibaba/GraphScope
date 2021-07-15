@@ -32,6 +32,7 @@ import com.alibaba.graphscope.gaia.plan.strategy.OrderGuaranteeStrategy;
 import com.alibaba.graphscope.gaia.plan.strategy.PropertyShuffleStrategy;
 import com.alibaba.graphscope.gaia.plan.strategy.global.PathHistoryStrategy;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
+import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
 import com.codahale.metrics.Timer;
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.PreCachePropertyStrategy;
 import io.netty.channel.ChannelHandlerContext;
@@ -113,6 +114,8 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
                     rhc.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
                             .statusMessage(t.getMessage())
                             .statusAttributeException(t).create());
+                } else if (t instanceof SchemaNotFoundException) {
+                    writeResultList(ctx, Collections.EMPTY_LIST, ResponseStatusCode.SUCCESS);
                 } else {
                     if (t instanceof MultipleCompilationErrorsException && t.getMessage().contains("Method too large") &&
                             ((MultipleCompilationErrorsException) t).getErrorCollector().getErrorCount() == 1) {

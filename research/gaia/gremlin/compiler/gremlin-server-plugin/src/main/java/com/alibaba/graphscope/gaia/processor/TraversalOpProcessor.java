@@ -15,9 +15,11 @@ import com.alibaba.graphscope.gaia.result.GremlinResultProcessor;
 import com.alibaba.graphscope.gaia.result.RemoteTraverserResultParser;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.GraphType;
+import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
+import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
@@ -68,22 +70,27 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
         switch (message.getOp()) {
             case Tokens.OPS_BYTECODE:
                 op = (context -> {
-                    Object byteCode = message.getArgs().get(Tokens.ARGS_GREMLIN);
-                    Traversal traversal = executor.eval((Bytecode) byteCode, new SimpleBindings(), null, traversalSourceName);
-                    GaiaGraphOpProcessor.applyStrategy(traversal, config, graphStore);
-                    long queryId = (long) queryIdMaker.getId(traversal);
-                    TraversalBuilder traversalBuilder = new TraversalBuilder((Traversal.Admin) traversal)
-                            .addConfig(PlanConfig.QUERY_ID, queryId)
-                            .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) traversal))
-                            .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config));
-                    if (config.getGraphType() == GraphType.MAXGRAPH) {
-                        traversalBuilder.addConfig(PlanConfig.SNAPSHOT_ID, Long.valueOf(graphStore.getSnapShotId()));
+                    try {
+                        Object byteCode = message.getArgs().get(Tokens.ARGS_GREMLIN);
+                        Traversal traversal = executor.eval((Bytecode) byteCode, new SimpleBindings(), null, traversalSourceName);
+                        GaiaGraphOpProcessor.applyStrategy(traversal, config, graphStore);
+                        long queryId = (long) queryIdMaker.getId(traversal);
+                        TraversalBuilder traversalBuilder = new TraversalBuilder((Traversal.Admin) traversal)
+                                .addConfig(PlanConfig.QUERY_ID, queryId)
+                                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) traversal))
+                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config));
+                        if (config.getGraphType() == GraphType.MAXGRAPH) {
+                            traversalBuilder.addConfig(PlanConfig.SNAPSHOT_ID, graphStore);
+                        }
+                        AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
+                        PlanUtils.print(jobReqBuilder);
+                        broadcastProcessor.broadcast(jobReqBuilder.build(),
+                                new GremlinResultProcessor(ctx, new RemoteTraverserResultParser(traversalBuilder, graphStore)));
+                        logger.info("query-{} finish", queryId);
+                    } catch (SchemaNotFoundException e) {
+                        throw new OpProcessorException("schema not found error",
+                                ResponseMessage.build(message).code(ResponseStatusCode.SUCCESS).result(Collections.EMPTY_LIST).create());
                     }
-                    AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
-                    PlanUtils.print(jobReqBuilder);
-                    broadcastProcessor.broadcast(jobReqBuilder.build(),
-                            new GremlinResultProcessor(ctx, new RemoteTraverserResultParser(traversalBuilder, graphStore)));
-                    logger.info("query-{} finish", queryId);
                 });
                 return op;
             case Tokens.OPS_KEYS:
