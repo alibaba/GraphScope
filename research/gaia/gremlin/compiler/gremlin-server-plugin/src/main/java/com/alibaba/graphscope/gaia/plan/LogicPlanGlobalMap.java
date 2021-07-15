@@ -252,9 +252,10 @@ public class LogicPlanGlobalMap {
             @Override
             protected void buildJob(StepBuilder stepBuilder) {
                 Step t = stepBuilder.getStep();
+                boolean isSimple = PlanUtils.getIsSimple(t);
                 JobBuilder target = (JobBuilder) stepBuilder.getJobBuilder();
                 target.filter(Gremlin.GremlinStep.newBuilder().setPathFilterStep(Gremlin.PathFilterStep.newBuilder()
-                        .setHint(((PathFilterStep) t).isSimple() ? Gremlin.PathFilterStep.PathHint.SIMPLE : Gremlin.PathFilterStep.PathHint.CYCLIC))
+                        .setHint(isSimple ? Gremlin.PathFilterStep.PathHint.SIMPLE : Gremlin.PathFilterStep.PathHint.CYCLIC))
                         .build().toByteString());
             }
         });
