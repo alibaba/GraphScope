@@ -27,7 +27,7 @@ on:
 
 jobs:
   build:
-    runs-on: macOS-11
+    runs-on: macOS-latest
     env:
       JAVA_HOME: /Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
       OPENSSL_ROOT_DIR: /usr/local/opt/openssl
@@ -47,7 +47,7 @@ jobs:
         pushd ${GITHUB_WORKSPACE}
         brew install llvm@9
 
-        # write envs to .env
+        # write out envs to .env
         {
           echo "export CC=/usr/local/opt/llvm@9/bin/clang"
           echo "export CXX=/usr/local/opt/llvm@9/bin/clang++"
