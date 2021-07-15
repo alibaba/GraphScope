@@ -894,3 +894,60 @@ def weakly_connected_components(G):
 
     """
     return AppAssets(algo="wcc_projected", context="vertex_data")(G)
+
+
+@project_to_simple
+def degree_assortativity_coefficient(G, x="out", y="in", directed=False):
+    """Compute degree assortativity of graph.
+
+    Assortativity measures the similarity of connections
+    in the graph with respect to the node degree.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    x: string ('in','out')
+       The degree type for source node (directed graphs only).
+
+    y: string ('in','out')
+       The degree type for target node (directed graphs only).
+
+    directed: bool (True, False)
+        directed graph or undirected graph
+
+    Returns
+    -------
+    r : float
+       Assortativity of graph by degree.
+
+    Examples
+    --------
+    >>> G = nx.path_graph(4)
+    >>> r = nx.builtin.degree_assortativity_coefficient(G)
+    >>> print(f"{r:3.1f}")
+    -0.5
+
+    See Also
+    --------
+    attribute_assortativity_coefficient
+
+    Notes
+    -----
+    This computes Eq. (21) in Ref. [1]_ , where e is the joint
+    probability distribution (mixing matrix) of the degrees.  If G is
+    directed than the matrix e is the joint probability of the
+    user-specified degree type for the source and target.
+
+    References
+    ----------
+    .. [1] M. E. J. Newman, Mixing patterns in networks,
+       Physical Review E, 67 026126, 2003
+    .. [2] Foster, J.G., Foster, D.V., Grassberger, P. & Paczuski, M.
+       Edge direction and the structure of networks, PNAS 107, 10815-20 (2010).
+    """
+
+    ctx = AppAssets(algo="degree_assortativity_coefficient", context="tensor")(
+        G, source_degree_type=x, target_degree_type=y, directed=directed
+    )
+    return ctx.to_numpy("r", axis=0)[0]
