@@ -147,7 +147,7 @@ public class OperationTest {
         VertexId dstVertexId = new VertexId(2L);
         EdgeId edgeId = new EdgeId(srcVertexId, dstVertexId, 3L);
 
-        OperationPb operationPb = new DeleteEdgeOperation(edgeId, testEdgeKind).toBlob().toProto();
+        OperationPb operationPb = new DeleteEdgeOperation(edgeId, testEdgeKind, true).toBlob().toProto();
         assertEquals(operationPb.getPartitionKey(), 1L);
         assertEquals(operationPb.getOpType(), OpTypePb.DELETE_EDGE);
         DataOperationPb dataOperationPb = DataOperationPb.parseFrom(operationPb.getDataBytes());
@@ -165,7 +165,7 @@ public class OperationTest {
         PropertyValue propertyValue = new PropertyValue(DataType.STRING, "val");
         Map<Integer, PropertyValue> properties = Collections.singletonMap(1, propertyValue);
 
-        operationPb = new OverwriteEdgeOperation(edgeId, testEdgeKind, properties).toBlob().toProto();
+        operationPb = new OverwriteEdgeOperation(edgeId, testEdgeKind, properties, true).toBlob().toProto();
         assertEquals(operationPb.getPartitionKey(), 1L);
         assertEquals(operationPb.getOpType(), OpTypePb.OVERWRITE_EDGE);
         dataOperationPb = DataOperationPb.parseFrom(operationPb.getDataBytes());
@@ -175,7 +175,7 @@ public class OperationTest {
         assertEquals(propsMap.size(), 1);
         assertEquals(propsMap.get(1), propertyValue.toProto());
 
-        operationPb = new UpdateEdgeOperation(edgeId, testEdgeKind, properties).toBlob().toProto();
+        operationPb = new UpdateEdgeOperation(edgeId, testEdgeKind, properties, true).toBlob().toProto();
         assertEquals(operationPb.getPartitionKey(), 1L);
         assertEquals(operationPb.getOpType(), OpTypePb.UPDATE_EDGE);
         dataOperationPb = DataOperationPb.parseFrom(operationPb.getDataBytes());

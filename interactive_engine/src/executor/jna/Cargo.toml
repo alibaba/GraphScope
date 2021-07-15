@@ -17,6 +17,7 @@ gaia_pegasus = { path = "../../../../research/gaia/pegasus/pegasus", package = "
 pegasus_network = { path = "../../../../research/gaia/pegasus/network" }
 pegasus_server = { path = "../../../../research/gaia/pegasus/server" }
 gremlin_core = { path = "../../../../research/gaia/gremlin/gremlin_core" }
+gs_gremlin = {path = "../../../../research/gaia/gremlin/gs_gremlin" }
 itertools = "0.7.8"
 log = "0.3"
 log4rs = "0.8.0"

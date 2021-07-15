@@ -33,9 +33,11 @@ from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
 from graphscope.framework.graph import Graph
 from graphscope.framework.loader import Loader
-from graphscope.learning.examples import GCN
-from graphscope.learning.graphlearn.python.model.tf.optimizer import get_tf_optimizer
-from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
+
+if sys.platform == "linux":
+    from graphscope.learning.examples import GCN
+    from graphscope.learning.graphlearn.python.model.tf import optimizer
+    from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
 
 graphscope.set_option(show_log=True)
 graphscope.set_option(initializing_interactive_engine=False)
@@ -65,7 +67,7 @@ def train(config, graph):
     trainer = LocalTFTrainer(
         model_fn,
         epoch=config["epoch"],
-        optimizer=get_tf_optimizer(
+        optimizer=optimizer.get_tf_optimizer(
             config["learning_algo"], config["learning_rate"], config["weight_decay"]
         ),
     )
@@ -104,6 +106,10 @@ def demo(sess, ogbn_mag_small):
 
     sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
     sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
+
+    # MacOS skip the GLE test
+    if sys.platform == "darwin":
+        return
 
     # GLE on ogbn_mag_small graph
     paper_features = []
@@ -202,6 +208,7 @@ def test_demo(ogbn_mag_small):
     sess.close()
 
 
+@pytest.mark.skipif(sys.platform == "darwin", reason="Mac no need to run this test.")
 def test_multiple_session(ogbn_mag_small):
     sess1 = graphscope.session(cluster_type="hosts", num_workers=1)
     assert sess1.info["status"] == "active"

@@ -33,7 +33,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 public class MaxNode extends NodeBase {
     private static final Logger logger = LoggerFactory.getLogger(MaxNode.class);
@@ -45,7 +47,9 @@ public class MaxNode extends NodeBase {
     private List<NodeBase> stores = new ArrayList<>();
 
     public MaxNode(Configs configs) throws Exception {
-        this.kafkaTestCluster = new KafkaTestCluster(1);
+        Properties kafkaConfigs = new Properties();
+        kafkaConfigs.put("max.request.size", 10000000);
+        this.kafkaTestCluster = new KafkaTestCluster(1, kafkaConfigs);
         this.kafkaTestCluster.start();
 
         int frontendCount = 1;
