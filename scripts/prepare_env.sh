@@ -11,8 +11,6 @@ NC="\033[0m" # No Color
 MUSCLE="\U1f4aa"
 
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
-VERBOSE=false
-OVERWRITE=false
 PLATFORM=
 OS_VERSION=
 
@@ -37,35 +35,14 @@ cat <<END
 END
 }
 
-##########################
-# Output error message to stderr.
-# Globals:
-#   None
-# Arguments:
-#   None
-##########################
 err() {
   echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${RED}ERROR${NC}] $*" >&2
 }
 
-##########################
-# Output warning message.
-# Globals:
-#   None
-# Arguments:
-#   None
-##########################
 warning() {
   echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${YELLOW}WARNING${NC}] $*" >&1
 }
 
-##########################
-# Output logging message.
-# Globals:
-#   None
-# Arguments:
-#   None
-##########################
 log() {
   echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${MUSCLE}] $*" >&1
 }
@@ -108,6 +85,8 @@ get_os_version() {
     PLATFORM=$(uname -s)
     OS_VERSION=$(uname -r)
   fi
+  readonly PLATFORM
+  readonly OS_VERSION
 }
 
 ##########################
@@ -313,6 +292,8 @@ main() {
 }
 
 # parse argv
+VERBOSE=false
+OVERWRITE=false
 while test $# -ne 0; do
   arg=$1; shift
   case $arg in
@@ -324,6 +305,8 @@ while test $# -ne 0; do
       ;;
   esac
 done
+readonly VERBOSE
+readonly OVERWRITE
 
 set -e
 set -o pipefail
