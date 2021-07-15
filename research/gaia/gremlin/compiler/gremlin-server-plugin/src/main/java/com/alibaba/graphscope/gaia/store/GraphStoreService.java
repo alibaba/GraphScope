@@ -60,6 +60,10 @@ public abstract class GraphStoreService {
         throw new UnsupportedOperationException();
     }
 
+    public void updateSnapShotId() {
+        throw new UnsupportedOperationException();
+    }
+
     public <P> Optional<P> getVertexProperty(BigInteger id, String key) {
         String idStr = String.valueOf(id);
         if (getVertexKeys(id).isEmpty()) return Optional.empty();
