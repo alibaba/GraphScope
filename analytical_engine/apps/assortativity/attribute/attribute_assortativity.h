@@ -78,14 +78,19 @@ class AttributeAssortativity
                message_manager_t& messages) {
     // merge in work 0
     if (frag.fid() == 0) {
-      std::unordered_map<std::pair<vdata_t, vdata_t>, int> msg;
+      // std::unordered_map<std::pair<vdata_t, vdata_t>, int> msg;
+      std::unordered_map<vdata_t, std::unordered_map<vdata_t, int>> msg;
       while (messages.GetMessage(msg)) {
-        for (auto& a : msg) {
-          // merge
-          if (ctx.attribute_mixing_map.count(a.first) != 0) {
-            ctx.attribute_mixing_map[a.first] += a.second;
-          } else {
-            ctx.attribute_mixing_map[a.first] = a.second;
+        for (auto& pair1 : msg) {
+          for (auto& pair2 : pair1.second) {
+            // merge
+            if (ctx.attribute_mixing_map.count(pair1.first) == 0 ||
+                ctx.attribute_mixing_map[pair1.first].count(pair2.first) == 0) {
+              ctx.attribute_mixing_map[pair1.first][pair2.first] = pair2.second;
+            } else {
+              ctx.attribute_mixing_map[pair1.first][pair2.first] +=
+                  pair2.second;
+            }
           }
         }
       }
@@ -125,40 +130,45 @@ class AttributeAssortativity
     return (sum_eii - sum_ai_bi) / (1 - sum_ai_bi);
   }
 
-  void AttributeMixingCount(vdata_t source_target, vdata_t target_data,
+  void AttributeMixingCount(vdata_t source_data, vdata_t target_data,
                             context_t& ctx) {
-    if (ctx.attribute_mixing_map.count({source_target, target_data}) == 0) {
-      ctx.attribute_mixing_map[{source_target, target_data}] = 1;
+    if (ctx.attribute_mixing_map.count(source_data) == 0 ||
+        ctx.attribute_mixing_map[source_data].count(target_data) == 0) {
+      ctx.attribute_mixing_map[source_data][target_data] = 1;
     } else {
-      ctx.attribute_mixing_map[{source_target, target_data}] += 1;
+      ctx.attribute_mixing_map[source_data][target_data] += 1;
     }
   }
   void GetAttributeMixingMatrix(
       context_t& ctx,
       std::vector<std::vector<double>>& attribute_mixing_matrix) {
     int total_edge_num = 0;
-    // <data, id> pair, id:{0, 1, ..., n}
+    // <data, index> pair, index:{0, 1, ..., n}
     std::unordered_map<vdata_t, int> property_map;
     int count = 0;
-    for (auto& a : ctx.attribute_mixing_map) {
-      if (property_map.count(a.first.first) == 0) {
-        property_map[a.first.first] = count;
-        count++;
+    for (auto& pair1 : ctx.attribute_mixing_map) {
+      for (auto& pair2 : pair1.second) {
+        if (property_map.count(pair1.first) == 0) {
+          property_map[pair1.first] = count;
+          count++;
+        }
+        if (property_map.count(pair2.first) == 0) {
+          property_map[pair2.first] = count;
+          count++;
+        }
+        total_edge_num += pair2.second;
       }
-      if (property_map.count(a.first.second) == 0) {
-        property_map[a.first.second] = count;
-        count++;
-      }
-      total_edge_num += a.second;
     }
     int n = property_map.size();
     std::vector<std::vector<double>> tmp(n, std::vector<double>(n, 0.0));
     attribute_mixing_matrix = move(tmp);
-    for (auto& pair : ctx.attribute_mixing_map) {
-      int row = property_map[pair.first.first];
-      int column = property_map[pair.first.second];
-      attribute_mixing_matrix[row][column] =
-          pair.second / static_cast<double>(total_edge_num);
+    for (auto& pair1 : ctx.attribute_mixing_map) {
+      for (auto& pair2 : pair1.second) {
+        int row = property_map[pair1.first];
+        int column = property_map[pair2.first];
+        attribute_mixing_matrix[row][column] =
+            pair2.second / static_cast<double>(total_edge_num);
+      }
     }
   }
 };
