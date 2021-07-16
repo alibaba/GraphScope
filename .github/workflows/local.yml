@@ -126,8 +126,8 @@ jobs:
         rm -rf ~/.cargo
         python3 -m pytest -s -v /tmp/test_run_locally.py
 
-    -name: Run Gaia on Maxgraph Store Test
-     run:
+    - name: Run Gaia on Maxgraph Store Test
+      run: |
         export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
         export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin
         export GRAPHSCOPE_PREFIX=/usr/local
