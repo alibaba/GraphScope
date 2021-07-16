@@ -209,3 +209,4 @@ app:
     compatible_graph:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment

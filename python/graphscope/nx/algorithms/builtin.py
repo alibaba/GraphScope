@@ -996,44 +996,43 @@ def edge_boundary(G, nbunch1, nbunch2=None):
 
 
 @project_to_simple
-def attribute_assortativity_coefficient(G, attribute=None):
-    """Compute degree assortativity of graph.
+def attribute_assortativity_coefficient(G, attribute):
+    """Compute assortativity for node attributes.
+
     Assortativity measures the similarity of connections
-    in the graph with respect to the node degree.
+    in the graph with respect to the given attribute.
+
     Parameters
     ----------
     G : NetworkX graph
-    x: string ('in','out')
-       The degree type for source node (directed graphs only).
-    y: string ('in','out')
-       The degree type for target node (directed graphs only).
-    directed: bool (True, False)
-        directed graph or undirected graph
+
+    attribute : string
+        Node attribute key
+
     Returns
     -------
-    r : float
-       Assortativity of graph by degree.
+    r: float
+       Assortativity of graph for given attribute
+
     Examples
     --------
-    >>> G = nx.path_graph(4)
-    >>> r = nx.builtin.degree_assortativity_coefficient(G)
-    >>> print(f"{r:3.1f}")
-    -0.5
-    See Also
-    --------
-    attribute_assortativity_coefficient
+    >>> G = nx.Graph()
+    >>> G.add_nodes_from([0, 1], color="red")
+    >>> G.add_nodes_from([2, 3], color="blue")
+    >>> G.add_edges_from([(0, 1), (2, 3)])
+    >>> print(nx.attribute_assortativity_coefficient(G, "color"))
+    1.0
+
     Notes
     -----
-    This computes Eq. (21) in Ref. [1]_ , where e is the joint
-    probability distribution (mixing matrix) of the degrees.  If G is
-    directed than the matrix e is the joint probability of the
-    user-specified degree type for the source and target.
+    This computes Eq. (2) in Ref. [1]_ , (trace(M)-sum(M^2))/(1-sum(M^2)),
+    where M is the joint probability distribution (mixing matrix)
+    of the specified attribute.
+
     References
     ----------
     .. [1] M. E. J. Newman, Mixing patterns in networks,
        Physical Review E, 67 026126, 2003
-    .. [2] Foster, J.G., Foster, D.V., Grassberger, P. & Paczuski, M.
-       Edge direction and the structure of networks, PNAS 107, 10815-20 (2010).
     """
 
     ctx = AppAssets(algo="attribute_assortativity_coefficient", context="tensor")(G)
