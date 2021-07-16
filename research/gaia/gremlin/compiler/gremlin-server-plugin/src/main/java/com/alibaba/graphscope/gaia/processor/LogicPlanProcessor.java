@@ -19,6 +19,7 @@ import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
+import com.alibaba.graphscope.gaia.store.GraphType;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.TraversalTranslator;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
@@ -52,6 +53,9 @@ public class LogicPlanProcessor extends AbstractGraphOpProcessor {
         final Map<String, Object> args = msg.getArgs();
         final long seto = args.containsKey(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT) ?
                 ((Number) args.get(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT)).longValue() : settings.scriptEvaluationTimeout;
+        if (config.getGraphType() == GraphType.MAXGRAPH) {
+            graphStore.updateSnapShotId();
+        }
         return GremlinExecutor.LifeCycle.build()
                 .scriptEvaluationTimeoutOverride(seto)
                 .beforeEval(b -> {
@@ -70,11 +74,14 @@ public class LogicPlanProcessor extends AbstractGraphOpProcessor {
                 .withResult(o -> {
                     if (o != null && o instanceof Traversal) {
                         long queryId = (long) queryIdMaker.getId(o);
-                        AbstractBuilder jobReqBuilder = new TraversalTranslator((new TraversalBuilder((Traversal.Admin) o))
+                        TraversalBuilder traversalBuilder = new TraversalBuilder((Traversal.Admin) o)
                                 .addConfig(PlanConfig.QUERY_ID, queryId)
                                 .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) o))
-                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config)))
-                                .translate();
+                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config));
+                        if (config.getGraphType() == GraphType.MAXGRAPH) {
+                            traversalBuilder.addConfig(PlanConfig.SNAPSHOT_ID, Long.valueOf(graphStore.getSnapShotId()));
+                        }
+                        AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
                         String content = new String(jobReqBuilder.build().toByteArray(), StandardCharsets.ISO_8859_1);
                         AbstractGraphOpProcessor.writeResultList(ctx, Arrays.asList(content), ResponseStatusCode.SUCCESS);
                     }
