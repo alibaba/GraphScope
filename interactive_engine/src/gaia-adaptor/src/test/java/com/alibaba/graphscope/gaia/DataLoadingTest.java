@@ -3,7 +3,6 @@ package com.alibaba.graphscope.gaia;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema;
 import com.alibaba.maxgraph.v2.common.schema.GraphDef;
 import com.alibaba.maxgraph.v2.sdk.Client;
-import com.alibaba.maxgraph.v2.sdk.DataLoadTarget;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -18,21 +17,6 @@ public class DataLoadingTest {
     String host = "localhost";
     int port = 55555;
     Client client = new Client(host, port);
-
-    @Test
-    public void testIngestData() {
-        String path = "hdfs://100.69.96.93:9000/user/tianli/data/build_1g_p8";
-        client.ingestData(path);
-    }
-
-    @Test
-    public void testCommitData() {
-        long tableId = -4611686018427387871L;
-        DataLoadTarget target = DataLoadTarget.newBuilder()
-                .setLabel("person")
-                .build();
-        client.commitDataLoad(Collections.singletonMap(tableId, target));
-    }
 
     @Test
     public void testLoadSchema() throws URISyntaxException, IOException {
@@ -132,5 +116,7 @@ public class DataLoadingTest {
                 Collections.singletonMap("weight", "0.2"));
 
         client.commit();
+
+        Thread.sleep(5000);
     }
 }
