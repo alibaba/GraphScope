@@ -33,11 +33,23 @@ message GetClientIdResponse {
 
 message BatchWriteRequest {
   string client_id = 1;
-  repeated DataRecordPb data_records = 2;
+  repeated WriteRequestPb write_requests = 2;
 }
 
 message BatchWriteResponse {
   int64 snapshot_id = 1;
+}
+
+enum WriteTypePb {
+  UNKNOWN = 0;
+  INSERT = 1;
+  UPDATE = 2;
+  DELETE = 3;
+}
+
+message WriteRequestPb {
+  WriteTypePb write_type = 1;
+  DataRecordPb data_record = 2;
 }
 
 message DataRecordPb {
