@@ -4,13 +4,14 @@
 
 
 # color
-RED="\033[0;31m"
-YELLOW="\033[1;33m"
-NC="\033[0m" # No Color
+readonly RED="\033[0;31m"
+readonly YELLOW="\033[1;33m"
+readonlyNC="\033[0m" # No Color
 # emoji
-MUSCLE="\U1f4aa"
+readonly MUSCLE="\U1f4aa"
 
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
+readonly IS_IN_WSL
 PLATFORM=
 OS_VERSION=
 
@@ -23,7 +24,7 @@ OS_VERSION=
 ##########################
 usage() {
 cat <<END
-  A script to prepare a local Kubernetes environment for GraphScope users.
+  A script to prepare a local Kubernetes environment for GraphScope.
 
   Usage: prepare_env [options]
   Options:
@@ -121,7 +122,7 @@ check_os_compatibility() {
     exit 1
   fi
 
-  log "Preparing environment on '${PLATFORM}' '${OS_VERSION}'"
+  log "Preparing environment on ${PLATFORM} ${OS_VERSION}"
 }
 
 ##########################
@@ -257,6 +258,16 @@ pull_images() {
   log "GraphScope images loaded into kind cluster successfully."
 }
 
+##########################
+# Main function of the script.
+# Globals:
+#   VERBOSE
+#   HOME
+# Arguments:
+#   None
+# Outputs:
+#   output log to stdout, output error to stderr.
+##########################
 main() {
   if [ ${VERBOSE} = true ]; then
     set -x
@@ -292,6 +303,7 @@ main() {
 }
 
 # parse argv
+# TODO(acezen): when option is not illegal, warning and output usage.
 VERBOSE=false
 OVERWRITE=false
 while test $# -ne 0; do
