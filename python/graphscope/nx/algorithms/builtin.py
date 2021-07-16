@@ -897,6 +897,7 @@ def weakly_connected_components(G):
     return AppAssets(algo="wcc_projected", context="vertex_data")(G)
 
 
+@project_to_simple
 def node_boundary(G, nbunch1, nbunch2=None):
     """Returns the node boundary of `nbunch1`.
 

@@ -188,7 +188,7 @@ app:
     compatible_graph:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
-      - gs::DynamicProjectedFragment   
+      - gs::DynamicProjectedFragment
   - algo: node_boundary
     type: cpp_pie
     class_name: gs::NodeBoundary
@@ -209,3 +209,4 @@ app:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
+      
