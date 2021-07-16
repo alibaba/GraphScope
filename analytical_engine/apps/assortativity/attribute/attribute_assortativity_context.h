@@ -34,7 +34,7 @@ class AttributeAssortativityContext : public TensorContext<FRAG_T, double> {
   explicit AttributeAssortativityContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, double>(fragment) {}
 
-  void Init(grape::DefaultMessageManager& messages) {}
+  void Init(grape::DefaultMessageManager& messages) { merge_stage = false; }
 
   void Output(std::ostream& os) override {
     auto& frag = this->fragment();
@@ -42,9 +42,10 @@ class AttributeAssortativityContext : public TensorContext<FRAG_T, double> {
       os << attribute_assortativity << std::endl;
     }
   }
-  // std::unordered_map<std::pair<vdata_t, vdata_t>, int> attribute_mixing_map;
-  std::unordered_map<vdata_t, std::unordered_map<vdata_t, int>> attribute_mixing_map;
+  std::unordered_map<vdata_t, std::unordered_map<vdata_t, int>>
+      attribute_mixing_map;
   double attribute_assortativity;
+  bool merge_stage;
 };
 }  // namespace gs
 

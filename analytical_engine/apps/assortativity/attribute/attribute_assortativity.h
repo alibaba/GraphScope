@@ -52,59 +52,75 @@ class AttributeAssortativity
              message_manager_t& messages) {
     // vid
     auto inner_vertices = frag.InnerVertices();
-    vdata_t source_data, target_data;
-    // w of type: Vertex
-    for (auto w : inner_vertices) {
-      source_data = frag.GetData(w);
-      // get all neighbors of vertex w
-      auto oes = frag.GetOutgoingAdjList(w);
-      for (auto& e : oes) {
-        vertex_t neighbor = e.get_neighbor();
-        target_data = frag.GetData(neighbor);
-        if (frag.IsOuterVertex(neighbor)) {
-          VLOG(0) << "out data: " << target_data << std::endl;
-        }
-        AttributeMixingCount(source_data, target_data, ctx);
-      }
-    }
-    // send message to work 0
-    if (frag.fid() != 0) {
-      messages.SendToFragment(0, ctx.attribute_mixing_map);
+    // v of type: Vertex
+    for (auto v : inner_vertices) {
+      ProcessVertex(v, frag, ctx, messages);
     }
     messages.ForceContinue();
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
-    // merge in work 0
-    if (frag.fid() == 0) {
-      // std::unordered_map<std::pair<vdata_t, vdata_t>, int> msg;
-      std::unordered_map<vdata_t, std::unordered_map<vdata_t, int>> msg;
-      while (messages.GetMessage(msg)) {
-        for (auto& pair1 : msg) {
-          for (auto& pair2 : pair1.second) {
-            // merge
-            if (ctx.attribute_mixing_map.count(pair1.first) == 0 ||
-                ctx.attribute_mixing_map[pair1.first].count(pair2.first) == 0) {
-              ctx.attribute_mixing_map[pair1.first][pair2.first] = pair2.second;
-            } else {
-              ctx.attribute_mixing_map[pair1.first][pair2.first] +=
-                  pair2.second;
+    if (!ctx.merge_stage) {
+      vdata_t source_data;
+      vertex_t u;
+      while (messages.GetMessage(frag, u, source_data)) {
+        vdata_t target_data = frag.GetData(u);
+        AttributeMixingCount(source_data, target_data, ctx);
+      }
+      ctx.merge_stage = true;
+      // send message to work 0
+      if (frag.fid() != 0) {
+        messages.SendToFragment(0, ctx.attribute_mixing_map);
+      }
+      messages.ForceContinue();
+    } else {
+      // merge in work 0
+      if (frag.fid() == 0) {
+        std::unordered_map<vdata_t, std::unordered_map<vdata_t, int>> msg;
+        while (messages.GetMessage(msg)) {
+          for (auto& pair1 : msg) {
+            for (auto& pair2 : pair1.second) {
+              // merge
+              if (ctx.attribute_mixing_map.count(pair1.first) == 0 ||
+                  ctx.attribute_mixing_map[pair1.first].count(pair2.first) ==
+                      0) {
+                ctx.attribute_mixing_map[pair1.first][pair2.first] =
+                    pair2.second;
+              } else {
+                ctx.attribute_mixing_map[pair1.first][pair2.first] +=
+                    pair2.second;
+              }
             }
           }
         }
+        std::vector<std::vector<double>> attribute_mixing_matrix;
+        GetAttributeMixingMatrix(ctx, attribute_mixing_matrix);
+        ctx.attribute_assortativity = ProcessMatrix(attribute_mixing_matrix);
+        std::vector<size_t> shape{1};
+        ctx.set_shape(shape);
+        ctx.assign(ctx.attribute_assortativity);
+        VLOG(0) << "attribute assortatity: " << ctx.attribute_assortativity
+                << std::endl;
       }
-      std::vector<std::vector<double>> attribute_mixing_matrix;
-      GetAttributeMixingMatrix(ctx, attribute_mixing_matrix);
-      ctx.attribute_assortativity = ProcessMatrix(attribute_mixing_matrix);
-      std::vector<size_t> shape{1};
-      ctx.set_shape(shape);
-      ctx.assign(ctx.attribute_assortativity);
-      VLOG(0) << "attribute assortatity: " << ctx.attribute_assortativity
-              << std::endl;
     }
   }
 
+  void ProcessVertex(const vertex_t& v, const fragment_t& frag, context_t& ctx,
+                     message_manager_t& messages) {
+    vdata_t source_data = frag.GetData(v);
+    // get all neighbors of vertex w
+    auto oes = frag.GetOutgoingAdjList(v);
+    for (auto& e : oes) {
+      vertex_t neighbor = e.get_neighbor();
+      if (frag.IsOuterVertex(neighbor)) {
+        messages.SyncStateOnOuterVertex(frag, neighbor, source_data);
+      } else {
+        vdata_t target_data = frag.GetData(neighbor);
+        AttributeMixingCount(source_data, target_data, ctx);
+      }
+    }
+  }
   double ProcessMatrix(
       std::vector<std::vector<double>>& attribute_mixing_matrix) {
     int n = attribute_mixing_matrix.size();
