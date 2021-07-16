@@ -953,7 +953,7 @@ def degree_assortativity_coefficient(G, x="out", y="in", directed=False):
     )
     return ctx.to_numpy("r", axis=0)[0]
 
-  
+
 @project_to_simple
 def node_boundary(G, nbunch1, nbunch2=None):
     """Returns the node boundary of `nbunch1`.
