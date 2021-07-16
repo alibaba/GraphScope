@@ -13,20 +13,20 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::graph_proxy::from_fn;
 use crate::structure::{
-    DefaultDetails, Details, Direction, DynDetails, Edge, Label, PropKey, QueryParams, Statement,
-    Vertex, ID_BITS,
+    DefaultDetails, Details, Direction, DynDetails, Edge, Label, LabelId, PropKey, QueryParams,
+    Statement, Vertex, ID_BITS,
 };
+use crate::{filter_limit, filter_limit_ok, limit_n};
 use crate::{register_graph, DynResult, GraphProxy, ID};
 use dyn_type::BorrowObject;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
 use graph_store::ldbc::LDBCVertexParser;
 use graph_store::prelude::{
     DefaultId, EdgeId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId,
-    LDBCGraphSchema, LabelId, LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row,
-    INVALID_LABEL_ID,
+    LDBCGraphSchema, LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
 };
-use pegasus::api::function::DynIter;
 use pegasus_common::downcast::*;
 use std::collections::HashMap;
 use std::path::Path;
@@ -187,30 +187,6 @@ fn _init_modern_graph() -> LargeGraphDB<DefaultId, InternalId> {
     mut_graph.into_graph(schema)
 }
 
-macro_rules! limit_n {
-    ($iter: expr, $n: expr) => {
-        if let Some(limit) = $n {
-            let r = $iter.take(limit);
-            Box::new(r)
-        } else {
-            Box::new($iter)
-        }
-    };
-}
-
-macro_rules! filter_limit_ok {
-    ($iter: expr, $f: expr, $n: expr) => {
-        if let Some(ref f) = $f {
-            let f = f.clone();
-            let r = $iter.filter(move |v| f.test(v).unwrap_or(false)).map(|v| Ok(v));
-            limit_n!(r, $n)
-        } else {
-            let r = $iter.map(|v| Ok(v));
-            limit_n!(r, $n)
-        }
-    };
-}
-
 impl GraphProxy for DemoGraph {
     fn scan_vertex(
         &self, params: &QueryParams<Vertex>,
@@ -224,13 +200,7 @@ impl GraphProxy for DemoGraph {
             //  to_runtime_vertex_with_property(v, params.props.as_ref())
         });
 
-        if let Some(ref filter) = params.filter {
-            let f = filter.clone();
-            let result = result.filter(move |v| f.test(v).unwrap_or(false));
-            Ok(limit_n!(result, params.limit))
-        } else {
-            Ok(limit_n!(result, params.limit))
-        }
+        Ok(filter_limit!(result, params.filter, params.limit))
     }
 
     fn scan_edge(
@@ -241,13 +211,7 @@ impl GraphProxy for DemoGraph {
         let result =
             self.store.get_all_edges(label_ids.as_ref()).map(move |e| to_runtime_edge(e, store));
 
-        if let Some(ref filter) = params.filter {
-            let f = filter.clone();
-            let result = result.filter(move |e| f.test(e).unwrap_or(false));
-            Ok(limit_n!(result, params.limit))
-        } else {
-            Ok(limit_n!(result, params.limit))
-        }
+        Ok(filter_limit!(result, params.filter, params.limit))
     }
 
     fn get_vertex(
@@ -261,17 +225,10 @@ impl GraphProxy for DemoGraph {
                 } else {
                     to_runtime_vertex(local_vertex, self.store)
                 };
-                if let Some(ref filter) = params.filter {
-                    if filter.test(&v).unwrap_or(false) {
-                        result.push(v);
-                    }
-                } else {
-                    result.push(v);
-                }
+                result.push(v);
             }
         }
-
-        DynResult::Ok(Box::new(result.into_iter()))
+        Ok(filter_limit!(result.into_iter(), params.filter, None))
     }
 
     fn get_edge(
@@ -282,17 +239,10 @@ impl GraphProxy for DemoGraph {
             let eid = encode_store_e_id(id);
             if let Some(local_edge) = self.store.get_edge(eid) {
                 let e = to_runtime_edge(local_edge, self.store);
-                if let Some(ref filter) = params.filter {
-                    if filter.test(&e).unwrap_or(false) {
-                        result.push(e);
-                    }
-                } else {
-                    result.push(e);
-                }
+                result.push(e);
             }
         }
-
-        DynResult::Ok(Box::new(result.into_iter()))
+        Ok(filter_limit!(result.into_iter(), params.filter, None))
     }
 
     fn prepare_explore_vertex(
@@ -484,14 +434,6 @@ impl Details for LazyEdgeDetails {
     fn get_label(&self) -> &Label {
         unimplemented!()
     }
-}
-
-#[inline]
-fn from_fn<I, O, F>(func: F) -> Box<dyn Statement<I, O>>
-where
-    F: Fn(I) -> DynResult<DynIter<O>> + Send + Sync + 'static,
-{
-    Box::new(func) as Box<dyn Statement<I, O>>
 }
 
 fn encode_runtime_v_id(v: &LocalVertex<DefaultId>) -> ID {

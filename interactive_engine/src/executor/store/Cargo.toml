@@ -26,6 +26,7 @@ maxgraph-common = { path = "../../common/rust/common" }
 
 [dependencies.rocksdb]
 git = "https://github.com/pingcap/rust-rocksdb.git"
+rev = "23a604459899f4f7a4c8967f16b6fa623474f27b"
 
 [build-dependencies]
 protoc-grpcio = "0.3.0"

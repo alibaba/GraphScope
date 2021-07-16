@@ -260,7 +260,7 @@ mod benchmark {
                 for dst_id in src_id+1..=src_id+count {
                     inner_id += 1;
                     let id = EdgeId::new(src_id, dst_id, inner_id);
-                    self.graph.insert_overwrite_edge(1, id, edge_type, properties).unwrap();
+                    self.graph.insert_overwrite_edge(1, id, edge_type, true, properties).unwrap();
                 }
                 test_count -= count as usize;
             }

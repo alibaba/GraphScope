@@ -61,12 +61,12 @@ function check_os_compatibility() {
       exit 1
     fi
     if ! command -v clang &> /dev/null; then
-      echo "clang could not be found, GraphScope require clang 9 or clang 10, you can install it manually."
+      echo "clang could not be found, GraphScope require clang 8 ~ 10, you can install it manually."
       exit 1
     fi
     ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')
-    if [[ "$ver" -lt "9" || "$ver" -gt "10" ]]; then
-      echo "GraphScope requires clang 9 or clang 10 on MacOS, current version is $ver."
+    if [[ "$ver" -lt "8" || "$ver" -gt "10" ]]; then
+      echo "GraphScope requires clang 8 ~ 10 on MacOS, current version is $ver."
       exit 1
     fi
   fi
@@ -110,7 +110,7 @@ function install_dependencies() {
     pushd /tmp/fmt-7.0.3
     mkdir build && cd build
     cmake .. -DBUILD_SHARED_LIBS=ON
-    make install -j
+    make install -j`nporc`
     popd
 
     # install folly
@@ -119,7 +119,7 @@ function install_dependencies() {
     pushd /tmp/folly-2020.10.19.00
     mkdir _build && cd _build
     cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
-    make install -j
+    make install -j`nproc`
     popd
 
     # install zookeeper
@@ -145,7 +145,7 @@ function install_dependencies() {
 
   if [[ "${platform}" == *"Darwin"* ]]; then
     brew install cmake double-conversion etcd protobuf apache-arrow openmpi boost glog gflags \
-      zstd snappy lz4 openssl@1.1 libevent fmt autoconf go maven
+      zstd snappy lz4 openssl@1.1 libevent fmt autoconf maven gnu-sed go@1.15
 
     # export openssl library
     export OPENSSL_ROOT_DIR="/usr/local/opt/openssl"
@@ -158,12 +158,18 @@ function install_dependencies() {
     pushd /tmp/folly-2020.10.19.00
     mkdir _build && cd _build
     cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
-    make install -j
+    make install -j$(sysctl -n hw.physicalcpu)
     popd
+
+    # install zookeeper
+    wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz -P /tmp
+    tar xf /tmp/zookeeper-3.4.14.tar.gz -C /tmp/
+    cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
+    sudo cp -r /tmp/zookeeper-3.4.14 /usr/local/zookeeper || true
 
     # install python packages for vineyard codegen
     pip3 install -U pip --user
-    pip3 install grpc-tools libclang parsec setuptools wheel twine --user
+    pip3 install grpcio-tools libclang parsec setuptools wheel twine --user
   fi
 
   check_dependencies_version
