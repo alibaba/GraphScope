@@ -45,25 +45,28 @@ class IsSimplePath : public AppBase<FRAG_T, IsSimplePathContext<FRAG_T>>,
     vertex_t source;
     vid_t first_v, second_v;
     int true_counter = 0;
-    if (ctx.is_simple_path == false) {
+    // First deal with the case where there is only one point in the list.
+    if (ctx.counter == 1) {
+      if (ctx.is_simple_path == false)
+        true_counter = 0;
+      else
+        true_counter = 1;
+    } else if (ctx.is_simple_path == false) {
       true_counter = 1;
     } else {
       for (auto pl : ctx.pair_list) {
         first_v = pl.first;
         second_v = pl.second;
-        if (!frag.InnerVertexGid2Vertex(first_v, source)) {
-          LOG(ERROR) << "Make pair error : p1 is not a innervertex"
-                     << std::endl;
-          break;
-        }
-        auto oes = frag.GetOutgoingAdjList(source);
         bool has_pair = false;
-        for (auto& e : oes) {
-          vertex_t u = e.get_neighbor();
-          vid_t compare_node = frag.Vertex2Gid(u);
-          if (compare_node == second_v) {
-            has_pair = true;
-            break;
+        if (frag.InnerVertexGid2Vertex(first_v, source)) {
+          auto oes = frag.GetOutgoingAdjList(source);
+          for (auto& e : oes) {
+            vertex_t u = e.get_neighbor();
+            vid_t compare_node = frag.Vertex2Gid(u);
+            if (compare_node == second_v) {
+              has_pair = true;
+              break;
+            }
           }
         }
         if (!has_pair) {
@@ -73,10 +76,22 @@ class IsSimplePath : public AppBase<FRAG_T, IsSimplePathContext<FRAG_T>>,
       }
     }
     Sum(true_counter, ctx.true_counter);
-    if (ctx.true_counter == 0)
+
+    if (ctx.counter == 1 && ctx.true_counter == 1) {
       ctx.is_simple_path = true;
-    else
+    } else if (ctx.counter > 1 && ctx.true_counter == 0) {
+      ctx.is_simple_path = true;
+    } else {
       ctx.is_simple_path = false;
+    }
+    {
+      if (frag.fid() == 0) {
+        std::vector<size_t> shape{1};
+
+        ctx.set_shape(shape);
+        ctx.assign(ctx.is_simple_path);
+      }
+    }
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,

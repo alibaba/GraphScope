@@ -33,7 +33,6 @@ namespace gs {
 template <typename FRAG_T>
 class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
  public:
-  using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
   using vertex_t = typename FRAG_T::vertex_t;
 
@@ -42,7 +41,7 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
 
   /**
    * @brief json formate
-   *  josn = {"nodes" : [(oid_t)node1,(oid_t)node2,....]}
+   *  josn = [(oid_t)node1,(oid_t)node2,....]
    *
    * @param messages
    * @param nodes_json
@@ -51,41 +50,55 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
   void Init(grape::DefaultMessageManager& messages,
             const std::string& nodes_json) {
     auto& frag = this->fragment();
-    std::set<oid_t> visit;
+    std::set<vid_t> visit;
     is_simple_path = true;
     vertex_t source;
-    int counter = 0;
-    oid_t pair_1 = 0;
+    counter = 0;
     vid_t p1, p2;
 
     folly::dynamic nodes_array = folly::parseJson(nodes_json);
-    for (auto val : nodes_array) {
-      oid_t key = val.getInt();
-      if (!visit.count(key)) {
-        visit.insert(key);
+    for (const auto& val : nodes_array) {
+      counter++;
+      if (!frag.Oid2Gid(val, p1)) {
+        LOG(ERROR) << "Input oid error" << std::endl;
+        is_simple_path = false;
+        break;
+      }
+      if (!visit.count(p1)) {
+        visit.insert(p1);
       } else {
         is_simple_path = false;
         break;
       }
-      counter++;
       if (counter == 1) {
       } else {
-        if (frag.GetInnerVertex(pair_1, source)) {
-          if (!frag.Oid2Gid(pair_1, p1) || !frag.Oid2Gid(key, p2)) {
-            LOG(ERROR) << "Input oid error" << std::endl;
-            break;
-          }
+        if (frag.GetInnerVertex(val, source)) {
           pair_list.push_back(std::make_pair(p1, p2));
         }
       }
-      pair_1 = key;
+      p2 = p1;
+    }
+    // The empty list is not a valid path.
+    if (counter == 0)
+      is_simple_path = false;
+    // If the list is a single node, just check that the node is actually in the
+    // graph.
+    else if (counter == 1) {
+      if (frag.GetInnerVertex(nodes_array[0], source))
+        is_simple_path = true;
+      else
+        is_simple_path = false;
     }
   }
 
-  void Output(std::ostream& os) override { os << is_simple_path << std::endl; }
+  void Output(std::ostream& os) override {
+    os << is_simple_path << std::endl;
+    os << counter << std::endl;
+  }
 
   std::vector<std::pair<vid_t, vid_t>> pair_list;
   int true_counter = 0;
+  int counter;
   bool is_simple_path;
 };
 }  // namespace gs
