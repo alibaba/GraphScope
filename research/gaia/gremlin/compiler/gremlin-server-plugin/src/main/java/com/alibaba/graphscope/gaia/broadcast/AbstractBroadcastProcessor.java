@@ -15,22 +15,17 @@
  */
 package com.alibaba.graphscope.gaia.broadcast;
 
+import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
+import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
-import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class AbstractBroadcastProcessor implements AutoCloseable {
-    protected List<Pair<String, Integer>> hostAddresses = new ArrayList<>();
+    protected RpcClient rpcClient;
 
     public abstract void broadcast(PegasusClient.JobRequest request, ResultProcessor resultProcessor);
 
-    public AbstractBroadcastProcessor(List<String> hostInfo) {
-        hostInfo.forEach(s -> {
-            String[] host = s.split(":");
-            hostAddresses.add(Pair.of(host[0], Integer.valueOf(host[1])));
-        });
+    public AbstractBroadcastProcessor(RpcChannelFetcher fetcher) {
+        this.rpcClient = new RpcClient(fetcher.fetch());
     }
 }

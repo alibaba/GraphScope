@@ -98,6 +98,21 @@ public class HasContainerP implements PredicateContainer {
                             + " for " + predicate.getBiPredicate());
                 }
             }
+        } else if (key.getItemCase() == Common.Key.ItemCase.NAME_ID) {
+            if (ignoreValue) {
+                return FilterHelper.INSTANCE.propertyPredicate(key.getNameId(), (Number) null, predicate.getBiPredicate());
+            } else {
+                if (predicate.getValue() instanceof Number) {
+                    return FilterHelper.INSTANCE.propertyPredicate(key.getNameId(), (Number) predicate.getValue(), predicate.getBiPredicate());
+                } else if (predicate.getValue() instanceof String) {
+                    return FilterHelper.INSTANCE.propertyPredicate(key.getNameId(), (String) predicate.getValue(), predicate.getBiPredicate());
+                } else if (predicate.getValue() instanceof List) {
+                    return FilterHelper.INSTANCE.propertyPredicate(key.getNameId(), (List) predicate.getValue(), predicate.getBiPredicate());
+                } else {
+                    throw new UnsupportedOperationException("property value type not support " + predicate.getValue().getClass()
+                            + " for " + predicate.getBiPredicate());
+                }
+            }
         } else {
             throw new UnsupportedOperationException("not support " + Common.Key.ItemCase.NAME_ID);
         }

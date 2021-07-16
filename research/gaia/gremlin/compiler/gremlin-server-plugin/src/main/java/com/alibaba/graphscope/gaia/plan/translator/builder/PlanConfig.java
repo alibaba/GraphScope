@@ -19,5 +19,6 @@ public class PlanConfig {
     public static String QUERY_ID = "query_id";
     public static String TAG_ID_MAKER = "tag_id_maker";
     public static String QUERY_CONFIG = "query_config";
-    public static String SNAPSHOT_ID = "snapshot_id";
+    // This snapshot id is aligned with the runtime to represent the extra parameter of snapshot id while accessing MaxGraphStore
+    public static String SNAPSHOT_ID = "SID";
 }
