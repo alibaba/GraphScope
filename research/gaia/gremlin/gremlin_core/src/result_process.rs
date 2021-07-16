@@ -26,19 +26,18 @@ use crate::structure::{Edge, GraphElement, Label, PropKey, Vertex, VertexOrEdge}
 use dyn_type::object::{Object, Primitives};
 
 fn label_to_pb(label: Option<&Label>) -> Option<result_pb::Label> {
-    if let Some(label) = label {
-        match label {
+    label.map(|lab|
+        match lab {
             // we will only pass label by id for current storages
-            Label::Str(_name) => {
+            Label::Str(_) => {
                 unreachable!()
             }
-            Label::Id(name_id) => Some(result_pb::Label {
-                item: Some(result_pb::label::Item::NameId(*name_id as i32)),
-            }),
+            Label::Id(label_id) => {
+                result_pb::Label{ item: Some(result_pb::label::Item::NameId(*label_id as i32)) }
+
+            }
         }
-    } else {
-        None
-    }
+    )
 }
 
 fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
