@@ -9,7 +9,7 @@ public interface GaiaConfig {
     int DEFAULT_PEGASUS_WORKER_NUM = 1;
     int DEFAULT_PEGASUS_SERVER_NUM = 0;
     int DEFAULT_PEGASUS_TIMEOUT = 60000;
-    GraphType DEFAULT_GRAPH_TYPE = GraphType.VINEYARD;
+    GraphType DEFAULT_GRAPH_TYPE = GraphType.MAXGRAPH;
     String DEFAULT_SCHEMA_PATH = ".";
     boolean DEFAULT_OPT_FLAG = false;
 
