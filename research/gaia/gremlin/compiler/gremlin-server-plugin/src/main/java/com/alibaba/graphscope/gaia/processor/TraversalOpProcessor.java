@@ -85,7 +85,7 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
                         AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
                         PlanUtils.print(jobReqBuilder);
                         broadcastProcessor.broadcast(jobReqBuilder.build(),
-                                new GremlinResultProcessor(ctx, new RemoteTraverserResultParser(traversalBuilder, graphStore)));
+                                new GremlinResultProcessor(ctx, new RemoteTraverserResultParser(traversalBuilder, graphStore, config)));
                         logger.info("query-{} finish", queryId);
                     } catch (SchemaNotFoundException e) {
                         throw new OpProcessorException("schema not found error",
