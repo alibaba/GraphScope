@@ -55,13 +55,19 @@ class TestDegreeAssortativity:
         assert almost_equal(r, -0.57735, places=4)
 
     def test_degree_assortativity_directed2(self):
-        r = nx.builtin.degree_assortativity_coefficient(self.D, x="in", y="in", directed=True)
+        r = nx.builtin.degree_assortativity_coefficient(
+            self.D, x="in", y="in", directed=True
+        )
         assert almost_equal(r, 0.33333, places=4)
 
     def test_degree_assortativity_directed3(self):
-        r = nx.builtin.degree_assortativity_coefficient(self.D, x="in", y="out", directed=True)
+        r = nx.builtin.degree_assortativity_coefficient(
+            self.D, x="in", y="out", directed=True
+        )
         assert almost_equal(r, -0.33333, places=4)
 
     def test_degree_assortativity_directed4(self):
-        r = nx.builtin.degree_assortativity_coefficient(self.D, x="out", y="out", directed=True)
+        r = nx.builtin.degree_assortativity_coefficient(
+            self.D, x="out", y="out", directed=True
+        )
         assert almost_equal(r, 0.57735, places=4)
