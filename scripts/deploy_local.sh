@@ -505,7 +505,7 @@ while test $# -ne 0; do
   case $arg in
     -h|--help) usage; exit ;;
     --prefix) INSTALL_PREFIX=$1; readonly INSTALL_PREFIX; shift ;;
-    --debug) VERBOSE=true; readonly VERBOSE; ;;
+    --verbose) VERBOSE=true; readonly VERBOSE; ;;
     install_deps) install_deps; exit;;
     deploy) deploy; exit;;
     *)
