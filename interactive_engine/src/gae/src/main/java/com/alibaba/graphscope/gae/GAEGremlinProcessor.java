@@ -1,17 +1,22 @@
 package com.alibaba.graphscope.gae;
 
 import com.alibaba.graphscope.gaia.JsonUtils;
+import com.alibaba.graphscope.gaia.TraversalSourceGraph;
 import com.alibaba.graphscope.gaia.processor.AbstractGraphOpProcessor;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkperpop.gremlin.groovy.custom.CustomGraphTraversalSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,11 +27,15 @@ public class GAEGremlinProcessor extends AbstractGraphOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(GAEGremlinProcessor.class);
     private InstanceConfig instanceConfig;
     private GAEStepChainMaker stepChainMaker;
+    private Graph graph;
+    private GraphTraversalSource traversalSource;
 
     public GAEGremlinProcessor(InstanceConfig instanceConfig) {
         super(null, null);
         this.instanceConfig = instanceConfig;
         this.stepChainMaker = new GAEStepChainMaker();
+        this.graph = TraversalSourceGraph.open(new BaseConfiguration());
+        this.traversalSource = graph.traversal(CustomGraphTraversalSource.class);
     }
 
     @Override
@@ -46,6 +55,8 @@ public class GAEGremlinProcessor extends AbstractGraphOpProcessor {
                 .beforeEval(b -> {
                     try {
                         b.putAll(bindingsSupplier.get());
+                        b.put("graph", this.graph);
+                        b.put("g", this.traversalSource);
                     } catch (OpProcessorException ope) {
                         throw new RuntimeException(ope);
                     }
