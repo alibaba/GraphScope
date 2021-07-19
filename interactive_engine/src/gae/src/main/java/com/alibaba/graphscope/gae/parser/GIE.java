@@ -5,16 +5,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.tinkerpop.gremlin.groovy.jsr223.GroovyTranslator;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.Map;
 
 public enum GIE implements Generator {
     GREMLIN_QUERY {
-        private final Logger logger = LoggerFactory.getLogger(GIE.class);
-
         @Override
         public Map<String, Object> generate(Map<String, Object> args) {
             String json = readFileFromResource("gie.gremlin.query.json");

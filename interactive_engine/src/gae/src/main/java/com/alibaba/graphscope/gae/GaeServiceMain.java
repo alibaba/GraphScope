@@ -15,18 +15,12 @@
  */
 package com.alibaba.graphscope.gae;
 
-import com.alibaba.graphscope.gaia.TraversalSourceGraph;
-import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
-import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkperpop.gremlin.groovy.custom.CustomGraphTraversalSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.Bindings;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -38,17 +32,9 @@ public class GaeServiceMain {
         Settings settings = load();
         GremlinServer server = new GremlinServer(settings);
 
-        // create graph and g
-        Graph graph = TraversalSourceGraph.open(new BaseConfiguration());
-        CustomGraphTraversalSource g = graph.traversal(CustomGraphTraversalSource.class);
-
         Properties properties = new Properties();
         properties.setProperty("graph.name", "test_graph");
         GaeProcessLoader.load(new InstanceConfig(properties));
-
-        // bind g to traversal source
-        Bindings globalBindings = PlanUtils.getGlobalBindings(server.getServerGremlinExecutor().getGremlinExecutor());
-        globalBindings.put("g", g);
 
         // start gremlin server
         server.start().exceptionally(t -> {
