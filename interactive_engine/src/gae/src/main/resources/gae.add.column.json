@@ -1,0 +1,10 @@
+{
+  "engine": "GAE",
+  "operation": "add_column",
+  "graph": "graphname-1",
+  "params": {
+    "new_column_name": "pr",
+    "use_data": "r:v0.pr"
+  },
+  "output_type": "graph"
+}

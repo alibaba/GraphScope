@@ -1,0 +1,8 @@
+{
+  "engine": "GIE",
+  "operation": "gremlin_query",
+  "params": {
+    "query": "g.V().order().by('pr', desc).limit(10).elementMap('name', 'pr')"
+  },
+  "output_type": "gremlin-result"
+}
