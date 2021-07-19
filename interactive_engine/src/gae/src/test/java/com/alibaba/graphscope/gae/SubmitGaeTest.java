@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.gaia;
+package com.alibaba.graphscope.gae;
 
 import org.apache.tinkerpop.gremlin.driver.*;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
@@ -22,22 +22,33 @@ import org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 
-public class SubmitQueryTest {
+public class SubmitGaeTest {
     public static void main(String[] args) throws Exception {
         MessageSerializer serializer = new GryoMessageSerializerV1d0();
         // new File(getResource("gremlin-sdk.yaml"))
         Cluster cluster = Cluster.build()
                 .addContactPoint("localhost")
-                .port(8182)
+                .port(8183)
                 .credentials("admin", "admin")
                 .serializer(serializer)
                 .create();
         Client client = cluster.connect();
-        String query = "g.V().hasLabel('PERSON').has('id',28587302327593).both('KNOWS').as('p').in('COMMENT_HASCREATOR_PERSON', 'POST_HASCREATOR_PERSON').has('creationDate',lte(20120301080000000)).order().by('creationDate',desc).by('id',asc).limit(20).as('m').select('p', 'm')";
+        String query = "g.V().hasLabel(\"person\").process(\n" +
+                "   V().property('$pr', expr('1.0/TOTAL_V')) \n" +
+                "      .repeat( \n" +
+                "         V().property('$tmp', expr('$pr/OUT_DEGREE')) \n" +
+                "         .scatter('$tmp').by(out())\n" +
+                "         .gather('$tmp', sum) \n" +
+                "         .property('$new', expr('0.15/TOTAL_V+0.85*$tmp')) \n" +
+                "         .where(expr('abs($new-$pr)>1e-10')) \n" +
+                "         .property('$pr', expr('$new')))\n" +
+                "      .until(count().is(0)) \n" +
+                "   ).with('$pr', 'pr') \n" +
+                "   .order().by('pr', desc).limit(10) \n";
         RequestMessage request = RequestMessage
                 .build(Tokens.OPS_EVAL)
                 .add(Tokens.ARGS_GREMLIN, query)
-                // .processor("plan")
+                .processor("gae")
                 .create();
         CompletableFuture<ResultSet> resultSet = client.submitAsync(request);
         while (!resultSet.isDone()) {

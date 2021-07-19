@@ -1,5 +1,8 @@
 package com.alibaba.graphscope.gae;
 
+import com.alibaba.graphscope.gae.parser.GAE;
+import com.alibaba.graphscope.gae.parser.GIE;
+import com.alibaba.graphscope.gae.parser.Generator;
 import com.alibaba.graphscope.gaia.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 

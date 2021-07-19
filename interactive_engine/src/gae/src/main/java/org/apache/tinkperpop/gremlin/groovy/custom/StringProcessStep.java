@@ -2,19 +2,19 @@ package org.apache.tinkperpop.gremlin.groovy.custom;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
-import org.apache.tinkerpop.gremlin.process.traversal.step.Mutating;
+import org.apache.tinkerpop.gremlin.process.traversal.step.Configuring;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.MapStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.Parameters;
-import org.apache.tinkerpop.gremlin.process.traversal.step.util.event.CallbackRegistry;
-import org.apache.tinkerpop.gremlin.process.traversal.step.util.event.Event;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
 import java.util.Objects;
 
-public final class StringProcessStep<S> extends MapStep<S, Vertex> implements Mutating<Event> {
+public final class StringProcessStep<S> extends MapStep<S, Vertex> implements Configuring {
 
     private String identifier;
+    private String key;
+    private Object value;
 
     public StringProcessStep(final Traversal.Admin traversal, final String identifier) {
         super(traversal);
@@ -31,14 +31,6 @@ public final class StringProcessStep<S> extends MapStep<S, Vertex> implements Mu
     }
 
     @Override
-    public CallbackRegistry<Event> getMutatingCallbackRegistry() {
-        return null;
-    }
-    @Override
-    public void configure(final Object... keyValues) {
-        // do nothing
-    }
-    @Override
     public Parameters getParameters() {
         return Parameters.EMPTY;
     }
@@ -53,4 +45,21 @@ public final class StringProcessStep<S> extends MapStep<S, Vertex> implements Mu
         return super.hashCode() ^ Objects.hashCode(this.identifier);
     }
 
+    @Override
+    public void configure(final Object... keyValues) {
+        if (keyValues.length > 0) {
+            key = (String) keyValues[0];
+        }
+        if (keyValues.length > 1) {
+            value = keyValues[1];
+        }
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public Object getValue() {
+        return value;
+    }
 }
