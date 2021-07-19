@@ -80,12 +80,11 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
       p2 = p1;
     }
     // The empty list is not a valid path.
-    if (counter == 0) {
-      is_simple_path = false;
-    }
     // If the list is a single node, just check that the node is actually in the
     // graph.
-    else if (counter == 1) {
+    if (counter == 0) {
+      is_simple_path = false;
+    } else if (counter == 1) {
       if (frag.GetInnerVertex(nodes_array[0], source))
         is_simple_path = true;
       else
