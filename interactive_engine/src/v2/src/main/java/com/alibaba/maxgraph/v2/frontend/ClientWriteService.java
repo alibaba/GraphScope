@@ -6,11 +6,14 @@ import com.alibaba.maxgraph.v2.frontend.write.GraphWriter;
 import com.alibaba.maxgraph.v2.frontend.write.WriteRequest;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
+    private static final Logger logger = LoggerFactory.getLogger(ClientWriteService.class);
 
     private WriteSessionGenerator writeSessionGenerator;
     private GraphWriter graphWriter;
@@ -31,7 +34,10 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
     public void batchWrite(BatchWriteRequest request, StreamObserver<BatchWriteResponse> responseObserver) {
         String requestId = UuidUtils.getBase64UUIDString();
         String writeSession = request.getClientId();
-        List<WriteRequest> writeRequests = new ArrayList<>(request.getWriteRequestsCount());
+        int writeRequestsCount = request.getWriteRequestsCount();
+        List<WriteRequest> writeRequests = new ArrayList<>(writeRequestsCount);
+        logger.info("received batchWrite request. requestId [" + requestId + "] writeSession [" + writeSession +
+                "] batchSize [" + writeRequestsCount + "]");
         try {
             for (WriteRequestPb writeRequestPb : request.getWriteRequestsList()) {
                 writeRequests.add(WriteRequest.parseProto(writeRequestPb));
@@ -40,6 +46,7 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
             responseObserver.onNext(BatchWriteResponse.newBuilder().setSnapshotId(snapshotId).build());
             responseObserver.onCompleted();
         } catch (Exception e) {
+            logger.error("batchWrite failed. request [" + requestId + "] session [" + writeSession + "]", e);
             responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
@@ -58,6 +65,8 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
             responseObserver.onNext(RemoteFlushResponse.newBuilder().setSuccess(suc).build());
             responseObserver.onCompleted();
         } catch (InterruptedException e) {
+            logger.error("remoteFlush failed. flushSnapshotId [" + flushSnapshotId + "] waitTimeMs [" + waitTimeMs +
+                    "]");
             responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
