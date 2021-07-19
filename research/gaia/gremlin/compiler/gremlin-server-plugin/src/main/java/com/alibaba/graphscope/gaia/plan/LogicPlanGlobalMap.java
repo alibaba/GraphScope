@@ -319,11 +319,16 @@ public class LogicPlanGlobalMap {
         stepPlanMap.put(STEP.PropertyIdentityStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
-                Gremlin.QueryParams params = StoreParamsBuider.newBuilder()
-                        .setRequiredProperties(PlanUtils.convertFrom(((PropertyIdentityStep) t).getAttachProperties()))
-                        .build();
+                StoreParamsBuider paramsBuilder = StoreParamsBuider.newBuilder()
+                        .setRequiredProperties(PlanUtils.convertFrom(((PropertyIdentityStep) t).getAttachProperties()));
+                // set snapshot id if present
+                Long snapshotId = (Long) conf.getProperty(PlanConfig.SNAPSHOT_ID);
+                if (snapshotId != null) {
+                    Common.Value value = Common.Value.newBuilder().setI64(snapshotId).build();
+                    paramsBuilder.setExtraParams(Collections.singletonMap(PlanConfig.SNAPSHOT_ID, value));
+                }
                 return Gremlin.IdentityStep.newBuilder()
-                        .setQueryParams(params)
+                        .setQueryParams(paramsBuilder.build())
                         .build();
             }
         });
@@ -444,8 +449,16 @@ public class LogicPlanGlobalMap {
                 if (((EdgeVertexStep) t).getDirection() == Direction.BOTH) {
                     return Gremlin.EdgeBothVStep.newBuilder().build();
                 } else {
+                    StoreParamsBuider paramsBuider = StoreParamsBuider.newBuilder();
+                    // set snapshot id if present
+                    Long snapshotId = (Long) conf.getProperty(PlanConfig.SNAPSHOT_ID);
+                    if (snapshotId != null) {
+                        Common.Value value = Common.Value.newBuilder().setI64(snapshotId).build();
+                        paramsBuider.setExtraParams(Collections.singletonMap(PlanConfig.SNAPSHOT_ID, value));
+                    }
                     return Gremlin.EdgeVertexStep.newBuilder()
                             .setEndpointOpt(Gremlin.EdgeVertexStep.EndpointOpt.valueOf(((EdgeVertexStep) t).getDirection().name()))
+                            .setQueryParams(paramsBuider.build())
                             .build();
                 }
             }
@@ -454,8 +467,16 @@ public class LogicPlanGlobalMap {
         stepPlanMap.put(STEP.EdgeOtherVertexStep, new GremlinStepResource() {
             @Override
             protected Object getStepResource(Step t, Configuration conf) {
+                StoreParamsBuider paramsBuider = StoreParamsBuider.newBuilder();
+                // set snapshot id if present
+                Long snapshotId = (Long) conf.getProperty(PlanConfig.SNAPSHOT_ID);
+                if (snapshotId != null) {
+                    Common.Value value = Common.Value.newBuilder().setI64(snapshotId).build();
+                    paramsBuider.setExtraParams(Collections.singletonMap(PlanConfig.SNAPSHOT_ID, value));
+                }
                 return Gremlin.EdgeVertexStep.newBuilder()
                         .setEndpointOpt(Gremlin.EdgeVertexStep.EndpointOpt.valueOf(PlanUtils.DIRECTION_OTHER))
+                        .setQueryParams(paramsBuider.build())
                         .build();
             }
         });

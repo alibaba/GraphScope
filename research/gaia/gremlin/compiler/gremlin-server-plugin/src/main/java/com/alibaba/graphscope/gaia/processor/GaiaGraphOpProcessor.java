@@ -91,7 +91,7 @@ public class GaiaGraphOpProcessor extends AbstractGraphOpProcessor {
                         }
                         AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
                         PlanUtils.print(jobReqBuilder);
-                        broadcastProcessor.broadcast(jobReqBuilder.build(), new GremlinResultProcessor(ctx, new DefaultResultParser(traversalBuilder, graphStore)));
+                        broadcastProcessor.broadcast(jobReqBuilder.build(), new GremlinResultProcessor(ctx, new DefaultResultParser(traversalBuilder, graphStore, config)));
                     } else {
                         List<Object> results = new ArrayList<>();
                         if (o != null) {

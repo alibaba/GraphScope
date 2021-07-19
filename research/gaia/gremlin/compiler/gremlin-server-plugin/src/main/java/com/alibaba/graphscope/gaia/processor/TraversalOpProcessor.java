@@ -80,12 +80,12 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
                                 .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) traversal))
                                 .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config));
                         if (config.getGraphType() == GraphType.MAXGRAPH) {
-                            traversalBuilder.addConfig(PlanConfig.SNAPSHOT_ID, graphStore);
+                            traversalBuilder.addConfig(PlanConfig.SNAPSHOT_ID, Long.valueOf(graphStore.getSnapShotId()));
                         }
                         AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
                         PlanUtils.print(jobReqBuilder);
                         broadcastProcessor.broadcast(jobReqBuilder.build(),
-                                new GremlinResultProcessor(ctx, new RemoteTraverserResultParser(traversalBuilder, graphStore)));
+                                new GremlinResultProcessor(ctx, new RemoteTraverserResultParser(traversalBuilder, graphStore, config)));
                         logger.info("query-{} finish", queryId);
                     } catch (SchemaNotFoundException e) {
                         throw new OpProcessorException("schema not found error",
