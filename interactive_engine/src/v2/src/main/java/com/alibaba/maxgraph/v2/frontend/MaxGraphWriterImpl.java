@@ -72,6 +72,7 @@ import java.util.concurrent.TimeoutException;
  * each reader and writer will belong to only one query, so will can cache the reader/writer
  * result in the instance, and the cache will be release memory when the query is finished
  */
+@Deprecated
 public class MaxGraphWriterImpl implements MaxGraphWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(MaxGraphWriterImpl.class);

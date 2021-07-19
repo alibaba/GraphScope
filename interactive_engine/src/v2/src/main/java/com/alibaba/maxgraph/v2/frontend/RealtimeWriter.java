@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * This class is for compiler to perform realtime write operations.
  */
+@Deprecated
 public class RealtimeWriter implements MetricsAgent {
     private static final Logger logger = LoggerFactory.getLogger(RealtimeWriter.class);
 
@@ -68,15 +69,19 @@ public class RealtimeWriter implements MetricsAgent {
      * @param
      * @return BatchId of the data
      */
-    public BatchId writeOperations(String requestId, String sessionId, OperationBatch operationBatch) {
+    public BatchId writeOperations(String requestId, String sessionId, int queueId, OperationBatch operationBatch) {
         logger.info("writeOperations requestId [" + requestId + "], sessionId [" + sessionId + "]");
 
-        int queueId = getTargetQueueId(sessionId);
         int ingestorId = this.metaService.getIngestorIdForQueue(queueId);
         BatchId batchId = this.ingestWriteClients.getClient(ingestorId).writeIngestor(requestId, queueId,
                 operationBatch);
         totalProcessed.addAndGet(operationBatch.getOperationCount());
         return batchId;
+    }
+
+    public BatchId writeOperations(String requestId, String sessionId, OperationBatch operationBatch) {
+        int queueId = getTargetQueueId(sessionId);
+        return writeOperations(requestId, sessionId, queueId, operationBatch);
     }
 
     private int getTargetQueueId(String sessionId) {

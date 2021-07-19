@@ -33,15 +33,17 @@ public class PropertyValue {
 
     public PropertyValue(DataType dataType, Object valObject) {
         this.dataType = dataType;
-        this.valBytes = SerdeUtils.objectToBytes(dataType, valObject);
+        this.valBytes = SerdeUtils.objectToBytes(dataType, stringToObj(dataType, valObject));
         this.valObject = valObject;
     }
 
-    public PropertyValue(DataType dataType, String valString) {
-        this(dataType, stringToObj(dataType, valString));
-    }
-
-    private static Object stringToObj(DataType dataType, String valString) {
+    private static Object stringToObj(DataType dataType, Object val) {
+        String valString;
+        if (val instanceof String) {
+            valString = (String) val;
+        } else {
+            return val;
+        }
         try {
             switch (dataType) {
                 case BOOL:
