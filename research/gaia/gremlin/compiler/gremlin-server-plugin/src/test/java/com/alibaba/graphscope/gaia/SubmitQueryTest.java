@@ -28,16 +28,30 @@ public class SubmitQueryTest {
         // new File(getResource("gremlin-sdk.yaml"))
         Cluster cluster = Cluster.build()
                 .addContactPoint("localhost")
-                .port(8182)
+                .port(8183)
                 .credentials("admin", "admin")
                 .serializer(serializer)
                 .create();
         Client client = cluster.connect();
-        String query = "g.V().hasLabel('PERSON').has('id',28587302327593).both('KNOWS').as('p').in('COMMENT_HASCREATOR_PERSON', 'POST_HASCREATOR_PERSON').has('creationDate',lte(20120301080000000)).order().by('creationDate',desc).by('id',asc).limit(20).as('m').select('p', 'm')";
+        // String query = "g.V().hasLabel('PERSON').has('id',28587302327593).both('KNOWS').as('p').in('COMMENT_HASCREATOR_PERSON', 'POST_HASCREATOR_PERSON').has('creationDate',lte(20120301080000000)).order().by('creationDate',desc).by('id',asc).limit(20).as('m').select('p', 'm')";
+        // String query = "g.V().process(expr(\"1.0f\"))";
+        String query = "g.V().process(\n" +
+                "   V().property('$pr', expr('1.0/TOTAL_V')) \n" +
+                "      .repeat( \n" +
+                "         V().property('$tmp', expr('$pr/OUT_DEGREE')) \n" +
+                "         .scatter('$tmp').by(out())\n" +
+                "         .gather('$tmp', sum) \n" +
+                "         .property('$new', expr('0.15/TOTAL_V+0.85*$tmp')) \n" +
+                "         .where(expr('abs($new-$pr)>1e-10')) \n" +
+                "         .property('$pr', expr('$new')))\n" +
+                "      .until(count().is(0)) \n" +
+                "   ).with('$pr', 'pr') \n" +
+                "   .order().by('pr', desc).limit(10).elementMap('name', 'pr') \n";
+        // String query = "g.V().elementMap()";
         RequestMessage request = RequestMessage
                 .build(Tokens.OPS_EVAL)
                 .add(Tokens.ARGS_GREMLIN, query)
-                // .processor("plan")
+                .processor("gae")
                 .create();
         CompletableFuture<ResultSet> resultSet = client.submitAsync(request);
         while (!resultSet.isDone()) {

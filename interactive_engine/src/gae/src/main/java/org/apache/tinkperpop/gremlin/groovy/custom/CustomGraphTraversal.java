@@ -15,11 +15,13 @@ public class CustomGraphTraversal<S, E> extends DefaultTraversal<S, E> implement
         this.asAdmin().getBytecode().addStep("process", identifier);
         return this.asAdmin().addStep(new StringProcessStep<S>(this.asAdmin(), identifier));
     }
+
     public <E2> GraphTraversal<S, E2> process(final Traversal<?, E2> processTraversal) {
         this.asAdmin().getBytecode().addStep("process", processTraversal);
         return this.asAdmin().addStep(new TraversalProcessStep<>(this.asAdmin(), processTraversal));
     }
-    public  GraphTraversal<S, E> scatter(final String scatterName) {
+
+    public GraphTraversal<S, E> scatter(final String scatterName) {
         this.asAdmin().getBytecode().addStep("scatter", scatterName);
         return this.asAdmin().addStep(new ScatterStep<S, E>(this.asAdmin(), scatterName));
     }
@@ -28,6 +30,7 @@ public class CustomGraphTraversal<S, E> extends DefaultTraversal<S, E> implement
         this.asAdmin().getBytecode().addStep("gather", gatherName, op);
         return this.asAdmin().addStep(new GatherStep<S>(this.asAdmin(), gatherName, op));
     }
+
     public GraphTraversal<S, String> expr(final String expression) {
         this.asAdmin().getBytecode().addStep("expr", expression);
         return this.asAdmin().addStep(new ExprStep<S>(this.asAdmin(), expression));

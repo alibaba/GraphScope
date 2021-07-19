@@ -1,0 +1,34 @@
+{
+  "version": 0.1,
+  "step-1": {
+    "engine": "GAE",
+    "operation": "run_app",
+    "graph": "graphname-1",
+    "params": {
+      "type": "cpp_pie",
+      "cpp_code": "SOURCE_CODE"
+    },
+    "output_type": "context",
+    "deps": []
+  },
+  "step-2": {
+    "engine": "GAE",
+    "operation": "add_colomn",
+    "graph": "graphname-1",
+    "params": {
+      "new_column_name": "pr",
+      "use_data": "r:v0.pr"
+    },
+    "output_type": "graph",
+    "deps": ["step-1"]
+  },
+  "step-3": {
+    "engine": "GIE",
+    "operation": "gremlin_query",
+    "params": {
+      "query": "g.V().order().by('pr', desc).limit(10).elementMap('name', 'pr')"
+    },
+    "output_type": "gremlin-result",
+    "deps": ["step-2"]
+  }
+}
