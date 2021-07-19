@@ -21,7 +21,7 @@ public final class ScatterStep<S, E> extends MapStep<S, E> implements TraversalP
         this.scatterName = scatterName;
     }
 
-    public void modulateBy(final Traversal.Admin<?, ?> aggregateTraversal) {
+    public void modulateBy(final Traversal.Admin<?, ?> scatterTraversal) {
         this.scatterTraversal = this.integrateChild(scatterTraversal);
     }
 
