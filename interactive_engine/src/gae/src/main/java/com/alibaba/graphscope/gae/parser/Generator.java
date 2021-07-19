@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.gae;
+package com.alibaba.graphscope.gae.parser;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -15,7 +15,7 @@ public interface Generator {
         return (String) args.get("graph");
     }
 
-    default Traversal getGremlinQuery(Map<String, Object> args) {
+    default Traversal getTraversal(Map<String, Object> args) {
         return (Traversal) args.get("traversal");
     }
 

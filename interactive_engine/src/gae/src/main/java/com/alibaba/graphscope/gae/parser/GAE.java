@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.gae;
+package com.alibaba.graphscope.gae.parser;
 
 import com.alibaba.graphscope.gaia.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -7,6 +7,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkperpop.gremlin.groovy.custom.StringProcessStep;
 import org.apache.tinkperpop.gremlin.groovy.custom.TraversalProcessStep;
 
 import java.util.Arrays;
@@ -19,7 +20,7 @@ public enum GAE implements Generator {
         @Override
         public Map<String, Object> generate(Map<String, Object> args) {
             try {
-                Traversal traversal = getGremlinQuery(args);
+                Traversal traversal = getTraversal(args);
                 String graphName = getGraphName(args);
                 List<String> withParams = getWithParams(traversal);
                 String json = readFileFromResource("gae.add.column.json");
@@ -44,6 +45,7 @@ public enum GAE implements Generator {
                     String dstColumn = ((TraversalProcessStep) step).getDstColumn();
                     return Arrays.asList(srcColumn, dstColumn);
                 }
+                // todo: process("").with(...)
             }
             return Collections.emptyList();
         }
@@ -68,14 +70,38 @@ public enum GAE implements Generator {
         @Override
         public Map<String, Object> generate(Map<String, Object> args) {
             String graphName = getGraphName(args);
+            Step processStep = evalProcessStep(getTraversal(args));
+            String srcCode;
+            if (processStep instanceof TraversalProcessStep) {
+                srcCode = runPageRank((TraversalProcessStep) processStep);
+            } else if (processStep instanceof StringProcessStep) {
+                srcCode = ((StringProcessStep) processStep).getIdentifier();
+            } else {
+                throw new UnsupportedOperationException("cannot support step " + processStep);
+            }
             String json = readFileFromResource("gae.run.app.json");
             Map<String, Object> runApp = JsonUtils.fromJson(json, new TypeReference<Map<String, Object>>() {
             });
-            String srcCode = readFileFromResource("src");
             runApp.put("graph", graphName);
             Map params = (Map) runApp.get("params");
             params.put("cpp_code", srcCode);
             return runApp;
+        }
+
+        private Step evalProcessStep(Traversal traversal) {
+            List<Step> steps = traversal.asAdmin().getSteps();
+            for (Step step : steps) {
+                if (step instanceof TraversalProcessStep || step instanceof StringProcessStep) {
+                    return step;
+                }
+            }
+            return null;
+        }
+
+        private String runPageRank(TraversalProcessStep step) {
+            // mock
+            String srcCode = readFileFromResource("src");
+            return srcCode;
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.gae;
+package com.alibaba.graphscope.gae.parser;
 
 import com.alibaba.graphscope.gaia.JsonUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -20,7 +20,7 @@ public enum GIE implements Generator {
             String json = readFileFromResource("gie.gremlin.query.json");
             Map<String, Object> gremlin = JsonUtils.fromJson(json, new TypeReference<Map<String, Object>>() {
             });
-            Traversal traversal = getGremlinQuery(args);
+            Traversal traversal = getTraversal(args);
             // remove process/scatter/gather/with from bytecode
             Bytecode gremlinCode = traversal.asAdmin().getBytecode();
             Iterator<Bytecode.Instruction> iterator = gremlinCode.getInstructions().iterator();
