@@ -32,56 +32,56 @@ class TestIsSimplePath:
         nodes and paths as lists of edges.
         """
         G = nx.trivial_graph()
-        assert not nx.is_simple_path(G, [])
+        assert not nx.builtin.is_simple_path(G, [])
 
     def test_trivial_path(self):
         """Tests that the trivial path, a path of length one, is
         considered a simple path in a graph.
         """
         G = nx.trivial_graph()
-        assert nx.is_simple_path(G, [0])
+        assert nx.builtin.is_simple_path(G, [0])
 
     def test_trivial_nonpath(self):
         """Tests that a list whose sole element is an object not in the
         graph is not considered a simple path.
         """
         G = nx.trivial_graph()
-        assert not nx.is_simple_path(G, ["not a node"])
+        assert not nx.builtin.is_simple_path(G, ["not a node"])
 
     def test_simple_path(self):
         G = nx.path_graph(2)
-        assert nx.is_simple_path(G, [0, 1])
+        assert nx.builtin.is_simple_path(G, [0, 1])
 
     def test_non_simple_path(self):
         G = nx.path_graph(2)
-        assert not nx.is_simple_path(G, [0, 1, 0])
+        assert not nx.builtin.is_simple_path(G, [0, 1, 0])
 
     def test_cycle(self):
         G = nx.cycle_graph(3)
-        assert not nx.is_simple_path(G, [0, 1, 2, 0])
+        assert not nx.builtin.is_simple_path(G, [0, 1, 2, 0])
 
     def test_missing_node(self):
         G = nx.path_graph(2)
-        assert not nx.is_simple_path(G, [0, 2])
+        assert not nx.builtin.is_simple_path(G, [0, 2])
 
     def test_directed_path(self):
         G = nx.DiGraph([(0, 1), (1, 2)])
-        assert nx.is_simple_path(G, [0, 1, 2])
+        assert nx.builtin.is_simple_path(G, [0, 1, 2])
 
     def test_directed_non_path(self):
         G = nx.DiGraph([(0, 1), (1, 2)])
-        assert not nx.is_simple_path(G, [2, 1, 0])
+        assert not nx.builtin.is_simple_path(G, [2, 1, 0])
 
     def test_directed_cycle(self):
         G = nx.DiGraph([(0, 1), (1, 2), (2, 0)])
-        assert not nx.is_simple_path(G, [0, 1, 2, 0])
+        assert not nx.builtin.is_simple_path(G, [0, 1, 2, 0])
 
     @pytest.mark.skip(reason="not support multigraph")
     def test_multigraph(self):
         G = nx.MultiGraph([(0, 1), (0, 1)])
-        assert nx.is_simple_path(G, [0, 1])
+        assert nx.builtin.is_simple_path(G, [0, 1])
 
     @pytest.mark.skip(reason="not support multidigraph")
     def test_multidigraph(self):
         G = nx.MultiDiGraph([(0, 1), (0, 1), (1, 0), (1, 0)])
-        assert nx.is_simple_path(G, [0, 1])
+        assert nx.builtin.is_simple_path(G, [0, 1])

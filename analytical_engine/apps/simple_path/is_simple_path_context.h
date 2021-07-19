@@ -72,15 +72,17 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
       }
       if (counter == 1) {
       } else {
-        if (frag.GetInnerVertex(val, source)) {
-          pair_list.push_back(std::make_pair(p1, p2));
+        frag.Gid2Vertex(p2, source);
+        if (frag.IsInnerVertex(source)) {
+          pair_list.push_back(std::make_pair(p2, p1));
         }
       }
       p2 = p1;
     }
     // The empty list is not a valid path.
-    if (counter == 0)
+    if (counter == 0) {
       is_simple_path = false;
+    }
     // If the list is a single node, just check that the node is actually in the
     // graph.
     else if (counter == 1) {
