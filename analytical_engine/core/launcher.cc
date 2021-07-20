@@ -32,17 +32,24 @@ void VineyardServer::Start() {
     return;
   }
 
+  // Use a unique timestamp as the etcd prefix to avoid contention between
+  // unrelated vineyardd processes.
+  uint64_t ts = 0;
+  if (comm_spec_.worker_id() == 0) {
+    ts = std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::system_clock::now().time_since_epoch())
+             .count();
+    grape::BcastSend(ts, comm_spec_.comm());
+  } else {
+    grape::BcastRecv(ts, comm_spec_.comm(), 0);
+  }
+
   if (comm_spec_.local_id() != 0) {
     // Only launch one vineyard instance at each machine.
     grape::BcastRecv(vineyard_socket_, comm_spec_.local_comm(), 0);
     return;
   }
 
-  // Use a unique timestamp as the etcd prefix to avoid contention between
-  // unrelated vineyardd processes.
-  auto ts = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now().time_since_epoch())
-                .count();
   if (getenv("VINEYARD_IPC_SOCKET")) {
     vineyard_socket_ =
         vineyard::ExpandEnvironmentVariables("$VINEYARD_IPC_SOCKET");

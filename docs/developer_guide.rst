@@ -112,18 +112,19 @@ version of Python using `conda` or `pyenv`.
 
 The GraphScope analytical engine and interactive engine could be built locally on mac with script.
 
-If GraphScope's dependencies are not satisfied，you could use the install_denpendencies
-script to install dependencies.
+If GraphScope's dependencies are not satisfied，you could use the to install
+dependencies of GraphScope.
 
 .. code::shell
 
-    ./script/install_denpendencies.sh
+    ./scripts/deploy_local.sh install_deps
+    source ./gs_env
 
-build the analytical engine and interactive engine with script.
+Deploy the GraphScope with the script
 
 .. code::shell
 
-    ./script/build.sh
+    ./scripts/deploy_local.sh deploy
 
 
 Code Format

@@ -54,6 +54,7 @@ public class InstanceConfig extends MaxGraphConfiguration {
      */
     public static final String PEGASUS_WORKER_NUM = "pegasus.worker.num";
     public static final String PEGASUS_TIMEOUT = "pegasus.timeout";
+    public static final String GAIA_COMPILER_ENABLED = "gaia.compiler.enabled";
 
     /**
      * machine count
@@ -376,11 +377,15 @@ public class InstanceConfig extends MaxGraphConfiguration {
     }
 
     public int getPegasusTimeoutMS() {
-        return getInt(PEGASUS_TIMEOUT, 60000);
+        return getInt(PEGASUS_TIMEOUT, 240000);
     }
 
     public int getPegasusWorkerNum() {
-        return getInt(PEGASUS_WORKER_NUM, 1);
+        return getInt(PEGASUS_WORKER_NUM, 2);
+    }
+
+    public boolean isGaiaCompilerEnabled() {
+        return getBoolean(GAIA_COMPILER_ENABLED, false);
     }
 
     public String getJuteMaxbuffer() {
