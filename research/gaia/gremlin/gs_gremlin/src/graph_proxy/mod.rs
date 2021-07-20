@@ -28,21 +28,21 @@ pub trait InitializeJobCompiler {
     fn initialize_job_compiler(&self) -> GremlinJobCompiler;
 }
 
-pub struct MaxGraphStorage<V, VI, E, EI> {
+pub struct QueryMaxGraph<V, VI, E, EI> {
     graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
     graph_partitioner: Arc<dyn GraphPartitionManager>,
     num_servers: usize,
     server_index: u64,
 }
 
-impl<V, VI, E, EI> MaxGraphStorage<V, VI, E, EI> {
+impl<V, VI, E, EI> QueryMaxGraph<V, VI, E, EI> {
     pub fn new(
         graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
         graph_partitioner: Arc<dyn GraphPartitionManager>,
         num_servers: usize,
         server_index: u64,
     ) -> Self {
-        MaxGraphStorage {
+        QueryMaxGraph {
             graph_query,
             graph_partitioner,
             num_servers,
@@ -51,7 +51,7 @@ impl<V, VI, E, EI> MaxGraphStorage<V, VI, E, EI> {
     }
 }
 
-impl<V, VI, E, EI> InitializeJobCompiler for MaxGraphStorage<V, VI, E, EI>
+impl<V, VI, E, EI> InitializeJobCompiler for QueryMaxGraph<V, VI, E, EI>
 where
     V: Vertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
@@ -65,7 +65,7 @@ where
     }
 }
 
-pub struct VineyardStorage<V, VI, E, EI> {
+pub struct QueryVineyard<V, VI, E, EI> {
     graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
     graph_partitioner: Arc<dyn GraphPartitionManager>,
     partition_worker_mapping: HashMap<u32, u32>,
@@ -73,7 +73,7 @@ pub struct VineyardStorage<V, VI, E, EI> {
     server_index: u64,
 }
 
-impl<V, VI, E, EI> VineyardStorage<V, VI, E, EI> {
+impl<V, VI, E, EI> QueryVineyard<V, VI, E, EI> {
     pub fn new(
         graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
         graph_partitioner: Arc<dyn GraphPartitionManager>,
@@ -81,7 +81,7 @@ impl<V, VI, E, EI> VineyardStorage<V, VI, E, EI> {
         num_servers: usize,
         server_index: u64,
     ) -> Self {
-        VineyardStorage {
+        QueryVineyard {
             graph_query,
             graph_partitioner,
             partition_worker_mapping,
@@ -92,7 +92,7 @@ impl<V, VI, E, EI> VineyardStorage<V, VI, E, EI> {
 }
 
 /// Initialize GremlinJobCompiler for vineyard
-impl<V, VI, E, EI> InitializeJobCompiler for VineyardStorage<V, VI, E, EI>
+impl<V, VI, E, EI> InitializeJobCompiler for QueryVineyard<V, VI, E, EI>
     where
         V: Vertex + 'static,
         VI: Iterator<Item = V> + Send + 'static,
