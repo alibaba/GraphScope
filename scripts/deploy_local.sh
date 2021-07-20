@@ -14,7 +14,7 @@ readonly MUSCLE="\U1f4aa"
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
 readonly V6D_BRANCH="main-v0.2.5" # vineyard branch
-readonly LLVM_VERSION=8 # llvm version we use in Darwin platform
+# readonly LLVM_VERSION=12 # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
 readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
@@ -223,12 +223,12 @@ check_dependencies_of_deploy() {
   fi
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if ! command -v clang &> /dev/null; then
-      echo "clang ${err_msg}. GraphScope require clang >=8, <=10."
+      echo "clang ${err_msg}. GraphScope require clang >= 10."
       exit 1
     fi
     ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')
-    if [[ "${ver}" -lt "8" || "${ver}" -gt "10" ]]; then
-      echo "GraphScope requires clang >=8, <=10   MacOS. Current version is ${ver}."
+    if [[ "${ver}" -lt "10"]]; then
+      echo "GraphScope requires clang >= 10   MacOS. Current version is ${ver}."
       exit 1
     fi
   fi
@@ -249,15 +249,15 @@ write_envs_config() {
   rm ${SOURCE_DIR}/gs_env || true
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     {
-      echo "export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang"
-      echo "export CXX=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang++"
-      echo "export LDFLAGS=-L/usr/local/opt/llvm@${LLVM_VERSION}/lib"
-      echo "export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include"
+      # echo "export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang"
+      # echo "export CXX=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang++"
+      # echo "export LDFLAGS=-L/usr/local/opt/llvm@${LLVM_VERSION}/lib"
+      # echo "export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include"
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
       echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
       echo "export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home"
-      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:/usr/local/opt/llvm@${LLVM_VERSION}/bin:\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
+      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
     } >> ${SOURCE_DIR}/gs_env
   else
     {
@@ -315,7 +315,7 @@ install_dependencies() {
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
     brew install cmake double-conversion etcd protobuf apache-arrow openmpi \
                  boost glog gflags zstd snappy lz4 openssl@1.1 libevent fmt \
-                 autoconf maven gnu-sed llvm@${LLVM_VERSION} wget
+                 autoconf maven gnu-sed wget
 
     # GraphScope require jdk8
     brew tap adoptopenjdk/openjdk

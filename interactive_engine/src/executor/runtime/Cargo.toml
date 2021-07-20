@@ -16,7 +16,7 @@ tokio-core = "0.1.6"
 futures = "0.1.25"
 futures-cpupool = "0.1.8"
 getopts = "0.2.14"
-grpcio = "=0.4.1"
+grpcio = {git = "https://github.com/tikv/grpc-rs"}
 quote = "=1.0.1"
 itertools = "0.7.8"
 lazy_static = "1.2.0"

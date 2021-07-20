@@ -12,7 +12,7 @@ byteorder = "1"
 crossbeam-channel = "0.3.2"
 futures = "0.1"
 psutil = "=1.1.1"
-grpcio = "=0.4.1"
+grpcio = {git = "https://github.com/tikv/grpc-rs"}
 quote = "=1.0.1"
 libc = "0.2"
 regex = "1"

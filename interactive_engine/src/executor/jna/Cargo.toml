@@ -22,6 +22,6 @@ itertools = "0.7.8"
 log = "0.3"
 log4rs = "0.8.0"
 lazy_static = "1.2.0"
-grpcio = "=0.4.1"
+grpcio = {git = "https://github.com/tikv/grpc-rs"}
 tokio = { version = "1.0", features = ["macros", "sync"] }
 futures = { version = "0.3.0", features = ["thread-pool"]}

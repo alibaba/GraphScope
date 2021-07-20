@@ -20,7 +20,7 @@ crc = "1.8.1"
 rust-ini = "0.13"
 libc = "0.2"
 log4rs = "0.8.0"
-grpcio = "=0.4.1"
+grpcio = {git = "https://github.com/tikv/grpc-rs"}
 
 maxgraph-common = { path = "../../common/rust/common" }
 
