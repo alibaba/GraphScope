@@ -70,17 +70,17 @@ class DAGManager(object):
         split_dag_def_for = GSEngine.analytical_engine
         for op in self._dag_def.op:
             if op.op in self._analytical_engine_split_op:
-                if len(split_dag_def.op) > 0:
+                if split_dag_def.op:
                     self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
                 split_dag_def = op_def_pb2.DagDef()
                 split_dag_def_for = GSEngine.analytical_engine
             if op.op in self._interactive_engine_split_op:
-                if len(split_dag_def.op) > 0:
+                if split_dag_def.op:
                     self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
                 split_dag_def = op_def_pb2.DagDef()
                 split_dag_def_for = GSEngine.interactive_engine
             if op.op in self._learning_engine_split_op:
-                if len(split_dag_def.op) > 0:
+                if split_dag_def.op:
                     self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
                 split_dag_def = op_def_pb2.DagDef()
                 split_dag_def_for = GSEngine.learning_engine
