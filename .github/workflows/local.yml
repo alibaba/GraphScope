@@ -72,7 +72,10 @@ jobs:
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 
         # install tensorflow for graphlearn if os is ubuntu20.04
-        if [ "${OS}" == "ubuntu-20.04" ];then pip3 install pytest tensorflow --user; fi
+        if [ "${OS}" == "ubuntu-20.04" ];
+        then
+            pip3 install pytest tensorflow --user;
+        fi
 
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd&
