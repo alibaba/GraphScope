@@ -158,21 +158,15 @@ def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir
     sub_graph = interactive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
-    person_count = (
-        interactive.execute(
-            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-        )
-        .all()
-        .result()[0]
-    )
-    knows_count = (
-        interactive.execute('g.V().hasLabel("person").outE("knows").count()')
-        .all()
-        .result()[0]
-    )
+    person_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+    ).all()[0]
+    knows_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").count()'
+    ).all()[0]
     interactive2 = gs_session_distributed.gremlin(sub_graph)
-    sub_person_count = interactive2.execute("g.V().count()").all().result()[0]
-    sub_knows_count = interactive2.execute("g.E().count()").all().result()[0]
+    sub_person_count = interactive2.execute("g.V().count()").all()[0]
+    sub_knows_count = interactive2.execute("g.E().count()").all()[0]
     assert person_count == sub_person_count
     assert knows_count == sub_knows_count
 
@@ -196,15 +190,11 @@ def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir
     msub_graph = minteractive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
-    person_count = (
-        minteractive.execute(
-            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-        )
-        .all()
-        .result()[0]
-    )
+    person_count = minteractive.execute(
+        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+    ).all()[0]
     msub_interactive = gs_session_distributed.gremlin(msub_graph)
-    sub_person_count = msub_interactive.execute("g.V().count()").all().result()[0]
+    sub_person_count = msub_interactive.execute("g.V().count()").all()[0]
     assert person_count == sub_person_count
 
     # GNN engine
@@ -254,7 +244,7 @@ def test_query_modern_graph(gs_session, modern_graph_data_dir):
         "g.V().has('person','name','marko').out('created').values('name').count()",
     ]
     for q in queries:
-        result = interactive.execute(q).all().result()[0]
+        result = interactive.execute(q).all()[0]
         assert result == 1
 
 

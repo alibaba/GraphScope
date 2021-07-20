@@ -154,6 +154,6 @@ class HostsClusterLauncher(Launcher):
         if not self._closed:
             if self._proc is not None:
                 self._proc.send_signal(signal.SIGINT)
-                self._proc.wait(timeout=15)
+                self._proc.wait(timeout=60)
                 self._proc = None
             self._closed = True
