@@ -226,11 +226,6 @@ check_dependencies_of_deploy() {
       echo "clang ${err_msg}. GraphScope require clang >= 10."
       exit 1
     fi
-    ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')
-    if [[ "${ver}" -lt "10"]]; then
-      echo "GraphScope requires clang >= 10   MacOS. Current version is ${ver}."
-      exit 1
-    fi
   fi
 }
 
