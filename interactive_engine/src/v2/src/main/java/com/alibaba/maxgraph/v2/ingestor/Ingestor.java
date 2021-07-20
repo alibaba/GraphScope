@@ -23,7 +23,6 @@ import com.alibaba.maxgraph.v2.common.config.CommonConfig;
 import com.alibaba.maxgraph.v2.common.discovery.*;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectService;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollector;
-import com.alibaba.maxgraph.v2.common.rpc.RoleClients;
 import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.rpc.ChannelManager;
@@ -61,8 +60,7 @@ public class Ingestor extends NodeBase {
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
         LogService logService = new KafkaLogService(configs);
-        IngestProgressFetcher ingestProgressClients = new IngestProgressClients(this.channelManager,
-                RoleType.COORDINATOR, IngestProgressClient::new);
+        IngestProgressFetcher ingestProgressClients = new RemoteIngestProgressFetcher(this.channelManager);
         StoreWriter storeWriteClients = new StoreWriteClients(this.channelManager, RoleType.STORE,
                 StoreWriteClient::new);
         MetricsCollector metricsCollector = new MetricsCollector(configs);
