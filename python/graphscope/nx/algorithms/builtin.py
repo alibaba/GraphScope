@@ -993,7 +993,7 @@ def edge_boundary(G, nbunch1, nbunch2=None):
 
 
 @project_to_simple
-def is_simple_path(G, nodes_json):
+def is_simple_path(G, nodes):
     """Returns True if and only if `nodes` form a simple path in `G`.
 
     A *simple path* in a graph is a nonempty sequence of nodes in which
@@ -1045,6 +1045,9 @@ def is_simple_path(G, nodes_json):
     False
 
     """
-    n1json = json.dumps(list(nodes_json))
-    ctx = AppAssets(algo="is_simple_path", context="tensor")(G, n1json)
-    return ctx.to_numpy("r", axis=0)[0]
+    if isinstance(nodes, list):
+        n1json = json.dumps(nodes)
+        ctx = AppAssets(algo="is_simple_path", context="tensor")(G, n1json)
+        return ctx.to_numpy("r", axis=0)[0]
+    else:
+        raise ValueError("input nodes is not a list object!")

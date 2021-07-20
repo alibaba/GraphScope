@@ -85,3 +85,8 @@ class TestIsSimplePath:
     def test_multidigraph(self):
         G = nx.MultiDiGraph([(0, 1), (0, 1), (1, 0), (1, 0)])
         assert nx.builtin.is_simple_path(G, [0, 1])
+
+    def test_not_list(self):
+        G = nx.path_graph(2)
+        with pytest.raises(ValueError, match="input nodes is not a list object!"):
+            ctx = nx.builtin.is_simple_path(G, 1)

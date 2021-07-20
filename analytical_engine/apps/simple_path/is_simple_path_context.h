@@ -70,8 +70,7 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
         is_simple_path = false;
         break;
       }
-      if (counter == 1) {
-      } else {
+      if (counter != 1) {
         frag.Gid2Vertex(p2, source);
         if (frag.IsInnerVertex(source)) {
           pair_list.push_back(std::make_pair(p2, p1));
