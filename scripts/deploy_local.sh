@@ -9,18 +9,17 @@ set -o pipefail
 readonly RED="\033[0;31m"
 readonly YELLOW="\033[1;33m"
 readonly NC="\033[0m" # No Color
-# emoji
-readonly MUSCLE="\U1f4aa"
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
 readonly V6D_BRANCH="main-v0.2.5" # vineyard branch
-readonly LLVM_VERSION=8 # llvm version we use in Darwin platform
+readonly LLVM_VERSION=7 # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
 readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 readonly IS_IN_WSL
 INSTALL_PREFIX=/usr/local
+PACKAGES_TO_UPDATE=
 PLATFORM=
 OS_VERSION=
 VERBOSE=false
@@ -60,7 +59,7 @@ warning() {
 }
 
 log() {
-  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${MUSCLE}] $*" >&1
+  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&1
 }
 
 ##########################
@@ -122,13 +121,18 @@ check_os_compatibility() {
     exit 1
   fi
 
-  if [[ "${PLATFORM}" != *"Ubuntu"* && "${PLATFORM}" != *"Darwin"* ]]; then
-    err "The platform is not Ubuntu or MacOS. This script is only available on Ubuntu/MacOS"
+  if [[ "${PLATFORM}" != *"Ubuntu"* && "${PLATFORM}" != *"CentOS"* && "${PLATFORM}" != *"Darwin"* ]]; then
+    err "The platform is not Ubuntu or MacOS. This script is only available on Ubuntu/CentOS/MacOS"
     exit 1
   fi
 
   if [[ "${PLATFORM}" == *"Ubuntu"* && "$(echo ${OS_VERSION} | sed 's/\([0-9]\)\([0-9]\).*/\1\2/')" -lt "20" ]]; then
     err "The version of Ubuntu is ${OS_VERSION}. This script requires Ubuntu 20 or greater."
+    exit 1
+  fi
+
+  if [[ "${PLATFORM}" == *"CentOS"* && "${OS_VERSION}" -lt "8" ]]; then
+    err "The version of CentOS is ${OS_VERSION}. this script requires CentOS 8 or greater."
     exit 1
   fi
 
@@ -149,12 +153,12 @@ check_os_compatibility() {
 check_dependencies_version() {
   log "Checking dependencies of install_deps command."
 
-  if ! hash sudo; then
+  if ! command -v sudo &> /dev/null; then
     err "sudo is not installed."
     exit 1
   fi
   # python3
-  if ! hash python3; then
+  if ! command -v python3 &> /dev/null; then
     err "Python3 is not installed."
     exit 1
   fi
@@ -163,13 +167,25 @@ check_dependencies_version() {
     err "GraphScope requires python 3.6 or greater."
     exit 1
   fi
-
+  # cmake
+  if ! command -v cmake &> /dev/null; then
+    PACKAGES_TO_UPDATE = "${PACKAGES_TO_UPDATE} cmake"
+  else
+    ver=$(cmake --version 2>&1 | awk -F ' ' '/version/ {print $3}')
+    if [[ "${ver}" < "3.1" ]]; then
+      PACKAGES_TO_UPDATE = "${PACKAGES_TO_UPDATE} cmake"
+    fi
+  fi
+  if ! command -v go &> /dev/null; then
+    PACKAGES_TO_UPDATE = "${PACKAGES_TO_UPDATE} go"
+  fi
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if ! hash brew; then
       err "Homebrew is not installed. Please install Homebrew: https://docs.brew.sh/Installation."
       exit 1
     fi
   fi
+  readonly PACKAGES_TO_UPDATE
 }
 
 ##########################
@@ -200,35 +216,45 @@ check_dependencies_of_deploy() {
     err "GraphScope requires python 3.6 or greater. Current version is ${python3 -V}"
     exit 1
   fi
-  # java
-  if ! command -v java &> /dev/null; then
-    err "JDK ${err_msg}. GraphScope require jdk8."
+  # cmake
+  if ! command -v cmake &> /dev/null; then
+    err "cmake ${err_msg}"
     exit 1
   fi
-  # if "${ver}" != "8"; then
-  #   err "GraphScope requires jdk8. Current version is jdk${ver}."
-  #   exit 1
-  # fi
+  ver=$(cmake --version 2>&1 | awk -F ' ' '/version/ {print $3}')
+  if [[ "${ver}" < "3.1" ]]; then
+    err "GraphScope require cmake 3.1 or greater. Current version is ${ver}."
+  fi
+  # java
+  if ! command -v java &> /dev/null; then
+    err "GraphScope require jdk8. JDK8 ${err_msg} or add JAVA_HOME/bin to PATH."
+    exit 1
+  fi
+  ver=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $2}')
+  if [[ "${ver}" != "8" ]]; then
+    err "GraphScope requires jdk8. Current version is jdk${ver}."
+    exit 1
+  fi
   if ! command -v mvn &> /dev/null; then
-    echo "maven ${err_msg}"
+    err "maven ${err_msg}"
     exit 1
   fi
   if ! command -v cargo &> /dev/null; then
-    echo "cargo ${err_msg} or source ~/.cargo/env"
+    err "cargo ${err_msg} or source ~/.cargo/env"
     exit 1
   fi
   if ! command -v go &> /dev/null; then
-    echo "go ${err_msg}"
+    err "go ${err_msg}"
     exit 1
   fi
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if ! command -v clang &> /dev/null; then
-      echo "clang ${err_msg}. GraphScope require clang >=8, <=10."
+      err "clang ${err_msg}. GraphScope require clang >=8"
       exit 1
     fi
     ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')
-    if [[ "${ver}" -lt "8" || "${ver}" -gt "10" ]]; then
-      echo "GraphScope requires clang >=8, <=10   MacOS. Current version is ${ver}."
+    if [[ "${ver}" -lt "7" ]]; then
+      err "GraphScope requires clang >=7 on MacOS. Current version is ${ver}."
       exit 1
     fi
   fi
@@ -257,12 +283,12 @@ write_envs_config() {
       echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
       echo "export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home"
-      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:/usr/local/opt/llvm@${LLVM_VERSION}/bin:\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
+      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:/usr/local/opt/llvm@${LLVM_VERSION}/bin\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
     } >> ${SOURCE_DIR}/gs_env
   else
     {
       echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64"
-      echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:$HOME/.cargo/bin:\$PATH:/usr/local/zookeeper/bin"
+      echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/zookeeper/bin"
     } >> ${SOURCE_DIR}/gs_env
   fi
 }
@@ -296,9 +322,10 @@ install_dependencies() {
     write_envs_config
     source ${SOURCE_DIR}/gs_env
 
-    log "Builing and installing apache-arrow."
+    log "Installing apache-arrow."
     wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
     sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+
     sudo apt update -y
     sudo apt install -y libarrow-dev=3.0.0-1 libarrow-python-dev=3.0.0-1
 
@@ -312,14 +339,41 @@ install_dependencies() {
     sudo make install
     popd
     rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
+  elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
+    yum install -y epel-release && yum clean all && rm -fr /var/cache/yum
+    yum install -y autoconf automake double-conversion-devel git \
+        libcurl-devel libevent-devel libgsasl-devel librdkafka-devel libunwind-devel.x86_64 \
+        libuuid-devel libxml2-devel libzip libzip-devel m4 minizip minizip-devel \
+        make net-tools openssl-devel python3-devel rsync telnet tools unzip vim wget which zip bind-utils && \
+      yum clean all && rm -fr /var/cache/yum
+
+    log "Installing Go and rust."
+    wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
+    sudo tar -C /usr/local -xzf /tmp/go1.15.5.linux-amd64.tar.gz
+    curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+    rm -fr /tmp/go1.15.5.linux-amd64.tar.gz
+
+    log "Builing and installing apache-arrow."
+    sudo dnf install -y epel-release || sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm
+    sudo dnf install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm
+    sudo dnf config-manager --set-enabled epel || :
+    sudo dnf config-manager --set-enabled powertools || :
+    sudo dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || :
+    sudo subscription-manager repos --enable codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-$(arch)-rpms || :
+    sudo dnf install -y arrow-devel
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    brew install cmake double-conversion etcd protobuf apache-arrow openmpi \
-                 boost glog gflags zstd snappy lz4 openssl@1.1 libevent fmt \
-                 autoconf maven gnu-sed llvm@${LLVM_VERSION} wget
+    if [ "${PACKAGES_TO_UPDATE}" != "" ]; then
+      # brew install/update PACKAGES_TO_UPDATE
+      brew install ${PACKAGES_TO_UPDATE}
+    fi
+    # brew install, if already installed, no need to update
+    HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install double-conversion etcd protobuf \
+      apache-arrow openmpi boost glog gflags zstd snappy lz4 openssl@1.1 libevent \
+      fmt autoconf maven gnu-sed wget
 
     # GraphScope require jdk8
     brew tap adoptopenjdk/openjdk
-    brew install --cask adoptopenjdk8
+    HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --cask adoptopenjdk8
 
     write_envs_config
     source ${SOURCE_DIR}/gs_env
