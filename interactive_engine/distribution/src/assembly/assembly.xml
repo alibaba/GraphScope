@@ -22,6 +22,10 @@
             <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>
         </fileSet>
+        <fileSet>
+            <directory>${project.parent.basedir}/../research/gaia/pegasus/clients/java/client/target/lib/</directory>
+            <outputDirectory>lib</outputDirectory>
+        </fileSet>
     </fileSets>
     <dependencySets>
         <dependencySet>
