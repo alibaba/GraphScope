@@ -83,4 +83,9 @@ public class EdgeTypeImpl implements EdgeType {
     public PrimaryKeyConstraint getPrimaryKeyConstraint() {
         return this.primaryKeyConstraint;
     }
+
+    @Override
+    public List<Integer> getPkPropertyIndices() {
+        return null;
+    }
 }

@@ -91,6 +91,10 @@ public class GraphInitializer {
             byte[] b = this.objectMapper.writeValueAsBytes(offsets);
             this.metaStore.write(SnapshotManager.QUEUE_OFFSETS_PATH, b);
         }
+        if (!this.metaStore.exists(IdAllocator.ID_ALLOCATE_INFO_PATH)) {
+            byte[] b = this.objectMapper.writeValueAsBytes(0L);
+            this.metaStore.write(IdAllocator.ID_ALLOCATE_INFO_PATH, b);
+        }
     }
 
 }

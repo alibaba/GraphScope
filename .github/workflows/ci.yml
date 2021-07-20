@@ -295,7 +295,7 @@ jobs:
       if: matrix.networkx == 'OFF'
       run: |
         # prelaunch the etcd
-        /usr/local/bin/etcd --data-dir=/dev/shm/default.etcd &
+        /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
         export GS_TEST_DIR='/root/gstest'
         cd python
@@ -315,7 +315,7 @@ jobs:
       if: matrix.networkx == 'ON'
       run: |
         # prelaunch the etcd
-        /usr/local/bin/etcd --data-dir=/dev/shm/default.etcd &
+        /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
         export GS_TEST_DIR='/root/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/classes

@@ -75,6 +75,11 @@ public class TypeDef implements SchemaElement {
     }
 
     @Override
+    public List<Integer> getPkPropertyIndices() {
+        return getPkIdxs();
+    }
+
+    @Override
     public String getLabel() {
         return label;
     }
