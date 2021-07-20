@@ -16,47 +16,92 @@
 mod global_storage;
 mod partitioner;
 
+use crate::graph_proxy::partitioner::{MaxGraphMultiPartition, VineyardMultiPartition};
 use global_storage::create_gs_store;
 use gremlin_core::compiler::GremlinJobCompiler;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::{Edge, GlobalGraphQuery, Vertex};
-use std::sync::Arc;
-use crate::graph_proxy::partitioner::{MaxGraphMultiPartition, VineyardMultiPartition};
 use std::collections::HashMap;
+use std::sync::Arc;
 
-/// Initialize GremlinJobCompiler for v2
-pub fn initialize_job_compiler<V, VI, E, EI>(
-    graph_query: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
+pub trait InitializeJobCompiler {
+    fn initialize_job_compiler(&self) -> GremlinJobCompiler;
+}
+
+pub struct MaxGraphStorage<V, VI, E, EI> {
+    graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
     graph_partitioner: Arc<dyn GraphPartitionManager>,
     num_servers: usize,
     server_index: u64,
-) -> GremlinJobCompiler
+}
+
+impl<V, VI, E, EI> MaxGraphStorage<V, VI, E, EI> {
+    pub fn new(
+        graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
+        graph_partitioner: Arc<dyn GraphPartitionManager>,
+        num_servers: usize,
+        server_index: u64,
+    ) -> Self {
+        MaxGraphStorage {
+            graph_query,
+            graph_partitioner,
+            num_servers,
+            server_index,
+        }
+    }
+}
+
+impl<V, VI, E, EI> InitializeJobCompiler for MaxGraphStorage<V, VI, E, EI>
 where
     V: Vertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
     E: Edge + 'static,
     EI: Iterator<Item = E> + Send + 'static,
 {
-    create_gs_store(graph_query, graph_partitioner.clone());
-    let partition = MaxGraphMultiPartition::new(graph_partitioner);
-    GremlinJobCompiler::new(partition, num_servers, server_index)
+    fn initialize_job_compiler(&self) -> GremlinJobCompiler {
+        create_gs_store(self.graph_query.clone(), self.graph_partitioner.clone());
+        let partition = MaxGraphMultiPartition::new(self.graph_partitioner.clone());
+        GremlinJobCompiler::new(partition, self.num_servers, self.server_index)
+    }
 }
 
-/// Initialize GremlinJobCompiler for vineyard
-pub fn initialize_job_compiler_vineyard<V, VI, E, EI>(
-    graph_query: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
+pub struct VineyardStorage<V, VI, E, EI> {
+    graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
     graph_partitioner: Arc<dyn GraphPartitionManager>,
     partition_worker_mapping: HashMap<u32, u32>,
     num_servers: usize,
     server_index: u64,
-) -> GremlinJobCompiler
+}
+
+impl<V, VI, E, EI> VineyardStorage<V, VI, E, EI> {
+    pub fn new(
+        graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
+        graph_partitioner: Arc<dyn GraphPartitionManager>,
+        partition_worker_mapping: HashMap<u32, u32>,
+        num_servers: usize,
+        server_index: u64,
+    ) -> Self {
+        VineyardStorage {
+            graph_query,
+            graph_partitioner,
+            partition_worker_mapping,
+            num_servers,
+            server_index,
+        }
+    }
+}
+
+/// Initialize GremlinJobCompiler for vineyard
+impl<V, VI, E, EI> InitializeJobCompiler for VineyardStorage<V, VI, E, EI>
     where
         V: Vertex + 'static,
         VI: Iterator<Item = V> + Send + 'static,
         E: Edge + 'static,
         EI: Iterator<Item = E> + Send + 'static,
 {
-    create_gs_store(graph_query, graph_partitioner.clone());
-    let partition = VineyardMultiPartition::new(graph_partitioner, partition_worker_mapping);
-    GremlinJobCompiler::new(partition, num_servers, server_index)
+    fn initialize_job_compiler(&self) -> GremlinJobCompiler {
+        create_gs_store(self.graph_query.clone(), self.graph_partitioner.clone());
+        let partition = VineyardMultiPartition::new(self.graph_partitioner.clone(), self.partition_worker_mapping.clone());
+        GremlinJobCompiler::new(partition, self.num_servers, self.server_index)
+    }
 }

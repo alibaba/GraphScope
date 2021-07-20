@@ -10,7 +10,7 @@ use pegasus_server::service::Service;
 use pegasus_server::rpc::start_rpc_server;
 use pegasus_network::manager::SimpleServerDetector;
 use pegasus_network::config::NetworkConfig;
-use gs_gremlin::initialize_job_compiler;
+use gs_gremlin::{InitializeJobCompiler, MaxGraphStorage};
 use std::collections::HashMap;
 use maxgraph_store::api::PartitionId;
 
@@ -66,8 +66,9 @@ impl GaiaServer {
             .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?
             .ok_or(GraphError::new(EngineError, "gaia engine return None addr".to_string()))?;
 
-        let rpc_port = self.rpc_runtime.block_on(async {
-            let job_compiler = initialize_job_compiler(self.graph.clone(), self.graph.clone(), worker_num, server_id);
+        let rpc_port = self.rpc_runtime.block_on(async{
+            let maxgraph_store = MaxGraphStorage::new(self.graph.clone(), self.graph.clone(), worker_num, server_id);
+            let job_compiler = maxgraph_store.initialize_job_compiler();
             let service = Service::new(job_compiler);
             let local_addr = start_rpc_server(addr, service, report, false).await.unwrap();
             local_addr.port()

@@ -15,4 +15,4 @@
 
 extern crate log;
 mod graph_proxy;
-pub use graph_proxy::{initialize_job_compiler, initialize_job_compiler_vineyard};
+pub use graph_proxy::{InitializeJobCompiler, MaxGraphStorage, VineyardStorage};
