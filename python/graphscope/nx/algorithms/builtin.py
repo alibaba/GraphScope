@@ -1020,7 +1020,7 @@ def attribute_assortativity_coefficient(G, attribute):
     >>> G.add_nodes_from([0, 1], color="red")
     >>> G.add_nodes_from([2, 3], color="blue")
     >>> G.add_edges_from([(0, 1), (2, 3)])
-    >>> print(nx.attribute_assortativity_coefficient(G, "color"))
+    >>> print(nx.builtin.attribute_assortativity_coefficient(G, "color"))
     1.0
 
     Notes
@@ -1036,4 +1036,47 @@ def attribute_assortativity_coefficient(G, attribute):
     """
 
     ctx = AppAssets(algo="attribute_assortativity_coefficient", context="tensor")(G)
+    return ctx.to_numpy("r", axis=0)[0]
+
+
+@project_to_simple
+def numeric_assortativity_coefficient(G, attribute):
+    """Compute assortativity for numerical node attributes.
+
+    Assortativity measures the similarity of connections
+    in the graph with respect to the given numeric attribute.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    attribute : string
+        Node attribute key.
+
+    Returns
+    -------
+    r: float
+       Assortativity of graph for given attribute
+
+    Examples
+    --------
+    >>> G = nx.Graph()
+    >>> G.add_nodes_from([0, 1], size=2)
+    >>> G.add_nodes_from([2, 3], size=3)
+    >>> G.add_edges_from([(0, 1), (2, 3)])
+    >>> print(nx.builtin.numeric_assortativity_coefficient(G, "size"))
+    1.0
+
+    Notes
+    -----
+    This computes Eq. (21) in Ref. [1]_ , for the mixing matrix
+    of the specified attribute.
+
+    References
+    ----------
+    .. [1] M. E. J. Newman, Mixing patterns in networks
+           Physical Review E, 67 026126, 2003
+    """
+
+    ctx = AppAssets(algo="numeric_assortativity_coefficient", context="tensor")(G)
     return ctx.to_numpy("r", axis=0)[0]
