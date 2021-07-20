@@ -369,7 +369,7 @@ install_dependencies() {
     # brew install, if already installed, no need to update
     HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install double-conversion etcd protobuf \
       apache-arrow openmpi boost glog gflags zstd snappy lz4 openssl@1.1 libevent \
-      fmt autoconf maven gnu-sed wget
+      fmt autoconf maven gnu-sed wget llvm@${LLVM_VERSION}
 
     # GraphScope require jdk8
     brew tap adoptopenjdk/openjdk
