@@ -1010,7 +1010,6 @@ class Session(object):
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""
 
-
     @set_defaults(gs_config)
     def gremlin(self, graph, engine_params=None):
         """Get a interactive engine handler to execute gremlin queries.
