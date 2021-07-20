@@ -97,6 +97,11 @@ public class DefaultEdgeType implements EdgeType {
     }
 
     @Override
+    public List<Integer> getPkPropertyIndices() {
+        return null;
+    }
+
+    @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("label", this.getLabel())

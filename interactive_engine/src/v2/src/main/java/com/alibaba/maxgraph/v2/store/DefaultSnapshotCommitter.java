@@ -13,25 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.maxgraph.v2.ingestor;
+package com.alibaba.maxgraph.v2.store;
 
 import com.alibaba.maxgraph.v2.common.discovery.RoleType;
 import com.alibaba.maxgraph.v2.common.rpc.ChannelManager;
 import com.alibaba.maxgraph.v2.common.rpc.RoleClients;
-import io.grpc.ManagedChannel;
 
 import java.util.List;
-import java.util.function.Function;
 
-public class IngestProgressClients extends RoleClients<IngestProgressClient> implements IngestProgressFetcher {
+public class DefaultSnapshotCommitter extends RoleClients<SnapshotCommitClient> implements SnapshotCommitter {
 
-    public IngestProgressClients(ChannelManager channelManager, RoleType targetRole,
-                                 Function<ManagedChannel, IngestProgressClient> clientBuilder) {
-        super(channelManager, targetRole, clientBuilder);
+    public DefaultSnapshotCommitter(ChannelManager channelManager) {
+        super(channelManager, RoleType.COORDINATOR, SnapshotCommitClient::new);
     }
 
     @Override
-    public List<Long> getTailOffsets(List<Integer> queueIds) {
-        return getClient(0).getTailOffsets(queueIds);
+    public void commitSnapshotId(int storeId, long snapshotId, long ddlSnapshotId, List<Long> offsets) {
+        getClient(0).commitSnapshotId(storeId, snapshotId, ddlSnapshotId, offsets);
     }
 }
