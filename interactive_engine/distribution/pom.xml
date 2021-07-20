@@ -23,11 +23,11 @@
             <artifactId>maxgraph-executor</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.alibaba.maxgraph</groupId>
-            <artifactId>data_load_tools</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.alibaba.maxgraph</groupId>-->
+            <!--<artifactId>data_load_tools</artifactId>-->
+            <!--<version>${project.parent.version}</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>com.alibaba.maxgraph</groupId>
             <artifactId>gaia-adaptor</artifactId>
