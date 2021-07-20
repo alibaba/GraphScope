@@ -55,8 +55,7 @@ public class Store extends NodeBase {
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
         this.storeService = new StoreService(configs, this.metaService);
-        SnapshotCommitter snapshotCommitter = new SnapshotCommitClients(this.channelManager, RoleType.COORDINATOR,
-                SnapshotCommitClient::new);
+        SnapshotCommitter snapshotCommitter = new DefaultSnapshotCommitter(this.channelManager);
         this.writerAgent = new WriterAgent(configs, this.storeService, this.metaService, snapshotCommitter);
         StoreWriteService storeWriteService = new StoreWriteService(this.writerAgent);
         StoreSchemaService storeSchemaService = new StoreSchemaService(this.storeService);

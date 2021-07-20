@@ -22,8 +22,13 @@
             <artifactId>v2</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba.graphscope</groupId>
+            <artifactId>gremlin-test</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
             <plugin>
@@ -64,6 +69,14 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <runOrder>alphabetical</runOrder>
+                </configuration>
+
             </plugin>
         </plugins>
     </build>

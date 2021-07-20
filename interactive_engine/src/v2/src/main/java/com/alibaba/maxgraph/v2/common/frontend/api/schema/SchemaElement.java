@@ -69,4 +69,11 @@ public interface SchemaElement {
      * @return The primary key constraint
      */
     PrimaryKeyConstraint getPrimaryKeyConstraint();
+
+    /**
+     * Get indices of primary key properties
+     *
+     * @return Indices of pk properties
+     */
+    List<Integer> getPkPropertyIndices();
 }

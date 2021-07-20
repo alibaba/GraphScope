@@ -28,7 +28,13 @@ import com.alibaba.maxgraph.v2.common.discovery.MaxGraphNode;
 import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
 import com.alibaba.maxgraph.v2.common.discovery.RoleType;
 import com.alibaba.maxgraph.v2.common.frontend.api.graph.GraphPartitionManager;
-import com.alibaba.maxgraph.v2.common.frontend.api.graph.MaxGraphWriter;
+import com.alibaba.maxgraph.v2.common.operation.EdgeId;
+import com.alibaba.maxgraph.v2.common.operation.LabelId;
+import com.alibaba.maxgraph.v2.common.operation.OperationType;
+import com.alibaba.maxgraph.v2.common.operation.VertexId;
+import com.alibaba.maxgraph.v2.common.schema.EdgeKind;
+import com.alibaba.maxgraph.v2.frontend.WriteSessionGenerator;
+import com.alibaba.maxgraph.v2.frontend.write.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
@@ -41,7 +47,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.*;
 
@@ -50,15 +55,17 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
 
     private SchemaFetcher schemaFetcher;
     private GraphPartitionManager partitionManager;
-    private MaxGraphWriter graphWriter;
+    private GraphWriter graphWriter;
+    private String writeSession;
 
     private Map<Integer, RemoteProxy> proxys = new ConcurrentHashMap<>();
 
     public MaxGraphImpl(NodeDiscovery discovery, SchemaFetcher schemaFetcher, GraphPartitionManager partitionManager,
-                        MaxGraphWriter graphWriter) {
+                        GraphWriter graphWriter, WriteSessionGenerator writeSessionGenerator) {
         this.schemaFetcher = schemaFetcher;
         this.partitionManager = partitionManager;
         this.graphWriter = graphWriter;
+        this.writeSession = writeSessionGenerator.newWriteSession();
         discovery.addListener(this);
     }
 
@@ -90,7 +97,7 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
 
     @Override
     public void refresh() throws Exception {
-        graphWriter.commit().get(30, TimeUnit.SECONDS);
+        graphWriter.flushLastSnapshot(30000);
     }
 
     @Override
@@ -131,7 +138,10 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
 
     @Override
     public Vertex addVertex(String label, Map<String, Object> properties) {
-        graphWriter.insertVertex(label, properties);
+        VertexRecordKey vertexRecordKey = new VertexRecordKey(label);
+        DataRecord dataRecord = new DataRecord(vertexRecordKey, properties);
+        WriteRequest writeRequest = new WriteRequest(OperationType.OVERWRITE_VERTEX, dataRecord);
+        graphWriter.writeBatch(getClass().getCanonicalName(), this.writeSession, Arrays.asList(writeRequest));
         return null;
     }
 
@@ -197,11 +207,18 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
 
     @Override
     public Edge addEdge(String label, Vertex src, Vertex dst, Map<String, Object> properties) {
-        graphWriter.insertEdge(
-                new com.alibaba.maxgraph.v2.common.frontend.result.CompositeId(src.id.id(), src.id.typeId()),
-                new com.alibaba.maxgraph.v2.common.frontend.result.CompositeId(dst.id.id(), dst.id.typeId()),
-                label,
-                properties);
+        GraphSchema schema = getSchema();
+        int edgeLabelId = schema.getElement(label).getLabelId();
+        EdgeKind edgeKind = EdgeKind.newBuilder()
+                .setEdgeLabelId(new LabelId(edgeLabelId))
+                .setSrcVertexLabelId(new LabelId(src.id.typeId()))
+                .setDstVertexLabelId(new LabelId(dst.id.typeId()))
+                .build();
+        EdgeId edgeId = new EdgeId(new VertexId(src.id.id()), new VertexId(dst.id.id()), 0L);
+        EdgeTarget edgeTarget = new EdgeTarget(edgeKind, edgeId);
+        DataRecord dataRecord = new DataRecord(edgeTarget, properties);
+        WriteRequest writeRequest = new WriteRequest(OperationType.OVERWRITE_EDGE, dataRecord);
+        graphWriter.writeBatch(getClass().getCanonicalName(), this.writeSession, Arrays.asList(writeRequest));
         return null;
     }
 
