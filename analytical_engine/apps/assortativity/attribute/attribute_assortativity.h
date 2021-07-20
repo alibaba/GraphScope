@@ -17,6 +17,7 @@ limitations under the License.
 #define ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_ATTRIBUTE_ATTRIBUTE_ASSORTATIVITY_H_
 
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "grape/grape.h"
