@@ -23,7 +23,6 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from enum import Enum
 
-from gremlin_python.driver.client import Client
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
 
@@ -234,7 +233,6 @@ class InteractiveQuery(object):
             self._session.dag.add_op(self._interactive_query_node.op)
         if frontend_endpoint is not None:
             self._graph_url = "ws://{0}/gremlin".format(frontend_endpoint)
-            self._client = Client(self._graph_url, "g")
 
     @property
     def graph_url(self):
@@ -313,7 +311,7 @@ class InteractiveQuery(object):
 
     def close(self):
         """Close interactive instance and release resources"""
-        if not self.closed():
+        if not self.closed() and not self._session.closed:
             self._session._wrapper(self._interactive_query_node.close())
             self._session._close_interactive_instance(self)
             self._status = InteractiveQueryStatus.Closed

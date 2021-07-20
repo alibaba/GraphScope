@@ -133,7 +133,7 @@ class Graph(GLGraph):
         return json.loads(base64.b64decode(arg.encode("utf-8")).decode("utf-8"))
 
     def close(self):
-        if not self.closed:
+        if not self.closed and not self.graphscope_session.closed:
             self.closed = True
             super(Graph, self).close()  # close client first
             # close server instance
