@@ -51,23 +51,23 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Frontend {
     private static final Logger LOG = LoggerFactory.getLogger(Frontend.class);
-    private InstanceConfig instanceConfig;
-    private ClientManager clientManager;
+    protected InstanceConfig instanceConfig;
+    protected ClientManager clientManager;
     private Endpoint endpoint;
     private GremlinExecutor gremlinExecutor;
-    private TinkerMaxGraph graph;
+    protected TinkerMaxGraph graph;
     private long currentExecutorVersion = 0L;
 
     private ScheduledExecutorService hbSchedule;
 
     private MemoryMonitor memoryMonitor;
 
-    private MaxGraphServer graphGremlinServer;
+    protected MaxGraphServer graphGremlinServer;
 
-    private RemoteGraph remoteGraph;
+    protected RemoteGraph remoteGraph;
     private PreparedQueryManager preparedQueryManager;
 
-    private int gremlinServerPort;
+    protected int gremlinServerPort;
     private int roleId;
 
     private FrontendQueryManager queryManager;
@@ -102,7 +102,7 @@ public class Frontend {
         this.preparedQueryManager = null;
     }
 
-    private void initAndStartGremlinServer() throws Exception {
+    protected void initAndStartGremlinServer() throws Exception {
         SchemaFetcher schemaFetcher;
         String vineyardSchemaPath = this.instanceConfig.getVineyardSchemaPath();
 
