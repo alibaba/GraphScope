@@ -270,6 +270,7 @@ def test_demo_lazy_mode(ogbn_mag_small):
         "edge_type": "cites",
     }
     train(config, r[1])
+    sess.close()
 
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="Mac no need to run this test.")
