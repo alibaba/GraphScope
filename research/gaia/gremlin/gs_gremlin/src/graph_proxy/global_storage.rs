@@ -154,8 +154,11 @@ where
             .ok_or(str_to_dyn_error("get schema failed"))?;
         let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
         let filter = params.filter.clone();
-        let partition_label_vertex_ids =
-            get_partition_label_vertex_ids(ids, self.partition_manager.clone());
+        let partition_label_vertex_ids = get_partition_label_vertex_ids(
+            ids,
+            params.labels.as_ref(),
+            self.partition_manager.clone(),
+        );
         let result = store
             .get_vertex_properties(si, partition_label_vertex_ids, prop_ids.as_ref())
             .map(move |v| to_runtime_vertex(&v));
@@ -419,27 +422,66 @@ fn encode_runtime_property(prop_id: PropId, prop_val: Property) -> (PropKey, Obj
 
 /// Transform type of ids to PartitionLabeledVertexIds as required by graphscope store,
 /// which consists of (PartitionId, Vec<(Option<LabelId>, Vec<VertexId>)>)
+/// In addition, there are two ways to process the source ids:
+/// 1. Source ids are global ids, and we directly use the id for query;
+/// 2. Source ids are attribute ids, and we need to call 'get_vertex_id_by_primary_key' to get the global id first.
 fn get_partition_label_vertex_ids(
     ids: &[ID],
+    labels: &Vec<Label>,
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
 ) -> Vec<PartitionLabeledVertexIds> {
     let mut partition_label_vid_map = HashMap::new();
-    for vid in ids {
-        let partition_id =
-            graph_partition_manager.get_partition_id(*vid as VertexId) as PartitionId;
-        let label_vid_list = partition_label_vid_map
-            .entry(partition_id)
-            .or_insert(HashMap::new());
-        label_vid_list
-            .entry(None)
-            .or_insert(vec![])
-            .push(*vid as VertexId);
+    for id in ids {
+        // The case that source ids are global ids
+        if labels.is_empty() {
+            let partition_id =
+                graph_partition_manager.get_partition_id(*id as VertexId) as PartitionId;
+            assign_vertex_label_partition(
+                None,
+                *id as VertexId,
+                partition_id,
+                &mut partition_label_vid_map,
+            );
+        } else {
+            // The case that source ids are attribute ids
+            for label in labels {
+                match label {
+                    Label::Str(_) => {
+                        unreachable!()
+                    }
+                    Label::Id(label_id) => {
+                        if let Some((partition_id, vid)) = graph_partition_manager
+                            .get_vertex_id_by_primary_key(*label_id as LabelId, &id.to_string())
+                        {
+                            assign_vertex_label_partition(
+                                Some(*label_id as LabelId),
+                                vid,
+                                partition_id,
+                                &mut partition_label_vid_map,
+                            );
+                        }
+                    }
+                }
+            }
+        }
     }
 
     partition_label_vid_map
         .into_iter()
         .map(|(pid, label_vid_map)| (pid, label_vid_map.into_iter().collect()))
         .collect()
+}
+
+fn assign_vertex_label_partition(
+    label_id: Option<LabelId>,
+    vid: VertexId,
+    partition_id: PartitionId,
+    partition_label_vid_map: &mut HashMap<PartitionId, HashMap<Option<LabelId>, Vec<VertexId>>>,
+) {
+    let label_vid_list = partition_label_vid_map
+        .entry(partition_id)
+        .or_insert(HashMap::new());
+    label_vid_list.entry(label_id).or_insert(vec![]).push(vid);
 }
 
 /// Transform type of ids to PartitionVertexIds as required by graphscope store,
