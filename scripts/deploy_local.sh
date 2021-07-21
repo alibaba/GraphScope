@@ -12,7 +12,7 @@ readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
 readonly V6D_BRANCH="main-v0.2.5" # vineyard branch
-readonly LLVM_VERSION=7 # llvm version we use in Darwin platform
+readonly LLVM_VERSION=11 # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
 readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
@@ -353,27 +353,39 @@ install_dependencies() {
     popd
     rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
-    sudo dnf -y install wget
-    wget https://download-ib01.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -P /tmp
-    sudo rpm -Uvh /tmp/epel-release*rpm && rm -fr /tmp/epel-release*rpm
+    sudo dnf install -y https://download-ib01.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 
     sudo dnf -y install gcc gcc-c++
-    sudo dnf -y install autoconf automake double-conversion git cmake zlib-devel \
-         libcurl-devel libevent-devel libgsasl-devel libunwind-devel.x86_64 boost \
+    sudo dnf -y install autoconf automake double-conversion-devel git cmake zlib-devel \
+         libcurl-devel libevent-devel libgsasl-devel libunwind-devel.x86_64 boost-devel \
          libuuid-devel libxml2-devel libzip libzip-devel m4 minizip minizip-devel \
-         make net-tools openssl-devel python3-devel rsync telnet unzip protobuf \
+         make net-tools openssl-devel python3-devel rsync telnet unzip \
          wget which zip bind-utils perl java-1.8.0-openjdk-devel golang cargo \
-         openmpi-devel maven fmt
+         maven fmt-devel libarchive
 
     sudo dnf --enablerepo=powertools install -y gflags-devel glog-devel gtest-devel
 
     log "Installing apache-arrow."
     sudo dnf install -y epel-release || sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm
     sudo dnf install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm
+    sudo dnf config-manager --set-enabled epel || :
+    sudo dnf config-manager --set-enabled powertools || :
+    sudo dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || :
+    sudo subscription-manager repos --enable codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-$(arch)-rpms || :
     sudo dnf --enablerepo=epel install -y arrow-devel
 
     write_envs_config
     source ${SOURCE_DIR}/gs_env
+
+    log "Installing protobuf v.3.13.0"
+    wget https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-all-3.13.0.tar.gz -P /tmp
+    tar zxvf /tmp/protobuf-all-3.13.0.tar.gz -C /tmp/
+    pushd /tmp/protobuf-3.13.0
+    ./configure --enable-shared --disable-static
+    make -j${NUM_PROC}
+    sudo make install && ldconfig
+    popd
+    rm -fr /tmp/protobuf-all-3.13.0.tar.gz /tmp/protobuf-3.13.0
 
     log "Installing grpc v1.33.1"
     git clone --depth 1 --branch v1.33.1 https://github.com/grpc/grpc.git /tmp/grpc
@@ -393,7 +405,7 @@ install_dependencies() {
         -DgRPC_BACKWARDS_COMPATIBILITY_MODE=ON \
         -DgRPC_PROTOBUF_PROVIDER=package \
         -DgRPC_ZLIB_PROVIDER=package \
-        -DgRPC_SSL_PROVIDER=package && \
+        -DgRPC_SSL_PROVIDER=package
     make -j${NUM_PROC}
     sudo make install
     popd
@@ -408,6 +420,15 @@ install_dependencies() {
     sudo mv /tmp/etcd-download-test/etcd /usr/local/bin/
     sudo mv /tmp/etcd-download-test/etcdctl /usr/local/bin/
     rm -fr /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz /tmp/etcd-download-test
+
+    log "Installing openmpi v4.0.5"
+    wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz -P /tmp
+    tar zxvf /tmp/openmpi-4.0.5.tar.gz -C /tmp
+    pushd /tmp/openmpi-4.0.5 && ./configure --enable-mpi-cxx
+    make -j${NUM_PROC}
+    sudo make install
+    popd
+    rm -fr /tmp/openmpi-4.0.5 /tmp/openmpi-4.0.5.tar.gz
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [ "${PACKAGES_TO_UPDATE}" != "" ]; then
       # brew install/update PACKAGES_TO_UPDATE
