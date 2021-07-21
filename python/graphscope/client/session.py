@@ -811,8 +811,11 @@ class Session(object):
 
         # clean up
         if self._config_params["addr"] is None:
-            if self._launcher:
-                self._launcher.stop()
+            try:
+                if self._launcher:
+                    self._launcher.stop()
+            except Exception:
+                pass
             self._pod_name_list = []
 
     def _close_interactive_instance(self, instance):
