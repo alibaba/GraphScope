@@ -113,3 +113,6 @@ class GSConfig(object):
     # kill GraphScope instance after seconds of client disconnect
     # disable dangling check by setting -1.
     dangling_timeout_seconds = 600
+
+    # Set to true to enable gaia
+    with_gaia = False

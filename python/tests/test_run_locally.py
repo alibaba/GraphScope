@@ -16,23 +16,16 @@
 # limitations under the License.
 #
 
-import importlib
-import logging
 import os
-import random
-import string
 import sys
 
-import numpy as np
 import pytest
+from gremlin_python.process.graph_traversal import GraphTraversalSource
+from gremlin_python.process.graph_traversal import __
 
 import graphscope
-from graphscope.config import GSConfig as gs_config
-from graphscope.dataset.ldbc import load_ldbc
 from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
-from graphscope.framework.graph import Graph
-from graphscope.framework.loader import Loader
 
 if sys.platform == "linux":
     from graphscope.learning.examples import GCN
@@ -77,6 +70,20 @@ def train(config, graph):
 @pytest.fixture
 def sess():
     s = graphscope.session(cluster_type="hosts", num_workers=2)
+    yield s
+    s.close()
+
+
+@pytest.fixture
+def sess_lazy():
+    s = graphscope.session(cluster_type="hosts", num_workers=2, mode="lazy")
+    yield s
+    s.close()
+
+
+@pytest.fixture
+def sess_with_gaia():
+    s = graphscope.session(cluster_type="hosts", num_workers=2, with_gaia=True)
     yield s
     s.close()
 
@@ -202,14 +209,12 @@ def simple_flow(sess, ogbn_mag_small):
     train(config, lg)
 
 
-def test_demo(ogbn_mag_small):
-    sess = graphscope.session(cluster_type="hosts", num_workers=2)
+def test_demo(sess, ogbn_mag_small):
     demo(sess, ogbn_mag_small)
     sess.close()
 
 
-def test_demo_lazy_mode(ogbn_mag_small):
-    sess = graphscope.session(cluster_type="hosts", num_workers=2, mode="lazy")
+def test_demo_lazy_mode(sess_lazy, ogbn_mag_small):
     graph_node = load_ogbn_mag(sess, ogbn_mag_small)
     # Interactive query
     interactive_node = sess.gremlin(graph_node)
@@ -271,6 +276,33 @@ def test_demo_lazy_mode(ogbn_mag_small):
     }
     train(config, r[1])
     sess.close()
+
+
+def test_with_gaia(sess_with_gaia, ogbn_mag_small):
+    graph = load_ogbn_mag(sess, ogbn_mag_small)
+
+    # Interactive engine
+    interactive = sess.gremlin(graph)
+    papers_1 = (
+        interactive.gaia()
+        .execute(
+            "g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()"
+        )
+        .one()
+    )
+
+    g = interactive.traversal_source()
+    papers_2 = (
+        g.gaia()
+        .V()
+        .has("author", "id", 2)
+        .out("writes")
+        .where(__.in_("writes").has("id", 4307))
+        .count()
+        .toList()[0]
+    )
+
+    assert papers_1 == papers_2
 
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="Mac no need to run this test.")

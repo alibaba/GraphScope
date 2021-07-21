@@ -244,6 +244,11 @@ def test_query_modern_graph(gs_session, modern_graph_data_dir):
     for q in queries:
         result = interactive.execute(q).all()[0]
         assert result == 1
+    with pytest.raises(
+        AssertionError,
+        match="GAIA not enabled. Enable gaia with `session(with_gaia=True)`",
+    ):
+        interactive.gaia().execute(queries[0]).all()
 
 
 def test_traversal_modern_graph(gs_session, modern_graph_data_dir):
@@ -281,6 +286,12 @@ def test_traversal_modern_graph(gs_session, modern_graph_data_dir):
         .toList()[0]
         == 2
     )
+
+    with pytest.raises(
+        AssertionError,
+        match="GAIA not enabled. Enable gaia with `session(with_gaia=True)`",
+    ):
+        g.gaia().V().count().toList()
 
 
 def test_add_vertices_edges(gs_session_distributed, modern_graph_data_dir):
