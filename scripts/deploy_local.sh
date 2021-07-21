@@ -12,14 +12,14 @@ readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
 readonly V6D_BRANCH="main-v0.2.5" # vineyard branch
-readonly LLVM_VERSION=11 # llvm version we use in Darwin platform
+readonly LLVM_VERSION=9 # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
 readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 readonly IS_IN_WSL
 INSTALL_PREFIX=/usr/local
-PACKAGES_TO_UPDATE=
+PACKAGES_TO_UPDATE=()
 PLATFORM=
 OS_VERSION=
 VERBOSE=false
@@ -169,15 +169,15 @@ check_dependencies_version() {
   fi
   # cmake
   if ! command -v cmake &> /dev/null; then
-    PACKAGES_TO_UPDATE="${PACKAGES_TO_UPDATE} cmake"
+    PACKAGES_TO_UPDATE+=(cmake)
   else
     ver=$(cmake --version 2>&1 | awk -F ' ' '/version/ {print $3}')
     if [[ "${ver}" < "3.1" ]]; then
-      PACKAGES_TO_UPDATE="${PACKAGES_TO_UPDATE} cmake"
+      PACKAGES_TO_UPDATE+=(cmake)
     fi
   fi
   if ! command -v go &> /dev/null; then
-    PACKAGES_TO_UPDATE="${PACKAGES_TO_UPDATE} go"
+    PACKAGES_TO_UPDATE+=(go)
   fi
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if ! hash brew; then
@@ -235,7 +235,7 @@ check_dependencies_of_deploy() {
     err "GraphScope requires jdk8. Current version is jdk${ver}."
     exit 1
   fi
-  if [ ! -z ${JAVA_HOME} ]; then
+  if [ -z ${JAVA_HOME} ]; then
     err "The environment JAVA_HOME not set. Please set the JAVA_HOME environment."
     exit 1
   fi
@@ -289,11 +289,13 @@ write_envs_config() {
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
       echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
+      # FIXME: gie should support latest jdk.
       echo "export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home"
       echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:/usr/local/opt/llvm@${LLVM_VERSION}/bin\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
     } >> ${SOURCE_DIR}/gs_env
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     {
+      # FIXME: gie should support latest jdk.
       echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64"
       echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/zookeeper/bin"
     } >> ${SOURCE_DIR}/gs_env
@@ -435,13 +437,13 @@ install_dependencies() {
       brew install ${PACKAGES_TO_UPDATE}
     fi
     # brew install, if already installed, no need to update
-    HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install double-conversion etcd protobuf \
+    HOMEBREW_NO_AUTO_UPDATE=1 brew install double-conversion etcd protobuf \
       apache-arrow openmpi boost glog gflags zstd snappy lz4 openssl@1.1 libevent \
       fmt autoconf maven gnu-sed wget llvm@${LLVM_VERSION}
 
     # GraphScope require jdk8
     brew tap adoptopenjdk/openjdk
-    HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --cask adoptopenjdk8
+    HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask adoptopenjdk8
 
     write_envs_config
     source ${SOURCE_DIR}/gs_env
