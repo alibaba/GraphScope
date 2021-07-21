@@ -169,15 +169,15 @@ check_dependencies_version() {
   fi
   # cmake
   if ! command -v cmake &> /dev/null; then
-    PACKAGES_TO_UPDATE = "${PACKAGES_TO_UPDATE} cmake"
+    PACKAGES_TO_UPDATE="${PACKAGES_TO_UPDATE} cmake"
   else
     ver=$(cmake --version 2>&1 | awk -F ' ' '/version/ {print $3}')
     if [[ "${ver}" < "3.1" ]]; then
-      PACKAGES_TO_UPDATE = "${PACKAGES_TO_UPDATE} cmake"
+      PACKAGES_TO_UPDATE="${PACKAGES_TO_UPDATE} cmake"
     fi
   fi
   if ! command -v go &> /dev/null; then
-    PACKAGES_TO_UPDATE = "${PACKAGES_TO_UPDATE} go"
+    PACKAGES_TO_UPDATE="${PACKAGES_TO_UPDATE} go"
   fi
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if ! hash brew; then
@@ -299,8 +299,6 @@ write_envs_config() {
     } >> ${SOURCE_DIR}/gs_env
   else
     {
-      echo "export CC=/opt/rh/devtoolset-7/root/usr/bin/gcc"
-      echo "export CXX=/opt/rh/devtoolset-7/root/usr/bin/g++"
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
       echo "export JAVA_HOME=/usr/lib/jvm/java"
       echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/.cargo/bin:/usr/local/bin:\$PATH:/usr/local/zookeeper/bin"
@@ -355,96 +353,27 @@ install_dependencies() {
     popd
     rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
-    yum update
-    yum install -y epel-release && yum clean all && rm -fr /var/cache/yum
-    yum install -y autoconf automake double-conversion-devel git \
-        libcurl-devel libevent-devel libgsasl-devel libunwind-devel.x86_64 \
-        libuuid-devel libxml2-devel libzip libzip-devel m4 minizip minizip-devel \
-        make net-tools openssl-devel python3-devel rsync telnet tools unzip \
-        wget which zip bind-utils perl java-1.8.0-openjdk-devel
-    yum clean all && rm -fr /var/cache/yum
+    sudo dnf -y install wget
+    wget https://download-ib01.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -P /tmp
+    sudo rpm -Uvh /tmp/epel-release*rpm && rm -fr /tmp/epel-release*rpm
 
-    log "Installing Go and rust."
-    wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
-    sudo tar -C /usr/local -xzf /tmp/go1.15.5.linux-amd64.tar.gz
-    curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
-    rm -fr /tmp/go1.15.5.linux-amd64.tar.gz
+    sudo dnf -y install gcc gcc-c++
+    sudo dnf -y install autoconf automake double-conversion git cmake zlib-devel \
+         libcurl-devel libevent-devel libgsasl-devel libunwind-devel.x86_64 boost \
+         libuuid-devel libxml2-devel libzip libzip-devel m4 minizip minizip-devel \
+         make net-tools openssl-devel python3-devel rsync telnet unzip protobuf \
+         wget which zip bind-utils perl java-1.8.0-openjdk-devel golang cargo \
+         openmpi-devel maven fmt
+
+    sudo dnf --enablerepo=powertools install -y gflags-devel glog-devel gtest-devel
 
     log "Installing apache-arrow."
-    sudo yum install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm
-    sudo yum install -y --enablerepo=epel arrow-devel
+    sudo dnf install -y epel-release || sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm
+    sudo dnf install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm
+    sudo dnf --enablerepo=epel install -y arrow-devel
 
     write_envs_config
     source ${SOURCE_DIR}/gs_env
-
-    log "Installing cmake3"
-    wget https://github.com/Kitware/CMake/releases/download/v3.19.1/cmake-3.19.1-Linux-x86_64.sh -P /tmp
-    pushd /tmp
-    bash cmake-3.19.1-Linux-x86_64.sh --prefix=/usr --skip-license
-    rm -rf ./cmake-3.19.1-Linux-x86_64.sh
-    popd
-
-    log "Installing boost 1.73.0"
-    wget https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.gz -P /tmp
-    tar zxf /tmp/boost_1_73_0.tar.gz -C /tmp/
-    pushd /tmp/boost_1_73_0
-    ./bootstrap.sh && ./b2 install link=shared runtime-link=shared variant=release threading=multi
-    popd
-    rm -fr /tmp/boost_1_73_0 /tmp/boost_1_73_0.tar.gz
-
-    log "Installing gflags"
-    wget https://github.com/gflags/gflags/archive/v2.2.2.tar.gz -P /tmp
-    tar zxvf /tmp/v2.2.2.tar.gz -C /tmp/
-    pushd /tmp/gflags-2.2.2
-    mkdir build && cd build
-    cmake .. -DBUILD_SHARED_LIBS=ON
-    make -j${NUM_PROC}
-    sudo make install
-    popd
-    rm -fr /tmp/v2.2.2.tar.gz /tmp/gflags-2.2.2
-
-    log "Installing glog v0.4.0"
-    wget https://github.com/google/glog/archive/v0.4.0.tar.gz -P /tmp
-    tar zxvf /tmp/v0.4.0.tar.gz -C /tmp/
-    pushd /tmp/glog-0.4.0
-    mkdir build && cd build
-    cmake .. -DBUILD_SHARED_LIBS=ON
-    make -j${NUM_PROC}
-    sudo make install
-    popd
-    rm -fr /tmp/v0.4.0.tar.gz /tmp/glog-0.4.0
-
-    log "Installing googletest v1.10.0"
-    wget https://github.com/google/googletest/archive/release-1.10.0.tar.gz -P /tmp
-    tar zxvf /tmp/release-1.10.0.tar.gz -C /tmp/
-    pushd /tmp/googletest-release-1.10.0
-    mkdir build && cd build
-    cmake .. -DBUILD_SHARED_LIBS=ON
-    make -j${NUM_PROC}
-    sudo make install
-    popd
-    rm -fr /tmp/release-1.10.0.tar.gz /tmp/googletest-release-1.10.0
-
-    log "Installing protobuf v.3.13.0"
-    wget https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-all-3.13.0.tar.gz -P /tmp
-    tar zxvf /tmp/protobuf-all-3.13.0.tar.gz -C /tmp/
-    pushd /tmp/protobuf-3.13.0
-    ./configure --enable-shared --disable-static
-    make -j${NUM_PROC}
-    sudo make install && ldconfig
-    popd
-    rm -fr /tmp/protobuf-all-3.13.0.tar.gz /tmp/protobuf-3.13.0
-
-    log "Installing zlib v1.2.11"
-    wget https://github.com/madler/zlib/archive/v1.2.11.tar.gz -P /tmp
-    tar zxvf /tmp/v1.2.11.tar.gz -C /tmp
-    pushd /tmp/zlib-1.2.11
-    mkdir build && cd build
-    cmake .. -DBUILD_SHARED_LIBS=ON
-    make -j${NUM_PROC}
-    sudo make install
-    popd
-    rm -fr /tmp/v1.2.11.tar.gz /tmp/zlib-1.2.11
 
     log "Installing grpc v1.33.1"
     git clone --depth 1 --branch v1.33.1 https://github.com/grpc/grpc.git /tmp/grpc
@@ -479,44 +408,6 @@ install_dependencies() {
     sudo mv /tmp/etcd-download-test/etcd /usr/local/bin/
     sudo mv /tmp/etcd-download-test/etcdctl /usr/local/bin/
     rm -fr /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz /tmp/etcd-download-test
-
-    # fmt v7.0.3, required by folly
-    wget https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz -P /tmp
-    tar zxvf /tmp/7.0.3.tar.gz -C /tmp/
-    pushd /tmp/fmt-7.0.3
-    mkdir build && cd build
-    cmake .. -DBUILD_SHARED_LIBS=O
-    make -j${NUM_PROC}
-    sudo make install
-    popd
-    rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
-
-    log "Installing openmpi v4.0.5"
-    wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz -P /tmp
-    tar zxvf /tmp/openmpi-4.0.5.tar.gz -C /tmp
-    pushd /tmp/openmpi-4.0.5 && ./configure --enable-mpi-cxx
-    make -j${NUM_PROC}
-    sudo make install
-    popd
-    rm -fr /tmp/openmpi-4.0.5 /tmp/openmpi-4.0.5.tar.gz
-
-    log "Installing maven"
-    curl -fsSL -o /tmp/apache-maven.tar.gz https://apache.osuosl.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
-    sudo tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1
-    rm -f /tmp/apache-maven.tar.gz
-    sudo ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
-
-    log "Installing glibc 2.18"
-    export LD_LIBRARY_PATH=$(echo "$LD_LIBRARY_PATH" | sed "s/::/:/g")
-    wget http://mirrors.ustc.edu.cn/gnu/libc/glibc-2.18.tar.gz -P /tmp
-    tar -zxf /tmp/glibc-2.18.tar.gz -C /tmp/
-    pushd /tmp/glibc-2.18
-    mkdir build && cd build
-    ../configure --prefix=/usr
-    make -j${NUM_PROC}
-    sudo make install
-    rm -fr /tmp/glibc-2.18.tar.gz /tmp/glibc-2.18
-    popd
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [ "${PACKAGES_TO_UPDATE}" != "" ]; then
       # brew install/update PACKAGES_TO_UPDATE
