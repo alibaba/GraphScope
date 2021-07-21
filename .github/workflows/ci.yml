@@ -331,9 +331,6 @@ jobs:
   k8s-test:
     runs-on: self-hosted
     needs: [build-gae, build-gie, build-gle, build-manager]
-    strategy:
-      matrix:
-        executor: [maxgraph, gaia]
     steps:
     - name: Clean up
       run: |
@@ -385,7 +382,6 @@ jobs:
         pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
 
     - name: Kubernetes test
-      if: matrix.executor == 'maxgraph'
       env:
         CHANGE_MINIKUBE_NONE_USER: true
         GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
@@ -401,7 +397,6 @@ jobs:
                           ./graphscope/deploy/tests/test_with_gaia.py
 
     - name: Helm test
-      if: matrix.executor == 'maxgraph'
       run: |
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
         cd charts

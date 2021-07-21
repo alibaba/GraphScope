@@ -65,7 +65,7 @@ spec:
           - -c
           - |
             /tmp/ready_probe.sh
-            
+
             [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
             ordinal=${BASH_REMATCH[1]}
             sed -e "s/GRAPH_NAME/$(GRAPH_NAME)/g" \
