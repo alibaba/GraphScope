@@ -51,5 +51,6 @@ def test_demo(gs_conn):
     os.system(load_script)
 
     interactive = gs_conn.gremlin()
+    # TODO(zsy, tianli): Use more compilcated queries
     assert interactive.V().count().toList()[0] == 903
     assert interactive.E().count().toList()[0] == 6626
