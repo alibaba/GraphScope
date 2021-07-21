@@ -1,0 +1,56 @@
+class PageRank : public IVertexProgram<int64_t, double, double> {
+public:
+    void Setup(Context<int64_t, double, double>& context) {
+        context.AddColumn("$pr", "double");
+        context.AddColumn("$tmp", "double");
+        context.AddColumn("$new", "double");
+    }
+
+    void Init(Context<int64_t, double, double>& context, Vertex<int64_t>& vertex) {
+        vertex.SetActive(true);
+        vertex.SetData<double>("$pr", 1.0/context.num_vertices());
+    }
+
+    void PreProcess(Context<int64_t, double, double>& context, Vertex<int64_t>& vertex) {
+        vertex.SetActive(true);
+        vertex.SetData<double>("$tmp", vertex.GetData<double>("$pr")/vertex.OutDegree());
+    }
+    
+    void PostProcess(Context<int64_t, double, double>& context, Vertex<int64_t>& vertex) {       
+        vertex.SetData<double>("$new", 0.15/context.num_vertices() + 0.85 * vertex.GetData<double>("$tmp"));
+
+        if (abs(vertex.GetData<double>("$new") - vertex.GetData<double>("$pr")) > 1e-10) {
+            vertex.SetActive(true);  
+        } else {
+            vertex.SetActive(false);
+            return;
+        }
+        vertex.SetData<double>("$pr", vertex.GetData<double>("$new"));
+    }
+
+    double ScatterValueSupplier(Context<int64_t, double, double>& context, 
+                                const Vertex<int64_t>& vertex) const {
+        return vertex.GetData<double>("$tmp");
+    }
+
+    EdgeDir ScatterEdges(Context<int64_t, double, double>& context,
+                        const Vertex<int64_t>& vertex) const {
+        return EdgeDir::OUT_EDGES;
+    }
+
+    void Aggregate(double &a, const double &b) const {
+        a = a + b;
+    }
+    
+    double GatherInit() const {
+        return 0.0;
+    }
+
+    string GatherIndex() const {
+        return "$tmp";
+    }
+    
+    int MaxIterations() const { 
+        return INT_MAX; 
+    }
+};

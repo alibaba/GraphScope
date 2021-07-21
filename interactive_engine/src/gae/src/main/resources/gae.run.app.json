@@ -1,0 +1,10 @@
+{
+  "engine": "GAE",
+  "operation": "run_app",
+  "graph": "graphname-1",
+  "params": {
+    "type": "cpp_pie",
+    "cpp_code": "SOURCE_CODE"
+  },
+  "output_type": "context"
+}
