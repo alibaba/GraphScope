@@ -8,6 +8,7 @@
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>gremlin-compiler</artifactId>
         <version>1.0-SNAPSHOT</version>
+        <relativePath>../../../../gremlin/compiler/pom.xml</relativePath>
     </parent>
 
     <artifactId>pegasus-client</artifactId>

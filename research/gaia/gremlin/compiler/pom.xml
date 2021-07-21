@@ -9,10 +9,10 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
+        <module>../../pegasus/clients/java/client</module>
         <module>gremlin-server-plugin</module>
         <module>compiler-core</module>
         <module>benchmark-tool</module>
-        <module>../../pegasus/clients/java/client</module>
         <module>gremlin-test</module>
     </modules>
 
