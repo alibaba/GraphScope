@@ -21,6 +21,8 @@ use std::env;
 
 fn main() {
     let dst = Config::new("native")
+        .define("CMAKE_C_COMPILER", "clang")
+        .define("CMAKE_CXX_COMPILER", "clang++")
         .build_target("native_store")
         .build();
 

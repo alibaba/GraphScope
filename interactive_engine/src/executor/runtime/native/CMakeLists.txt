@@ -34,8 +34,9 @@ macro(install_vineyard_target target)
     )
 endmacro()
 
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-deprecated-declarations")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -flto=thin -fuse-ld=lld")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=thin -fuse-ld=lld -std=c++14 -Wall -Wno-deprecated-declarations")
+set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -Wl,-fuse-ld=lld")
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
