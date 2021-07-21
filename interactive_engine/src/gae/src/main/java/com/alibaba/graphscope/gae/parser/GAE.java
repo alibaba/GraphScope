@@ -9,6 +9,10 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkperpop.gremlin.groovy.custom.StringProcessStep;
 import org.apache.tinkperpop.gremlin.groovy.custom.TraversalProcessStep;
+<<<<<<< HEAD
+=======
+import s2scompiler.S2SCompiler;
+>>>>>>> extend_gremlin
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -100,8 +104,14 @@ public enum GAE implements Generator {
 
         private String runPageRank(TraversalProcessStep step) {
             // mock
-            String srcCode = readFileFromResource("src");
-            return srcCode;
+            // String srcCode = readFileFromResource("src");
+            // return srcCode;
+            try{
+                String srcCode = (new S2SCompiler()).compile(step);
+                return srcCode;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
