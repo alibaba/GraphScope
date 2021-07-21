@@ -26,6 +26,15 @@
     <dependencySets>
         <dependencySet>
             <outputDirectory>lib</outputDirectory>
+            <excludes>
+                <exclude>com.alibaba.maxgraph:data_load_tools</exclude>
+            </excludes>
+        </dependencySet>
+        <dependencySet>
+            <outputDirectory>loader</outputDirectory>
+            <includes>
+                <include>com.alibaba.maxgraph:data_load_tools</include>
+            </includes>
         </dependencySet>
     </dependencySets>
 </assembly>
