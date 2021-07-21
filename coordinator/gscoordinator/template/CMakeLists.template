@@ -171,6 +171,13 @@ elseif (PROJECT_FRAME)
     target_include_directories(${FRAME_NAME} PRIVATE utils)
     target_link_libraries(${FRAME_NAME} ${LIBGRAPELITE_LIBRARIES} ${VINEYARD_LIBRARIES} ${PROTO})
     set_target_properties(${FRAME_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
+elseif (CPP_GAS)
+    add_library(${FRAME_NAME} SHARED ${ANALYTICAL_ENGINE_FRAME_DIR}/gas_app_frame.cc)
+    target_compile_definitions(${FRAME_NAME} PRIVATE _GRAPH_TYPE=$_graph_type _GRAPH_HEADER=$_graph_header
+                                                     _APP_TYPE=$_app_type _APP_HEADER=$_app_header)
+    target_include_directories(${FRAME_NAME} PRIVATE utils apps)
+    target_link_libraries(${FRAME_NAME} ${LIBGRAPELITE_LIBRARIES} ${VINEYARD_LIBRARIES} ${PROTO})
+    set_target_properties(${FRAME_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
 else ()
     add_library(${FRAME_NAME} SHARED ${ANALYTICAL_ENGINE_FRAME_DIR}/app_frame.cc)
     target_compile_definitions(${FRAME_NAME} PRIVATE _GRAPH_TYPE=$_graph_type _GRAPH_HEADER=$_graph_header

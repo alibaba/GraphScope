@@ -12,3 +12,4 @@ PyYAML
 scipy
 vineyard>=0.2.5
 vineyard-io>=0.2.5
+packaging

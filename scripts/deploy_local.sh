@@ -399,8 +399,18 @@ install_vineyard() {
   make vineyard_client_python -j${NUM_PROC}
   sudo make install
   popd
+
+  # install vineyard-python
   python3 setup.py bdist_wheel
   pip3 install -U ./dist/*.whl --user
+
+  # install vineyard-io
+  pushd modules/io
+  rm -rf build/lib.* build/bdist.*
+  python3 setup.py bdist_wheel
+  pip3 install -U ./dist/*.whl --user
+  popd
+
   popd
   rm -fr /tmp/libvineyard
 }
@@ -505,7 +515,7 @@ while test $# -ne 0; do
   case $arg in
     -h|--help) usage; exit ;;
     --prefix) INSTALL_PREFIX=$1; readonly INSTALL_PREFIX; shift ;;
-    --debug) VERBOSE=true; readonly VERBOSE; ;;
+    --verbose) VERBOSE=true; readonly VERBOSE; ;;
     install_deps) install_deps; exit;;
     deploy) deploy; exit;;
     *)

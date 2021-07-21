@@ -48,6 +48,19 @@ class DAGManager(object):
         types_pb2.UNLOAD_APP,  # need loaded app information
     ]
 
+    _interactive_engine_split_op = [
+        types_pb2.CREATE_INTERACTIVE_QUERY,
+        types_pb2.SUBGRAPH,
+        types_pb2.GREMLIN_QUERY,
+        types_pb2.FETCH_GREMLIN_RESULT,
+        types_pb2.CLOSE_INTERACTIVE_QUERY,
+    ]
+
+    _learning_engine_split_op = [
+        types_pb2.CREATE_LEARNING_INSTANCE,
+        types_pb2.CLOSE_LEARNING_INSTANCE,
+    ]
+
     def __init__(self, dag_def: op_def_pb2.DagDef):
         self._dag_def = dag_def
         self._split_dag_def_queue = queue.Queue()
@@ -57,10 +70,20 @@ class DAGManager(object):
         split_dag_def_for = GSEngine.analytical_engine
         for op in self._dag_def.op:
             if op.op in self._analytical_engine_split_op:
-                if len(split_dag_def.op) > 0:
+                if split_dag_def.op:
                     self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
                 split_dag_def = op_def_pb2.DagDef()
                 split_dag_def_for = GSEngine.analytical_engine
+            if op.op in self._interactive_engine_split_op:
+                if split_dag_def.op:
+                    self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
+                split_dag_def = op_def_pb2.DagDef()
+                split_dag_def_for = GSEngine.interactive_engine
+            if op.op in self._learning_engine_split_op:
+                if split_dag_def.op:
+                    self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
+                split_dag_def = op_def_pb2.DagDef()
+                split_dag_def_for = GSEngine.learning_engine
             split_dag_def.op.extend([copy.deepcopy(op)])
         if len(split_dag_def.op) > 0:
             self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))

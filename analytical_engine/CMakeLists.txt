@@ -228,6 +228,8 @@ if (BUILD_TESTS)
 
     add_vineyard_app(projected_graph_benchmarks SRCS benchmarks/projected_graph_benchmarks.cc)
 
+    add_vineyard_app(test_gather_scatter SRCS test/test_gather_scatter.cc)
+
     if (NETWORKX)
         add_vineyard_app(test_convert SRCS test/test_convert.cc)
         target_include_directories(test_convert PRIVATE ${FOLLY_ROOT_DIR}/include)

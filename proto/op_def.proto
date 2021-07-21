@@ -65,6 +65,17 @@ message OpResult {
   // result represents app_name or ctx_name or raw bytes If the op returns a NDArray or DataFrame
   bytes result = 5;
 
+  // learning graph handle
+  bytes handle = 6;
+  
+  // learning graph config
+  bytes config = 7;
+
+  // extra info for specific op
+  //  1) CREATE_INTERACTIVE_QUERY: object id
+  //  2) CREATE_LEARNING_INSTANCE: object_id
+  bytes extra_info = 8;
+
   // if the op create a graph or modify a graph, return the meta data of the graph.
   gs.rpc.graph.GraphDefPb graph_def = 31;
 };
