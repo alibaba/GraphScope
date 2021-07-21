@@ -115,4 +115,4 @@ class GSConfig(object):
     dangling_timeout_seconds = 600
 
     # Set to true to enable gaia
-    with_gaia = False
+    enable_gaia = False

@@ -91,7 +91,7 @@ spec:
               value: "frontend"
             - name: EXECUTOR
               value: {{ if eq .Values.executor "gaia" -}}
-                     "gaia_frontend"
+                     "store-frontend"
                      {{- else -}}
                      "frontend"
                      {{- end }}

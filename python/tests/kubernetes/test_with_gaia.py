@@ -54,7 +54,7 @@ def gs_session():
     gs_image, gie_manager_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
-        with_gaia=True,
+        enable_gaia=True,
         k8s_gs_image=gs_image,
         k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=2,
@@ -82,68 +82,17 @@ def modern_graph_data_dir():
     return "/testingdata/modern_graph"
 
 
-def test_query_modern_graph(gs_session, modern_graph_data_dir):
+def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_script):
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
-    queries = [
-        "g.V().has('name','marko').count()",
-        "g.V().has('person','name','marko').count()",
-        "g.V().has('person','name','marko').outE('created').count()",
-        "g.V().has('person','name','marko').outE('created').inV().count()",
-        "g.V().has('person','name','marko').out('created').count()",
-        "g.V().has('person','name','marko').out('created').values('name').count()",
-    ]
-    for q in queries:
+    for q in modern_script:
         result = interactive.gaia().execute(q).all().result()[0]
         assert result == 1
 
 
-def test_traversal_modern_graph(gs_session, modern_graph_data_dir):
-    from gremlin_python.process.traversal import Order
-    from gremlin_python.process.traversal import P
-
+def test_traversal_modern_graph(gs_session, modern_graph_data_dir, modern_bytecode):
     gs_image, gie_manager_image = get_gs_image_on_ci_env()
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
     g = interactive.traversal_source()
-    assert g.gaia().V().has("name", "marko").count().toList()[0] == 1
-    assert g.gaia().V().has("person", "name", "marko").count().toList()[0] == 1
-    assert (
-        g.gaia().V().has("person", "name", "marko").outE("created").count().toList()[0]
-        == 1
-    )
-    assert (
-        g.gaia()
-        .V()
-        .has("person", "name", "marko")
-        .outE("created")
-        .inV()
-        .count()
-        .toList()[0]
-        == 1
-    )
-    assert (
-        g.gaia().V().has("person", "name", "marko").out("created").count().toList()[0]
-        == 1
-    )
-    assert (
-        g.gaia()
-        .V()
-        .has("person", "name", "marko")
-        .out("created")
-        .values("name")
-        .count()
-        .toList()[0]
-        == 1
-    )
-    assert (
-        g.gaia()
-        .V()
-        .hasLabel("person")
-        .has("age", P.gt(30))
-        .order()
-        .by("age", Order.desc)
-        .count()
-        .toList()[0]
-        == 2
-    )
+    modern_bytecode(g.gaia())

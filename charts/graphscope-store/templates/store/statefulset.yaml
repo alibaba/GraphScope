@@ -89,7 +89,7 @@ spec:
               value: {{ .Values.javaOpts | quote }}
             - name: EXECUTOR
               value: {{ if eq .Values.executor "gaia" -}}
-                     "gaia_store"
+                     "store-gaia"
                      {{- else -}}
                      "store"
                      {{- end }}

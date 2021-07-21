@@ -298,8 +298,8 @@ jobs:
 
         export GS_TEST_DIR='/root/gstest'
         cd python
-        python3 -m pytest --ignore tests/test_run_locally.py --cov=graphscope --cov-config=.coveragerc \
-                          --cov-report=xml --cov-report=term --exitfirst -s -v tests
+        python3 -m pytest --cov=graphscope --cov-config=.coveragerc \
+                          --cov-report=xml --cov-report=term --exitfirst -s -v tests/unittest/
 
         pkill -TERM etcd || true
 
@@ -390,11 +390,10 @@ jobs:
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         cd python
-        python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
+        python3 -m pytest --ignore=./tests/kubernetes/test_store_service.py \
+                          --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
-                          ./graphscope/deploy/tests/test_demo_script.py \
-                          ./graphscope/deploy/tests/test_with_mars.py \
-                          ./graphscope/deploy/tests/test_with_gaia.py
+                          ./tests/kubernetes
 
     - name: Helm test
       run: |
@@ -612,7 +611,7 @@ jobs:
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
 
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest -s -vvv graphscope/deploy/tests/test_store_service.py
+        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py
 
     - name: Clean
       if: always()

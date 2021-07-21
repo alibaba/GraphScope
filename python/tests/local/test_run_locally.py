@@ -20,11 +20,8 @@ import os
 import sys
 
 import pytest
-from gremlin_python.process.graph_traversal import GraphTraversalSource
-from gremlin_python.process.graph_traversal import __
 
 import graphscope
-from graphscope.dataset.modern_graph import load_modern_graph
 from graphscope.dataset.ogbn_mag import load_ogbn_mag
 
 if sys.platform == "linux":
@@ -82,8 +79,8 @@ def sess_lazy():
 
 
 @pytest.fixture
-def sess_with_gaia():
-    s = graphscope.session(cluster_type="hosts", num_workers=2, with_gaia=True)
+def sess_enable_gaia():
+    s = graphscope.session(cluster_type="hosts", num_workers=2, enable_gaia=True)
     yield s
     s.close()
 
@@ -93,14 +90,12 @@ def ogbn_mag_small():
     return "{}/ogbn_mag_small".format(test_repo_dir)
 
 
-def demo(sess, ogbn_mag_small):
+def demo(sess, ogbn_mag_small, ogbn_small_script):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
 
     # Interactive engine
     interactive = sess.gremlin(graph)
-    papers = interactive.execute(
-        "g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()"
-    ).one()
+    papers = interactive.execute(ogbn_small_script).one()
 
     sub_graph = interactive.subgraph(
         "g.timeout(1000000).V().has('year', inside(2014, 2020)).outE('cites')"
@@ -160,14 +155,12 @@ def demo(sess, ogbn_mag_small):
     train(config, lg)
 
 
-def simple_flow(sess, ogbn_mag_small):
+def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
 
     # Interactive engine
     interactive = sess.gremlin(graph)
-    papers = interactive.execute(
-        "g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()"
-    ).one()
+    papers = interactive.execute(ogbn_small_script).one()
 
     # GLE on ogbn_mag_small graph
     paper_features = []
@@ -214,12 +207,12 @@ def test_demo(sess, ogbn_mag_small):
     sess.close()
 
 
-def test_demo_lazy_mode(sess_lazy, ogbn_mag_small):
+def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
     graph_node = load_ogbn_mag(sess, ogbn_mag_small)
     # Interactive query
     interactive_node = sess.gremlin(graph_node)
     paper_result_node = interactive_node.execute(
-        "g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()",
+        ogbn_small_script,
         request_options={"engine": "gae"},
     ).one()
     sub_graph_node = interactive_node.subgraph(
@@ -278,31 +271,18 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small):
     sess.close()
 
 
-def test_with_gaia(sess_with_gaia, ogbn_mag_small):
+def test_enable_gaia(
+    sess_enable_gaia, ogbn_mag_small, ogbn_small_script, ogbn_small_bytecode
+):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
 
     # Interactive engine
     interactive = sess.gremlin(graph)
-    papers_1 = (
-        interactive.gaia()
-        .execute(
-            "g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()"
-        )
-        .one()
-    )
+    papers = interactive.gaia().execute(ogbn_small_script).one()
+    assert papers == 2
 
     g = interactive.traversal_source()
-    papers_2 = (
-        g.gaia()
-        .V()
-        .has("author", "id", 2)
-        .out("writes")
-        .where(__.in_("writes").has("id", 4307))
-        .count()
-        .toList()[0]
-    )
-
-    assert papers_1 == papers_2
+    ogbn_small_bytecode(g.gaia())
 
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="Mac no need to run this test.")
