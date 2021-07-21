@@ -106,5 +106,5 @@ jobs:
         path: /tmp/graphscope/
 
     - name: Setup tmate session debug
-      if: always()
+      if: false
       uses: mxschmitt/action-tmate@v2
