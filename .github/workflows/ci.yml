@@ -98,9 +98,8 @@ jobs:
         strip /opt/graphscope/lib64/* || true
 
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
-        cd analytical_engine
-        mkdir build
-        cd build
+        mkdir analytical_engine/build
+        cd analytical_engine/build
         cmake .. -DCMAKE_PREFIX_PATH=/opt/graphscope \
                  -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
                  -DNETWORKX=${{ matrix.networkx }}
@@ -332,6 +331,9 @@ jobs:
   k8s-test:
     runs-on: self-hosted
     needs: [build-gae, build-gie, build-gle, build-manager]
+    strategy:
+      matrix:
+        executor: [maxgraph, gaia]
     steps:
     - name: Clean up
       run: |
@@ -383,6 +385,7 @@ jobs:
         pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e50373b88b85bd9f454332e#egg=pymars[distributed]
 
     - name: Kubernetes test
+      if: matrix.executor == 'maxgraph'
       env:
         CHANGE_MINIKUBE_NONE_USER: true
         GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
@@ -391,11 +394,27 @@ jobs:
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         cd python
-        python3 -m pytest --ignore graphscope/deploy/tests/test_store_service.py \
-                          --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
+        python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
-                          ./graphscope/deploy/tests/
+                          ./graphscope/deploy/tests/test_demo_script.py \
+                          ./graphscope/deploy/tests/test_with_mars.py
+
+    - name: Kubernetes GAIA test
+      if: matrix.executor == 'gaia'
+      env:
+        CHANGE_MINIKUBE_NONE_USER: true
+        GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
+        GIE_MANAGER_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
+      run: |
+        export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        cd python
+        python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
+                          --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
+                          ./graphscope/deploy/tests/test_gaia.py
+
     - name: Helm test
+      if: matrix.executor == 'maxgraph'
       run: |
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
         cd charts
@@ -535,6 +554,9 @@ jobs:
   gss-test:
     runs-on: self-hosted
     needs: [build-gss]
+    strategy:
+      matrix:
+        executor: [maxgraph, gaia]
     steps:
     - name: Clean up
       run: |
@@ -576,7 +598,7 @@ jobs:
         cd charts/graphscope-store
         helm dependency update
         cd ..
-        helm install ci --set image.tag=${{ github.sha }} \
+        helm install ci --set image.tag=${{ github.sha }},executor={{ matrix.executor }} \
                                       ./graphscope-store
         helm test ci --timeout 5m0s
 

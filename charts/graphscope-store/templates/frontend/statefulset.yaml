@@ -78,7 +78,7 @@ spec:
                 -e "s/STORE/$(DNS_NAME_PREFIX_STORE)/g" \
             /etc/graphscope-store/my.cnf.tpl > /etc/graphscope-store/my.cnf
 
-            LOG_NAME=graphscope-store.log MAXGRAPH_CONF_FILE=/etc/graphscope-store/my.cnf /home/maxgraph/maxgraph/bin/maxgraph.sh frontend
+            LOG_NAME=graphscope-store.log MAXGRAPH_CONF_FILE=/etc/graphscope-store/my.cnf /home/maxgraph/maxgraph/bin/maxgraph.sh $(EXECUTOR)
             tail -f /dev/null
           env:
             - name: DEBUG
@@ -89,6 +89,12 @@ spec:
               value: {{ .Values.javaOpts | quote }}
             - name: ROLE
               value: "frontend"
+            - name: EXECUTOR
+              value: {{ if eq .Values.executor "gaia" -}}
+                     "gaia_frontend"
+                     {{- else -}}
+                     "frontend"
+                     {{- end }}
             - name: FRONTEND_COUNT
               value: {{ .Values.frontend.replicaCount | quote }}
             - name: INGESTOR_COUNT

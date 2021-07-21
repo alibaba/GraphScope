@@ -20,8 +20,6 @@ import logging
 import os
 import random
 import string
-import subprocess
-import sys
 
 import numpy as np
 import pytest
