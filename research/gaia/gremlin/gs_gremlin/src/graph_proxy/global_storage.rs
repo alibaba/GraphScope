@@ -32,8 +32,8 @@ use std::sync::Arc;
 
 static INVALID_LABEL_ID: LabelId = 0xffffffff;
 static INVALID_PROP_ID: PropId = 0xffffffff;
-// TODO(bingqing): confirm with compiler, compiler should set the param_key as "SID"
 const SNAPSHOT_ID: &str = "SID";
+const PRIMARY_KEY: &str = "PK";
 
 pub struct GraphScopeStore<V, VI, E, EI>
 where
@@ -86,24 +86,41 @@ where
         let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
         let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
         let filter = params.filter.clone();
-        let result = store
-            .get_all_vertices(
-                si,
-                label_ids.as_ref(),
-                // None means no filter condition pushed down to storage as not supported yet. Same as follows.
-                None,
-                // None means no need to dedup by properties. Same as follows.
-                None,
-                prop_ids.as_ref(),
-                // Zero limit means no limit. Same as follows.
-                params.limit.unwrap_or(0),
-                // TODO(bingqing): optimization, each worker may scan some partitions on current server.
-                // Empty vector means all partitions, since we use worker 0 to scan all for now.
-                &vec![],
-            )
-            .map(move |v| to_runtime_vertex(&v));
+        if let Some(primary_key_list_object) = params.get_extra_param(PRIMARY_KEY) {
+            // GraphScopeStore enables optimizations in scan_vertex if primary keys provided by:
+            // firstly get global vertex ids by primary_keys and then directly call get_vertex()
+            if let Some(primary_key_list) = try_downcast_primary_key_list(primary_key_list_object) {
+                let ids = get_vertex_ids_by_primary_keys(
+                    label_ids.as_ref(),
+                    self.partition_manager.clone(),
+                    primary_key_list,
+                );
+                self.get_vertex(ids.as_slice(), params)
+            } else {
+                Err(str_to_dyn_error(
+                    "try_downcast_primary_key_list failed in scan",
+                ))
+            }
+        } else {
+            let result = store
+                .get_all_vertices(
+                    si,
+                    label_ids.as_ref(),
+                    // None means no filter condition pushed down to storage as not supported yet. Same as follows.
+                    None,
+                    // None means no need to dedup by properties. Same as follows.
+                    None,
+                    prop_ids.as_ref(),
+                    // Zero limit means no limit. Same as follows.
+                    params.limit.unwrap_or(0),
+                    // TODO(bingqing): optimization, each worker may scan some partitions on current server.
+                    // Empty vector means all partitions, since we use worker 0 to scan all for now.
+                    &vec![],
+                )
+                .map(move |v| to_runtime_vertex(&v));
 
-        Ok(filter_limit!(result, filter, None))
+            Ok(filter_limit!(result, filter, None))
+        }
     }
 
     fn scan_edge(
@@ -450,4 +467,36 @@ fn get_partition_vertex_ids(
 ) -> Vec<PartitionVertexIds> {
     let partition_id = graph_partition_manager.get_partition_id(id as VertexId) as PartitionId;
     vec![(partition_id, vec![id as VertexId])]
+}
+
+/// Get vertex ids by giving label_ids and corresponding primary key values
+fn get_vertex_ids_by_primary_keys(
+    labels: &Vec<LabelId>,
+    graph_partition_manager: Arc<dyn GraphPartitionManager>,
+    primary_key_list: Vec<String>,
+) -> Vec<ID> {
+    let mut ids = vec![];
+    for label_id in labels {
+        for primary_key in primary_key_list.iter() {
+            if let Some((_, vid)) =
+                graph_partition_manager.get_vertex_id_by_primary_key(*label_id, primary_key)
+            {
+                ids.push(vid as ID);
+            }
+        }
+    }
+    ids
+}
+
+/// downcast object of Vec<String>, i.e., the primary_key_list
+pub fn try_downcast_primary_key_list(obj: &Object) -> Option<Vec<String>> {
+    if let Object::DynOwned(object) = obj {
+        if let Some(list) = object.try_downcast_ref::<Vec<String>>() {
+            Some(list.clone())
+        } else {
+            None
+        }
+    } else {
+        None
+    }
 }
