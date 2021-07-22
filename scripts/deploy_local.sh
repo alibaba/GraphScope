@@ -464,8 +464,6 @@ install_dependencies() {
       log "Installing apache-arrow."
       sudo dnf install -y epel-release || sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm
       sudo dnf install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm
-      sudo subscription-manager repos --enable codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-$(arch)-rpms || :
-      sudo dnf --enablerepo=epel install -y arrow-devel
       # remove apache-arrow from packages_to_install
       packages_to_install=("${packages_to_install[@]/apache-arrow}")
     fi
