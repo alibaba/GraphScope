@@ -64,21 +64,21 @@ def train(config, graph):
     trainer.train_and_evaluate()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def sess():
     s = graphscope.session(cluster_type="hosts", num_workers=2)
     yield s
     s.close()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def sess_lazy():
     s = graphscope.session(cluster_type="hosts", num_workers=2, mode="lazy")
     yield s
     s.close()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def sess_enable_gaia():
     s = graphscope.session(cluster_type="hosts", num_workers=2, enable_gaia=True)
     yield s
@@ -228,13 +228,12 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
 
 def test_demo(sess, ogbn_mag_small, ogbn_small_script):
     demo(sess, ogbn_mag_small, ogbn_small_script)
-    sess.close()
 
 
 def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
-    graph_node = load_ogbn_mag(sess, ogbn_mag_small)
+    graph_node = load_ogbn_mag(sess_lazy, ogbn_mag_small)
     # Interactive query
-    interactive_node = sess.gremlin(graph_node)
+    interactive_node = sess_lazy.gremlin(graph_node)
     paper_result_node = interactive_node.execute(
         ogbn_small_script,
         request_options={"engine": "gae"},
@@ -256,7 +255,7 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
         paper_features.append("feat_" + str(i))
     paper_features.append("kcore")
     paper_features.append("tc")
-    learning_graph_node = sess.learning(
+    learning_graph_node = sess_lazy.learning(
         sub_graph_node,
         nodes=[("paper", paper_features)],
         edges=[("paper", "cites", "paper")],
@@ -269,7 +268,7 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
     # sess run
     # r[0]: gremlin result
     # r[1]: learning graph instance
-    r = sess.run([paper_result_node, learning_graph_node])
+    r = sess_lazy.run([paper_result_node, learning_graph_node])
     # hyperparameters config.
     config = {
         "class_num": 349,  # output dimension
@@ -292,17 +291,16 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
         "edge_type": "cites",
     }
     train(config, r[1])
-    sess.close()
 
 
 @pytest.mark.skip(reason="Gaia is not supported yet.")
 def test_enable_gaia(
     sess_enable_gaia, ogbn_mag_small, ogbn_small_script, ogbn_small_bytecode
 ):
-    graph = load_ogbn_mag(sess, ogbn_mag_small)
+    graph = load_ogbn_mag(sess_enable_gaia, ogbn_mag_small)
 
     # Interactive engine
-    interactive = sess.gremlin(graph)
+    interactive = sess_enable_gaia.gremlin(graph)
     papers = interactive.gaia().execute(ogbn_small_script).one()
     assert papers == 2
 
