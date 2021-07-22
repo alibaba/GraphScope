@@ -8,7 +8,7 @@ set -o pipefail
 # color
 readonly RED="\033[0;31m"
 readonly YELLOW="\033[1;33m"
-readonly GREEN="'\e[0;32m'"...
+readonly GREEN="\e[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
@@ -362,7 +362,7 @@ check_dependencies() {
 #   output environment export statements to file.
 ##########################
 write_envs_config() {
-  if [ if "${SOURCE_DIR}/gs_env" ]; then
+  if [ -f "${SOURCE_DIR}/gs_env" ]; then
     warning "Found gs_env exists, remove the environmen config file and generate a new one."
   fi
 
@@ -446,7 +446,7 @@ install_dependencies() {
     wget https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz -P /tmp
     tar xf /tmp/7.0.3.tar.gz -C /tmp/
     pushd /tmp/fmt-7.0.3
-    mkdir build && cd build
+    mkdir -p build && cd build
     cmake .. -DBUILD_SHARED_LIBS=ON
     make -j${NUM_PROC}
     sudo make install
@@ -485,7 +485,7 @@ install_dependencies() {
     git clone --depth 1 --branch v1.33.1 https://github.com/grpc/grpc.git /tmp/grpc
     pushd /tmp/grpc
     git submodule update --init
-    mkdir build && cd build
+    mkdir -p build && cd build
     cmake .. -DBUILD_SHARED_LIBS=ON \
         -DgRPC_INSTALL=ON \
         -DgRPC_BUILD_TESTS=OFF \
@@ -552,7 +552,7 @@ install_dependencies() {
   wget https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz -P /tmp
   tar xf /tmp/v2020.10.19.00.tar.gz -C /tmp/
   pushd /tmp/folly-2020.10.19.00
-  mkdir _build && cd _build
+  mkdir -p _build && cd _build
   cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
   make -j${NUM_PROC}
   sudo make install
@@ -589,7 +589,7 @@ install_libgrape-lite() {
   git clone -b ${GRAPE_BRANCH} --single-branch --depth=1 \
       https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
   pushd /tmp/libgrape-lite
-  mkdir build && cd build
+  mkdir -p build && cd build
   cmake ..
   make -j${NUM_PROC}
   sudo make install
@@ -613,7 +613,7 @@ install_vineyard() {
       https://github.com/alibaba/libvineyard.git /tmp/libvineyard
   pushd /tmp/libvineyard
   git submodule update --init
-  mkdir build && pushd build
+  mkdir -p build && pushd build
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     cmake .. -DBUILD_VINEYARD_PYTHON_BINDINGS=ON -DBUILD_SHARED_LIBS=ON \
              -DBUILD_VINEYARD_IO_OSS=ON -DBUILD_VINEYARD_TESTS=OFF
@@ -746,16 +746,20 @@ set -o pipefail
 # parse argv
 # TODO(acezen): when option and command is not illegal, warning and output usage.
 # TODO(acezen): now the option need to specify before command, that's not user-friendly.
+if test  $# -eq 0; then
+  usage
+fi
 while test $# -ne 0; do
   arg=$1; shift
-  case $arg in
+  case ${arg} in
     -h|--help) usage; exit ;;
     --prefix) INSTALL_PREFIX=$1; readonly INSTALL_PREFIX; shift ;;
     --verbose) VERBOSE=true; readonly VERBOSE; ;;
     install_deps) install_deps; exit;;
     deploy) deploy; exit;;
     *)
-      ;;
+      echo "unrecognized option or command '${arg}'"
+      usage; exit;;
   esac
 done
 
