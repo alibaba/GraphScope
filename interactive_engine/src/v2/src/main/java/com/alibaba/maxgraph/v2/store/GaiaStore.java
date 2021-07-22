@@ -20,7 +20,10 @@ import com.alibaba.maxgraph.v2.common.MetaService;
 import com.alibaba.maxgraph.v2.common.NodeBase;
 import com.alibaba.maxgraph.v2.common.NodeLauncher;
 import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.discovery.*;
+import com.alibaba.maxgraph.v2.common.discovery.DiscoveryFactory;
+import com.alibaba.maxgraph.v2.common.discovery.LocalNodeProvider;
+import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
+import com.alibaba.maxgraph.v2.common.discovery.RoleType;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.rpc.ChannelManager;
 import com.alibaba.maxgraph.v2.common.rpc.MaxGraphNameResolverFactory;
@@ -33,7 +36,7 @@ import io.grpc.NameResolver;
 
 import java.io.IOException;
 
-public class Store extends NodeBase {
+public class GaiaStore extends NodeBase {
 
     private NodeDiscovery discovery;
     private ChannelManager channelManager;
@@ -41,10 +44,10 @@ public class Store extends NodeBase {
     private StoreService storeService;
     private WriterAgent writerAgent;
     private RpcServer rpcServer;
-    private ExecutorService executorService;
+    private GaiaService gaiaService;
 
-    public Store(Configs configs) {
-        super(configs);
+    public GaiaStore(Configs configs) {
+        super(configs, RoleType.STORE);
         configs = reConfig(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
         DiscoveryFactory discoveryFactory = new DiscoveryFactory(configs);
@@ -61,7 +64,8 @@ public class Store extends NodeBase {
         StoreIngestService storeIngestService = new StoreIngestService(this.storeService);
         this.rpcServer = new RpcServer(configs, localNodeProvider, storeWriteService, storeSchemaService,
                 storeIngestService);
-        this.executorService = new ExecutorService(configs, storeService, discoveryFactory, this.metaService);
+        ExecutorEngine executorEngine = new GaiaEngine(configs, discoveryFactory);
+        this.gaiaService = new GaiaService(configs, executorEngine, this.storeService, this.metaService);
     }
 
     @Override
@@ -87,12 +91,12 @@ public class Store extends NodeBase {
         }
         this.discovery.start();
         this.channelManager.start();
-        this.executorService.start();
+        this.gaiaService.start();
     }
 
     @Override
     public void close() throws IOException {
-        this.executorService.close();
+        this.gaiaService.stop();
         this.rpcServer.stop();
         this.writerAgent.stop();
         this.storeService.stop();
@@ -104,7 +108,7 @@ public class Store extends NodeBase {
     public static void main(String[] args) throws IOException {
         String configFile = System.getProperty("config.file");
         Configs conf = new Configs(configFile);
-        Store store = new Store(conf);
+        GaiaStore store = new GaiaStore(conf);
         NodeLauncher nodeLauncher = new NodeLauncher(store);
         nodeLauncher.start();
     }
