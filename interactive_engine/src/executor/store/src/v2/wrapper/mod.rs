@@ -13,11 +13,4 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::v2::errors::Error;
-
-pub mod api;
-pub mod errors;
-mod wrapper;
-mod multi_version_graph;
-
-pub type Result<T> = std::result::Result<T, Error>;
+mod graph_storage;

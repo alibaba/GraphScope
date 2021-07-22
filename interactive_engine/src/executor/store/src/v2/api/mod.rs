@@ -15,9 +15,9 @@
 
 use crate::v2::Result;
 
-mod partition_snapshot;
-mod types;
-mod condition;
+pub mod partition_snapshot;
+pub mod types;
+pub mod condition;
 
 pub type SnapshotId = u64;
 pub type LabelId = u32;
@@ -26,7 +26,7 @@ pub type VertexId = u64;
 pub type EdgeInnerId = u64;
 pub type SerialId = usize;
 
-type Records<T> = Box<dyn Iterator<Item=Result<T>> + Send>;
+pub type Records<T> = Box<dyn Iterator<Item=Result<T>> + Send>;
 
 pub struct EdgeId {
     edge_inner_id: EdgeInnerId,
