@@ -101,7 +101,6 @@ jobs:
       run: |
         source ${GITHUB_WORKSPACE}/gs_env
         export GRAPHSCOPE_PREFIX=/usr/local
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
         # run test
         cd interactive_engine/src/gaia-adaptor && ./gremlin_test.sh
 

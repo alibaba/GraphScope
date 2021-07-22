@@ -8,7 +8,7 @@ set -o pipefail
 # color
 readonly RED="\033[0;31m"
 readonly YELLOW="\033[1;33m"
-readonly GREEN="\e[0;32m"
+readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
@@ -37,6 +37,10 @@ warning() {
 
 log() {
   echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&1
+}
+
+succ() {
+  echo -e "${YELLOW}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*${NC}" >&1
 }
 
 ##########################
@@ -164,6 +168,7 @@ init_basic_packages() {
       uuid-dev
       zip
       perl
+      python3-pip
     )
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
@@ -183,7 +188,6 @@ init_basic_packages() {
       m4
       minizip
       minizip-devel
-      make
       net-tools
       openssl-devel
       unzip
@@ -436,10 +440,11 @@ install_dependencies() {
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     sudo dnf install -y https://download-ib01.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 
-    sudo dnf config-manager --set-enabled epel || :
-    sudo dnf config-manager --set-enabled powertools || :
+    sudo dnf config-manager --set-enabled epel
+    sudo dnf config-manager --set-enabled powertools
     sudo dnf -y install gcc \
       gcc-c++ \
+      make \
       wget \
       curl
 
@@ -743,10 +748,9 @@ deploy() {
 
   check_dependencies
 
-  if [ "${packages_to_install}" != "" ]; then
-    err_msg="The dependence of GraphScope is not satisfied. These packages
-            [${packages_to_install[*]}] are not installed or version not compatible."
-    err ${err_msg}
+  if [ ${packages_to_install[@]} -eq 0 ]; then
+    err "The dependences of GraphScope are not satisfied."
+    err "These packages: [${packages_to_install[*]}] are not installed or their version are not compatible."
     exit 1
   fi
 
@@ -756,11 +760,11 @@ deploy() {
 
   install_graphscope
 
-  succ_msg="${GREEN}GraphScope has been built successfully and installed on ${INSTALL_PREFIX}. \n
+  succ_msg="GraphScope has been built successfully and installed on ${INSTALL_PREFIX}. \n
   Please manually run \n
   'export GRAPHSCOPE_PREFIX=${INSTALL_PREFIX}'\n
-  to before using GraphScope via Python client, enjoy!\n${NC}"
-  log ${succ_msg}
+  to before using GraphScope via Python client, enjoy!\n$"
+  succ ${succ_msg}
   if [ ${VERBOSE} = true ]; then
     set +x
   fi
