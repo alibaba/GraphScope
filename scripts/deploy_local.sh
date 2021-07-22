@@ -431,6 +431,7 @@ install_dependencies() {
       log "Installing apache-arrow."
       wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
       sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+      sudo apt update -y
       sudo apt install -y libarrow-dev=3.0.0-1 libarrow-python-dev=3.0.0-1
       # remove apache-arrow from packages_to_install
       packages_to_install=("${packages_to_install[@]/apache-arrow}")
