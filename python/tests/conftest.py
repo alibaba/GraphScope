@@ -676,27 +676,3 @@ def modern_bytecode():
         )
 
     return func
-
-
-@pytest.fixture(scope="module")
-def ogbn_small_script():
-    script = "g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()"
-    return script
-
-
-@pytest.fixture(scope="module")
-def ogbn_small_bytecode():
-    from gremlin_python.process.graph_traversal import __
-
-    def func(g):
-        assert (
-            g.V()
-            .has("author", "id", 2)
-            .out("writes")
-            .where(__.in_("writes").has("id", 4307))
-            .count()
-            .toList()[0]
-            == 2
-        )
-
-    return func

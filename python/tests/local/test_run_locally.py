@@ -90,6 +90,30 @@ def ogbn_mag_small():
     return "{}/ogbn_mag_small".format(test_repo_dir)
 
 
+@pytest.fixture(scope="module")
+def ogbn_small_script():
+    script = "g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()"
+    return script
+
+
+@pytest.fixture(scope="module")
+def ogbn_small_bytecode():
+    from gremlin_python.process.graph_traversal import __
+
+    def func(g):
+        assert (
+            g.V()
+            .has("author", "id", 2)
+            .out("writes")
+            .where(__.in_("writes").has("id", 4307))
+            .count()
+            .toList()[0]
+            == 2
+        )
+
+    return func
+
+
 def demo(sess, ogbn_mag_small, ogbn_small_script):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
 
@@ -202,8 +226,8 @@ def simple_flow(sess, ogbn_mag_small, ogbn_small_script):
     train(config, lg)
 
 
-def test_demo(sess, ogbn_mag_small):
-    demo(sess, ogbn_mag_small)
+def test_demo(sess, ogbn_mag_small, ogbn_small_script):
+    demo(sess, ogbn_mag_small, ogbn_small_script)
     sess.close()
 
 
@@ -287,15 +311,15 @@ def test_enable_gaia(
 
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="Mac no need to run this test.")
-def test_multiple_session(ogbn_mag_small):
+def test_multiple_session(ogbn_mag_small, ogbn_small_script):
     sess1 = graphscope.session(cluster_type="hosts", num_workers=1)
     assert sess1.info["status"] == "active"
 
     sess2 = graphscope.session(cluster_type="hosts", num_workers=1)
     assert sess2.info["status"] == "active"
 
-    simple_flow(sess1, ogbn_mag_small)
-    simple_flow(sess2, ogbn_mag_small)
+    simple_flow(sess1, ogbn_mag_small, ogbn_small_script)
+    simple_flow(sess2, ogbn_mag_small, ogbn_small_script)
 
     sess1.close()
     sess2.close()
