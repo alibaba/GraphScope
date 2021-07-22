@@ -271,6 +271,7 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
     sess.close()
 
 
+@pytest.mark.skip(reason="Gaia is not supported yet.")
 def test_enable_gaia(
     sess_enable_gaia, ogbn_mag_small, ogbn_small_script, ogbn_small_bytecode
 ):

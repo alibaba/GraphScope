@@ -230,18 +230,18 @@ def test_multiple_session():
     sess.close()
 
 
-def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_script):
+def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_scripts):
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
 
-    for q in modern_script:
+    for q in modern_scripts:
         result = interactive.execute(q).all()[0]
         assert result == 1
     with pytest.raises(
         AssertionError,
         match="GAIA not enabled. Enable gaia with `session(enable_gaia=True)`",
     ):
-        interactive.gaia().execute(modern_script[0]).all()
+        interactive.gaia().execute(modern_scripts[0]).all()
 
 
 def test_traversal_modern_graph(gs_session, modern_graph_data_dir, modern_bytecode):

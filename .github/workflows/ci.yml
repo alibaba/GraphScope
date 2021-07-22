@@ -537,7 +537,9 @@ jobs:
     needs: [build-gss]
     strategy:
       matrix:
-        executor: [maxgraph, gaia]
+        #executor: [maxgraph, gaia]
+        # Add gaia when supported
+        executor: [maxgraph]
     steps:
     - name: Clean up
       run: |
@@ -579,7 +581,7 @@ jobs:
         cd charts/graphscope-store
         helm dependency update
         cd ..
-        helm install ci --set image.tag=${{ github.sha }},executor={{ matrix.executor }} \
+        helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} \
                                       ./graphscope-store
         helm test ci --timeout 5m0s
 

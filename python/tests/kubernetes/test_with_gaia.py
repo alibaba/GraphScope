@@ -82,14 +82,16 @@ def modern_graph_data_dir():
     return "/testingdata/modern_graph"
 
 
-def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_script):
+@pytest.mark.skip(reason="GAIA is not supported yet")
+def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_scripts):
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
-    for q in modern_script:
+    for q in modern_scripts:
         result = interactive.gaia().execute(q).all().result()[0]
         assert result == 1
 
 
+@pytest.mark.skip(reason="GAIA is not supported yet")
 def test_traversal_modern_graph(gs_session, modern_graph_data_dir, modern_bytecode):
     gs_image, gie_manager_image = get_gs_image_on_ci_env()
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
