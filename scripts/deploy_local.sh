@@ -286,12 +286,14 @@ check_dependencies() {
   fi
 
   # check rust
-  if ! command -v rustup &> /dev/null; then
+  if [[ $(! command -v rustup &> /dev/null) || \
+        $(! command -v ${HOME}/.cargo/bin/rustup &> /dev/null) ]]; then
     packages_to_install+=(rust)
   fi
 
   # check golang
-  if ! command -v /usr/local/bin/go &> /dev/null; then
+  if [[ $(! command -v /usr/local/bin/go &> /dev/null) || \
+        $(! command -v /usr/local/go/bin/go &> /dev/null) ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
       packages_to_install+=(golang)
     else
@@ -306,7 +308,11 @@ check_dependencies() {
 
   # check mpi
   if ! command -v mpiexec &> /dev/null; then
-    packages_to_install+=(openmpi)
+    if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
+      packages_to_install+=(libopenmpi-dev)
+    else
+      packages_to_install+=(openmpi)
+    fi
   fi
 
   # check folly
@@ -386,9 +392,9 @@ install_dependencies() {
   # install dependencies for specific platforms.
   if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     sudo apt-get update -y
-    sudo apt-get install -y build-essential
-      wget
-      curl
+    sudo apt-get install -y build-essential \
+      wget \
+      curl \
       lsb-release
 
     if [[ "${packages_to_install[@]}" =~ "go" ]]; then
@@ -433,8 +439,8 @@ install_dependencies() {
     sudo dnf config-manager --set-enabled epel || :
     sudo dnf config-manager --set-enabled powertools || :
     sudo dnf -y install gcc \
-      gcc-c++
-      wget
+      gcc-c++ \
+      wget \
       curl
 
     if [[ "${packages_to_install[@]}" =~ "apache-arrow" ]]; then
