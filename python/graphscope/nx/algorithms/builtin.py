@@ -1058,9 +1058,9 @@ def average_degree_connectivity(G, source="in+out", target="in+out", weight=None
     ctx = AppAssets(algo="average_degree_connectivity", context="tensor")(
         G, source, target, G.is_directed()
     )
-    l = ctx.to_numpy("r", axis=0).tolist()
-    l = [i for item in l for i in item]
-    list1 = [int(i) for i in l[0::2]]
-    list2 = l[1::2]
-    res = dict(zip(list1, list2))
+    res_list = ctx.to_numpy("r", axis=0).tolist()
+    res_list = [i for item in res_list for i in item]
+    degree = [int(i) for i in res_list[0::2]]
+    degree_connectivity = res_list[1::2]
+    res = dict(zip(degree, degree_connectivity))
     return res

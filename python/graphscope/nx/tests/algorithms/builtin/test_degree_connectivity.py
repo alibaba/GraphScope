@@ -17,9 +17,10 @@
 """
     Unit tests for average degree connectivity.
 """
+from itertools import permutations
+
 import pytest
 
-from itertools import permutations
 from graphscope import nx
 
 
