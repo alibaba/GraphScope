@@ -46,7 +46,7 @@ public class MaxGraph {
             }
         } else {
             String roleName = args[0];
-            if (roleName.equalsIgnoreCase("gaia_store")) {
+            if (roleName.equalsIgnoreCase("store-gaia")) {
                 node = new GaiaStore(conf);
             } else {
                 RoleType roleType = RoleType.fromName(roleName);
