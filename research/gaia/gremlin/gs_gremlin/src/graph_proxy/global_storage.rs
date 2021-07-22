@@ -488,10 +488,16 @@ fn get_vertex_ids_by_primary_keys(
     ids
 }
 
-/// downcast object of Vec<String>, i.e., the primary_key_list
+/// downcast the object of value list (of primary key)
 pub fn try_downcast_primary_key_list(obj: &Object) -> Option<Vec<String>> {
     if let Object::DynOwned(object) = obj {
-        if let Some(list) = object.try_downcast_ref::<Vec<String>>() {
+        if let Some(list) = object.try_downcast_ref::<Vec<i32>>() {
+            Some(list.iter().map(|i| i.to_string()).collect())
+        } else if let Some(list) = object.try_downcast_ref::<Vec<i64>>() {
+            Some(list.iter().map(|i| i.to_string()).collect())
+        } else if let Some(list) = object.try_downcast_ref::<Vec<f64>>() {
+            Some(list.iter().map(|i| i.to_string()).collect())
+        } else if let Some(list) = object.try_downcast_ref::<Vec<String>>() {
             Some(list.clone())
         } else {
             None

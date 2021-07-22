@@ -117,8 +117,17 @@ impl<E: Element + Send + Sync> QueryParams<E> {
                     pb_common::value::Item::F64(f) => Ok(f.into()),
                     pb_common::value::Item::Str(s) => Ok(s.into()),
                     pb_common::value::Item::Blob(b) => Ok(b.into()),
-                    pb_common::value::Item::StrArray(str_array) => {
-                        Ok(Object::DynOwned(Box::new(str_array.item)))
+                    pb_common::value::Item::I32Array(array) => {
+                        Ok(Object::DynOwned(Box::new(array.item)))
+                    }
+                    pb_common::value::Item::I64Array(array) => {
+                        Ok(Object::DynOwned(Box::new(array.item)))
+                    }
+                    pb_common::value::Item::F64Array(array) => {
+                        Ok(Object::DynOwned(Box::new(array.item)))
+                    }
+                    pb_common::value::Item::StrArray(array) => {
+                        Ok(Object::DynOwned(Box::new(array.item)))
                     }
                     _ => Err(ParseError::OtherErr("Unsupported extra params".to_string())),
                 }?;

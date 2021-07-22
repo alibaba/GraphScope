@@ -144,6 +144,9 @@ pub fn register_gremlin_types() -> io::Result<()> {
     dyn_type::register_type::<ShadeSync<(Traverser, Traverser)>>()?;
     dyn_type::register_type::<ShadeSync<Count<Traverser>>>()?;
     dyn_type::register_type::<ShadeSync<ToList<Traverser>>>()?;
+    dyn_type::register_type::<Vec<i32>>()?;
+    dyn_type::register_type::<Vec<i64>>()?;
+    dyn_type::register_type::<Vec<f64>>()?;
     dyn_type::register_type::<Vec<String>>()?;
     Ok(())
 }
