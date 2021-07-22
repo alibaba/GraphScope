@@ -38,9 +38,7 @@ public class AddressChannelFetcher implements RpcChannelFetcher {
     @Override
     public List<RpcChannel> fetch() {
         try {
-            // List<Endpoint> endpoints = addressFetcher.getServiceAddress();
-            // for mock
-            List<Endpoint> endpoints = Collections.singletonList(new Endpoint("127.0.0.1", 8088));
+            List<Endpoint> endpoints = addressFetcher.getServiceAddress();
             logger.info("endpoints are {}", endpoints);
             return endpoints.stream().map(k -> new RpcChannel(k.getIp(), k.getPort())).collect(Collectors.toList());
         } catch (IllegalArgumentException e) {
