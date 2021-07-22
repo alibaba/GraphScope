@@ -22,7 +22,7 @@ public interface Generator {
     default String readFileFromResource(String fileName) {
         try {
             InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
-            File file = new File("./tmp");
+            File file = new File("/tmp/tmp");
             FileUtils.copyInputStreamToFile(stream, file);
             String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
             file.delete();

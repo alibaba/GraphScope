@@ -17,6 +17,7 @@
 #
 
 import importlib
+import json
 import logging
 import os
 import random
@@ -52,6 +53,22 @@ def ogbn_mag_small():
     return "{}/ogbn_mag_small".format(test_repo_dir)
 
 
+QUERY_1 = (
+    "g.V().process("
+    "V().property('$pr', expr('1.0/TOTAL_V'))"
+    ".repeat("
+    "V().property('$tmp', expr('$pr/OUT_DEGREE'))"
+    ".scatter('$tmp').by(out())"
+    ".gather('$tmp', sum)"
+    ".property('$new', expr('0.15/TOTAL_V+0.85*$tmp'))"
+    ".where(expr('abs($new-$pr)>1e-10'))"
+    ".property('$pr', expr('$new')))"
+    ".until(count().is(0))"
+    ").with('$pr', 'pr')"
+    ".order().by('pr', desc).limit(10).valueMap('name', 'pr')"
+)
+
+
 def demo(sess, ogbn_mag_small):
     graph = load_ogbn_mag(sess, ogbn_mag_small)
 
@@ -60,6 +77,13 @@ def demo(sess, ogbn_mag_small):
     papers = interactive.execute(
         "g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()"
     ).one()
+    print(papers)
+
+    source_to_source_json = interactive.execute(
+        QUERY_1, request_options={"engine": "gae"}
+    ).one()
+    assert len(source_to_source_json) == 1
+    print(json.loads(source_to_source_json[0]))
 
 
 def test_demo(ogbn_mag_small):

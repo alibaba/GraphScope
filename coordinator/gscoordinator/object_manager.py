@@ -17,6 +17,25 @@
 #
 
 from gremlin_python.driver.client import Client
+from gremlin_python.driver.serializer import GraphSONMessageSerializer
+
+"""Patch for gremlin_python serializer to support "gae" processor
+"""
+
+
+def patch_for_gremlin_python():
+    def get_processor(self, processor):
+        if processor == "gae":
+            return getattr(self, "standard", None)
+        processor = getattr(self, processor, None)
+        if not processor:
+            raise Exception("Unknown processor")
+        return processor
+
+    setattr(GraphSONMessageSerializer, "get_processor", get_processor)
+
+
+patch_for_gremlin_python()
 
 
 class LibMeta(object):
@@ -47,6 +66,20 @@ class InteractiveQueryManager(object):
         self.closed = False
 
     def submit(self, message, bindings=None, request_options=None):
+        if request_options is not None and "engine" in request_options:
+            from gremlin_python.driver import request
+
+            rm = request.RequestMessage(
+                # {"engine": "gae"} support only
+                processor=request_options["engine"],
+                op="eval",
+                args={
+                    "gremlin": message,
+                    "aliases": {"g": self.client.traversal_source},
+                },
+            )
+            print("[DEBUG] RequestMessage is: ", rm)
+            return self.client.submit(rm)
         return self.client.submit(message, bindings, request_options)
 
 
