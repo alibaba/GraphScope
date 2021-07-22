@@ -76,4 +76,7 @@ public class CommonConfig {
     public static final Config<String> DISCOVERY_MODE =
             Config.stringConfig("discovery.mode", "file"); // others: zookeeper
 
+    public static final Config<Integer> ID_ALLOCATE_SIZE =
+            Config.intConfig("id.allocate.size", 1000000);
+
 }

@@ -42,7 +42,6 @@ public class Store extends NodeBase {
     private WriterAgent writerAgent;
     private RpcServer rpcServer;
     private ExecutorService executorService;
-    private GaiaService gaiaService;
 
     public Store(Configs configs) {
         super(configs);
@@ -55,8 +54,7 @@ public class Store extends NodeBase {
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
         this.storeService = new StoreService(configs, this.metaService);
-        SnapshotCommitter snapshotCommitter = new SnapshotCommitClients(this.channelManager, RoleType.COORDINATOR,
-                SnapshotCommitClient::new);
+        SnapshotCommitter snapshotCommitter = new DefaultSnapshotCommitter(this.channelManager);
         this.writerAgent = new WriterAgent(configs, this.storeService, this.metaService, snapshotCommitter);
         StoreWriteService storeWriteService = new StoreWriteService(this.writerAgent);
         StoreSchemaService storeSchemaService = new StoreSchemaService(this.storeService);
@@ -64,8 +62,6 @@ public class Store extends NodeBase {
         this.rpcServer = new RpcServer(configs, localNodeProvider, storeWriteService, storeSchemaService,
                 storeIngestService);
         this.executorService = new ExecutorService(configs, storeService, discoveryFactory, this.metaService);
-        ExecutorEngine executorEngine = new GaiaEngine(configs, discoveryFactory);
-        this.gaiaService = new GaiaService(configs, executorEngine, this.storeService, this.metaService);
     }
 
     @Override
@@ -92,12 +88,10 @@ public class Store extends NodeBase {
         this.discovery.start();
         this.channelManager.start();
         this.executorService.start();
-        this.gaiaService.start();
     }
 
     @Override
     public void close() throws IOException {
-        this.gaiaService.stop();
         this.executorService.close();
         this.rpcServer.stop();
         this.writerAgent.stop();

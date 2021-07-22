@@ -49,6 +49,7 @@ public class Coordinator extends NodeBase {
     private ChannelManager channelManager;
     private LogRecycler logRecycler;
     private GraphInitializer graphInitializer;
+    private IdAllocator idAllocator;
 
     public Coordinator(Configs configs) {
         super(configs);
@@ -89,8 +90,10 @@ public class Coordinator extends NodeBase {
         IngestProgressService ingestProgressService = new IngestProgressService(this.snapshotManager);
         SnapshotCommitService snapshotCommitService = new SnapshotCommitService(this.snapshotManager);
         SchemaService schemaService = new SchemaService(this.schemaManager);
+        this.idAllocator = new IdAllocator(metaStore);
+        IdAllocateService idAllocateService = new IdAllocateService(this.idAllocator);
         this.rpcServer = new RpcServer(configs, localNodeProvider, ingestProgressService, snapshotCommitService,
-                schemaService);
+                schemaService, idAllocateService);
         this.logRecycler = new LogRecycler(configs, logService, this.snapshotManager);
         this.graphInitializer = new GraphInitializer(configs, this.curator, metaStore, logService);
     }
@@ -103,6 +106,7 @@ public class Coordinator extends NodeBase {
         this.graphInitializer.initializeIfNeeded();
         this.metaService.start();
         this.snapshotManager.start();
+        this.idAllocator.start();
         try {
             this.rpcServer.start();
         } catch (IOException e) {
@@ -119,6 +123,7 @@ public class Coordinator extends NodeBase {
     public void close() throws IOException {
         this.logRecycler.stop();
         this.rpcServer.stop();
+        this.idAllocator.stop();
         this.snapshotManager.stop();
         this.schemaManager.stop();
         this.metaService.stop();

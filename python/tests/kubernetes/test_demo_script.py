@@ -20,8 +20,6 @@ import logging
 import os
 import random
 import string
-import subprocess
-import sys
 
 import numpy as np
 import pytest
@@ -158,21 +156,15 @@ def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir
     sub_graph = interactive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
-    person_count = (
-        interactive.execute(
-            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-        )
-        .all()
-        .result()[0]
-    )
-    knows_count = (
-        interactive.execute('g.V().hasLabel("person").outE("knows").count()')
-        .all()
-        .result()[0]
-    )
+    person_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+    ).all()[0]
+    knows_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").count()'
+    ).all()[0]
     interactive2 = gs_session_distributed.gremlin(sub_graph)
-    sub_person_count = interactive2.execute("g.V().count()").all().result()[0]
-    sub_knows_count = interactive2.execute("g.E().count()").all().result()[0]
+    sub_person_count = interactive2.execute("g.V().count()").all()[0]
+    sub_knows_count = interactive2.execute("g.E().count()").all()[0]
     assert person_count == sub_person_count
     assert knows_count == sub_knows_count
 
@@ -196,21 +188,17 @@ def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir
     msub_graph = minteractive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
-    person_count = (
-        minteractive.execute(
-            'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
-        )
-        .all()
-        .result()[0]
-    )
+    person_count = minteractive.execute(
+        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+    ).all()[0]
     msub_interactive = gs_session_distributed.gremlin(msub_graph)
-    sub_person_count = msub_interactive.execute("g.V().count()").all().result()[0]
+    sub_person_count = msub_interactive.execute("g.V().count()").all()[0]
     assert person_count == sub_person_count
 
     # GNN engine
 
 
-def test_multiple_session(data_dir):
+def test_multiple_session():
     namespace = "gs-multi-" + "".join(
         [random.choice(string.ascii_lowercase) for _ in range(6)]
     )
@@ -242,57 +230,31 @@ def test_multiple_session(data_dir):
     sess.close()
 
 
-def test_query_modern_graph(gs_session, modern_graph_data_dir):
+def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_scripts):
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
-    queries = [
-        "g.V().has('name','marko').count()",
-        "g.V().has('person','name','marko').count()",
-        "g.V().has('person','name','marko').outE('created').count()",
-        "g.V().has('person','name','marko').outE('created').inV().count()",
-        "g.V().has('person','name','marko').out('created').count()",
-        "g.V().has('person','name','marko').out('created').values('name').count()",
-    ]
-    for q in queries:
-        result = interactive.execute(q).all().result()[0]
+
+    for q in modern_scripts:
+        result = interactive.execute(q).all()[0]
         assert result == 1
+    # with pytest.raises(
+    #     AssertionError,
+    #     match="GAIA not enabled. Enable gaia with `session(enable_gaia=True)`",
+    # ):
+    #     interactive.gaia().execute(modern_scripts[0]).all()
 
 
-def test_traversal_modern_graph(gs_session, modern_graph_data_dir):
-    from gremlin_python.process.traversal import Order
-    from gremlin_python.process.traversal import P
-
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+def test_traversal_modern_graph(gs_session, modern_graph_data_dir, modern_bytecode):
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
     g = interactive.traversal_source()
-    assert g.V().has("name", "marko").count().toList()[0] == 1
-    assert g.V().has("person", "name", "marko").count().toList()[0] == 1
-    assert g.V().has("person", "name", "marko").outE("created").count().toList()[0] == 1
-    assert (
-        g.V().has("person", "name", "marko").outE("created").inV().count().toList()[0]
-        == 1
-    )
-    assert g.V().has("person", "name", "marko").out("created").count().toList()[0] == 1
-    assert (
-        g.V()
-        .has("person", "name", "marko")
-        .out("created")
-        .values("name")
-        .count()
-        .toList()[0]
-        == 1
-    )
-    assert (
-        g.V()
-        .hasLabel("person")
-        .has("age", P.gt(30))
-        .order()
-        .by("age", Order.desc)
-        .count()
-        .toList()[0]
-        == 2
-    )
+    modern_bytecode(g)
+
+    # with pytest.raises(
+    #     AssertionError,
+    #     match="GAIA not enabled. Enable gaia with `session(enable_gaia=True)`",
+    # ):
+    #     g.gaia().V().count().toList()
 
 
 def test_add_vertices_edges(gs_session_distributed, modern_graph_data_dir):

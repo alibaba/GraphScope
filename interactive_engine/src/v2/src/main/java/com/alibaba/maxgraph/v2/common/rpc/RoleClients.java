@@ -31,7 +31,6 @@ import java.util.function.Function;
  * @param <T>
  */
 public class RoleClients<T extends RpcClient> {
-    private static final Logger logger = LoggerFactory.getLogger(RoleClients.class);
 
     private ChannelManager channelManager;
     private RoleType targetRole;

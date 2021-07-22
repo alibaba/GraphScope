@@ -1,5 +1,4 @@
 Cython==3.0a6
-decorator>=5.0.5
 gremlinpython
 grpcio
 grpcio-tools
@@ -13,3 +12,4 @@ PyYAML
 scipy
 vineyard>=0.2.5
 vineyard-io>=0.2.5
+packaging

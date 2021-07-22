@@ -98,9 +98,8 @@ jobs:
         strip /opt/graphscope/lib64/* || true
 
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
-        cd analytical_engine
-        mkdir build
-        cd build
+        mkdir analytical_engine/build
+        cd analytical_engine/build
         cmake .. -DCMAKE_PREFIX_PATH=/opt/graphscope \
                  -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
                  -DNETWORKX=${{ matrix.networkx }}
@@ -295,12 +294,12 @@ jobs:
       if: matrix.networkx == 'OFF'
       run: |
         # prelaunch the etcd
-        /usr/local/bin/etcd --data-dir=/dev/shm/default.etcd &
+        /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
         export GS_TEST_DIR='/root/gstest'
         cd python
-        python3 -m pytest --ignore tests/test_run_locally.py --cov=graphscope --cov-config=.coveragerc \
-                          --cov-report=xml --cov-report=term --exitfirst -s -v tests
+        python3 -m pytest --cov=graphscope --cov-config=.coveragerc \
+                          --cov-report=xml --cov-report=term --exitfirst -s -v tests/unittest/
 
         pkill -TERM etcd || true
 
@@ -315,7 +314,7 @@ jobs:
       if: matrix.networkx == 'ON'
       run: |
         # prelaunch the etcd
-        /usr/local/bin/etcd --data-dir=/dev/shm/default.etcd &
+        /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
         export GS_TEST_DIR='/root/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/classes
@@ -391,10 +390,11 @@ jobs:
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         cd python
-        python3 -m pytest --ignore graphscope/deploy/tests/test_store_service.py \
+        python3 -m pytest --ignore=./tests/kubernetes/test_store_service.py \
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
-                          ./graphscope/deploy/tests/
+                          ./tests/kubernetes
+
     - name: Helm test
       run: |
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
@@ -535,6 +535,11 @@ jobs:
   gss-test:
     runs-on: self-hosted
     needs: [build-gss]
+    strategy:
+      matrix:
+        #executor: [maxgraph, gaia]
+        # Add gaia when supported
+        executor: [maxgraph]
     steps:
     - name: Clean up
       run: |
@@ -576,7 +581,7 @@ jobs:
         cd charts/graphscope-store
         helm dependency update
         cd ..
-        helm install ci --set image.tag=${{ github.sha }} \
+        helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} \
                                       ./graphscope-store
         helm test ci --timeout 5m0s
 
@@ -608,7 +613,7 @@ jobs:
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
 
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest -s -vvv graphscope/deploy/tests/test_store_service.py
+        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py
 
     - name: Clean
       if: always()
