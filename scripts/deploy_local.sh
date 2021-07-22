@@ -195,10 +195,12 @@ init_basic_packages() {
       perl
       fmt-devel
       libarchive
+      gflags-devel
+      glog-devel
+      gtest-devel
       rust
     )
   else
-    echo "init for mac"
     BASIC_PACKGES_TO_INSTALL=(
       double-conversion
       etcd
