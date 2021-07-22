@@ -202,3 +202,11 @@ app:
     src: apps/boundary/edge_boundary.h
     compatible_graph:
       - gs::DynamicProjectedFragment
+  - algo: average_degree_connectivity
+    type: cpp_pie
+    class_name: gs::AverageDegreeConnectivity
+    src: apps/assortativity/average_degree_connectivity/average_degree_connectivity.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment

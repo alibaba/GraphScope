@@ -990,3 +990,77 @@ def edge_boundary(G, nbunch1, nbunch2=None):
         n2json = ""
     ctx = AppAssets(algo="edge_boundary", context="tensor")(G, n1json, n2json)
     return ctx.to_numpy("r", axis=0).tolist()
+
+
+@project_to_simple
+def average_degree_connectivity(G, source="in+out", target="in+out", weight=None):
+    """Compute the average degree connectivity of graph.
+
+    The average degree connectivity is the average nearest neighbor degree of
+    nodes with degree k. For weighted graphs, an analogous measure can
+    be computed using the weighted average neighbors degree defined in
+    [1]_, for a node `i`, as
+
+    .. math::
+
+        k_{nn,i}^{w} = \frac{1}{s_i} \sum_{j \in N(i)} w_{ij} k_j
+
+    where `s_i` is the weighted degree of node `i`,
+    `w_{ij}` is the weight of the edge that links `i` and `j`,
+    and `N(i)` are the neighbors of node `i`.
+
+    Parameters
+    ----------
+    G : NetworkX graph
+
+    source :  "in"|"out"|"in+out" (default:"in+out")
+       Directed graphs only. Use "in"- or "out"-degree for source node.
+
+    target : "in"|"out"|"in+out" (default:"in+out"
+       Directed graphs only. Use "in"- or "out"-degree for target node.
+
+    weight : string or None, optional (default=None)
+       The edge attribute that holds the numerical value used as a weight.
+       If None, then each edge has weight 1.
+
+    Returns
+    -------
+    d : dict
+       A dictionary keyed by degree k with the value of average connectivity.
+
+    Raises
+    ------
+    ValueError
+        If either `source` or `target` are not one of 'in',
+        'out', or 'in+out'.
+
+    Examples
+    --------
+    >>> G = nx.Graph()
+    >>> G.add_edges_from([(0, 1), (2, 3)], weight=1)
+    >>> G.add_edge(1, 2, weight=3)
+    >>> nx.builtin.average_degree_connectivity(G)
+    {1: 2.0, 2: 1.5}
+    >>> nx.builtin.average_degree_connectivity(G, weight="weight")
+    {1: 2.0, 2: 1.75}
+
+    References
+    ----------
+    .. [1] A. Barrat, M. Barthélemy, R. Pastor-Satorras, and A. Vespignani,
+       "The architecture of complex weighted networks".
+       PNAS 101 (11): 3747–3752 (2004).
+    """
+    if G.is_directed():
+        if source not in ("in", "out", "in+out"):
+            raise ValueError('source must be one of "in", "out", or "in+out"')
+        if target not in ("in", "out", "in+out"):
+            raise ValueError('target must be one of "in", "out", or "in+out"')
+    ctx = AppAssets(algo="average_degree_connectivity", context="tensor")(
+        G, source, target, G.is_directed()
+    )
+    l = ctx.to_numpy("r", axis=0).tolist()
+    l = [i for item in l for i in item]
+    list1 = [int(i) for i in l[0::2]]
+    list2 = l[1::2]
+    res = dict(zip(list1, list2))
+    return res
