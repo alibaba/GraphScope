@@ -8,6 +8,7 @@ set -o pipefail
 # color
 readonly RED="\033[0;31m"
 readonly YELLOW="\033[1;33m"
+readonly GREEN="'\e[0;32m'"...
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
@@ -19,10 +20,23 @@ readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 readonly IS_IN_WSL
 INSTALL_PREFIX=/usr/local
-PACKAGES_TO_UPDATE=()
+BASIC_PACKGES_TO_INSTALL=
 PLATFORM=
 OS_VERSION=
 VERBOSE=false
+packages_to_install=()
+
+err() {
+  echo -e "${RED}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [ERROR] $*${NC}" >&2
+}
+
+warning() {
+  echo -e "${YELLOW}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [WARNING] $*${NC}" >&1
+}
+
+log() {
+  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&1
+}
 
 ##########################
 # Output useage information.
@@ -50,26 +64,12 @@ cat <<END
 END
 }
 
-err() {
-  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${RED}ERROR${NC}] $*" >&2
-}
-
-warning() {
-  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [${YELLOW}WARNING${NC}] $*" >&1
-}
-
-log() {
-  echo -e "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&1
-}
-
 ##########################
-# Get os platform and version
+# Get OS platform and version
 # Globals:
 #   PLATFORM
 #   OS_VERSION
-# Arguments:
-#   None
-# Refer:
+# Reference:
 # https://unix.stackexchange.com/questions/6345/how-can-i-get-distribution-name-and-version-number-in-a-simple-shell-script
 ##########################
 get_os_version() {
@@ -106,23 +106,15 @@ get_os_version() {
 
 ##########################
 # Check the compatibility of platform and script.
-# Globals:
-#   None
-# Arguments:
-#   None
-# Outputs:
-#   Writes error message to stderr
-# Returns:
-#   non-zero on error.
 ##########################
 check_os_compatibility() {
   if [[ "${is_in_wsl}" == true && -z "${WSL_INTEROP}" ]]; then
-    err "The platform is WSL1. GraphScope not support to run on WSL1, please use WSL2."
+    err "GraphScope does not support to run on WSL1, please use WSL2."
     exit 1
   fi
 
   if [[ "${PLATFORM}" != *"Ubuntu"* && "${PLATFORM}" != *"CentOS"* && "${PLATFORM}" != *"Darwin"* ]]; then
-    err "The platform is not Ubuntu or MacOS. This script is only available on Ubuntu/CentOS/MacOS"
+    err "The script is only support platforms of Ubuntu/CentOS/macOS"
     exit 1
   fi
 
@@ -132,134 +124,226 @@ check_os_compatibility() {
   fi
 
   if [[ "${PLATFORM}" == *"CentOS"* && "${OS_VERSION}" -lt "8" ]]; then
-    err "The version of CentOS is ${OS_VERSION}. this script requires CentOS 8 or greater."
+    err "The version of CentOS is ${OS_VERSION}. This script requires CentOS 8 or greater."
     exit 1
   fi
 
   log "Runing on ${PLATFORM} ${OS_VERSION}"
 }
 
-##########################
-# Check the dependencies of install_deps command.
-# Globals:
-#   None
-# Arguments:
-#   None
-# Outputs:
-#   Writes error message to stderr
-# Returns:
-#   non-zero on error.
-##########################
-check_dependencies_version() {
-  log "Checking dependencies of install_deps command."
-
-  if ! command -v sudo &> /dev/null; then
-    err "sudo is not installed."
-    exit 1
-  fi
-  # python3
-  if ! command -v python3 &> /dev/null; then
-    err "Python3 is not installed."
-    exit 1
-  fi
-  ver=$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
-  if [ "${ver}" -lt "36" ]; then
-    err "GraphScope requires python 3.6 or greater."
-    exit 1
-  fi
-  # cmake
-  if ! command -v cmake &> /dev/null; then
-    PACKAGES_TO_UPDATE+=(cmake)
+init_basic_packages() {
+  if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
+    BASIC_PACKGES_TO_INSTALL=(
+      curl
+      libbrotli-dev
+      libbz2-dev
+      libcurl4-openssl-dev
+      libdouble-conversion-dev
+      protobuf-compiler-grpc
+      libevent-dev
+      libgflags-dev
+      libgoogle-glog-dev
+      libgrpc-dev
+      libgrpc++-dev
+      libgtest-dev
+      libgsasl7-dev
+      libtinfo5
+      libkrb5-dev
+      liblz4-dev
+      libprotobuf-dev
+      libre2-dev
+      libsnappy-dev
+      libssl-dev
+      libunwind-dev
+      libutf8proc-dev
+      libxml2-dev
+      libz-dev
+      libzstd-dev
+      lsb-release
+      zlib1g-dev
+      uuid-dev
+      wget
+      zip
+      perl
+    )
+  elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
+    BASIC_PACKGES_TO_INSTALL=(
+      autoconf
+      automake
+      double-conversion-devel
+      git
+      zlib-devel
+      libcurl-devel
+      libevent-devel
+      libgsasl-devel
+      libunwind-devel
+      libuuid-devel
+      libxml2-devel
+      libzip
+      libzip-devel
+      m4
+      minizip
+      minizip-devel
+      make
+      net-tools
+      openssl-devel
+      unzip
+      wget
+      which
+      zip
+      bind-utils
+      perl
+      fmt-devel
+      libarchive
+      rust
+    )
   else
-    ver=$(cmake --version 2>&1 | awk -F ' ' '/version/ {print $3}')
-    if [[ "${ver}" < "3.1" ]]; then
-      PACKAGES_TO_UPDATE+=(cmake)
-    fi
+    echo "init for mac"
+    BASIC_PACKGES_TO_INSTALL=(
+      double-conversion
+      etcd
+      protobuf
+      openmpi
+      glog
+      gflags
+      zstd
+      snappy
+      lz4
+      openssl
+      libevent
+      fmt
+      autoconf
+      gnu-sed
+      wget
+    )
   fi
-  if ! command -v go &> /dev/null; then
-    PACKAGES_TO_UPDATE+=(go)
-  fi
-  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if ! hash brew; then
-      err "Homebrew is not installed. Please install Homebrew: https://docs.brew.sh/Installation."
-      exit 1
-    fi
-  fi
-  readonly PACKAGES_TO_UPDATE
+  readonly BASIC_PACKGES_TO_INSTALL
 }
+
 
 ##########################
 # Check the dependencies of deploy command.
-# Globals:
-#   None
-# Arguments:
-#   None
-# Outputs:
-#   Writes error message to stderr
-# Returns:
-#   non-zero on error.
 ##########################
-check_dependencies_of_deploy() {
-  log "Checking dependencies of deploy command."
+check_dependencies() {
+  log "Checking dependencies of deploy."
 
-  err_msg="could not be found, you can install it manually, or via install_deps command."
-  if ! hash sudo; then
-    err "sudo is not installed."
-    exit 1
-  fi
+  # python3
   if ! command -v python3 &> /dev/null; then
-    err "Python3 is not installed."
-    exit 1
+    packages_to_install+=(python3)
+  else
+    ver=$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
+    if [ "${ver}" -lt "36" ]; then
+      packages_to_install+=(python3)
+    fi
   fi
-  ver=$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
-  if [ "${ver}" -lt "36" ]; then
-    err "GraphScope requires python 3.6 or greater. Current version is ${python3 -V}"
-    exit 1
-  fi
+
   # cmake
   if ! command -v cmake &> /dev/null; then
-    err "cmake ${err_msg}"
-    exit 1
+    packages_to_install+=(cmake)
+  else
+    ver=$(cmake --version 2>&1 | awk -F ' ' '/version/ {print $3}')
+    if [[ "${ver}" < "3.1" ]]; then
+      packages_to_install+=(cmake)
+    fi
   fi
-  ver=$(cmake --version 2>&1 | awk -F ' ' '/version/ {print $3}')
-  if [[ "${ver}" < "3.1" ]]; then
-    err "GraphScope require cmake 3.1 or greater. Current version is ${ver}."
-  fi
+
   # java
-  if ! command -v java &> /dev/null; then
-    err "java ${err_msg}"
-    exit 1
+  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
+    if [ ! -f "/usr/libexec/java_home" ]; then
+      packages_to_install+=(jdk8)
+    elif ! /usr/libexec/java_home -v 1.8 &> /dev/null; then
+      packages_to_install+=(jdk8)
+    fi
+  else
+    if ! command -v java &> /dev/null; then
+      if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
+        packages_to_install+=(openjdk-8-jdk)
+      elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
+        packages_to_install+=(java-1.8.0-openjdk-devel)
+      else
+        packages_to_install+=(jdk8)
+      fi
+    else
+      ver=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $2}')
+      if [[ "${ver}" != "8" ]]; then
+        if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
+          packages_to_install+=(openjdk-8-jdk)
+        elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
+          packages_to_install+=(java-1.8.0-openjdk-devel)
+        fi
+      fi
+    fi
   fi
-  ver=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $2}')
-  if [[ "${ver}" != "8" ]]; then
-    err "GraphScope requires jdk8. Current version is jdk${ver}."
-    exit 1
+
+  # boost
+  if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
+    if [ ! -f "/usr/include/boost/version.hpp" ]; then
+      packages_to_install+=(libboost-all-dev)
+    else
+      ver=$(grep "#define BOOST_VERSION" /usr/include/boost/version.hpp | cut -d' ' -f3)
+      if [[ "${ver}" -lt "106600" ]]; then
+        packages_to_install+=(libboost-all-dev)
+      fi
+    fi
+  elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
+    if [ ! -f "/usr/include/boost/version.hpp" ]; then
+      packages_to_install+=(boost-devel)
+    else
+      ver=$(grep "#define BOOST_VERSION" /usr/include/boost/version.hpp | cut -d' ' -f3)
+      if [[ "${ver}" -lt "106600" ]]; then
+        packages_to_install+=(boost-devel)
+      fi
+    fi
+  else
+    if [ ! -f "/usr/local/include/boost/version.hpp" ]; then
+      packages_to_install+=(boost)
+    else
+      ver=$(grep "#define BOOST_VERSION" /usr/local/include/boost/version.hpp | cut -d' ' -f3)
+      if [[ "${ver}" -lt "106600" ]]; then
+        packages_to_install+=(boost)
+      fi
+    fi
   fi
-  if [ -z ${JAVA_HOME} ]; then
-    err "The environment JAVA_HOME not set. Please set the JAVA_HOME environment."
-    exit 1
+
+  # apache arrow
+  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
+    if [ ! -f "/usr/local/include/arrow/api.h" ]; then
+      packages_to_install+=(apache-arrow)
+    fi
+  else
+    if [ ! -f "/usr/include/arrow/api.h" ]; then
+      packages_to_install+=(apache-arrow)
+    fi
   fi
+
+  # maven
   if ! command -v mvn &> /dev/null; then
-    err "maven ${err_msg}"
-    exit 1
+    packages_to_install+=(maven)
   fi
-  if ! command -v cargo &> /dev/null; then
-    err "cargo ${err_msg} or source ~/.cargo/env"
-    exit 1
+
+  # rust
+  if ! command -v rustc &> /dev/null; then
+    packages_to_install+=(rust)
   fi
+
+  # golang
   if ! command -v go &> /dev/null; then
-    err "go ${err_msg}"
-    exit 1
+    if [[ "${PLATFORM}" == *"CentOS"* ]]; then
+      packages_to_install+=(golang)
+    else
+      packages_to_install+=(go)
+    fi
   fi
+
+  # clang in Darwin
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if ! command -v clang &> /dev/null; then
-      err "clang ${err_msg}. GraphScope require clang >=8"
-      exit 1
-    fi
-    ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')
-    if [[ "${ver}" -lt "7" ]]; then
-      err "GraphScope requires clang >=7 on MacOS. Current version is ${ver}."
-      exit 1
+      packages_to_install+=("llvm@${LLVM_VERSION}")
+    else
+      ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')
+      if [[ "${ver}" -lt "7" || "${ver}" -gt "10" ]]; then
+        packages_to_install+=("llvm@${LLVM_VERSION}")
+      fi
     fi
   fi
 }
@@ -277,25 +361,27 @@ check_dependencies_of_deploy() {
 ##########################
 write_envs_config() {
   if [ if "${SOURCE_DIR}/gs_env" ]; then
-    warning "Found gs_env exists, remove the environmen variables and generate a new one."
+    warning "Found gs_env exists, remove the environmen config file and generate a new one."
   fi
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     {
-      echo "export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang"
-      echo "export CXX=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang++"
-      echo "export LDFLAGS=-L/usr/local/opt/llvm@${LLVM_VERSION}/lib"
-      echo "export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include"
+      if [[ "${packages_to_install[@]}" =~ "llvm@${LLVM_VERSION}" ]]; then
+        # packages_to_install contains llvm
+        echo "export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang"
+        echo "export CXX=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang++"
+        echo "export LDFLAGS=-L/usr/local/opt/llvm@${LLVM_VERSION}/lib"
+        echo "export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include"
+        echo "export PATH=/usr/local/opt/llvm@${LLVM_VERSION}/bin:\$PATH"
+      fi
+      echo "export JAVA_HOME=\$(/usr/libexec/java_home -v 1.8)"
+      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
       echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
-      # FIXME: gie should support latest jdk.
-      echo "export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home"
-      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:/usr/local/opt/llvm@${LLVM_VERSION}/bin\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
     } >> ${SOURCE_DIR}/gs_env
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     {
-      # FIXME: gie should support latest jdk.
       echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64"
       echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/zookeeper/bin"
     } >> ${SOURCE_DIR}/gs_env
@@ -319,30 +405,39 @@ write_envs_config() {
 #   output log to stdout, output error to stderr.
 ##########################
 install_dependencies() {
+
+  # install dependencies for specific platforms.
   if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     sudo apt-get update -y
-    sudo apt install -y ca-certificates ccache cmake curl etcd libbrotli-dev \
-      libbz2-dev libcurl4-openssl-dev libdouble-conversion-dev libevent-dev libgflags-dev \
-      libboost-all-dev libgoogle-glog-dev libgrpc-dev libgrpc++-dev libgtest-dev libgsasl7-dev \
-      libtinfo5 libkrb5-dev liblz4-dev libprotobuf-dev librdkafka-dev libre2-dev libsnappy-dev \
-      libssl-dev libunwind-dev libutf8proc-dev libxml2-dev libz-dev libzstd-dev lsb-release maven \
-      openjdk-8-jdk perl protobuf-compiler-grpc python3-pip uuid-dev wget zip zlib1g-dev
 
-    log "Installing Go and rust."
-    wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
-    sudo tar -C /usr/local -xzf /tmp/go1.15.5.linux-amd64.tar.gz
-    curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
-    rm -fr /tmp/go1.15.5.linux-amd64.tar.gz
+    if [[ "${packages_to_install[@]}" =~ "go" ]]; then
+      # packages_to_install contains go
+      log "Installing Go."
+      wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
+      sudo tar -C /usr/local -xzf /tmp/go1.15.5.linux-amd64.tar.gz
+      rm -fr /tmp/go1.15.5.linux-amd64.tar.gz
+      # remove go from packages_to_install
+      packages_to_install=("${packages_to_install[@]/go}")
+    fi
+    if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
+      # packages_to_install contains rust
+      log "Installing rust."
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+      # remove rust from packages_to_install
+      packages_to_install=("${packages_to_install[@]/rust}")
+    fi
 
-    write_envs_config
-    source ${SOURCE_DIR}/gs_env
+    if [[ "${packages_to_install[@]}" =~ "apache-arrow" ]]; then
+      log "Installing apache-arrow."
+      wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+      sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+      sudo apt install -y libarrow-dev=3.0.0-1 libarrow-python-dev=3.0.0-1
+      # remove apache-arrow from packages_to_install
+      packages_to_install=("${packages_to_install[@]/apache-arrow}")
+    fi
 
-    log "Installing apache-arrow."
-    wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
-    sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
-
-    sudo apt update -y
-    sudo apt install -y libarrow-dev=3.0.0-1 libarrow-python-dev=3.0.0-1
+    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
+    sudo apt install -y ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
 
     log "Installing fmt."
     wget https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz -P /tmp
@@ -354,30 +449,26 @@ install_dependencies() {
     sudo make install
     popd
     rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
+
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     sudo dnf install -y https://download-ib01.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 
     sudo dnf -y install gcc gcc-c++
-    sudo dnf -y install autoconf automake double-conversion-devel git cmake zlib-devel \
-         libcurl-devel libevent-devel libgsasl-devel libunwind-devel.x86_64 boost-devel \
-         libuuid-devel libxml2-devel libzip libzip-devel m4 minizip minizip-devel \
-         make net-tools openssl-devel python3-devel rsync telnet unzip \
-         wget which zip bind-utils perl java-1.8.0-openjdk-devel golang cargo \
-         maven fmt-devel libarchive
-
-    sudo dnf --enablerepo=powertools install -y gflags-devel glog-devel gtest-devel
-
-    log "Installing apache-arrow."
-    sudo dnf install -y epel-release || sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm
-    sudo dnf install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm
     sudo dnf config-manager --set-enabled epel || :
     sudo dnf config-manager --set-enabled powertools || :
-    sudo dnf config-manager --set-enabled codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-rhui-rpms || :
-    sudo subscription-manager repos --enable codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-$(arch)-rpms || :
-    sudo dnf --enablerepo=epel install -y arrow-devel
 
-    write_envs_config
-    source ${SOURCE_DIR}/gs_env
+    if [[ "${packages_to_install[@]}" =~ "apache-arrow" ]]; then
+      log "Installing apache-arrow."
+      sudo dnf install -y epel-release || sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm
+      sudo dnf install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm
+      sudo subscription-manager repos --enable codeready-builder-for-rhel-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)-$(arch)-rpms || :
+      sudo dnf --enablerepo=epel install -y arrow-devel
+      # remove apache-arrow from packages_to_install
+      packages_to_install=("${packages_to_install[@]/apache-arrow}")
+    fi
+
+    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
+    sudo dnf -y install ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
 
     log "Installing protobuf v.3.13.0"
     wget https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-all-3.13.0.tar.gz -P /tmp
@@ -431,22 +522,29 @@ install_dependencies() {
     sudo make install
     popd
     rm -fr /tmp/openmpi-4.0.5 /tmp/openmpi-4.0.5.tar.gz
+
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if [ "${PACKAGES_TO_UPDATE}" != "" ]; then
-      # brew install/update PACKAGES_TO_UPDATE
-      brew install ${PACKAGES_TO_UPDATE}
+    if [[ "${packages_to_install[@]}" =~ "jdk8" ]]; then
+      # packages_to_install contains jdk8
+      log "Installing adoptopenjdk8."
+      brew tap adoptopenjdk/openjdk
+      brew install --cask adoptopenjdk8
+      # remove jdk8 from packages_to_install
+      packages_to_install=("${packages_to_install[@]/jdk8}")
     fi
-    # brew install, if already installed, no need to update
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install double-conversion etcd protobuf \
-      apache-arrow openmpi boost glog gflags zstd snappy lz4 openssl@1.1 libevent \
-      fmt autoconf maven gnu-sed wget llvm@${LLVM_VERSION}
 
-    # GraphScope require jdk8
-    brew tap adoptopenjdk/openjdk
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install --cask adoptopenjdk8
+    log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
+    brew install ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
 
-    write_envs_config
-    source ${SOURCE_DIR}/gs_env
+    export OPENSSL_ROOT_DIR=/usr/local/opt/openssl
+    export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib
+    export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib
+    if [[ "${packages_to_install[@]}" =~ "llvm${LLVM_VERSION}" ]]; then
+      export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang
+      export CXX=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang++
+      export LDFLAGS=-L/usr/local/opt/llvm@${LLVM_VERSION}/lib
+      export CPPFLAGS=-I/usr/local/opt/llvm@${LLVM_VERSION}/include
+    fi
   fi
 
   log "Installing folly."
@@ -470,6 +568,9 @@ install_dependencies() {
   log "Installing python packages for vineyard codegen."
   pip3 install -U pip --user
   pip3 install grpcio-tools libclang parsec setuptools wheel twine --user
+
+  log "Output environments config file ${SOURCE_DIR}/gs_env"
+  write_envs_config
 }
 
 ##########################
@@ -551,7 +652,7 @@ install_vineyard() {
 #   output log to stdout, output error to stderr.
 ##########################
 install_graphscope() {
-  log "Deploying GraphScope."
+  log "Build GraphScope."
   pushd ${SOURCE_DIR}
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
@@ -580,13 +681,15 @@ install_deps() {
 
   check_os_compatibility
 
-  check_dependencies_version
+  init_basic_packages
+
+  check_dependencies
 
   install_dependencies
 
-  succ_msg="Install dependencies successfully. The script had output the related
+  succ_msg="${GREEN}Install dependencies successfully. The script had output the related
   environments to ${SOURCE_DIR}/gs_env.\nPlease run 'source ${SOURCE_DIR}/gs_env'
-  before run deploy command."
+  before run deploy command.${NC}"
   log ${succ_msg}
   if [ ${VERBOSE} = true ]; then
     set +x
@@ -611,7 +714,14 @@ deploy() {
 
   check_os_compatibility
 
-  check_dependencies_of_deploy
+  check_dependencies
+
+  if [ "${packages_to_install}" != "" ]; then
+    err_msg="The dependence of GraphScope is not satisfied. These packages
+            [${packages_to_install[*]}] are not installed or version not compatible."
+    err ${err_msg}
+    exit 1
+  fi
 
   install_libgrape-lite
 
@@ -619,9 +729,10 @@ deploy() {
 
   install_graphscope
 
-  succ_msg="Deploy GraphScope successfully. Finally you need to run
+  succ_msg="${GREEN}GraphScope has been built successfully and installed on ${INSTALL_PREFIX}. \n
+  Please manually run \n
   'export GRAPHSCOPE_PREFIX=${INSTALL_PREFIX}'\n
-  Hope you have fun with GraphScope."
+  to before using GraphScope via Python client, enjoy!\n${NC}"
   log ${succ_msg}
   if [ ${VERBOSE} = true ]; then
     set +x
