@@ -25,6 +25,7 @@ PLATFORM=
 OS_VERSION=
 VERBOSE=false
 packages_to_install=()
+install_folly=false
 
 err() {
   echo -e "${RED}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [ERROR] $*${NC}" >&2
@@ -49,7 +50,7 @@ usage() {
 cat <<END
   A script to install dependencies of GraphScope or deploy GraphScope locally.
 
-  Usage: deploy_local [options] [command]
+  Usage: deploy_local [options] command
 
   Options:
 
@@ -134,7 +135,6 @@ check_os_compatibility() {
 init_basic_packages() {
   if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
-      curl
       libbrotli-dev
       libbz2-dev
       libcurl4-openssl-dev
@@ -162,7 +162,6 @@ init_basic_packages() {
       lsb-release
       zlib1g-dev
       uuid-dev
-      wget
       zip
       perl
     )
@@ -188,12 +187,10 @@ init_basic_packages() {
       net-tools
       openssl-devel
       unzip
-      wget
       which
       zip
       bind-utils
       perl
-      fmt-devel
       libarchive
       gflags-devel
       glog-devel
@@ -203,9 +200,7 @@ init_basic_packages() {
   else
     BASIC_PACKGES_TO_INSTALL=(
       double-conversion
-      etcd
       protobuf
-      openmpi
       glog
       gflags
       zstd
@@ -213,7 +208,6 @@ init_basic_packages() {
       lz4
       openssl
       libevent
-      fmt
       autoconf
       gnu-sed
       wget
@@ -229,107 +223,75 @@ init_basic_packages() {
 check_dependencies() {
   log "Checking dependencies of deploy."
 
-  # python3
-  if ! command -v python3 &> /dev/null; then
-    packages_to_install+=(python3)
-  else
-    ver=$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
-    if [ "${ver}" -lt "36" ]; then
+  # check python3 >= 3.6
+  if [[ $(! command -v python3 &> /dev/null) || \
+        "$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')" -lt "36" ]]; then
+    if [[ "${PLATFORM}" == *"CentOS"* ]]; then
+      packages_to_install+=(python3-devel)
+    else
       packages_to_install+=(python3)
     fi
   fi
 
-  # cmake
-  if ! command -v cmake &> /dev/null; then
+  # check cmake >= 3.1
+  if [[ $(! command -v cmake &> /dev/null) || \
+        "$(cmake --version 2>&1 | awk -F ' ' '/version/ {print $3}')" < "3.1" ]]; then
     packages_to_install+=(cmake)
-  else
-    ver=$(cmake --version 2>&1 | awk -F ' ' '/version/ {print $3}')
-    if [[ "${ver}" < "3.1" ]]; then
-      packages_to_install+=(cmake)
-    fi
   fi
 
-  # java
+  # check java == 1.8
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if [ ! -f "/usr/libexec/java_home" ]; then
-      packages_to_install+=(jdk8)
-    elif ! /usr/libexec/java_home -v 1.8 &> /dev/null; then
+    if [[ ! -f "/usr/libexec/java_home" || \
+          $(! /usr/libexec/java_home -v 1.8 &> /dev/null) ]]; then
       packages_to_install+=(jdk8)
     fi
   else
-    if ! command -v java &> /dev/null; then
+    if [[ $(! command -v java &> /dev/null) || \
+          "$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $2}')" -ne "8" ]]; then
       if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
         packages_to_install+=(openjdk-8-jdk)
-      elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
-        packages_to_install+=(java-1.8.0-openjdk-devel)
       else
-        packages_to_install+=(jdk8)
-      fi
-    else
-      ver=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $2}')
-      if [[ "${ver}" != "8" ]]; then
-        if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
-          packages_to_install+=(openjdk-8-jdk)
-        elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
-          packages_to_install+=(java-1.8.0-openjdk-devel)
-        fi
+        packages_to_install+=(java-1.8.0-openjdk-devel)  # CentOS
       fi
     fi
   fi
 
-  # boost
-  if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
-    if [ ! -f "/usr/include/boost/version.hpp" ]; then
-      packages_to_install+=(libboost-all-dev)
-    else
-      ver=$(grep "#define BOOST_VERSION" /usr/include/boost/version.hpp | cut -d' ' -f3)
-      if [[ "${ver}" -lt "106600" ]]; then
+  # check boost >= 1.66
+  if [[ ( ! -f "/usr/include/boost/version.hpp" || \
+        "$(grep "#define BOOST_VERSION" /usr/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) && \
+        ( ! -f "/usr/local/include/boost/version.hpp" || \
+        "$(grep "#define BOOST_VERSION" /usr/local/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) ]]; then
+    case "${PLATFORM}" in
+      *"Ubuntu"*)
         packages_to_install+=(libboost-all-dev)
-      fi
-    fi
-  elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
-    if [ ! -f "/usr/include/boost/version.hpp" ]; then
-      packages_to_install+=(boost-devel)
-    else
-      ver=$(grep "#define BOOST_VERSION" /usr/include/boost/version.hpp | cut -d' ' -f3)
-      if [[ "${ver}" -lt "106600" ]]; then
+        ;;
+      *"CentOS"*)
         packages_to_install+=(boost-devel)
-      fi
-    fi
-  else
-    if [ ! -f "/usr/local/include/boost/version.hpp" ]; then
-      packages_to_install+=(boost)
-    else
-      ver=$(grep "#define BOOST_VERSION" /usr/local/include/boost/version.hpp | cut -d' ' -f3)
-      if [[ "${ver}" -lt "106600" ]]; then
+        ;;
+      *)
         packages_to_install+=(boost)
-      fi
-    fi
+        ;;
+    esac
   fi
 
-  # apache arrow
-  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if [ ! -f "/usr/local/include/arrow/api.h" ]; then
-      packages_to_install+=(apache-arrow)
-    fi
-  else
-    if [ ! -f "/usr/include/arrow/api.h" ]; then
-      packages_to_install+=(apache-arrow)
-    fi
+  # check apache-arrow
+  if [[ ! -f "/usr/local/include/arrow/api.h" && \
+        ! -f "/usr/include/arrow/api.h" ]]; then
+    packages_to_install+=(apache-arrow)
   fi
 
-  # maven
+  # check maven
   if ! command -v mvn &> /dev/null; then
     packages_to_install+=(maven)
   fi
 
-  # rust
-  if ! command -v rustc &> /dev/null; then
+  # check rust
+  if ! command -v rustup &> /dev/null; then
     packages_to_install+=(rust)
   fi
 
-  # golang
-  if ! command -v go &> /dev/null; then
+  # check golang
+  if ! command -v /usr/local/bin/go &> /dev/null; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
       packages_to_install+=(golang)
     else
@@ -337,15 +299,27 @@ check_dependencies() {
     fi
   fi
 
-  # clang in Darwin
+  # check etcd
+  if ! command -v etcd &> /dev/null; then
+    packages_to_install+=(etcd)
+  fi
+
+  # check mpi
+  if ! command -v mpiexec &> /dev/null; then
+    packages_to_install+=(openmpi)
+  fi
+
+  # check folly
+  if [ ! -f "/usr/local/include/folly/dynamic.h" ]; then
+    packages_to_install+=(folly)
+  fi
+
+  # check clang >=8, <=10 in Darwin
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if ! command -v clang &> /dev/null; then
+    if [[ $(! command -v clang &> /dev/null) || \
+       "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -lt "8" || \
+       "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -gt "10" ]]; then
       packages_to_install+=("llvm@${LLVM_VERSION}")
-    else
-      ver=$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')
-      if [[ "${ver}" -lt "7" || "${ver}" -gt "10" ]]; then
-        packages_to_install+=("llvm@${LLVM_VERSION}")
-      fi
     fi
   fi
 }
@@ -384,6 +358,7 @@ write_envs_config() {
     } >> ${SOURCE_DIR}/gs_env
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     {
+      echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
       echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64"
       echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/zookeeper/bin"
     } >> ${SOURCE_DIR}/gs_env
@@ -411,6 +386,10 @@ install_dependencies() {
   # install dependencies for specific platforms.
   if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     sudo apt-get update -y
+    sudo apt-get install -y build-essential
+      wget
+      curl
+      lsb-release
 
     if [[ "${packages_to_install[@]}" =~ "go" ]]; then
       # packages_to_install contains go
@@ -439,33 +418,73 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/apache-arrow}")
     fi
 
+    if [[ "${packages_to_install[@]}" =~ "folly" ]]; then
+      install_folly=true
+      # remove folly from packages_to_install
+      packages_to_install=("${packages_to_install[@]/folly}")
+    fi
+
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
     sudo apt install -y ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
-
-    log "Installing fmt."
-    wget https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz -P /tmp
-    tar xf /tmp/7.0.3.tar.gz -C /tmp/
-    pushd /tmp/fmt-7.0.3
-    mkdir -p build && cd build
-    cmake .. -DBUILD_SHARED_LIBS=ON
-    make -j${NUM_PROC}
-    sudo make install
-    popd
-    rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
 
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     sudo dnf install -y https://download-ib01.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 
-    sudo dnf -y install gcc gcc-c++
     sudo dnf config-manager --set-enabled epel || :
     sudo dnf config-manager --set-enabled powertools || :
+    sudo dnf -y install gcc \
+      gcc-c++
+      wget
+      curl
 
     if [[ "${packages_to_install[@]}" =~ "apache-arrow" ]]; then
       log "Installing apache-arrow."
       sudo dnf install -y epel-release || sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm
       sudo dnf install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm
+      sudo dnf install -y arrow-devel
       # remove apache-arrow from packages_to_install
       packages_to_install=("${packages_to_install[@]/apache-arrow}")
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "openmpi" ]]; then
+      log "Installing openmpi v4.0.5"
+      wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz -P /tmp
+      tar zxvf /tmp/openmpi-4.0.5.tar.gz -C /tmp
+      pushd /tmp/openmpi-4.0.5 && ./configure --enable-mpi-cxx
+      make -j${NUM_PROC}
+      sudo make install
+      popd
+      rm -fr /tmp/openmpi-4.0.5 /tmp/openmpi-4.0.5.tar.gz
+      packages_to_install=("${packages_to_install[@]/openmpi}")
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "etcd" ]]; then
+      log "Installing etcd v3.4.13"
+      mkdir -p /tmp/etcd-download-test
+      export ETCD_VER=v3.4.13 && \
+      export DOWNLOAD_URL=https://github.com/etcd-io/etcd/releases/download && \
+      curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+      tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test --strip-components=1
+      sudo mv /tmp/etcd-download-test/etcd /usr/local/bin/
+      sudo mv /tmp/etcd-download-test/etcdctl /usr/local/bin/
+      rm -fr /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz /tmp/etcd-download-test
+      packages_to_install=("${packages_to_install[@]/etcd}")
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "folly" ]]; then
+      install_folly=true
+      # remove folly from packages_to_install
+      packages_to_install=("${packages_to_install[@]/folly}")
+      # add fmt to packages_to_install
+      packages_to_install+=(fmt-devel)
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
+      # packages_to_install contains rust
+      log "Installing rust."
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+      # remove rust from packages_to_install
+      packages_to_install=("${packages_to_install[@]/rust}")
     fi
 
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
@@ -505,25 +524,6 @@ install_dependencies() {
     popd
     rm -fr /tmp/grpc
 
-    log "Installing etcd v3.4.13"
-    mkdir -p /tmp/etcd-download-test
-    export ETCD_VER=v3.4.13 && \
-    export DOWNLOAD_URL=https://github.com/etcd-io/etcd/releases/download && \
-    curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
-    tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test --strip-components=1
-    sudo mv /tmp/etcd-download-test/etcd /usr/local/bin/
-    sudo mv /tmp/etcd-download-test/etcdctl /usr/local/bin/
-    rm -fr /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz /tmp/etcd-download-test
-
-    log "Installing openmpi v4.0.5"
-    wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz -P /tmp
-    tar zxvf /tmp/openmpi-4.0.5.tar.gz -C /tmp
-    pushd /tmp/openmpi-4.0.5 && ./configure --enable-mpi-cxx
-    make -j${NUM_PROC}
-    sudo make install
-    popd
-    rm -fr /tmp/openmpi-4.0.5 /tmp/openmpi-4.0.5.tar.gz
-
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [[ "${packages_to_install[@]}" =~ "jdk8" ]]; then
       # packages_to_install contains jdk8
@@ -532,6 +532,12 @@ install_dependencies() {
       brew install --cask adoptopenjdk8
       # remove jdk8 from packages_to_install
       packages_to_install=("${packages_to_install[@]/jdk8}")
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "folly" ]]; then
+      install_folly=true
+      packages_to_install=("${packages_to_install[@]/folly}")
+      packages_to_install+=(fmt)
     fi
 
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
@@ -548,16 +554,30 @@ install_dependencies() {
     fi
   fi
 
-  log "Installing folly."
-  wget https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz -P /tmp
-  tar xf /tmp/v2020.10.19.00.tar.gz -C /tmp/
-  pushd /tmp/folly-2020.10.19.00
-  mkdir -p _build && cd _build
-  cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
-  make -j${NUM_PROC}
-  sudo make install
-  popd
-  rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
+  if [ ${install_folly} = true ]; then
+    if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
+      log "Installing fmt."
+      wget https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz -P /tmp
+      tar xf /tmp/7.0.3.tar.gz -C /tmp/
+      pushd /tmp/fmt-7.0.3
+      mkdir -p build && cd build
+      cmake .. -DBUILD_SHARED_LIBS=ON
+      make -j${NUM_PROC}
+      sudo make install
+      popd
+      rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
+    fi
+    log "Installing folly."
+    wget https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz -P /tmp
+    tar xf /tmp/v2020.10.19.00.tar.gz -C /tmp/
+    pushd /tmp/folly-2020.10.19.00
+    mkdir -p _build && cd _build
+    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
+    make -j${NUM_PROC}
+    sudo make install
+    popd
+    rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
+  fi
 
   log "Installing zookeeper."
   wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz -P /tmp
@@ -744,11 +764,7 @@ set -e
 set -o pipefail
 
 # parse argv
-# TODO(acezen): when option and command is not illegal, warning and output usage.
 # TODO(acezen): now the option need to specify before command, that's not user-friendly.
-if test  $# -eq 0; then
-  usage
-fi
 while test $# -ne 0; do
   arg=$1; shift
   case ${arg} in
@@ -762,6 +778,9 @@ while test $# -ne 0; do
       usage; exit;;
   esac
 done
+if test  $# -eq 0; then
+  usage
+fi
 
 set +e
 set +o pipefail
