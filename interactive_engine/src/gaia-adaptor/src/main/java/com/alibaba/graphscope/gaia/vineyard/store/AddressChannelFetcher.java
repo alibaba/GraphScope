@@ -40,7 +40,7 @@ public class AddressChannelFetcher implements RpcChannelFetcher {
         try {
             List<Endpoint> endpoints = addressFetcher.getServiceAddress();
             logger.info("endpoints are {}", endpoints);
-            return endpoints.stream().map(k -> new RpcChannel(k.getIp(), k.getPort())).collect(Collectors.toList());
+            return endpoints.stream().map(k -> new RpcChannel(k.getIp(), k.getRuntimeCtrlAndAsyncPort())).collect(Collectors.toList());
         } catch (IllegalArgumentException e) {
             if (firstFetch) {
                 logger.warn("cannot get executors ip info");
