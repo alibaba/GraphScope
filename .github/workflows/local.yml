@@ -30,7 +30,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macOS-latest]
+        os: [ubuntu-20.04]
 
     steps:
     - uses: actions/checkout@v2
@@ -82,7 +82,8 @@ jobs:
 
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-        cp ${GITHUB_WORKSPACE}/python/tests/test_run_locally.py /tmp/test_run_locally.py
+        # Copy test_run_locally.py out of graphscope to enable import graph-learn from system path
+        cp ${GITHUB_WORKSPACE}/python/tests/local/test_run_locally.py /tmp/test_run_locally.py
         rm -rf ~/.ccache ~/.m2 ~/.cargo || true
         python3 -m pytest -s -v /tmp/test_run_locally.py
 
