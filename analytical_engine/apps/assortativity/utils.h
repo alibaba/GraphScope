@@ -18,4 +18,4 @@ limitations under the License.
 namespace gs {
 enum class DegreeType { IN, OUT, INANDOUT };
 }
-#endif
+#endif  // ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_UTILS_H_

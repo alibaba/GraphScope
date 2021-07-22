@@ -61,6 +61,11 @@ class AverageDegreeConnectivityContext : public TensorContext<FRAG_T, double> {
       LOG(FATAL) << "invalid parameter target_degree_type: "
                  << target_degree_type;
     }
+    if (std::is_same<edata_t, grape::EmptyType>::value) {
+      weighted = false;
+    } else {
+      weighted = true;
+    }
   }
 
   void Output(std::ostream& os) override {
@@ -73,10 +78,11 @@ class AverageDegreeConnectivityContext : public TensorContext<FRAG_T, double> {
   }
   bool merge_stage;
   bool directed;
+  bool weighted;
   DegreeType source_degree_type_;
   DegreeType target_degree_type_;
   // <degree, degree_connectivity> pair
-  std::unordered_map<int, std::pair<double, edata_t>> degree_connectivity_map;
+  std::unordered_map<int, std::pair<double, double>> degree_connectivity_map;
 };
 }  // namespace gs
 

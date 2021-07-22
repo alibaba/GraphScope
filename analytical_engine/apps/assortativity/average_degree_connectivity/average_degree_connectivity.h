@@ -19,11 +19,13 @@ limitations under the License.
 #include <tuple>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "grape/grape.h"
 
 #include "apps/assortativity/average_degree_connectivity/average_degree_connectivity_context.h"
 #include "core/app/app_base.h"
+#include "core/utils/app_utils.h"
 #include "core/worker/default_worker.h"
 
 namespace gs {
@@ -48,12 +50,19 @@ class AverageDegreeConnectivity
   using vid_t = typename fragment_t::vid_t;
   using oid_t = typename fragment_t::oid_t;
   using edata_t = typename fragment_t::edata_t;
-  using pair_msg_t = typename std::pair<int, edata_t>;
+  using pair_msg_t = typename std::pair<int, double>;
   using degree_connectivity_t =
-      typename std::unordered_map<int, std::pair<double, edata_t>>;
+      typename std::unordered_map<int, std::pair<double, double>>;
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
+    // process single node
+    if (frag.GetTotalVerticesNum() == 1) {
+      std::vector<size_t> shape{1, 2};
+      std::vector<double> data = {0.0, 0.0};
+      ctx.assign(data, shape);
+      messages.ForceTerminate("single node");
+    }
     auto inner_vertices = frag.InnerVertices();
     for (auto& v : inner_vertices) {
       vertexProcess(v, frag, ctx, messages);
@@ -69,11 +78,9 @@ class AverageDegreeConnectivity
       vertex_t vertex;
       while (messages.GetMessage<fragment_t, pair_msg_t>(frag, vertex, msg)) {
         int source_degree = msg.first;
-        edata_t weight = msg.second;
+        double weight = msg.second;
         int target_degree = GetDegreeByType(
             frag, vertex, ctx.target_degree_type_, ctx.directed);
-        VLOG(0) << "vid: " << frag.Vertex2Gid(vertex)
-                << ", target_degree: " << target_degree << std::endl;
         if (ctx.degree_connectivity_map.count(source_degree) == 0) {
           ctx.degree_connectivity_map[source_degree].first =
               static_cast<double>(weight * target_degree);
@@ -91,7 +98,7 @@ class AverageDegreeConnectivity
     } else {
       // merge in work 0
       if (frag.fid() == 0) {
-        std::unordered_map<int, std::pair<double, edata_t>> msg;
+        std::unordered_map<int, std::pair<double, double>> msg;
         while (messages.GetMessage(msg)) {
           for (auto& a : msg) {
             // merge
@@ -104,62 +111,122 @@ class AverageDegreeConnectivity
             }
           }
         }
+
+        // write to ctx
+        size_t row_num = ctx.degree_connectivity_map.size();
+        std::vector<size_t> shape{row_num, 2};
+        std::vector<double> data;
         for (auto& a : ctx.degree_connectivity_map) {
-          VLOG(0) << "0: " << a.first << ": " << a.second.first << ": "
-                  << a.second.second << std::endl;
-          ctx.degree_connectivity_map[a.first].first /=
-              static_cast<double>(a.second.second);
-          VLOG(0) << "degree: " << a.first
-                  << "  connectivity:" << a.second.first << std::endl;
+          double result = a.second.second == 0.0
+                              ? a.second.first
+                              : a.second.first / a.second.second;
+          ctx.degree_connectivity_map[a.first].first = result;
+          // degree
+          data.push_back(static_cast<double>(a.first));
+          // degree connectivity
+          data.push_back(result);
         }
+        ctx.assign(data, shape);
       }
     }
   }
   void vertexProcess(vertex_t v, const fragment_t& frag, context_t& ctx,
                      message_manager_t& messages) {
-    int source_degree, target_degree;
-    source_degree =
+    int source_degree =
         GetDegreeByType(frag, v, ctx.source_degree_type_, ctx.directed);
-    VLOG(0) << "fid: " << frag.fid() << ", vid: " << frag.Vertex2Gid(v)
-            << std::endl;
-    auto oes = frag.GetOutgoingAdjList(v);
-    for (auto& e : oes) {
-      vertex_t neighbor = e.get_neighbor();
-      // edge weight
-      edata_t data = e.get_data();
-      if (ctx.degree_connectivity_map.count(source_degree) == 0) {
-        ctx.degree_connectivity_map[source_degree].second = data;
-      } else {
-        ctx.degree_connectivity_map[source_degree].second += data;
+    double norm = GetWeightedDegree(v, frag, ctx);
+    if (ctx.degree_connectivity_map.count(source_degree) == 0) {
+      ctx.degree_connectivity_map[source_degree].second = norm;
+    } else {
+      ctx.degree_connectivity_map[source_degree].second += norm;
+    }
+    // process incoming neighbours
+    if (ctx.directed && ctx.source_degree_type_ == DegreeType::IN) {
+      auto oes = frag.GetIncomingAdjList(v);
+      for (auto& e : oes) {
+        edgeProcess(e, source_degree, frag, ctx, messages);
       }
-      if (frag.IsOuterVertex(neighbor)) {
-        messages.SyncStateOnOuterVertex<fragment_t, pair_msg_t>(
-            frag, neighbor, std::make_pair(source_degree, data));
-      } else {
-        target_degree = GetDegreeByType(frag, neighbor, ctx.target_degree_type_,
-                                        ctx.directed);
-        // VLOG(0) << source_degree << " : " << data << " : " << target_degree
-        // << std::endl;
-        if (ctx.degree_connectivity_map.count(source_degree) == 0) {
-          ctx.degree_connectivity_map[source_degree].first =
-              static_cast<double>(data * target_degree);
-        } else {
-          ctx.degree_connectivity_map[source_degree].first +=
-              static_cast<double>(data * target_degree);
-        }
+    } else {  // process outgoing neighbours
+      auto oes = frag.GetOutgoingAdjList(v);
+      for (auto& e : oes) {
+        edgeProcess(e, source_degree, frag, ctx, messages);
       }
     }
   }
+
+  template <typename T>
+  void edgeProcess(const T& e, int source_degree, const fragment_t& frag,
+                   context_t& ctx, message_manager_t& messages) {
+    vertex_t neighbor = e.get_neighbor();
+    // edge weight
+    double data = 1.0;
+    static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+        [&](auto& e, auto& edata) {
+          edata = static_cast<double>(e.get_data());
+        })(e, data);
+    if (frag.IsOuterVertex(neighbor)) {
+      messages.SyncStateOnOuterVertex<fragment_t, pair_msg_t>(
+          frag, neighbor, std::make_pair(source_degree, data));
+    } else {
+      int target_degree = GetDegreeByType(
+          frag, neighbor, ctx.target_degree_type_, ctx.directed);
+      if (ctx.degree_connectivity_map.count(source_degree) == 0) {
+        ctx.degree_connectivity_map[source_degree].first =
+            static_cast<double>(data * target_degree);
+      } else {
+        ctx.degree_connectivity_map[source_degree].first +=
+            static_cast<double>(data * target_degree);
+      }
+    }
+  }
+
+  double GetWeightedDegree(vertex_t v, const fragment_t& frag, context_t& ctx) {
+    double res = 0.0;
+    if (ctx.weighted) {
+      if (!ctx.directed || ctx.source_degree_type_ == DegreeType::OUT) {
+        auto oes = frag.GetOutgoingAdjList(v);
+        // compute the sum of weight
+        res = ComputeWeightedDegree(oes);
+      } else if (ctx.source_degree_type_ == DegreeType::IN) {
+        auto oes = frag.GetIncomingAdjList(v);
+        res = ComputeWeightedDegree(oes);
+      } else {
+        auto oes = frag.GetIncomingAdjList(v);
+        res = ComputeWeightedDegree(oes);
+        auto oes1 = frag.GetOutgoingAdjList(v);
+        res += ComputeWeightedDegree(oes1);
+      }
+    } else {
+      res = static_cast<double>(
+          GetDegreeByType(frag, v, ctx.source_degree_type_, ctx.directed));
+    }
+    return res;
+  }
+
+  template <typename T>
+  double ComputeWeightedDegree(T adjList) {
+    double res = 0.0;
+    for (auto& e : adjList) {
+      double data = 0.0;
+      static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+          [&](auto& e, auto& edata) {
+            edata = static_cast<double>(e.get_data());
+          })(e, data);
+      res += data;
+    }
+    return res;
+  }
   int GetDegreeByType(const fragment_t& frag, const vertex_t& vertex,
                       DegreeType type, bool directed) {
+    if (!directed) {
+      return frag.GetLocalOutDegree(vertex);
+    }
     if (type == DegreeType::IN) {
       return frag.GetLocalInDegree(vertex);
     } else if (type == DegreeType::OUT) {
       return frag.GetLocalOutDegree(vertex);
     }
-    return directed
-               ? frag.GetLocalInDegree(vertex) + frag.GetLocalOutDegree(vertex)
-               : frag.GetLocalInDegree(vertex);
+    return frag.GetLocalInDegree(vertex) + frag.GetLocalOutDegree(vertex);
   }
 };
 }  // namespace gs
