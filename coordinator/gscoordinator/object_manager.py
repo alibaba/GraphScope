@@ -70,7 +70,8 @@ class InteractiveQueryManager(object):
             from gremlin_python.driver import request
 
             rm = request.RequestMessage(
-                processor="gae",
+                # {"engine": "gae"} support only
+                processor=request_options["engine"],
                 op="eval",
                 args={
                     "gremlin": message,
