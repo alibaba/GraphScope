@@ -14,63 +14,94 @@
 //! limitations under the License.
 
 mod global_storage;
+mod partitioner;
+
+use crate::graph_proxy::partitioner::{MaxGraphMultiPartition, VineyardMultiPartition};
 use global_storage::create_gs_store;
 use gremlin_core::compiler::GremlinJobCompiler;
-use gremlin_core::{str_to_dyn_error, DynResult, Partitioner, ID, ID_MASK};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
-use maxgraph_store::api::{Edge, GlobalGraphQuery, PropId, Vertex, VertexId};
+use maxgraph_store::api::{Edge, GlobalGraphQuery, Vertex};
+use std::collections::HashMap;
 use std::sync::Arc;
 
-pub fn initialize_job_compiler<V, VI, E, EI>(
-    graph_query: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
+pub trait InitializeJobCompiler {
+    fn initialize_job_compiler(&self) -> GremlinJobCompiler;
+}
+
+pub struct QueryMaxGraph<V, VI, E, EI> {
+    graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
     graph_partitioner: Arc<dyn GraphPartitionManager>,
     num_servers: usize,
     server_index: u64,
-) -> GremlinJobCompiler
+}
+
+impl<V, VI, E, EI> QueryMaxGraph<V, VI, E, EI> {
+    pub fn new(
+        graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
+        graph_partitioner: Arc<dyn GraphPartitionManager>,
+        num_servers: usize,
+        server_index: u64,
+    ) -> Self {
+        QueryMaxGraph {
+            graph_query,
+            graph_partitioner,
+            num_servers,
+            server_index,
+        }
+    }
+}
+
+impl<V, VI, E, EI> InitializeJobCompiler for QueryMaxGraph<V, VI, E, EI>
 where
     V: Vertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
     E: Edge + 'static,
     EI: Iterator<Item = E> + Send + 'static,
 {
-    create_gs_store(graph_query, graph_partitioner.clone());
-    let partition = MultiPartition::new(graph_partitioner);
-    GremlinJobCompiler::new(partition, num_servers, server_index)
+    fn initialize_job_compiler(&self) -> GremlinJobCompiler {
+        create_gs_store(self.graph_query.clone(), self.graph_partitioner.clone());
+        let partition = MaxGraphMultiPartition::new(self.graph_partitioner.clone());
+        GremlinJobCompiler::new(partition, self.num_servers, self.server_index)
+    }
 }
 
-/// A partition utility that one server contains multiple graph partitions
-pub struct MultiPartition {
-    graph_partition_manager: Arc<dyn GraphPartitionManager>,
+pub struct QueryVineyard<V, VI, E, EI> {
+    graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
+    graph_partitioner: Arc<dyn GraphPartitionManager>,
+    partition_worker_mapping: HashMap<u32, u32>,
+    num_servers: usize,
+    server_index: u64,
 }
 
-impl MultiPartition {
-    pub fn new(graph_partition_manager: Arc<dyn GraphPartitionManager>) -> Self {
-        MultiPartition {
-            graph_partition_manager,
+impl<V, VI, E, EI> QueryVineyard<V, VI, E, EI> {
+    pub fn new(
+        graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
+        graph_partitioner: Arc<dyn GraphPartitionManager>,
+        partition_worker_mapping: HashMap<u32, u32>,
+        num_servers: usize,
+        server_index: u64,
+    ) -> Self {
+        QueryVineyard {
+            graph_query,
+            graph_partitioner,
+            partition_worker_mapping,
+            num_servers,
+            server_index,
         }
     }
 }
 
-impl Partitioner for MultiPartition {
-    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> DynResult<u64> {
-        // The partitioning logics is as follows:
-        // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id
-        // to the partition that holds its data.
-        // 2. `server_index = partition_id % self.num_servers as u64` routes the partition id to the
-        // server R that holds the partition
-        // 3. `worker_index = partition_id % worker_num_per_server` picks up one worker to do the computation.
-        // 4. `server_index * worker_num_per_server + worker_index` computes the worker index in server R
-        // to do the computation.
-        let vid = (*id & (ID_MASK)) as VertexId;
-        let worker_num_per_server = worker_num_per_server as u64;
-        let partition_id = self.graph_partition_manager.get_partition_id(vid) as u64;
-        let server_index = self
-            .graph_partition_manager
-            .get_server_id(partition_id as PropId)
-            .ok_or(str_to_dyn_error(
-                "get server id failed in graph_partition_manager",
-            ))? as u64;
-        let worker_index = partition_id % worker_num_per_server;
-        Ok(server_index * worker_num_per_server + worker_index as u64)
+/// Initialize GremlinJobCompiler for vineyard
+impl<V, VI, E, EI> InitializeJobCompiler for QueryVineyard<V, VI, E, EI>
+    where
+        V: Vertex + 'static,
+        VI: Iterator<Item = V> + Send + 'static,
+        E: Edge + 'static,
+        EI: Iterator<Item = E> + Send + 'static,
+{
+    fn initialize_job_compiler(&self) -> GremlinJobCompiler {
+        create_gs_store(self.graph_query.clone(), self.graph_partitioner.clone());
+        let partition = VineyardMultiPartition::new(self.graph_partitioner.clone(), self.partition_worker_mapping.clone());
+        GremlinJobCompiler::new(partition, self.num_servers, self.server_index)
     }
 }
