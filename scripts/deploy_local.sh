@@ -17,6 +17,7 @@ readonly LLVM_VERSION=9  # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
 readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
+readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 readonly IS_IN_WSL
 INSTALL_PREFIX=/usr/local
@@ -358,8 +359,8 @@ check_dependencies() {
 #   output environment export statements to file.
 ##########################
 write_envs_config() {
-  if [ -f "${SOURCE_DIR}/gs_env" ]; then
-    warning "Found gs_env exists, remove the environmen config file and generate a new one."
+  if [ -f "${OUTPUT_ENV_FILE}" ]; then
+    warning "Found ${OUTPUT_ENV_FILE} exists, remove the environmen config file and generate a new one."
   fi
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
@@ -377,19 +378,19 @@ write_envs_config() {
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
       echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
-    } >> ${SOURCE_DIR}/gs_env
+    } >> ${OUTPUT_ENV_FILE}
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
       echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64"
       echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/zookeeper/bin"
-    } >> ${SOURCE_DIR}/gs_env
+    } >> ${OUTPUT_ENV_FILE}
   else
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
       echo "export JAVA_HOME=/usr/lib/jvm/java"
       echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/.cargo/bin:/usr/local/bin:\$PATH:/usr/local/zookeeper/bin"
-    } >> ${SOURCE_DIR}/gs_env
+    } >> ${OUTPUT_ENV_FILE}
   fi
 }
 
@@ -638,7 +639,7 @@ install_dependencies() {
   pip3 install -U pip --user
   pip3 install grpcio-tools libclang parsec setuptools wheel twine --user
 
-  log "Output environments config file ${SOURCE_DIR}/gs_env"
+  log "Output environments config file ${OUTPUT_ENV_FILE}"
   write_envs_config
 }
 
@@ -765,8 +766,8 @@ install_deps() {
   install_dependencies
 
   succ_msg="Install dependencies successfully. The script had output the related
-  environments to ${SOURCE_DIR}/gs_env.\nPlease run 'source ${SOURCE_DIR}/gs_env'
-  before run deploy command."
+  environments to ${OUTPUT_ENV_FILE}.\n
+  Please run 'source ${OUTPUT_ENV_FILE}' before run GraphScope."
   succ ${succ_msg}
   if [ ${VERBOSE} = true ]; then
     set +x
@@ -792,10 +793,10 @@ build_and_deploy() {
 
   check_os_compatibility
 
-  # if gs_env already exists, source it
-  if [ -f "${SOURCE_DIR}/gs_env" ]; then
-    log "Found file ${SOURCE_DIR}/gs_env exists, source the env file."
-    source ${SOURCE_DIR}/gs_env
+  # if .graphscope_env already exists, source it
+  if [ -f "${OUTPUT_ENV_FILE}" ]; then
+    log "Found env file ${OUTPUT_ENV_FILE} exists, source the env file."
+    source ${OUTPUT_ENV_FILE}
   fi
 
   check_dependencies
