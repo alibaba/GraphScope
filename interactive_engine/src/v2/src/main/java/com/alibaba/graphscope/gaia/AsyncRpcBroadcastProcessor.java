@@ -1,7 +1,6 @@
-package com.alibaba.graphscope.gaia.vineyard.store;
+package com.alibaba.graphscope.gaia;
 
 import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
-import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.CloseableIterator;
 import com.alibaba.pegasus.intf.ResultProcessor;
@@ -14,19 +13,20 @@ import java.io.IOException;
 
 public class AsyncRpcBroadcastProcessor extends AbstractBroadcastProcessor {
     private static final Logger logger = LoggerFactory.getLogger(AsyncRpcBroadcastProcessor.class);
-    private RpcChannelFetcher fetcher;
+    private AsyncRpcChannelFetcher fetcher;
 
-    public AsyncRpcBroadcastProcessor(RpcChannelFetcher fetcher) {
+    public AsyncRpcBroadcastProcessor(AsyncRpcChannelFetcher fetcher) {
         super(fetcher);
         this.fetcher = fetcher;
     }
 
     @Override
     public void broadcast(PegasusClient.JobRequest request, ResultProcessor processor) {
-        refresh();
         CloseableIterator<PegasusClient.JobResponse> iterator = null;
         // ResultProcessor processor = new GremlinResultProcessor(writeResult);
         try {
+            // refresh
+            this.rpcClient = new RpcClient(fetcher.refresh());
             iterator = rpcClient.submit(request);
             // process response
             while (iterator.hasNext()) {
@@ -51,9 +51,5 @@ public class AsyncRpcBroadcastProcessor extends AbstractBroadcastProcessor {
     @Override
     public void close() throws Exception {
         this.rpcClient.shutdown();
-    }
-
-    private void refresh() {
-        this.rpcClient = new RpcClient(fetcher.fetch());
     }
 }

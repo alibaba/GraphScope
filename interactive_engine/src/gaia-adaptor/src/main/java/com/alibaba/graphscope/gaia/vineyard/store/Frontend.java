@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.gaia.vineyard.store;
 
+import com.alibaba.graphscope.gaia.AsyncRpcBroadcastProcessor;
+import com.alibaba.graphscope.gaia.AsyncRpcChannelFetcher;
 import com.alibaba.graphscope.gaia.GaiaGraphServer;
 import com.alibaba.graphscope.gaia.MaxGraphStore;
 import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
@@ -57,7 +59,7 @@ public class Frontend extends com.alibaba.maxgraph.frontendservice.Frontend {
 
         // add gaia compiler
         Configs configs = loadConfigs(this.instanceConfig);
-        RpcChannelFetcher gaiaRpcFetcher = new AddressChannelFetcher(new ExecutorAddressFetcher(this.clientManager));
+        AsyncRpcChannelFetcher gaiaRpcFetcher = new AddressChannelFetcher(new ExecutorAddressFetcher(this.clientManager));
         GraphStoreService gaiaStoreService = new MaxGraphStore(schemaFetcher);
         AbstractBroadcastProcessor broadcastProcessor = new AsyncRpcBroadcastProcessor(gaiaRpcFetcher);
         gaiaGraphServer = new GaiaGraphServer(configs, gaiaStoreService, broadcastProcessor);

@@ -15,40 +15,28 @@
  */
 package com.alibaba.graphscope.gaia.vineyard.store;
 
-import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
+import com.alibaba.graphscope.gaia.AsyncRpcChannelFetcher;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 import com.alibaba.pegasus.RpcChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AddressChannelFetcher implements RpcChannelFetcher {
+public class AddressChannelFetcher extends AsyncRpcChannelFetcher {
     private static final Logger logger = LoggerFactory.getLogger(AddressChannelFetcher.class);
     private RpcAddressFetcher addressFetcher;
-    private boolean firstFetch = true;
 
     public AddressChannelFetcher(RpcAddressFetcher addressFetcher) {
         this.addressFetcher = addressFetcher;
     }
 
     @Override
-    public List<RpcChannel> fetch() {
-        try {
-            List<Endpoint> endpoints = addressFetcher.getServiceAddress();
-            logger.info("endpoints are {}", endpoints);
-            return endpoints.stream().map(k -> new RpcChannel(k.getIp(), k.getRuntimeCtrlAndAsyncPort())).collect(Collectors.toList());
-        } catch (IllegalArgumentException e) {
-            if (firstFetch) {
-                logger.warn("cannot get executors ip info");
-                firstFetch = false;
-                return Collections.emptyList();
-            } else {
-                throw e;
-            }
-        }
+    public List<RpcChannel> refresh() {
+        List<Endpoint> endpoints = addressFetcher.getServiceAddress();
+        logger.info("endpoints are {}", endpoints);
+        return endpoints.stream().map(k -> new RpcChannel(k.getIp(), k.getRuntimeCtrlAndAsyncPort())).collect(Collectors.toList());
     }
 }

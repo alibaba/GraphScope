@@ -15,8 +15,6 @@
  */
 package com.alibaba.graphscope.gaia;
 
-import com.alibaba.graphscope.gaia.broadcast.RpcBroadcastProcessor;
-import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.v2.common.DefaultMetaService;
 import com.alibaba.maxgraph.v2.common.MetaService;
@@ -42,7 +40,6 @@ import com.alibaba.maxgraph.v2.frontend.*;
 import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
 
 import com.alibaba.maxgraph.v2.grafting.frontend.WrappedSchemaFetcher;
-import com.google.common.collect.ImmutableMap;
 import io.grpc.NameResolver;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -104,9 +101,9 @@ public class Frontend extends NodeBase {
         WrappedSchemaFetcher wrappedSchemaFetcher = new WrappedSchemaFetcher(snapshotCache, metaService);
 
         // add gaia compiler
-        RpcChannelFetcher gaiaRpcFetcher = new DirectChannelFetcher(this.channelManager, executorCount, RoleType.GAIA_RPC);
+        AsyncRpcChannelFetcher gaiaRpcFetcher = new ChannelManagerFetcher(this.channelManager, executorCount, RoleType.GAIA_RPC);
         GraphStoreService gaiaStoreService = new MaxGraphStore(wrappedSchemaFetcher);
-        this.maxGraphServer = new GaiaGraphServer(configs, gaiaStoreService, new RpcBroadcastProcessor(gaiaRpcFetcher));
+        this.maxGraphServer = new GaiaGraphServer(configs, gaiaStoreService, new AsyncRpcBroadcastProcessor(gaiaRpcFetcher));
     }
 
     @Override
