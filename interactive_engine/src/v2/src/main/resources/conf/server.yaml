@@ -8,21 +8,42 @@ graphs: {
 scriptEngines: {
   gremlin-groovy: {
     plugins: {
-      com.alibaba.maxgraph.v2.frontend.server.plugin.MaxGraphGremlinPlugin: {},
-      org.apache.tinkerpop.gremlin.jsr223.ImportGremlinPlugin: {classImports: [java.lang.Math],
+      com.alibaba.maxgraph.plugin.MxGraphGremlinPlugin: {},
+      org.apache.tinkerpop.gremlin.jsr223.ImportGremlinPlugin: {classImports: [java.lang.Math,
+                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.Text,
+                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.Lists,
+                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.Dim,
+                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.output.Output,
+                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Prop,
+                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Mapper,
+                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.graph.OdpsGraph,
+                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.program.Program,
+                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomBranch,
+                                                                               com.alibaba.maxgraph.sdkcommon.compiler.custom.aggregate.CustomAggregation],
                                                                 methodImports: [
-                                                                  java.lang.Math#*],},
+                                                                  java.lang.Math#*,
+                                                                  com.alibaba.maxgraph.sdkcommon.compiler.custom.program.Program#*,
+                                                                  com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomBranch#*,
+                                                                  com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Mapper#*,
+                                                                  com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Prop#*,
+                                                                  com.alibaba.maxgraph.sdkcommon.compiler.custom.aggregate.CustomAggregation#*],},
       org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin: {files: [/tmp/generate-classic.groovy]}
     }
   },
+  gremlin-jython: {},
+  gremlin-python: {}
 }
 serializers:
   - {
     className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0,
     config: {
-      classResolverSupplier: com.alibaba.maxgraph.v2.common.frontend.driver.MaxGraphResolverSupplier,
       useMapperFromGraph: graph,
-      ioRegistries: [ com.alibaba.maxgraph.v2.common.frontend.api.io.MaxGraphIORegistry ],
+    }
+  }            # application/vnd.gremlin-v1.0+gryo
+  - {
+    className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV3d0,
+    config: {
+      useMapperFromGraph: graph,
     }
   }            # application/vnd.gremlin-v1.0+gryo
   - {
@@ -30,46 +51,25 @@ serializers:
     config: {
       serializeResultToString: true,
       useMapperFromGraph: graph,
-      ioRegistries: [ com.alibaba.maxgraph.v2.common.frontend.api.io.MaxGraphIORegistry ],
     }
   }        # application/vnd.gremlin-v1.0+gryo-lite
   - {
     className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0,
     config: {
-      classResolverSupplier: com.alibaba.maxgraph.v2.common.frontend.driver.MaxGraphResolverSupplier,
       serializeResultToString: true,
-      ioRegistries: [ com.alibaba.maxgraph.v2.common.frontend.api.io.MaxGraphIORegistry ],
     }
   }        # application/vnd.gremlin-v1.0+gryo-stringd
   - {
     className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV3d0,
     config: {
-      classResolverSupplier: com.alibaba.maxgraph.v2.common.frontend.driver.MaxGraphResolverSupplier,
-      useMapperFromGraph: graph,
-      ioRegistries: [ com.alibaba.maxgraph.v2.common.frontend.api.io.MaxGraphIORegistry ],
-    }
-  }
-  - {
-    className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV3d0,
-    config: {
-      classResolverSupplier: com.alibaba.maxgraph.v2.common.frontend.driver.MaxGraphResolverSupplier,
       serializeResultToString: true,
-      ioRegistries: [ com.alibaba.maxgraph.v2.common.frontend.api.io.MaxGraphIORegistry ],
     }
-  }
-  - {
-    className: com.alibaba.maxgraph.v2.common.frontend.driver.ser.MaxGraphMessageSerializerV3d0,
-    config: {
-      classResolverSupplier: com.alibaba.maxgraph.v2.common.frontend.driver.MaxGraphResolverSupplier,
-      ioRegistries: [ com.alibaba.maxgraph.v2.common.frontend.api.io.MaxGraphIORegistry ],
-    }
-  } # application/vnd.gremlin-mg-v3.0+gryo
+  }        # application/vnd.gremlin-v3.0+gryo-stringd
   - {
     className: org.apache.tinkerpop.gremlin.driver.ser.GraphSONMessageSerializerV1d0,
     config: {
       serializeResultToString: true,
       useMapperFromGraph: graph,
-      ioRegistries: [ com.alibaba.maxgraph.v2.common.frontend.api.io.MaxGraphIORegistry ],
     }
   } # application/vnd.gremlin-v1.0+json
   - {
@@ -77,7 +77,6 @@ serializers:
     config: {
       serializeResultToString: true,
       useMapperFromGraph: graph,
-      ioRegistries: [ com.alibaba.maxgraph.v2.common.frontend.api.io.MaxGraphIORegistry ],
     }
   } # application/vnd.gremlin-v3.0+json
   - {
@@ -85,7 +84,6 @@ serializers:
     config: {
       serializeResultToString: true,
       useMapperFromGraph: graph,
-      ioRegistries: [ com.alibaba.maxgraph.v2.common.frontend.api.io.MaxGraphIORegistry ],
     }
   }        # application/json
   - {
@@ -93,7 +91,6 @@ serializers:
     config: {
       serializeResultToString: true,
       useMapperFromGraph: graph,
-      ioRegistries: [ com.alibaba.maxgraph.v2.common.frontend.api.io.MaxGraphIORegistry ],
     }
   }
 metrics: {

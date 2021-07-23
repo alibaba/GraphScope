@@ -44,7 +44,6 @@ import java.util.*;
 public class OfflineBuild {
     private static final Logger logger = LoggerFactory.getLogger(OfflineBuild.class);
 
-    public static final String PARTITION_NUM = "partition.num";
     public static final String INPUT_PATH = "input.path";
     public static final String OUTPUT_PATH = "output.path";
     public static final String GRAPH_ENDPOINT = "graph.endpoint";
@@ -55,6 +54,8 @@ public class OfflineBuild {
 
     public static final String COLUMN_MAPPINGS = "column.mappings";
     public static final String LDBC_CUSTOMIZE = "ldbc.customize";
+    public static final String LOAD_AFTER_BUILD = "load.after.build";
+    public static final String SKIP_HEADER = "skip.header";
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         String propertiesFile = args[0];
@@ -62,7 +63,6 @@ public class OfflineBuild {
         try (InputStream is = new FileInputStream(propertiesFile)) {
             properties.load(is);
         }
-        int partitionNum = Integer.parseInt(properties.getProperty(PARTITION_NUM));
         String inputPath = properties.getProperty(INPUT_PATH);
         String outputPath = properties.getProperty(OUTPUT_PATH);
         String columnMappingConfigStr = properties.getProperty(COLUMN_MAPPING_CONFIG);
@@ -82,6 +82,7 @@ public class OfflineBuild {
         }
         GraphSchema schema = client.prepareDataLoad(targets);
         String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
+        int partitionNum = client.getPartitionNum();
 
         Map<String, ColumnMappingInfo> columnMappingInfos = new HashMap<>();
         columnMappingConfig.forEach((fileName, fileColumnMapping) -> {
@@ -89,6 +90,8 @@ public class OfflineBuild {
         });
         String ldbcCustomize = properties.getProperty(LDBC_CUSTOMIZE, "true");
         long splitSize = Long.valueOf(properties.getProperty(SPLIT_SIZE, "256")) * 1024 * 1024;
+        boolean loadAfterBuild = properties.getProperty(LOAD_AFTER_BUILD, "false").equalsIgnoreCase("true");
+        boolean skipHeader = properties.getProperty(SKIP_HEADER, "true").equalsIgnoreCase("true");
         Configuration conf = new Configuration();
         conf.setBoolean("mapreduce.map.speculative", false);
         conf.setBoolean("mapreduce.reduce.speculative", false);
@@ -98,6 +101,8 @@ public class OfflineBuild {
         String mappings = objectMapper.writeValueAsString(columnMappingInfos);
         conf.setStrings(COLUMN_MAPPINGS, mappings);
         conf.setBoolean(LDBC_CUSTOMIZE, ldbcCustomize.equalsIgnoreCase("true"));
+        conf.set(SEPARATOR, properties.getProperty(SEPARATOR, "\\|"));
+        conf.setBoolean(SKIP_HEADER, skipHeader);
         Job job = Job.getInstance(conf, "build graph data");
         job.setJarByClass(OfflineBuild.class);
         job.setMapperClass(DataBuildMapper.class);
@@ -130,9 +135,27 @@ public class OfflineBuild {
         os.flush();
         os.close();
 
-        client.ingestData(dataPath);
+        if (loadAfterBuild) {
+            logger.info("start ingesting data");
+            client.ingestData(dataPath);
 
-
+            logger.info("commit bulk load");
+            Map<Long, DataLoadTarget> tableToTarget = new HashMap<>();
+            for (ColumnMappingInfo columnMappingInfo : columnMappingInfos.values()) {
+                long tableId = columnMappingInfo.getTableId();
+                int labelId = columnMappingInfo.getLabelId();
+                SchemaElement schemaElement = schema.getSchemaElement(labelId);
+                String label = schemaElement.getLabel();
+                DataLoadTarget.Builder builder = DataLoadTarget.newBuilder();
+                builder.setLabel(label);
+                if (schemaElement instanceof EdgeType) {
+                    builder.setSrcLabel(schema.getSchemaElement(columnMappingInfo.getSrcLabelId()).getLabel());
+                    builder.setDstLabel(schema.getSchemaElement(columnMappingInfo.getDstLabelId()).getLabel());
+                }
+                tableToTarget.put(tableId, builder.build());
+            }
+            client.commitDataLoad(tableToTarget);
+        }
     }
 
 }

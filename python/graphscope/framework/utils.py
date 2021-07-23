@@ -29,6 +29,7 @@ from graphscope.client.archive import OutArchive
 from graphscope.framework.errors import check_argument
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import data_types_pb2
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
@@ -88,6 +89,10 @@ def report_type_to_attr(t):
     return attr_value_pb2.AttrValue(report_type=t)
 
 
+def place_holder_to_attr():
+    return attr_value_pb2.AttrValue(place_holder=types_pb2.PlaceHolder())
+
+
 def list_str_to_attr(list_of_str):
     attr = attr_value_pb2.AttrValue()
     attr.list.s[:] = [
@@ -103,15 +108,15 @@ def list_i_to_attr(list_i):
 
 
 def graph_type_to_cpp_class(graph_type):
-    if graph_type == types_pb2.IMMUTABLE_EDGECUT:
+    if graph_type == graph_def_pb2.IMMUTABLE_EDGECUT:
         return "grape::ImmutableEdgecutFragment"
-    if graph_type == types_pb2.DYNAMIC_PROPERTY:
+    if graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
         return "gs::DynamicFragment"
-    if graph_type == types_pb2.DYNAMIC_PROJECTED:
+    if graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
         return "gs::DynamicProjectedFragment"
-    if graph_type == types_pb2.ARROW_PROPERTY:
+    if graph_type == graph_def_pb2.ARROW_PROPERTY:
         return "vineyard::ArrowFragment"
-    if graph_type == types_pb2.ARROW_PROJECTED:
+    if graph_type == graph_def_pb2.ARROW_PROJECTED:
         return "gs::ArrowProjectedFragment"
     return "null"
 
@@ -225,64 +230,83 @@ def decode_dataframe(value):
     return pd.DataFrame(arrays)
 
 
+def _unify_str_type(t):
+    t = t.lower()
+    if t in ("b", "bool"):
+        return graph_def_pb2.DataTypePb.BOOL
+    elif t in ("c", "char"):
+        return graph_def_pb2.DataTypePb.CHAR
+    elif t in ("s", "short"):
+        return graph_def_pb2.DataTypePb.SHORT
+    elif t in ("i", "int", "int32", "int32_t"):
+        return graph_def_pb2.DataTypePb.INT
+    elif t in ("l", "long", "int64_t", "int64"):
+        return graph_def_pb2.DataTypePb.LONG
+    elif t in ("uint32_t", "uint32"):
+        return graph_def_pb2.DataTypePb.UINT
+    elif t in ("uint64_t", "uint64"):
+        return graph_def_pb2.DataTypePb.ULONG
+    elif t in ("f", "float"):
+        return graph_def_pb2.DataTypePb.FLOAT
+    elif t in ("d", "double"):
+        return graph_def_pb2.DataTypePb.DOUBLE
+    elif t in ("str", "string", "std::string"):
+        return graph_def_pb2.DataTypePb.STRING
+    elif t == "bytes":
+        return graph_def_pb2.DataTypePb.BYTES
+    elif t == "int_list":
+        return graph_def_pb2.DataTypePb.INT_LIST
+    elif t == "long_list":
+        return graph_def_pb2.DataTypePb.LONG_LIST
+    elif t == "float_list":
+        return graph_def_pb2.DataTypePb.FLOAT_LIST
+    elif t == "double_list":
+        return graph_def_pb2.DataTypePb.DOUBLE_LIST
+    elif t in ("empty", "grape::emptytype"):
+        return graph_def_pb2.NULLVALUE
+    raise TypeError("Not supported type {}".format(t))
+
+
 def unify_type(t):
     # If type is None, we deduce type from source file.
     if t is None:
-        return types_pb2.INVALID
+        return graph_def_pb2.DataTypePb.UNKNOWN
     if isinstance(t, str):
-        t = t.lower()
-        if t == "int":
-            return types_pb2.INT
-        elif t in ("int32_t", "int32"):
-            return types_pb2.INT32
-        elif t == "long":
-            return types_pb2.LONG
-        elif t in ("int64_t", "int64"):
-            return types_pb2.INT64
-        elif t in ("uint32_t", "uint32"):
-            return types_pb2.UINT32
-        elif t in ("uint64_t", "uint64"):
-            return types_pb2.UINT64
-        elif t == "float":
-            return types_pb2.FLOAT
-        elif t == "double":
-            return types_pb2.DOUBLE
-        elif t in ("str", "string", "std::string"):
-            return types_pb2.STRING
-        elif t in ("empty", "grape::emptytype"):
-            return types_pb2.NULLVALUE
+        return _unify_str_type(t)
     elif isinstance(t, type):
         unify_types = {
-            int: types_pb2.LONG,
-            float: types_pb2.DOUBLE,
-            str: types_pb2.STRING,
-            bool: types_pb2.BOOLEAN,
-            list: types_pb2.LIST,
+            int: graph_def_pb2.LONG,
+            float: graph_def_pb2.DOUBLE,
+            str: graph_def_pb2.STRING,
+            bool: graph_def_pb2.BOOL,
+            list: graph_def_pb2.INT_LIST,
         }
         return unify_types[t]
-    elif isinstance(t, int):  # types_pb2.DataType
+    elif isinstance(t, int):  # graph_def_pb2.DataType
         return t
     raise TypeError("Not supported type {}".format(t))
 
 
 def data_type_to_cpp(t):
-    if t == types_pb2.INT or t == types_pb2.INT32:
+    if t == graph_def_pb2.INT:
         return "int32_t"
-    elif t == types_pb2.LONG or t == types_pb2.INT64:
+    elif t == graph_def_pb2.LONG:
         return "int64_t"
-    elif t == types_pb2.UINT32:
+    elif t == graph_def_pb2.UINT:
         return "uint32_t"
-    elif t == types_pb2.UINT64:
+    elif t == graph_def_pb2.ULONG:
         return "uint64_t"
-    elif t == types_pb2.FLOAT:
+    elif t == graph_def_pb2.FLOAT:
         return "float"
-    elif t == types_pb2.DOUBLE:
+    elif t == graph_def_pb2.DOUBLE:
         return "double"
-    elif t == types_pb2.STRING:
+    elif t == graph_def_pb2.STRING:
         return "std::string"
-    elif t is None or t == types_pb2.NULLVALUE:
+    elif t is None or t == graph_def_pb2.NULLVALUE:
         return "grape::EmptyType"
-    elif t == types_pb2.INVALID:
+    elif t == graph_def_pb2.DYNAMIC:
+        return "folly::dynamic"
+    elif t == graph_def_pb2.UNKNOWN:
         return ""
     raise ValueError("Not support type {}".format(t))
 
@@ -305,138 +329,6 @@ def normalize_data_type_str(data_type):
         return "std::string"
     else:
         return data_type
-
-
-def _transform_vertex_data_v(selector):
-    if selector not in ("v.id", "v.data"):
-        raise SyntaxError("selector of v must be 'id' or 'data'")
-    return selector
-
-
-def _transform_vertex_data_e(selector):
-    if selector not in ("e.src", "e.dst", "e.data"):
-        raise SyntaxError("selector of e must be 'src', 'dst' or 'data'")
-    return selector
-
-
-def _transform_vertex_data_r(selector):
-    if selector != "r":
-        raise SyntaxError("selector or r must be 'r'")
-    return selector
-
-
-def _transform_vertex_property_data_r(selector):
-    # The second part of selector or r is user defined name.
-    # So we will allow any str
-    return selector
-
-
-def _transform_labeled_vertex_data_v(schema, label, prop):
-    label_id = schema.get_vertex_label_id(label)
-    if prop == "id":
-        return "label{}.{}".format(label_id, prop)
-    else:
-        prop_id = schema.get_vertex_property_id(label, prop)
-        return "label{}.property{}".format(label_id, prop_id)
-
-
-def _transform_labeled_vertex_data_e(schema, label, prop):
-    label_id = schema.get_edge_label_id(label)
-    if prop in ("src", "dst"):
-        return "label{}.{}".format(label_id, prop)
-    else:
-        prop_id = schema.get_vertex_property_id(label, prop)
-        return "label{}.property{}".format(label_id, prop_id)
-
-
-def _transform_labeled_vertex_data_r(schema, label):
-    label_id = schema.get_vertex_label_id(label)
-    return "label{}".format(label_id)
-
-
-def _transform_labeled_vertex_property_data_r(schema, label, prop):
-    label_id = schema.get_vertex_label_id(label)
-    return "label{}.{}".format(label_id, prop)
-
-
-def transform_vertex_data_selector(selector):
-    if selector is None:
-        raise RuntimeError("selector cannot be None")
-    segments = selector.split(".")
-    if len(segments) > 2:
-        raise SyntaxError("Invalid selector: %s." % selector)
-    if segments[0] == "v":
-        selector = _transform_vertex_data_v(selector)
-    elif segments[0] == "e":
-        selector = _transform_vertex_data_e(selector)
-    elif segments[0] == "r":
-        selector = _transform_vertex_data_r(selector)
-    else:
-        raise SyntaxError("Invalid selector: %s, choose from v / e / r." % selector)
-    return selector
-
-
-def transform_vertex_property_data_selector(selector):
-    if selector is None:
-        raise RuntimeError("selector cannot be None")
-    segments = selector.split(".")
-    if len(segments) != 2:
-        raise SyntaxError("Invalid selector: %s." % selector)
-    if segments[0] == "v":
-        selector = _transform_vertex_data_v(selector)
-    elif segments[0] == "e":
-        selector = _transform_vertex_data_e(selector)
-    elif segments[0] == "r":
-        selector = _transform_vertex_property_data_r(selector)
-    else:
-        raise SyntaxError("Invalid selector: %s, choose from v / e / r." % selector)
-    return selector
-
-
-def transform_labeled_vertex_data_selector(graph, selector):
-    """Formats: 'v:x.y/id', 'e:x.y/src/dst', 'r:label',
-                x denotes label name, y denotes property name.
-    Returned selector will change label name to 'label{id}', where id is x's id in labels.
-    And change property name to 'property{id}', where id is y's id in properties.
-    """
-    if selector is None:
-        raise RuntimeError("selector cannot be None")
-    schema = graph.schema
-    ret_type, segments = selector.split(":")
-    if ret_type not in ("v", "e", "r"):
-        raise SyntaxError("Invalid selector: " + selector)
-    segments = segments.split(".")
-    ret = ""
-    if ret_type == "v":
-        ret = _transform_labeled_vertex_data_v(schema, *segments)
-    elif ret_type == "e":
-        ret = _transform_labeled_vertex_data_e(schema, *segments)
-    elif ret_type == "r":
-        ret = _transform_labeled_vertex_data_r(schema, *segments)
-    return "{}:{}".format(ret_type, ret)
-
-
-def transform_labeled_vertex_property_data_selector(graph, selector):
-    """Formats: 'v:x.y/id', 'e:x.y/src/dst', 'r:x.y',
-                x denotes label name, y denotes property name.
-    Returned selector will change label name to 'label{id}', where id is x's id in labels.
-    And change property name to 'property{id}', where id is y's id in properties.
-    """
-    if selector is None:
-        raise RuntimeError("selector cannot be None")
-    schema = graph.schema
-    ret_type, segments = selector.split(":")
-    if ret_type not in ("v", "e", "r"):
-        raise SyntaxError("Invalid selector: " + selector)
-    segments = segments.split(".")
-    ret = ""
-    if ret_type == "v":
-        ret = _transform_labeled_vertex_data_v(schema, *segments)
-    elif ret_type == "e":
-        ret = _transform_labeled_vertex_data_e(schema, *segments)
-    elif ret_type == "r":
-        ret = _transform_labeled_vertex_property_data_r(schema, *segments)
-    return "{}:{}".format(ret_type, ret)
 
 
 def transform_vertex_range(vertex_range):

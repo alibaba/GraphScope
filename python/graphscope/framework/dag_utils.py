@@ -16,55 +16,90 @@
 # limitations under the License.
 #
 
+import json
+import pickle
+
 import numpy as np
 
 from graphscope.framework import utils
+from graphscope.framework.dag import DAGNode
 from graphscope.framework.errors import check_argument
 from graphscope.framework.operation import Operation
 from graphscope.proto import attr_value_pb2
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import query_args_pb2
 from graphscope.proto import types_pb2
 
 
-def create_app(graph, app):
+def create_app(app_assets):
     """Wrapper for create an `CREATE_APP` Operation with configuration.
+
+    This op will do nothing but provide required information for `BOUND_APP`
+    """
+    config = {types_pb2.APP_ALGO: utils.s_to_attr(app_assets.algo)}
+    if app_assets.gar is not None:
+        config[types_pb2.GAR] = utils.bytes_to_attr(app_assets.gar)
+    op = Operation(
+        None, types_pb2.CREATE_APP, config=config, output_types=types_pb2.APP
+    )
+    return op
+
+
+def bind_app(graph, app_assets):
+    """Wrapper for create an `BIND_APP` Operation with configuration.
     Compile and load an application after evaluated.
 
     Args:
-        graph (:class:`Graph`): A :class:`Graph` instance
-        app (:class:`App`): A :class:`App` instance.
+        graph (:class:`GraphDAGNode`): A :class:`GraphDAGNode` instance
+        app (:class:`AppAssets`): A :class:`AppAssets` instance.
 
     Returns:
         An :class:`Operation` with configuration that instruct
         analytical engine how to build the app.
     """
-    config = {
-        types_pb2.APP_ALGO: utils.s_to_attr(app.algo),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
-        types_pb2.OID_TYPE: utils.s_to_attr(
-            utils.normalize_data_type_str(graph.schema.oid_type)
-        ),
-        types_pb2.VID_TYPE: utils.s_to_attr(graph.schema.vid_type),
-        types_pb2.V_DATA_TYPE: utils.s_to_attr(
-            utils.data_type_to_cpp(graph.schema.vdata_type)
-        ),
-        types_pb2.E_DATA_TYPE: utils.s_to_attr(
-            utils.data_type_to_cpp(graph.schema.edata_type)
-        ),
-    }
-    if app.gar is not None:
-        config[types_pb2.GAR] = utils.bytes_to_attr(app.gar)
-
-    opr = Operation(
+    inputs = [graph.op, app_assets.op]
+    op = Operation(
         graph.session_id,
-        types_pb2.CREATE_APP,
-        config=config,
-        output_types=types_pb2.APP,
+        types_pb2.BIND_APP,
+        inputs=inputs,
+        config={},
+        output_types=types_pb2.BOUND_APP,
     )
-    return opr
+    return op
 
 
-def create_graph(session_id, graph_type, **kwargs):
+def run_app(app, *args, **kwargs):
+    """Run `bound app` on the `graph`.
+
+    Args:
+        app (:class:`AppDAGNode`): A :class:`AppDAGNode` instance which represent a bound app.
+        key (str): Key of query results, can be used to retrieve results.
+        *args: Additional query params that will be used in evaluation.
+        **kwargs: Key-value formated query params that mostly used in Cython apps.
+
+    Returns:
+        An op to run app on the specified graph, with optional query parameters.
+    """
+    inputs = [app.op]
+    config = {}
+    output_prefix = kwargs.pop("output_prefix", ".")
+    config[types_pb2.OUTPUT_PREFIX] = utils.s_to_attr(output_prefix)
+    # optional query arguments.
+    params = utils.pack_query_params(*args, **kwargs)
+    query_args = query_args_pb2.QueryArgs()
+    query_args.args.extend(params)
+    op = Operation(
+        app.session_id,
+        types_pb2.RUN_APP,
+        inputs=inputs,
+        config=config,
+        output_types=types_pb2.RESULTS,
+        query_args=query_args,
+    )
+    return op
+
+
+def create_graph(session_id, graph_type, inputs=None, **kwargs):
     """Create an `CREATE_GRAPH` op, add op to default dag.
 
     Args:
@@ -79,13 +114,13 @@ def create_graph(session_id, graph_type, **kwargs):
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_type),
     }
 
-    if graph_type == types_pb2.ARROW_PROPERTY:
+    if graph_type == graph_def_pb2.ARROW_PROPERTY:
         attrs = kwargs.pop("attrs", None)
         if attrs:
             for k, v in attrs.items():
                 if isinstance(v, attr_value_pb2.AttrValue):
                     config[k] = v
-    elif graph_type == types_pb2.DYNAMIC_PROPERTY:
+    elif graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
         config[types_pb2.E_FILE] = utils.s_to_attr(kwargs["efile"])
         config[types_pb2.V_FILE] = utils.s_to_attr(kwargs["vfile"])
         config[types_pb2.DIRECTED] = utils.b_to_attr(kwargs["directed"])
@@ -94,7 +129,11 @@ def create_graph(session_id, graph_type, **kwargs):
         raise RuntimeError("Not supported graph type {}".format(graph_type))
 
     op = Operation(
-        session_id, types_pb2.CREATE_GRAPH, config=config, output_types=types_pb2.GRAPH
+        session_id,
+        types_pb2.CREATE_GRAPH,
+        inputs=inputs,
+        config=config,
+        output_types=types_pb2.GRAPH,
     )
     return op
 
@@ -117,12 +156,16 @@ def add_labels_to_graph(graph, **kwargs):
         Since we don't want to trigger the loading, we must not use
         any api that can trigger the loading process implicitly.
     """
+    from graphscope.framework.graph import GraphDAGNode
+
+    assert isinstance(graph, GraphDAGNode)
+    inputs = [graph.op]
     config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph._key),
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph._graph_type),
     }
-
-    if graph._graph_type == types_pb2.ARROW_PROPERTY:
+    # inferred from the context of the dag.
+    config.update({types_pb2.GRAPH_NAME: utils.place_holder_to_attr()})
+    if graph._graph_type == graph_def_pb2.ARROW_PROPERTY:
         attrs = kwargs.pop("attrs", None)
         if attrs:
             for k, v in attrs.items():
@@ -135,6 +178,7 @@ def add_labels_to_graph(graph, **kwargs):
     op = Operation(
         graph._session.session_id,
         types_pb2.ADD_LABELS,
+        inputs=inputs,
         config=config,
         output_types=types_pb2.GRAPH,
     )
@@ -149,7 +193,7 @@ def dynamic_to_arrow(graph):
 
     Returns: An op of transform dynamic graph to arrow graph with necessary configurations.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     oid_type = None
     for node in graph:
         if oid_type is None:
@@ -161,16 +205,18 @@ def dynamic_to_arrow(graph):
                 )
             )
     if oid_type == int or oid_type is None:
-        oid_type = utils.data_type_to_cpp(types_pb2.INT64)
+        oid_type = utils.data_type_to_cpp(graph_def_pb2.LONG)
     elif oid_type == str:
-        oid_type = utils.data_type_to_cpp(types_pb2.STRING)
+        oid_type = utils.data_type_to_cpp(graph_def_pb2.STRING)
     else:
         raise RuntimeError("Unsupported oid type: " + str(oid_type))
-    vid_type = utils.data_type_to_cpp(types_pb2.UINT64)
+    vid_type = utils.data_type_to_cpp(graph_def_pb2.ULONG)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.ARROW_PROPERTY),
-        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.ARROW_PROPERTY),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_PROPERTY),
+        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(
+            graph_def_pb2.ARROW_PROPERTY
+        ),
         types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
         types_pb2.VID_TYPE: utils.s_to_attr(vid_type),
     }
@@ -193,13 +239,19 @@ def arrow_to_dynamic(graph):
     Returns:
         An op of transform arrow graph to dynamic graph with necessary configurations.
     """
-    check_argument(graph.graph_type == types_pb2.ARROW_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.ARROW_PROPERTY),
-        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.DYNAMIC_PROPERTY),
-        types_pb2.OID_TYPE: utils.s_to_attr(graph.schema.oid_type),
-        types_pb2.VID_TYPE: utils.s_to_attr(graph.schema.vid_type),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_PROPERTY),
+        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(
+            graph_def_pb2.DYNAMIC_PROPERTY
+        ),
+        types_pb2.OID_TYPE: utils.s_to_attr(
+            utils.data_type_to_cpp(graph.schema.oid_type)
+        ),
+        types_pb2.VID_TYPE: utils.s_to_attr(
+            utils.data_type_to_cpp(graph.schema.vid_type)
+        ),
     }
     op = Operation(
         graph.session_id,
@@ -221,7 +273,7 @@ def modify_edges(graph, modify_type, edges):
     Returns:
         An op to modify edges on the graph.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
@@ -246,7 +298,7 @@ def modify_vertices(graph, modify_type, vertices):
     Returns:
         An op to modify vertices on the graph.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
@@ -256,40 +308,6 @@ def modify_vertices(graph, modify_type, vertices):
         types_pb2.MODIFY_VERTICES,
         config=config,
         output_types=types_pb2.GRAPH,
-    )
-    return op
-
-
-def run_app(graph, app, *args, **kwargs):
-    """Run `app` on the `graph`.
-
-    Args:
-        graph (:class:`Graph`): A loaded graph.
-        app (:class:`App`): A loaded app that will be queried.
-        key (str): Key of query results, can be used to retrieve results.
-        *args: Additional query params that will be used in evaluation.
-        **kwargs: Key-value formated query params that mostly used in Cython apps.
-
-    Returns:
-        An op to run app on the specified graph, with optional query parameters.
-    """
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.APP_NAME: utils.s_to_attr(app.key),
-    }
-    output_prefix = kwargs.pop("output_prefix", ".")
-    config[types_pb2.OUTPUT_PREFIX] = utils.s_to_attr(output_prefix)
-    # optional query arguments.
-    params = utils.pack_query_params(*args, **kwargs)
-    query_args = query_args_pb2.QueryArgs()
-    query_args.args.extend(params)
-
-    op = Operation(
-        graph.session_id,
-        types_pb2.RUN_APP,
-        config=config,
-        output_types=types_pb2.RESULTS,
-        query_args=query_args,
     )
     return op
 
@@ -357,25 +375,21 @@ def report_graph(
 
 
 def project_arrow_property_graph(graph, vertex_collections, edge_collections):
-    check_argument(graph.graph_type == types_pb2.ARROW_PROPERTY)
-    attr = attr_value_pb2.AttrValue()
-    v_attr = attr_value_pb2.NameAttrList()
-    e_attr = attr_value_pb2.NameAttrList()
-    for label, props in vertex_collections.items():
-        v_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
-    for label, props in edge_collections.items():
-        e_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
-    attr.list.func.extend([v_attr, e_attr])
-
+    check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
     config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
-        types_pb2.ARROW_PROPERTY_DEFINITION: attr,
     }
+    config.update(
+        {
+            types_pb2.VERTEX_COLLECTIONS: utils.s_to_attr(vertex_collections),
+            types_pb2.EDGE_COLLECTIONS: utils.s_to_attr(edge_collections),
+        }
+    )
     op = Operation(
         graph.session_id,
         types_pb2.PROJECT_GRAPH,
         config=config,
+        inputs=[graph.op],
         output_types=types_pb2.GRAPH,
     )
     return op
@@ -383,12 +397,12 @@ def project_arrow_property_graph(graph, vertex_collections, edge_collections):
 
 def project_arrow_property_graph_to_simple(
     graph,
-    v_label_id,
-    v_prop_id,
-    e_label_id,
-    e_prop_id,
-    v_data_type,
-    e_data_type,
+    v_label_id=None,
+    v_prop_id=None,
+    e_label_id=None,
+    e_prop_id=None,
+    v_data_type=None,
+    e_data_type=None,
     oid_type=None,
     vid_type=None,
 ):
@@ -405,23 +419,13 @@ def project_arrow_property_graph_to_simple(
     Returns:
         An op to project `graph`, results in a simple ARROW_PROJECTED graph.
     """
-    check_argument(graph.graph_type == types_pb2.ARROW_PROPERTY)
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.ARROW_PROJECTED),
-        types_pb2.V_LABEL_ID: utils.i_to_attr(v_label_id),
-        types_pb2.V_PROP_ID: utils.i_to_attr(v_prop_id),
-        types_pb2.E_LABEL_ID: utils.i_to_attr(e_label_id),
-        types_pb2.E_PROP_ID: utils.i_to_attr(e_prop_id),
-        types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
-        types_pb2.VID_TYPE: utils.s_to_attr(vid_type),
-        types_pb2.V_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(v_data_type)),
-        types_pb2.E_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(e_data_type)),
-    }
+    check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
+    config = {}
     op = Operation(
         graph.session_id,
         types_pb2.PROJECT_TO_SIMPLE,
         config=config,
+        inputs=[graph.op],
         output_types=types_pb2.GRAPH,
     )
     return op
@@ -440,10 +444,10 @@ def project_dynamic_property_graph(graph, v_prop, e_prop, v_prop_type, e_prop_ty
     Returns:
         Operation to project a dynamic property graph. Results in a simple graph.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(types_pb2.DYNAMIC_PROJECTED),
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.DYNAMIC_PROJECTED),
         types_pb2.V_PROP_KEY: utils.s_to_attr(v_prop),
         types_pb2.E_PROP_KEY: utils.s_to_attr(e_prop),
         types_pb2.V_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(v_prop_type)),
@@ -471,7 +475,8 @@ def copy_graph(graph, copy_type="identical"):
         Operation
     """
     check_argument(
-        graph.graph_type in (types_pb2.ARROW_PROPERTY, types_pb2.DYNAMIC_PROPERTY)
+        graph.graph_type
+        in (graph_def_pb2.ARROW_PROPERTY, graph_def_pb2.DYNAMIC_PROPERTY)
     )
     check_argument(copy_type in ("identical", "reverse"))
     config = {
@@ -497,7 +502,7 @@ def to_directed(graph):
     Returns:
         Operation
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -520,7 +525,7 @@ def to_undirected(graph):
     Returns:
         Operation
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -544,7 +549,7 @@ def create_graph_view(graph, view_type):
     Returns:
         Operation
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     check_argument(view_type in ("reversed", "directed", "undirected"))
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
@@ -569,7 +574,7 @@ def clear_graph(graph):
     Returns:
         An op to modify edges on the graph.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -591,7 +596,7 @@ def clear_edges(graph):
     Returns:
         An op to modify edges on the graph.
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -615,7 +620,7 @@ def create_subgraph(graph, nodes=None, edges=None):
     Returns:
         Operation
     """
-    check_argument(graph.graph_type == types_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
@@ -637,14 +642,18 @@ def unload_app(app):
     """Unload a loaded app.
 
     Args:
-        app (:class:`App`): The app to unload.
+        app (:class:`AppDAGNode`): The app to unload.
 
     Returns:
         An op to unload the `app`.
     """
-    config = {types_pb2.APP_NAME: utils.s_to_attr(app.key)}
+    config = {}
     op = Operation(
-        app._session_id, types_pb2.UNLOAD_APP, config=config, output_types=types_pb2.APP
+        app.session_id,
+        types_pb2.UNLOAD_APP,
+        config=config,
+        inputs=[app.op],
+        output_types=types_pb2.NULL_OUTPUT,
     )
     return op
 
@@ -653,25 +662,23 @@ def unload_graph(graph):
     """Unload a graph.
 
     Args:
-        graph (:class:`Graph`): The graph to unload.
+        graph (:class:`GraphDAGNode`): The graph to unload.
 
     Returns:
         An op to unload the `graph`.
     """
-    config = {types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key)}
-    # Dynamic graph doesn't have a vineyard id
-    if hasattr(graph, "vineyard_id"):
-        config[types_pb2.VINEYARD_ID] = utils.i_to_attr(graph.vineyard_id)
+    config = {}
     op = Operation(
         graph.session_id,
         types_pb2.UNLOAD_GRAPH,
         config=config,
-        output_types=types_pb2.GRAPH,
+        inputs=[graph.op],
+        output_types=types_pb2.NULL_OUTPUT,
     )
     return op
 
 
-def context_to_numpy(results, selector=None, vertex_range=None, axis=0):
+def context_to_numpy(context, selector=None, vertex_range=None, axis=0):
     """Retrieve results as a numpy ndarray.
 
     Args:
@@ -682,9 +689,7 @@ def context_to_numpy(results, selector=None, vertex_range=None, axis=0):
     Returns:
         An op to retrieve query results and convert to numpy ndarray.
     """
-    config = {
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
@@ -692,15 +697,16 @@ def context_to_numpy(results, selector=None, vertex_range=None, axis=0):
     if axis is not None:
         config[types_pb2.AXIS] = utils.i_to_attr(axis)
     op = Operation(
-        results._session_id,
+        context.session_id,
         types_pb2.CONTEXT_TO_NUMPY,
         config=config,
+        inputs=[context.op],
         output_types=types_pb2.TENSOR,
     )
     return op
 
 
-def context_to_dataframe(results, selector=None, vertex_range=None):
+def context_to_dataframe(context, selector=None, vertex_range=None):
     """Retrieve results as a pandas DataFrame.
 
     Args:
@@ -711,23 +717,22 @@ def context_to_dataframe(results, selector=None, vertex_range=None):
     Returns:
         An op to retrieve query results and convert to pandas DataFrame.
     """
-    config = {
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
         config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
     op = Operation(
-        results._session_id,
+        context.session_id,
         types_pb2.CONTEXT_TO_DATAFRAME,
         config=config,
+        inputs=[context.op],
         output_types=types_pb2.DATAFRAME,
     )
     return op
 
 
-def to_vineyard_tensor(results, selector=None, vertex_range=None, axis=None):
+def to_vineyard_tensor(context, selector=None, vertex_range=None, axis=None):
     """Retrieve results as vineyard tensor.
 
     Parameters:
@@ -737,9 +742,7 @@ def to_vineyard_tensor(results, selector=None, vertex_range=None, axis=None):
     Returns:
         An op to convert query results into a vineyard tensor.
     """
-    config = {
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
@@ -747,15 +750,16 @@ def to_vineyard_tensor(results, selector=None, vertex_range=None, axis=None):
     if axis is not None:
         config[types_pb2.AXIS] = utils.i_to_attr(axis)
     op = Operation(
-        results._session_id,
+        context.session_id,
         types_pb2.TO_VINEYARD_TENSOR,
         config=config,
+        inputs=[context.op],
         output_types=types_pb2.VINEYARD_TENSOR,
     )
     return op
 
 
-def to_vineyard_dataframe(results, selector=None, vertex_range=None):
+def to_vineyard_dataframe(context, selector=None, vertex_range=None):
     """Retrieve results as vineyard dataframe.
 
     Parameters:
@@ -765,18 +769,31 @@ def to_vineyard_dataframe(results, selector=None, vertex_range=None):
     Returns:
         An op to convert query results into a vineyard dataframe.
     """
-    config = {
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
         config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
     op = Operation(
-        results._session_id,
+        context.session_id,
         types_pb2.TO_VINEYARD_DATAFRAME,
         config=config,
+        inputs=[context.op],
         output_types=types_pb2.VINEYARD_DATAFRAME,
+    )
+    return op
+
+
+def get_context_data(results, node):
+    config = {
+        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
+        types_pb2.NODE: utils.s_to_attr(node),
+    }
+    op = Operation(
+        results._session_id,
+        types_pb2.GET_CONTEXT_DATA,
+        config=config,
+        output_types=types_pb2.RESULTS,
     )
     return op
 
@@ -793,16 +810,12 @@ def add_column(graph, results, selector):
     Returns:
         A new graph with new columns added.
     """
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
-        types_pb2.CTX_NAME: utils.s_to_attr(results.key),
-        types_pb2.SELECTOR: utils.s_to_attr(selector),
-    }
+    config = {types_pb2.SELECTOR: utils.s_to_attr(selector)}
     op = Operation(
         graph.session_id,
         types_pb2.ADD_COLUMN,
         config=config,
+        inputs=[graph.op, results.op],
         output_types=types_pb2.GRAPH,
     )
     return op
@@ -812,16 +825,14 @@ def graph_to_numpy(graph, selector=None, vertex_range=None):
     """Retrieve graph raw data as a numpy ndarray.
 
     Args:
-        graph (:class:`Graph`): Source graph.
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`): Source graph.
         selector (str): Select the type of data to retrieve.
         vertex_range (str): Specify a range to retrieve.
 
     Returns:
         An op to convert a graph's data to numpy ndarray.
     """
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
@@ -830,6 +841,7 @@ def graph_to_numpy(graph, selector=None, vertex_range=None):
         graph.session_id,
         types_pb2.GRAPH_TO_NUMPY,
         config=config,
+        inputs=[graph.op],
         output_types=types_pb2.TENSOR,
     )
     return op
@@ -839,16 +851,14 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
     """Retrieve graph raw data as a pandas DataFrame.
 
     Args:
-        graph (:class:`Graph`): Source graph.
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`): Source graph.
         selector (str): Select the type of data to retrieve.
         vertex_range (str): Specify a range to retrieve.
 
     Returns:
         An op to convert a graph's data to pandas DataFrame.
     """
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-    }
+    config = {}
     if selector is not None:
         config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
     if vertex_range is not None:
@@ -857,6 +867,201 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
         graph.session_id,
         types_pb2.GRAPH_TO_DATAFRAME,
         config=config,
+        inputs=[graph.op],
         output_types=types_pb2.DATAFRAME,
+    )
+    return op
+
+
+def create_interactive_query(graph, engine_params, cpu, mem):
+    """Create a interactive engine that query on the :code:`graph`
+
+    Args:
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`):
+            Source property graph.
+        engine_params (dict, optional):
+            Configuration to startup the interactive engine. See detail in:
+            `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`
+        cpu (float): The number of CPU cores for gremlin server.
+        mem (str): The number of mem  for gremlin server.
+
+    Returns:
+        An op to create a interactive engine based on a graph.
+    """
+    config = {}
+    config[types_pb2.GIE_GREMLIN_SERVER_CPU] = utils.f_to_attr(cpu)
+    config[types_pb2.GIE_GREMLIN_SERVER_MEM] = utils.s_to_attr(mem)
+    if engine_params is not None:
+        config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS] = utils.s_to_attr(
+            json.dumps(engine_params)
+        )
+    op = Operation(
+        graph.session_id,
+        types_pb2.CREATE_INTERACTIVE_QUERY,
+        config=config,
+        inputs=[graph.op],
+        output_types=types_pb2.INTERACTIVE_QUERY,
+    )
+    return op
+
+
+def create_learning_instance(graph, nodes=None, edges=None, gen_labels=None):
+    """Create an engine for graph learning.
+
+    Args:
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`):
+            Source property graph.
+        nodes (list): The node types that will be used for gnn training.
+        edges (list): The edge types that will be used for gnn training.
+        gen_labels (list): Extra node and edge labels on original graph for gnn training.
+
+    Returns:
+        An op to create a learning engine based on a graph.
+    """
+    config = {}
+    if nodes is not None:
+        config[types_pb2.NODES] = utils.bytes_to_attr(pickle.dumps(nodes))
+    if edges is not None:
+        config[types_pb2.EDGES] = utils.bytes_to_attr(pickle.dumps(edges))
+    if gen_labels is not None:
+        config[types_pb2.GLE_GEN_LABELS] = utils.bytes_to_attr(pickle.dumps(gen_labels))
+    op = Operation(
+        graph.session_id,
+        types_pb2.CREATE_LEARNING_INSTANCE,
+        config=config,
+        inputs=[graph.op],
+        output_types=types_pb2.LEARNING_GRAPH,
+    )
+    return op
+
+
+def close_interactive_query(interactive_query):
+    """Close the interactive instance.
+
+    Args:
+        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):
+            The GIE instance holds the graph that gremlin query on.
+    Returns:
+        An op to close the instance.
+    """
+    config = {}
+    op = Operation(
+        interactive_query.session_id,
+        types_pb2.CLOSE_INTERACTIVE_QUERY,
+        config=config,
+        inputs=[interactive_query.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def close_learning_instance(learning_instance):
+    """Close the learning instance.
+
+    Args:
+        learning_instance (:class:`graphscope.learning.graph.GraphDAGNode`):
+            The learning instance.
+    Returns:
+        An op to close the instance.
+    """
+    config = {}
+    op = Operation(
+        learning_instance.session_id,
+        types_pb2.CLOSE_LEARNING_INSTANCE,
+        config=config,
+        inputs=[learning_instance.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def gremlin_query(interactive_query, query, request_options=None):
+    """Execute a gremlin query.
+
+    Args:
+        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):
+            The GIE instance holds the graph that gremlin query on.
+        query (str):
+            Scripts that written in gremlin quering language.
+        request_options (dict, optional): gremlin request options. format:
+            {
+                "engine": "gae"
+            }
+
+    Returns:
+        An op to execute a gremlin query on the GIE instance.
+    """
+    config = {}
+    config[types_pb2.GIE_GREMLIN_QUERY_MESSAGE] = utils.s_to_attr(query)
+    if request_options:
+        config[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS] = utils.s_to_attr(
+            json.dumps(request_options)
+        )
+    op = Operation(
+        interactive_query.session_id,
+        types_pb2.GREMLIN_QUERY,
+        config=config,
+        inputs=[interactive_query.op],
+        output_types=types_pb2.GREMLIN_RESULTS,
+    )
+    return op
+
+
+def gremlin_to_subgraph(
+    interactive_query, gremlin_script, request_options=None, oid_type="int64"
+):
+    """Create a subgraph from gremlin output.
+
+    Args:
+        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):
+            The GIE instance holds the graph that gremlin query on.
+        gremlin_script (str):
+            gremlin script to be executed.
+        request_options (dict, optional): gremlin request options. format:
+            {
+                "engine": "gae"
+            }
+        oid_type (str, optional):
+            Type of vertex original id. Defaults to "int64".
+
+    Returns:
+        An op to create the subgraph from gremlin script
+    """
+    config = {}
+    config[types_pb2.GIE_GREMLIN_QUERY_MESSAGE] = utils.s_to_attr(gremlin_script)
+    config[types_pb2.OID_TYPE] = utils.s_to_attr(oid_type)
+    if request_options:
+        config[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS] = utils.s_to_attr(
+            json.dumps(request_options)
+        )
+    op = Operation(
+        interactive_query.session_id,
+        types_pb2.SUBGRAPH,
+        config=config,
+        inputs=[interactive_query.op],
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
+def fetch_gremlin_result(result_set, fetch_type="one"):
+    """Fetch the gremlin query result.
+
+    Args:
+        result_set (:class:`raphscope.interactive.query.ResultSetDAGNode`):
+            The instance holds the resultSet in coordinator that can fetch the gremlin result from.
+        fetch_type (str): "one" or "all". Defaults to "one".
+
+    Returns:
+        An op to fetch the gremlin result.
+    """
+    config = {}
+    config[types_pb2.GIE_GREMLIN_FETCH_RESULT_TYPE] = utils.s_to_attr(fetch_type)
+    op = Operation(
+        result_set.session_id,
+        types_pb2.FETCH_GREMLIN_RESULT,
+        config=config,
+        inputs=[result_set.op],
+        output_types=types_pb2.RESULTS,
     )
     return op

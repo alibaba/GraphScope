@@ -73,6 +73,13 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     }
 
     @Override
+    public void getPartitionNum(GetPartitionNumRequest request, StreamObserver<GetPartitionNumResponse> responseObserver) {
+        int partitionCount = metaService.getPartitionCount();
+        responseObserver.onNext(GetPartitionNumResponse.newBuilder().setPartitionNum(partitionCount).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void prepareDataLoad(PrepareDataLoadRequest request, StreamObserver<PrepareDataLoadResponse> responseObserver) {
         for (DataLoadTargetPb dataLoadTargetPb : request.getDataLoadTargetsList()) {
             DataLoadTarget dataLoadTarget = DataLoadTarget.parseProto(dataLoadTargetPb);
@@ -224,7 +231,8 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                     .setDstVertexLabelId(dstLabelId)
                     .build();
             Map<Integer, PropertyValue> operationProperties = buildPropertiesMap(typeDef, properties);
-            batchBuilder.addOperation(new OverwriteEdgeOperation(edgeId, edgeKind, operationProperties));
+            batchBuilder.addOperation(new OverwriteEdgeOperation(edgeId, edgeKind, operationProperties, true));
+            batchBuilder.addOperation(new OverwriteEdgeOperation(edgeId, edgeKind, operationProperties, false));
         }
         BatchId batchId = this.realtimeWriter.writeOperations(UuidUtils.getBase64UUIDString(), session,
                 batchBuilder.build());

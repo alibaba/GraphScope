@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
@@ -80,15 +81,15 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
                 } else {
                     selectResult = Select.extractFrom(firstTagTraversal.getKey(), firstTagTraversal.getValue(), false, args[2]);
                 }
-                if (selectResult.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.NAME) {
-                    throw new UnsupportedOperationException("value map not support in order by step " + selectResult.getByKey().getName());
+                if (selectResult.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.PROP_KEYS) {
+                    throw new UnsupportedOperationException("value map not support in order by step " + selectResult.getByKey().getPropKeys());
                 }
                 return selectResult;
             } else if (super.isSimpleValue(orderBy)) {
                 Gremlin.TagKey.Builder tagKeyBuilder = Gremlin.TagKey.newBuilder();
                 Gremlin.ByKey byKey = modulateBy(orderBy);
-                if (byKey.getItemCase() == Gremlin.ByKey.ItemCase.NAME) {
-                    throw new UnsupportedOperationException("value map not support in order by step " + byKey.getName());
+                if (byKey.getItemCase() == Gremlin.ByKey.ItemCase.PROP_KEYS) {
+                    throw new UnsupportedOperationException("value map not support in order by step " + byKey.getPropKeys());
                 }
                 if (byKey.getItemCase() != Gremlin.ByKey.ItemCase.ITEM_NOT_SET) {
                     tagKeyBuilder.setByKey(byKey);
@@ -172,7 +173,11 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
             } else if (key.equals(T.id.getAccessor())) {
                 builder.setId(Common.IdKey.newBuilder());
             } else {
-                builder.setName((String) key);
+                if (StringUtils.isNumeric(key)) {
+                    builder.setNameId(Integer.valueOf(key));
+                } else {
+                    builder.setName(key);
+                }
             }
             return Gremlin.TagKey.newBuilder().setByKey(Gremlin.ByKey.newBuilder().setKey(builder)).build();
         }

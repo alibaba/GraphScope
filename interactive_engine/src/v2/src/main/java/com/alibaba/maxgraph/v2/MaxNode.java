@@ -33,7 +33,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 public class MaxNode extends NodeBase {
     private static final Logger logger = LoggerFactory.getLogger(MaxNode.class);
@@ -45,12 +47,14 @@ public class MaxNode extends NodeBase {
     private List<NodeBase> stores = new ArrayList<>();
 
     public MaxNode(Configs configs) throws Exception {
-        this.kafkaTestCluster = new KafkaTestCluster(1);
+        Properties kafkaConfigs = new Properties();
+        kafkaConfigs.put("max.request.size", 10000000);
+        this.kafkaTestCluster = new KafkaTestCluster(1, kafkaConfigs);
         this.kafkaTestCluster.start();
 
         int frontendCount = 1;
         int ingestorCount = 2;
-        int storeCount = 2;
+        int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         int partitionCount = 4;
 
         Configs baseConfigs = Configs.newBuilder(configs)
@@ -58,11 +62,12 @@ public class MaxNode extends NodeBase {
                 .put(KafkaConfig.KAFKA_SERVERS.getKey(), this.kafkaTestCluster.getKafkaConnectString())
                 .put(CommonConfig.INGESTOR_NODE_COUNT.getKey(), String.valueOf(ingestorCount))
                 .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), String.valueOf(ingestorCount))
-                .put(CommonConfig.STORE_NODE_COUNT.getKey(), String.valueOf(storeCount))
                 .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_ENGINE.getName()), String.valueOf(storeCount))
                 .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_GRAPH.getName()), String.valueOf(storeCount))
                 .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_MANAGE.getName()), String.valueOf(storeCount))
                 .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_QUERY.getName()), String.valueOf(storeCount))
+                .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.GAIA_RPC.getName()), String.valueOf(storeCount))
+                .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.GAIA_ENGINE.getName()), String.valueOf(storeCount))
                 .put(CommonConfig.PARTITION_COUNT.getKey(), String.valueOf(partitionCount))
                 .put(CommonConfig.FRONTEND_NODE_COUNT.getKey(), String.valueOf(frontendCount))
                 .build();
@@ -127,7 +132,7 @@ public class MaxNode extends NodeBase {
         }
         for (Thread startThread : startThreads) {
             try {
-                startThread.join(60000L);
+                startThread.join();
             } catch (InterruptedException e) {
                 throw new MaxGraphException(e);
             }

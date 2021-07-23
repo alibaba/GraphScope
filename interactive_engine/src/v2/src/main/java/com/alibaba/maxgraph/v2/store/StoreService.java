@@ -23,7 +23,6 @@ import com.alibaba.maxgraph.v2.common.StoreDataBatch;
 import com.alibaba.maxgraph.v2.common.config.CommonConfig;
 import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.config.StoreConfig;
-import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.util.ThreadFactoryUtils;
 import com.alibaba.maxgraph.v2.store.jna.JnaGraphStore;
 import org.apache.hadoop.conf.Configuration;

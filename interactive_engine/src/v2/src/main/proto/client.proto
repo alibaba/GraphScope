@@ -31,6 +31,7 @@ service Client {
   rpc dropSchema(DropSchemaRequest) returns(DropSchemaResponse);
   rpc prepareDataLoad(PrepareDataLoadRequest) returns(PrepareDataLoadResponse);
   rpc commitDataLoad(CommitDataLoadRequest) returns(CommitDataLoadResponse);
+  rpc getPartitionNum(GetPartitionNumRequest) returns(GetPartitionNumResponse);
 }
 
 message VertexDataPb {
@@ -126,4 +127,12 @@ message CommitDataLoadRequest {
 
 message CommitDataLoadResponse {
 
+}
+
+message GetPartitionNumRequest {
+
+}
+
+message GetPartitionNumResponse {
+  int32 partitionNum = 1;
 }

@@ -15,10 +15,7 @@
  */
 package com.alibaba.maxgraph.v2.common.rpc;
 
-import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.config.DiscoveryConfig;
-import com.alibaba.maxgraph.v2.common.config.StoreConfig;
+import com.alibaba.maxgraph.v2.common.config.*;
 import com.alibaba.maxgraph.v2.common.discovery.NodeDiscovery;
 import com.alibaba.maxgraph.v2.common.discovery.RoleType;
 import com.alibaba.maxgraph.v2.common.exception.NodeConnectException;
@@ -90,6 +87,14 @@ public class ChannelManager {
                     case EXECUTOR_ENGINE:
                         hostTemplate = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
                         port = StoreConfig.EXECUTOR_ENGINE_PORT.get(configs);
+                        break;
+                    case GAIA_ENGINE:
+                        hostTemplate = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
+                        port = GaiaConfig.GAIA_ENGINE_PORT.get(configs);
+                        break;
+                    case GAIA_RPC:
+                        hostTemplate = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
+                        port = GaiaConfig.GAIA_RPC_PORT.get(configs);
                         break;
                     default:
                         throw new IllegalArgumentException("invalid role [" + role + "]");

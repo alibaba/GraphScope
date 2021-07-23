@@ -21,7 +21,7 @@ use crate::process::traversal::step::util::result_downcast::{
 };
 use crate::process::traversal::step::MapFuncGen;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::{Details, GraphElement, Tag, Token};
+use crate::structure::{Details, GraphElement, PropKey, Tag, Token};
 use crate::{str_to_dyn_error, DynResult, Element, FromPb};
 use dyn_type::Object;
 use pegasus::api::function::*;
@@ -42,7 +42,7 @@ pub struct ResultProperty {
 pub struct OneTagValue {
     pub graph_element: Option<GraphElement>,
     pub value: Option<Object>,
-    pub properties: Option<Vec<(String, Object)>>,
+    pub properties: Option<Vec<(PropKey, Object)>>,
 }
 
 impl OneTagValue {
@@ -52,7 +52,7 @@ impl OneTagValue {
     fn new_value<T: Into<Object>>(o: T) -> Self {
         OneTagValue { graph_element: None, value: Some(o.into()), properties: None }
     }
-    fn new_props(props: Vec<(String, Object)>) -> Self {
+    fn new_props(props: Vec<(PropKey, Object)>) -> Self {
         OneTagValue { graph_element: None, value: None, properties: Some(props) }
     }
 }

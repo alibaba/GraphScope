@@ -72,6 +72,7 @@ import java.util.concurrent.TimeoutException;
  * each reader and writer will belong to only one query, so will can cache the reader/writer
  * result in the instance, and the cache will be release memory when the query is finished
  */
+@Deprecated
 public class MaxGraphWriterImpl implements MaxGraphWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(MaxGraphWriterImpl.class);
@@ -690,8 +691,10 @@ public class MaxGraphWriterImpl implements MaxGraphWriter {
         GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
         TypeDef typeDef = graphDef.getTypeDef(edgeLabelId);
         Map<Integer, PropertyValue> operationProperties = buildPropertiesMap(typeDef, properties);
-        UpdateEdgeOperation operation = new UpdateEdgeOperation(operationEdgeId, edgeKind, operationProperties);
-        this.operationBatchBuilder.addOperation(operation);
+        this.operationBatchBuilder.addOperation(new UpdateEdgeOperation(operationEdgeId, edgeKind, operationProperties,
+                true));
+        this.operationBatchBuilder.addOperation(new UpdateEdgeOperation(operationEdgeId, edgeKind, operationProperties,
+                false));
 
         CompletableFuture<Void> future = new CompletableFuture<>();
         this.pendingCallbacks.add(new CompletionCallback<Object>() {
@@ -730,8 +733,8 @@ public class MaxGraphWriterImpl implements MaxGraphWriter {
                     .setSrcVertexLabelId(new LabelId(srcElement.labelId()))
                     .setDstVertexLabelId(new LabelId(destElement.labelId()))
                     .build();
-            DeleteEdgeOperation operation = new DeleteEdgeOperation(edgeId, edgeKind);
-            this.operationBatchBuilder.addOperation(operation);
+            this.operationBatchBuilder.addOperation(new DeleteEdgeOperation(edgeId, edgeKind, true));
+            this.operationBatchBuilder.addOperation(new DeleteEdgeOperation(edgeId, edgeKind, false));
             cache.removeOutEdgeList(srcElement);
             cache.removeInEdgeList(destElement);
         }
@@ -787,8 +790,8 @@ public class MaxGraphWriterImpl implements MaxGraphWriter {
                     .setSrcVertexLabelId(new LabelId(srcElementId.labelId()))
                     .setDstVertexLabelId(new LabelId(dstElementId.labelId()))
                     .build();
-            OverwriteEdgeOperation operation = new OverwriteEdgeOperation(edgeId, edgeKind, operationProperties);
-            this.operationBatchBuilder.addOperation(operation);
+            this.operationBatchBuilder.addOperation(new OverwriteEdgeOperation(edgeId, edgeKind, operationProperties, true));
+            this.operationBatchBuilder.addOperation(new OverwriteEdgeOperation(edgeId, edgeKind, operationProperties, false));
             cache.removeOutEdgeList(srcElementId);
             cache.removeInEdgeList(dstElementId);
         }

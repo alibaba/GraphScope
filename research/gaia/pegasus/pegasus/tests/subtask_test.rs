@@ -13,7 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus::api::{Count, Exchange, Iteration, Map, Range, ResultSet, Sink, SubTask, Limit, Filter};
+use pegasus::api::{
+    Count, Exchange, Filter, Iteration, Limit, Map, Range, ResultSet, Sink, SubTask,
+};
 use pegasus::communication::Pipeline;
 use pegasus::{Configuration, JobConf};
 use std::collections::HashMap;
@@ -22,7 +24,8 @@ use std::collections::HashMap;
 fn test_subtask_fork() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(50, "test_subtask_fork", 2);
+    let mut conf = JobConf::new("test_subtask_fork");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -82,7 +85,8 @@ fn test_subtask_fork() {
 fn test_subtask_fork_join() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(51, "test_subtask_fork_join", 2);
+    let mut conf = JobConf::new("test_subtask_fork_join");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -129,7 +133,8 @@ fn test_subtask_fork_join() {
 fn test_subtask_fork_count_join() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(52, "test_subtask_count_fork_join", 2);
+    let mut conf = JobConf::new("test_subtask_count_fork_join");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -178,7 +183,8 @@ fn test_subtask_fork_count_join() {
 fn test_subtask_in_iteration_01() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(52, "test_subtask_count_fork_join", 2);
+    let mut conf = JobConf::new("test_subtask_count_fork_join");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -192,9 +198,7 @@ fn test_subtask_in_iteration_01() {
             src.iterate(2, |start| {
                 let parent = start.exchange_with_fn(|item: &u32| *item as u64)?;
                 let sub = parent.fork_subtask(|sub| {
-                    sub.flat_map_with_fn(Pipeline, |item| {
-                        Ok((item..10000 + item).map(|x| Ok(x)))
-                    })?
+                    sub.flat_map_with_fn(Pipeline, |item| Ok((item..10000 + item).map(|x| Ok(x))))?
                         .filter_with_fn(|item| Ok(*item < 2))
                 })?;
 
@@ -230,7 +234,8 @@ fn test_subtask_in_iteration_01() {
 fn test_subtask_in_iteration_02() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(52, "test_subtask_count_fork_join", 2);
+    let mut conf = JobConf::new("test_subtask_count_fork_join");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -244,9 +249,7 @@ fn test_subtask_in_iteration_02() {
             src.iterate(2, |start| {
                 let sub = start.fork_subtask(|sub| {
                     sub.exchange_with_fn(|item: &u32| *item as u64)?
-                        .flat_map_with_fn(Pipeline, |item| {
-                            Ok((item..10000 + item).map(|x| Ok(x)))
-                        })?
+                        .flat_map_with_fn(Pipeline, |item| Ok((item..10000 + item).map(|x| Ok(x))))?
                         .limit(Range::Local, 10)?
                         .exchange_with_fn(|item: &u32| *item as u64)?
                         .filter_with_fn(|item| Ok(*item < 2))
@@ -254,26 +257,26 @@ fn test_subtask_in_iteration_02() {
 
                 start.join_subtask(sub, |p, s| Some(*p + s))
             })?
-                .sink_by(|_| {
-                    move |_, r| match r {
-                        ResultSet::Data(data) => {
-                            tx.send(data).expect("sink data failure;");
-                        }
-                        _ => (),
+            .sink_by(|_| {
+                move |_, r| match r {
+                    ResultSet::Data(data) => {
+                        tx.send(data).expect("sink data failure;");
                     }
-                })?;
+                    _ => (),
+                }
+            })?;
             Ok(())
         })
     })
-        .expect("submit job failure;");
+    .expect("submit job failure;");
 
     std::mem::drop(tx);
     let mut vec = Vec::new();
     while let Ok(r) = rx.recv() {
-       for d in r {
-           assert!(d <= 2);
-           vec.push(d);
-       }
+        for d in r {
+            assert!(d <= 2);
+            vec.push(d);
+        }
     }
     vec.sort();
     assert_eq!(vec, vec![0, 1, 2]);

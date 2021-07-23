@@ -35,8 +35,10 @@ def k_shell(graph, k: int):
         k (int): The `k` for k-shell.
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with a boolean:
-        1 if the vertex satisfies k-shell, otherwise 0.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with a boolean:
+                1 if the vertex satisfies k-shell, otherwise 0.
+            Evaluated in eager mode.
 
     Examples:
 
@@ -51,4 +53,4 @@ def k_shell(graph, k: int):
 
     """
     k = int(k)
-    return AppAssets(algo="kshell")(graph, k)
+    return AppAssets(algo="kshell", context="vertex_data")(graph, k)

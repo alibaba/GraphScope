@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,12 +16,13 @@
 use crate::api::meta::{OperatorMeta, ScopePrior};
 use crate::errors::BuildJobError;
 use crate::event::EventBus;
-use crate::graph::{Edge, LogicalGraph};
+use crate::graph::{DotGraph, Edge, LogicalGraph};
 use crate::operator::{OperatorBuilder, OperatorCore};
 use crate::schedule::OpRuntime;
 use crate::{JobConf, WorkerId};
 use std::cell::{RefCell, RefMut};
 use std::fmt::Write;
+use std::fs::File;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -117,6 +118,24 @@ impl DataflowBuilder {
         if report {
             info!("crate job[{}] with configuration : {:?}", self.config.job_id, self.config);
             info!("{}", plan_desc);
+            let mut op_names = Vec::with_capacity(operators.len());
+            for op in operators.iter() {
+                let name = op.as_ref().unwrap().meta.name.clone();
+                op_names.push(name);
+            }
+            let graph = DotGraph::new(
+                self.config.job_name.clone(),
+                self.config.job_id,
+                op_names,
+                edges.clone(),
+            );
+            if let Ok(mut f) =
+                File::create(format!("{}_{}.dot", self.config.job_name, self.config.job_id))
+            {
+                if let Err(e) = dot::render(&graph, &mut f) {
+                    error!("create dot file failure: {}", e);
+                }
+            }
         }
         let graph = LogicalGraph::new(edges, operators.len());
         Ok(Dataflow { worker_id: self.worker_id, graph, operators })

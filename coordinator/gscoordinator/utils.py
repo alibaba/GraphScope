@@ -17,14 +17,17 @@
 #
 
 
+import base64
 import copy
 import datetime
 import glob
 import hashlib
+import inspect
 import json
 import logging
 import numbers
 import os
+import pickle
 import random
 import shutil
 import socket
@@ -40,6 +43,10 @@ from queue import Queue
 from string import Template
 
 import yaml
+from graphscope.framework import utils
+from graphscope.framework.graph_schema import GraphSchema
+from graphscope.proto import attr_value_pb2
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
@@ -277,11 +284,11 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         ".",
         "-DNETWORKX=" + engine_config["networkx"],
     ]
-    if graph_type == types_pb2.ARROW_PROPERTY:
+    if graph_type == graph_def_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]
     elif (
-        graph_type == types_pb2.ARROW_PROJECTED
-        or graph_type == types_pb2.DYNAMIC_PROJECTED
+        graph_type == graph_def_pb2.ARROW_PROJECTED
+        or graph_type == graph_def_pb2.DYNAMIC_PROJECTED
     ):
         cmake_commands += ["-DPROJECT_FRAME=True"]
     else:
@@ -327,6 +334,614 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     lib_path = get_lib_path(library_dir, library_name)
     assert os.path.isfile(lib_path), "Error occurs when building the frame library."
     return lib_path
+
+
+def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
+    if op.op == types_pb2.REPORT_GRAPH:
+        # do nothing for nx report graph
+        return
+    if op.op == types_pb2.ADD_LABELS:
+        _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.RUN_APP:
+        _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.BIND_APP:
+        _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.PROJECT_GRAPH:
+        _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.PROJECT_TO_SIMPLE:
+        _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.ADD_COLUMN:
+        _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.UNLOAD_GRAPH:
+        _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op in (
+        types_pb2.CONTEXT_TO_NUMPY,
+        types_pb2.CONTEXT_TO_DATAFRAME,
+        types_pb2.TO_VINEYARD_TENSOR,
+        types_pb2.TO_VINEYARD_DATAFRAME,
+    ):
+        _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op in (types_pb2.GRAPH_TO_NUMPY, types_pb2.GRAPH_TO_DATAFRAME):
+        _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.UNLOAD_APP:
+        _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.CREATE_INTERACTIVE_QUERY:
+        _pre_process_for_create_interactive_query_op(
+            op, op_result_pool, key_to_op, **kwargs
+        )
+    if op.op == types_pb2.GREMLIN_QUERY:
+        _pre_process_for_gremlin_query_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.FETCH_GREMLIN_RESULT:
+        _pre_process_for_fetch_gremlin_result(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.CLOSE_INTERACTIVE_QUERY:
+        _pre_process_for_close_interactive_query_op(
+            op, op_result_pool, key_to_op, **kwargs
+        )
+    if op.op == types_pb2.SUBGRAPH:
+        _pre_process_for_gremlin_to_subgraph_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.CREATE_LEARNING_INSTANCE:
+        _pre_process_for_create_learning_graph_op(
+            op, op_result_pool, key_to_op, **kwargs
+        )
+    if op.op == types_pb2.CLOSE_LEARNING_INSTANCE:
+        _pre_process_for_close_learning_instance_op(
+            op, op_result_pool, key_to_op, **kwargs
+        )
+
+
+def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
+
+
+def _pre_process_for_close_interactive_query_op(
+    op, op_result_pool, key_to_op, **kwargs
+):
+    assert len(op.parents) == 1
+    assert op.parents[0] in op_result_pool
+
+
+def _pre_process_for_gremlin_to_subgraph_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    assert op.parents[0] in op_result_pool
+
+
+def _pre_process_for_gremlin_query_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    assert op.parents[0] in op_result_pool
+
+
+def _pre_process_for_fetch_gremlin_result(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    assert op.parents[0] in op_result_pool
+
+
+def _pre_process_for_create_interactive_query_op(
+    op, op_result_pool, key_to_op, **kwargs
+):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
+    vy_info = graph_def_pb2.VineyardInfoPb()
+    result.graph_def.extension.Unpack(vy_info)
+    op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
+    op.attr[types_pb2.SCHEMA_PATH].CopyFrom(utils.s_to_attr(vy_info.schema_path))
+
+
+def _pre_process_for_close_learning_instance_op(
+    op, op_result_pool, key_to_op, **kwargs
+):
+    assert len(op.parents) == 1
+    assert op.parents[0] in op_result_pool
+
+
+def _pre_process_for_create_learning_graph_op(op, op_result_pool, key_to_op, **kwargs):
+    from graphscope.learning.graph import Graph as LearningGraph
+
+    nodes = pickle.loads(op.attr[types_pb2.NODES].s)
+    edges = pickle.loads(op.attr[types_pb2.EDGES].s)
+    gen_labels = pickle.loads(op.attr[types_pb2.GLE_GEN_LABELS].s)
+    # get graph schema
+    op, op_result_pool, key_to_op
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
+    schema = GraphSchema()
+    schema.from_graph_def(result.graph_def)
+    # get graph vineyard id
+    vy_info = graph_def_pb2.VineyardInfoPb()
+    result.graph_def.extension.Unpack(vy_info)
+    vineyard_id = vy_info.vineyard_id
+    # gle handle
+    engine_hosts = kwargs.pop("engine_hosts")
+    engine_config = kwargs.pop("engine_config")
+    handle = get_gl_handle(schema, vineyard_id, engine_hosts, engine_config)
+    config = LearningGraph.preprocess_args(handle, nodes, edges, gen_labels)
+    config = base64.b64encode(json.dumps(config).encode("utf-8")).decode("utf-8")
+    op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vineyard_id))
+    op.attr[types_pb2.GLE_HANDLE].CopyFrom(utils.s_to_attr(handle))
+    op.attr[types_pb2.GLE_CONFIG].CopyFrom(utils.s_to_attr(config))
+
+
+# get `bind_app` runtime informarion in lazy mode
+def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs):
+    for key_of_parent_op in op.parents:
+        parent_op = key_to_op[key_of_parent_op]
+        if parent_op.op == types_pb2.CREATE_APP:
+            # app assets
+            op.attr[types_pb2.APP_ALGO].CopyFrom(parent_op.attr[types_pb2.APP_ALGO])
+            if types_pb2.GAR in parent_op.attr:
+                op.attr[types_pb2.GAR].CopyFrom(parent_op.attr[types_pb2.GAR])
+        else:
+            # get graph runtime information from results
+            result = op_result_pool[key_of_parent_op]
+            assert result.graph_def.extension.Is(
+                graph_def_pb2.VineyardInfoPb.DESCRIPTOR
+            )
+            vy_info = graph_def_pb2.VineyardInfoPb()
+            result.graph_def.extension.Unpack(vy_info)
+            op.attr[types_pb2.GRAPH_NAME].CopyFrom(
+                attr_value_pb2.AttrValue(s=result.graph_def.key.encode("utf-8"))
+            )
+            op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
+                attr_value_pb2.AttrValue(graph_type=result.graph_def.graph_type)
+            )
+            op.attr[types_pb2.OID_TYPE].CopyFrom(
+                utils.s_to_attr(
+                    utils.normalize_data_type_str(
+                        utils.data_type_to_cpp(vy_info.oid_type)
+                    )
+                )
+            )
+            op.attr[types_pb2.VID_TYPE].CopyFrom(
+                utils.s_to_attr(utils.data_type_to_cpp(vy_info.vid_type))
+            )
+            op.attr[types_pb2.V_DATA_TYPE].CopyFrom(
+                utils.s_to_attr(utils.data_type_to_cpp(vy_info.vdata_type))
+            )
+            op.attr[types_pb2.E_DATA_TYPE].CopyFrom(
+                utils.s_to_attr(utils.data_type_to_cpp(vy_info.edata_type))
+            )
+
+
+# get `run_app` runtime informarion in lazy mode
+def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
+    # run_app op has only one parent
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    parent_op = key_to_op[key_of_parent_op]
+    assert parent_op.op == types_pb2.BIND_APP
+    # set graph key
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(parent_op.attr[types_pb2.GRAPH_NAME])
+    result = op_result_pool[key_of_parent_op]
+    # set app key
+    op.attr[types_pb2.APP_NAME].CopyFrom(
+        attr_value_pb2.AttrValue(s=result.result.decode("utf-8").encode("utf-8"))
+    )
+
+
+def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
+    vy_info = graph_def_pb2.VineyardInfoPb()
+    result.graph_def.extension.Unpack(vy_info)
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
+    op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
+
+
+def _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    op.attr[types_pb2.APP_NAME].CopyFrom(utils.s_to_attr(result.result.decode("utf-8")))
+
+
+def _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs):
+    for key_of_parent_op in op.parents:
+        parent_op = key_to_op[key_of_parent_op]
+        if parent_op.op != types_pb2.RUN_APP:
+            # get graph information
+            r = op_result_pool[key_of_parent_op]
+            graph_name = r.graph_def.key
+            graph_type = r.graph_def.graph_type
+            schema = GraphSchema()
+            schema.from_graph_def(r.graph_def)
+    for key_of_parent_op in op.parents:
+        parent_op = key_to_op[key_of_parent_op]
+        if parent_op.op == types_pb2.RUN_APP:
+            selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
+            r = op_result_pool[key_of_parent_op]
+            parent_op_result = json.loads(r.result.decode("utf-8"))
+            context_key = parent_op_result["context_key"]
+            context_type = parent_op_result["context_type"]
+            selector = _tranform_dataframe_selector(context_type, schema, selector)
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(graph_name))
+    op.attr[types_pb2.GRAPH_TYPE].CopyFrom(utils.graph_type_to_attr(graph_type))
+    op.attr[types_pb2.CTX_NAME].CopyFrom(utils.s_to_attr(context_key))
+    op.attr[types_pb2.SELECTOR].CopyFrom(utils.s_to_attr(selector))
+
+
+def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
+    def __backtrack_key_of_graph_op(key):
+        bfs_queue = Queue()
+        bfs_queue.put(key)
+        while not bfs_queue.empty():
+            next_op_key = bfs_queue.get()
+            if next_op_key in key_to_op:
+                next_op = key_to_op[next_op_key]
+                if next_op.op in (
+                    types_pb2.CREATE_GRAPH,
+                    types_pb2.ADD_LABELS,
+                    types_pb2.TRANSFORM_GRAPH,
+                    types_pb2.PROJECT_GRAPH,
+                    types_pb2.PROJECT_TO_SIMPLE,
+                ):
+                    return next_op
+                for parent_key in next_op.parents:
+                    bfs_queue.put(parent_key)
+        return None
+
+    assert len(op.parents) == 1
+    schema = None
+    key_of_parent_op = op.parents[0]
+    graph_op = __backtrack_key_of_graph_op(key_of_parent_op)
+    r = op_result_pool[key_of_parent_op]
+    # set context key
+    parent_op_result = json.loads(r.result.decode("utf-8"))
+    context_key = parent_op_result["context_key"]
+    context_type = parent_op_result["context_type"]
+    op.attr[types_pb2.CTX_NAME].CopyFrom(
+        attr_value_pb2.AttrValue(s=context_key.encode("utf-8"))
+    )
+    r = op_result_pool[graph_op.key]
+    # transform selector
+    schema = GraphSchema()
+    schema.from_graph_def(r.graph_def)
+    selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
+    if op.op in (types_pb2.CONTEXT_TO_DATAFRAME, types_pb2.TO_VINEYARD_DATAFRAME):
+        selector = _tranform_dataframe_selector(context_type, schema, selector)
+    else:
+        # to numpy
+        selector = _tranform_numpy_selector(context_type, schema, selector)
+    if selector is not None:
+        op.attr[types_pb2.SELECTOR].CopyFrom(
+            attr_value_pb2.AttrValue(s=selector.encode("utf-8"))
+        )
+
+
+def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    r = op_result_pool[key_of_parent_op]
+    schema = GraphSchema()
+    schema.from_graph_def(r.graph_def)
+    graph_name = r.graph_def.key
+    selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
+    if op.op == types_pb2.GRAPH_TO_DATAFRAME:
+        selector = _tranform_dataframe_selector(
+            "labeled_vertex_property", schema, selector
+        )
+    else:
+        # to numpy
+        selector = _tranform_numpy_selector("labeled_vertex_property", schema, selector)
+    if selector is not None:
+        op.attr[types_pb2.SELECTOR].CopyFrom(
+            attr_value_pb2.AttrValue(s=selector.encode("utf-8"))
+        )
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+    )
+
+
+def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwargs):
+    # for nx graph
+    if op.attr[types_pb2.GRAPH_TYPE].graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
+        return
+    assert len(op.parents) == 1
+    # get parent graph schema
+    key_of_parent_op = op.parents[0]
+    r = op_result_pool[key_of_parent_op]
+    schema = GraphSchema()
+    schema.from_graph_def(r.graph_def)
+    graph_name = r.graph_def.key
+    check_argument(
+        schema.vertex_label_num == 1,
+        "Cannot project to simple, vertex label number is not one.",
+    )
+    check_argument(
+        schema.edge_label_num == 1,
+        "Cannot project to simple, edge label number is not one.",
+    )
+    v_label = schema.vertex_labels[0]
+    e_label = schema.edge_labels[0]
+    relation = (v_label, v_label)
+    check_argument(
+        relation in schema.get_relationships(e_label),
+        f"Cannot project to simple, Graph doesn't contain such relationship: {v_label} -> {e_label} <- {v_label}.",
+    )
+    v_props = schema.get_vertex_properties(v_label)
+    e_props = schema.get_edge_properties(e_label)
+    check_argument(len(v_props) <= 1)
+    check_argument(len(e_props) <= 1)
+    v_label_id = schema.get_vertex_label_id(v_label)
+    e_label_id = schema.get_edge_label_id(e_label)
+    v_prop_id, vdata_type = (v_props[0].id, v_props[0].type) if v_props else (-1, None)
+    e_prop_id, edata_type = (e_props[0].id, e_props[0].type) if e_props else (-1, None)
+    oid_type = schema.oid_type
+    vid_type = schema.vid_type
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+    )
+    op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
+        utils.graph_type_to_attr(graph_def_pb2.ARROW_PROJECTED)
+    )
+    op.attr[types_pb2.V_LABEL_ID].CopyFrom(utils.i_to_attr(v_label_id))
+    op.attr[types_pb2.V_PROP_ID].CopyFrom(utils.i_to_attr(v_prop_id))
+    op.attr[types_pb2.E_LABEL_ID].CopyFrom(utils.i_to_attr(e_label_id))
+    op.attr[types_pb2.E_PROP_ID].CopyFrom(utils.i_to_attr(e_prop_id))
+    op.attr[types_pb2.OID_TYPE].CopyFrom(
+        utils.s_to_attr(utils.data_type_to_cpp(oid_type))
+    )
+    op.attr[types_pb2.VID_TYPE].CopyFrom(
+        utils.s_to_attr(utils.data_type_to_cpp(vid_type))
+    )
+    op.attr[types_pb2.V_DATA_TYPE].CopyFrom(
+        utils.s_to_attr(utils.data_type_to_cpp(vdata_type))
+    )
+    op.attr[types_pb2.E_DATA_TYPE].CopyFrom(
+        utils.s_to_attr(utils.data_type_to_cpp(edata_type))
+    )
+
+
+def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
+    def _get_all_v_props_id(schema, label):
+        props = schema.get_vertex_properties(label)
+        return [schema.get_vertex_property_id(label, prop.name) for prop in props]
+
+    def _get_all_e_props_id(schema, label):
+        props = schema.get_edge_properties(label)
+        return [schema.get_edge_property_id(label, prop.name) for prop in props]
+
+    assert len(op.parents) == 1
+    # get parent graph schema
+    key_of_parent_op = op.parents[0]
+    r = op_result_pool[key_of_parent_op]
+    schema = GraphSchema()
+    schema.from_graph_def(r.graph_def)
+    graph_name = r.graph_def.key
+    vertices = json.loads(op.attr[types_pb2.VERTEX_COLLECTIONS].s.decode("utf-8"))
+    edges = json.loads(op.attr[types_pb2.EDGE_COLLECTIONS].s.decode("utf-8"))
+    vertex_collections = {}
+    edge_collections = {}
+    for label, props in vertices.items():
+        label_id = schema.get_vertex_label_id(label)
+        if props is None:
+            vertex_collections[label_id] = _get_all_v_props_id(schema, label)
+        else:
+            vertex_collections[label_id] = sorted(
+                [schema.get_vertex_property_id(label, prop) for prop in props]
+            )
+    for label, props in edges.items():
+        relations = schema.get_relationships(label)
+        valid = False
+        for src, dst in relations:
+            if src in vertices and dst in vertices:
+                valid = True
+                break
+        if not valid:
+            raise ValueError("Cannot find a valid relation in given vertices and edges")
+        label_id = schema.get_edge_label_id(label)
+        if props is None:
+            edge_collections[label_id] = _get_all_e_props_id(schema, label)
+        else:
+            edge_collections[label_id] = sorted(
+                [schema.get_edge_property_id(label, prop) for prop in props]
+            )
+    vertex_collections = dict(sorted(vertex_collections.items()))
+    edge_collections = dict(sorted(edge_collections.items()))
+
+    # construct op attr
+    attr = attr_value_pb2.AttrValue()
+    v_attr = attr_value_pb2.NameAttrList()
+    e_attr = attr_value_pb2.NameAttrList()
+    for label, props in vertex_collections.items():
+        v_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
+    for label, props in edge_collections.items():
+        e_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
+    attr.list.func.extend([v_attr, e_attr])
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+    )
+    op.attr[types_pb2.ARROW_PROPERTY_DEFINITION].CopyFrom(attr)
+    del op.attr[types_pb2.VERTEX_COLLECTIONS]
+    del op.attr[types_pb2.EDGE_COLLECTIONS]
+
+
+def _tranform_numpy_selector(context_type, schema, selector):
+    if context_type == "tensor":
+        selector = None
+    if context_type == "vertex_data":
+        selector = transform_vertex_data_selector(selector)
+    if context_type == "labeled_vertex_data":
+        selector = transform_labeled_vertex_data_selector(schema, selector)
+    if context_type == "vertex_property":
+        selector = transform_vertex_property_data_selector(selector)
+    if context_type == "labeled_vertex_property":
+        selector = transform_labeled_vertex_property_data_selector(schema, selector)
+    return selector
+
+
+def _tranform_dataframe_selector(context_type, schema, selector):
+    selector = json.loads(selector)
+    if context_type == "tensor":
+        selector = {key: None for key, value in selector.items()}
+    if context_type == "vertex_data":
+        selector = {
+            key: transform_vertex_data_selector(value)
+            for key, value in selector.items()
+        }
+    if context_type == "labeled_vertex_data":
+        selector = {
+            key: transform_labeled_vertex_data_selector(schema, value)
+            for key, value in selector.items()
+        }
+    if context_type == "vertex_property":
+        selector = {
+            key: transform_vertex_property_data_selector(value)
+            for key, value in selector.items()
+        }
+    if context_type == "labeled_vertex_property":
+        selector = {
+            key: transform_labeled_vertex_property_data_selector(schema, value)
+            for key, value in selector.items()
+        }
+    return json.dumps(selector)
+
+
+def _transform_vertex_data_v(selector):
+    if selector not in ("v.id", "v.data"):
+        raise SyntaxError("selector of v must be 'id' or 'data'")
+    return selector
+
+
+def _transform_vertex_data_e(selector):
+    if selector not in ("e.src", "e.dst", "e.data"):
+        raise SyntaxError("selector of e must be 'src', 'dst' or 'data'")
+    return selector
+
+
+def _transform_vertex_data_r(selector):
+    if selector != "r":
+        raise SyntaxError("selector of r must be 'r'")
+    return selector
+
+
+def _transform_vertex_property_data_r(selector):
+    # The second part of selector or r is user defined name.
+    # So we will allow any str
+    return selector
+
+
+def _transform_labeled_vertex_data_v(schema, label, prop):
+    label_id = schema.get_vertex_label_id(label)
+    if prop == "id":
+        return "label{}.{}".format(label_id, prop)
+    else:
+        prop_id = schema.get_vertex_property_id(label, prop)
+        return "label{}.property{}".format(label_id, prop_id)
+
+
+def _transform_labeled_vertex_data_e(schema, label, prop):
+    label_id = schema.get_edge_label_id(label)
+    if prop in ("src", "dst"):
+        return "label{}.{}".format(label_id, prop)
+    else:
+        prop_id = schema.get_vertex_property_id(label, prop)
+        return "label{}.property{}".format(label_id, prop_id)
+
+
+def _transform_labeled_vertex_data_r(schema, label):
+    label_id = schema.get_vertex_label_id(label)
+    return "label{}".format(label_id)
+
+
+def _transform_labeled_vertex_property_data_r(schema, label, prop):
+    label_id = schema.get_vertex_label_id(label)
+    return "label{}.{}".format(label_id, prop)
+
+
+def transform_vertex_data_selector(selector):
+    """Optional values:
+    vertex selector: 'v.id', 'v.data'
+    edge selector: 'e.src', 'e.dst', 'e.data'
+    result selector: 'r'
+    """
+    if selector is None:
+        raise RuntimeError("selector cannot be None")
+    segments = selector.split(".")
+    if len(segments) > 2:
+        raise SyntaxError("Invalid selector: %s." % selector)
+    if segments[0] == "v":
+        selector = _transform_vertex_data_v(selector)
+    elif segments[0] == "e":
+        selector = _transform_vertex_data_e(selector)
+    elif segments[0] == "r":
+        selector = _transform_vertex_data_r(selector)
+    else:
+        raise SyntaxError("Invalid selector: %s, choose from v / e / r." % selector)
+    return selector
+
+
+def transform_vertex_property_data_selector(selector):
+    """Optional values:
+    vertex selector: 'v.id', 'v.data'
+    edge selector: 'e.src', 'e.dst', 'e.data'
+    result selector format: 'r.y', y  denotes property name.
+    """
+    if selector is None:
+        raise RuntimeError("selector cannot be None")
+    segments = selector.split(".")
+    if len(segments) != 2:
+        raise SyntaxError("Invalid selector: %s." % selector)
+    if segments[0] == "v":
+        selector = _transform_vertex_data_v(selector)
+    elif segments[0] == "e":
+        selector = _transform_vertex_data_e(selector)
+    elif segments[0] == "r":
+        selector = _transform_vertex_property_data_r(selector)
+    else:
+        raise SyntaxError("Invalid selector: %s, choose from v / e / r." % selector)
+    return selector
+
+
+def transform_labeled_vertex_data_selector(schema, selector):
+    """Formats: 'v:x.y/id', 'e:x.y/src/dst', 'r:label',
+                x denotes label name, y denotes property name.
+    Returned selector will change label name to 'label{id}', where id is x's id in labels.
+    And change property name to 'property{id}', where id is y's id in properties.
+    """
+    if selector is None:
+        raise RuntimeError("selector cannot be None")
+
+    ret_type, segments = selector.split(":")
+    if ret_type not in ("v", "e", "r"):
+        raise SyntaxError("Invalid selector: " + selector)
+    segments = segments.split(".")
+    ret = ""
+    if ret_type == "v":
+        ret = _transform_labeled_vertex_data_v(schema, *segments)
+    elif ret_type == "e":
+        ret = _transform_labeled_vertex_data_e(schema, *segments)
+    elif ret_type == "r":
+        ret = _transform_labeled_vertex_data_r(schema, *segments)
+    return "{}:{}".format(ret_type, ret)
+
+
+def transform_labeled_vertex_property_data_selector(schema, selector):
+    """Formats: 'v:x.y/id', 'e:x.y/src/dst', 'r:x.y',
+                x denotes label name, y denotes property name.
+    Returned selector will change label name to 'label{id}', where id is x's id in labels.
+    And change property name to 'property{id}', where id is y's id in properties.
+    """
+    if selector is None:
+        raise RuntimeError("selector cannot be None")
+    ret_type, segments = selector.split(":")
+    if ret_type not in ("v", "e", "r"):
+        raise SyntaxError("Invalid selector: " + selector)
+    segments = segments.split(".")
+    ret = ""
+    if ret_type == "v":
+        ret = _transform_labeled_vertex_data_v(schema, *segments)
+    elif ret_type == "e":
+        ret = _transform_labeled_vertex_data_e(schema, *segments)
+    elif ret_type == "r":
+        ret = _transform_labeled_vertex_property_data_r(schema, *segments)
+    return "{}:{}".format(ret_type, ret)
 
 
 def _extract_gar(app_dir: str, attr):
@@ -395,23 +1010,23 @@ def _codegen_app_info(attr, meta_file: str):
 
 # a mapping for classname to header file.
 GRAPH_HEADER_MAP = {
-    types_pb2.IMMUTABLE_EDGECUT: (
+    graph_def_pb2.IMMUTABLE_EDGECUT: (
         "grape::ImmutableEdgecutFragment",
         "grape/fragment/immutable_edgecut_fragment.h",
     ),
-    types_pb2.DYNAMIC_PROJECTED: (
+    graph_def_pb2.DYNAMIC_PROJECTED: (
         "gs::DynamicProjectedFragment",
         "core/fragment/dynamic_projected_fragment.h",
     ),
-    types_pb2.ARROW_PROPERTY: (
+    graph_def_pb2.ARROW_PROPERTY: (
         "vineyard::ArrowFragment",
         "vineyard/graph/fragment/arrow_fragment.h",
     ),
-    types_pb2.ARROW_PROJECTED: (
+    graph_def_pb2.ARROW_PROJECTED: (
         "gs::ArrowProjectedFragment",
         "core/fragment/arrow_projected_fragment.h",
     ),
-    types_pb2.DYNAMIC_PROPERTY: (
+    graph_def_pb2.DYNAMIC_PROPERTY: (
         "gs::DynamicFragment",
         "core/fragment/dynamic_fragment.h",
     ),
@@ -644,6 +1259,123 @@ class ResolveMPICmdPrefix(object):
         return (cmd, env)
 
 
+def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config):
+    """Dump a handler for GraphLearn for interaction.
+
+    Fields in :code:`schema` are:
+
+    + the name of node type or edge type
+    + whether the graph is weighted graph
+    + whether the graph is labeled graph
+    + the number of int attributes
+    + the number of float attributes
+    + the number of string attributes
+
+    An example of the graph handle:
+
+    .. code:: python
+
+        {
+            "server": "127.0.0.1:8888,127.0.0.1:8889",
+            "client_count": 1,
+            "vineyard_socket": "/var/run/vineyard.sock",
+            "vineyard_id": 13278328736,
+            "node_schema": [
+                "user:false:false:10:0:0",
+                "item:true:false:0:0:5"
+            ],
+            "edge_schema": [
+                "user:click:item:true:false:0:0:0",
+                "user:buy:item:true:true:0:0:0",
+                "item:similar:item:false:false:10:0:0"
+            ],
+            "node_attribute_types": {
+                "person": {
+                    "age": "i",
+                    "name": "s",
+                },
+            },
+            "edge_attribute_types": {
+                "knows": {
+                    "weight": "f",
+                },
+            },
+        }
+
+    The handle can be decoded using:
+
+    .. code:: python
+
+       base64.b64decode(handle.encode('ascii')).decode('ascii')
+
+    Note that the ports are selected from a range :code:`(8000, 9000)`.
+
+    Args:
+        schema: The graph schema.
+        vineyard_id: The object id of graph stored in vineyard.
+        engine_hosts: A list of hosts for GraphScope engine workers.
+        engine_config: dict of config for GAE engine.
+
+    Returns:
+        str: Base64 encoded handle
+
+    """
+
+    def group_property_types(props):
+        weighted, labeled, i, f, s, attr_types = "false", "false", 0, 0, 0, {}
+        for prop in props:
+            if prop.type in [graph_def_pb2.STRING]:
+                s += 1
+                attr_types[prop.name] = "s"
+            elif prop.type in (graph_def_pb2.FLOAT, graph_def_pb2.DOUBLE):
+                f += 1
+                attr_types[prop.name] = "f"
+            else:
+                i += 1
+                attr_types[prop.name] = "i"
+            if prop.name == "weight":
+                weighted = "true"
+            elif prop.name == "label":
+                labeled = "true"
+        return weighted, labeled, i, f, s, attr_types
+
+    node_schema, node_attribute_types = [], dict()
+    for label in schema.vertex_labels:
+        weighted, labeled, i, f, s, attr_types = group_property_types(
+            schema.get_vertex_properties(label)
+        )
+        node_schema.append(
+            "{}:{}:{}:{}:{}:{}".format(label, weighted, labeled, i, f, s)
+        )
+        node_attribute_types[label] = attr_types
+
+    edge_schema, edge_attribute_types = [], dict()
+    for label in schema.edge_labels:
+        weighted, labeled, i, f, s, attr_types = group_property_types(
+            schema.get_edge_properties(label)
+        )
+        for rel in schema.get_relationships(label):
+            edge_schema.append(
+                "{}:{}:{}:{}:{}:{}:{}:{}".format(
+                    rel[0], label, rel[1], weighted, labeled, i, f, s
+                )
+            )
+        edge_attribute_types[label] = attr_types
+
+    handle = {
+        "hosts": engine_hosts,
+        "client_count": 1,
+        "vineyard_id": vineyard_id,
+        "vineyard_socket": engine_config["vineyard_socket"],
+        "node_schema": node_schema,
+        "edge_schema": edge_schema,
+        "node_attribute_types": node_attribute_types,
+        "edge_attribute_types": edge_attribute_types,
+    }
+    handle_json_string = json.dumps(handle)
+    return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")
+
+
 # In Analytical engine, assume label ids of vertex entries are continuous
 # from zero, and property ids of each label is also continuous from zero.
 # When transform schema to Maxgraph style, we gather all property names and
@@ -675,3 +1407,10 @@ def to_maxgraph_schema(gsa_schema_json):
             for prop in item["propertyDefList"]:
                 prop["id"] = 1 + prop_list.index(prop["name"])
     return json.dumps(mg_schema)
+
+
+def check_argument(condition, message=None):
+    if not condition:
+        if message is None:
+            message = "in '%s'" % inspect.stack()[1].code_context[0]
+        raise ValueError("Check failed: %s" % message)

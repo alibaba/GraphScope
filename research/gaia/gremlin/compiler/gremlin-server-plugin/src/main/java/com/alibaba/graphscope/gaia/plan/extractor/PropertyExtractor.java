@@ -1,9 +1,8 @@
 package com.alibaba.graphscope.gaia.plan.extractor;
 
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
-import java.util.List;
-
 public interface PropertyExtractor {
-    List<String> extractProperties(Step step);
+    ToFetchProperties extractProperties(Step step);
 }

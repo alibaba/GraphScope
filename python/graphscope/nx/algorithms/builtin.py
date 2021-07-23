@@ -16,7 +16,9 @@
 # limitations under the License.
 #
 
+import functools
 import inspect
+import json
 
 import networkx.algorithms as nxa
 from networkx.utils.decorators import not_implemented_for
@@ -26,16 +28,18 @@ from graphscope import nx
 from graphscope.framework.app import AppAssets
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.nx.utils.compat import patch_docstring
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
 # decorator function
 def project_to_simple(func):
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
-        elif graph.graph_type == types_pb2.DYNAMIC_PROPERTY:
+        elif graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
             if (
                 "weight" in inspect.getfullargspec(func)[0]
             ):  # func has 'weight' argument
@@ -48,9 +52,61 @@ def project_to_simple(func):
     return wrapper
 
 
-@patch_docstring(nxa.pagerank)
+@project_to_simple
 def pagerank(G, alpha=0.85, max_iter=100, tol=1.0e-6):
-    raise NotImplementedError
+    """Returns the PageRank of the nodes in the graph.
+
+    PageRank computes a ranking of the nodes in the graph G based on
+    the structure of the incoming links. It was originally designed as
+    an algorithm to rank web pages.
+
+    Parameters
+    ----------
+    G : graph
+      A networkx directed graph.
+
+    alpha : float, optional
+      Damping parameter for PageRank, default=0.85.
+
+    max_iter : integer, optional
+      Maximum number of iterations in power method eigenvalue solver.
+
+    tol : float, optional
+      Error tolerance used to check convergence in power method solver.
+
+    Returns
+    -------
+    pagerank : dataframe
+       Dataframe of nodes with PageRank as the value.
+
+    Examples
+    --------
+    >>> G = nx.DiGraph(nx.path_graph(4))
+    >>> pr = nx.pagerank(G, alpha=0.9)
+
+    Notes
+    -----
+    The eigenvector calculation is done by the power iteration method
+    and has no guarantee of convergence.  The iteration will stop after
+    an error tolerance of ``len(G) * tol`` has been reached. If the
+    number of iterations exceed `max_iter`, computation just complete and
+    return the current result.
+
+    The PageRank algorithm was designed for directed graphs but this
+    algorithm does not check if the input graph is directed.
+
+    References
+    ----------
+    .. [1] A. Langville and C. Meyer,
+       "A survey of eigenvector methods of web information retrieval."
+       http://citeseer.ist.psu.edu/713792.html
+    .. [2] Page, Lawrence; Brin, Sergey; Motwani, Rajeev and Winograd, Terry,
+       The PageRank citation ranking: Bringing order to the Web. 1999
+       http://dbpubs.stanford.edu:8090/pub/showDoc.Fulltext?lang=en&doc=1999-66&format=pdf
+
+    """
+    ctx = graphscope.pagerank_nx(G, alpha, max_iter, tol)
+    return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 
 @project_to_simple
@@ -358,13 +414,13 @@ def has_path(G, source, target):
     target : node
        Ending node for path
     """
-    return AppAssets(algo="sssp_has_path")(G, source, target)
+    return AppAssets(algo="sssp_has_path", context="tensor")(G, source, target)
 
 
 @project_to_simple
 @patch_docstring(nxa.shortest_path)
 def shortest_path(G, source=None, target=None, weight=None):
-    return AppAssets(algo="sssp_path")(G, source)
+    return AppAssets(algo="sssp_path", context="tensor")(G, source)
 
 
 @project_to_simple
@@ -402,7 +458,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
     Distances are calculated as sums of weighted edges traversed.
 
     """
-    ctx = AppAssets(algo="sssp_projected")(G, source)
+    ctx = graphscope.sssp(G, source)
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 
@@ -436,7 +492,7 @@ def average_shortest_path_length(G, weight=None):
     2.0
 
     """
-    ctx = AppAssets(algo="sssp_average_length")(G)
+    ctx = AppAssets(algo="sssp_average_length", context="tensor")(G)
     return ctx.to_numpy("r", axis=0)[0]
 
 
@@ -473,20 +529,69 @@ def bfs_edges(G, source, depth_limit=None):
 
     """
     # FIXME: reverse not support.
-    ctx = AppAssets(algo="bfs_generic")(G, source, depth_limit, format="edges")
+    ctx = AppAssets(algo="bfs_generic", context="tensor")(
+        G, source, depth_limit, format="edges"
+    )
     return ctx.to_numpy("r", axis=0).tolist()
 
 
 @project_to_simple
 @patch_docstring(nxa.bfs_predecessors)
 def bfs_predecessors(G, source, depth_limit=None):
-    return AppAssets(algo="bfs_generic")(G, source, depth_limit, format="predecessors")
+    return AppAssets(algo="bfs_generic", context="tensor")(
+        G, source, depth_limit, format="predecessors"
+    )
 
 
 @project_to_simple
 @patch_docstring(nxa.bfs_successors)
 def bfs_successors(G, source, depth_limit=None):
-    return AppAssets(algo="bfs_generic")(G, source, depth_limit, format="successors")
+    return AppAssets(algo="bfs_generic", context="tensor")(
+        G, source, depth_limit, format="successors"
+    )
+
+
+@project_to_simple
+def all_pairs_shortest_path_length(G, weight=None):
+    """Compute shortest path lengths between all nodes in a graph.
+
+    Parameters
+    ----------
+    G : networkx graph
+
+    weight : string (defualt=None)
+       edge weights will be accessed via the edge attribute with this
+       key (that is, the weight of the edge joining `u` to `v` will be
+       ``G.edges[u, v][weight]``). If is None, every edge is assume to be one.
+
+    Returns
+    -------
+     :class:`DynamicVertexDataContext`: A context with each vertex assigned with the shortest distance.
+        One can use the context to access node's distance result or iterate by nodes.
+
+    Examples
+    --------
+    >>> G = nx.path_graph(5)
+    >>> length = dict(nx.all_pairs_dijkstra_path_length(G))
+    >>> for node in [0, 1, 2, 3, 4]:
+    ...     print(f"1 - {node}: {length[1][node]}")
+    1 - 0: 1
+    1 - 1: 0
+    1 - 2: 1
+    1 - 3: 2
+    1 - 4: 3
+    >>> length[3][2]
+    1
+    >>> length[2][2]
+    0
+
+    Notes
+    -----
+    Edge weight attributes must be numerical.
+    Distances are calculated as sums of weighted edges traversed.
+
+    """
+    return AppAssets(algo="all_pairs_shortest_path_length", context="vertex_data")(G)
 
 
 @project_to_simple
@@ -522,11 +627,11 @@ def closeness_centrality(G, weight=None, wf_improved=True):
     Parameters
     ----------
     G : graph
-      A NetworkX graph
+      A networkx graph
 
     weight : edge attribute key, optional (default=None)
       Use the specified edge attribute as the edge distance in shortest
-      path calculations
+      path calculations, if None, every edge is assumed to be one.
 
     wf_improved : bool, optional (default=True)
       If True, scale by the fraction of nodes reachable. This gives the
@@ -537,21 +642,6 @@ def closeness_centrality(G, weight=None, wf_improved=True):
     -------
     nodes: dataframe
 
-    Notes
-    -----
-    The closeness centrality is normalized to `(n-1)/(|G|-1)` where
-    `n` is the number of nodes in the connected part of graph
-    containing the node.  If the graph is not completely connected,
-    this algorithm computes the closeness centrality for each
-    connected part separately scaled by that parts size.
-
-    If the 'weight' keyword is set to an edge attribute key then the
-    shortest-path length will be computed using Dijkstra's algorithm with
-    that edge attribute as the edge weight.
-
-    The closeness centrality uses *inward* distance to a node, not outward.
-    If you want to use outword distances apply the function to `G.reverse()`
-
     References
     ----------
     .. [1] Linton C. Freeman: Centrality in networks: I.
@@ -561,7 +651,7 @@ def closeness_centrality(G, weight=None, wf_improved=True):
        Social Network Analysis: Methods and Applications, 1994,
        Cambridge University Press.
     """
-    ctx = AppAssets(algo="closeness_centrality")(G, wf_improved)
+    ctx = AppAssets(algo="closeness_centrality", context="vertex_data")(G, wf_improved)
     return ctx.to_dataframe({"node": "v.id", "result": "r"})
 
 
@@ -736,7 +826,7 @@ def triangles(G, nodes=None):
 @patch_docstring(nxa.transitivity)
 def transitivity(G):
     # FIXME: nodes not support.
-    return AppAssets(algo="transitivity")(G)
+    return AppAssets(algo="transitivity", context="tensor")(G)
 
 
 @project_to_simple
@@ -785,7 +875,7 @@ def average_clustering(G, nodes=None, count_zeros=True):
        https://arxiv.org/abs/0802.2512
     """
     # FIXME: nodes, weight, count_zeros not support.
-    ctx = AppAssets(algo="avg_clustering")(G)
+    ctx = AppAssets(algo="avg_clustering", context="tensor")(G)
     return ctx.to_numpy("r")[0]
 
 
@@ -804,4 +894,99 @@ def weakly_connected_components(G):
         1 if the vertex satisfies k-core, otherwise 0.
 
     """
-    return AppAssets(algo="wcc_projected")(G)
+    return AppAssets(algo="wcc_projected", context="vertex_data")(G)
+
+
+@project_to_simple
+def node_boundary(G, nbunch1, nbunch2=None):
+    """Returns the node boundary of `nbunch1`.
+
+    The *node boundary* of a set *S* with respect to a set *T* is the
+    set of nodes *v* in *T* such that for some *u* in *S*, there is an
+    edge joining *u* to *v*. If *T* is not specified, it is assumed to
+    be the set of all nodes not in *S*.
+
+    Parameters
+    ----------
+    G : networkx graph
+
+    nbunch1 : iterable
+        Iterable of nodes in the graph representing the set of nodes
+        whose node boundary will be returned. (This is the set *S* from
+        the definition above.)
+
+    nbunch2 : iterable
+        Iterable of nodes representing the target (or "exterior") set of
+        nodes. (This is the set *T* from the definition above.) If not
+        specified, this is assumed to be the set of all nodes in `G`
+        not in `nbunch1`.
+
+    Returns
+    -------
+    list
+        The node boundary of `nbunch1` with respect to `nbunch2`.
+
+    Notes
+    -----
+    Any element of `nbunch` that is not in the graph `G` will be
+    ignored.
+
+    `nbunch1` and `nbunch2` are usually meant to be disjoint, but in
+    the interest of speed and generality, that is not required here.
+
+    """
+    n1json = json.dumps(list(nbunch1))
+    if nbunch2:
+        n2json = json.dumps(list(nbunch2))
+    else:
+        n2json = ""
+    ctx = AppAssets(algo="node_boundary", context="tensor")(G, n1json, n2json)
+    return ctx.to_numpy("r", axis=0).tolist()
+
+
+@project_to_simple
+def edge_boundary(G, nbunch1, nbunch2=None):
+    """Returns the edge boundary of `nbunch1`.
+
+    The *edge boundary* of a set *S* with respect to a set *T* is the
+    set of edges (*u*, *v*) such that *u* is in *S* and *v* is in *T*.
+    If *T* is not specified, it is assumed to be the set of all nodes
+    not in *S*.
+
+    Parameters
+    ----------
+    G : networkx graph
+
+    nbunch1 : iterable
+        Iterable of nodes in the graph representing the set of nodes
+        whose edge boundary will be returned. (This is the set *S* from
+        the definition above.)
+
+    nbunch2 : iterable
+        Iterable of nodes representing the target (or "exterior") set of
+        nodes. (This is the set *T* from the definition above.) If not
+        specified, this is assumed to be the set of all nodes in `G`
+        not in `nbunch1`.
+
+    Returns
+    -------
+    list
+        An list of the edges in the boundary of `nbunch1` with
+        respect to `nbunch2`.
+
+    Notes
+    -----
+    Any element of `nbunch` that is not in the graph `G` will be
+    ignored.
+
+    `nbunch1` and `nbunch2` are usually meant to be disjoint, but in
+    the interest of speed and generality, that is not required here.
+
+    """
+    n1json = json.dumps(list(nbunch1))
+    if nbunch2:
+        n2json = json.dumps(list(nbunch2))
+    else:
+        n2json = ""
+    ctx = AppAssets(algo="edge_boundary", context="tensor")(G, n1json, n2json)
+    return ctx.to_numpy("r", axis=0).tolist()

@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@ use crate::api::scope::enter::{CURRENT_SCOPE, EXTRA_COMPLETES};
 use crate::api::{EnterScope, ScopeInput, ScopeInputEmitter};
 use crate::communication::input::{new_input_session, InputProxy};
 use crate::communication::output::{new_output_session, OutputDelta, OutputProxy};
-use crate::communication::{Pipeline};
+use crate::communication::Pipeline;
 use crate::errors::{BuildJobError, ErrorKind, IOResult, JobExecError};
 use crate::operator::{FiredState, OperatorCore};
 use crate::stream::Stream;
@@ -38,7 +38,9 @@ impl<D> DefaultEnterOperator<D> {
 }
 
 impl<D: Data> OperatorCore for DefaultEnterOperator<D> {
-    fn on_receive(&mut self, tag: &Tag, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>]) -> Result<FiredState, JobExecError> {
+    fn on_receive(
+        &mut self, tag: &Tag, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>],
+    ) -> Result<FiredState, JobExecError> {
         let mut input = new_input_session::<D>(&inputs[0], tag);
         let mut output = new_output_session::<D>(&outputs[0], tag);
         input.for_each_batch(|dataset| {
@@ -48,13 +50,14 @@ impl<D: Data> OperatorCore for DefaultEnterOperator<D> {
         Ok(FiredState::Idle)
     }
 
-    fn on_notify(&mut self, n: Notification, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
+    fn on_notify(
+        &mut self, n: Notification, outputs: &[Box<dyn OutputProxy>],
+    ) -> Result<(), JobExecError> {
         let tag = Tag::inherit(&n.tag, 0);
         outputs[0].scope_end(tag);
         Ok(())
     }
 }
-
 
 struct DynEnterScopeOperator<D, F> {
     completes: HashMap<Tag, IdSet>,
@@ -87,7 +90,6 @@ impl<D, F> DynEnterScopeOperator<D, F> {
         }
     }
 }
-
 
 impl<D, F> OperatorCore for DynEnterScopeOperator<D, F>
 where

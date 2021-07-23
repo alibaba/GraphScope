@@ -41,7 +41,7 @@ def empty_graph_in_engine(graph, directed, distributed):
         efile="",
         vfile="",
     )
-    graph_def = sess.run(op)
+    graph_def = op.eval()
     return graph_def
 
 

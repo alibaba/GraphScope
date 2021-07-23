@@ -62,17 +62,23 @@ enum Direction {
 enum OutputType {
   GRAPH = 0;
   APP = 1;
-  RESULTS = 2;
-  TENSOR = 3;
-  DATAFRAME = 4;
-  VINEYARD_TENSOR = 5;
-  VINEYARD_DATAFRAME = 6;
+  BOUND_APP = 2;
+  RESULTS = 3;
+  TENSOR = 4;
+  DATAFRAME = 5;
+  VINEYARD_TENSOR = 6;
+  VINEYARD_DATAFRAME = 7;
+  INTERACTIVE_QUERY = 8;
+  GREMLIN_RESULTS = 9;
+  LEARNING_GRAPH = 10;
+  NULL_OUTPUT = 101;
 };
 
 enum OperationType {
   // command
   CREATE_GRAPH = 0;  // return output_type = graph
-  CREATE_APP = 2;    // return app
+  BIND_APP = 1;      // return app
+  CREATE_APP = 2;    // do nothing
   MODIFY_VERTICES = 3;  // return graph
   MODIFY_EDGES = 4;     // return graph
   RUN_APP = 5;       // return result
@@ -94,6 +100,15 @@ enum OperationType {
   VIEW_GRAPH = 21;  // create graph view
   INDUCE_SUBGRAPH = 22;  // induce subgraph
 
+  CREATE_INTERACTIVE_QUERY = 31;  // interactive query
+  SUBGRAPH = 32;  // subgraph in interactive query
+  GREMLIN_QUERY = 33;  // queries on gremlin engine
+  FETCH_GREMLIN_RESULT = 34;
+  CLOSE_INTERACTIVE_QUERY = 35;
+
+  CREATE_LEARNING_INSTANCE = 41;  // learning graph
+  CLOSE_LEARNING_INSTANCE = 42;
+
   // data
   CONTEXT_TO_NUMPY = 50;
   CONTEXT_TO_DATAFRAME = 51;
@@ -106,20 +121,14 @@ enum OperationType {
 
   REGISTER_GRAPH_TYPE = 58;
 
+  GET_CONTEXT_DATA = 59;
+
   FROM_NUMPY = 80;
   FROM_DATAFRAME = 81;
   FROM_FILE = 82;
 
   GET_ENGINE_CONFIG = 90;
 };
-
-enum GraphType {
-  IMMUTABLE_EDGECUT = 0;
-  DYNAMIC_PROPERTY = 1;
-  DYNAMIC_PROJECTED = 2;
-  ARROW_PROPERTY = 3;
-  ARROW_PROJECTED = 4;
-}
 
 enum ParamKey {
   GRAPH_NAME = 0;
@@ -157,12 +166,28 @@ enum ParamKey {
   PARAM = 26;
 
   DISTRIBUTED = 27;
+  SCHEMA_PATH = 31;
+  GIE_GREMLIN_SERVER_CPU = 32;
+  GIE_GREMLIN_SERVER_MEM = 33;
+  GIE_GREMLIN_ENGINE_PARAMS = 34;
+  GIE_GREMLIN_QUERY_MESSAGE = 35;
+  GIE_GREMLIN_REQUEST_OPTIONS = 36;
+  GIE_GREMLIN_FETCH_RESULT_TYPE = 37;
 
   APP_SIGNATURE = 40;
   GRAPH_SIGNATURE = 41;
   IS_FROM_VINEYARD_ID = 42;
   VINEYARD_ID = 43;
   VINEYARD_NAME = 44;
+
+  // project
+  VERTEX_COLLECTIONS = 51;
+  EDGE_COLLECTIONS = 52;
+
+  // learning graph
+  GLE_HANDLE = 60;
+  GLE_CONFIG = 61;
+  GLE_GEN_LABELS = 62;
 
   APP_NAME = 100;
   APP_ALGO = 101;
@@ -237,3 +262,5 @@ enum ReportType {
   NODES_BY_LOC = 18;
   SELFLOOPS_NUM = 19;
 }
+
+message PlaceHolder {}

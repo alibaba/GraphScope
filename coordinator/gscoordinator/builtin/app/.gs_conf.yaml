@@ -30,6 +30,13 @@ app:
     compatible_graph:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
+  - algo: wcc_projected
+    type: cpp_pie
+    class_name: gs::WCCProjected
+    src: apps/projected/wcc_projected.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
   - algo: cdlp
     type: cpp_pie
@@ -166,5 +173,32 @@ app:
     type: cpp_pie
     class_name: gs::ClosenessCentrality
     src: apps/centrality/closeness/closeness_centrality.h
+    compatible_graph:
+      - gs::DynamicProjectedFragment
+  - algo: all_pairs_shortest_path_length
+    type: cpp_pie
+    class_name: gs::AllPairsShortestPathLength
+    src: apps/apsp/all_pairs_shortest_path_length.h
+    compatible_graph:
+      - gs::DynamicProjectedFragment
+  - algo: pagerank_nx
+    type: cpp_pie
+    class_name: gs::PageRankNetworkX
+    src: apps/pagerank/pagerank_networkx.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
+  - algo: node_boundary
+    type: cpp_pie
+    class_name: gs::NodeBoundary
+    src: apps/boundary/node_boundary.h
+    compatible_graph:
+      - gs::DynamicProjectedFragment
+
+  - algo: edge_boundary
+    type: cpp_pie
+    class_name: gs::EdgeBoundary
+    src: apps/boundary/edge_boundary.h
     compatible_graph:
       - gs::DynamicProjectedFragment

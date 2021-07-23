@@ -5,13 +5,13 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - '!research/gaia/**'
+    paths:
+      - 'research/gaia/**'
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - '!research/gaia/**'
+    paths:
+      - 'research/gaia/**'
 
 jobs:
   gaia-test:

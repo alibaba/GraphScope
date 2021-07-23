@@ -1,0 +1,79 @@
+{{- if (include "graphscope-store.createConfigmap" .) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "graphscope-store.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-store.labels" . | nindent 4 }}
+    app.kubernetes.io/component: configmap
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+data:
+  my.cnf: |-
+    ## Common Config
+    graph.name={{ .Values.graphName }}
+    role.name=ROLE
+    node.idx=INDEX
+    rpc.port=55555
+    rpc.max.bytes.mb={{ .Values.rpcMaxBytesMb }}
+    store.node.count={{ .Values.store.replicaCount }}
+    frontend.node.count={{ .Values.frontend.replicaCount }}
+    ingestor.node.count={{ .Values.ingestor.replicaCount }}
+    coordinator.node.count={{ .Values.coordinator.replicaCount }}
+    ingestor.queue.count={{ .Values.ingestor.replicaCount }}
+    partition.count={{ .Values.store.replicaCount | mul 8 }}
+    engine.type={{ .Values.engineType }}
+    discovery.mode={{ .Values.discoveryMode }}
+
+    ## Ingestor Config
+    ingestor.queue.buffer.size={{ .Values.ingestorQueueBufferSize }}
+    ingestor.sender.buffer.size={{ .Values.ingestorSenderBufferSize }}
+
+    ## Coordinator Config
+    snapshot.increase.interval.ms={{ .Values.snapshotIncreaseIntervalMs }}
+    offsets.persist.interval.ms={{ .Values.offsetsPersistIntervalMs }}
+    file.meta.store.path={{ .Values.fileMetaStorePath }}
+
+    ## Store Config
+    store.data.path={{ .Values.storeDataPath }}
+    store.write.thread.count={{ .Values.storeWriteThreadCount }}
+
+    ## Kafka Config
+    kafka.servers=KAFKA_SERVERS
+    kafka.topic={{ .Values.kafkaTopic }}
+
+    ## Frontend Config
+    graph.store.type={{ .Values.graphStoreType }}
+    gremlin.server.port=12312
+
+    executor.worker.per.process={{ .Values.executorWorkerPerProcess }}
+    executor.query.thread.count={{ .Values.executorQueryThreadCount }}
+    executor.query.manager.thread.count={{ .Values.executorQueryManagerThreadCount }}
+    executor.query.store.thread.count={{ .Values.executorQueryStoreThreadCount }}
+    log4rs.config={{ .Values.log4rsConfig }}
+
+    dns.name.prefix.frontend=FRONTEND
+    dns.name.prefix.ingestor=INGESTOR
+    dns.name.prefix.coordinator=COORDINATOR
+    dns.name.prefix.store=STORE
+
+    executor.graph.port=55556
+    executor.query.port=55557
+    executor.engine.port=55558
+
+    ## GAIA Config
+    gaia.rpc.port=60000
+    gaia.engine.port=60001
+
+    ## Extra Config
+    {{- if .Values.extraConfig }}
+    {{- $config_list := regexSplit ":" .Values.extraConfig -1 }}
+    {{- range $config_list }}
+    {{ . }}
+    {{- end }}
+    {{- end }}
+{{- end -}}

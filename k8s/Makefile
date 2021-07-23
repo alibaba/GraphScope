@@ -21,7 +21,7 @@ endif
 VERSION ?= latest
 PROFILE ?= release
 
-DOCKER_BUILD_PROGRESS  	= auto
+BUILD_PROGRESS  	= auto
 
 submodule:
 	cd ../ && git submodule update --init
@@ -47,6 +47,13 @@ manager:
 	cd ../interactive_engine && docker build --target manager \
 				 -t graphscope/maxgraph_standalone_manager:${SHORT_SHA} \
 				 -f ../k8s/manager.Dockerfile .
+
+graphscope-store:
+	docker build --progress=$(BUILD_PROGRESS) \
+                                 --build-arg profile=${PROFILE} \
+                                 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-store:${VERSION} \
+                                 --network=host \
+                                 -f $(WORKING_DIR)/graphscope-store.Dockerfile ..
 
 graphscope-manylinux2010:
 	docker build --progress=$(BUILD_PROGRESS) \

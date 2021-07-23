@@ -34,15 +34,19 @@ use store::v2::global_graph_schema::GlobalGraphSchema;
 
 pub struct GlobalGraph {
     graph_partitions: HashMap<PartitionId, Arc<GraphStore>>,
+    total_partition: u32,
+    partition_to_server: HashMap<PartitionId, u32>,
 }
 
 unsafe impl Send for GlobalGraph {}
 unsafe impl Sync for GlobalGraph {}
 
 impl GlobalGraph {
-    pub fn empty() -> Self {
+    pub fn empty(total_partition: u32) -> Self {
         GlobalGraph {
             graph_partitions: HashMap::new(),
+            total_partition,
+            partition_to_server: HashMap::new(),
         }
     }
 
@@ -50,17 +54,8 @@ impl GlobalGraph {
         self.graph_partitions.insert(partition_id, graph_store);
     }
 
-    pub fn new(disks: Vec<String>, graph_config: &GraphConfig, partition_ids: &Vec<PartitionId>) -> GraphResult<Self> {
-        let mut graph_partitions = HashMap::new();
-        for partition_id in partition_ids {
-            let disk_idx = *partition_id as usize % disks.len();
-            let disk = &disks[disk_idx];
-            let partition = GraphStore::open(graph_config, disk.as_str())?;
-            graph_partitions.insert(*partition_id, Arc::new(partition));
-        }
-        Ok(GlobalGraph {
-            graph_partitions,
-        })
+    pub fn update_partition_routing(&mut self, partition_id: PartitionId, server_id: u32) {
+        self.partition_to_server.insert(partition_id, server_id);
     }
 
     fn convert_label_id(label_id: Option<LabelId>) -> Option<i32> {
@@ -252,11 +247,11 @@ impl GlobalGraph {
             if labels.is_empty() {
                 if let Some(iter) = self.scan_vertex_iter(si, partition_id, None, condition)? {
                     res.push(iter);
-                } else {
-                    for label_id in labels {
-                        if let Some(iter) = self.scan_vertex_iter(si, partition_id, Some(*label_id), condition)? {
-                            res.push(iter);
-                        }
+                }
+            } else {
+                for label_id in labels {
+                    if let Some(iter) = self.scan_vertex_iter(si, partition_id, Some(*label_id), condition)? {
+                        res.push(iter);
                     }
                 }
             }
@@ -288,11 +283,11 @@ impl GlobalGraph {
             if labels.is_empty() {
                 if let Some(iter) = self.scan_edge_iter(si, partition_id, None, condition)? {
                     res.push(iter);
-                } else {
-                    for label_id in labels {
-                        if let Some(iter) = self.scan_edge_iter(si, partition_id, Some(*label_id), condition)? {
-                            res.push(iter);
-                        }
+                }
+            } else {
+                for label_id in labels {
+                    if let Some(iter) = self.scan_edge_iter(si, partition_id, Some(*label_id), condition)? {
+                        res.push(iter);
                     }
                 }
             }
@@ -486,8 +481,12 @@ impl GlobalGraphQuery for GlobalGraph {
 
 impl GraphPartitionManager for GlobalGraph {
     fn get_partition_id(&self, vid: i64) -> i32 {
-        let partition_count = self.graph_partitions.len();
+        let partition_count = self.total_partition;
         floor_mod(vid, partition_count as i64) as i32
+    }
+
+    fn get_server_id(&self, partition_id: u32) -> Option<u32> {
+        self.partition_to_server.get(&partition_id).map(|x| *x)
     }
 
     fn get_process_partition_list(&self) -> Vec<u32> {

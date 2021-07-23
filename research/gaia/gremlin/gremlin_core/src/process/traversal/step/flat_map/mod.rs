@@ -18,7 +18,8 @@ use crate::process::traversal::step::flat_map::explore::VertexStep;
 use crate::process::traversal::step::flat_map::values::PropertiesStep;
 use crate::process::traversal::step::Step;
 use crate::process::traversal::traverser::Traverser;
-use crate::{str_to_dyn_error, DynResult};
+use crate::structure::PropKey;
+use crate::{str_to_dyn_error, DynResult, FromPb};
 use pegasus::api::function::{DynIter, FlatMapFunction};
 
 mod explore;
@@ -46,7 +47,13 @@ impl FlatMapFuncGen for pb::GremlinStep {
                     vertex_step.gen_flat_map()
                 }
                 pb::gremlin_step::Step::PropertiesStep(properties_step) => {
-                    Ok(Box::new(PropertiesStep { props: properties_step.properties.clone(), tags }))
+                    let mut prop_keys= vec![] ;
+                    if let Some(prop_step_keys) = properties_step.prop_keys {
+                        for prop_key in prop_step_keys.prop_keys {
+                            prop_keys.push(PropKey::from_pb(prop_key)?);
+                        }
+                    };
+                    Ok(Box::new(PropertiesStep { prop_keys, tags }))
                 }
                 pb::gremlin_step::Step::UnfoldStep(unfold_step) => Ok(Box::new(unfold_step)),
                 _ => Err(str_to_dyn_error("pb GremlinStep is not a FlatMap Step")),

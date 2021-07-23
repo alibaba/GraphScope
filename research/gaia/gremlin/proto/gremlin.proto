@@ -60,6 +60,33 @@ message StepTag {
     }
 }
 
+// Parameters for querying graph store
+message QueryParams {
+  message ExtraParams {
+    message Params {
+      string key = 1;
+      common.Value value = 2;
+    }
+    repeated Params params = 1;
+  }
+  message Labels {
+    repeated int32 labels = 1;
+  }
+  message Limit {
+      int32 limit = 1;
+  }
+  // To filter based on the labels, e.g. g.out("knows")
+  Labels labels = 1;
+  // To filter the number of results, e.g., g.V().limit(10)
+  Limit limit = 2;
+  // The properties of the entities that need to be saved
+  PropKeys required_properties = 3;
+  // To filter vertices based on some predicates, e.g. has("name", eq("John"))
+  FilterChain predicates = 4;
+  // Extra params for specific storages, e.g., snapshot id etc.
+  ExtraParams extra_params = 5;
+}
+
 message GremlinStep {
   // Every gremlin step can potentially carry tags
   repeated StepTag tags = 1;
@@ -110,14 +137,12 @@ message GraphStep {
   // To filter vertices or edges based on a id list
   // edge consists of 128 bits
   repeated string ids = 1;
-  // To filter vertices based on a label list
-  repeated int32 labels = 2;
   // The entity type, either vertex or edge, for g.V() or g.E()
-  EntityType return_type = 3;
-  // To filter vertices based on some predicates, e.g. has("name", eq("John"))
-  FilterChain predicates = 4;
+  EntityType return_type = 2;
   // to initialize a traverser type
-  repeated TraverserRequirement traverser_requirements = 5;
+  repeated TraverserRequirement traverser_requirements = 3;
+  // parameters for querying graph store
+  QueryParams query_params = 4;
 }
 
 // decide a new traverser type with the requirements
@@ -132,14 +157,12 @@ enum Direction {
 }
 
 message VertexStep {
-  // To filter based on the edge labels, e.g. g.out("knows")
-  repeated int32 edge_labels = 1;
   // For g.outX(), g.inX() and g.bothX()
-  Direction direction = 2;
+  Direction direction = 1;
   // The entity type, either vertex or edge, for g.out(), g.outE()
-  EntityType return_type = 3;
-  // To filter vertices based on some predicates, e.g. has("name", eq("John"))
-  FilterChain predicates = 4;
+  EntityType return_type = 2;
+  // parameters for querying graph store
+  QueryParams query_params = 3;
 }
 
 message HasStep {
@@ -174,10 +197,8 @@ message RangeGlobalStep {
 // We further use it to get properties from the graph properties, which is useful when
 // ordering by or projecting certain properties of some entities.
 message IdentityStep {
-  // The properties of the entities that need to be collected to the traversal path
-  repeated string properties = 1;
-  // Whether we need to collect all properties
-  bool is_all = 2 ;
+  // parameters for querying graph store
+  QueryParams query_params = 1;
 }
 
 message WhereJoiner {}
@@ -204,13 +225,18 @@ message MapKey {common.Key key = 1;}
 message MapValue {common.Key key = 1;}
 message SubValue {}
 
+message PropKeys {
+ repeated common.PropertyKey prop_keys = 1;
+ bool is_all = 2;
+}
+
 // we try to unify the by key for select, group, and order
 message ByKey {
   oneof item {
     // by(id/label/property/values("p1","p2")
     common.Key key = 1;
-    // by(valueMap("prop1", "prop2")), empty means all
-    common.StringArray name = 2;
+    // by(valueMap("prop1", "prop2")) in string, or by(valueMap(prop_id1, prop_id2)) in integer, empty means all
+    PropKeys prop_keys = 2;
     // by(keys)
     MapKey map_keys = 3;
     // by(values)
@@ -279,7 +305,7 @@ message GroupByUnfold {
 message PathLocalCountStep{}
 
 message PropertiesStep {
-  repeated string properties = 1;
+  PropKeys prop_keys = 1;
 }
 
 // map
@@ -290,6 +316,9 @@ message EdgeVertexStep {
       OTHER = 2;
     }
     EndpointOpt endpoint_opt = 1;
+    // todo: get properties locally without shuffle if store supports
+    // parameters for querying graph store
+    QueryParams query_params = 2;
 }
 
 // flatmap

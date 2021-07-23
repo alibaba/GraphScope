@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,8 @@ use pegasus::{Configuration, JobConf};
 fn branch_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(9, "branch_test", 2);
+    let mut conf = JobConf::new("branch_test");
+    conf.set_workers(2);
 
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {

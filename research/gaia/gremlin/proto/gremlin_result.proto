@@ -20,24 +20,30 @@ option java_outer_classname = "GremlinResult";
 
 import "common.proto";
 
+message Label {
+  oneof item {
+    int32 name_id = 1;
+  }
+}
+
 message Property {
-  string key = 1;
+  common.PropertyKey key = 1;
   common.Value value = 2;
 }
 
 message Vertex {
   int64 id = 1;
-  string label = 2;
+  Label label = 2;
   repeated Property properties = 3;
 }
 
 message Edge {
   string id = 1;
-  string label = 2;
+  Label label = 2;
   int64 src_id = 3;
-  string src_label = 4;
+  Label src_label = 4;
   int64 dst_id = 5;
-  string dst_label = 6;
+  Label dst_label = 6;
   repeated Property properties = 7;
 }
 

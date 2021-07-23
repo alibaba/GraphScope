@@ -30,12 +30,12 @@ from graphscope.proto import op_def_pb2
 class Operation(object):
     """Represents a dag op that performs computation on tensors.
 
-    For example :code:`c = run_app(a, b)` creates an :code:`Operation` of type
-    "RunApp" that takes operation :code:`a` and :code:`b` as input, and produces :code:`c`
-    as output.
+    For example :code:`g2 = g1.add_vertices("path")` create an :code:`Operation` of type
+    "ADD_LABELS" that takes operation of :code:`g1` as input, and produces a graph dag node
+    :code:`g2` which contains this operation as output.
 
-    After the dag has been launched in a session, an `Operation` can
-    be executed by passing it to :code:`graphscope.Session.run`.
+    After the dag has been launched in a session, an `Operation` can be executed by
+    :code`op.eval()` or passing it to :code:`session.run`.
     """
 
     def __init__(
@@ -47,7 +47,7 @@ class Operation(object):
         config=None,
         query_args=None,
     ):
-        """Creates an :code:`Operation`.
+        """Creates an :code:`graphscope.framework.operation.Operation`.
 
         Args:
             op_type: :code:`types_pb2.OperationType`
@@ -64,70 +64,42 @@ class Operation(object):
                 Values that used as query parameters when evaluating app.
 
         Raises:
-            TypeError: if `op_def` is not a `OpDef`, or if `g` is not a `Dag`.
-            ValueError: if the `op_def` name is not valid.
+            TypeError: value in inputs is not a :class:`Operation`
         """
         self._session_id = session_id
         self._op_def = op_def_pb2.OpDef(op=op_type, key=uuid.uuid4().hex)
+        self._parents = list()
         if config:
             for k, v in config.items():
                 self._op_def.attr[k].CopyFrom(v)
-
         if query_args is not None:
             self._op_def.query_args.CopyFrom(query_args)
-
+        if inputs:
+            for op in inputs:
+                if not isinstance(op, Operation):
+                    raise TypeError("Input op must be an Operation: {0}".format(op))
+                self.add_parent(op)
         self._output_types = output_types
-
-        self._signature = None
-        self._output = None  # hold the executed result of the DAG.
-
-    def as_op_def(self):
-        return self._op_def
+        self._evaluated = False
+        self._leaf = False
 
     @property
     def key(self):
+        """Unique key for each :code:`op_def_pb2.OpDef`"""
         return self._op_def.key
 
     @property
-    def signature(self):
-        """Signature of its parents' signatures and its own parameters.
-        Used to unique identify one `Operation` with fixed configuration, if the configuration
-        changed, the signature will be changed accordingly.
-        """
-        content = str(self.as_op_def())
-        return hashlib.sha224(content.encode()).hexdigest()
-
-    def eval(self):
-        # NB: to void cycle import
-        # pylint: disable=import-outside-toplevel, cyclic-import
-        from graphscope.client.session import get_session_by_id
-
-        sess = get_session_by_id(self._session_id)
-        res = sess.run(self)
-        return res
-
-    def set_output(self, output):
-        """Set Operation's output value.
-        Args:
-            output: The output after evaluated the op
-
-        Raises:
-            RuntimeError: If the output is already be set before, since one op can only be evaluated once.
-        """
-        if self._output is not None:
-            raise RuntimeError("The executed value of a DAG node is already set")
-        self._output = output
+    def parents(self):
+        """A list of :code:`graphscope.framework.operation.Operation`"""
+        return self._parents
 
     @property
     def evaluated(self):
-        return self._output is not None
+        return self._evaluated
 
-    @property
-    def output(self):
-        """Executed result of the DAG node.
-        Returns None if the DAG node hasn't been evaluated yet, otherwise a `dict` from `JSON` object.
-        """
-        return self._output
+    @evaluated.setter
+    def evaluated(self, value):
+        self._evaluated = bool(value)
 
     @property
     def type(self):
@@ -137,11 +109,56 @@ class Operation(object):
     def output_types(self):
         return self._output_types
 
+    @property
+    def signature(self):
+        """Signature of its parents' signatures and its own parameters.
+
+        Used to unique identify one `Operation` with fixed configuration,
+        if the configuration changed, the signature will be changed accordingly.
+
+        Note that this method has not been used.
+        """
+        content = ""
+        for op in self._parents:
+            content += str(op.as_op_def)
+        content += str(self.as_op_def())
+        return hashlib.sha224(content.encode()).hexdigest()
+
+    def is_leaf_op(self):
+        return self._leaf
+
+    def eval(self, leaf=True):
+        """Evaluate by :code:`sess.run`.
+
+        Args:
+            leaf (bool, optional): Leaf Operation means there is no successor.
+        """
+        # NB: to void cycle import
+        # pylint: disable=import-outside-toplevel, cyclic-import
+        from graphscope.client.session import get_session_by_id
+
+        self._leaf = leaf
+        sess = get_session_by_id(self._session_id)
+        if not self._leaf:
+            sess.dag.add_op(self)
+        res = sess.run(self)
+        return res
+
+    def add_parent(self, op):
+        self._parents.append(op)
+        self._op_def.parents.extend([op.key])
+
+    def as_op_def(self):
+        return self._op_def
+
     def __str__(self):
         return str(self.as_op_def())
 
     def __repr__(self):
-        return "<grape.Operation '%s'(%s)>" % (self.type, self.key)
+        return "<graphscope.framework.operation.Operation '%s'(%s)>" % (
+            self.type,
+            self.key,
+        )
 
     def to_json(self):
         """Get json represented op."""

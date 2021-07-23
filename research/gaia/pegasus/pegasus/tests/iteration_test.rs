@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,10 @@
 //! limitations under the License.
 
 use pegasus::api::function::*;
-use pegasus::api::{complete, Exchange, Iteration, LoopCondition, Map, Multiplexing, NonBlockReceiver, ResultSet, Sink, Filter, Range, Limit};
+use pegasus::api::{
+    complete, Exchange, Filter, Iteration, Limit, LoopCondition, Map, Multiplexing,
+    NonBlockReceiver, Range, ResultSet, Sink,
+};
 use pegasus::communication::Pipeline;
 use pegasus::filter;
 use pegasus::{Configuration, JobConf};
@@ -23,7 +26,8 @@ use pegasus::{Configuration, JobConf};
 fn ping_pong_test_01() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(60, "ping_pong_test_01", 2);
+    let mut conf = JobConf::new("ping_pong_test_01");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     let guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -71,7 +75,8 @@ fn ping_pong_test_01() {
 fn ping_pong_test_02() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(61, "ping_pong_test_02", 2);
+    let mut conf = JobConf::new("ping_pong_test_02");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -122,7 +127,8 @@ fn ping_pong_test_02() {
 fn ping_pong_test_03() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(63, "ping_pong_test_03", 2);
+    let mut conf = JobConf::new("ping_pong_test_03");
+    conf.set_workers(2);
     let (input_tx, input_rx) = crossbeam_channel::unbounded();
     let (output_tx, output_rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
@@ -196,7 +202,8 @@ fn ping_pong_test_03() {
 fn flat_map_iteration_test() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(61, "ping_pong_test_02", 2);
+    let mut conf = JobConf::new("ping_pong_test_02");
+    conf.set_workers(2);
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -213,9 +220,7 @@ fn flat_map_iteration_test() {
                 .iterate(2, |start| {
                     start
                         .exchange_with_fn(|item: &u32| *item as u64)?
-                        .flat_map_with_fn(Pipeline, |item| {
-                            Ok((item..4000 + item).map(|x| Ok(x)))
-                        })?
+                        .flat_map_with_fn(Pipeline, |item| Ok((item..4000 + item).map(|x| Ok(x))))?
                         .filter_with_fn(|item| Ok(*item < 100))?
                         .limit(Range::Global, 10)
                 })?
@@ -229,7 +234,7 @@ fn flat_map_iteration_test() {
             Ok(())
         })
     })
-        .expect("submit job failure");
+    .expect("submit job failure");
 
     std::mem::drop(tx);
     let mut count = 0;

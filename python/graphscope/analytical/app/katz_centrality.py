@@ -48,7 +48,8 @@ def katz_centrality(
         normalized (bool, optional): Whether to normalize result values. Defaults to True.
 
     Returns:
-        :class:`VertexDatacontext`: A context with each vertex assigned with the computed katz_centrality.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with the computed katz_centrality, evaluated in eager mode.
 
     Examples:
 
@@ -67,7 +68,7 @@ def katz_centrality(
     tolerance = float(tolerance)
     max_round = int(max_round)
     normalized = bool(normalized)
-    return AppAssets(algo="katz_centrality")(
+    return AppAssets(algo="katz_centrality", context="vertex_data")(
         graph,
         alpha,
         beta,

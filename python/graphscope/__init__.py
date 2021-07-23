@@ -19,6 +19,7 @@
 from graphscope.analytical.app import *
 from graphscope.analytical.udf import declare
 from graphscope.analytical.udf.types import Vertex
+from graphscope.client.connection import conn
 from graphscope.client.session import Session
 from graphscope.client.session import g
 from graphscope.client.session import get_default_session

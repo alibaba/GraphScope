@@ -45,14 +45,15 @@ void GrapeInstance::Init(const std::string& vineyard_socket) {
   }
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     const rpc::GSParams& params) {
   std::string graph_name = "graph_" + generateId();
 
-  BOOST_LEAF_AUTO(graph_type, params.Get<rpc::GraphType>(rpc::GRAPH_TYPE));
+  BOOST_LEAF_AUTO(graph_type,
+                  params.Get<rpc::graph::GraphTypePb>(rpc::GRAPH_TYPE));
 
   switch (graph_type) {
-  case rpc::DYNAMIC_PROPERTY: {
+  case rpc::graph::DYNAMIC_PROPERTY: {
 #ifdef NETWORKX
     using fragment_t = DynamicFragment;
     using vertex_map_t = typename fragment_t::vertex_map_t;
@@ -70,24 +71,28 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
     bool duplicated = !distributed;
     fragment->Init(comm_spec_.fid(), directed, duplicated);
 
-    rpc::GraphDef graph_def;
+    rpc::graph::GraphDefPb graph_def;
 
     graph_def.set_key(graph_name);
     graph_def.set_directed(directed);
-    graph_def.set_graph_type(rpc::DYNAMIC_PROPERTY);
+    graph_def.set_graph_type(rpc::graph::DYNAMIC_PROPERTY);
     // dynamic graph doesn't have a vineyard id
-    graph_def.set_vineyard_id(-1);
-    auto* schema_def = graph_def.mutable_schema_def();
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (graph_def.has_extension()) {
+      graph_def.extension().UnpackTo(&vy_info);
+    }
+    vy_info.set_vineyard_id(-1);
 
-    schema_def->set_oid_type(
-        vineyard::TypeName<typename DynamicFragment::oid_t>::Get());
-    schema_def->set_vid_type(
-        vineyard::TypeName<typename DynamicFragment::vid_t>::Get());
-    schema_def->set_vdata_type(
-        vineyard::TypeName<typename DynamicFragment::vdata_t>::Get());
-    schema_def->set_edata_type(
-        vineyard::TypeName<typename DynamicFragment::edata_t>::Get());
-    schema_def->set_property_schema_json("{}");
+    vy_info.set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::oid_t>::Get())));
+    vy_info.set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::vid_t>::Get())));
+    vy_info.set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::vdata_t>::Get())));
+    vy_info.set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+        vineyard::TypeName<typename gs::DynamicFragment::edata_t>::Get())));
+    vy_info.set_property_schema_json("{}");
+    graph_def.mutable_extension()->PackFrom(vy_info);
 
     auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
         graph_name, graph_def, fragment);
@@ -99,7 +104,7 @@ bl::result<rpc::GraphDef> GrapeInstance::loadGraph(
                     "GS is built with networkx off");
 #endif
   }
-  case rpc::ARROW_PROPERTY: {
+  case rpc::graph::ARROW_PROPERTY: {
     BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
 
     VLOG(1) << "Loading graph, graph name: " << graph_name
@@ -159,7 +164,7 @@ bl::result<void> GrapeInstance::unloadApp(const rpc::GSParams& params) {
   return object_manager_.RemoveObject(app_name);
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::projectGraph(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectGraph(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(project_infos, gs::ParseProjectPropertyGraph(params));
@@ -167,7 +172,7 @@ bl::result<rpc::GraphDef> GrapeInstance::projectGraph(
       frag_wrapper,
       object_manager_.GetObject<ILabeledFragmentWrapper>(graph_name));
 
-  if (frag_wrapper->graph_def().graph_type() != rpc::ARROW_PROPERTY) {
+  if (frag_wrapper->graph_def().graph_type() != rpc::graph::ARROW_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "projectGraph is only available for ArrowFragment");
   }
@@ -181,7 +186,7 @@ bl::result<rpc::GraphDef> GrapeInstance::projectGraph(
   return new_frag_wrapper->graph_def();
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::projectToSimple(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectToSimple(
     const rpc::GSParams& params) {
   std::string projected_id = "graph_projected_" + generateId();
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
@@ -232,7 +237,7 @@ bl::result<std::string> GrapeInstance::reportGraph(
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
   auto graph_type = wrapper->graph_def().graph_type();
 
-  if (graph_type != rpc::DYNAMIC_PROPERTY) {
+  if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                     "Error graph type: " + std::to_string(graph_type) +
                         ", graph id: " + graph_name);
@@ -256,7 +261,7 @@ bl::result<void> GrapeInstance::modifyVertices(
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
   auto graph_type = wrapper->graph_def().graph_type();
 
-  if (graph_type != rpc::DYNAMIC_PROPERTY) {
+  if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                     "Error graph type: " + std::to_string(graph_type) +
                         ", graph id: " + graph_name);
@@ -281,7 +286,7 @@ bl::result<void> GrapeInstance::modifyEdges(
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
   auto graph_type = wrapper->graph_def().graph_type();
 
-  if (graph_type != rpc::DYNAMIC_PROPERTY) {
+  if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                     "Error graph type: " + std::to_string(graph_type) +
                         ", graph id: " + graph_name);
@@ -351,6 +356,17 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToNumpy(
   }
   RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
                   "Unsupported context type: " + std::string(ctx_type));
+}
+
+bl::result<std::string> GrapeInstance::getContextData(
+    const rpc::GSParams& params) {
+  BOOST_LEAF_AUTO(ctx_name, params.Get<std::string>(rpc::CTX_NAME));
+  BOOST_LEAF_AUTO(base_ctx_wrapper,
+                  object_manager_.GetObject<IContextWrapper>(ctx_name));
+
+  auto wrapper =
+      std::dynamic_pointer_cast<IVertexDataContextWrapper>(base_ctx_wrapper);
+  return wrapper->GetContextData(params);
 }
 
 bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToDataframe(
@@ -539,7 +555,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
   return toJson({{"object_id", s_id}});
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::addColumn(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::addColumn(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(ctx_name, params.Get<std::string>(rpc::CTX_NAME));
@@ -548,7 +564,7 @@ bl::result<rpc::GraphDef> GrapeInstance::addColumn(
       frag_wrapper,
       object_manager_.GetObject<ILabeledFragmentWrapper>(graph_name));
 
-  if (frag_wrapper->graph_def().graph_type() != rpc::ARROW_PROPERTY) {
+  if (frag_wrapper->graph_def().graph_type() != rpc::graph::ARROW_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "AddColumn is only available for ArrowFragment");
   }
@@ -563,11 +579,11 @@ bl::result<rpc::GraphDef> GrapeInstance::addColumn(
   return new_frag_wrapper->graph_def();
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::convertGraph(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::convertGraph(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(dst_graph_type,
-                  params.Get<rpc::GraphType>(rpc::DST_GRAPH_TYPE));
+                  params.Get<rpc::graph::GraphTypePb>(rpc::DST_GRAPH_TYPE));
   BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
   std::string dst_graph_name = "graph_" + generateId();
 
@@ -583,15 +599,15 @@ bl::result<rpc::GraphDef> GrapeInstance::convertGraph(
 
   auto src_graph_type = src_frag_wrapper->graph_def().graph_type();
 
-  if (src_graph_type == rpc::ARROW_PROPERTY &&
-      dst_graph_type == rpc::DYNAMIC_PROPERTY) {
+  if (src_graph_type == rpc::graph::ARROW_PROPERTY &&
+      dst_graph_type == rpc::graph::DYNAMIC_PROPERTY) {
     BOOST_LEAF_AUTO(dst_graph_wrapper,
                     g_utils->ToDynamicFragment(comm_spec_, src_frag_wrapper,
                                                dst_graph_name));
     BOOST_LEAF_CHECK(object_manager_.PutObject(dst_graph_wrapper));
     return dst_graph_wrapper->graph_def();
-  } else if (src_graph_type == rpc::DYNAMIC_PROPERTY &&
-             dst_graph_type == rpc::ARROW_PROPERTY) {
+  } else if (src_graph_type == rpc::graph::DYNAMIC_PROPERTY &&
+             dst_graph_type == rpc::graph::ARROW_PROPERTY) {
     BOOST_LEAF_AUTO(dst_graph_wrapper,
                     g_utils->ToArrowFragment(*client_, comm_spec_,
                                              src_frag_wrapper, dst_graph_name));
@@ -604,7 +620,7 @@ bl::result<rpc::GraphDef> GrapeInstance::convertGraph(
                       std::to_string(dst_graph_type));
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::copyGraph(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::copyGraph(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(copy_type, params.Get<std::string>(rpc::COPY_TYPE));
@@ -619,7 +635,7 @@ bl::result<rpc::GraphDef> GrapeInstance::copyGraph(
   return dst_wrapper->graph_def();
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::toDirected(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::toDirected(
     const rpc::GSParams& params) {
 #ifdef NETWORKX
   BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
@@ -639,7 +655,7 @@ bl::result<rpc::GraphDef> GrapeInstance::toDirected(
 #endif  // NETWORKX
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::toUnDirected(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::toUnDirected(
     const rpc::GSParams& params) {
 #ifdef NETWORKX
   BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
@@ -659,7 +675,7 @@ bl::result<rpc::GraphDef> GrapeInstance::toUnDirected(
 }
 
 #ifdef NETWORKX
-bl::result<rpc::GraphDef> GrapeInstance::induceSubGraph(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
     const rpc::GSParams& params,
     const std::unordered_set<typename DynamicFragment::oid_t>& induced_vertices,
     const std::vector<std::pair<typename DynamicFragment::oid_t,
@@ -711,7 +727,7 @@ bl::result<void> GrapeInstance::clearGraph(const rpc::GSParams& params) {
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
   auto graph_type = wrapper->graph_def().graph_type();
 
-  if (graph_type != rpc::DYNAMIC_PROPERTY) {
+  if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                     "Error graph type: " + std::to_string(graph_type) +
                         ", graph id: " + graph_name);
@@ -737,7 +753,7 @@ bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
   auto graph_type = wrapper->graph_def().graph_type();
 
-  if (graph_type != rpc::DYNAMIC_PROPERTY) {
+  if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                     "Error graph type: " + std::to_string(graph_type) +
                         ", graph id: " + graph_name);
@@ -753,7 +769,7 @@ bl::result<void> GrapeInstance::clearEdges(const rpc::GSParams& params) {
   return {};
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::createGraphView(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::createGraphView(
     const rpc::GSParams& params) {
 #ifdef NETWORKX
   std::string view_id = "graph_view_" + generateId();
@@ -776,13 +792,13 @@ bl::result<rpc::GraphDef> GrapeInstance::createGraphView(
 #endif  // NETWORKX
 }
 
-bl::result<rpc::GraphDef> GrapeInstance::addLabelsToGraph(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::addLabelsToGraph(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(
       src_wrapper,
       object_manager_.GetObject<ILabeledFragmentWrapper>(graph_name));
-  if (src_wrapper->graph_def().graph_type() != rpc::ARROW_PROPERTY) {
+  if (src_wrapper->graph_def().graph_type() != rpc::graph::ARROW_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "AddEdges is only avaiable for ArrowFragment");
   }
@@ -840,7 +856,8 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::graphToDataframe(
 }
 
 bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
-  BOOST_LEAF_AUTO(graph_type, params.Get<rpc::GraphType>(rpc::GRAPH_TYPE));
+  BOOST_LEAF_AUTO(graph_type,
+                  params.Get<rpc::graph::GraphTypePb>(rpc::GRAPH_TYPE));
   BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
   BOOST_LEAF_AUTO(lib_path, params.Get<std::string>(rpc::GRAPH_LIBRARY_PATH));
 
@@ -852,12 +869,12 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
     return {};
   }
 
-  if (graph_type == rpc::ARROW_PROPERTY) {
+  if (graph_type == rpc::graph::ARROW_PROPERTY) {
     auto utils = std::make_shared<PropertyGraphUtils>(type_sig, lib_path);
     BOOST_LEAF_CHECK(utils->Init());
     return object_manager_.PutObject(utils);
-  } else if (graph_type == rpc::ARROW_PROJECTED ||
-             graph_type == rpc::DYNAMIC_PROJECTED) {
+  } else if (graph_type == rpc::graph::ARROW_PROJECTED ||
+             graph_type == rpc::graph::DYNAMIC_PROJECTED) {
     auto projector = std::make_shared<Projector>(type_sig, lib_path);
     BOOST_LEAF_CHECK(projector->Init());
     return object_manager_.PutObject(projector);
@@ -880,6 +897,10 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     break;
   }
   case rpc::CREATE_APP: {
+    // do nothing
+    break;
+  }
+  case rpc::BIND_APP: {
     BOOST_LEAF_AUTO(app_name, loadApp(params));
     r->set_data(app_name);
     break;
@@ -1069,6 +1090,12 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   case rpc::TO_VINEYARD_DATAFRAME: {
     BOOST_LEAF_AUTO(vy_obj_id_in_json, contextToVineyardDataFrame(params));
     r->set_data(vy_obj_id_in_json);
+    break;
+  }
+  case rpc::GET_CONTEXT_DATA: {
+    BOOST_LEAF_AUTO(context_json, getContextData(params));
+    r->set_data(context_json,
+                DispatchResult::AggregatePolicy::kPickFirstNonEmpty);
     break;
   }
   case rpc::ADD_COLUMN: {

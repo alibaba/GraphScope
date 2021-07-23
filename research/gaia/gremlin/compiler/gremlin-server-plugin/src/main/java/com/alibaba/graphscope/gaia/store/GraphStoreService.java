@@ -15,22 +15,78 @@
  */
 package com.alibaba.graphscope.gaia.store;
 
+import com.alibaba.graphscope.gaia.JsonUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.commons.io.IOUtils;
+
+import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public interface GraphStoreService {
-    long getLabelId(String label);
+public abstract class GraphStoreService {
+    protected Map<String, Map<String, Map<String, Object>>> cachedPropertyForTest;
 
-    String getLabel(long labelId);
+    public GraphStoreService(String propertyResourceName) {
+        try {
+            // init properties from file under resources
+            InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(propertyResourceName);
+            String propertiesJson = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+            this.cachedPropertyForTest = JsonUtils.fromJson(propertiesJson, new TypeReference<Map<String, Map<String, Map<String, Object>>>>() {
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    long getGlobalId(long labelId, long propertyId);
+    public abstract long getLabelId(String label);
 
-    <P> Optional<P> getVertexProperty(BigInteger id, String key);
+    public abstract String getLabel(long labelId);
 
-    Set<String> getVertexKeys(BigInteger id);
+    public abstract long getGlobalId(long labelId, long propertyId);
 
-    <P> Optional<P> getEdgeProperty(BigInteger id, String key);
+    public int getPropertyId(String propertyName) {
+        throw new UnsupportedOperationException();
+    }
 
-    Set<String> getEdgeKeys(BigInteger id);
+    public String getPropertyName(int propertyId) {
+        throw new UnsupportedOperationException();
+    }
+
+    public long getSnapShotId() {
+        throw new UnsupportedOperationException();
+    }
+
+    public void updateSnapShotId() {
+        throw new UnsupportedOperationException();
+    }
+
+    public <P> Optional<P> getVertexProperty(BigInteger id, String key) {
+        String idStr = String.valueOf(id);
+        if (getVertexKeys(id).isEmpty()) return Optional.empty();
+        return Optional.ofNullable((P) cachedPropertyForTest.get("vertex_properties").get(idStr).get(key));
+    }
+
+    public Set<String> getVertexKeys(BigInteger id) {
+        String idStr = String.valueOf(id);
+        Map<String, Object> result = cachedPropertyForTest.get("vertex_properties").get(idStr);
+        if (result == null) return Collections.EMPTY_SET;
+        return result.keySet();
+    }
+
+    public <P> Optional<P> getEdgeProperty(BigInteger id, String key) {
+        String idStr = String.valueOf(id);
+        if (getEdgeKeys(id).isEmpty()) return Optional.empty();
+        return Optional.ofNullable((P) cachedPropertyForTest.get("edge_properties").get(idStr).get(key));
+    }
+
+    public Set<String> getEdgeKeys(BigInteger id) {
+        String idStr = String.valueOf(id);
+        Map<String, Object> result = cachedPropertyForTest.get("edge_properties").get(idStr);
+        if (result == null) return Collections.EMPTY_SET;
+        return result.keySet();
+    }
 }

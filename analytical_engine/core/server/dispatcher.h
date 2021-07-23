@@ -71,15 +71,15 @@ class DispatchResult {
    * workers.
    * @param graph_def
    */
-  void set_graph_def(const rpc::GraphDef& graph_def) {
+  void set_graph_def(const rpc::graph::GraphDefPb& graph_def) {
     if (worker_id_ == grape::kCoordinatorRank) {
       graph_def_ = graph_def;
     }
   }
 
-  const rpc::GraphDef& graph_def() const { return graph_def_; }
+  const rpc::graph::GraphDefPb& graph_def() const { return graph_def_; }
 
-  rpc::GraphDef& graph_def() { return graph_def_; }
+  rpc::graph::GraphDefPb& graph_def() { return graph_def_; }
 
   void set_data(const std::string& data,
                 AggregatePolicy policy = AggregatePolicy::kRequireConsistent) {
@@ -110,7 +110,7 @@ class DispatchResult {
   std::string data_;
   AggregatePolicy aggregate_policy_{};
 
-  rpc::GraphDef graph_def_;
+  rpc::graph::GraphDefPb graph_def_;
 
   friend grape::InArchive& operator<<(grape::InArchive& archive,
                                       const DispatchResult& result);

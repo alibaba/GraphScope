@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,9 +16,10 @@
 use super::utils::CountDownLatchTree;
 use crate::tag::tools::{BlockGuard, TagAntiChainSet};
 use crate::Tag;
+use ahash::AHashMap;
 use pegasus_common::rc::RcPointer;
 use std::cell::{Cell, RefCell, RefMut};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fmt;
 
 #[derive(Default)]
@@ -150,7 +151,7 @@ pub struct ChannelRxState {
     pub scope_depth: usize,
     pub index: u32,
     scope_end: CountDownLatchTree,
-    scope_data: RefCell<HashMap<Tag, RcPointer<Panel>>>,
+    scope_data: RefCell<AHashMap<Tag, RcPointer<Panel>>>,
     parent_scope_skipped: RefCell<HashSet<Tag>>,
     notifications: RefCell<TagAntiChainSet>,
     seq_gen: Cell<usize>,
@@ -164,7 +165,7 @@ impl ChannelRxState {
             index,
             scope_depth,
             scope_end: CountDownLatchTree::new(tx_peers),
-            scope_data: RefCell::new(HashMap::new()),
+            scope_data: RefCell::new(AHashMap::new()),
             parent_scope_skipped: RefCell::new(HashSet::new()),
             notifications: RefCell::new(TagAntiChainSet::new()),
             seq_gen: Cell::new(0),

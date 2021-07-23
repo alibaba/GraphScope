@@ -18,7 +18,6 @@ syntax = "proto3";
 package gs.rpc;
 
 import "proto/error_codes.proto";
-import "proto/graph_def.proto";
 import "proto/op_def.proto";
 import "proto/types.proto";
 
@@ -30,6 +29,8 @@ message ResponseStatus {
   oneof detail {
     NullDetail null = 3;
     OpDef op = 4;
+    // pickle coordinator python exception
+    bytes full_exception = 5;
   }
 }
 
@@ -42,6 +43,8 @@ message ResponseStatus {
 message ConnectSessionRequest {
   bool cleanup_instance = 1;
   int32 dangling_timeout_seconds = 2;
+  // check version compatibility
+  string version = 3;
 }
 
 message ConnectSessionResponse {
@@ -93,15 +96,9 @@ message RunStepRequest {
 
 message RunStepResponse {
   ResponseStatus status = 1;
-  // If success, store the metrics. (e.g. how many seconds used, memory bytes...)
-  string metrics = 2;
 
-  // result represents app_name or ctx_name or raw bytes If the op returns a NDArray or DataFrame
-  bytes result = 3;
-
-  // If the op create a graph or modify a graph, return the meta data of the
-  // graph.
-  GraphDef graph_def = 31;
+  // list of result of ops in dag
+  repeated OpResult results = 2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,75 +131,5 @@ message CloseSessionRequest {
 }
 
 message CloseSessionResponse {
-  ResponseStatus status = 1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// CreateInteractive method request/response protos.
-//
-////////////////////////////////////////////////////////////////////////////////
-
-message CreateInteractiveRequest {
-  // object id of the graph in vineyard
-  int64 object_id    = 1;
-  string schema_path = 2;
-  // resource
-  float gremlin_server_cpu = 3;
-  string gremlin_server_mem = 4;
-  map<string, string> engine_params = 5;
-}
-
-message CreateInteractiveResponse {
-  ResponseStatus status = 1;
-
-  string frontend_host = 2;
-  int32 frontend_port = 3;
-  int64 object_id = 4;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// CloseInteractive method request/response protos.
-//
-////////////////////////////////////////////////////////////////////////////////
-
-message CloseInteractiveRequest {
-  int64 object_id = 1;
-}
-
-message CloseInteractiveResponse {
-  ResponseStatus status = 1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// CreateLeaning method request/response protos.
-//
-////////////////////////////////////////////////////////////////////////////////
-message CreateLearningInstanceRequest {
-  // object id of the graph in vineyard
-  int64 object_id = 1;
-  string handle = 2;
-  string config = 3;
-}
-
-message CreateLearningInstanceResponse {
-  ResponseStatus status = 1;
-
-  string endpoints = 2;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// CloseLearning method request/response protos.
-//
-////////////////////////////////////////////////////////////////////////////////
-
-message CloseLearningInstanceRequest {
-  int64 object_id = 1;
-}
-
-message CloseLearningInstanceResponse {
   ResponseStatus status = 1;
 }

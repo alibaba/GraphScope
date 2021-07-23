@@ -15,16 +15,19 @@
  */
 package com.alibaba.graphscope.gaia;
 
+import com.alibaba.graphscope.gaia.config.ExperimentalGaiaConfig;
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.idmaker.IncrementalQueryIdMaker;
 import com.alibaba.graphscope.gaia.idmaker.TagIdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
-import com.alibaba.graphscope.gaia.processor.MaxGraphOpProcessor;
+import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
+import com.alibaba.graphscope.gaia.store.ExperimentalGraphStore;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.TraversalTranslator;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Scope;
@@ -36,34 +39,37 @@ import org.apache.tinkerpop.gremlin.structure.util.empty.EmptyGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
 public class QueryTest {
     private static Logger logger = LoggerFactory.getLogger(QueryTest.class);
     private static final GraphTraversalSource g = EmptyGraph.instance().traversal();
 
-    public static void main(String[] args) throws Exception {
-        // read default engine conf
-        GlobalEngineConf.setDefaultSysConf(JsonUtils.fromJson(
-                PlanUtils.readJsonFromFile("conf/gaia.args.json"), new TypeReference<Map<String, Object>>() {
-                })
-        );
+    public static void main(String[] args) {
+        GaiaConfig config = new ExperimentalGaiaConfig("conf");
+        GraphStoreService graphStore = new ExperimentalGraphStore(config);
         IdMaker queryIdMaker = new IncrementalQueryIdMaker();
-        Traversal testTraversal = getTestTraversal();
+        test_CR_1_1(config, graphStore, queryIdMaker);
+        test_CR_1_2(config, graphStore, queryIdMaker);
+        test_CR_2(config, graphStore, queryIdMaker);
+        test_CR_3_1(config, graphStore, queryIdMaker);
+        test_CR_3_2(config, graphStore, queryIdMaker);
+        test_CR_5(config, graphStore, queryIdMaker);
+        test_CR_6(config, graphStore, queryIdMaker);
+        test_CR_7(config, graphStore, queryIdMaker);
+        test_CR_8(config, graphStore, queryIdMaker);
+        test_CR_9(config, graphStore, queryIdMaker);
+        test_CR_11(config, graphStore, queryIdMaker);
+        test_CR_12(config, graphStore, queryIdMaker);
+    }
+
+    public static void test_CR_1_1(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_1_1();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
         long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
         AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
                 .addConfig(PlanConfig.QUERY_ID, queryId)
                 .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
-                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId))).translate();
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
         PlanUtils.print(job);
-    }
-
-    public static Traversal getTestTraversal() {
-        Traversal traversal = g.V().hasLabel("person");
-                // g.V().in().as("a").select("a").by(__.unfold().values("name").fold());
-                // CR_12();
-        MaxGraphOpProcessor.applyStrategy(traversal);
-        return traversal;
     }
 
     public static Traversal CR_1_1() {
@@ -81,6 +87,17 @@ public class QueryTest {
                 .select("a", "b");
     }
 
+    public static void test_CR_1_2(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_1_2();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
+        PlanUtils.print(job);
+    }
+
     public static Traversal CR_1_2() {
         return g.V(1).union(
                 __.out("HASCREATOR").values("name"),
@@ -88,6 +105,17 @@ public class QueryTest {
                         .select("study", "u", "city"),
                 __.outE("HASCREATOR").as("we").inV().as("company").out("HASCREATOR").as("country")
                         .select("we", "company", "country"));
+    }
+
+    public static void test_CR_2(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_2();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
+        PlanUtils.print(job);
     }
 
     public static Traversal CR_2() {
@@ -99,6 +127,17 @@ public class QueryTest {
                 .select("p", "m")
                 .by(__.valueMap("id", "firstName", "lastName"))
                 .by(__.valueMap("id", "imageFile", "creationDate", "content"));
+    }
+
+    public static void test_CR_3_1(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_3_1();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
+        PlanUtils.print(job);
     }
 
     public static Traversal CR_3_1() {
@@ -121,12 +160,34 @@ public class QueryTest {
                 .limit(20);
     }
 
+    public static void test_CR_3_2(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_3_2();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
+        PlanUtils.print(job);
+    }
+
     public static Traversal CR_3_2() {
         return g.V(1)
                 .in("HASCREATOR")
                 .has("creationDate", P.inside(20110601000000000L, 20110713000000000L))
                 .filter(__.out("HASCREATOR").has("name", P.eq("United_States")))
                 .count();
+    }
+
+    public static void test_CR_5(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_5();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
+        PlanUtils.print(job);
     }
 
     public static Traversal CR_5() {
@@ -145,6 +206,17 @@ public class QueryTest {
                 .limit(20);
     }
 
+    public static void test_CR_6(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_6();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
+        PlanUtils.print(job);
+    }
+
     public static Traversal CR_6() {
         return g.V().hasLabel("PERSON").has("id", 30786325583618L)
                 .both("HASCREATOR").union(__.identity(), __.both("HASCREATOR"))
@@ -159,6 +231,17 @@ public class QueryTest {
                 .by(__.select(Column.values), Order.desc)
                 .by(__.select(Column.keys).values("age"), Order.asc)
                 .limit(10);
+    }
+
+    public static void test_CR_7(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_7();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
+        PlanUtils.print(job);
     }
 
     public static Traversal CR_7() {
@@ -179,6 +262,17 @@ public class QueryTest {
                 .by(__.valueMap("id", "firstName", "lastName"));
     }
 
+    public static void test_CR_8(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_8();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
+        PlanUtils.print(job);
+    }
+
     public static Traversal CR_8() {
         return g.V().hasLabel("PERSON").has("id", 24189255818757L)
                 .in("HASCREATOR")
@@ -192,6 +286,17 @@ public class QueryTest {
                 .by(__.valueMap("creationDate", "id", "content"));
     }
 
+    public static void test_CR_9(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_9();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
+        PlanUtils.print(job);
+    }
+
     public static Traversal CR_9() {
         return g.V().hasLabel("PERSON").has("id", 13194139542834L)
                 .both("HASCREATOR")
@@ -202,6 +307,17 @@ public class QueryTest {
                 .select("friends", "post")
                 .by(__.valueMap("id", "firstName", "lastName"))
                 .by(__.valueMap("id", "content", "imageFile", "creationDate"));
+    }
+
+    public static void test_CR_11(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_11();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
+        PlanUtils.print(job);
     }
 
     public static Traversal CR_11() {
@@ -222,6 +338,17 @@ public class QueryTest {
                 .by(__.valueMap("id", "firstName", "lastName"))
                 .by()
                 .by();
+    }
+
+    public static void test_CR_12(GaiaConfig config, GraphStoreService storeService, IdMaker queryIdMaker) {
+        Traversal testTraversal = CR_12();
+        GaiaGraphOpProcessor.applyStrategy(testTraversal, config, storeService);
+        long queryId = (long) queryIdMaker.getId(testTraversal.asAdmin());
+        AbstractBuilder job = new TraversalTranslator((new TraversalBuilder(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_ID, queryId)
+                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker(testTraversal.asAdmin()))
+                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config))).translate();
+        PlanUtils.print(job);
     }
 
     public static Traversal CR_12() {

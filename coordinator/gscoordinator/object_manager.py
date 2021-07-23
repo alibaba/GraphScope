@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+from gremlin_python.driver.client import Client
+
 
 class LibMeta(object):
     def __init__(self, key, type, lib_path):
@@ -25,12 +27,42 @@ class LibMeta(object):
 
 
 class GraphMeta(object):
-    def __init__(self, key, vineyard_id, schema, schema_path=None):
+    def __init__(self, key, vineyard_id, graph_def, schema_path=None):
         self.key = key
         self.type = "graph"
         self.vineyard_id = vineyard_id
-        self.schema = schema
+        self.graph_def = graph_def
         self.schema_path = schema_path
+
+
+class InteractiveQueryManager(object):
+    def __init__(self, key, frontend_endpoint, object_id):
+        self.key = key
+        self.type = "gie_manager"
+        self.frontend_endpoint = frontend_endpoint
+        # graph object id in vineyard
+        self.object_id = object_id
+        self.graph_url = "ws://{0}/gremlin".format(self.frontend_endpoint)
+        self.client = Client(self.graph_url, "g")
+        self.closed = False
+
+    def submit(self, message, bindings=None, request_options=None):
+        return self.client.submit(message, bindings, request_options)
+
+
+class GremlinResultSet(object):
+    def __init__(self, key, result_set):
+        self.key = key
+        self.type = "result_set"
+        self.result_set = result_set
+
+
+class LearningInstanceManager(object):
+    def __init__(self, key, object_id):
+        self.key = key
+        self.type = "gle_manager"
+        self.object_id = object_id
+        self.closed = False
 
 
 class ObjectManager(object):

@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -155,12 +155,6 @@ macro_rules! inspect_worker {
             } else {
                 log!($lvl, $arg0);
             }
-        } else if $lvl == log::Level::Info {
-            if let Some(id) = $crate::worker_id::get_current_worker() {
-                println!(concat!("{:?}: ", $arg0), id);
-            } else {
-                println!($arg0);
-            }
         }
     );
     ($lvl: expr, $arg0: expr, $($arg:tt)*) => (
@@ -169,12 +163,6 @@ macro_rules! inspect_worker {
                 log!($lvl, concat!("{:?}: ", $arg0), id, $($arg)*);
             } else {
                 log!($lvl, $arg0, $($arg)*);
-            }
-        } else if $lvl == log::Level::Info {
-            if let Some(id) = $crate::worker_id::get_current_worker() {
-                println!(concat!("{:?}: ", $arg0), id, $($arg)*);
-            } else {
-                println!($arg0, $($arg)*);
             }
         }
     )
@@ -186,7 +174,7 @@ macro_rules! info_worker {
         inspect_worker!(log::Level::Info, $arg0);
     );
     ($arg0: expr, $($arg:tt)*) => (
-        inspect_worker!(log::Level::Info, $arg0, $($arg)*);
+        inspect_worker!(log::Level::Info, $arg0, $($arg)*);9
     )
 }
 

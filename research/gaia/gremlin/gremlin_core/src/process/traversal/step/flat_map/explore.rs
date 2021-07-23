@@ -16,11 +16,9 @@
 use super::FlatMapFuncGen;
 use crate::generated::gremlin as pb;
 use crate::process::traversal::traverser::{Traverser, TraverserSplitIter};
-use crate::structure::codec::pb_chain_to_filter;
-use crate::structure::{Direction, Element, GraphElement, Label, QueryParams, Statement, ID};
+use crate::structure::{Direction, Element, GraphElement, QueryParams, Statement, ID};
 use crate::{str_to_dyn_error, DynIter, DynResult, FromPb};
 use bit_set::BitSet;
-use graph_store::prelude::LabelId;
 use pegasus::api::function::FlatMapFunction;
 use std::sync::Arc;
 
@@ -56,29 +54,16 @@ impl FlatMapFuncGen for VertexStep {
         self,
     ) -> DynResult<Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>>
     {
-        let mut step = self.step;
+        let step = self.step;
         let direction_pb = unsafe { std::mem::transmute(step.direction) };
         let direction = Direction::from_pb(direction_pb)?;
-        let labels = step.edge_labels.iter().map(|id| Label::Id(*id as LabelId)).collect();
         let graph = crate::get_graph().ok_or(str_to_dyn_error("Graph is None"))?;
         if step.return_type == 0 {
-            let mut params = QueryParams::new();
-            params.labels = labels;
-            if let Some(test) = step.predicates.take() {
-                if let Some(filter) = pb_chain_to_filter(&test)? {
-                    params.set_filter(filter);
-                }
-            }
+            let params = QueryParams::from_pb(step.query_params)?;
             let stmt = graph.prepare_explore_vertex(direction, &params)?;
             Ok(Box::new(FlatMapStatement { tags: Arc::new(self.tags), stmt }))
         } else if step.return_type == 1 {
-            let mut params = QueryParams::new();
-            params.labels = labels;
-            if let Some(test) = step.predicates.take() {
-                if let Some(filter) = pb_chain_to_filter(&test)? {
-                    params.set_filter(filter);
-                }
-            }
+            let params = QueryParams::from_pb(step.query_params)?;
             let stmt = graph.prepare_explore_edge(direction, &params)?;
             Ok(Box::new(FlatMapStatement { tags: Arc::new(self.tags), stmt }))
         } else {

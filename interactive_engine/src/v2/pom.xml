@@ -12,11 +12,33 @@
 
     <artifactId>v2</artifactId>
 
+    <properties>
+        <curator.new.version>5.1.0</curator.new.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.alibaba.maxgraph</groupId>
             <artifactId>maxgraph-frontendservice</artifactId>
             <version>${project.parent.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.curator</groupId>
+                    <artifactId>curator-framework</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.curator</groupId>
+                    <artifactId>curator-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.curator</groupId>
+                    <artifactId>curator-recipes</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.curator</groupId>
+                    <artifactId>curator-test</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -77,6 +99,7 @@
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-test</artifactId>
             <version>${curator.new.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
@@ -108,7 +131,6 @@
         <dependency>
             <groupId>com.salesforce.kafka.test</groupId>
             <artifactId>kafka-junit5</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
@@ -143,6 +165,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.tinkerpop</groupId>
@@ -159,6 +182,15 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.graphscope</groupId>
+            <artifactId>gremlin-server-plugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -174,10 +206,11 @@
                                 <include>**/GremlinStandardTest.java</include>
                             </includes>
                             <argLine>
-                                -Djna.library.path=${project.parent.basedir}/executor/target/debug
+                                -Djna.library.path=${project.parent.basedir}/executor/target/debug:/usr/local/lib
                             </argLine>
                             <environmentVariables>
                                 <RUST_BACKTRACE>1</RUST_BACKTRACE>
+                                <LD_LIBRARY_PATH>/usr/local/lib/</LD_LIBRARY_PATH>
                             </environmentVariables>
                         </configuration>
                     </plugin>
@@ -227,17 +260,33 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>${protobuf.maven.plugin.version}</version>
                 <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}
-                    </protocArtifact>
+                    <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}
-                    </pluginArtifact>
-                    <protoSourceRoot>${project.basedir}/src/main/proto/</protoSourceRoot>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
                     <outputDirectory>${project.basedir}/src/main/generated</outputDirectory>
                     <clearOutputDirectory>false</clearOutputDirectory>
                 </configuration>
                 <executions>
                     <execution>
+                        <id>maxgraph</id>
+                        <configuration>
+                            <protoSourceRoot>${project.basedir}/src/main/proto/</protoSourceRoot>
+                        </configuration>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>compile-custom</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>graphscope</id>
+                        <configuration>
+                            <protoSourceRoot>${project.basedir}/../../../</protoSourceRoot>
+                            <includes>
+                                <include>proto/graph_def.proto</include>
+                                <include>proto/ddl_service.proto</include>
+                                <include>proto/write_service.proto</include>
+                            </includes>
+                        </configuration>
                         <goals>
                             <goal>compile</goal>
                             <goal>compile-custom</goal>

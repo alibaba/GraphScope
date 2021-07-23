@@ -16,7 +16,6 @@
 use crate::process::traversal::step::*;
 use crate::process::traversal::step::{BySubJoin, HasAnyJoin};
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::Element;
 use crate::Partitioner;
 use crate::{generated as pb, TraverserSinkEncoder};
 use pegasus::api::function::*;
@@ -44,6 +43,10 @@ impl GremlinJobCompiler {
     pub fn get_server_index(&self) -> u64 {
         self.server_index
     }
+
+    pub fn get_partitioner(&self) -> Arc<dyn Partitioner> {
+        self.partitioner.clone()
+    }
 }
 
 impl JobCompiler<Traverser> for GremlinJobCompiler {
@@ -51,13 +54,7 @@ impl JobCompiler<Traverser> for GremlinJobCompiler {
         let p = self.partitioner.clone();
         if let Some(worker_id) = pegasus::get_current_worker() {
             let num_workers = worker_id.peers as usize / self.num_servers;
-            Ok(box_route!(move |t: &Traverser| -> u64 {
-                if let Some(e) = t.get_element() {
-                    p.get_partition(&e.id(), num_workers)
-                } else {
-                    0
-                }
-            }))
+            Ok(Box::new(Router { p, num_workers }))
         } else {
             Err("worker id not found")?
         }
@@ -71,14 +68,12 @@ impl JobCompiler<Traverser> for GremlinJobCompiler {
         let mut step = decode::<pb::gremlin::GremlinStep>(src)?;
         if let Some(worker_id) = pegasus::get_current_worker() {
             let num_workers = worker_id.peers as usize / self.num_servers;
-            let mut step = graph_step_from(&mut step, self.num_servers)?;
+            let mut step = graph_step_from(&mut step, self.partitioner.clone())?;
             step.set_num_workers(num_workers);
-            step.set_server_index(self.server_index);
-            Ok(step.gen_source(Some(worker_id.index as usize)))
+            Ok(step.gen_source(worker_id.index as usize))
         } else {
-            let mut step = graph_step_from(&mut step, self.num_servers)?;
-            step.set_server_index(self.server_index);
-            Ok(step.gen_source(None))
+            let step = graph_step_from(&mut step, self.partitioner.clone())?;
+            Ok(step.gen_source(self.server_index as usize))
         }
     }
 

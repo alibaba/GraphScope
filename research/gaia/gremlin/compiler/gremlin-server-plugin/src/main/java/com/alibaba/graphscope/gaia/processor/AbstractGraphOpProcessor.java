@@ -24,15 +24,17 @@
  */
 package com.alibaba.graphscope.gaia.processor;
 
-import com.alibaba.graphscope.gaia.GlobalEngineConf;
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.idmaker.IncrementalQueryIdMaker;
 import com.alibaba.graphscope.gaia.plan.strategy.GraphTraversalStrategies;
 import com.alibaba.graphscope.gaia.plan.strategy.OrderGuaranteeStrategy;
-import com.alibaba.graphscope.gaia.plan.strategy.global.PathHistoryStrategy;
-import com.codahale.metrics.Timer;
 import com.alibaba.graphscope.gaia.plan.strategy.PropertyShuffleStrategy;
-import com.alibaba.graphscope.gaia.plan.strategy.global.PreCachePropertyStrategy;
+import com.alibaba.graphscope.gaia.plan.strategy.global.PathHistoryStrategy;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
+import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
+import com.codahale.metrics.Timer;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.PreCachePropertyStrategy;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
@@ -43,11 +45,11 @@ import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.groovy.jsr223.TimedInterruptTimeoutException;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.server.Context;
+import org.apache.tinkerpop.gremlin.server.ResponseHandlerContext;
 import org.apache.tinkerpop.gremlin.server.handler.Frame;
 import org.apache.tinkerpop.gremlin.server.handler.StateKey;
 import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +59,6 @@ import javax.script.SimpleBindings;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -65,10 +66,14 @@ import java.util.function.Supplier;
 
 public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
     protected IdMaker queryIdMaker;
-    private static final Logger logger = LoggerFactory.getLogger(MaxGraphOpProcessor.class);
+    private static final Logger logger = LoggerFactory.getLogger(GaiaGraphOpProcessor.class);
+    protected GaiaConfig config;
+    protected GraphStoreService graphStore;
 
-    public AbstractGraphOpProcessor() {
+    public AbstractGraphOpProcessor(GaiaConfig config, GraphStoreService graphStore) {
         this.queryIdMaker = new IncrementalQueryIdMaker();
+        this.config = config;
+        this.graphStore = graphStore;
     }
 
     protected abstract GremlinExecutor.LifeCycle createLifeCycle(Context ctx, Supplier<GremlinExecutor> gremlinExecutorSupplier, BindingSupplier bindingsSupplier);
@@ -92,34 +97,37 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
         evalFuture.handle((v, t) -> {
             long elapsed = timerContext.stop();
             logger.info("query {} total execution time is {} ms", script, elapsed / 1000000.0f);
+            ResponseHandlerContext rhc = new ResponseHandlerContext(ctx);
             if (t != null) {
                 if (t instanceof OpProcessorException) {
-                    ctx.writeAndFlush(((OpProcessorException) t).getResponseMessage());
+                    rhc.writeAndFlush(((OpProcessorException) t).getResponseMessage());
                 } else if (t instanceof TimedInterruptTimeoutException) {
                     // occurs when the TimedInterruptCustomizerProvider is in play
                     final String errorMessage = String.format("A timeout occurred within the script during evaluation of [%s] - consider increasing the limit given to TimedInterruptCustomizerProvider", msg);
                     logger.warn(errorMessage);
-                    ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
+                    rhc.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
                             .statusMessage("Timeout during script evaluation triggered by TimedInterruptCustomizerProvider")
                             .statusAttributeException(t).create());
                 } else if (t instanceof TimeoutException) {
                     final String errorMessage = String.format("Script evaluation exceeded the configured threshold for request [%s]", msg);
                     logger.warn(errorMessage, t);
-                    ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
+                    rhc.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
                             .statusMessage(t.getMessage())
                             .statusAttributeException(t).create());
+                } else if (t instanceof SchemaNotFoundException) {
+                    writeResultList(ctx, Collections.EMPTY_LIST, ResponseStatusCode.SUCCESS);
                 } else {
                     if (t instanceof MultipleCompilationErrorsException && t.getMessage().contains("Method too large") &&
                             ((MultipleCompilationErrorsException) t).getErrorCollector().getErrorCount() == 1) {
                         final String errorMessage = String.format("The Gremlin statement that was submitted exceeds the maximum compilation size allowed by the JVM, please split it into multiple smaller statements");
                         logger.warn(errorMessage);
-                        ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_SCRIPT_EVALUATION)
+                        rhc.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_SCRIPT_EVALUATION)
                                 .statusMessage(errorMessage)
                                 .statusAttributeException(t).create());
                     } else {
                         final String errorMessage = (t.getMessage() == null) ? t.toString() : t.getMessage();
                         logger.warn(String.format("Exception processing a script on request [%s].", msg), t);
-                        ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_SCRIPT_EVALUATION)
+                        rhc.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_SCRIPT_EVALUATION)
                                 .statusMessage(errorMessage)
                                 .statusAttributeException(t).create());
                     }
@@ -178,12 +186,12 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
         }
     }
 
-    public static synchronized void applyStrategy(Traversal traversal) {
-        GraphTraversalStrategies traversalStrategies = GraphTraversalStrategies.instance();
-        boolean removeTagOn = isOptOn("remove_tag");
-        boolean labelPathRequireOn = isOptOn("label_path_requirement");
-        boolean propertyCacheOn = isOptOn("property_cache");
-        logger.debug("remove {}, require {}, cache {}", removeTagOn, labelPathRequireOn, propertyCacheOn);
+    public static synchronized void applyStrategy(Traversal traversal, GaiaConfig config, GraphStoreService graphStore) {
+        GraphTraversalStrategies traversalStrategies = new GraphTraversalStrategies(config, graphStore);
+        boolean removeTagOn = config.getOptimizationStrategyFlag(GaiaConfig.REMOVE_TAG);
+        boolean labelPathRequireOn = config.getOptimizationStrategyFlag(GaiaConfig.LABEL_PATH_REQUIREMENT);
+        boolean propertyCacheOn = config.getOptimizationStrategyFlag(GaiaConfig.PROPERTY_CACHE);
+        logger.debug("remove {}, require {}", removeTagOn, labelPathRequireOn);
         if (propertyCacheOn) {
             traversalStrategies.removeStrategies(PropertyShuffleStrategy.class);
             traversalStrategies.removeStrategies(OrderGuaranteeStrategy.class);
@@ -201,25 +209,5 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
         if (propertyCacheOn) {
             PreCachePropertyStrategy.instance().apply(traversal.asAdmin());
         }
-    }
-
-    public static boolean isOptOn(String optName) {
-        // read engine default config, must exist related config
-        Map<String, Object> optMap = (Map) GlobalEngineConf.getDefaultSysConf().get("optimizations");
-        // reset from sys property or variable, optional
-        if (System.getProperty(optName) != null) {
-            optMap.put(optName, Boolean.valueOf(System.getProperty(optName)));
-        }
-        Graph.Variables variables = GlobalEngineConf.getGlobalVariables();
-        if (variables != null) {
-            // update config if set in global variables
-            optMap.forEach((k, v) -> {
-                Optional value = variables.get(k);
-                if (value.isPresent()) {
-                    optMap.put(k, value.get());
-                }
-            });
-        }
-        return (boolean) optMap.get(optName);
     }
 }

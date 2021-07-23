@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //!     http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,10 +57,7 @@ use std::sync::atomic::AtomicBool;
 use maxgraph_runtime::utils::get_lambda_service_client;
 use maxgraph_runtime::store::remote_store_service::RemoteStoreServiceManager;
 use maxgraph_store::api::graph_partition::{GraphPartitionManager};
-use maxgraph_runtime::store::ffi::{GlobalVertex, GlobalVertexIter, FFIEdge, GlobalEdgeIter};
 use maxgraph_server::StoreContext;
-use maxgraph_runtime::store::v2::global_graph::GlobalGraph;
-use maxgraph_runtime::store::v2::create_global_graph;
 
 fn main() {
     if let Some(_) = env::args().find(|arg| arg == "--show-build-info") {
@@ -83,20 +80,14 @@ fn main() {
 
     let worker_num = store_config.timely_worker_per_process;
     let store_config = Arc::new(store_config);
-    let process_num = store_config.worker_num as i32;
     if store_config.graph_type.to_lowercase().eq(VINEYARD_GRAPH) {
-        if cfg!(target_os = "linux") {
-            info!("Start executor with vineyard graph object id {:?}", store_config.vineyard_graph_id);
-            use maxgraph_runtime::store::ffi::FFIGraphStore;
-            let ffi_store = FFIGraphStore::new(store_config.vineyard_graph_id, worker_num as i32);
-            let partition_manager = ffi_store.get_partition_manager();
-            run_main(store_config, Arc::new(ffi_store), Arc::new(partition_manager));
-        } else {
-            unimplemented!("Mac not support vineyard graph")
-        }
+        info!("Start executor with vineyard graph object id {:?}", store_config.vineyard_graph_id);
+        use maxgraph_runtime::store::ffi::FFIGraphStore;
+        let ffi_store = FFIGraphStore::new(store_config.vineyard_graph_id, worker_num as i32);
+        let partition_manager = ffi_store.get_partition_manager();
+        run_main(store_config, Arc::new(ffi_store), Arc::new(partition_manager));
     } else {
-        let graph = Arc::new(create_global_graph(&store_config, &partitions));
-        run_main(store_config, graph.clone(), graph.clone());
+        unimplemented!("only start vineyard graph from executor")
     }
 }
 
@@ -131,7 +122,7 @@ fn run_main<V, VI, E, EI>(store_config: Arc<StoreConfig>,
     server_manager = Box::new(pegasus_server_manager);
     let _manager_guards = ServerManager::start_server(server_manager, store_config.clone(), Box::new(recover_prepare)).unwrap();
 
-    // waiting for initial task_partition_manager 
+    // waiting for initial task_partition_manager
     let mut timeout_count = 0;
     loop {
         match task_partition_manager.read() {

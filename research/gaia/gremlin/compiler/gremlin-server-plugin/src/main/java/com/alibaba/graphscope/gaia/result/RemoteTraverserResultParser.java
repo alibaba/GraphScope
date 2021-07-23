@@ -16,7 +16,9 @@
 package com.alibaba.graphscope.gaia.result;
 
 import com.alibaba.graphscope.common.proto.GremlinResult;
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.ConfigBuilder;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.google.common.collect.ImmutableMap;
 import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
 import org.apache.tinkerpop.gremlin.process.remote.traversal.RemoteTraverser;
@@ -30,8 +32,8 @@ import java.util.*;
 public class RemoteTraverserResultParser extends DefaultResultParser {
     private static final Logger logger = LoggerFactory.getLogger(RemoteTraverserResultParser.class);
 
-    public RemoteTraverserResultParser(ConfigBuilder builder) {
-        super(builder);
+    public RemoteTraverserResultParser(ConfigBuilder builder, GraphStoreService graphStore, GaiaConfig config) {
+        super(builder, graphStore, config);
     }
 
     @Override

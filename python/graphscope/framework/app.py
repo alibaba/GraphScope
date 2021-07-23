@@ -16,33 +16,39 @@
 # limitations under the License.
 #
 
+import functools
 import hashlib
 import json
 import os
 import zipfile
+from copy import deepcopy
 from io import BytesIO
 
 import yaml
 
 import graphscope
-from graphscope.framework.context import create_context
+from graphscope.framework.context import create_context_node
+from graphscope.framework.dag import DAGNode
+from graphscope.framework.dag_utils import bind_app
 from graphscope.framework.dag_utils import create_app
 from graphscope.framework.dag_utils import run_app
 from graphscope.framework.dag_utils import unload_app
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.utils import graph_type_to_cpp_class
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
 
 def project_to_simple(func):
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
-        if graph.graph_type == types_pb2.ARROW_PROPERTY:
+        if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
             graph = graph._project_to_simple()
         return func(graph, *args[1:], **kwargs)
 
@@ -74,6 +80,7 @@ def not_compatible_for(*graph_types):
     """
 
     def _not_compatible_for(not_compatible_for_func):
+        @functools.wraps(not_compatible_for_func)
         def wrapper(*args, **kwargs):
             graph = args[0]
             if not hasattr(graph, "graph_type"):
@@ -82,10 +89,11 @@ def not_compatible_for(*graph_types):
                 )
 
             terms = {
-                "arrow_property": graph.graph_type == types_pb2.ARROW_PROPERTY,
-                "dynamic_property": graph.graph_type == types_pb2.DYNAMIC_PROPERTY,
-                "arrow_projected": graph.graph_type == types_pb2.ARROW_PROJECTED,
-                "dynamic_projected": graph.graph_type == types_pb2.DYNAMIC_PROJECTED,
+                "arrow_property": graph.graph_type == graph_def_pb2.ARROW_PROPERTY,
+                "dynamic_property": graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY,
+                "arrow_projected": graph.graph_type == graph_def_pb2.ARROW_PROJECTED,
+                "dynamic_projected": graph.graph_type
+                == graph_def_pb2.DYNAMIC_PROJECTED,
             }
             match = False
             try:
@@ -107,42 +115,76 @@ def not_compatible_for(*graph_types):
     return _not_compatible_for
 
 
-class AppAssets(object):
-    """A class holds the bytes of the gar resource.
+class AppAssets(DAGNode):
+    """A class represents a app assert node in a DAG that holds the bytes of the gar resource.
 
-    Assets includes name (for builtin algorithm), and gar (for user defined algorithm),
-    and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`.
+    Assets includes an algorithm name, and gar (for user defined algorithm),
+    a context type (one of 'tensor', 'vertex_data', 'vertex_property',
+    'labeled_vertex_data', 'dynamic_vertex_data', 'labeled_vertex_property'),
+    and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`),
 
-    The instance of this class can be passed to init :class:`graphscope.App`.
-
-    Attributes:
-        algo (str): Name of the algorithm
-        type (str): Type of the algorithm
-        gar (bytes): Byte content of user defined algorithm
-        signature (str): Unique identifier of this assets.
+    The instance of this class can be passed to init :class:`graphscope.framework.app.AppDAGNode`
     """
 
-    def __init__(self, algo, gar=None, **kwargs):
+    _support_context_type = [
+        "tensor",
+        "vertex_data",
+        "vertex_property",
+        "labeled_vertex_data",
+        "dynamic_vertex_data",
+        "labeled_vertex_property",
+    ]
+
+    def __init__(self, algo, context=None, gar=None):
         """Init assets of the algorithm.
 
         Args:
             algo (str): Represent specific algo inside resource.
+            context (str): Type of context that hold the calculation results.
+            It will get from gar if param is None. Defaults to None.
             gar (bytes or BytesIO, optional): The bytes that encodes the application's source code.
-                Default to None
-            kwargs: Other params, e.g. vd_type and md_type in cython app.
+                Defaults to None.
         """
         self._algo = algo
-        self._type = "cpp_pie"  # default is built_in app with `built_in` type
+        self._context_type = context
+        self._type = "cpp_pie"  # default is builtin app with `built_in` type
+        self._meta = {}
 
         # used for gar resource
         if gar and isinstance(gar, (BytesIO, bytes)):
             self._gar = gar if isinstance(gar, bytes) else gar.getvalue()
+            self._extract_meta_info()
         else:
             # built_in apps has no gar resource.
             self._gar = None
 
+        if self._context_type not in self._support_context_type:
+            raise InvalidArgumentError(
+                "Unsupport context type: {0}".format(self._context_type)
+            )
+
+        self._op = create_app(self)
+
     def __repr__(self) -> str:
-        return f"graphscope.AppAssets <type: {self._type}, algorithm: {self._algo}>"
+        return f"graphscope.framework.app.AppAssets <type: {self._type}, algo: {self._algo}, context: {self._context_type}>"
+
+    def _extract_meta_info(self):
+        """Extract app meta info from gar resource.
+        Raises:
+            InvalidArgumentError:
+                - :code:`gs_conf.yaml` not exist in gar resource.
+                - Algo not found in gar resource.
+        """
+        fp = BytesIO(self._gar)
+        archive = zipfile.ZipFile(fp, "r")
+        config = yaml.safe_load(archive.read(DEFAULT_GS_CONFIG_FILE))
+        for meta in config["app"]:
+            if self._algo == meta["algo"]:
+                self._context_type = meta["context_type"]
+                self._type = meta["type"]
+                self._meta = meta
+                return
+        raise InvalidArgumentError("App not found in gar: {}".format(self._algo))
 
     @property
     def algo(self):
@@ -152,6 +194,15 @@ class AppAssets(object):
             str: Algorithm name of this asset.
         """
         return self._algo
+
+    @property
+    def context_type(self):
+        """Context type, e.g. vertex_property, labeled_vertex_data.
+
+        Returns:
+            str: Type of the app context.
+        """
+        return self._context_type
 
     @property
     def type(self):
@@ -187,6 +238,7 @@ class AppAssets(object):
         """Generate a signature of the app assets by its algo name (and gar resources).
 
         Used to uniquely identify a app assets.
+
         Returns:
             str: signature of this assets
         """
@@ -200,67 +252,36 @@ class AppAssets(object):
         """Determine if this algorithm can run on this type of graph.
 
         Args:
-            graph (:class:`Graph`): A graph instance.
+            graph (:class:`GraphDAGNode`): A graph instance.
 
         Raises:
             InvalidArgumentError:
-                - :code:`gs_conf.yaml` not exist in gar resource.
-                - App is not compatible with graph or
-                - Algo not found in gar resource.
+                - App is not compatible with graph
 
             ScannerError:
                 - Yaml file format is incorrect.
         """
-        if not isinstance(
-            graph,
-            (
-                graphscope.framework.graph.Graph,
-                graphscope.nx.classes.graph.Graph,
-                graphscope.nx.classes.digraph.DiGraph,
-            ),
-        ):
-            raise InvalidArgumentError("Wrong type of graph.")
         # builtin app
         if self._gar is None:
-            self._type = "cpp_pie"
             return
         # check yaml file
-        fp = BytesIO(self._gar)
-        archive = zipfile.ZipFile(fp, "r")
-        config = yaml.safe_load(archive.read(DEFAULT_GS_CONFIG_FILE))
-
-        # check the compatibility with graph
-        for application in config["app"]:
-            if self._algo == application["algo"]:
-                self._type = application["type"]
-                graph_type = graph_type_to_cpp_class(graph.graph_type)
-                if graph_type not in application["compatible_graph"]:
-                    raise InvalidArgumentError(
-                        "App is uncompatible with graph {}".format(graph_type)
-                    )
-                return True
-        raise InvalidArgumentError("App not found in gar: {}".format(self._algo))
+        graph_type = graph_type_to_cpp_class(graph.graph_type)
+        if graph_type not in self._meta["compatible_graph"]:
+            raise InvalidArgumentError(
+                "App is uncompatible with graph {}".format(graph_type)
+            )
+        return True
 
     def __call__(self, graph, *args, **kwargs):
         """Instantiate an App and do queries over it."""
-        app_ = App(graph, self)
+        app_ = graph.session._wrapper(AppDAGNode(graph, self))
         return app_(*args, **kwargs)
 
 
-class App(object):
-    """An application that can run on graphs and produce results.
+class AppDAGNode(DAGNode):
+    """A class represents a app node in a DAG.
 
-    Analytical engine will build the app dynamic library when instantiate a app instance.
-    The dynamic library will be reused if subsequent app's signature matches one of previous ones.
-
-    Attributes:
-        key (str): Identifier of the app, associated with the dynamic library path.
-            set by analytical engine after library is built.
-        signature (str): Combination of app_assets's and graph's signature.
-        session_id (str): Session id of the session that associated with the app.
-        algo (str): Algorithm name of app_assets.
-        gar (str): Gar content of app_assets.
-
+    In GraphScope, an app node binding a concrete graph node that query executed on.
     """
 
     def __init__(self, graph, app_assets: AppAssets):
@@ -268,52 +289,24 @@ class App(object):
             class name.
 
         Args:
-            graph (:class:`Graph`): A :class:`Graph` instance.
+            graph (:class:`GraphDAGNode`): A :class:`GraphDAGNode` instance.
             app_assets: A :class:`AppAssets` instance.
-
-        Raise:
-            TypeError: The type of app_assets incorrect.
         """
-        if not graph.loaded():
-            raise RuntimeError("The graph is not loaded.")
-        app_assets.is_compatible(graph)
-
-        self._key = None
         self._graph = graph
-        self._app_assets = app_assets
-        self._session_id = graph.session_id
 
-        opr = create_app(graph, self)
-        self._key = opr.eval()
-        self._saved_signature = self.signature
+        self._app_assets = app_assets
+        self._session = graph.session
+        self._app_assets.is_compatible(self._graph)
+
+        self._op = bind_app(graph, self._app_assets)
+        # add op to dag
+        self._session.dag.add_op(self._app_assets.op)
+        self._session.dag.add_op(self._op)
 
     def __repr__(self):
         s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo}"
         s += f"bounded_graph: {str(self._graph)}>"
         return s
-
-    @property
-    def key(self):
-        """A unique identifier of App."""
-        return self._key
-
-    @property
-    def signature(self):
-        """Signature is computed by all critical components of the App."""
-        return hashlib.sha256(
-            "{}.{}".format(self._app_assets.signature, self._graph.template_str).encode(
-                "utf-8"
-            )
-        ).hexdigest()
-
-    @property
-    def session_id(self):
-        """Return the session_id, which is copied from the graph.
-
-        Returns:
-            str: Id of the session which loaded the app.
-        """
-        return self._session_id
 
     @property
     def algo(self):
@@ -345,57 +338,94 @@ class App(object):
         """
         app_type = self._app_assets.type
         check_argument(app_type is not None)
+        context_type = self._app_assets.context_type
+
+        if not isinstance(self._graph, DAGNode) and not self._graph.loaded():
+            raise RuntimeError("The graph is not loaded")
 
         if self._app_assets.type in ["cython_pie", "cython_pregel"]:
             # cython app support kwargs only
             check_argument(
                 not args, "Only support using keyword arguments in cython app."
             )
-            return self._query(json.dumps(kwargs))
+            return create_context_node(
+                context_type, self, self._graph, json.dumps(kwargs)
+            )
 
-        return self._query(*args, **kwargs)
+        return create_context_node(context_type, self, self._graph, *args, **kwargs)
 
-    def _query(self, *args, **kwargs):
-        """Create a `RUN_APP` Operation, and send it to analytical engine to do actual query.
-        Then retrieve query contexts and return.
-        """
-        self._check_unmodified()
-        op = run_app(self._graph, self, *args, **kwargs)
-        ret = op.eval()
-        ret = json.loads(ret)
-        context_key, context_type = ret["context_key"], ret["context_type"]
-        results = create_context(
-            context_type, self._session_id, context_key, self._graph
-        )
-        return results
-
-    def _check_unmodified(self):
-        """Ensure app is not modified, cause it may need to recompile the dynamic library."""
-        check_argument(self.signature == self._saved_signature)
-
-    def loaded(self):
-        """Since key is only set by engine after it load the app, and unset to None when unload,
-           we can use the key to detect whether the app is loaded.
+    def unload(self):
+        """Unload this app from graphscope engine.
 
         Returns:
-            bool: The app is loaded or not.
+            :class:`graphscope.framework.app.UnloadedApp`: Evaluated in eager mode.
         """
-        return self._key is not None
+        op = unload_app(self)
+        return UnloadedApp(self._session, op)
+
+
+class App(object):
+    """An application that can run on graphs and produce results.
+
+    Analytical engine will build the app dynamic library when instantiate a app instance.
+    And the dynamic library will be reused if subsequent app's signature matches one of
+    previous ones.
+    """
+
+    def __init__(self, app_node, key):
+        self._app_node = app_node
+        self._session = self._app_node.session
+        self._key = key
+        # copy and set op evaluated
+        self._app_node.op = deepcopy(self._app_node.op)
+        self._app_node.evaluated = True
+        self._session.dag.add_op(self._app_node.op)
+        self._saved_signature = self.signature
+
+    def __getattr__(self, name):
+        if hasattr(self._app_node, name):
+            return getattr(self._app_node, name)
+        else:
+            raise AttributeError("{0} not found.".format(name))
+
+    @property
+    def key(self):
+        """A unique identifier of App."""
+        return self._key
+
+    @property
+    def signature(self):
+        """Signature is computed by all critical components of the App."""
+        return hashlib.sha256(
+            "{}.{}".format(self._app_assets.signature, self._graph.template_str).encode(
+                "utf-8"
+            )
+        ).hexdigest()
 
     def unload(self):
         """Unload app. Both on engine side and python side. Set the key to None."""
-        if self._key:
-            op = unload_app(self)
-            op.eval()
-            self._key = None
-            self._graph = None
-            self._app_assets = None
-            self._session_id = None
+        rlt = self._session._wrapper(self._app_node.unload())
+        self._key = None
+        self._session = None
+        return rlt
+
+    def __call__(self, *args, **kwargs):
+        return self._session._wrapper(self._app_node(*args, **kwargs))
+
+
+class UnloadedApp(DAGNode):
+    """Unloaded app node in a DAG."""
+
+    def __init__(self, session, op):
+        self._session = session
+        self._op = op
+        # add op to dag
+        self._session.dag.add_op(self._op)
 
 
 def load_app(algo, gar=None, **kwargs):
     """Load an app from gar.
-    bytes orthe resource of the specified path or bytes.
+    bytes or the resource of the specified path or bytes.
 
     Args:
         algo: str
@@ -404,7 +434,7 @@ def load_app(algo, gar=None, **kwargs):
           str represent the path of resource.
 
     Returns:
-        Instance of <graphscope.AppAssets>
+        Instance of <graphscope.framework.app.AppAssets>
 
     Raises:
         FileNotFoundError: File not exist.
@@ -425,14 +455,12 @@ def load_app(algo, gar=None, **kwargs):
                 - gs::ArrowProjectedFragment
     """
     if isinstance(gar, (BytesIO, bytes)):
-        return AppAssets(str(algo), gar, **kwargs)
+        return AppAssets(str(algo), None, gar, **kwargs)
     elif isinstance(gar, str):
         with open(gar, "rb") as f:
             content = f.read()
-
         if not zipfile.is_zipfile(gar):
             raise InvalidArgumentError("{} is not a zip file.".format(gar))
-
-        return AppAssets(str(algo), content, **kwargs)
+        return AppAssets(str(algo), None, content, **kwargs)
     else:
         raise InvalidArgumentError("Wrong type with {}".format(gar))

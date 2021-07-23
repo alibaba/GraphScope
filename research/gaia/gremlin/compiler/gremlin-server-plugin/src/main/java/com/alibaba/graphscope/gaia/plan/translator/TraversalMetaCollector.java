@@ -17,6 +17,7 @@ package com.alibaba.graphscope.gaia.plan.translator;
 
 import com.alibaba.graphscope.gaia.plan.meta.*;
 import com.alibaba.graphscope.gaia.plan.meta.object.*;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 import com.alibaba.graphscope.gaia.plan.translator.builder.MetaConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepMetaBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalMetaBuilder;
@@ -56,8 +57,9 @@ public class TraversalMetaCollector extends AttributeTranslator<TraversalMetaBui
                 ElementValueTraversal admin1 = (ElementValueTraversal) admin;
                 Step parent = StepMetaCollector.getParentOfTraversalId(t.getMetaId(), admin1);
                 int stepIdx = TraversalHelper.stepIndex(parent, parent.getTraversal());
-                elementProperties.add(head.getObject().getElement(), new StepPropertiesMeta(Collections.singletonList(admin1.getPropertyKey()),
-                        new StepId(t.getMetaId(), stepIdx), parent));
+                elementProperties.add(head.getObject().getElement(),
+                        new StepPropertiesMeta(new ToFetchProperties(false, Collections.singletonList(admin1.getPropertyKey())),
+                                new StepId(t.getMetaId(), stepIdx)));
             }
             if (admin instanceof IdentityTraversal) {
                 return head;

@@ -1,5 +1,6 @@
 MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
+NUM_PROC                := $( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
 
 VERSION                     ?= 0.1.0
 INSTALL_PREFIX              ?= /usr/local
@@ -9,6 +10,9 @@ NETWORKX                    ?= OFF
 
 # client build options
 WITH_LEARNING_ENGINE        ?= OFF
+
+# testing build option
+BUILD_TEST                  ?= OFF
 
 .PHONY: all
 all: graphscope
@@ -39,21 +43,21 @@ install: gle client coordinator gae gie
 .PHONY: client
 client: gle
 	cd $(WORKING_DIR)/python && \
-	pip3 install -r requirements.txt -r requirements-dev.txt && \
-	python3 setup.py install --user
+	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
+	python3 setup.py install --user --prefix=
 
 .PHONY: coordinator
 coordinator: client
 	cd $(WORKING_DIR)/coordinator && \
-	pip3 install -r requirements.txt -r requirements-dev.txt && \
-	python3 setup.py install --user
+	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
+	python3 setup.py install --user --prefix=
 
 .PHONY: gae
 gae:
 	mkdir -p $(WORKING_DIR)/analytical_engine/build
 	cd $(WORKING_DIR)/analytical_engine/build && \
-	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) .. && \
-	make -j`nproc` && \
+	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) -DBUILD_TESTS=${BUILD_TEST} .. && \
+	make -j$(NUM_PROC) && \
 	sudo make install
 
 .PHONY: gie
@@ -63,6 +67,7 @@ gie:
 	mvn clean package -DskipTests -Pjava-release --quiet
 	# executor
 	cd $(WORKING_DIR)/interactive_engine/src/executor && \
+	rustup component add rustfmt && \
 	cargo build --all
 	# install
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
@@ -78,18 +83,22 @@ gie:
 
 .PHONY: gle
 gle:
+ifeq ($(WITH_LEARNING_ENGINE), ON)
+	cd ${WORKING_DIR} && \
+	git submodule update --init && \
 	cd $(WORKING_DIR)/learning_engine/graph-learn && \
 	git submodule update --init third_party/pybind11 && \
 	mkdir -p cmake-build && cd cmake-build && \
-	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
-	make -j`nproc` && \
+	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DWITH_VINEYARD=ON -DTESTING=${BUILD_TEST} .. && \
+	make -j$(NUM_PROC) && \
 	sudo make install
+endif
 
 .PHONY: prepare-client
 prepare-client:
 	cd $(WORKING_DIR)/python && \
-	pip3 install -r requirements.txt && \
-	pip3 install -r requirements-dev.txt && \
+	pip3 install -r requirements.txt --user && \
+	pip3 install -r requirements-dev.txt --user && \
 	python3 setup.py build_proto
 
 .PHONY: graphscope-docs

@@ -32,7 +32,7 @@ def louvain(graph, min_progress=1000, progress_tries=1):
     """Compute best partition on the `graph` by louvain.
 
     Args:
-        graph (:class:`Graph`): A projected simple graph.
+        graph (:class:`Graph`): A projected simple undirected graph.
         min_progress: The minimum delta X required to be considered progress, where X is the number of nodes
                       that have changed their community on a particular pass.
                       Delta X is then the difference in number of nodes that changed communities
@@ -42,7 +42,8 @@ def louvain(graph, min_progress=1000, progress_tries=1):
 
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with id of community it belongs to.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with id of community it belongs to, evaluated in eager mode.
 
     References:
         [1] Blondel, V.D. et al. Fast unfolding of communities in large networks. J. Stat. Mech 10008, 1-12(2008).
@@ -51,13 +52,19 @@ def louvain(graph, min_progress=1000, progress_tries=1):
 
         [3] https://sotera.github.io/distributed-graph-analytics/louvain/
 
+    Notes:
+        louvain now only support undirected graph. If input graph is directed graph, louvain would raise
+        a InvalidArgumentError.
+
     Examples:
 
     .. code:: python
 
         import graphscope as gs
         s = gs.session()
-        g = s.load_from('The parameters for loading a graph...')
+        g = s.g(directed=False)
+        g = g.add_vertices('The parameters for loading a graph...')
+        g = g.add_edges('The parameters for loading a graph...')
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": ["weight"]})
         r = gs.louvain(pg)
         s.close()
@@ -65,4 +72,6 @@ def louvain(graph, min_progress=1000, progress_tries=1):
     """
     if graph.is_directed():
         raise InvalidArgumentError("Louvain not support directed graph.")
-    return AppAssets(algo="louvain")(graph, min_progress, progress_tries)
+    return AppAssets(algo="louvain", context="vertex_data")(
+        graph, min_progress, progress_tries
+    )

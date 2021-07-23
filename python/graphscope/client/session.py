@@ -26,6 +26,7 @@ import copy
 import json
 import logging
 import os
+import pickle
 import random
 import sys
 import threading
@@ -48,18 +49,23 @@ from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.hosts.cluster import HostsClusterLauncher
 from graphscope.deploy.kubernetes.cluster import KubernetesClusterLauncher
+from graphscope.framework.dag import Dag
 from graphscope.framework.errors import ConnectionError
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InteractiveEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import K8sError
-from graphscope.framework.errors import LearningEngineInternalError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
+from graphscope.framework.graph import GraphDAGNode
 from graphscope.framework.operation import Operation
+from graphscope.framework.utils import decode_dataframe
+from graphscope.framework.utils import decode_numpy
 from graphscope.interactive.query import InteractiveQuery
+from graphscope.interactive.query import InteractiveQueryDAGNode
 from graphscope.interactive.query import InteractiveQueryStatus
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
@@ -71,6 +77,162 @@ DEFAULT_CONFIG_FILE = os.environ.get(
 _session_dict = {}
 
 logger = logging.getLogger("graphscope")
+
+
+class _FetchHandler(object):
+    """Handler for structured fetches.
+    This class takes care of extracting a sub-DAG as targets for a user-provided structure for fetches,
+    which can be used for a low level `run` call of grpc_client.
+
+    Given the results of the low level run call, this class can also rebuild a result structure
+    matching the user-provided structure for fetches, but containing the corresponding results.
+    """
+
+    def __init__(self, dag, fetches):
+        self._fetches = fetches
+        self._ops = list()
+        self._unpack = False
+        if not isinstance(self._fetches, (list, tuple)):
+            self._fetches = [self._fetches]
+            self._unpack = True
+        for fetch in self._fetches:
+            if hasattr(fetch, "op"):
+                fetch = fetch.op
+            if not isinstance(fetch, Operation):
+                raise ValueError("Expect a `Operation` in sess run method.")
+            self._ops.append(fetch)
+        # extract sub dag
+        self._sub_dag = dag.extract_subdag_for(self._ops)
+        if "debug" in os.environ:
+            logger.info("sub_dag: %s", self._sub_dag)
+
+    @property
+    def targets(self):
+        return self._sub_dag
+
+    def _rebuild_graph(self, seq, op: Operation, op_result: op_def_pb2.OpResult):
+        if isinstance(self._fetches[seq], Operation):
+            # for nx Graph
+            return op_result.graph_def
+        # get graph dag node as base
+        graph_dag_node = self._fetches[seq]
+        # construct graph
+        g = Graph(graph_dag_node)
+        # update graph flied from graph_def
+        g.update_from_graph_def(op_result.graph_def)
+        return g
+
+    def _rebuild_learning_graph(
+        self, seq, op: Operation, op_result: op_def_pb2.OpResult
+    ):
+        from graphscope.learning.graph import Graph as LearningGraph
+
+        handle = op_result.handle
+        handle = json.loads(base64.b64decode(handle).decode("utf-8"))
+        config = op_result.config.decode("utf-8")
+        handle["server"] = op_result.result.decode("utf-8")
+        handle["client_count"] = 1
+
+        graph_dag_node = self._fetches[seq]
+        # construct learning graph
+        g = LearningGraph(
+            graph_dag_node, handle, config, op_result.extra_info.decode("utf-8")
+        )
+        return g
+
+    def _rebuild_interactive_query(
+        self, seq, op: Operation, op_result: op_def_pb2.OpResult
+    ):
+        # get interactive query dag node as base
+        interactive_query_node = self._fetches[seq]
+        # construct interactive query
+        interactive_query = InteractiveQuery(
+            interactive_query_node,
+            op_result.result.decode("utf-8"),
+            op_result.extra_info.decode("utf-8"),
+        )
+        interactive_query.status = InteractiveQueryStatus.Running
+        return interactive_query
+
+    def _rebuild_app(self, seq, op: Operation, op_result: op_def_pb2.OpResult):
+        from graphscope.framework.app import App
+
+        # get app dag node as base
+        app_dag_node = self._fetches[seq]
+        # construct app
+        app = App(app_dag_node, op_result.result.decode("utf-8"))
+        return app
+
+    def _rebuild_context(self, seq, op: Operation, op_result: op_def_pb2.OpResult):
+        from graphscope.framework.context import Context
+        from graphscope.framework.context import DynamicVertexDataContext
+
+        # get context dag node as base
+        context_dag_node = self._fetches[seq]
+        ret = json.loads(op_result.result.decode("utf-8"))
+        context_type = ret["context_type"]
+        if context_type == "dynamic_vertex_data":
+            # for nx
+            return DynamicVertexDataContext(context_dag_node, ret["context_key"])
+        else:
+            return Context(context_dag_node, ret["context_key"])
+
+    def _rebuild_gremlin_results(
+        self, seq, op: Operation, op_result: op_def_pb2.OpResult
+    ):
+        from graphscope.interactive.query import ResultSet
+
+        # get result set node as base
+        result_set_dag_node = self._fetches[seq]
+        return ResultSet(result_set_dag_node)
+
+    def wrapper_results(self, response: message_pb2.RunStepResponse):
+        rets = list()
+        for seq, op in enumerate(self._ops):
+            for op_result in response.results:
+                if op.key == op_result.key:
+                    if op.output_types == types_pb2.RESULTS:
+                        if op.type == types_pb2.RUN_APP:
+                            rets.append(self._rebuild_context(seq, op, op_result))
+                        elif op.type == types_pb2.FETCH_GREMLIN_RESULT:
+                            rets.append(pickle.loads(op_result.result))
+                        else:
+                            # for nx Graph
+                            rets.append(op_result.result.decode("utf-8"))
+                    if op.output_types == types_pb2.GREMLIN_RESULTS:
+                        rets.append(self._rebuild_gremlin_results(seq, op, op_result))
+                    if op.output_types == types_pb2.GRAPH:
+                        rets.append(self._rebuild_graph(seq, op, op_result))
+                    if op.output_types == types_pb2.LEARNING_GRAPH:
+                        rets.append(self._rebuild_learning_graph(seq, op, op_result))
+                    if op.output_types == types_pb2.APP:
+                        rets.append(None)
+                    if op.output_types == types_pb2.BOUND_APP:
+                        rets.append(self._rebuild_app(seq, op, op_result))
+                    if op.output_types in (
+                        types_pb2.VINEYARD_TENSOR,
+                        types_pb2.VINEYARD_DATAFRAME,
+                    ):
+                        rets.append(
+                            json.loads(op_result.result.decode("utf-8"))["object_id"]
+                        )
+                    if op.output_types in (types_pb2.TENSOR, types_pb2.DATAFRAME):
+                        if (
+                            op.type == types_pb2.CONTEXT_TO_DATAFRAME
+                            or op.type == types_pb2.GRAPH_TO_DATAFRAME
+                        ):
+                            rets.append(decode_dataframe(op_result.result))
+                        if (
+                            op.type == types_pb2.CONTEXT_TO_NUMPY
+                            or op.type == types_pb2.GRAPH_TO_NUMPY
+                        ):
+                            rets.append(decode_numpy(op_result.result))
+                    if op.output_types == types_pb2.INTERACTIVE_QUERY:
+                        rets.append(self._rebuild_interactive_query(seq, op, op_result))
+                    if op.output_types == types_pb2.NULL_OUTPUT:
+                        rets.append(None)
+                    break
+        return rets[0] if self._unpack else rets
 
 
 class Session(object):
@@ -97,15 +259,15 @@ class Session(object):
         >>> sess = gs.session()
         >>> g = sess.g()
         >>> pg = g.project(vertices={'v': []}, edges={'e': ['dist']})
-        >>> r = s.sssp(g, 4)
-        >>> s.close()
+        >>> r = gs.sssp(g, 4)
+        >>> sess.close()
 
         >>> # or use a session as default
-        >>> s = gs.session().as_default()
-        >>> g = g()
+        >>> sess = gs.session().as_default()
+        >>> g = gs.g()
         >>> pg = g.project(vertices={'v': []}, edges={'e': ['dist']})
         >>> r = gs.sssp(pg, 4)
-        >>> s.close()
+        >>> sess.close()
 
     We support setup a service cluster and create a RPC session in following ways:
 
@@ -137,8 +299,9 @@ class Session(object):
     def __init__(
         self,
         config=None,
-        cluster_type=gs_config.cluster_type,
         addr=gs_config.addr,
+        mode=gs_config.mode,
+        cluster_type=gs_config.cluster_type,
         num_workers=gs_config.num_workers,
         preemptive=gs_config.preemptive,
         k8s_namespace=gs_config.k8s_namespace,
@@ -173,6 +336,7 @@ class Session(object):
         timeout_seconds=gs_config.timeout_seconds,
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         with_mars=gs_config.with_mars,
+        enable_gaia=gs_config.enable_gaia,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -186,6 +350,13 @@ class Session(object):
 
             addr (str, optional): The endpoint of a pre-launched GraphScope instance with '<ip>:<port>' format.
                 A new session id will be generated for each session connection.
+
+            mode (str, optional): optional values are eager and lazy. Defaults to eager.
+                Eager execution is a flexible platform for research and experimentation, it provides:
+                    An intuitive interface: Quickly test on small data.
+                    Easier debugging: Call ops directly to inspect running models and test changes.
+                Lazy execution means GraphScope does not process the data till it has to. It just gathers all the
+                    information to a DAG that we feed into it, and processes only when we execute :code:`sess.run(fetches)`
 
             cluster_type (str, optional): Deploy GraphScope instance on hosts or k8s cluster. Defaults to k8s.
                 Available options: "k8s" and "hosts". Note that only support deployed on localhost with hosts mode.
@@ -267,6 +438,9 @@ class Session(object):
 
             with_mars (bool, optional):
                 Launch graphscope with mars. Defaults to False.
+
+            enable_gaia (bool, optional):
+                Launch graphscope with gaia enabled. Defaults to False.
 
             k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the
                 containers in a pod. Defaults to {}.
@@ -353,10 +527,10 @@ class Session(object):
             TypeError: If the given argument combination is invalid and cannot be used to create
                 a GraphScope session.
         """
-        num_workers = int(num_workers)
         self._config_params = {}
         self._accessable_params = (
             "addr",
+            "mode",
             "cluster_type",
             "num_workers",
             "preemptive",
@@ -388,6 +562,7 @@ class Session(object):
             "k8s_mars_scheduler_cpu",
             "k8s_mars_scheduler_mem",
             "with_mars",
+            "enable_gaia",
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
@@ -402,7 +577,7 @@ class Session(object):
         if isinstance(config, dict):
             self._config_params.update(config)
         elif isinstance(config, str):
-            self._load_config(config, False)
+            self._load_config(config, slient=False)
         elif DEFAULT_CONFIG_FILE:
             self._load_config(DEFAULT_CONFIG_FILE)
 
@@ -411,6 +586,9 @@ class Session(object):
 
         # initial setting of cluster_type
         self._cluster_type = self._parse_cluster_type()
+
+        # initial dag
+        self._dag = Dag()
 
         # mars cannot work with run-on-local mode
         if self._cluster_type == types_pb2.HOSTS and self._config_params["with_mars"]:
@@ -435,7 +613,7 @@ class Session(object):
             )
         if "k8s_vineyard_shared_mem" in kw:
             warnings.warn(
-                "The `k8s_vineyard_shared_mem` has benn deprecated and has no effect, "
+                "The `k8s_vineyard_shared_mem` has been deprecated and has no effect, "
                 "please use `vineyard_shared_mem` instead."
                 % kw.pop("k8s_vineyard_shared_mem", None),
                 category=DeprecationWarning,
@@ -500,6 +678,9 @@ class Session(object):
         self._heartbeat_sending_thread.daemon = True
         self._heartbeat_sending_thread.start()
 
+        # networkx module
+        self._nx = None
+
     def __repr__(self):
         return str(self.info)
 
@@ -509,6 +690,10 @@ class Session(object):
     @property
     def session_id(self):
         return self._session_id
+
+    @property
+    def dag(self):
+        return self._dag
 
     def _load_config(self, path, slient=True):
         config_path = os.path.expandvars(os.path.expanduser(path))
@@ -564,6 +749,13 @@ class Session(object):
         info["engine_config"] = self._engine_config
         return info
 
+    @property
+    def closed(self):
+        return self._closed
+
+    def eager(self):
+        return self._config_params["mode"] == "eager"
+
     def _send_heartbeat(self):
         while not self._closed:
             if self._grpc_client:
@@ -601,7 +793,7 @@ class Session(object):
             try:
                 if instance is not None:
                     instance.close()
-            except InteractiveEngineInternalError:
+            except Exception:
                 pass
         self._interactive_instance_dict.clear()
 
@@ -610,31 +802,35 @@ class Session(object):
             try:
                 if instance is not None:
                     instance.close()
-            except LearningEngineInternalError:
+            except Exception:
                 pass
         self._learning_instance_dict.clear()
 
         if self._grpc_client:
-            self._grpc_client.close()
+            try:
+                self._grpc_client.close()
+            except Exception:
+                pass
             self._grpc_client = None
             _session_dict.pop(self._session_id, None)
 
         # clean up
         if self._config_params["addr"] is None:
-            if self._launcher:
-                self._launcher.stop()
+            try:
+                if self._launcher:
+                    self._launcher.stop()
+            except Exception:
+                pass
             self._pod_name_list = []
 
     def _close_interactive_instance(self, instance):
         """Close a interactive instance."""
-        if self._grpc_client:
-            self._grpc_client.close_interactive_engine(instance.object_id)
+        if self.eager():
             self._interactive_instance_dict[instance.object_id] = None
 
     def _close_learning_instance(self, instance):
         """Close a learning instance."""
-        if self._grpc_client:
-            self._grpc_client.close_learning_engine(instance.object_id)
+        if self.eager():
             self._learning_instance_dict[instance.object_id] = None
 
     def __del__(self):
@@ -642,6 +838,30 @@ class Session(object):
         try:
             self.close()
         except Exception:  # pylint: disable=broad-except
+            pass
+
+    def _check_closed(self, msg=None):
+        """Internal: raise a ValueError if session is closed"""
+        if self.closed:
+            raise ValueError("Operation on closed session." if msg is None else msg)
+
+    # Context manager
+    def __enter__(self):
+        """Context management protocol.
+        Returns self and register self as default session.
+        """
+        self._check_closed()
+        self.as_default()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        """Deregister self from the default session,
+        close the session and release the resources, ignore all exceptions in close().
+        """
+        try:
+            self._deregister_default()
+            self.close()
+        except Exception:
             pass
 
     def as_default(self):
@@ -670,9 +890,14 @@ class Session(object):
             self._default_session.__exit__(None, None, None)
             self._default_session = None
 
-    def run(self, fetch):
-        """Run operations of `fetch`.
+    def _wrapper(self, dag_node):
+        if self.eager():
+            return self.run(dag_node)
+        else:
+            return dag_node
 
+    def run(self, fetches, debug=False):
+        """Run operations of `fetch`.
         Args:
             fetch: :class:`Operation`
 
@@ -690,60 +915,17 @@ class Session(object):
         Returns:
             Different values for different output types of :class:`Operation`
         """
-
-        # prepare names to run and fetch
-        if hasattr(fetch, "op"):
-            fetch = fetch.op
-        if not isinstance(fetch, Operation):
-            raise ValueError("Expect a `Operation`")
-        if fetch.output is not None:
-            raise ValueError("The op <%s> are evaluated duplicated." % fetch.key)
-
-        # convert to list to be compatible with rpc client method signature
-        fetch_ops = [fetch]
-
-        dag = op_def_pb2.DagDef()
-        for op in fetch_ops:
-            dag.op.extend([copy.deepcopy(op.as_op_def())])
-
         if self._closed:
             raise RuntimeError("Attempted to use a closed Session.")
-
         if not self._grpc_client:
             raise RuntimeError("Session disconnected.")
-
-        # execute the query
+        fetch_handler = _FetchHandler(self.dag, fetches)
         try:
-            response = self._grpc_client.run(dag)
+            response = self._grpc_client.run(fetch_handler.targets)
         except FatalError:
             self.close()
             raise
-        check_argument(
-            len(fetch_ops) == 1, "Cannot execute multiple ops at the same time"
-        )
-        return self._parse_value(fetch_ops[0], response)
-
-    def _parse_value(self, op, response: message_pb2.RunStepResponse):
-        # attach an output to op, indicating the op is already run.
-        op.set_output(response.metrics)
-
-        # if loads a arrow property graph, will return {'object_id': xxxx}
-        if op.output_types == types_pb2.GRAPH:
-            return response.graph_def
-        if op.output_types == types_pb2.APP:
-            return response.result.decode("utf-8")
-        if op.output_types in (
-            types_pb2.RESULTS,
-            types_pb2.VINEYARD_TENSOR,
-            types_pb2.VINEYARD_DATAFRAME,
-        ):
-            return response.result.decode("utf-8")
-        if op.output_types in (types_pb2.TENSOR, types_pb2.DATAFRAME):
-            return response.result
-        else:
-            raise InvalidArgumentError(
-                "Not recognized output type: %s" % op.output_types
-            )
+        return fetch_handler.wrapper_results(response)
 
     def _connect(self):
         if self._config_params["addr"] is not None:
@@ -820,7 +1002,9 @@ class Session(object):
         return self._config_params
 
     def g(self, incoming_data=None, oid_type="int64", directed=True, generate_eid=True):
-        return Graph(self, incoming_data, oid_type, directed, generate_eid)
+        return self._wrapper(
+            GraphDAGNode(self, incoming_data, oid_type, directed, generate_eid)
+        )
 
     def load_from(self, *args, **kwargs):
         """Load a graph within the session.
@@ -834,163 +1018,48 @@ class Session(object):
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""
 
-    def _get_gl_handle(self, graph):
-        """Dump a handler for GraphLearn for interaction.
-
-        Fields in :code:`schema` are:
-
-        + the name of node type or edge type
-        + whether the graph is weighted graph
-        + whether the graph is labeled graph
-        + the number of int attributes
-        + the number of float attributes
-        + the number of string attributes
-
-        An example of the graph handle:
-
-        .. code:: python
-
-            {
-                "server": "127.0.0.1:8888,127.0.0.1:8889",
-                "client_count": 1,
-                "vineyard_socket": "/var/run/vineyard.sock",
-                "vineyard_id": 13278328736,
-                "node_schema": [
-                    "user:false:false:10:0:0",
-                    "item:true:false:0:0:5"
-                ],
-                "edge_schema": [
-                    "user:click:item:true:false:0:0:0",
-                    "user:buy:item:true:true:0:0:0",
-                    "item:similar:item:false:false:10:0:0"
-                ],
-                "node_attribute_types": {
-                    "person": {
-                        "age": "i",
-                        "name": "s",
-                    },
-                },
-                "edge_attribute_types": {
-                    "knows": {
-                        "weight": "f",
-                    },
-                },
-            }
-
-        The handle can be decoded using:
-
-        .. code:: python
-
-           base64.b64decode(handle.encode('ascii')).decode('ascii')
-
-        Note that the ports are selected from a range :code:`(8000, 9000)`.
-
-        Args:
-            graph (:class:`Graph`): A Property Graph.
-            client_number (int): Number of client.
-
-        Returns:
-            str: Base64 encoded handle
-
-        Raises:
-            InvalidArgumentError: If the graph is not loaded, or graph_type isn't
-                `ARROW_PROPERTY`.
-        """
-
-        if not graph.loaded():
-            raise InvalidArgumentError("The graph has already been unloaded")
-        if not graph.graph_type == types_pb2.ARROW_PROPERTY:
-            raise InvalidArgumentError("The graph should be a property graph.")
-
-        def group_property_types(props):
-            weighted, labeled, i, f, s, attr_types = "false", "false", 0, 0, 0, {}
-            for prop in props:
-                if prop.type in [types_pb2.STRING]:
-                    s += 1
-                    attr_types[prop.name] = "s"
-                elif prop.type in (types_pb2.FLOAT, types_pb2.DOUBLE):
-                    f += 1
-                    attr_types[prop.name] = "f"
-                else:
-                    i += 1
-                    attr_types[prop.name] = "i"
-                if prop.name == "weight":
-                    weighted = "true"
-                elif prop.name == "label":
-                    labeled = "true"
-            return weighted, labeled, i, f, s, attr_types
-
-        node_schema, node_attribute_types = [], dict()
-        for label in graph.schema.vertex_labels:
-            weighted, labeled, i, f, s, attr_types = group_property_types(
-                graph.schema.get_vertex_properties(label)
-            )
-            node_schema.append(
-                "{}:{}:{}:{}:{}:{}".format(label, weighted, labeled, i, f, s)
-            )
-            node_attribute_types[label] = attr_types
-
-        edge_schema, edge_attribute_types = [], dict()
-        for label in graph.schema.edge_labels:
-            weighted, labeled, i, f, s, attr_types = group_property_types(
-                graph.schema.get_edge_properties(label)
-            )
-            for rel in graph.schema.get_relationships(label):
-                edge_schema.append(
-                    "{}:{}:{}:{}:{}:{}:{}:{}".format(
-                        rel[0], label, rel[1], weighted, labeled, i, f, s
-                    )
-                )
-            edge_attribute_types[label] = attr_types
-
-        handle = {
-            "hosts": self.info["engine_hosts"],
-            "client_count": 1,
-            "vineyard_id": graph.vineyard_id,
-            "vineyard_socket": self._engine_config["vineyard_socket"],
-            "node_schema": node_schema,
-            "edge_schema": edge_schema,
-            "node_attribute_types": node_attribute_types,
-            "edge_attribute_types": edge_attribute_types,
-        }
-        handle_json_string = json.dumps(handle)
-        return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")
-
     @set_defaults(gs_config)
     def gremlin(self, graph, engine_params=None):
         """Get a interactive engine handler to execute gremlin queries.
 
-        Note that this method will be executed implicitly when a property graph created
-        and cache a instance of InteractiveQuery in session if `initializing_interactive_engine`
-        is True. If you want to create a new instance under the same graph by different params,
-        you should close the instance first.
+        It will return a instance of :class:`graphscope.interactive.query.InteractiveQueryDAGNode`,
+        that will be evaluated by :method:`sess.run` in eager mode.
+
+        Note that this method will be executed implicitly in eager mode when a property graph created
+        and cache a instance of InteractiveQuery in session if `initializing_interactive_engine` is True.
+        If you want to create a new instance under the same graph by different params, you should close
+        the instance first.
 
         .. code:: python
 
-            >>> # close and recreate InteractiveQuery.
+            >>> # close and recreate InteractiveQuery in eager mode.
             >>> interactive_query = sess.gremlin(g)
             >>> interactive_query.close()
             >>> interactive_query = sess.gremlin(g, engine_params={"xxx":"xxx"})
 
-
         Args:
-            graph (:class:`Graph`): Use the graph to create interactive instance.
+            graph (:class:`graphscope.framework.graph.GraphDAGNode`):
+                The graph to create interactive instance.
             engine_params (dict, optional): Configure startup parameters of interactive engine.
                 You can also configure this param by `graphscope.set_option(engine_params={})`.
                 See a list of configurable keys in
                 `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`
 
         Raises:
-            InvalidArgumentError: :code:`graph` is not a property graph or unloaded.
+            InvalidArgumentError:
+                - :code:`graph` is not a property graph.
+                - :code:`graph` is unloaded in eager mode.
 
         Returns:
-            :class:`InteractiveQuery`
+            :class:`graphscope.interactive.query.InteractiveQueryDAGNode`:
+                InteractiveQuery to execute gremlin queries, evaluated in eager mode.
         """
 
-        # self._interactive_instance_dict[graph.vineyard_id] will be None if
-        # InteractiveQuery closed
+        # Interactive query instance won't add to self._interactive_instance_dict in lazy mode.
+        # self._interactive_instance_dict[graph.vineyard_id] will be None if InteractiveQuery closed
         if (
-            graph.vineyard_id in self._interactive_instance_dict
+            self.eager()
+            and graph.vineyard_id in self._interactive_instance_dict
             and self._interactive_instance_dict[graph.vineyard_id] is not None
         ):
             interactive_query = self._interactive_instance_dict[graph.vineyard_id]
@@ -1010,41 +1079,30 @@ class Session(object):
                             interactive_query.error_msg
                         )
 
-        if not graph.loaded():
-            raise InvalidArgumentError("The graph has already been unloaded")
-        if not graph.graph_type == types_pb2.ARROW_PROPERTY:
+        if not graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
 
-        interactive_query = InteractiveQuery(session=self, object_id=graph.vineyard_id)
-        self._interactive_instance_dict[graph.vineyard_id] = interactive_query
-
-        if engine_params is not None:
-            engine_params = {
-                str(key): str(value) for key, value in engine_params.items()
-            }
-        else:
-            engine_params = {}
+        if self.eager():
+            if not graph.loaded():
+                raise InvalidArgumentError("The graph has already been unloaded")
+            # cache the instance of interactive query in eager mode
+            interactive_query = InteractiveQuery()
+            self._interactive_instance_dict[graph.vineyard_id] = interactive_query
 
         try:
-            response = self._grpc_client.create_interactive_engine(
-                object_id=graph.vineyard_id,
-                schema_path=graph.schema_path,
-                gremlin_server_cpu=gs_config.k8s_gie_gremlin_server_cpu,
-                gremlin_server_mem=gs_config.k8s_gie_gremlin_server_mem,
-                engine_params=engine_params,
+            _wrapper = self._wrapper(
+                InteractiveQueryDAGNode(self, graph, engine_params)
             )
         except Exception as e:
-            interactive_query.status = InteractiveQueryStatus.Failed
-            interactive_query.error_msg = str(e)
+            if self.eager():
+                interactive_query.status = InteractiveQueryStatus.Failed
+                interactive_query.error_msg = str(e)
             raise InteractiveEngineInternalError(str(e)) from e
         else:
-            interactive_query.set_frontend(
-                front_ip=response.frontend_host, front_port=response.frontend_port
-            )
-            interactive_query.status = InteractiveQueryStatus.Running
-            graph._attach_interactive_instance(interactive_query)
-
-        return interactive_query
+            if self.eager():
+                interactive_query = _wrapper
+                graph._attach_interactive_instance(interactive_query)
+        return _wrapper
 
     def learning(self, graph, nodes=None, edges=None, gen_labels=None):
         """Start a graph learning engine.
@@ -1055,11 +1113,12 @@ class Session(object):
             gen_labels (list): Extra node and edge labels on original graph for gnn training.
 
         Returns:
-            `graphscope.learning.Graph`: An instance of `graphscope.learning.Graph`
-                that could be feed to the learning engine.
+            :class:`graphscope.learning.GraphDAGNode`:
+                An instance of learning graph that could be feed to the learning engine, evaluated in eager node.
         """
         if (
-            graph.vineyard_id in self._learning_instance_dict
+            self.eager()
+            and graph.vineyard_id in self._learning_instance_dict
             and self._learning_instance_dict[graph.vineyard_id] is not None
         ):
             return self._learning_instance_dict[graph.vineyard_id]
@@ -1070,28 +1129,45 @@ class Session(object):
                 % sys.platform
             )
 
-        if not graph.loaded():
-            raise InvalidArgumentError("The graph has already been unloaded")
-        if not graph.graph_type == types_pb2.ARROW_PROPERTY:
+        if not graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
             raise InvalidArgumentError("The graph should be a property graph.")
 
-        from graphscope.learning.graph import Graph as LearningGraph
+        if self.eager():
+            if not graph.loaded():
+                raise InvalidArgumentError("The graph has already been unloaded")
 
-        handle = self._get_gl_handle(graph)
-        config = LearningGraph.preprocess_args(handle, nodes, edges, gen_labels)
-        config = base64.b64encode(json.dumps(config).encode("utf-8")).decode("utf-8")
-        endpoints = self._grpc_client.create_learning_engine(
-            graph.vineyard_id, handle, config
+        from graphscope.learning.graph import GraphDAGNode as LearningGraphDAGNode
+
+        _wrapper = self._wrapper(
+            LearningGraphDAGNode(self, graph, nodes, edges, gen_labels)
         )
+        if self.eager():
+            self._learning_instance_dict[graph.vineyard_id] = _wrapper
+            graph._attach_learning_instance(_wrapper)
+        return _wrapper
 
-        handle = json.loads(base64.b64decode(handle.encode("utf-8")).decode("utf-8"))
-        handle["server"] = endpoints
-        handle["client_count"] = 1
+    def nx(self):
+        if not self.eager():
+            raise RuntimeError(
+                "Networkx module need session to be eager mode. "
+                "The session is lazy mode."
+            )
+        if self._nx:
+            return self._nx
+        import importlib.util
 
-        learning_graph = LearningGraph(handle, config, graph.vineyard_id, self)
-        self._learning_instance_dict[graph.vineyard_id] = learning_graph
-        graph._attach_learning_instance(learning_graph)
-        return learning_graph
+        spec = importlib.util.find_spec("graphscope.nx")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        graph = type("Graph", (mod.Graph.__base__,), dict(mod.Graph.__dict__))
+        digraph = type("DiGraph", (mod.DiGraph.__base__,), dict(mod.DiGraph.__dict__))
+        setattr(graph, "_session", self)
+        setattr(digraph, "_session", self)
+        setattr(mod, "Graph", graph)
+        setattr(mod, "DiGraph", digraph)
+        self._nx = mod
+        return self._nx
 
 
 session = Session
@@ -1125,6 +1201,7 @@ def set_option(**kwargs):
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
         - with_mars
+        - enable_gaia
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
@@ -1178,6 +1255,7 @@ def get_option(key):
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
         - with_mars
+        - enable_gaia
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
@@ -1232,7 +1310,7 @@ def get_default_session():
 def get_session_by_id(handle):
     """Return the session by handle."""
     if handle not in _session_dict:
-        raise ValueError("Session not exists.")
+        raise ValueError("Session {} not exists.".format(handle))
     return _session_dict.get(handle)
 
 

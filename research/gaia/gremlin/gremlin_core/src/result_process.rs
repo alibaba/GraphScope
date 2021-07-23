@@ -22,40 +22,36 @@ use crate::process::traversal::step::result_downcast::{
 };
 use crate::process::traversal::step::ResultProperty;
 use crate::process::traversal::traverser::Traverser;
-use crate::structure::{Edge, GraphElement, Label, Vertex, VertexOrEdge};
+use crate::structure::{Edge, GraphElement, Label, PropKey, Vertex, VertexOrEdge};
 use dyn_type::object::{Object, Primitives};
 
-fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
-    result_pb::Vertex {
-        id: v.id as i64,
-        label: if let Some(label) = v.label.clone() {
-            match label {
-                Label::Str(s) => s,
-                // TODO(longbin) should turn back to its actual string
-                Label::Id(id) => id.to_string(),
+fn label_to_pb(label: Option<&Label>) -> Option<result_pb::Label> {
+    label.map(|lab|
+        match lab {
+            // we will only pass label by id for current storages
+            Label::Str(_) => {
+                unreachable!()
             }
-        } else {
-            String::new()
-        },
-        properties: vec![],
-    }
+            Label::Id(label_id) => {
+                result_pb::Label{ item: Some(result_pb::label::Item::NameId(*label_id as i32)) }
+
+            }
+        }
+    )
 }
+
+fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
+    result_pb::Vertex { id: v.id as i64, label: label_to_pb(v.label.as_ref()), properties: vec![] }
+}
+
 fn edge_to_pb(e: &Edge) -> result_pb::Edge {
     result_pb::Edge {
         id: e.id.to_string(),
-        label: if let Some(label) = e.label.clone() {
-            match label {
-                Label::Str(s) => s,
-                // TODO(longbin) should turn back to its actual string
-                Label::Id(id) => id.to_string(),
-            }
-        } else {
-            String::new()
-        },
+        label: label_to_pb(e.label.as_ref()),
         src_id: e.src_id as i64,
-        src_label: "".to_string(),
+        src_label: label_to_pb(e.get_src_label()),
         dst_id: e.dst_id as i64,
-        dst_label: "".to_string(),
+        dst_label: label_to_pb(e.get_dst_label()),
         properties: vec![],
     }
 }
@@ -95,8 +91,21 @@ fn property_to_pb(result_property: &ResultProperty) -> result_pb::TagEntries {
             let mut props_pb = vec![];
             for (prop_name, prop_val) in value_map {
                 let pb_value = object_to_pb_value(prop_val);
-                let property =
-                    result_pb::Property { key: prop_name.to_string(), value: Some(pb_value) };
+                let property = match prop_name {
+                    PropKey::Str(prop_name) => result_pb::Property {
+                        key: Some(common_pb::PropertyKey {
+                            item: Some(common_pb::property_key::Item::Name(prop_name.to_string())),
+                        }),
+                        value: Some(pb_value),
+                    },
+                    PropKey::Id(prop_id) => result_pb::Property {
+                        key: Some(common_pb::PropertyKey {
+                            item: Some(common_pb::property_key::Item::NameId(*prop_id as i32)),
+                        }),
+                        value: Some(pb_value),
+                    },
+                };
+
                 props_pb.push(property);
             }
             OneTagValue {

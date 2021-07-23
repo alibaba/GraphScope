@@ -214,6 +214,17 @@ def replace_module_context(  # noqa: C901
                 continue
 
             if inspect.isclass(var):
+                # special case for `argmap`: `copy_class` cannot handle complex
+                # arguments properly.
+                #
+                # see also: https://github.com/alibaba/GraphScope/pull/507
+                if var.__name__ == "argmap":
+                    global_ctx[var_name] = var
+                    setattr(module, var_name, var)
+                    if expand:
+                        setattr(mod, var_name, var)
+                    continue
+
                 target_class = copy_class(var)
                 for dec in decorators:
                     target_class = dec(target_class)

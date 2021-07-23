@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,8 +23,7 @@ use pegasus::{Configuration, JobConf};
 fn binary_test_01() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(7, "binary_test_01", 1);
-
+    let conf = JobConf::new("binary_test_01");
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {
         let tx = tx.clone();
@@ -72,7 +71,7 @@ fn binary_test_01() {
 fn binary_test_02() {
     pegasus_common::logs::init_log();
     pegasus::startup(Configuration::singleton()).ok();
-    let conf = JobConf::new(8, "binary_test_02", 2);
+    let conf = JobConf::with_id(8, "binary_test_02", 2);
 
     let (tx, rx) = crossbeam_channel::unbounded();
     let _guard = pegasus::run(conf, |worker| {

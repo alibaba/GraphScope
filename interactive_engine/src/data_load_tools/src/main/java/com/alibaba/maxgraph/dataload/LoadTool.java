@@ -18,7 +18,7 @@ public class LoadTool {
                 .longOpt("dir")
                 .hasArg()
                 .argName("HDFS_PATH")
-                .desc("data directory of HDFS. e.g., hdfs://127.0.0.1:8000/build_output")
+                .desc("data directory of HDFS. e.g., hdfs://1.2.3.4:9000/build_output")
                 .build());
         options.addOption(Option.builder("h")
                 .longOpt("help")

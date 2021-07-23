@@ -29,7 +29,6 @@ import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
 import com.alibaba.maxgraph.v2.common.frontend.api.graph.GraphPartitionManager;
 import com.alibaba.maxgraph.v2.common.frontend.api.graph.MaxGraphWriter;
-import com.alibaba.maxgraph.v2.common.frontend.cache.MaxGraphCache;
 import com.alibaba.maxgraph.v2.common.frontend.remote.RemoteGraphPartitionManager;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsAggregator;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectClient;
@@ -43,6 +42,9 @@ import com.alibaba.maxgraph.v2.common.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.v2.common.util.CuratorUtils;
 import com.alibaba.maxgraph.v2.frontend.*;
 import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
+import com.alibaba.maxgraph.v2.frontend.write.DefaultEdgeIdGenerator;
+import com.alibaba.maxgraph.v2.frontend.write.EdgeIdGenerator;
+import com.alibaba.maxgraph.v2.frontend.write.GraphWriter;
 import io.grpc.NameResolver;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -54,7 +56,6 @@ public class Frontend extends NodeBase {
     private NodeDiscovery discovery;
     private ChannelManager channelManager;
     private MetaService metaService;
-    private RealtimeWriter realtimeWriter;
     private RpcServer rpcServer;
     private MaxGraphServer maxGraphServer;
 
@@ -75,7 +76,7 @@ public class Frontend extends NodeBase {
         MetricsCollector metricsCollector = new MetricsCollector(configs);
         RoleClients<IngestorWriteClient> ingestorWriteClients = new RoleClients<>(this.channelManager,
                 RoleType.INGESTOR, IngestorWriteClient::new);
-        this.realtimeWriter = new RealtimeWriter(this.metaService, snapshotCache, ingestorWriteClients,
+        RealtimeWriter realtimeWriter = new RealtimeWriter(this.metaService, snapshotCache, ingestorWriteClients,
                 metricsCollector);
         FrontendSnapshotService frontendSnapshotService = new FrontendSnapshotService(snapshotCache);
         RoleClients<MetricsCollectClient> frontendMetricsCollectClients = new RoleClients<>(this.channelManager,
@@ -90,23 +91,24 @@ public class Frontend extends NodeBase {
                 RoleType.EXECUTOR_GRAPH, QueryStoreRpcClient::new);
         SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
                 RoleType.COORDINATOR, SchemaClient::new));
-        MaxGraphWriter writer = new MaxGraphWriterImpl(this.realtimeWriter, schemaWriter, new DdlExecutors(),
+        DdlExecutors ddlExecutors = new DdlExecutors();
+        MaxGraphWriter writer = new MaxGraphWriterImpl(realtimeWriter, schemaWriter, ddlExecutors,
                 snapshotCache, "schema", false, null);
-        ClientService clientService = new ClientService(this.realtimeWriter, snapshotCache, metricsAggregator,
+        ClientService clientService = new ClientService(realtimeWriter, snapshotCache, metricsAggregator,
                 storeIngestClients, this.metaService, queryStoreClients, writer);
-        ClientDdlService clientDdlService = new ClientDdlService(schemaWriter, snapshotCache);
+        ClientDdlService clientDdlService = new ClientDdlService(schemaWriter, snapshotCache, ddlExecutors);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
-
+        WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
+        EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);
+        GraphWriter graphWriter = new GraphWriter(snapshotCache, edgeIdGenerator, this.metaService,
+                ingestorWriteClients);
+        ClientWriteService clientWriteService = new ClientWriteService(writeSessionGenerator, graphWriter);
         this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
-                metricsCollectService, clientDdlService);
-        int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
+                metricsCollectService, clientDdlService, clientWriteService);
         GraphPartitionManager partitionManager = new RemoteGraphPartitionManager(this.metaService);
         WrappedSchemaFetcher wrappedSchemaFetcher = new WrappedSchemaFetcher(snapshotCache, metaService);
-
-        MaxGraphWriter graphWriter = new MaxGraphWriterImpl(realtimeWriter, null, null,
-                snapshotCache, "data", false, new MaxGraphCache());
         MaxGraphImpl maxGraphImpl = new MaxGraphImpl(this.discovery, wrappedSchemaFetcher, partitionManager,
-                graphWriter);
+                graphWriter, writeSessionGenerator);
         TinkerMaxGraph graph = new TinkerMaxGraph(new InstanceConfig(configs.getInnerProperties()), maxGraphImpl,
                 new DefaultGraphDfs());
         this.maxGraphServer = new ReadOnlyMaxGraphServer(configs, graph, wrappedSchemaFetcher,

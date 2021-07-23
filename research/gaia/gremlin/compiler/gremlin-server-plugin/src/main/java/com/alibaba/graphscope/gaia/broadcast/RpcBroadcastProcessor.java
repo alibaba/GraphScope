@@ -15,37 +15,25 @@
  */
 package com.alibaba.graphscope.gaia.broadcast;
 
-import com.alibaba.pegasus.RpcChannel;
-import com.alibaba.pegasus.RpcClient;
+import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.pegasus.intf.CloseableIterator;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import io.grpc.Status;
-import org.apache.tinkerpop.gremlin.server.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class RpcBroadcastProcessor extends AbstractBroadcastProcessor {
     private static final Logger logger = LoggerFactory.getLogger(RpcBroadcastProcessor.class);
-    private RpcClient rpcClient;
 
-    public RpcBroadcastProcessor(List<String> hosts) {
-        super(hosts);
-        List<RpcChannel> rpcChannels = new ArrayList<>();
-        hostAddresses.forEach(k -> {
-            String host = k.getLeft();
-            int port = k.getRight();
-            rpcChannels.add(new RpcChannel(host, port));
-        });
-        rpcClient = new RpcClient(rpcChannels);
+    public RpcBroadcastProcessor(RpcChannelFetcher fetcher) {
+        super(fetcher);
     }
 
     @Override
-    public void broadcast(PegasusClient.JobRequest request, Context writeResult, ResultProcessor processor) {
+    public void broadcast(PegasusClient.JobRequest request, ResultProcessor processor) {
         CloseableIterator<PegasusClient.JobResponse> iterator = null;
         // ResultProcessor processor = new GremlinResultProcessor(writeResult);
         try {

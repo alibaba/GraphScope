@@ -21,10 +21,10 @@ mod property;
 use crate::generated::gremlin as pb;
 use crate::structure::codec::ParseError;
 use crate::FromPb;
-pub use element::{Edge, Element, GraphElement, Label, Vertex, VertexOrEdge, ID, ID_BITS};
+pub use element::{Edge, Element, GraphElement, Label, LabelId, Vertex, VertexOrEdge, ID, ID_BITS};
 pub use filter::*;
 pub use graph::*;
-pub use property::{DefaultDetails, Details, DynDetails, Token};
+pub use property::{DefaultDetails, Details, DynDetails, PropId, PropKey, Token};
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Direction {

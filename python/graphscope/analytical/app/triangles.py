@@ -33,7 +33,8 @@ def triangles(graph):
         graph (:class:`Graph`): A projected simple graph.
 
     Returns:
-        :class:`VertexDataContext`: A context with each vertex assigned with the triangle counting result.
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with the triangle counting result, evaluated in eager mode.
 
     Examples:
 
@@ -47,4 +48,4 @@ def triangles(graph):
         s.close()
 
     """
-    return AppAssets(algo="triangles")(graph)
+    return AppAssets(algo="triangles", context="vertex_data")(graph)

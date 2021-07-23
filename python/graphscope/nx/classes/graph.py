@@ -45,10 +45,20 @@ from graphscope.nx.convert import to_nx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.other import empty_graph_in_engine
 from graphscope.nx.utils.other import parse_ret_as_dict
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
-class Graph(object):
+class _GraphBase(object):
+    """
+    Base class for networkx module.
+    This is an empty class use to classify networkx graph.
+    """
+
+    pass
+
+
+class Graph(_GraphBase):
     """
     Base class for undirected graphs in graphscope.nx.
 
@@ -200,7 +210,7 @@ class Graph(object):
     node_dict_factory = NodeDict
     adjlist_dict_factory = AdjDict
     graph_attr_dict_factory = dict
-    _graph_type = types_pb2.DYNAMIC_PROPERTY
+    _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
 
     def __init__(self, incoming_graph_data=None, **attr):
         """Initialize a graph with edges, name, or graph attributes
@@ -246,6 +256,9 @@ class Graph(object):
         >>> G = nx.Graph(g) # or DiGraph
 
         """
+        if self._session is None:
+            self._try_to_get_default_session()
+
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
         self.adjlist_dict_factory = self.adjlist_dict_factory
@@ -255,7 +268,6 @@ class Graph(object):
 
         self._key = None
         self._op = None
-        self._session_id = None
         self._schema = GraphSchema()
         self._schema.init_nx_schema()
 
@@ -263,18 +275,6 @@ class Graph(object):
             "create_empty_in_engine", True
         )  # a hidden parameter
         self._distributed = attr.pop("dist", False)
-
-        if self._is_gs_graph(incoming_graph_data):
-            self._session_id = incoming_graph_data.session_id
-        elif create_empty_in_engine:
-            sess = get_default_session()
-            if sess is None:
-                raise ValueError(
-                    "Cannot find a default session. "
-                    "Please register a session using graphscope.session(...).as_default()"
-                )
-            self._session_id = sess.session_id
-
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(
                 self, self.is_directed(), self._distributed
@@ -298,8 +298,23 @@ class Graph(object):
     def _is_gs_graph(self, incoming_graph_data):
         return (
             hasattr(incoming_graph_data, "graph_type")
-            and incoming_graph_data.graph_type == types_pb2.ARROW_PROPERTY
+            and incoming_graph_data.graph_type == graph_def_pb2.ARROW_PROPERTY
         )
+
+    def _try_to_get_default_session(self):
+        try:
+            session = get_default_session()
+        except RuntimeError:
+            raise RuntimeError(
+                "The nx binding session is None, that maybe no default session found. "
+                "Please register a session as default session."
+            )
+        if not session.eager():
+            raise RuntimeError(
+                "Networkx module need session to be eager mode. "
+                "The default session is lazy mode."
+            )
+        self._session = session
 
     @patch_docstring(RefGraph.to_directed_class)
     def to_directed_class(self):
@@ -315,6 +330,19 @@ class Graph(object):
         return self._op
 
     @property
+    def session(self):
+        """Get the currrent session.
+
+        Returns:
+            Return session that the graph belongs to.
+        """
+        if hasattr(self, "_graph") and self._is_client_view:
+            return (
+                self._graph.session
+            )  # this graph is a client side graph view, use host graph session
+        return self._session
+
+    @property
     def session_id(self):
         """Get the currrent session_id.
 
@@ -325,7 +353,7 @@ class Graph(object):
             return (
                 self._graph.session_id
             )  # this graph is a client side graph view, use host graph session_id
-        return self._session_id
+        return self._session.session_id
 
     @property
     def key(self):
@@ -349,9 +377,9 @@ class Graph(object):
     def template_str(self):
         if self._key is None:
             raise RuntimeError("graph should be registered in remote.")
-        if self._graph_type == types_pb2.DYNAMIC_PROPERTY:
+        if self._graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
             return "gs::DynamicFragment"
-        elif self._graph_type == types_pb2.DYNAMIC_PROJECTED:
+        elif self._graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
             edata_type = utils.data_type_to_cpp(self._schema.edata_type)
             return f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
@@ -1513,7 +1541,7 @@ class Graph(object):
             graph_def = op.eval()
             g._key = graph_def.key
             g._schema = copy.deepcopy(self._schema)
-        g._session_id = self._session_id
+        g._session = self._session
         return g
 
     def to_undirected(self, as_view=False):
@@ -1557,9 +1585,9 @@ class Graph(object):
                 op = dag_utils.create_graph_view(self, "undirected")
                 graph_def = op.eval()
                 g._key = graph_def.key
-                g._session_id = self._session_id
                 g._schema = copy.deepcopy(self._schema)
                 g._graph = self
+                g._session = self._session
                 g._is_client_view = False
                 g = freeze(g)
                 return g
@@ -1568,7 +1596,7 @@ class Graph(object):
             op = dag_utils.to_undirected(self)
             graph_def = op.eval()
             g._key = graph_def.key
-            g._session_id = self._session_id
+            g._session = self._session
             g._schema = copy.deepcopy(self._schema)
             return g
         else:
@@ -1621,9 +1649,9 @@ class Graph(object):
                 op = dag_utils.create_graph_view(self, "directed")
                 graph_def = op.eval()
                 g._key = graph_def.key
-                g._session_id = self._session_id
                 g._schema = copy.deepcopy(self._schema)
                 g._graph = self
+                g._session = self._session
                 g._is_client_view = False
                 g = freeze(g)
                 return g
@@ -1632,7 +1660,7 @@ class Graph(object):
             op = dag_utils.to_directed(self)
             graph_def = op.eval()
             g._key = graph_def.key
-            g._session_id = self._session_id
+            g._session = self._session
             g._schema = copy.deepcopy(self._schema)
             return g
 
@@ -1671,7 +1699,7 @@ class Graph(object):
         op = dag_utils.create_subgraph(self, nodes=induced_nodes)
         graph_def = op.eval()
         g._key = graph_def.key
-        g._session_id = self._session_id
+        g._session = self._session
         g._schema = copy.deepcopy(self._schema)
         return g
 
@@ -1715,8 +1743,9 @@ class Graph(object):
         op = dag_utils.create_subgraph(self, edges=induced_edges)
         graph_def = op.eval()
         g._key = graph_def.key
-        g._session_id = self._session_id
+        g._session = self._session
         g._schema = copy.deepcopy(self._schema)
+        g._op = op
         return g
 
     def _is_view(self):
@@ -1784,7 +1813,8 @@ class Graph(object):
         if n not in self:
             raise NetworkXError("The node %s is not in the graph." % (n,))
         op = dag_utils.report_graph(self, report_type, node=json.dumps([n]))
-        return op.eval()
+        ret = op.eval()
+        return ret
 
     def _batch_get_nbrs(self, location, report_type=types_pb2.SUCCS_BY_LOC):
         """Get neighbors of nodes by location in batch.
@@ -1916,7 +1946,7 @@ class Graph(object):
 
         if v_prop is None:
             v_prop = str(v_prop)
-            v_prop_type = types_pb2.NULLVALUE
+            v_prop_type = graph_def_pb2.NULLVALUE
         else:
             check_argument(isinstance(v_prop, str))
             v_label = self._schema.vertex_labels[0]
@@ -1932,7 +1962,7 @@ class Graph(object):
 
         if e_prop is None:
             e_prop = str(e_prop)
-            e_prop_type = types_pb2.NULLVALUE
+            e_prop_type = graph_def_pb2.NULLVALUE
         else:
             check_argument(isinstance(e_prop, str))
             e_label = self._schema.edge_labels[0]
@@ -1946,12 +1976,15 @@ class Graph(object):
         op = dag_utils.project_dynamic_property_graph(
             self, v_prop, e_prop, v_prop_type, e_prop_type
         )
-        graph_def = op.eval()
+        graph_def = op.eval(leaf=False)
         graph = self.__class__(create_empty_in_engine=False)
         graph = nx.freeze(graph)
-        graph._graph_type = types_pb2.DYNAMIC_PROJECTED
+        graph._graph_type = graph_def_pb2.DYNAMIC_PROJECTED
         graph._key = graph_def.key
-        graph._session_id = self._session_id
-        graph.schema.get_schema_from_def(graph_def.schema_def)
+        graph._session = self._session
+        graph.schema.from_graph_def(graph_def)
         graph._saved_signature = self._saved_signature
+        graph._graph = self  # projected graph also can report nodes.
+        graph._op = op
+        graph._is_client_view = False
         return graph

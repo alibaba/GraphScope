@@ -17,6 +17,7 @@
 #
 
 import inspect
+import pickle
 
 from graphscope.proto import error_codes_pb2
 from graphscope.proto import op_def_pb2
@@ -36,6 +37,7 @@ __all__ = [
     "AnalyticalEngineInternalError",
     "InteractiveEngineInternalError",
     "LearningEngineInternalError",
+    "CoordinatorInternalError",
     "NetworkError",
     "K8sError",
     "UnknownError",
@@ -112,6 +114,10 @@ class LearningEngineInternalError(GSError):
     pass
 
 
+class CoordinatorInternalError(GSError):
+    pass
+
+
 class NetworkError(GSError):
     pass
 
@@ -151,7 +157,8 @@ _gs_error_types = {
     error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR: AnalyticalEngineInternalError,
     error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR: InteractiveEngineInternalError,
     error_codes_pb2.LEARNING_ENGINE_INTERNAL_ERROR: LearningEngineInternalError,
-    error_codes_pb2.UNKNOWN: UnknownError,
+    error_codes_pb2.COORDINATOR_INTERNAL_ERROR: CoordinatorInternalError,
+    error_codes_pb2.UNKNOWN_ERROR: UnknownError,
     error_codes_pb2.FATAL_ERROR: FatalError,
 }
 
@@ -168,6 +175,9 @@ def check_grpc_response(response):
 
     error_type = _gs_error_types.get(status.code)
     if error_type:
+        if error_type == CoordinatorInternalError:
+            e = pickle.loads(detail)
+            raise (e)
         raise error_type(status.error_msg, detail)
     else:
         raise RuntimeError(

@@ -15,10 +15,13 @@
  */
 package com.alibaba.graphscope.gaia.plan;
 
+import com.alibaba.graphscope.common.proto.Common;
 import com.alibaba.graphscope.common.proto.Gremlin;
-import com.alibaba.graphscope.gaia.GlobalEngineConf;
 import com.alibaba.graphscope.gaia.JsonUtils;
+import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
+import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
@@ -29,6 +32,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.util.JsonFormat;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
@@ -37,7 +41,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ComparatorHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceEdge;
 import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceVertex;
@@ -52,6 +55,7 @@ import java.lang.reflect.Modifier;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PlanUtils {
     private static final Logger logger = LoggerFactory.getLogger(PlanUtils.class);
@@ -75,34 +79,15 @@ public class PlanUtils {
         return resultIds;
     }
 
-    public static PegasusClient.JobConfig getDefaultConfig(long queryId) {
+    public static PegasusClient.JobConfig getDefaultConfig(long queryId, GaiaConfig config) {
         try {
-            String queryName = "demo_query_" + queryId;
-            // read engine default config
-            Map<String, Object> jobConfig = GlobalEngineConf.getDefaultSysConf();
-            Graph.Variables variables = GlobalEngineConf.getGlobalVariables();
-            if (variables != null) {
-                // update config if set in global variables
-                jobConfig.forEach((k, v) -> {
-                    Optional value = variables.get(k);
-                    if (value.isPresent()) {
-                        jobConfig.put(k, value.get());
-                    }
-                });
-            }
-            long hosts = ((List) jobConfig.get("hosts")).size();
-            List<Long> servers = new ArrayList<>();
-            for (long i = 0; i < hosts; ++i) {
-                servers.add(i);
-            }
-            long pegasusTimeOut = (Integer) jobConfig.get("time_limit");
-            logger.debug("pegasus time_limit is {} ms", pegasusTimeOut);
+            String queryName = "gaia_query_" + queryId;
             return PegasusClient.JobConfig.newBuilder()
                     .setJobId(queryId)
                     .setJobName(queryName)
-                    .setWorkers((Integer) jobConfig.get("workers"))
-                    .addAllServers(servers)
-                    .setTimeLimit(pegasusTimeOut)
+                    .setWorkers(config.getPegasusWorkerNum())
+                    .addAllServers(config.getPegasusServers())
+                    .setTimeLimit(config.getPegasusTimeout())
                     .build();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -188,8 +173,8 @@ public class PlanUtils {
             List<Object> results = new ArrayList<>();
             results.add(Collections.singletonMap("source", printGremlinStep(job.getSource())));
             job.getPlan().getPlan().forEach(k -> results.add(printOpr(k)));
-            // logger.info("{}", JsonUtils.toJson(results));
-            FileUtils.writeStringToFile(new File("plan.log"), JsonUtils.toJson(results), StandardCharsets.UTF_8, true);
+            logger.info("{}", JsonUtils.toJson(results));
+            // FileUtils.writeStringToFile(new File("plan.log"), JsonUtils.toJson(results), StandardCharsets.UTF_8, true);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -365,5 +350,41 @@ public class PlanUtils {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Gremlin.PropKeys convertFrom(ToFetchProperties toFetchProperties) {
+        Gremlin.PropKeys.Builder keysBuilder = Gremlin.PropKeys.newBuilder();
+        if (toFetchProperties.isAll()) {
+            keysBuilder.setIsAll(true);
+        } else if (toFetchProperties.getProperties() != null && !toFetchProperties.getProperties().isEmpty()) {
+            List<String> properties = toFetchProperties.getProperties();
+            if (StringUtils.isNumeric(properties.get(0))) {
+                keysBuilder.addAllPropKeys(properties.stream()
+                        .map(k -> Common.PropertyKey.newBuilder().setNameId(Integer.valueOf(k)).build())
+                        .collect(Collectors.toList()));
+            } else {
+                keysBuilder.addAllPropKeys(properties.stream()
+                        .map(k -> Common.PropertyKey.newBuilder().setName(k).build())
+                        .collect(Collectors.toList()));
+            }
+        }
+        return keysBuilder.build();
+    }
+
+    public static boolean getIsSimple(Step step) {
+        String field = "isSimple";
+        try {
+            return (boolean) FieldUtils.readField(step, field, true);
+            // return getPrivateField(step.getClass(), field);
+        } catch (Exception e) {
+            throw new RuntimeException("field " + field + " not exist in step " + step.getClass(), e);
+        }
+    }
+
+    public static String convertToPropertyId(GraphStoreService graphStore, String key) {
+        if (key.equals(T.label.getAccessor()) || key.equals(T.id.getAccessor())) {
+            return key;
+        }
+        return String.valueOf(graphStore.getPropertyId(key));
     }
 }

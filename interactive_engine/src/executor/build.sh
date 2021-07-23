@@ -9,9 +9,9 @@ if [ "$SKIP" = "true" ]; then
 fi
 
 if [ "$MODE" = "debug" ]; then
-    cargo build --all
+    ./exec.sh cargo build --all
 elif [ "$MODE" = "release" ]; then
-    cargo build --all --release
+    ./exec.sh cargo build --all --release
 else
     exit 1
 fi
@@ -23,5 +23,4 @@ else
     SUFFIX="so"
 fi
 
-ln -sf `pwd`/target/${MODE}/libmaxgraph_runtime.${SUFFIX} ./target/libmaxgraph_runtime.${SUFFIX}
-#ln -sf `pwd`/target/${MODE}/libmaxgraph_query.${SUFFIX} ./target/libmaxgraph_query.${SUFFIX}
+ln -sf `pwd`/target/${MODE}/libmaxgraph_jna.${SUFFIX} ./target/libmaxgraph_jna.${SUFFIX}

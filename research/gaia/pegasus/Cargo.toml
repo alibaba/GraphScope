@@ -6,7 +6,8 @@ members = [
     "network",
     "executor",
     "pegasus",
-    "server"
+    "server",
+    "graph"
 ]
 
 [profile.release]

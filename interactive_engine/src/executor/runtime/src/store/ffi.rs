@@ -1411,6 +1411,11 @@ impl GraphPartitionManager for VineyardPartitionManager {
         }
     }
 
+    // TODO(bingqing): check with vineyard
+    fn get_server_id(&self, _pid: u32) -> Option<u32> {
+        unimplemented!()
+    }
+
     fn get_process_partition_list(&self) -> Vec<u32> {
         let mut partition_id_list = Vec::new();
         let mut partition_count: i32 = 0;
