@@ -70,8 +70,9 @@ jobs:
         cd python
         python3 -m pytest -s -v tests/test_minimum.py
 
-        # delete etcd dir
-        rm -fr /tmp/default.etcd || true
+    - name: Setup tmate session debug
+      if: always()
+      uses: mxschmitt/action-tmate@v2
 
     - name: Upload GIE Log
       if: always()
@@ -79,7 +80,3 @@ jobs:
       with:
         name: gie-log-minimum
         path: /tmp/graphscope/
-
-    - name: Setup tmate session debug
-      if: false
-      uses: mxschmitt/action-tmate@v2
