@@ -42,6 +42,21 @@ public class MaxGraphConfig implements GaiaConfig {
     }
 
     @Override
+    public int getPegasusBatchSize() {
+        return instanceConfig.getPegasusBatchSize();
+    }
+
+    @Override
+    public int getPegasusOutputCapacity() {
+        return instanceConfig.getPegasusOutputCapacity();
+    }
+
+    @Override
+    public int getPegasusMemoryLimit() {
+        return instanceConfig.getPegasusMemoryLimit();
+    }
+
+    @Override
     public String getSchemaFilePath() {
         throw new UnsupportedOperationException();
     }
