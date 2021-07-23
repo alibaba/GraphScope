@@ -55,20 +55,46 @@ succ() {
 ##########################
 usage() {
 cat <<END
+
   A script to install dependencies of GraphScope or deploy GraphScope locally.
 
-  Usage: deploy_local [options] command
+  Usage: deploy_local [options] [command]
 
   Options:
-
-    --prefix <path>      install prefix of GraphScope, default is /usr/local
-    --verbose            ouput the debug logging information
-    -h, --help           output help information
+    -h, --help           Print help information
 
   Commands:
+    install_deps         Install the dependencies of GraphScope
+    build_and_deploy     Build and deploy GraphScope locally
 
-    install_deps         install dependencies of GraphScope
-    build_and_deploy     build and deploy GraphScope locally
+  Run 'deploy_local COMMAND --help' for more information on a command.
+END
+}
+
+install_deps_usage() {
+cat <<END
+
+  Install dependencies of GraphScope.
+
+  Usage: deploy_local install_deps [option]
+
+  Options:
+    --help              Print usage information
+    --verbose           Print the debug logging information
+END
+}
+
+build_and_deploy_usage() {
+cat <<END
+
+  Build and deploy GraphScope locally
+
+  Usage: deploy_local build_and_deploy [option]
+
+  Options:
+    --help              Print usage information
+    --verbose           Print the debug logging information
+    --prefix <path>     Install prefix of GraphScope, default is /usr/local
 END
 }
 
@@ -787,6 +813,19 @@ install_graphscope() {
 #   output log to stdout, output error to stderr.
 ##########################
 install_deps() {
+
+  # parse args for install_deps command
+  while test $# -ne 0; do
+    arg=$1; shift
+    case ${arg} in
+      --help) install_deps_usage; exit ;;
+      --verbose) VERBOSE=true; readonly VERBOSE; ;;
+      *)
+        echo "unrecognized option '${arg}'"
+        install_deps_usage; exit;;
+    esac
+  done
+
   if [[ ${VERBOSE} == true ]]; then
     set -x
   fi
@@ -820,6 +859,25 @@ install_deps() {
 #   output log to stdout, output error to stderr.
 ##########################
 build_and_deploy() {
+
+  # parse args for install_deps command
+  while test $# -ne 0; do
+    arg=$1; shift
+    case ${arg} in
+      --help)     build_and_deploy_usage; exit ;;
+      --verbose)  VERBOSE=true; readonly VERBOSE; ;;
+      --prefix)
+        if [ $# -eq 0 ]; then
+          echo "there should be given a path for prefix option."
+          build_and_deploy_usage; exit;
+        fi
+        INSTALL_PREFIX=$1; readonly INSTALL_PREFIX; shift ;;
+      *)
+        echo "unrecognized option '${arg}'"
+        build_and_deploy_usage; exit;;
+    esac
+  done
+
   if [[ ${VERBOSE} == true ]]; then
     set -x
   fi
@@ -865,11 +923,9 @@ set -o pipefail
 while test $# -ne 0; do
   arg=$1; shift
   case ${arg} in
-    -h|--help) usage; exit ;;
-    --prefix) INSTALL_PREFIX=$1; readonly INSTALL_PREFIX; shift ;;
-    --verbose) VERBOSE=true; readonly VERBOSE; ;;
-    install_deps) install_deps; exit;;
-    build_and_deploy) build_and_deploy; exit;;
+    -h|--help)        usage; exit ;;
+    install_deps)     install_deps "$@"; exit;;
+    build_and_deploy) build_and_deploy "$@"; exit;;
     *)
       echo "unrecognized option or command '${arg}'"
       usage; exit;;

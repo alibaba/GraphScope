@@ -49,7 +49,7 @@ jobs:
 
     - name: Install Dependencies of GraphScope
       run: |
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh --verbose install_deps
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh install_deps --verbose
 
         # avoid access node by DNS hostnames
         r=`cat /etc/hosts | grep $(hostname) || true`
@@ -62,7 +62,7 @@ jobs:
 
     - name: Build GraphScope
       run: |
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh --verbose build_and_deploy
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose
 
     - name: DEBUG
       if: false
