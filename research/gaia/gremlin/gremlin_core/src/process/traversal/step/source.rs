@@ -77,7 +77,7 @@ impl GraphVertexStep {
         &mut self, job_workers: usize, worker_index: u32, partitioner: Arc<dyn Partitioner>,
     ) {
         if let Ok(partition_list) = partitioner.get_worker_partitions(job_workers, worker_index) {
-            info!("Assign worker {:?} to scan partition list: {:?}", worker_index, partition_list);
+            debug!("Assign worker {:?} to scan partition list: {:?}", worker_index, partition_list);
             if self.return_type == EntityType::Vertex {
                 self.v_params.partitions = partition_list
             } else {
