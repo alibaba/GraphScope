@@ -228,8 +228,8 @@ check_dependencies() {
   log "Checking dependencies of deploy."
 
   # check python3 >= 3.6
-  if [[ $(! command -v python3 &> /dev/null) || \
-        "$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')" -lt "36" ]]; then
+  if ! command -v python3 &> /dev/null ||
+     [[ "$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')" -lt "36" ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
       packages_to_install+=(python3-devel)
     else
@@ -238,20 +238,20 @@ check_dependencies() {
   fi
 
   # check cmake >= 3.1
-  if [[ $(! command -v cmake &> /dev/null) || \
-        "$(cmake --version 2>&1 | awk -F ' ' '/version/ {print $3}')" < "3.1" ]]; then
+  if $(! command -v cmake &> /dev/null) || \
+     [[ "$(cmake --version 2>&1 | awk -F ' ' '/version/ {print $3}')" < "3.1" ]]; then
     packages_to_install+=(cmake)
   fi
 
   # check java == 1.8
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if [[ ! -f "/usr/libexec/java_home" || \
-          $(! /usr/libexec/java_home -v 1.8 &> /dev/null) ]]; then
+    if [[ ! -f "/usr/libexec/java_home" ]] || \
+       ! /usr/libexec/java_home -v 1.8 &> /dev/null; then
       packages_to_install+=(jdk8)
     fi
   else
-    if [[ $(! command -v java &> /dev/null) || \
-          "$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $2}')" -ne "8" ]]; then
+    if $(! command -v java &> /dev/null) || \
+       [[ "$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $2}')" -ne "8" ]]; then
       if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
         packages_to_install+=(openjdk-8-jdk)
       else
@@ -263,8 +263,8 @@ check_dependencies() {
   # check boost >= 1.66
   if [[ ( ! -f "/usr/include/boost/version.hpp" || \
         "$(grep "#define BOOST_VERSION" /usr/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) && \
-        ( ! -f "/usr/local/include/boost/version.hpp" || \
-        "$(grep "#define BOOST_VERSION" /usr/local/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) ]]; then
+     ( ! -f "/usr/local/include/boost/version.hpp" || \
+       "$(grep "#define BOOST_VERSION" /usr/local/include/boost/version.hpp | cut -d' ' -f3)" -lt "106600" ) ]]; then
     case "${PLATFORM}" in
       *"Ubuntu"*)
         packages_to_install+=(libboost-all-dev)
@@ -279,8 +279,7 @@ check_dependencies() {
   fi
 
   # check apache-arrow
-  if [[ ! -f "/usr/local/include/arrow/api.h" && \
-        ! -f "/usr/include/arrow/api.h" ]]; then
+  if [[ ! -f "/usr/local/include/arrow/api.h" && ! -f "/usr/include/arrow/api.h" ]]; then
     packages_to_install+=(apache-arrow)
   fi
 
@@ -290,14 +289,14 @@ check_dependencies() {
   fi
 
   # check rust
-  if [[ $(! command -v rustup &> /dev/null) && \
-        $(! command -v ${HOME}/.cargo/bin/rustup &> /dev/null) ]]; then
+  if ! command -v rustup &> /dev/null && \
+     ! command -v ${HOME}/.cargo/bin/rustup &> /dev/null; then
     packages_to_install+=(rust)
   fi
 
   # check golang
-  if [[ $(! command -v /usr/local/bin/go &> /dev/null) && \
-        $(! command -v /usr/local/go/bin/go &> /dev/null) ]]; then
+  if ! command -v /usr/local/bin/go &> /dev/null && \
+     ! command -v /usr/local/go/bin/go &> /dev/null; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
       packages_to_install+=(golang)
     else
@@ -320,15 +319,15 @@ check_dependencies() {
   fi
 
   # check folly
-  if [ ! -f "/usr/local/include/folly/dynamic.h" ]; then
+  if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
     packages_to_install+=(folly)
   fi
 
   # check c++ compiler
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if [[ $(! command -v clang &> /dev/null) || \
-       "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -lt "8" || \
-       "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -gt "10" ]]; then
+    if ! command -v clang &> /dev/null || \
+       [[ "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -lt "8" ]] || \
+       [[ "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -gt "10" ]]; then
       packages_to_install+=("llvm@${LLVM_VERSION}")
     fi
   else
