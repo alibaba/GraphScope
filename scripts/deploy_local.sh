@@ -290,13 +290,13 @@ check_dependencies() {
   fi
 
   # check rust
-  if [[ $(! command -v rustup &> /dev/null) || \
+  if [[ $(! command -v rustup &> /dev/null) && \
         $(! command -v ${HOME}/.cargo/bin/rustup &> /dev/null) ]]; then
     packages_to_install+=(rust)
   fi
 
   # check golang
-  if [[ $(! command -v /usr/local/bin/go &> /dev/null) || \
+  if [[ $(! command -v /usr/local/bin/go &> /dev/null) && \
         $(! command -v /usr/local/go/bin/go &> /dev/null) ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
       packages_to_install+=(golang)
@@ -324,7 +324,7 @@ check_dependencies() {
     packages_to_install+=(folly)
   fi
 
-  # check clang >=8, <=10 in Darwin
+  # check c++ compiler
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [[ $(! command -v clang &> /dev/null) || \
        "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -lt "8" || \
