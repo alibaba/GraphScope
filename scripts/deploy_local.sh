@@ -199,7 +199,6 @@ init_basic_packages() {
       gflags-devel
       glog-devel
       gtest-devel
-      rust
     )
   else
     BASIC_PACKGES_TO_INSTALL=(
@@ -445,7 +444,8 @@ install_dependencies() {
     sudo apt install -y ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
 
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
-    sudo dnf install -y https://download-ib01.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    sudo dnf install -y dnf-plugins-core \
+        https://download-ib01.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 
     sudo dnf config-manager --set-enabled epel
     sudo dnf config-manager --set-enabled powertools
