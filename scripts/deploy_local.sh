@@ -26,6 +26,7 @@ OS_VERSION=
 VERBOSE=false
 packages_to_install=()
 install_folly=false
+install_zookeeper=false
 
 err() {
   echo -e "${RED}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [ERROR] $*${NC}" >&2
@@ -65,7 +66,7 @@ cat <<END
   Commands:
 
     install_deps         install dependencies of GraphScope
-    deploy               deploy GraphScope locally
+    build_and_deploy     build and deploy GraphScope locally
 END
 }
 
@@ -294,7 +295,7 @@ check_dependencies() {
   fi
 
   # check golang
-  if ! command -v /usr/local/bin/go &> /dev/null && \
+  if ! command -v go &> /dev/null && ! command -v /usr/local/bin/go &> /dev/null && \
      ! command -v /usr/local/go/bin/go &> /dev/null; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
       packages_to_install+=(golang)
@@ -320,6 +321,11 @@ check_dependencies() {
   # check folly
   if [[ ! -f "/usr/local/include/folly/dynamic.h" ]]; then
     packages_to_install+=(folly)
+  fi
+
+  # check zookeeper
+  if [[ ! -f "/usr/local/zookeeper/bin/zkServer.sh" ]]; then
+    packages_to_install+=(zookeeper)
   fi
 
   # check c++ compiler
@@ -410,7 +416,7 @@ install_dependencies() {
     if [[ "${packages_to_install[@]}" =~ "go" ]]; then
       # packages_to_install contains go
       log "Installing Go."
-      wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
+      wget -c --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz -P /tmp
       sudo tar -C /usr/local -xzf /tmp/go1.15.5.linux-amd64.tar.gz
       rm -fr /tmp/go1.15.5.linux-amd64.tar.gz
       # remove go from packages_to_install
@@ -426,8 +432,9 @@ install_dependencies() {
 
     if [[ "${packages_to_install[@]}" =~ "apache-arrow" ]]; then
       log "Installing apache-arrow."
-      wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
-      sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+      wget -c https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
+        -P /tmp/
+      sudo apt install -y -V /tmp/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
       sudo apt update -y
       sudo apt install -y libarrow-dev=3.0.0-1 libarrow-python-dev=3.0.0-1
       # remove apache-arrow from packages_to_install
@@ -435,9 +442,15 @@ install_dependencies() {
     fi
 
     if [[ "${packages_to_install[@]}" =~ "folly" ]]; then
-      install_folly=true
+      install_folly=true  # set folly install flag
       # remove folly from packages_to_install
       packages_to_install=("${packages_to_install[@]/folly}")
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "zookeeper" ]]; then
+      install_zookeeper=true  # set zookeeper install flag
+      # remove zookeeper from packages_to_install
+      packages_to_install=("${packages_to_install[@]/zookeeper}")
     fi
 
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
@@ -466,7 +479,7 @@ install_dependencies() {
 
     if [[ "${packages_to_install[@]}" =~ "openmpi" ]]; then
       log "Installing openmpi v4.0.5"
-      wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz -P /tmp
+      wget -c https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz -P /tmp
       tar zxvf /tmp/openmpi-4.0.5.tar.gz -C /tmp
       pushd /tmp/openmpi-4.0.5 && ./configure --enable-mpi-cxx
       make -j${NUM_PROC}
@@ -490,11 +503,17 @@ install_dependencies() {
     fi
 
     if [[ "${packages_to_install[@]}" =~ "folly" ]]; then
-      install_folly=true
+      install_folly=true  # set folly install flag
       # remove folly from packages_to_install
       packages_to_install=("${packages_to_install[@]/folly}")
       # add fmt to packages_to_install
       packages_to_install+=(fmt-devel)
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "zookeeper" ]]; then
+      install_zookeeper=true  # set zookeeper install flag
+      # remove zookeeper from packages_to_install
+      packages_to_install=("${packages_to_install[@]/zookeeper}")
     fi
 
     if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
@@ -509,7 +528,7 @@ install_dependencies() {
     sudo dnf -y install ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}
 
     log "Installing protobuf v.3.13.0"
-    wget https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-all-3.13.0.tar.gz -P /tmp
+    wget -c https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-all-3.13.0.tar.gz -P /tmp
     tar zxvf /tmp/protobuf-all-3.13.0.tar.gz -C /tmp/
     pushd /tmp/protobuf-3.13.0
     ./configure --enable-shared --disable-static
@@ -553,9 +572,15 @@ install_dependencies() {
     fi
 
     if [[ "${packages_to_install[@]}" =~ "folly" ]]; then
-      install_folly=true
+      install_folly=true  # set folly install flag
       packages_to_install=("${packages_to_install[@]/folly}")
       packages_to_install+=(fmt)
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "zookeeper" ]]; then
+      install_zookeeper=true  # set zookeeper install flag
+      # remove zookeeper from packages_to_install
+      packages_to_install=("${packages_to_install[@]/zookeeper}")
     fi
 
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]} ${packages_to_install[*]}"
@@ -575,7 +600,7 @@ install_dependencies() {
   if [ ${install_folly} = true ]; then
     if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
       log "Installing fmt."
-      wget https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz -P /tmp
+      wget -c https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz -P /tmp
       tar xf /tmp/7.0.3.tar.gz -C /tmp/
       pushd /tmp/fmt-7.0.3
       mkdir -p build && cd build
@@ -586,7 +611,7 @@ install_dependencies() {
       rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
     fi
     log "Installing folly."
-    wget https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz -P /tmp
+    wget -c https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz -P /tmp
     tar xf /tmp/v2020.10.19.00.tar.gz -C /tmp/
     pushd /tmp/folly-2020.10.19.00
     mkdir -p _build && cd _build
@@ -597,12 +622,14 @@ install_dependencies() {
     rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
   fi
 
-  log "Installing zookeeper."
-  wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz -P /tmp
-  tar xf /tmp/zookeeper-3.4.14.tar.gz -C /tmp/
-  cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
-  sudo cp -r /tmp/zookeeper-3.4.14 /usr/local/zookeeper || true
-  rm -fr /tmp/zookeeper-3.4.14*
+  if [ ${install_zookeeper} = true ]; then
+    log "Installing zookeeper."
+    wget -c https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz -P /tmp
+    tar xf /tmp/zookeeper-3.4.14.tar.gz -C /tmp/
+    cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
+    sudo cp -r /tmp/zookeeper-3.4.14 /usr/local/zookeeper || true
+    rm -fr /tmp/zookeeper-3.4.14*
+  fi
 
   log "Installing python packages for vineyard codegen."
   pip3 install -U pip --user
@@ -736,7 +763,7 @@ install_deps() {
 }
 
 ##########################
-# Main function for deploy command.
+# Main function for build_and_deploy command.
 # Globals:
 #   VERBOSE
 #   INSTALL_PREFIX
@@ -745,7 +772,7 @@ install_deps() {
 # Outputs:
 #   output log to stdout, output error to stderr.
 ##########################
-deploy() {
+build_and_deploy() {
   if [ ${VERBOSE} = true ]; then
     set -x
   fi
@@ -754,8 +781,9 @@ deploy() {
 
   check_os_compatibility
 
-  # if gs_env exist, just source it
+  # if gs_env already exists, source it
   if [ -f "${SOURCE_DIR}/gs_env" ]; then
+    log "Found file ${SOURCE_DIR}/gs_env exists, source the env file."
     source ${SOURCE_DIR}/gs_env
   fi
 
@@ -795,7 +823,7 @@ while test $# -ne 0; do
     --prefix) INSTALL_PREFIX=$1; readonly INSTALL_PREFIX; shift ;;
     --verbose) VERBOSE=true; readonly VERBOSE; ;;
     install_deps) install_deps; exit;;
-    deploy) deploy; exit;;
+    build_and_deploy) build_and_deploy; exit;;
     *)
       echo "unrecognized option or command '${arg}'"
       usage; exit;;

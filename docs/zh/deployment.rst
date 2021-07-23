@@ -87,5 +87,5 @@ Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 `./scrip
 * 使用`deploy_local.sh`本地部署GraphScope
 .. code:: shell
 
-    ./scripts/deploy_local.sh deploy
+    ./scripts/deploy_local.sh build_and_deploy
     export GRAPHSCOPE_HOME=/usr/local
