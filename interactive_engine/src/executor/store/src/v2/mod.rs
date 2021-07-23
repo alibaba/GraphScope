@@ -16,6 +16,8 @@
 use crate::v2::errors::Error;
 
 pub mod api;
+pub mod mock;
 pub mod errors;
+pub mod ffi;
 
 pub type Result<T> = std::result::Result<T, Error>;
