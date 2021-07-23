@@ -15,6 +15,7 @@
 
 use crate::v2::api::{PropertyId, VertexId, LabelId, EdgeId};
 
+#[repr(C)]
 pub enum DataType {
     Boolean,
     Char,
@@ -59,7 +60,7 @@ pub trait PropertyReader {
     type P: Property;
     type PropertyIterator: Iterator<Item=Self::P>;
 
-    fn get_property_value(&self, property_id: PropertyId) -> Option<&PropertyValue>;
+    fn get_property(&self, property_id: PropertyId) -> Option<Self::P>;
     fn get_property_iterator(&self) -> Self::PropertyIterator;
 }
 
@@ -68,6 +69,7 @@ pub trait Vertex: PropertyReader {
     fn get_label_id(&self) -> LabelId;
 }
 
+#[repr(C)]
 pub struct EdgeRelation {
     edge_label_id: LabelId,
     src_vertex_label_id: LabelId,
@@ -95,6 +97,6 @@ impl EdgeRelation {
 }
 
 pub trait Edge: PropertyReader {
-    fn get_edge_id(&self) -> &EdgeId;
-    fn get_edge_relation(&self) -> &EdgeRelation;
+    fn get_edge_id(&self) -> EdgeId;
+    fn get_edge_relation(&self) -> EdgeRelation;
 }
