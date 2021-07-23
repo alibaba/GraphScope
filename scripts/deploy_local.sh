@@ -13,7 +13,7 @@ readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
 readonly V6D_BRANCH="main-v0.2.5" # vineyard branch
-readonly LLVM_VERSION=9 # llvm version we use in Darwin platform
+readonly LLVM_VERSION=11  # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
 readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
