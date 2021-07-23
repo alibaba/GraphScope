@@ -73,16 +73,20 @@ pub struct VineyardMultiPartition {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
     // mapping of partition id -> worker id
     partition_worker_mapping: HashMap<u32, u32>,
+    // mapping of worker id -> partition list
+    worker_partition_list: HashMap<u32, Vec<u32>>,
 }
 
 impl VineyardMultiPartition {
     pub fn new(
         graph_partition_manager: Arc<dyn GraphPartitionManager>,
-        partition_worker_map: HashMap<u32, u32>,
+        partition_worker_mapping: HashMap<u32, u32>,
+        worker_partition_list: HashMap<u32, Vec<u32>>,
     ) -> Self {
         VineyardMultiPartition {
             graph_partition_manager,
-            partition_worker_mapping: partition_worker_map,
+            partition_worker_mapping,
+            worker_partition_list,
         }
     }
 }
@@ -108,9 +112,15 @@ impl Partitioner for VineyardMultiPartition {
     fn get_worker_partitions(
         &self,
         _job_workers: usize,
-        _worker_id: u32,
+        worker_id: u32,
     ) -> DynResult<Option<Vec<u64>>> {
-        // TODO(bingqing)
-        unimplemented!()
+        // Vineyard will pre-allocate the worker_partition_list mapping
+        if let Some(partition_list) = self.worker_partition_list.get(&worker_id) {
+            Ok(Some(partition_list.iter().map(|pid| *pid as u64).collect()))
+        } else {
+            Err(str_to_dyn_error(
+                "get worker partitions failed in VineyardMultiPartition",
+            ))
+        }
     }
 }
