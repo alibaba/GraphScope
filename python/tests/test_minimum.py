@@ -107,4 +107,3 @@ def demo(sess, ogbn_mag_small):
 
 def test_demo(sess, ogbn_mag_small):
     demo(sess, ogbn_mag_small)
-    sess.close()

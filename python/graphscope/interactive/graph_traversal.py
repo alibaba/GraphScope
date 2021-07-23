@@ -36,9 +36,15 @@ def gather(cls, *args):
     return cls
 
 
+def expr(cls, *args):
+    cls.bytecode.add_step("expr", *args)
+    return cls
+
+
 setattr(GraphTraversal, "process", process)
 setattr(GraphTraversal, "scatter", scatter)
 setattr(GraphTraversal, "gather", gather)
+setattr(GraphTraversal, "expr", expr)
 
 
 def expr(*args):
