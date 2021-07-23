@@ -88,4 +88,4 @@ Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 `./scrip
 .. code:: shell
 
     ./scripts/deploy_local.sh deploy
-    export GRAPHSCOPE_PREFIX=/usr/local
+    export GRAPHSCOPE_HOME=/usr/local

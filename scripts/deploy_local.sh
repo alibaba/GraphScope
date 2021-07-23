@@ -331,6 +331,14 @@ check_dependencies() {
        "$(clang -v 2>&1 | head -n 1 | sed 's/.* \([0-9]*\)\..*/\1/')" -gt "10" ]]; then
       packages_to_install+=("llvm@${LLVM_VERSION}")
     fi
+  else
+    if ! command -v g++ &> /dev/null; then
+      if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
+        packages_to_install+=(build-essential)
+      else
+        packages_to_install+=(gcc gcc-c++)
+      fi
+    fi
   fi
 }
 
@@ -719,10 +727,10 @@ install_deps() {
 
   install_dependencies
 
-  succ_msg="${GREEN}Install dependencies successfully. The script had output the related
+  succ_msg="Install dependencies successfully. The script had output the related
   environments to ${SOURCE_DIR}/gs_env.\nPlease run 'source ${SOURCE_DIR}/gs_env'
-  before run deploy command.${NC}"
-  log ${succ_msg}
+  before run deploy command."
+  succ ${succ_msg}
   if [ ${VERBOSE} = true ]; then
     set +x
   fi
@@ -742,13 +750,19 @@ deploy() {
   if [ ${VERBOSE} = true ]; then
     set -x
   fi
+
   get_os_version
 
   check_os_compatibility
 
+  # if gs_env exist, just source it
+  if [ -f "${SOURCE_DIR}/gs_env" ]; then
+    source ${SOURCE_DIR}/gs_env
+  fi
+
   check_dependencies
 
-  if [ ${packages_to_install[@]} -eq 0 ]; then
+  if [ ${#packages_to_install[@]} -ne 0 ]; then
     err "The dependences of GraphScope are not satisfied."
     err "These packages: [${packages_to_install[*]}] are not installed or their version are not compatible."
     exit 1
@@ -762,7 +776,7 @@ deploy() {
 
   succ_msg="GraphScope has been built successfully and installed on ${INSTALL_PREFIX}. \n
   Please manually run \n
-  'export GRAPHSCOPE_PREFIX=${INSTALL_PREFIX}'\n
+  'export GRAPHSCOPE_HOME=${INSTALL_PREFIX}'\n
   to before using GraphScope via Python client, enjoy!\n$"
   succ ${succ_msg}
   if [ ${VERBOSE} = true ]; then

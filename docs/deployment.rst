@@ -94,4 +94,4 @@ Ubuntu 20.04+ or MacOS.
 .. code:: shell
 
     ./scripts/deploy_local.sh deploy
-    export GRAPHSCOPE_PREFIX=/usr/local
+    export GRAPHSCOPE_HOME=/usr/local

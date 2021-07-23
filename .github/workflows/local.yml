@@ -74,7 +74,7 @@ jobs:
         OS : ${{ matrix.os }}
       run: |
         source ${GITHUB_WORKSPACE}/gs_env
-        export GRAPHSCOPE_PREFIX=/usr/local
+        export GRAPHSCOPE_HOME=/usr/local
         export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 
         # install tensorflow for graphlearn if os is ubuntu20.04
@@ -100,7 +100,7 @@ jobs:
       if: matrix.os == 'ubuntu-20.04'
       run: |
         source ${GITHUB_WORKSPACE}/gs_env
-        export GRAPHSCOPE_PREFIX=/usr/local
+        export GRAPHSCOPE_HOME=/usr/local
         # run test
         cd interactive_engine/src/gaia-adaptor && ./gremlin_test.sh
 
