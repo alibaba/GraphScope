@@ -14,11 +14,11 @@
 //! limitations under the License.
 //!
 
+use gremlin_core::{str_to_dyn_error, DynResult, Partitioner, ID, ID_MASK};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
-use std::sync::Arc;
-use gremlin_core::{Partitioner, ID, ID_MASK, str_to_dyn_error, DynResult};
-use maxgraph_store::api::{VertexId, PartitionId};
+use maxgraph_store::api::{PartitionId, VertexId};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// A partition utility that one server contains multiple graph partitions for MaxGraph (V2) Store
 pub struct MaxGraphMultiPartition {
@@ -55,8 +55,12 @@ impl Partitioner for MaxGraphMultiPartition {
         let worker_index = partition_id % worker_num_per_server;
         Ok(server_index * worker_num_per_server + worker_index as u64)
     }
-}
 
+    fn get_worker_partitions(&self, _job_workers: usize, _worker_id: u32) -> DynResult<Vec<u64>> {
+        // TODO(bingqing)
+        unimplemented!()
+    }
+}
 
 /// A partition utility that one server contains multiple graph partitions for Vineyard
 /// Starting gaia with vineyard will pre-allocate partitions for each worker to process,
@@ -87,12 +91,18 @@ impl Partitioner for VineyardMultiPartition {
         // 2. get worker_id by the prebuild partition_worker_map, which specifies partition_id -> worker_id
         let vid = (*id & (ID_MASK)) as VertexId;
         let partition_id = self.graph_partition_manager.get_partition_id(vid) as PartitionId;
-        let worker_id = *self
-            .partition_worker_mapping
-            .get(&partition_id)
-            .ok_or(str_to_dyn_error(
-                "get worker id failed in VineyardMultiPartition",
-            ))?;
+        let worker_id =
+            *self
+                .partition_worker_mapping
+                .get(&partition_id)
+                .ok_or(str_to_dyn_error(
+                    "get worker id failed in VineyardMultiPartition",
+                ))?;
         Ok(worker_id as u64)
+    }
+
+    fn get_worker_partitions(&self, _job_workers: usize, _worker_id: u32) -> DynResult<Vec<u64>> {
+        // TODO(bingqing)
+        unimplemented!()
     }
 }
