@@ -191,16 +191,20 @@ impl GraphProxy for DemoGraph {
     fn scan_vertex(
         &self, params: &QueryParams<Vertex>,
     ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        let label_ids = encode_storage_vertex_label(&params.labels);
-        let store = self.store;
-        let result = self.store.get_all_vertices(label_ids.as_ref()).map(move |v| {
-            // TODO: Only process label[0] for now
-            // TODO: change to  to_runtime_vertex_with_property
-            to_runtime_vertex(v, store)
-            //  to_runtime_vertex_with_property(v, params.props.as_ref())
-        });
+        if params.partitions.is_some() {
+            let label_ids = encode_storage_vertex_label(&params.labels);
+            let store = self.store;
+            let result = self.store.get_all_vertices(label_ids.as_ref()).map(move |v| {
+                // TODO: Only process label[0] for now
+                // TODO: change to  to_runtime_vertex_with_property
+                to_runtime_vertex(v, store)
+                //  to_runtime_vertex_with_property(v, params.props.as_ref())
+            });
 
-        Ok(filter_limit!(result, params.filter, params.limit))
+            Ok(filter_limit!(result, params.filter, params.limit))
+        } else {
+            Ok(Box::new(std::iter::empty()))
+        }
     }
 
     fn scan_edge(
