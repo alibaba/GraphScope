@@ -385,7 +385,7 @@ write_envs_config() {
         echo "export PATH=/usr/local/opt/llvm@${LLVM_VERSION}/bin:\$PATH"
       fi
       echo "export JAVA_HOME=\$(/usr/libexec/java_home -v 1.8)"
-      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:\${HOME/.cargo/bin:\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
+      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:\$HOME/.cargo/bin:\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
       echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
