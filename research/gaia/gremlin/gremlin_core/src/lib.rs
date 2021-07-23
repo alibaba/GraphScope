@@ -108,7 +108,11 @@ pub trait FromPb<T> {
 
 pub trait Partitioner: Send + Sync + 'static {
     fn get_partition(&self, id: &ID, job_workers: usize) -> DynResult<u64>;
-    fn get_worker_partitions(&self, job_workers: usize, worker_id: u32) -> DynResult<Vec<u64>>;
+    /// Given job_workers (number of worker per server) and worker_id (worker index),
+    /// return the partition list that the worker is going to process
+    fn get_worker_partitions(
+        &self, job_workers: usize, worker_id: u32,
+    ) -> DynResult<Option<Vec<u64>>>;
 }
 
 /// A simple partition utility that one server contains a single graph partition
@@ -129,15 +133,17 @@ impl Partitioner for Partition {
         Ok(((id_usize - magic_num * self.num_servers) * workers + magic_num % workers) as u64)
     }
 
-    fn get_worker_partitions(&self, job_workers: usize, worker_id: u32) -> DynResult<Vec<u64>> {
+    fn get_worker_partitions(
+        &self, job_workers: usize, worker_id: u32,
+    ) -> DynResult<Option<Vec<u64>>> {
         // In graph that one server contains a single graph partition,
         // we assign the first worker on current server to process (scan) the partition,
         // and we assume the partition id is identity to the server id
         info!("in get_worker_partitions: job_workers {} worker_id {}", job_workers, worker_id);
         if worker_id as usize % job_workers == 0 {
-            Ok(vec![worker_id as u64 / job_workers as u64])
+            Ok(Some(vec![worker_id as u64 / job_workers as u64]))
         } else {
-            Ok(vec![])
+            Ok(None)
         }
     }
 }

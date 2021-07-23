@@ -56,7 +56,11 @@ impl Partitioner for MaxGraphMultiPartition {
         Ok(server_index * worker_num_per_server + worker_index as u64)
     }
 
-    fn get_worker_partitions(&self, _job_workers: usize, _worker_id: u32) -> DynResult<Vec<u64>> {
+    fn get_worker_partitions(
+        &self,
+        _job_workers: usize,
+        _worker_id: u32,
+    ) -> DynResult<Option<Vec<u64>>> {
         // TODO(bingqing)
         unimplemented!()
     }
@@ -101,7 +105,11 @@ impl Partitioner for VineyardMultiPartition {
         Ok(worker_id as u64)
     }
 
-    fn get_worker_partitions(&self, _job_workers: usize, _worker_id: u32) -> DynResult<Vec<u64>> {
+    fn get_worker_partitions(
+        &self,
+        _job_workers: usize,
+        _worker_id: u32,
+    ) -> DynResult<Option<Vec<u64>>> {
         // TODO(bingqing)
         unimplemented!()
     }
