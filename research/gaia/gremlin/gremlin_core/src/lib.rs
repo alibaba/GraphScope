@@ -139,7 +139,6 @@ impl Partitioner for Partition {
         // In graph that one server contains a single graph partition,
         // we assign the first worker on current server to process (scan) the partition,
         // and we assume the partition id is identity to the server id
-        info!("in get_worker_partitions: job_workers {} worker_id {}", job_workers, worker_id);
         if worker_id as usize % job_workers == 0 {
             Ok(Some(vec![worker_id as u64 / job_workers as u64]))
         } else {
