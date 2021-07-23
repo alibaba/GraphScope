@@ -385,7 +385,7 @@ write_envs_config() {
         echo "export PATH=/usr/local/opt/llvm@${LLVM_VERSION}/bin:\$PATH"
       fi
       echo "export JAVA_HOME=\$(/usr/libexec/java_home -v 1.8)"
-      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
+      echo "export PATH=/usr/local/opt/gnu-sed/libexec/gnubin:\${HOME/.cargo/bin:\${JAVA_HOME}/bin:\$PATH:/usr/local/zookeeper/bin"
       echo "export OPENSSL_ROOT_DIR=/usr/local/opt/openssl"
       echo "export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib"
@@ -482,7 +482,8 @@ install_dependencies() {
 
     if [[ "${packages_to_install[@]}" =~ "apache-arrow" ]]; then
       log "Installing apache-arrow."
-      sudo dnf install -y epel-release || sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm
+      sudo dnf install -y epel-release || sudo dnf install -y \
+        https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm
       sudo dnf install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm
       sudo dnf install -y arrow-devel
       # remove apache-arrow from packages_to_install
@@ -507,9 +508,11 @@ install_dependencies() {
       mkdir -p /tmp/etcd-download-test
       export ETCD_VER=v3.4.13 && \
       export DOWNLOAD_URL=https://github.com/etcd-io/etcd/releases/download && \
-      curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+      curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz \
+        -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
       check_and_remove_dir "/tmp/etcd-download-test"
-      tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test --strip-components=1
+      tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz \
+        -C /tmp/etcd-download-test --strip-components=1
       sudo mv /tmp/etcd-download-test/etcd /usr/local/bin/
       sudo mv /tmp/etcd-download-test/etcdctl /usr/local/bin/
       rm -fr /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz /tmp/etcd-download-test
@@ -533,7 +536,8 @@ install_dependencies() {
     if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
-      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+      curl -sf -L https://static.rust-lang.org/rustup.sh 
+        | sh -s -- -y --profile minimal --default-toolchain 1.48.0
       # remove rust from packages_to_install
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
@@ -587,6 +591,14 @@ install_dependencies() {
       brew install --cask adoptopenjdk8
       # remove jdk8 from packages_to_install
       packages_to_install=("${packages_to_install[@]/jdk8}")
+    fi
+
+    if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
+      # packages_to_install contains rust
+      log "Installing rust."
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+      # remove rust from packages_to_install
+      packages_to_install=("${packages_to_install[@]/rust}")
     fi
 
     if [[ "${packages_to_install[@]}" =~ "folly" ]]; then
@@ -837,11 +849,10 @@ build_and_deploy() {
 
   install_graphscope
 
-  succ_msg="GraphScope has been built successfully and installed on ${INSTALL_PREFIX}. \n
-  Please manually run \n
-  'export GRAPHSCOPE_HOME=${INSTALL_PREFIX}'\n
-  before using GraphScope via Python client, enjoy!\n"
-  succ ${succ_msg}
+  succ "GraphScope has been built successfully and installed on ${INSTALL_PREFIX}."
+  succ "Please manually run:"
+  succ "export GRAPHSCOPE_HOME=${INSTALL_PREFIX}"
+  succ "before using GraphScope via Python client, enjoy!"
   if [[ ${VERBOSE} == true ]]; then
     set +x
   fi

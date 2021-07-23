@@ -72,7 +72,7 @@ jobs:
       env:
         OS : ${{ matrix.os }}
       run: |
-        source ${GITHUB_WORKSPACE}/gs_env
+        source ~/.graphscope_env
         export GRAPHSCOPE_HOME=/usr/local
 
         # install tensorflow for graphlearn if os is ubuntu20.04
@@ -97,7 +97,7 @@ jobs:
     - name: Run Gaia on Maxgraph Store Test
       if: matrix.os == 'ubuntu-20.04'
       run: |
-        source ${GITHUB_WORKSPACE}/gs_env
+        source ~/.graphscope_env
         export GRAPHSCOPE_HOME=/usr/local
         # run test
         cd interactive_engine/src/gaia-adaptor && ./gremlin_test.sh
