@@ -210,12 +210,18 @@ impl GraphProxy for DemoGraph {
     fn scan_edge(
         &self, params: &QueryParams<Edge>,
     ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        let label_ids = encode_storage_edge_label(&params.labels);
-        let store = self.store;
-        let result =
-            self.store.get_all_edges(label_ids.as_ref()).map(move |e| to_runtime_edge(e, store));
+        if params.partitions.is_some() {
+            let label_ids = encode_storage_edge_label(&params.labels);
+            let store = self.store;
+            let result = self
+                .store
+                .get_all_edges(label_ids.as_ref())
+                .map(move |e| to_runtime_edge(e, store));
 
-        Ok(filter_limit!(result, params.filter, params.limit))
+            Ok(filter_limit!(result, params.filter, params.limit))
+        } else {
+            Ok(Box::new(std::iter::empty()))
+        }
     }
 
     fn get_vertex(
