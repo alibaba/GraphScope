@@ -36,7 +36,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macOS-latest]
+        os: [ubuntu-20.04]
 
     steps:
     - uses: actions/checkout@v2
@@ -44,7 +44,7 @@ jobs:
         submodules: true
 
     - name: Setup tmate session
-      if: true
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Install Dependencies of GraphScope
@@ -62,8 +62,7 @@ jobs:
 
     - name: Build GraphScope
       run: |
-        source ${GITHUB_WORKSPACE}/gs_env
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh --verbose deploy
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh --verbose build_and_deploy
 
     - name: DEBUG
       if: false
@@ -75,7 +74,6 @@ jobs:
       run: |
         source ${GITHUB_WORKSPACE}/gs_env
         export GRAPHSCOPE_HOME=/usr/local
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 
         # install tensorflow for graphlearn if os is ubuntu20.04
         if [ "${OS}" == "ubuntu-20.04" ];

@@ -13,7 +13,7 @@ readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
 readonly V6D_BRANCH="main-v0.2.5" # vineyard branch
-readonly LLVM_VERSION=11  # llvm version we use in Darwin platform
+readonly LLVM_VERSION=9  # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
 readonly NUM_PROC=$( $(command -v nproc &> /dev/null) && echo $(nproc) || echo $(sysctl -n hw.physicalcpu) )
@@ -41,7 +41,7 @@ log() {
 }
 
 succ() {
-  echo -e "${YELLOW}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*${NC}" >&1
+  echo -e "${GREEN}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*${NC}" >&1
 }
 
 ##########################
@@ -538,6 +538,9 @@ install_dependencies() {
     rm -fr /tmp/protobuf-all-3.13.0.tar.gz /tmp/protobuf-3.13.0
 
     log "Installing grpc v1.33.1"
+    if [[ -d "/tmp/grpc" ]]; then
+      sudo rm -fr /tmp/grpc
+    fi
     git clone --depth 1 --branch v1.33.1 https://github.com/grpc/grpc.git /tmp/grpc
     pushd /tmp/grpc
     git submodule update --init
@@ -650,6 +653,10 @@ install_dependencies() {
 ##########################
 install_libgrape-lite() {
   log "Building and installing libgrape-lite."
+  if [[ -d "/tmp/libgrape-lite" ]]; then
+    log "Found /tmp/libgrape-lite exists, remove and clone again."
+    sudo rm -fr /tmp/libgrape-lite
+  fi
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
   git clone -b ${GRAPE_BRANCH} --single-branch --depth=1 \
       https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
@@ -674,6 +681,10 @@ install_libgrape-lite() {
 ##########################
 install_vineyard() {
   log "Building and installing vineyard."
+  if [[ -d "/tmp/libvineyard" ]]; then
+    log "Found /tmp/libvineyard exists, remove and clone again."
+    sudo rm -fr /tmp/libvineyard
+  fi
   git clone -b ${V6D_BRANCH} --single-branch --depth=1 \
       https://github.com/alibaba/libvineyard.git /tmp/libvineyard
   pushd /tmp/libvineyard
