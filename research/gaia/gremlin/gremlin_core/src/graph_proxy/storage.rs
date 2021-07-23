@@ -191,6 +191,9 @@ impl GraphProxy for DemoGraph {
     fn scan_vertex(
         &self, params: &QueryParams<Vertex>,
     ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+        // DemoGraph contains a single graph partition on each server,
+        // therefore, there's no need to use the specific partition id for query.
+        // Besides, we guarantee only one worker (on each server) is going to scan (with params.partitions.is_some())
         if params.partitions.is_some() {
             let label_ids = encode_storage_vertex_label(&params.labels);
             let store = self.store;
