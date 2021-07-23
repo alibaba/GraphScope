@@ -12,6 +12,7 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
+readonly V6D_VERSION="0.2.5"  # vineyard version
 readonly V6D_BRANCH="main-v0.2.5" # vineyard branch
 readonly LLVM_VERSION=9  # llvm version we use in Darwin platform
 
@@ -69,6 +70,16 @@ cat <<END
     install_deps         install dependencies of GraphScope
     build_and_deploy     build and deploy GraphScope locally
 END
+}
+
+##########################
+# Check dir exists and remove it.
+##########################
+check_and_remove_dir() {
+  if [[ -d $1 ]]; then
+    log "Found $1 exists, remove it."
+    rm -fr $1
+  fi
 }
 
 ##########################
@@ -481,6 +492,7 @@ install_dependencies() {
     if [[ "${packages_to_install[@]}" =~ "openmpi" ]]; then
       log "Installing openmpi v4.0.5"
       wget -c https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz -P /tmp
+      check_and_remove_dir "/tmp/openmpi-4.0.5"
       tar zxvf /tmp/openmpi-4.0.5.tar.gz -C /tmp
       pushd /tmp/openmpi-4.0.5 && ./configure --enable-mpi-cxx
       make -j${NUM_PROC}
@@ -496,6 +508,7 @@ install_dependencies() {
       export ETCD_VER=v3.4.13 && \
       export DOWNLOAD_URL=https://github.com/etcd-io/etcd/releases/download && \
       curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+      check_and_remove_dir "/tmp/etcd-download-test"
       tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test --strip-components=1
       sudo mv /tmp/etcd-download-test/etcd /usr/local/bin/
       sudo mv /tmp/etcd-download-test/etcdctl /usr/local/bin/
@@ -530,6 +543,7 @@ install_dependencies() {
 
     log "Installing protobuf v.3.13.0"
     wget -c https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-all-3.13.0.tar.gz -P /tmp
+    check_and_remove_dir "/tmp/protobuf-3.13.0"
     tar zxvf /tmp/protobuf-all-3.13.0.tar.gz -C /tmp/
     pushd /tmp/protobuf-3.13.0
     ./configure --enable-shared --disable-static
@@ -593,7 +607,7 @@ install_dependencies() {
     export OPENSSL_ROOT_DIR=/usr/local/opt/openssl
     export OPENSSL_LIBRARIES=/usr/local/opt/openssl/lib
     export OPENSSL_SSL_LIBRARY=/usr/local/opt/openssl/lib/libssl.dylib
-    if [[ "${packages_to_install[@]}" =~ "llvm${LLVM_VERSION}" ]]; then
+    if [[ "${packages_to_install[@]}" =~ "llvm@${LLVM_VERSION}" ]]; then
       export CC=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang
       export CXX=/usr/local/opt/llvm@${LLVM_VERSION}/bin/clang++
       export LDFLAGS=-L/usr/local/opt/llvm@${LLVM_VERSION}/lib
@@ -601,10 +615,11 @@ install_dependencies() {
     fi
   fi
 
-  if [ ${install_folly} = true ]; then
+  if [[ ${install_folly} == true ]]; then
     if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
       log "Installing fmt."
       wget -c https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz -P /tmp
+      check_and_remove_dir "/tmp/fmt-7.0.3"
       tar xf /tmp/7.0.3.tar.gz -C /tmp/
       pushd /tmp/fmt-7.0.3
       mkdir -p build && cd build
@@ -616,6 +631,7 @@ install_dependencies() {
     fi
     log "Installing folly."
     wget -c https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz -P /tmp
+    check_and_remove_dir "/tmp/folly-2020.10.19.00"
     tar xf /tmp/v2020.10.19.00.tar.gz -C /tmp/
     pushd /tmp/folly-2020.10.19.00
     mkdir -p _build && cd _build
@@ -626,9 +642,10 @@ install_dependencies() {
     rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
   fi
 
-  if [ ${install_zookeeper} = true ]; then
+  if [[ ${install_zookeeper} == true ]]; then
     log "Installing zookeeper."
     wget -c https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz -P /tmp
+    check_and_remove_dir "/tmp/zookeeper-3.4.14"
     tar xf /tmp/zookeeper-3.4.14.tar.gz -C /tmp/
     cp /tmp/zookeeper-3.4.14/conf/zoo_sample.cfg /tmp/zookeeper-3.4.14/conf/zoo.cfg
     sudo cp -r /tmp/zookeeper-3.4.14 /usr/local/zookeeper || true
@@ -654,11 +671,13 @@ install_dependencies() {
 ##########################
 install_libgrape-lite() {
   log "Building and installing libgrape-lite."
-  if [[ -d "/tmp/libgrape-lite" ]]; then
-    log "Found /tmp/libgrape-lite exists, remove and clone again."
-    sudo rm -fr /tmp/libgrape-lite
+
+  if [[ -f "/usr/local/include/grape/grape.h" ]]; then
+    log "libgrape-lite already installed, skip."
+    return 0
   fi
-  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+
+  check_and_remove_dir "/tmp/libgrape-lite"
   git clone -b ${GRAPE_BRANCH} --single-branch --depth=1 \
       https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
   pushd /tmp/libgrape-lite
@@ -682,10 +701,15 @@ install_libgrape-lite() {
 ##########################
 install_vineyard() {
   log "Building and installing vineyard."
-  if [[ -d "/tmp/libvineyard" ]]; then
-    log "Found /tmp/libvineyard exists, remove and clone again."
-    sudo rm -fr /tmp/libvineyard
+  # TODO: check vineyard version with vineyadd --version
+  if command -v /usr/local/bin/vineyardd &> /dev/null && \
+     [[ "$(head -n 1 /usr/local/lib/cmake/vineyard/vineyard-config-version.cmake | \
+        awk -F '"' '{print $2}')" == "${V6D_VERSION}" ]]; then
+    log "vineyard ${V6D_VERSION} already installed, skip."
+    return 0
   fi
+
+  check_and_remove_dir "/tmp/libvineyard"
   git clone -b ${V6D_BRANCH} --single-branch --depth=1 \
       https://github.com/alibaba/libvineyard.git /tmp/libvineyard
   pushd /tmp/libvineyard
@@ -752,7 +776,7 @@ install_graphscope() {
 #   output log to stdout, output error to stderr.
 ##########################
 install_deps() {
-  if [ ${VERBOSE} = true ]; then
+  if [[ ${VERBOSE} == true ]]; then
     set -x
   fi
   get_os_version
@@ -769,7 +793,7 @@ install_deps() {
   environments to ${OUTPUT_ENV_FILE}.\n
   Please run 'source ${OUTPUT_ENV_FILE}' before run GraphScope."
   succ ${succ_msg}
-  if [ ${VERBOSE} = true ]; then
+  if [[ ${VERBOSE} == true ]]; then
     set +x
   fi
 }
@@ -785,7 +809,7 @@ install_deps() {
 #   output log to stdout, output error to stderr.
 ##########################
 build_and_deploy() {
-  if [ ${VERBOSE} = true ]; then
+  if [[ ${VERBOSE} == true ]]; then
     set -x
   fi
 
@@ -816,9 +840,9 @@ build_and_deploy() {
   succ_msg="GraphScope has been built successfully and installed on ${INSTALL_PREFIX}. \n
   Please manually run \n
   'export GRAPHSCOPE_HOME=${INSTALL_PREFIX}'\n
-  to before using GraphScope via Python client, enjoy!\n$"
+  before using GraphScope via Python client, enjoy!\n"
   succ ${succ_msg}
-  if [ ${VERBOSE} = true ]; then
+  if [[ ${VERBOSE} == true ]]; then
     set +x
   fi
 }
