@@ -58,11 +58,22 @@ impl Partitioner for MaxGraphMultiPartition {
 
     fn get_worker_partitions(
         &self,
-        _job_workers: usize,
-        _worker_id: u32,
+        job_workers: usize,
+        worker_id: u32,
     ) -> DynResult<Option<Vec<u64>>> {
-        // TODO(bingqing)
-        unimplemented!()
+        // Get worker partition list logic is as follows:
+        // 1. `process_partition_list = self.graph_partition_manager.get_process_partition_list()`
+        // get all partitions on current server
+        // 2. 'pid % job_workers' picks one worker to do the computation.
+        // and 'pid % job_workers == worker_id % job_workers' checks if current worker is the picked worker
+        let mut worker_partition_list = vec![];
+        let process_partition_list = self.graph_partition_manager.get_process_partition_list();
+        for pid in process_partition_list {
+            if pid % job_workers == worker_id % job_workers {
+                worker_partition_list.push(pid as u64)
+            }
+        }
+        Ok(Some(worker_partition_list))
     }
 }
 
