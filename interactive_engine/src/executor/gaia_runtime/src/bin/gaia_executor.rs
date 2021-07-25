@@ -19,53 +19,55 @@ extern crate futures;
 extern crate grpcio;
 #[macro_use]
 extern crate log;
+extern crate gaia_pegasus;
+extern crate gs_gremlin;
 extern crate log4rs;
 extern crate maxgraph_common;
 extern crate maxgraph_runtime;
-extern crate maxgraph_store;
 extern crate maxgraph_server;
-extern crate protobuf;
-extern crate structopt;
+extern crate maxgraph_store;
 extern crate pegasus;
 extern crate pegasus_server;
-extern crate gs_gremlin;
-extern crate gaia_pegasus;
+extern crate protobuf;
+extern crate structopt;
 
+use std::env;
 use std::sync::mpsc::{channel, Sender};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::Duration;
-use std::env;
 
-use maxgraph_common::proto::query_flow::*;
-use maxgraph_common::proto::hb::*;
-use maxgraph_runtime::server::manager::*;
-use maxgraph_common::util::log4rs::init_log4rs;
-use maxgraph_store::config::{StoreConfig, VINEYARD_GRAPH};
-use maxgraph_store::api::prelude::*;
-use protobuf::Message;
-use maxgraph_common::util;
-use maxgraph_runtime::{server::RuntimeInfo};
-use grpcio::{ServerBuilder, EnvBuilder};
 use grpcio::ChannelBuilder;
 use grpcio::Environment;
 use grpcio::Server;
-use maxgraph_runtime::rpc::*;
+use grpcio::{EnvBuilder, ServerBuilder};
 use maxgraph_common::proto::data::*;
+use maxgraph_common::proto::hb::*;
+use maxgraph_common::proto::query_flow::*;
+use maxgraph_common::util;
+use maxgraph_common::util::log4rs::init_log4rs;
+use maxgraph_runtime::rpc::*;
+use maxgraph_runtime::server::manager::*;
+use maxgraph_runtime::server::RuntimeInfo;
+use maxgraph_store::api::prelude::*;
+use maxgraph_store::config::{StoreConfig, VINEYARD_GRAPH};
+use protobuf::Message;
 
-use std::sync::atomic::AtomicBool;
-use maxgraph_store::api::graph_partition::{GraphPartitionManager};
+use core::time;
+use gaia_runtime::server::init_with_rpc_service;
+use gaia_runtime::server::manager::GaiaServerManager;
+use gs_gremlin::{InitializeJobCompiler, QueryVineyard};
+use maxgraph_common::util::get_local_ip;
+use maxgraph_runtime::server::allocate::register_tcp_listener;
+use maxgraph_runtime::store::task_partition_manager::TaskPartitionManager;
 use maxgraph_server::StoreContext;
+use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use pegasus_server::rpc::start_rpc_server;
 use pegasus_server::service::Service;
-use gs_gremlin::{ QueryVineyard, InitializeJobCompiler};
-use maxgraph_runtime::store::task_partition_manager::TaskPartitionManager;
-use maxgraph_runtime::server::allocate::register_tcp_listener;
-use gaia_runtime::server::manager::GaiaServerManager;
+use std::collections::HashMap;
+use std::sync::atomic::AtomicBool;
+use tokio::net::TcpListener;
 use tokio::runtime::Runtime;
-use gaia_runtime::server::init_with_rpc_service;
-use maxgraph_common::util::get_local_ip;
-
 
 fn main() {
     if let Some(_) = env::args().find(|arg| arg == "--show-build-info") {
@@ -90,11 +92,18 @@ fn main() {
     let store_config = Arc::new(store_config);
     if store_config.graph_type.to_lowercase().eq(VINEYARD_GRAPH) {
         if cfg!(target_os = "linux") {
-            info!("Start executor with vineyard graph object id {:?}", store_config.vineyard_graph_id);
+            info!(
+                "Start executor with vineyard graph object id {:?}",
+                store_config.vineyard_graph_id
+            );
             use maxgraph_runtime::store::ffi::FFIGraphStore;
             let ffi_store = FFIGraphStore::new(store_config.vineyard_graph_id, worker_num as i32);
             let partition_manager = ffi_store.get_partition_manager();
-            run_main(store_config, Arc::new(ffi_store), Arc::new(partition_manager));
+            run_main(
+                store_config,
+                Arc::new(ffi_store),
+                Arc::new(partition_manager),
+            );
         } else {
             unimplemented!("Mac not support vineyard graph")
         }
@@ -103,106 +112,54 @@ fn main() {
     }
 }
 
-fn run_main<V, VI, E, EI>(store_config: Arc<StoreConfig>,
-                          graph: Arc<GlobalGraphQuery<V=V, E=E, VI=VI, EI=EI>>,
-                          partition_manager: Arc<GraphPartitionManager>)
-    where V: Vertex + 'static,
-          VI: Iterator<Item=V> + Send + 'static,
-          E: Edge + 'static,
-          EI: Iterator<Item=E> + Send + 'static {
-
-    let process_partition_list = partition_manager.get_process_partition_list();
-    let runtime_info = Arc::new(Mutex::new(RuntimeInfo::new(store_config.timely_worker_per_process,
-                                                            process_partition_list)));
-    let runtime_info_clone = runtime_info.clone();
-    let (hb_resp_sender, hb_resp_receiver) = channel();
-    let initial_timeout = 60;
-    let signal = Arc::new(AtomicBool::new(false));
-
-    let gaia_server_manager = GaiaServerManager::new(hb_resp_receiver, runtime_info,  Arc::new(RwLock::new(None)), signal.clone());
-  //  let pegasus_runtime = gaia_server_manager.get_server();
-    let task_partition_manager = gaia_server_manager.get_task_partition_manager();
-
-    let server_manager = Box::new(gaia_server_manager);
-    let _manager_guards = ServerManager::start_server(server_manager, store_config.clone(), Box::new(recover_prepare)).unwrap();
-
-    // waiting for initial task_partition_manager
-    let mut timeout_count = 0;
-    loop {
-        match task_partition_manager.read() {
-            Ok(_) => break,
-            Err(_) => {
-                info!("trying to read task_partition_manager...");
-                thread::sleep(Duration::from_secs(1))
-            }
-        }
-        timeout_count += 1;
-        if timeout_count == initial_timeout {
-            panic!("waiting for initial task_partition_manager timeout.")
-        }
-    };
-
-    let gaia_rpc_service = GaiaRpcService::new_service(store_config.clone(), graph.clone(), partition_manager.clone(), task_partition_manager);
-    let (ip, gaia_rpc_service_port) = gaia_rpc_service.start_rpc_service();
-    info!("gaia_rpc_service bind to: {:?} {:?}", ip, gaia_rpc_service_port);
-    let store_context = StoreContext::new(graph, partition_manager);
-    start_rpc_service(runtime_info_clone, store_config, gaia_rpc_service_port, hb_resp_sender, store_context);
-    thread::sleep(Duration::from_secs(u64::max_value()));
-}
-
-pub struct GaiaRpcService<V, VI, E, EI>
-where
-    V: Vertex + 'static,
-    VI: Iterator<Item = V> + Send + 'static,
-    E: Edge + 'static,
-    EI: Iterator<Item = E> + Send + 'static,
-{
+fn run_main<V, VI, E, EI>(
     store_config: Arc<StoreConfig>,
     graph: Arc<GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
     partition_manager: Arc<GraphPartitionManager>,
-    task_partition_manager: Arc<RwLock<Option<TaskPartitionManager>>>,
-}
-
-impl<V, VI, E, EI> GaiaRpcService<V, VI, E, EI>
-where
+) where
     V: Vertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
     E: Edge + 'static,
     EI: Iterator<Item = E> + Send + 'static,
 {
-    pub fn new_service(
-        store_config: Arc<StoreConfig>,
-        graph: Arc<GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
-        partition_manager: Arc<GraphPartitionManager>,
-        task_partition_manager: Arc<RwLock<Option<TaskPartitionManager>>>,
-    ) -> GaiaRpcService<V, VI, E, EI> {
-        GaiaRpcService {
-            store_config,
-            graph,
-            partition_manager,
-            task_partition_manager
-        }
-    }
+    let process_partition_list = partition_manager.get_process_partition_list();
+    info!("process_partition_list: {:?}", process_partition_list);
+    let runtime_info = Arc::new(Mutex::new(RuntimeInfo::new(
+        store_config.timely_worker_per_process,
+        process_partition_list,
+    )));
+    let runtime_info_clone = runtime_info.clone();
+    let (hb_resp_sender, hb_resp_receiver) = channel();
+    let signal = Arc::new(AtomicBool::new(false));
 
-    pub fn start_rpc_service(&self)-> (String, u16) {
-        let task_partition_manager = {
-            let task_partition_manager = self.task_partition_manager.read().unwrap();
-            task_partition_manager.clone().unwrap()
-        };
-        let partition_task_list = task_partition_manager.get_partition_task_list();
-        info!("partition_task_list in starting gaia {:?}", partition_task_list);
-        let rpc_port = Runtime::new().unwrap().block_on(async {
-            let query_vineyard = QueryVineyard::new(self.graph.clone(), self.partition_manager.clone(), partition_task_list, self.store_config.worker_num as usize, self.store_config.worker_id as u64);
-            let job_compiler = query_vineyard.initialize_job_compiler();
-            let service = Service::new(job_compiler);
-            let port = self.store_config.rpc_port;
-            let addr = format!("{}:{}", "0.0.0.0", port);
-            let local_addr = start_rpc_server(addr.parse().unwrap(), service, true, false).await.unwrap();
-            local_addr.port()
-        });
-        let ip = get_local_ip();
-        (ip, rpc_port)
-    }
+    let gaia_server_manager = GaiaServerManager::new(
+        hb_resp_receiver,
+        runtime_info,
+        signal.clone(),
+        store_config.clone(),
+        graph.clone(),
+        partition_manager.clone(),
+    );
+
+    let server_manager = Box::new(gaia_server_manager);
+    let _manager_guards = ServerManager::start_server(
+        server_manager,
+        store_config.clone(),
+        Box::new(recover_prepare),
+    )
+    .unwrap();
+
+    // TODO(bingqing): set gaia_rpc_service_port in config, we set as 8088 for test now
+    let gaia_rpc_service_port = 8088;
+    let store_context = StoreContext::new(graph, partition_manager);
+    start_hb_rpc_service(
+        runtime_info_clone,
+        store_config,
+        gaia_rpc_service_port,
+        hb_resp_sender,
+        store_context,
+    );
+    thread::sleep(Duration::from_secs(u64::max_value()));
 }
 
 fn recover_prepare(prepared: &[u8]) -> Result<Vec<u8>, String> {
@@ -214,29 +171,38 @@ fn recover_prepare(prepared: &[u8]) -> Result<Vec<u8>, String> {
         })
 }
 
-fn start_rpc_service<VV, VVI, EE, EEI>(runtime_info: Arc<Mutex<RuntimeInfo>>,
-                                       store_config: Arc<StoreConfig>,
-                                       gaia_service_port: u16,
-                                       hb_resp_sender: Sender<Arc<ServerHBResp>>,
-                                       store_context: StoreContext<VV, VVI, EE, EEI>)
-    where VV: 'static + Vertex ,
-          VVI: 'static + Iterator<Item=VV> + Send,
-          EE: 'static + Edge,
-          EEI: 'static + Iterator<Item=EE> + Send
+fn start_hb_rpc_service<VV, VVI, EE, EEI>(
+    runtime_info: Arc<Mutex<RuntimeInfo>>,
+    store_config: Arc<StoreConfig>,
+    gaia_service_port: u16,
+    hb_resp_sender: Sender<Arc<ServerHBResp>>,
+    store_context: StoreContext<VV, VVI, EE, EEI>,
+) where
+    VV: 'static + Vertex,
+    VVI: 'static + Iterator<Item = VV> + Send,
+    EE: 'static + Edge,
+    EEI: 'static + Iterator<Item = EE> + Send,
 {
     // build hb information
     let mut hb_providers = Vec::new();
     let mut hb_resp_senders = Vec::new();
     let hb_provider = move |ref mut server_hb_req: &mut ServerHBReq| {
         server_hb_req.set_runtimeReq(build_runtime_req(runtime_info.clone()));
-        server_hb_req.mut_endpoint().set_runtimCtrlAndAsyncPort(gaia_service_port as i32);
+        server_hb_req
+            .mut_endpoint()
+            .set_runtimCtrlAndAsyncPort(gaia_service_port as i32);
     };
 
     hb_providers.push(Box::new(hb_provider));
     hb_resp_senders.push(hb_resp_sender);
 
     let store_config_clone = store_config.clone();
-    init_with_rpc_service(store_config_clone, hb_providers, hb_resp_senders, store_context);
+    init_with_rpc_service(
+        store_config_clone,
+        hb_providers,
+        hb_resp_senders,
+        store_context,
+    );
 }
 
 fn build_runtime_req(runtime_info: Arc<Mutex<RuntimeInfo>>) -> RuntimeHBReq {
@@ -254,16 +220,16 @@ fn build_runtime_req(runtime_info: Arc<Mutex<RuntimeInfo>>) -> RuntimeHBReq {
 
 /// return: (aliveId, partiiton assignments)
 fn get_init_info(config: &StoreConfig) -> (u64, Vec<PartitionId>) {
-    use maxgraph_server::client::ZKClient;
     use maxgraph_common::proto::data_grpc::*;
     use maxgraph_common::util::ip;
+    use maxgraph_server::client::ZKClient;
 
     let zk_url = format!("{}/{}", config.zk_url, config.graph_name);
     let zk = ZKClient::new(&zk_url, config.zk_timeout_ms, config.get_zk_auth());
     let addr = zk.get_coordinator_addr();
 
-    let channel = ChannelBuilder::new(Arc::new(EnvBuilder::new().build()))
-        .connect(addr.to_string().as_str());
+    let channel =
+        ChannelBuilder::new(Arc::new(EnvBuilder::new().build())).connect(addr.to_string().as_str());
 
     let client = ServerDataApiClient::new(channel);
 

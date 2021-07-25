@@ -1,55 +1,63 @@
 pub mod manager;
 
-use std::sync::Arc;
-use std::sync::mpsc::channel;
+use grpcio::{ChannelBuilder, Environment, ServerBuilder};
 use maxgraph_common::proto::debug_grpc;
+use maxgraph_common::proto::gremlin_query_grpc;
+use maxgraph_common::proto::hb::*;
+use maxgraph_common::proto::hb::*;
+use maxgraph_common::util::get_local_ip;
+use maxgraph_server::heartbeat::Heartbeat;
+use maxgraph_server::service::{DebugService, GremlinRpcService};
+use maxgraph_server::{service, Store, StoreContext};
+use maxgraph_store::api::prelude::*;
+use maxgraph_store::api::prelude::*;
+use maxgraph_store::config::StoreConfig;
+use pegasus_server::rpc::start_rpc_server;
+use pegasus_server::service::Service;
+use std::collections::HashMap;
+use std::sync::mpsc::channel;
+use std::sync::mpsc::Sender;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-use maxgraph_common::util::get_local_ip;
-use maxgraph_store::api::prelude::*;
-use maxgraph_common::proto::gremlin_query_grpc;
-use maxgraph_store::config::StoreConfig;
-use maxgraph_store::api::prelude::*;
-use std::sync::mpsc::Sender;
-use maxgraph_common::proto::hb::*;
-use maxgraph_server::{StoreContext, Store, service};
-use maxgraph_server::service::{GremlinRpcService, DebugService};
 use tokio::runtime::Runtime;
-use pegasus_server::rpc::start_rpc_server;
-use std::collections::HashMap;
-use pegasus_server::service::Service;
-use maxgraph_common::proto::hb::*;
-use maxgraph_server::heartbeat::Heartbeat;
-use grpcio::{Environment, ServerBuilder, ChannelBuilder};
 
-
-pub fn init_with_rpc_service<VV, VVI, EE, EEI,  FS>(config: Arc<StoreConfig>,
-                                                      hb_providers: Vec<Box<FS>>,
-                                                      hb_resp_senders: Vec<Sender<Arc<ServerHBResp>>>,
-                                                      store_context: StoreContext<VV, VVI, EE, EEI>)
-    where VV: 'static + Vertex,
-          VVI: 'static  +  Iterator<Item=VV> + Send,
-          EE: 'static + Edge,
-          EEI: 'static  +  Iterator<Item=EE> + Send,
-          FS: 'static + Fn(&mut ServerHBReq) + Send {
+pub fn init_with_rpc_service<VV, VVI, EE, EEI, FS>(
+    config: Arc<StoreConfig>,
+    hb_providers: Vec<Box<FS>>,
+    hb_resp_senders: Vec<Sender<Arc<ServerHBResp>>>,
+    store_context: StoreContext<VV, VVI, EE, EEI>,
+) where
+    VV: 'static + Vertex,
+    VVI: 'static + Iterator<Item = VV> + Send,
+    EE: 'static + Edge,
+    EEI: 'static + Iterator<Item = EE> + Send,
+    FS: 'static + Fn(&mut ServerHBReq) + Send,
+{
     let store = Arc::new(Store::new(config.clone()));
     let gremlin_service = GremlinRpcService::new(Arc::new(store_context));
-    let (host, port) = start_all(store.clone(),gremlin_service);
+    let (host, port) = start_all(store.clone(), gremlin_service);
     info!("Start rpc service successfully {} {}", host, port);
-    let mut hb = Heartbeat::new(host, port as u32, store.clone(), hb_providers, hb_resp_senders);
+    let mut hb = Heartbeat::new(
+        host,
+        port as u32,
+        store.clone(),
+        hb_providers,
+        hb_resp_senders,
+    );
     hb.start();
 }
 
-
-
-pub(crate) fn start_all<VV, VVI, EE, EEI>(store: Arc<Store>,
-                                             gremlin_server: GremlinRpcService<VV, VVI, EE, EEI>) -> (String, u16)
-    where
-          VV: 'static + Vertex,
-          VVI: 'static +  Send + Iterator<Item=VV>,
-          EE: 'static + Edge,
-          EEI: 'static + Send +  Iterator<Item=EE> {
-
+pub(crate) fn start_all<VV, VVI, EE, EEI>(
+    store: Arc<Store>,
+    gremlin_server: GremlinRpcService<VV, VVI, EE, EEI>,
+) -> (String, u16)
+where
+    VV: 'static + Vertex,
+    VVI: 'static + Send + Iterator<Item = VV>,
+    EE: 'static + Edge,
+    EEI: 'static + Send + Iterator<Item = EE>,
+{
     let (tx, rx) = channel();
     thread::spawn(move || {
         let config = store.get_config();
@@ -75,5 +83,3 @@ pub(crate) fn start_all<VV, VVI, EE, EEI>(store: Arc<Store>,
     info!("start service success, bind address: {}:{}", ip, port);
     (ip, port)
 }
-
-
