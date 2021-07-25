@@ -2,8 +2,10 @@
 #
 # interactive_engine command tool
 
-readonly SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
-readonly WORKSPACE=${SCRIPT_DIR}/../
+set -x
+set -e
+set -o pipefail
+readonly WORKSPACE=${GRAPHSCOPE_HOME}
 
 err() {
   echo -e "${RED}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [ERROR]${NC} $*" >&2
@@ -106,8 +108,8 @@ start_frontend() {
 
 start_executor() {
   export VINEYARD_IPC_SOCKET=$3
-  inner_config=$CONFIG_DIR/executor.local.vineyard.properties
-  cp $WORKSPACE/config/executor.local.vineyard.properties $inner_config
+  inner_config=$CONFIG_DIR/executor.vineyard.properties
+  cp $WORKSPACE/config/executor.vineyard.properties $inner_config
   sed -i "s/VINEYARD_OBJECT_ID/$1/g" $inner_config
   sed -i "s/ZOOKEEPER_PORT/$4/g" $inner_config
   server_id=1
@@ -150,6 +152,59 @@ close_instance() {
   sudo kill $executor_id || true
 }
 
+start_service() {
+  cluster_type=$1
+  port=$2
+  instance_id=$3
+  zookeeper_port=$4
+
+  if [ ! -n "$GRAPHSCOPE_RUNTIME" ]; then
+    export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
+  fi
+
+  LIBPATH="."
+  for file in `ls ${WORKSPACE}/lib`; do
+    LIBPATH=$LIBPATH":"$WORKSPACE/lib/$file
+  done
+
+  INSTANCE_DIR=$GRAPHSCOPE_RUNTIME/$instance_id
+  mkdir -p $INSTANCE_DIR
+  inner_config=$INSTANCE_DIR/application.properties
+  cp $WORKSPACE/config/application.properties $inner_config
+  if [ "$cluster_type" == "local" ]; then
+    sed -i "s#SERVER_PORT#$port#g" $inner_config
+    sed -i "s#CREATE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
+    sed -i "s#CLOSE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
+    sed -i "s#ZOOKEEPER_PORT#$zookeeper_port#g" $inner_config
+
+    java -cp $LIBPATH -Dspring.config.location=$inner_config com.alibaba.maxgraph.admin.InstanceManagerApplication &
+    echo $! > $INSTANCE_DIR/graphmanager.pid
+  else
+    sed -i "s#SERVER_PORT#8080#g" $inner_config
+    sed -i "s#CREATE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
+    sed -i "s#CLOSE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
+    sed -i "s#ZOOKEEPER_PORT#2181/g" $inner_config
+    java -cp $LIBPATH -Dspring.config.location=$inner_config com.alibaba.maxgraph.admin.InstanceManagerApplication
+  fi
+}
+
+stop_service() {
+  cluster_type=$1
+  instance_id=$2
+
+  if [ ! -n "$GRAPHSCOPE_RUNTIME" ]; then
+    export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
+  fi
+
+  if [ "$cluster_type" == "local" ]; then
+    instance_dir=$GRAPHSCOPE_RUNTIME/$instance_id
+    graphmanager_id=`cat $INSTANCE_DIR/graphmanager.pid`
+    sudo kill $graphmanager_id || true > /dev/null 2>&1
+  else
+    jps | grep InstanceManagerApplication | awk '{print $1}' | xargs kill -9
+  fi
+}
+
 # parse argv
 # TODO(acezen): when option and command is not illegal, warning and output usage.
 # TODO(acezen): now the option need to specify before command, that's not user-friendly.
@@ -157,9 +212,15 @@ while test $# -ne 0; do
   arg=$1; shift
   case $arg in
     -h|--help) usage; exit ;;
-    start_instance) start_instance $1 $2 $3 $4 $5; exit;;
+    create_instance) create_instance "$@"; exit;;
     close_instance) close_instance; exit;;
+    start_service) start_service "$@"; exit;;
+    stop_service) stop_service "$@"; exit;;
     *)
       ;;
   esac
 done
+
+set +x
+set +e
+set +o pipefail
