@@ -4,23 +4,18 @@ use grpcio::{ChannelBuilder, Environment, ServerBuilder};
 use maxgraph_common::proto::debug_grpc;
 use maxgraph_common::proto::gremlin_query_grpc;
 use maxgraph_common::proto::hb::*;
-use maxgraph_common::proto::hb::*;
 use maxgraph_common::util::get_local_ip;
 use maxgraph_server::heartbeat::Heartbeat;
 use maxgraph_server::service::{DebugService, GremlinRpcService};
-use maxgraph_server::{service, Store, StoreContext};
-use maxgraph_store::api::prelude::*;
+use maxgraph_server::{Store, StoreContext};
 use maxgraph_store::api::prelude::*;
 use maxgraph_store::config::StoreConfig;
-use pegasus_server::rpc::start_rpc_server;
-use pegasus_server::service::Service;
-use std::collections::HashMap;
+
 use std::sync::mpsc::channel;
 use std::sync::mpsc::Sender;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-use tokio::runtime::Runtime;
 
 pub fn init_with_rpc_service<VV, VVI, EE, EEI, FS>(
     config: Arc<StoreConfig>,
@@ -66,7 +61,7 @@ where
         let gremlin_service = gremlin_query_grpc::create_gremlin_service(gremlin_server);
         // let graph_store_service = store_node_grpc::create_graph_store_service(GraphStoreServer::new(store.get_graph()));
         let env = Arc::new(Environment::new(config.rpc_thread_count as usize));
-        let mut server_builder = ServerBuilder::new(env.clone())
+        let server_builder = ServerBuilder::new(env.clone())
             .channel_args(ChannelBuilder::new(env).reuse_port(false).build_args())
             .register_service(debug_service)
             .register_service(gremlin_service)

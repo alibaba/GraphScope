@@ -17,22 +17,31 @@
 //! it also collects the status information of timely_server and reports to runtime_manager (coordinator)
 extern crate protobuf;
 
+use gaia_pegasus::Configuration;
+use gs_gremlin::{InitializeJobCompiler, QueryVineyard};
 use maxgraph_common::proto::hb::*;
 use maxgraph_common::util::{get_local_ip, log};
+use maxgraph_runtime::server::allocate::register_tcp_listener;
+use maxgraph_runtime::server::manager::{ManagerGuards, ServerManager, ServerManagerCommon};
+use maxgraph_runtime::server::network_manager::{NetworkManager, PegasusNetworkCenter};
+use maxgraph_runtime::server::RuntimeAddress;
 use maxgraph_runtime::server::RuntimeInfo;
+use maxgraph_runtime::store::task_partition_manager::TaskPartitionManager;
+use maxgraph_store::api::graph_partition::GraphPartitionManager;
+use maxgraph_store::api::{Edge, GlobalGraphQuery, Vertex};
 use maxgraph_store::config::StoreConfig;
-use std::net::TcpListener;
+use pegasus::network_connection;
+use pegasus::Pegasus;
+use pegasus_network::config::{NetworkConfig, PeerConfig};
+use pegasus_server::rpc::start_rpc_server;
+use pegasus_server::service::Service;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time;
 use std::vec::Vec;
-
-use maxgraph_runtime::server::RuntimeAddress;
-use maxgraph_runtime::store::store_client::StoreClientManager;
-use pegasus::Pegasus;
-use pegasus::{network_connection, ConfigArgs};
+use tokio::runtime::Runtime;
 
 fn parse_store_ip_list(address_list: &[RuntimeAddressProto]) -> (Vec<String>, Vec<RuntimeAddress>) {
     let mut ip_list = Vec::with_capacity(address_list.len());
@@ -50,21 +59,6 @@ fn parse_store_ip_list(address_list: &[RuntimeAddressProto]) -> (Vec<String>, Ve
 
     (ip_list, store_address_list)
 }
-
-use gaia_pegasus::Configuration;
-use gs_gremlin::{InitializeJobCompiler, QueryVineyard};
-use maxgraph_runtime::server::allocate::register_tcp_listener;
-use maxgraph_runtime::server::manager::{ManagerGuards, ServerManager, ServerManagerCommon};
-use maxgraph_runtime::server::network_manager::{NetworkManager, PegasusNetworkCenter};
-use maxgraph_runtime::store::remote_store_service::RemoteStoreServiceManager;
-use maxgraph_runtime::store::task_partition_manager::TaskPartitionManager;
-use maxgraph_store::api::graph_partition::GraphPartitionManager;
-use maxgraph_store::api::{Edge, GlobalGraphQuery, PartitionId, Vertex};
-use pegasus_network::config::{NetworkConfig, PeerConfig};
-use pegasus_server::rpc::{start_debug_rpc_server, start_rpc_server};
-use pegasus_server::service::Service;
-use std::collections::HashMap;
-use tokio::runtime::Runtime;
 
 pub struct GaiaServerManager<V, VI, E, EI>
 where
@@ -120,26 +114,6 @@ where
         self.task_partition_manager.clone()
     }
 
-    /// Initialize pegasus runtime
-    ///
-    /// Pegasus runtime is shared by query rpc thread and server manager thread, but it will only be initialized once by
-    /// server manager thread and query rpc thread only read the value.
-    /// Consequently here use `unsafe` but not `Mutex` or `RwLock` to initialize pegasus runtime.
-    fn initial_pegasus_runtime(&self, process_id: usize, store_config: Arc<StoreConfig>) {
-        let pegasus_runtime = ConfigArgs::distribute(
-            process_id,
-            store_config.pegasus_thread_pool_size as usize,
-            store_config.worker_num as usize,
-            "".to_string(),
-        )
-        .build();
-        unsafe {
-            let pegasus_pointer =
-                Arc::into_raw(self.gaia_pegasus_runtime.clone()) as *mut Option<Pegasus>;
-            (*pegasus_pointer).replace(pegasus_runtime);
-        }
-    }
-
     fn initial_task_partition_manager(&self, task_partition_manager: TaskPartitionManager) {
         let mut manager = self.task_partition_manager.write().unwrap();
         manager.replace(task_partition_manager);
@@ -159,12 +133,12 @@ where
                 task_partition_manager.clone().unwrap()
             };
             let partition_task_list = task_partition_manager.get_partition_task_list();
-            let task_partition_list_mapping =
-                task_partition_manager.get_task_partition_list_mapping();
             info!(
                 "partition_task_list in starting gaia {:?}",
                 partition_task_list
             );
+            let _task_partition_list_mapping =
+                task_partition_manager.get_task_partition_list_mapping();
             let query_vineyard = QueryVineyard::new(
                 self.graph.clone(),
                 self.partition_manager.clone(),
@@ -174,7 +148,7 @@ where
             );
             let job_compiler = query_vineyard.initialize_job_compiler();
             let service = Service::new(job_compiler);
-            // TODO(bingqing): set rpc_port in store_config
+            // TODO(bingqing): assign rpc_port in store_config
             //  let port = self.store_config.rpc_port;
             let port = 8088;
             let addr = format!("{}:{}", "0.0.0.0", port);
@@ -201,7 +175,7 @@ where
         store_config: Arc<StoreConfig>,
         _recover: Box<dyn Send + Sync + 'static + Fn(&[u8]) -> Result<Self::Data, String>>,
     ) -> Result<ManagerGuards<()>, String> {
-        info!("Start_server for GaiaServerManager...");
+        info!("start_server for GaiaServerManager...");
         let manager_switch = self.server_manager_common.manager_switch.clone();
         let handle = thread::Builder::new().name("Gaia Server Manager".to_owned()).spawn(move || {
             let listener = register_tcp_listener();
@@ -212,7 +186,6 @@ where
 
             while self.server_manager_common.manager_switch.load(Ordering::Relaxed) {
                 let hb_resp = self.server_manager_common.get_hb_response();
-                // TODO: check network_manager.is_serving()
                 if hb_resp.is_none() || network_manager.is_serving() {
                     if hb_resp.is_none() {
                         info!("hb_resp is none");
@@ -228,14 +201,8 @@ where
                 let address_list = timely_server_resp.get_addresses();
                 let task_partition_list = timely_server_resp.get_task_partition_list();
 
-
-                // if self.gaia_pegasus_runtime.is_none() {
-                //     info!("Begin start pegasus with process id {} in group {}.", worker_id, group_id);
-                //     self.initial_pegasus_runtime(worker_id as usize, store_config.clone());
-                // }
-
                 if !address_list.is_empty() && !task_partition_list.is_empty() {
-                    // start gaia_pegasus!!
+                    // start gaia_pegasus
                     let configuration = build_gaia_config(worker_id as usize, address_list);
                     if let Err(err) = gaia_pegasus::startup(configuration) {
                         info!("start pegasus failed {:?}", err);
@@ -243,7 +210,7 @@ where
                         info!("start pegasus successfully");
                     }
 
-                    let (ip_list, store_ip_list) = parse_store_ip_list(address_list);
+                    let (ip_list, _store_ip_list) = parse_store_ip_list(address_list);
                     info!("Receive task partition info {:?} from coordinator", task_partition_list);
                     let task_partition_manager = TaskPartitionManager::parse_proto(task_partition_list);
 
@@ -254,6 +221,7 @@ where
                     self.initial_task_partition_manager(task_partition_manager);
                     self.signal.store(true, Ordering::Relaxed);
 
+                    // start gaia_pegasus rpc service
                     let (ip, gaia_rpc_service_port) = self.start_rpc_service();
                     info!("gaia_rpc_service bind to: {:?} {:?}", ip, gaia_rpc_service_port);
                 } else {
@@ -264,7 +232,6 @@ where
                 info!("worker {} in group {} is starting, caused by connection between {:?} and {:?} is not working.",
                       worker_id, group_id, start_addresses, await_addresses);
 
-                // TODO(bingqing): check here, do we need to wait for gaia_pegasus network ok?
                 match network_manager.reconnect(start_addresses, await_addresses, store_config.hb_interval_ms) {
                     Ok(result) => {
                         info!("worker {} in group {} connect to {:?} success.", worker_id, group_id, result);
@@ -316,21 +283,13 @@ fn parse_store_ip_list_for_gaia(address_list: &[RuntimeAddressProto]) -> Vec<Pee
     let mut server_idx = 0;
     for address in address_list {
         let peer_config = PeerConfig {
-            // TODO(bingqing): check if peers server_id correct
             server_id: server_idx,
             ip: address.get_ip().to_string(),
-            // TODO(bingqing): Is it okay to assign random port for pegasus?
+            // assign a random port for pegasus
             port: 0,
         };
         peers_list.push(peer_config);
         server_idx += 1;
     }
     peers_list
-}
-
-fn build_partition_task_mapping(
-    task_partition_list: &[RuntimeTaskPartitionProto],
-) -> HashMap<PartitionId, u32> {
-    let task_partition_manager = TaskPartitionManager::parse_proto(task_partition_list);
-    task_partition_manager.get_partition_task_list()
 }
