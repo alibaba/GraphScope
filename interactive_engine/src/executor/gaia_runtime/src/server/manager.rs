@@ -96,7 +96,6 @@ impl ServerManager for GaiaServerManager {
         store_config: Arc<StoreConfig>,
         _recover: Box<dyn Send + Sync + 'static + Fn(&[u8]) -> Result<Self::Data, String>>,
     ) -> Result<ManagerGuards<()>, String> {
-        info!("start_server for GaiaServerManager...");
         let manager_switch = self.server_manager_common.manager_switch.clone();
         let handle = thread::Builder::new().name("Gaia Server Manager".to_owned()).spawn(move || {
             let listener = register_tcp_listener();

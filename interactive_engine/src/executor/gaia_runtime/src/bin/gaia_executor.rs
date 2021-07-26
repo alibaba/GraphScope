@@ -135,8 +135,6 @@ fn run_main<V, VI, E, EI>(
     )
     .unwrap();
 
-    // TODO(bingqing): assign gaia_rpc_service_port randomly, we set as 8088 for tmp now
-    //  let gaia_rpc_service_port = 8088;
     let gaia_service = GaiaService::new(
         store_config.clone(),
         graph.clone(),
