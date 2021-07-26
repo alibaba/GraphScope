@@ -18,7 +18,7 @@ use gremlin_core::{str_to_dyn_error, DynResult, Partitioner, ID, ID_MASK};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::{PartitionId, VertexId};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 /// A partition utility that one server contains multiple graph partitions for MaxGraph (V2) Store
 pub struct MaxGraphMultiPartition {
@@ -69,7 +69,7 @@ impl Partitioner for MaxGraphMultiPartition {
         let mut worker_partition_list = vec![];
         let process_partition_list = self.graph_partition_manager.get_process_partition_list();
         for pid in process_partition_list {
-            if pid % job_workers == worker_id % job_workers {
+            if pid % (job_workers as u32) == worker_id % (job_workers as u32) {
                 worker_partition_list.push(pid as u64)
             }
         }
@@ -83,21 +83,21 @@ impl Partitioner for MaxGraphMultiPartition {
 pub struct VineyardMultiPartition {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
     // mapping of partition id -> worker id
-    partition_worker_mapping: HashMap<u32, u32>,
+    partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
     // mapping of worker id -> partition list
-    worker_partition_list: HashMap<u32, Vec<u32>>,
+    worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
 }
 
 impl VineyardMultiPartition {
     pub fn new(
         graph_partition_manager: Arc<dyn GraphPartitionManager>,
-        partition_worker_mapping: HashMap<u32, u32>,
-        worker_partition_list: HashMap<u32, Vec<u32>>,
-    ) -> Self {
+        partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+        worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
+    ) -> VineyardMultiPartition {
         VineyardMultiPartition {
             graph_partition_manager,
             partition_worker_mapping,
-            worker_partition_list,
+            worker_partition_list_mapping,
         }
     }
 }
@@ -110,14 +110,25 @@ impl Partitioner for VineyardMultiPartition {
         // 2. get worker_id by the prebuild partition_worker_map, which specifies partition_id -> worker_id
         let vid = (*id & (ID_MASK)) as VertexId;
         let partition_id = self.graph_partition_manager.get_partition_id(vid) as PartitionId;
-        let worker_id =
-            *self
-                .partition_worker_mapping
-                .get(&partition_id)
-                .ok_or(str_to_dyn_error(
-                    "get worker id failed in VineyardMultiPartition",
-                ))?;
-        Ok(worker_id as u64)
+        if let Ok(partition_worker_mapping) = self.partition_worker_mapping.read() {
+            if let Some(partition_worker_mapping) = partition_worker_mapping.as_ref() {
+                if let Some(worker_id) = partition_worker_mapping.get(&partition_id) {
+                    Ok(*worker_id as u64)
+                } else {
+                    Err(str_to_dyn_error(
+                        "get worker id failed in VineyardMultiPartition",
+                    ))
+                }
+            } else {
+                Err(str_to_dyn_error(
+                    "partition_worker_mapping is not initialized in VineyardMultiPartition",
+                ))
+            }
+        } else {
+            Err(str_to_dyn_error(
+                "read partition_worker_mapping in VineyardMultiPartition failed",
+            ))
+        }
     }
 
     fn get_worker_partitions(
@@ -126,11 +137,23 @@ impl Partitioner for VineyardMultiPartition {
         worker_id: u32,
     ) -> DynResult<Option<Vec<u64>>> {
         // Vineyard will pre-allocate the worker_partition_list mapping
-        if let Some(partition_list) = self.worker_partition_list.get(&worker_id) {
-            Ok(Some(partition_list.iter().map(|pid| *pid as u64).collect()))
+        if let Ok(worker_partition_list_mapping) = self.worker_partition_list_mapping.read() {
+            if let Some(worker_partition_list_mapping) = worker_partition_list_mapping.as_ref() {
+                if let Some(partition_list) = worker_partition_list_mapping.get(&worker_id) {
+                    Ok(Some(partition_list.iter().map(|pid| *pid as u64).collect()))
+                } else {
+                    Err(str_to_dyn_error(
+                        "get worker partitions failed in VineyardMultiPartition",
+                    ))
+                }
+            } else {
+                Err(str_to_dyn_error(
+                    "worker_partition_list is not initialized in VineyardMultiPartition",
+                ))
+            }
         } else {
             Err(str_to_dyn_error(
-                "get worker partitions failed in VineyardMultiPartition",
+                "read worker_partition_list failed in VineyardMultiPartition",
             ))
         }
     }

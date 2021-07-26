@@ -16,13 +16,13 @@
 mod global_storage;
 mod partitioner;
 
-use crate::graph_proxy::partitioner::{MaxGraphMultiPartition, VineyardMultiPartition};
 use global_storage::create_gs_store;
 use gremlin_core::compiler::GremlinJobCompiler;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::{Edge, GlobalGraphQuery, Vertex};
+use partitioner::{MaxGraphMultiPartition, VineyardMultiPartition};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 pub trait InitializeJobCompiler {
     fn initialize_job_compiler(&self) -> GremlinJobCompiler;
@@ -68,8 +68,8 @@ where
 pub struct QueryVineyard<V, VI, E, EI> {
     graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
     graph_partitioner: Arc<dyn GraphPartitionManager>,
-    partition_worker_mapping: HashMap<u32, u32>,
-    worker_partition_list: HashMap<u32, Vec<u32>>,
+    partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+    worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
     num_servers: usize,
     server_index: u64,
 }
@@ -78,8 +78,8 @@ impl<V, VI, E, EI> QueryVineyard<V, VI, E, EI> {
     pub fn new(
         graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
         graph_partitioner: Arc<dyn GraphPartitionManager>,
-        partition_worker_mapping: HashMap<u32, u32>,
-        worker_partition_list: HashMap<u32, Vec<u32>>,
+        partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+        worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
         num_servers: usize,
         server_index: u64,
     ) -> Self {
@@ -87,7 +87,7 @@ impl<V, VI, E, EI> QueryVineyard<V, VI, E, EI> {
             graph_query,
             graph_partitioner,
             partition_worker_mapping,
-            worker_partition_list,
+            worker_partition_list_mapping,
             num_servers,
             server_index,
         }
@@ -107,7 +107,7 @@ where
         let partition = VineyardMultiPartition::new(
             self.graph_partitioner.clone(),
             self.partition_worker_mapping.clone(),
-            self.worker_partition_list.clone(),
+            self.worker_partition_list_mapping.clone(),
         );
         GremlinJobCompiler::new(partition, self.num_servers, self.server_index)
     }
