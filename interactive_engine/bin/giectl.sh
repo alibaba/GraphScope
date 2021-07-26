@@ -62,7 +62,7 @@ set_common_envs() {
 }
 
 start_coordinator() {
-  readonly JAVA_OPT="-server -Xmx1024m -Xms1024m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./java.hprof -verbose:gc -Xloggc:${LOG_DIR}/maxgraph-coordinator.gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-coordinator.log -Dlogbasedir=${LOG_DIR}/coordinator -Dlog4j.configurationFile=file:${WORKSPACE}/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath ${WORKSPACE}/0.0.1-SNAPSHOT/conf/*:${WORKSPACE}/0.0.1-SNAPSHOT/lib/*:"
+  JAVA_OPT="-server -Xmx1024m -Xms1024m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./java.hprof -verbose:gc -Xloggc:${LOG_DIR}/maxgraph-coordinator.gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-coordinator.log -Dlogbasedir=${LOG_DIR}/coordinator -Dlog4j.configurationFile=file:${WORKSPACE}/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath ${WORKSPACE}/0.0.1-SNAPSHOT/conf/*:${WORKSPACE}/0.0.1-SNAPSHOT/lib/*:"
   inner_config=$CONFIG_DIR/coordinator.application.properties
   cp $WORKSPACE/config/coordinator.application.properties $inner_config
   sed -i "s/ZOOKEEPER_PORT/$2/g" $inner_config
@@ -73,37 +73,39 @@ start_coordinator() {
 }
 
 start_frontend() {
-  readonly JAVA_OPT="-server -verbose:gc -Xloggc:${LOG_DIR}/maxgraph-frontend.gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-frontend.log -Dlogbasedir=${LOG_DIR}/frontend -Dlog4j.configurationFile=file:$WORKSPACE/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath $WORKSPACE/0.0.1-SNAPSHOT/conf/*:$WORKSPACE/0.0.1-SNAPSHOT/lib/*:"
-  readonly REPLACE_SCHEMA_PATH=`echo ${2//\//\\\/}`
+  JAVA_OPT="-server -verbose:gc -Xloggc:${LOG_DIR}/maxgraph-frontend.gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-frontend.log -Dlogbasedir=${LOG_DIR}/frontend -Dlog4j.configurationFile=file:$WORKSPACE/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath $WORKSPACE/0.0.1-SNAPSHOT/conf/*:$WORKSPACE/0.0.1-SNAPSHOT/lib/*:"
+  REPLACE_SCHEMA_PATH=`echo ${2//\//\\\/}`
 
   inner_config=$CONFIG_DIR/frontend.vineyard.properties
   cp $WORKSPACE/config/frontend.vineyard.properties $inner_config
   sed -i "s/VINEYARD_SCHEMA_PATH/$REPLACE_SCHEMA_PATH/g" $inner_config
   sed -i "s/ZOOKEEPER_PORT/$3/g" $inner_config
 
-  cd $WORKSPACE/frontend/frontendservice/target/classes/
+  pushd $WORKSPACE/frontend/frontendservice/target/classes/
 
   java ${JAVA_OPT} com.alibaba.maxgraph.frontendservice.FrontendServiceMain $inner_config $1 1>$LOG_DIR/maxgraph-frontend.out 2>$LOG_DIR/maxgraph-frontend.err &
 
   timeout_seconds=60
   wait_period_seconds=0
 
+  sleep 10
   while true
   do
-    gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.log | awk -F: '{print $6}'`
+    gremlin_server_port=$(awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.log | awk -F: '{print $6}')
     if [ -n "$gremlin_server_port" ]; then
-      echo "FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
+      log "FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
       break
     fi
     wait_period_seconds=$(($wait_period_seconds+5))
     if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-      echo "Get external ip of ${GREMLIN_EXPOSE} failed."
+      err "Get external ip of ${GREMLIN_EXPOSE} failed."
       break
     fi
     sleep 5
   done
 
   echo $! > $PID_DIR/frontend.pid
+  popd
 }
 
 start_executor() {
@@ -131,8 +133,10 @@ create_instance() {
   mkdir -p $LOG_DIR $CONFIG_DIR $PID_DIR
 
   start_coordinator ${object_id} ${zookeeper_port}
+  sleep 1
 
   start_frontend ${object_id} ${schema_path} ${zookeeper_port}
+  sleep 1
 
   start_executor ${object_id} ${server_id} ${vineyard_ipc_socket} \
                  ${zookeeper_port}
@@ -147,9 +151,9 @@ close_instance() {
   frontend_id=`cat $PID_DIR/frontend.pid`
   executor_id=`cat $PID_DIR/executor.pid`
 
-  sudo kill $coordinator_id || true
-  sudo kill $frontend_id || true
-  sudo kill $executor_id || true
+  kill $coordinator_id || true
+  kill $frontend_id || true
+  kill $executor_id || true
 }
 
 start_service() {
@@ -172,8 +176,8 @@ start_service() {
   inner_config=$INSTANCE_DIR/application.properties
   cp $WORKSPACE/config/application.properties $inner_config
   sed -i "s#SERVER_PORT#$port#g" $inner_config
-  sed -i "s#CREATE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
-  sed -i "s#CLOSE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
+  sed -i "s#CREATE_SCRIPT#$WORKSPACE/bin/giectl.sh#g" $inner_config
+  sed -i "s#CLOSE_SCRIPT#$WORKSPACE/bin/giectl.sh#g" $inner_config
   sed -i "s#ZOOKEEPER_PORT#$zookeeper_port#g" $inner_config
   if [ "$cluster_type" == "local" ]; then
     java -cp $LIBPATH -Dspring.config.location=$inner_config com.alibaba.maxgraph.admin.InstanceManagerApplication &
@@ -193,8 +197,8 @@ stop_service() {
 
   if [ "$cluster_type" == "local" ]; then
     instance_dir=$GRAPHSCOPE_RUNTIME/$instance_id
-    graphmanager_id=`cat $INSTANCE_DIR/graphmanager.pid`
-    sudo kill $graphmanager_id || true > /dev/null 2>&1
+    graphmanager_id=`cat $instance_dir/graphmanager.pid`
+    kill $graphmanager_id || true > /dev/null 2>&1
   else
     jps | grep InstanceManagerApplication | awk '{print $1}' | xargs kill -9
   fi
