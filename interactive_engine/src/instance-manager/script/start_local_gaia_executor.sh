@@ -34,6 +34,6 @@ sed -i "s/ZOOKEEPER_PORT/$zookeeper_port/g" $inner_config
 server_id=1
 
 export flag="maxgraph"$object_id"executor"
-RUST_BACKTRACE=full $WORKSPACE/bin/gaia_executor --config $inner_config $flag $server_id 1>> $LOG_DIR/maxgraph-executor.out 2>> $LOG_DIR/maxgraph-executor.err &
+RUST_BACKTRACE=full $WORKSPACE/bin/gaia_executor --config $inner_config $flag $server_id 1>> $LOG_DIR/gaia-executor.out 2>> $LOG_DIR/gaia-executor.err &
 
 echo $! > $PID_DIR/executor.pid
