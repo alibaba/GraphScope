@@ -55,6 +55,11 @@ public class DefaultVertexType implements VertexType {
     }
 
     @Override
+    public List<Integer> getPkPropertyIndices() {
+        return null;
+    }
+
+    @Override
     public String getLabel() {
         return this.label;
     }

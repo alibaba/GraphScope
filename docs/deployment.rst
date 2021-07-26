@@ -88,10 +88,10 @@ Ubuntu 20.04+ or MacOS.
 .. code:: shell
 
     ./scripts/deploy_local.sh install_deps
-    source ./gs_env
+    source ~/.graphscope_env
 
-* deploy GraphScope locally
+* build and deploy GraphScope locally
 .. code:: shell
 
-    ./scripts/deploy_local.sh deploy
-    export GRAPHSCOPE_PREFIX=/usr/local
+    ./scripts/deploy_local.sh build_and_deploy
+    export GRAPHSCOPE_HOME=/usr/local

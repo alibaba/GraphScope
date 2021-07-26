@@ -33,16 +33,4 @@ service CoordinatorService {
 
   // Closes a session.
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
-
-  // Create interactive instance
-  rpc CreateInteractiveInstance(CreateInteractiveRequest) returns (CreateInteractiveResponse);
-
-  // Closes interactive instance
-  rpc CloseInteractiveInstance(CloseInteractiveRequest) returns (CloseInteractiveResponse);
-
-  // Create learning instance
-  rpc CreateLearningInstance(CreateLearningInstanceRequest) returns (CreateLearningInstanceResponse);
-
-  // Closes learning instance
-  rpc CloseLearningInstance(CloseLearningInstanceRequest) returns (CloseLearningInstanceResponse);
 }

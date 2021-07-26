@@ -616,3 +616,63 @@ def ldbc_graph(graphscope_session):
     graph = load_ldbc(graphscope_session, prefix="{}/ldbc_sample".format(test_repo_dir))
     yield graph
     graph.unload()
+
+
+@pytest.fixture(scope="module")
+def modern_scripts():
+    queries = [
+        "g.V().has('name','marko').count()",
+        "g.V().has('person','name','marko').count()",
+        "g.V().has('person','name','marko').outE('created').count()",
+        "g.V().has('person','name','marko').outE('created').inV().count()",
+        "g.V().has('person','name','marko').out('created').count()",
+        "g.V().has('person','name','marko').out('created').values('name').count()",
+    ]
+    return queries
+
+
+@pytest.fixture(scope="module")
+def modern_bytecode():
+    def func(g):
+        from gremlin_python.process.traversal import Order
+        from gremlin_python.process.traversal import P
+
+        assert g.V().has("name", "marko").count().toList()[0] == 1
+        assert g.V().has("person", "name", "marko").count().toList()[0] == 1
+        assert (
+            g.V().has("person", "name", "marko").outE("created").count().toList()[0]
+            == 1
+        )
+        assert (
+            g.V()
+            .has("person", "name", "marko")
+            .outE("created")
+            .inV()
+            .count()
+            .toList()[0]
+            == 1
+        )
+        assert (
+            g.V().has("person", "name", "marko").out("created").count().toList()[0] == 1
+        )
+        assert (
+            g.V()
+            .has("person", "name", "marko")
+            .out("created")
+            .values("name")
+            .count()
+            .toList()[0]
+            == 1
+        )
+        assert (
+            g.V()
+            .hasLabel("person")
+            .has("age", P.gt(30))
+            .order()
+            .by("age", Order.desc)
+            .count()
+            .toList()[0]
+            == 2
+        )
+
+    return func

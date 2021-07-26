@@ -35,6 +35,10 @@ commonAnnotations: {}
 ##
 commonLabels: {}
 
+## Configure which executor (maxgraph or gaia) to use for store and frontend
+##
+executor: "maxgraph"
+
 ## Configure GraphScope Components with a custom my.cnf file
 ##
 javaOpts: ""
