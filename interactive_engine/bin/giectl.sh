@@ -171,19 +171,14 @@ start_service() {
   mkdir -p $INSTANCE_DIR
   inner_config=$INSTANCE_DIR/application.properties
   cp $WORKSPACE/config/application.properties $inner_config
+  sed -i "s#SERVER_PORT#$port#g" $inner_config
+  sed -i "s#CREATE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
+  sed -i "s#CLOSE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
+  sed -i "s#ZOOKEEPER_PORT#$zookeeper_port#g" $inner_config
   if [ "$cluster_type" == "local" ]; then
-    sed -i "s#SERVER_PORT#$port#g" $inner_config
-    sed -i "s#CREATE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
-    sed -i "s#CLOSE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
-    sed -i "s#ZOOKEEPER_PORT#$zookeeper_port#g" $inner_config
-
     java -cp $LIBPATH -Dspring.config.location=$inner_config com.alibaba.maxgraph.admin.InstanceManagerApplication &
     echo $! > $INSTANCE_DIR/graphmanager.pid
   else
-    sed -i "s#SERVER_PORT#8080#g" $inner_config
-    sed -i "s#CREATE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
-    sed -i "s#CLOSE_SCRIPT#$WORKSPACE/giectl.sh#g" $inner_config
-    sed -i "s#ZOOKEEPER_PORT#2181/g" $inner_config
     java -cp $LIBPATH -Dspring.config.location=$inner_config com.alibaba.maxgraph.admin.InstanceManagerApplication
   fi
 }
