@@ -18,23 +18,18 @@
 extern crate protobuf;
 
 use gaia_pegasus::Configuration;
-use gs_gremlin::{InitializeJobCompiler, QueryVineyard};
 use maxgraph_common::proto::hb::*;
-use maxgraph_common::util::{get_local_ip, log};
+use maxgraph_common::util::log;
 use maxgraph_runtime::server::allocate::register_tcp_listener;
 use maxgraph_runtime::server::manager::{ManagerGuards, ServerManager, ServerManagerCommon};
 use maxgraph_runtime::server::network_manager::{NetworkManager, PegasusNetworkCenter};
 use maxgraph_runtime::server::RuntimeAddress;
 use maxgraph_runtime::server::RuntimeInfo;
 use maxgraph_runtime::store::task_partition_manager::TaskPartitionManager;
-use maxgraph_store::api::graph_partition::GraphPartitionManager;
-use maxgraph_store::api::{Edge, GlobalGraphQuery, Vertex};
 use maxgraph_store::config::StoreConfig;
 use pegasus::network_connection;
 use pegasus::Pegasus;
 use pegasus_network::config::{NetworkConfig, PeerConfig};
-use pegasus_server::rpc::start_rpc_server;
-use pegasus_server::service::Service;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Receiver;
@@ -42,66 +37,29 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time;
 use std::vec::Vec;
-use tokio::runtime::Runtime;
 
-fn parse_store_ip_list(address_list: &[RuntimeAddressProto]) -> (Vec<String>, Vec<RuntimeAddress>) {
-    let mut ip_list = Vec::with_capacity(address_list.len());
-    let mut store_address_list = Vec::with_capacity(address_list.len());
-    for address in address_list {
-        ip_list.push(format!(
-            "{}:{}",
-            address.get_ip(),
-            address.get_runtime_port()
-        ));
-        let store_address =
-            RuntimeAddress::new(address.get_ip().to_string(), address.get_store_port());
-        store_address_list.push(store_address);
-    }
-
-    (ip_list, store_address_list)
-}
-
-pub struct GaiaServerManager<V, VI, E, EI>
-where
-    V: Vertex + 'static,
-    VI: Iterator<Item = V> + Send + 'static,
-    E: Edge + 'static,
-    EI: Iterator<Item = E> + Send + 'static,
-{
+pub struct GaiaServerManager {
     server_manager_common: ServerManagerCommon,
     gaia_pegasus_runtime: Arc<Option<Pegasus>>,
+    // mapping of partition id -> worker id
     partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+    // mapping of worker id -> partition list
+    worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
     signal: Arc<AtomicBool>,
-    store_config: Arc<StoreConfig>,
-    graph: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
-    partition_manager: Arc<dyn GraphPartitionManager>,
-    rpc_runtime: Runtime,
 }
 
-impl<V, VI, E, EI> GaiaServerManager<V, VI, E, EI>
-where
-    V: Vertex + 'static,
-    VI: Iterator<Item = V> + Send + 'static,
-    E: Edge + 'static,
-    EI: Iterator<Item = E> + Send + 'static,
-{
+impl GaiaServerManager {
     pub fn new(
         receiver: Receiver<Arc<ServerHBResp>>,
         runtime_info: Arc<Mutex<RuntimeInfo>>,
         signal: Arc<AtomicBool>,
-        store_config: Arc<StoreConfig>,
-        graph: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
-        partition_manager: Arc<dyn GraphPartitionManager>,
-    ) -> GaiaServerManager<V, VI, E, EI> {
+    ) -> GaiaServerManager {
         GaiaServerManager {
             server_manager_common: ServerManagerCommon::new(receiver, runtime_info),
             gaia_pegasus_runtime: Arc::new(None),
             partition_worker_mapping: Arc::new(RwLock::new(None)),
+            worker_partition_list_mapping: Arc::new(RwLock::new(None)),
             signal,
-            store_config,
-            graph,
-            partition_manager,
-            rpc_runtime: Runtime::new().unwrap(),
         }
     }
 
@@ -111,65 +69,27 @@ where
     }
 
     #[inline]
-    pub fn get_task_partition_manager(&self) -> Arc<RwLock<Option<HashMap<u32, u32>>>> {
+    pub fn get_partition_worker_mapping(&self) -> Arc<RwLock<Option<HashMap<u32, u32>>>> {
         self.partition_worker_mapping.clone()
     }
 
-    fn initial_task_partition_manager(&self, task_partition_manager: HashMap<u32, u32>) {
+    fn initial_partition_worker_mapping(&self, partition_task_list: HashMap<u32, u32>) {
         let mut partition_worker_mapping = self.partition_worker_mapping.write().unwrap();
-        partition_worker_mapping.replace(task_partition_manager);
+        partition_worker_mapping.replace(partition_task_list);
     }
 
-    //pub fn start_rpc_service(&self) -> (String, u16) {
-    //     let rpc_port = self.rpc_runtime.block_on(async {
-    //         let task_partition_manager = {
-    //             let task_partition_manager = self.task_partition_manager.read().unwrap();
-    //             while task_partition_manager.is_none() {
-    //                 info!("task_partition_manager is none, waiting for initialization...");
-    //                 thread::sleep(time::Duration::from_millis(
-    //                     self.store_config.hb_interval_ms,
-    //                 ));
-    //                 continue;
-    //             }
-    //             task_partition_manager.clone().unwrap()
-    //         };
-    //         let partition_task_list = task_partition_manager.get_partition_task_list();
-    //         info!(
-    //             "partition_task_list in starting gaia {:?}",
-    //             partition_task_list
-    //         );
-    //         let _task_partition_list_mapping =
-    //             task_partition_manager.get_task_partition_list_mapping();
-    //         let query_vineyard = QueryVineyard::new(
-    //             self.graph.clone(),
-    //             self.partition_manager.clone(),
-    //             partition_task_list,
-    //             self.store_config.worker_num as usize,
-    //             self.store_config.worker_id as u64,
-    //         );
-    //         let job_compiler = query_vineyard.initialize_job_compiler();
-    //         let service = Service::new(job_compiler);
-    //         // TODO(bingqing): assign rpc_port in store_config
-    //         //  let port = self.store_config.rpc_port;
-    //         let port = 8088;
-    //         let addr = format!("{}:{}", "0.0.0.0", port);
-    //         let local_addr = start_rpc_server(addr.parse().unwrap(), service, true, false)
-    //             .await
-    //             .unwrap();
-    //         local_addr.port()
-    //     });
-    //     let ip = get_local_ip();
-    //     (ip, rpc_port)
-    // }
+    #[inline]
+    pub fn get_worker_partition_list_mapping(&self) -> Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>> {
+        self.worker_partition_list_mapping.clone()
+    }
+
+    fn initial_worker_partition_list_mapping(&self, task_partition_lists: HashMap<u32, Vec<u32>>) {
+        let mut worker_partition_list_mapping = self.worker_partition_list_mapping.write().unwrap();
+        worker_partition_list_mapping.replace(task_partition_lists);
+    }
 }
 
-impl<V, VI, E, EI> ServerManager for GaiaServerManager<V, VI, E, EI>
-where
-    V: Vertex + 'static,
-    VI: Iterator<Item = V> + Send + 'static,
-    E: Edge + 'static,
-    EI: Iterator<Item = E> + Send + 'static,
-{
+impl ServerManager for GaiaServerManager {
     type Data = Vec<u8>;
     fn start_server(
         self: Box<Self>,
@@ -211,15 +131,13 @@ where
                     let (ip_list, _store_ip_list) = parse_store_ip_list(address_list);
                     info!("Receive task partition info {:?} from coordinator", task_partition_list);
                     let task_partition_manager = TaskPartitionManager::parse_proto(task_partition_list);
+                    self.initial_partition_worker_mapping(task_partition_manager.get_partition_task_list());
+                    self.initial_worker_partition_list_mapping(task_partition_manager.get_task_partition_list_mapping());
 
                     network_manager.update_number(worker_id as usize, ip_list.len());
                     network_center.initialize(ip_list);
 
-                    self.initial_task_partition_manager(task_partition_manager.get_partition_task_list());
                     self.signal.store(true, Ordering::Relaxed);
-
-                    // start gaia_pegasus rpc service
-                    //  let (ip, gaia_rpc_service_port) = self.start_rpc_service();
                 } else {
                     continue;
                 }
@@ -288,4 +206,21 @@ fn parse_store_ip_list_for_gaia(address_list: &[RuntimeAddressProto]) -> Vec<Pee
         server_idx += 1;
     }
     peers_list
+}
+
+fn parse_store_ip_list(address_list: &[RuntimeAddressProto]) -> (Vec<String>, Vec<RuntimeAddress>) {
+    let mut ip_list = Vec::with_capacity(address_list.len());
+    let mut store_address_list = Vec::with_capacity(address_list.len());
+    for address in address_list {
+        ip_list.push(format!(
+            "{}:{}",
+            address.get_ip(),
+            address.get_runtime_port()
+        ));
+        let store_address =
+            RuntimeAddress::new(address.get_ip().to_string(), address.get_store_port());
+        store_address_list.push(store_address);
+    }
+
+    (ip_list, store_address_list)
 }

@@ -118,8 +118,8 @@ where
 pub struct QueryVineyardTest<V, VI, E, EI> {
     graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
     graph_partitioner: Arc<dyn GraphPartitionManager>,
-    partition_worker_mapping: Arc<RwLock<HashMap<u32, u32>>>,
-    worker_partition_list_mapping: Arc<RwLock<HashMap<u32, Vec<u32>>>>,
+    partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+    worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
     num_servers: usize,
     server_index: u64,
 }
@@ -128,8 +128,8 @@ impl<V, VI, E, EI> QueryVineyardTest<V, VI, E, EI> {
     pub fn new(
         graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
         graph_partitioner: Arc<dyn GraphPartitionManager>,
-        partition_worker_mapping: Arc<RwLock<HashMap<u32, u32>>>,
-        worker_partition_list_mapping: Arc<RwLock<HashMap<u32, Vec<u32>>>>,
+        partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+        worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
         num_servers: usize,
         server_index: u64,
     ) -> Self {

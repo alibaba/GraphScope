@@ -31,12 +31,11 @@ extern crate pegasus_server;
 extern crate protobuf;
 extern crate structopt;
 
-use core::time;
 use gaia_runtime::server::init_with_rpc_service;
 use gaia_runtime::server::manager::GaiaServerManager;
 use grpcio::ChannelBuilder;
 use grpcio::EnvBuilder;
-use gs_gremlin::{InitializeJobCompiler, QueryVineyard, QueryVineyardTest};
+use gs_gremlin::{InitializeJobCompiler, QueryVineyardTest};
 use maxgraph_common::proto::data::*;
 use maxgraph_common::proto::hb::*;
 use maxgraph_common::proto::query_flow::*;
@@ -123,16 +122,11 @@ fn run_main<V, VI, E, EI>(
     let runtime_info_clone = runtime_info.clone();
     let (hb_resp_sender, hb_resp_receiver) = channel();
     let signal = Arc::new(AtomicBool::new(false));
-    let gaia_server_manager = GaiaServerManager::new(
-        hb_resp_receiver,
-        runtime_info,
-        signal.clone(),
-        store_config.clone(),
-        graph.clone(),
-        partition_manager.clone(),
-    );
+    let gaia_server_manager =
+        GaiaServerManager::new(hb_resp_receiver, runtime_info, signal.clone());
 
-    let partition_worker_mapping = gaia_server_manager.get_task_partition_manager();
+    let partition_worker_mapping = gaia_server_manager.get_partition_worker_mapping();
+    let worker_partition_list_mapping = gaia_server_manager.get_worker_partition_list_mapping();
     let server_manager = Box::new(gaia_server_manager);
     let _manager_guards = ServerManager::start_server(
         server_manager,
@@ -148,6 +142,7 @@ fn run_main<V, VI, E, EI>(
         graph.clone(),
         partition_manager.clone(),
         partition_worker_mapping,
+        worker_partition_list_mapping,
     );
     let (_, gaia_rpc_service_port) = gaia_service.start_rpc_service();
     let store_context = StoreContext::new(graph, partition_manager);
@@ -251,11 +246,13 @@ where
     E: Edge + 'static,
     EI: Iterator<Item = E> + Send + 'static,
 {
-    signal: Arc<AtomicBool>,
     store_config: Arc<StoreConfig>,
     graph: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
     partition_manager: Arc<dyn GraphPartitionManager>,
+    // mapping of partition id -> worker id
     partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+    // mapping of worker id -> partition list
+    worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
     rpc_runtime: Runtime,
 }
 
@@ -271,39 +268,25 @@ where
         graph: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
         partition_manager: Arc<dyn GraphPartitionManager>,
         partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+        worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
     ) -> GaiaService<V, VI, E, EI> {
         GaiaService {
-            signal: Arc::new(Default::default()),
             store_config,
             graph,
             partition_manager,
             partition_worker_mapping,
+            worker_partition_list_mapping,
             rpc_runtime: Runtime::new().unwrap(),
         }
     }
 
     pub fn start_rpc_service(&self) -> (String, u16) {
         let rpc_port = self.rpc_runtime.block_on(async {
-            // let task_partition_manager = {
-            //     let task_partition_manager = self.task_partition_manager.read().unwrap();
-            //     while task_partition_manager.is_none() {
-            //         info!("task_partition_manager is none, waiting for initialization...");
-            //         thread::sleep(time::Duration::from_millis(
-            //             self.store_config.hb_interval_ms,
-            //         ));
-            //         continue;
-            //     }
-            //     task_partition_manager.clone().unwrap()
-            // };
-            // let partition_task_list = task_partition_manager.get_partition_task_list();
-            //  info!(
-            //      "partition_task_list in starting gaia {:?}",
-            //      partition_task_list
-            //  );
             let query_vineyard = QueryVineyardTest::new(
                 self.graph.clone(),
                 self.partition_manager.clone(),
                 self.partition_worker_mapping.clone(),
+                self.worker_partition_list_mapping.clone(),
                 self.store_config.worker_num as usize,
                 self.store_config.worker_id as u64,
             );

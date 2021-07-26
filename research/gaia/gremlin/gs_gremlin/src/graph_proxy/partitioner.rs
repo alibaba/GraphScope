@@ -142,16 +142,16 @@ impl Partitioner for VineyardMultiPartition {
 pub struct VineyardMultiPartitionTest {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
     // mapping of partition id -> worker id
-    partition_worker_map: Arc<RwLock<HashMap<u32, u32>>>,
+    partition_worker_map: Arc<RwLock<Option<HashMap<u32, u32>>>>,
     // mapping of worker id -> partition list
-    worker_partition_list_mapping: Arc<RwLock<HashMap<u32, Vec<u32>>>>,
+    worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
 }
 
 impl VineyardMultiPartitionTest {
     pub fn new(
         graph_partition_manager: Arc<dyn GraphPartitionManager>,
-        partition_worker_map: Arc<RwLock<HashMap<u32, u32>>>,
-        worker_partition_list_mapping: Arc<RwLock<HashMap<u32, Vec<u32>>>>,
+        partition_worker_map: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+        worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
     ) -> VineyardMultiPartitionTest {
         VineyardMultiPartitionTest {
             graph_partition_manager,
@@ -170,16 +170,22 @@ impl Partitioner for VineyardMultiPartitionTest {
         let vid = (*id & (ID_MASK)) as VertexId;
         let partition_id = self.graph_partition_manager.get_partition_id(vid) as PartitionId;
         if let Ok(partition_worker_mapping) = self.partition_worker_map.read() {
-            if let Some(worker_id) = partition_worker_mapping.get(&partition_id) {
-                Ok(*worker_id as u64)
+            if let Some(partition_worker_mapping) = partition_worker_mapping.as_ref() {
+                if let Some(worker_id) = partition_worker_mapping.get(&partition_id) {
+                    Ok(*worker_id as u64)
+                } else {
+                    Err(str_to_dyn_error(
+                        "get worker id failed in VineyardMultiPartition",
+                    ))
+                }
             } else {
                 Err(str_to_dyn_error(
-                    "get worker id failed in VineyardMultiPartition",
+                    "partition_worker_mapping is not initialized in VineyardMultiPartition",
                 ))
             }
         } else {
             Err(str_to_dyn_error(
-                "read partition_worker_mapping in VineyardMultiPartitionTest failed",
+                "read partition_worker_mapping in VineyardMultiPartition failed",
             ))
         }
     }
@@ -191,11 +197,17 @@ impl Partitioner for VineyardMultiPartitionTest {
     ) -> DynResult<Option<Vec<u64>>> {
         // Vineyard will pre-allocate the worker_partition_list mapping
         if let Ok(worker_partition_list_mapping) = self.worker_partition_list_mapping.read() {
-            if let Some(partition_list) = worker_partition_list_mapping.get(&worker_id) {
-                Ok(Some(partition_list.iter().map(|pid| *pid as u64).collect()))
+            if let Some(worker_partition_list_mapping) = worker_partition_list_mapping.as_ref() {
+                if let Some(partition_list) = worker_partition_list_mapping.get(&worker_id) {
+                    Ok(Some(partition_list.iter().map(|pid| *pid as u64).collect()))
+                } else {
+                    Err(str_to_dyn_error(
+                        "get worker partitions failed in VineyardMultiPartition",
+                    ))
+                }
             } else {
                 Err(str_to_dyn_error(
-                    "get worker partitions failed in VineyardMultiPartition",
+                    "worker_partition_list is not initialized in VineyardMultiPartition",
                 ))
             }
         } else {
