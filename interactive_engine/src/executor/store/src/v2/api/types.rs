@@ -32,6 +32,7 @@ pub enum DataType {
     StringList,
 }
 
+#[derive(Clone)]
 pub enum PropertyValue {
     Null,
     Boolean(bool),
