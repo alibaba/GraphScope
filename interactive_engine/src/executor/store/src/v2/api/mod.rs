@@ -33,6 +33,7 @@ pub type SerialId = usize;
 pub type Records<T> = Box<dyn Iterator<Item=Result<T>> + Send>;
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct EdgeId {
     edge_inner_id: EdgeInnerId,
     src_vertex_id: VertexId,

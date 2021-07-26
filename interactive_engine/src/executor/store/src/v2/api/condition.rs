@@ -16,6 +16,7 @@
 use crate::v2::api::PropertyId;
 use crate::v2::api::types::PropertyValue;
 
+#[allow(dead_code)]
 pub enum Condition {
     And(Box<Condition>, Box<Condition>),
     Or(Box<Condition>, Box<Condition>),

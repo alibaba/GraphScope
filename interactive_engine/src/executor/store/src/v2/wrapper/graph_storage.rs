@@ -13,15 +13,14 @@
 // limitations under the License.
 
 use crate::v2::multi_version_graph::MultiVersionGraph;
-use crate::v2::api::{SnapshotId, VertexId, LabelId, PropertyId, EdgeId, Records, SerialId};
+use crate::v2::api::{SnapshotId, VertexId, LabelId, PropertyId, EdgeId, Records, SerialId, EdgeInnerId};
 use crate::v2::api::types::{EdgeRelation, Vertex, PropertyReader, PropertyValue, Property, Edge};
 use crate::v2::api::condition::Condition;
 use crate::v2::Result;
 use std::sync::Arc;
-use crate::db::storage::ExternalStorage;
-use crate::db::graph::types::{VertexTypeManager, EdgeTypeManager};
-use crate::db::api::{GraphStorage, EdgeKind};
-use std::collections::HashMap;
+use crate::db::api::{GraphStorage, EdgeKind, PropIter, ValueRef, PropertiesRef, ValueType};
+use std::collections::{HashMap, HashSet};
+use std::iter::FromIterator;
 
 pub struct GraphStorageWrapper<G: GraphStorage> {
     storage: Arc<G>,
@@ -46,9 +45,53 @@ impl<G: GraphStorage> GraphStorageWrapper<G> {
         vertex_id as i64
     }
 
+    fn parse_property_value(value_ref: ValueRef) -> PropertyValue {
+        match value_ref.get_type() {
+            ValueType::Bool => PropertyValue::Boolean(value_ref.get_bool().unwrap()),
+            ValueType::Char => PropertyValue::Char(char::from(value_ref.get_char().unwrap())),
+            ValueType::Short => PropertyValue::Short(value_ref.get_short().unwrap()),
+            ValueType::Int => PropertyValue::Int(value_ref.get_int().unwrap()),
+            ValueType::Long => PropertyValue::Long(value_ref.get_long().unwrap()),
+            ValueType::Float => PropertyValue::Float(value_ref.get_float().unwrap()),
+            ValueType::Double => PropertyValue::Double(value_ref.get_double().unwrap()),
+            ValueType::String => PropertyValue::String(String::from(value_ref.get_str().unwrap())),
+            ValueType::Bytes => PropertyValue::Bytes(Vec::from(value_ref.get_bytes().unwrap())),
+            ValueType::IntList => PropertyValue::IntList(value_ref.get_int_list().unwrap().iter().collect()),
+            ValueType::LongList => PropertyValue::LongList(value_ref.get_long_list().unwrap().iter().collect()),
+            ValueType::FloatList => PropertyValue::FloatList(value_ref.get_float_list().unwrap().iter().collect()),
+            ValueType::DoubleList => PropertyValue::DoubleList(value_ref.get_double_list().unwrap().iter().collect()),
+            ValueType::StringList => PropertyValue::StringList(value_ref.get_str_list().unwrap().iter()
+                .map(String::from).collect()),
+        }
+    }
+
     fn parse_vertex<V: crate::db::api::Vertex>(from_vertex: V, property_ids: Option<&Vec<PropertyId>>)
         -> WrapperVertex {
-        unimplemented!()
+        let vertex_id = from_vertex.get_id() as VertexId;
+        let label_id = from_vertex.get_label() as LabelId;
+        let mut property_iter = from_vertex.get_properties_iter();
+        let vertex_properties = Self::parse_properties(property_ids, &mut property_iter);
+        WrapperVertex::new(vertex_id, label_id, vertex_properties)
+    }
+
+    fn parse_properties<T: PropIter>(property_ids: Option<&Vec<u32>>, property_iter: &mut PropertiesRef<T>) -> HashMap<PropertyId, WrapperProperty> {
+        let property_filter = property_ids.map(|id_vec| HashSet::<&PropertyId>::from_iter(id_vec));
+        let mut properties = HashMap::new();
+        while let Some((id, value_ref)) = property_iter.next() {
+            let property_id = id as PropertyId;
+            if let Some(filter) = property_filter.as_ref() {
+                if !filter.contains(&(property_id)) {
+                    continue;
+                }
+            }
+            let property_value = Self::parse_property_value(value_ref);
+            let property = WrapperProperty {
+                property_id,
+                property_value,
+            };
+            properties.insert(property_id, property);
+        }
+        properties
     }
 
     fn parse_edge_id(from_edge_id: EdgeId) -> crate::db::api::EdgeId {
@@ -66,7 +109,16 @@ impl<G: GraphStorage> GraphStorageWrapper<G> {
     }
 
     fn parse_edge<E: crate::db::api::Edge>(from_edge: E, property_ids: Option<&Vec<PropertyId>>) -> WrapperEdge {
-        unimplemented!()
+        let from_edge_id = from_edge.get_id();
+        let edge_id = EdgeId::new(from_edge_id.inner_id as EdgeInnerId, from_edge_id.src_id as VertexId,
+                                  from_edge_id.dst_id as VertexId);
+        let edge_kind = from_edge.get_kind();
+        let edge_relation = EdgeRelation::new(edge_kind.edge_label_id as LabelId,
+                                              edge_kind.src_vertex_label_id as LabelId,
+                                              edge_kind.dst_vertex_label_id as LabelId);
+        let mut property_iter = from_edge.get_properties_iter();
+        let edge_properteis = Self::parse_properties(property_ids, &mut property_iter);
+        WrapperEdge::new(edge_id, edge_relation, edge_properteis)
     }
 
     fn parse_condition(condition: Option<&Condition>) -> Option<Arc<crate::db::api::Condition>> {
@@ -273,14 +325,17 @@ impl Vertex for WrapperVertex {
 
 impl PropertyReader for WrapperVertex {
     type P = WrapperProperty;
-    type PropertyIterator = Box<Iterator<Item=Self::P>>;
+    type PropertyIterator = Box<dyn Iterator<Item=Result<Self::P>>>;
 
-    fn get_property_value(&self, property_id: PropertyId) -> Option<&PropertyValue> {
-        self.properties.get(&property_id).map(|p| p.get_property_value())
+    fn get_property(&self, property_id: PropertyId) -> Option<Self::P> {
+        self.properties.get(&property_id).cloned()
     }
 
     fn get_property_iterator(&self) -> Self::PropertyIterator {
-        Box::new(self.properties.clone().into_iter().map(|(id, p)| p).collect::<Vec<WrapperProperty>>().into_iter())
+        Box::new(self.properties.clone().into_iter()
+            .map(|(_, p)| Ok(p))
+            .collect::<Vec<Result<WrapperProperty>>>()
+            .into_iter())
     }
 }
 
@@ -290,25 +345,39 @@ pub struct WrapperEdge {
     properties: HashMap<PropertyId, WrapperProperty>,
 }
 
+impl WrapperEdge {
+    pub fn new(edge_id: EdgeId, edge_relation: EdgeRelation, properties: HashMap<PropertyId, WrapperProperty>)
+        -> Self {
+        WrapperEdge {
+            edge_id,
+            edge_relation,
+            properties,
+        }
+    }
+}
+
 impl Edge for WrapperEdge {
-    fn get_edge_id(&self) -> &EdgeId {
-        &self.edge_id
+    fn get_edge_id(&self) -> EdgeId {
+        self.edge_id.clone()
     }
 
-    fn get_edge_relation(&self) -> &EdgeRelation {
-        &self.edge_relation
+    fn get_edge_relation(&self) -> EdgeRelation {
+        self.edge_relation.clone()
     }
 }
 
 impl PropertyReader for WrapperEdge {
     type P = WrapperProperty;
-    type PropertyIterator = Box<Iterator<Item=Self::P>>;
+    type PropertyIterator = Box<dyn Iterator<Item=Result<Self::P>>>;
 
-    fn get_property_value(&self, property_id: PropertyId) -> Option<&PropertyValue> {
-        self.properties.get(&property_id).map(|p| p.get_property_value())
+    fn get_property(&self, property_id: PropertyId) -> Option<Self::P> {
+        self.properties.get(&property_id).cloned()
     }
 
     fn get_property_iterator(&self) -> Self::PropertyIterator {
-        Box::new(self.properties.clone().into_iter().map(|(id, p)| p).collect::<Vec<WrapperProperty>>().into_iter())
+        Box::new(self.properties.clone().into_iter()
+            .map(|(_, p)| Ok(p))
+            .collect::<Vec<Result<WrapperProperty>>>()
+            .into_iter())
     }
 }

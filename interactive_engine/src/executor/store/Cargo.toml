@@ -5,8 +5,8 @@ authors = ["勤远 <wubin.cwb@alibaba-inc.com>"]
 edition = "2018"
 build = "./build.rs"
 
-[lib]
-crate-type = ["cdylib"]
+#[lib]
+#crate-type = ["cdylib"]
 
 [dependencies]
 byteorder = "1"

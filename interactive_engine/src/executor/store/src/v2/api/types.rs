@@ -17,6 +17,7 @@ use crate::v2::api::{PropertyId, VertexId, LabelId, EdgeId};
 use crate::v2::Result;
 
 #[repr(C)]
+#[allow(dead_code)]
 pub enum DataType {
     Boolean,
     Char,
@@ -72,6 +73,7 @@ pub trait Vertex: PropertyReader {
 }
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct EdgeRelation {
     edge_label_id: LabelId,
     src_vertex_label_id: LabelId,
