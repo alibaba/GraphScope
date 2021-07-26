@@ -68,8 +68,12 @@ fn main() {
     init_log4rs();
     let mut store_config = {
         let args: Vec<String> = std::env::args().collect();
-        if args.len() <= 5 && args[1] == "--config" {
-            StoreConfig::init_from_file(&args[2], &args[4])
+        if args.len() <= 6 && args[1] == "--config" {
+            let mut store_config = StoreConfig::init_from_file(&args[2], &args[4]);
+            if args.len() == 6 {
+                store_config.graph_name = (&args[5]).to_string();
+            }
+            store_config
         } else {
             StoreConfig::init()
         }

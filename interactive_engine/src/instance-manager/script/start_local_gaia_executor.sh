@@ -17,6 +17,7 @@ object_id=$1
 server_id=$2
 export VINEYARD_IPC_SOCKET=$3
 zookeeper_port=$4
+graph_name=$5
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
 WORKSPACE=$SCRIPT_DIR/../
@@ -34,6 +35,6 @@ sed -i "s/ZOOKEEPER_PORT/$zookeeper_port/g" $inner_config
 server_id=1
 
 export flag="maxgraph"$object_id"executor"
-RUST_BACKTRACE=full $WORKSPACE/bin/gaia_executor --config $inner_config $flag $server_id 1>> $LOG_DIR/gaia-executor.out 2>> $LOG_DIR/gaia-executor.err &
+RUST_BACKTRACE=full $WORKSPACE/bin/gaia_executor --config $inner_config $flag $server_id $graph_name 1>> $LOG_DIR/gaia-executor.out 2>> $LOG_DIR/gaia-executor.err &
 
 echo $! > $PID_DIR/executor.pid
