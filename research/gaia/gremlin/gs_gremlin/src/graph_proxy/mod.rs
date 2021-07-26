@@ -118,7 +118,8 @@ where
 pub struct QueryVineyardTest<V, VI, E, EI> {
     graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
     graph_partitioner: Arc<dyn GraphPartitionManager>,
-    partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+    partition_worker_mapping: Arc<RwLock<HashMap<u32, u32>>>,
+    worker_partition_list_mapping: Arc<RwLock<HashMap<u32, Vec<u32>>>>,
     num_servers: usize,
     server_index: u64,
 }
@@ -127,7 +128,8 @@ impl<V, VI, E, EI> QueryVineyardTest<V, VI, E, EI> {
     pub fn new(
         graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
         graph_partitioner: Arc<dyn GraphPartitionManager>,
-        partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+        partition_worker_mapping: Arc<RwLock<HashMap<u32, u32>>>,
+        worker_partition_list_mapping: Arc<RwLock<HashMap<u32, Vec<u32>>>>,
         num_servers: usize,
         server_index: u64,
     ) -> Self {
@@ -135,6 +137,7 @@ impl<V, VI, E, EI> QueryVineyardTest<V, VI, E, EI> {
             graph_query,
             graph_partitioner,
             partition_worker_mapping,
+            worker_partition_list_mapping,
             num_servers,
             server_index,
         }
@@ -154,6 +157,7 @@ where
         let partition = VineyardMultiPartitionTest::new(
             self.graph_partitioner.clone(),
             self.partition_worker_mapping.clone(),
+            self.worker_partition_list_mapping.clone(),
         );
         GremlinJobCompiler::new(partition, self.num_servers, self.server_index)
     }
