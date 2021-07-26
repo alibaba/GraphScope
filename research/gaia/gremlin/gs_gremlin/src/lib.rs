@@ -15,4 +15,4 @@
 #[macro_use]
 extern crate log;
 mod graph_proxy;
-pub use graph_proxy::{InitializeJobCompiler, QueryMaxGraph, QueryVineyard, QueryVineyardTest};
+pub use graph_proxy::{InitializeJobCompiler, QueryMaxGraph, QueryVineyard};

@@ -35,7 +35,7 @@ use gaia_runtime::server::init_with_rpc_service;
 use gaia_runtime::server::manager::GaiaServerManager;
 use grpcio::ChannelBuilder;
 use grpcio::EnvBuilder;
-use gs_gremlin::{InitializeJobCompiler, QueryVineyardTest};
+use gs_gremlin::{InitializeJobCompiler, QueryVineyard};
 use maxgraph_common::proto::data::*;
 use maxgraph_common::proto::hb::*;
 use maxgraph_common::proto::query_flow::*;
@@ -282,7 +282,7 @@ where
 
     pub fn start_rpc_service(&self) -> (String, u16) {
         let rpc_port = self.rpc_runtime.block_on(async {
-            let query_vineyard = QueryVineyardTest::new(
+            let query_vineyard = QueryVineyard::new(
                 self.graph.clone(),
                 self.partition_manager.clone(),
                 self.partition_worker_mapping.clone(),

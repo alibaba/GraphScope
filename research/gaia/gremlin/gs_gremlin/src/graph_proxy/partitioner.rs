@@ -83,21 +83,21 @@ impl Partitioner for MaxGraphMultiPartition {
 pub struct VineyardMultiPartition {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
     // mapping of partition id -> worker id
-    partition_worker_mapping: HashMap<u32, u32>,
+    partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
     // mapping of worker id -> partition list
-    worker_partition_list: HashMap<u32, Vec<u32>>,
+    worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
 }
 
 impl VineyardMultiPartition {
     pub fn new(
         graph_partition_manager: Arc<dyn GraphPartitionManager>,
-        partition_worker_mapping: HashMap<u32, u32>,
-        worker_partition_list: HashMap<u32, Vec<u32>>,
-    ) -> Self {
+        partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+        worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
+    ) -> VineyardMultiPartition {
         VineyardMultiPartition {
             graph_partition_manager,
             partition_worker_mapping,
-            worker_partition_list,
+            worker_partition_list_mapping,
         }
     }
 }
@@ -110,66 +110,7 @@ impl Partitioner for VineyardMultiPartition {
         // 2. get worker_id by the prebuild partition_worker_map, which specifies partition_id -> worker_id
         let vid = (*id & (ID_MASK)) as VertexId;
         let partition_id = self.graph_partition_manager.get_partition_id(vid) as PartitionId;
-        let worker_id =
-            *self
-                .partition_worker_mapping
-                .get(&partition_id)
-                .ok_or(str_to_dyn_error(
-                    "get worker id failed in VineyardMultiPartition",
-                ))?;
-        Ok(worker_id as u64)
-    }
-
-    fn get_worker_partitions(
-        &self,
-        _job_workers: usize,
-        worker_id: u32,
-    ) -> DynResult<Option<Vec<u64>>> {
-        // Vineyard will pre-allocate the worker_partition_list mapping
-        if let Some(partition_list) = self.worker_partition_list.get(&worker_id) {
-            Ok(Some(partition_list.iter().map(|pid| *pid as u64).collect()))
-        } else {
-            Err(str_to_dyn_error(
-                "get worker partitions failed in VineyardMultiPartition",
-            ))
-        }
-    }
-}
-
-/// A partition utility that one server contains multiple graph partitions for Vineyard
-/// Starting gaia with vineyard will pre-allocate partitions for each worker to process,
-/// thus we use graph_partitioner together with partition_worker_mapping for data routing.
-pub struct VineyardMultiPartitionTest {
-    graph_partition_manager: Arc<dyn GraphPartitionManager>,
-    // mapping of partition id -> worker id
-    partition_worker_map: Arc<RwLock<Option<HashMap<u32, u32>>>>,
-    // mapping of worker id -> partition list
-    worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
-}
-
-impl VineyardMultiPartitionTest {
-    pub fn new(
-        graph_partition_manager: Arc<dyn GraphPartitionManager>,
-        partition_worker_map: Arc<RwLock<Option<HashMap<u32, u32>>>>,
-        worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
-    ) -> VineyardMultiPartitionTest {
-        VineyardMultiPartitionTest {
-            graph_partition_manager,
-            partition_worker_map,
-            worker_partition_list_mapping,
-        }
-    }
-}
-
-impl Partitioner for VineyardMultiPartitionTest {
-    fn get_partition(&self, id: &ID, _worker_num_per_server: usize) -> DynResult<u64> {
-        // The partitioning logics is as follows:
-        // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id
-        // to the partition that holds its data.
-        // 2. get worker_id by the prebuild partition_worker_map, which specifies partition_id -> worker_id
-        let vid = (*id & (ID_MASK)) as VertexId;
-        let partition_id = self.graph_partition_manager.get_partition_id(vid) as PartitionId;
-        if let Ok(partition_worker_mapping) = self.partition_worker_map.read() {
+        if let Ok(partition_worker_mapping) = self.partition_worker_mapping.read() {
             if let Some(partition_worker_mapping) = partition_worker_mapping.as_ref() {
                 if let Some(worker_id) = partition_worker_mapping.get(&partition_id) {
                     Ok(*worker_id as u64)
