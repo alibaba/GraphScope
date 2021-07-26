@@ -18,7 +18,8 @@ use gremlin_core::{str_to_dyn_error, DynResult, Partitioner, ID, ID_MASK};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::{PartitionId, VertexId};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
+use std::thread;
 
 /// A partition utility that one server contains multiple graph partitions for MaxGraph (V2) Store
 pub struct MaxGraphMultiPartition {
@@ -133,5 +134,53 @@ impl Partitioner for VineyardMultiPartition {
                 "get worker partitions failed in VineyardMultiPartition",
             ))
         }
+    }
+}
+
+/// A partition utility that one server contains multiple graph partitions for Vineyard
+/// Starting gaia with vineyard will pre-allocate partitions for each worker to process,
+/// thus we use graph_partitioner together with partition_worker_mapping for data routing.
+pub struct VineyardMultiPartitionTest {
+    graph_partition_manager: Arc<dyn GraphPartitionManager>,
+    // mapping of partition id -> worker id
+    partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+}
+
+impl VineyardMultiPartitionTest {
+    pub fn new(
+        graph_partition_manager: Arc<dyn GraphPartitionManager>,
+        partition_worker_map: Arc<RwLock<Option<HashMap<u32, u32>>>>,
+    ) -> Self {
+        VineyardMultiPartitionTest {
+            graph_partition_manager,
+            partition_worker_mapping: partition_worker_map,
+        }
+    }
+}
+
+impl Partitioner for VineyardMultiPartitionTest {
+    fn get_partition(&self, id: &ID, _worker_num_per_server: usize) -> DynResult<u64> {
+        // The partitioning logics is as follows:
+        // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id
+        // to the partition that holds its data.
+        // 2. get worker_id by the prebuild partition_worker_map, which specifies partition_id -> worker_id
+        let vid = (*id & (ID_MASK)) as VertexId;
+        let partition_id = self.graph_partition_manager.get_partition_id(vid) as PartitionId;
+        let partition_worker_mapping = {
+            let partition_worker_mapping = self.partition_worker_mapping.read().unwrap();
+            while partition_worker_mapping.is_none() {
+                info!("partition_worker_mapping is none, waiting for initialization...");
+                thread::sleep(time::Duration::from_millis(1000));
+                continue;
+            }
+            partition_worker_mapping.clone().unwrap()
+        };
+
+        let worker_id = partition_worker_mapping
+            .get(&partition_id)
+            .ok_or(str_to_dyn_error(
+                "get worker id failed in VineyardMultiPartition",
+            ))?;
+        Ok(*worker_id as u64)
     }
 }

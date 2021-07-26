@@ -35,6 +35,7 @@ use pegasus::Pegasus;
 use pegasus_network::config::{NetworkConfig, PeerConfig};
 use pegasus_server::rpc::start_rpc_server;
 use pegasus_server::service::Service;
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, Mutex, RwLock};
@@ -69,7 +70,7 @@ where
 {
     server_manager_common: ServerManagerCommon,
     gaia_pegasus_runtime: Arc<Option<Pegasus>>,
-    task_partition_manager: Arc<RwLock<Option<TaskPartitionManager>>>,
+    partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
     signal: Arc<AtomicBool>,
     store_config: Arc<StoreConfig>,
     graph: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
@@ -95,7 +96,7 @@ where
         GaiaServerManager {
             server_manager_common: ServerManagerCommon::new(receiver, runtime_info),
             gaia_pegasus_runtime: Arc::new(None),
-            task_partition_manager: Arc::new(RwLock::new(None)),
+            partition_worker_mapping: Arc::new(RwLock::new(None)),
             signal,
             store_config,
             graph,
@@ -110,56 +111,56 @@ where
     }
 
     #[inline]
-    pub fn get_task_partition_manager(&self) -> Arc<RwLock<Option<TaskPartitionManager>>> {
-        self.task_partition_manager.clone()
+    pub fn get_task_partition_manager(&self) -> Arc<RwLock<Option<HashMap<u32, u32>>>> {
+        self.partition_worker_mapping.clone()
     }
 
-    fn initial_task_partition_manager(&self, task_partition_manager: TaskPartitionManager) {
-        let mut manager = self.task_partition_manager.write().unwrap();
-        manager.replace(task_partition_manager);
+    fn initial_task_partition_manager(&self, task_partition_manager: HashMap<u32, u32>) {
+        let mut partition_worker_mapping = self.partition_worker_mapping.write().unwrap();
+        partition_worker_mapping.replace(task_partition_manager);
     }
 
-    pub fn start_rpc_service(&self) -> (String, u16) {
-        let rpc_port = self.rpc_runtime.block_on(async {
-            let task_partition_manager = {
-                let task_partition_manager = self.task_partition_manager.read().unwrap();
-                while task_partition_manager.is_none() {
-                    info!("task_partition_manager is none, waiting for initialization...");
-                    thread::sleep(time::Duration::from_millis(
-                        self.store_config.hb_interval_ms,
-                    ));
-                    continue;
-                }
-                task_partition_manager.clone().unwrap()
-            };
-            let partition_task_list = task_partition_manager.get_partition_task_list();
-            info!(
-                "partition_task_list in starting gaia {:?}",
-                partition_task_list
-            );
-            let worker_partition_list = task_partition_manager.get_task_partition_list_mapping();
-            let query_vineyard = QueryVineyard::new(
-                self.graph.clone(),
-                self.partition_manager.clone(),
-                partition_task_list,
-                worker_partition_list,
-                self.store_config.worker_num as usize,
-                self.store_config.worker_id as u64,
-            );
-            let job_compiler = query_vineyard.initialize_job_compiler();
-            let service = Service::new(job_compiler);
-            // TODO(bingqing): assign rpc_port in store_config
-            //  let port = self.store_config.rpc_port;
-            let port = 8088;
-            let addr = format!("{}:{}", "0.0.0.0", port);
-            let local_addr = start_rpc_server(addr.parse().unwrap(), service, true, false)
-                .await
-                .unwrap();
-            local_addr.port()
-        });
-        let ip = get_local_ip();
-        (ip, rpc_port)
-    }
+    //pub fn start_rpc_service(&self) -> (String, u16) {
+    //     let rpc_port = self.rpc_runtime.block_on(async {
+    //         let task_partition_manager = {
+    //             let task_partition_manager = self.task_partition_manager.read().unwrap();
+    //             while task_partition_manager.is_none() {
+    //                 info!("task_partition_manager is none, waiting for initialization...");
+    //                 thread::sleep(time::Duration::from_millis(
+    //                     self.store_config.hb_interval_ms,
+    //                 ));
+    //                 continue;
+    //             }
+    //             task_partition_manager.clone().unwrap()
+    //         };
+    //         let partition_task_list = task_partition_manager.get_partition_task_list();
+    //         info!(
+    //             "partition_task_list in starting gaia {:?}",
+    //             partition_task_list
+    //         );
+    //         let _task_partition_list_mapping =
+    //             task_partition_manager.get_task_partition_list_mapping();
+    //         let query_vineyard = QueryVineyard::new(
+    //             self.graph.clone(),
+    //             self.partition_manager.clone(),
+    //             partition_task_list,
+    //             self.store_config.worker_num as usize,
+    //             self.store_config.worker_id as u64,
+    //         );
+    //         let job_compiler = query_vineyard.initialize_job_compiler();
+    //         let service = Service::new(job_compiler);
+    //         // TODO(bingqing): assign rpc_port in store_config
+    //         //  let port = self.store_config.rpc_port;
+    //         let port = 8088;
+    //         let addr = format!("{}:{}", "0.0.0.0", port);
+    //         let local_addr = start_rpc_server(addr.parse().unwrap(), service, true, false)
+    //             .await
+    //             .unwrap();
+    //         local_addr.port()
+    //     });
+    //     let ip = get_local_ip();
+    //     (ip, rpc_port)
+    // }
 }
 
 impl<V, VI, E, EI> ServerManager for GaiaServerManager<V, VI, E, EI>
@@ -214,11 +215,11 @@ where
                     network_manager.update_number(worker_id as usize, ip_list.len());
                     network_center.initialize(ip_list);
 
-                    self.initial_task_partition_manager(task_partition_manager);
+                    self.initial_task_partition_manager(task_partition_manager.get_partition_task_list());
                     self.signal.store(true, Ordering::Relaxed);
 
                     // start gaia_pegasus rpc service
-                    let (_ip, _gaia_rpc_service_port) = self.start_rpc_service();
+                    //  let (ip, gaia_rpc_service_port) = self.start_rpc_service();
                 } else {
                     continue;
                 }
