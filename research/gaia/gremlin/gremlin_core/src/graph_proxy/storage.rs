@@ -191,27 +191,40 @@ impl GraphProxy for DemoGraph {
     fn scan_vertex(
         &self, params: &QueryParams<Vertex>,
     ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        let label_ids = encode_storage_vertex_label(&params.labels);
-        let store = self.store;
-        let result = self.store.get_all_vertices(label_ids.as_ref()).map(move |v| {
-            // TODO: Only process label[0] for now
-            // TODO: change to  to_runtime_vertex_with_property
-            to_runtime_vertex(v, store)
-            //  to_runtime_vertex_with_property(v, params.props.as_ref())
-        });
+        // DemoGraph contains a single graph partition on each server,
+        // therefore, there's no need to use the specific partition id for query.
+        // Besides, we guarantee only one worker (on each server) is going to scan (with params.partitions.is_some())
+        if params.partitions.is_some() {
+            let label_ids = encode_storage_vertex_label(&params.labels);
+            let store = self.store;
+            let result = self.store.get_all_vertices(label_ids.as_ref()).map(move |v| {
+                // TODO: Only process label[0] for now
+                // TODO: change to  to_runtime_vertex_with_property
+                to_runtime_vertex(v, store)
+                //  to_runtime_vertex_with_property(v, params.props.as_ref())
+            });
 
-        Ok(filter_limit!(result, params.filter, params.limit))
+            Ok(filter_limit!(result, params.filter, params.limit))
+        } else {
+            Ok(Box::new(std::iter::empty()))
+        }
     }
 
     fn scan_edge(
         &self, params: &QueryParams<Edge>,
     ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        let label_ids = encode_storage_edge_label(&params.labels);
-        let store = self.store;
-        let result =
-            self.store.get_all_edges(label_ids.as_ref()).map(move |e| to_runtime_edge(e, store));
+        if params.partitions.is_some() {
+            let label_ids = encode_storage_edge_label(&params.labels);
+            let store = self.store;
+            let result = self
+                .store
+                .get_all_edges(label_ids.as_ref())
+                .map(move |e| to_runtime_edge(e, store));
 
-        Ok(filter_limit!(result, params.filter, params.limit))
+            Ok(filter_limit!(result, params.filter, params.limit))
+        } else {
+            Ok(Box::new(std::iter::empty()))
+        }
     }
 
     fn get_vertex(
