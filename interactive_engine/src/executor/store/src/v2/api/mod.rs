@@ -19,6 +19,10 @@ pub mod partition_snapshot;
 pub mod types;
 pub mod condition;
 
+pub use self::partition_snapshot::*;
+pub use self::types::*;
+pub use self::condition::*;
+
 pub type SnapshotId = u64;
 pub type LabelId = u32;
 pub type PropertyId = u32;
@@ -28,6 +32,7 @@ pub type SerialId = usize;
 
 pub type Records<T> = Box<dyn Iterator<Item=Result<T>> + Send>;
 
+#[repr(C)]
 pub struct EdgeId {
     edge_inner_id: EdgeInnerId,
     src_vertex_id: VertexId,

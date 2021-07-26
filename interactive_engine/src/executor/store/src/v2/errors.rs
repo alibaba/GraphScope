@@ -19,6 +19,15 @@ pub enum Error {
     Internal(String),
 }
 
+impl Error {
+    pub fn what(&self) {
+        match &self {
+            Error::Internal(msg) => {
+                println!("{}", msg);
+            }
+        }
+    }
+}
 
 impl From<GraphError> for Error {
     fn from(err: GraphError) -> Self {

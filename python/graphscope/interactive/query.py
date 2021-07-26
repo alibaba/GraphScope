@@ -143,6 +143,10 @@ class InteractiveQueryDAGNode(DAGNode):
         # add op to dag
         self._session.dag.add_op(self._op)
 
+    # TODO(yuansi): Support gaia
+    def gaia(self):
+        return self
+
     def execute(self, query, request_options=None):
         """Execute gremlin querying scripts.
 
@@ -262,6 +266,13 @@ class InteractiveQuery(object):
     def closed(self):
         """Return if the current instance is closed."""
         return self._status == InteractiveQueryStatus.Closed
+
+    def gaia(self):
+        if self._status != InteractiveQueryStatus.Running:
+            raise RuntimeError(
+                "Interactive query is unavailable with %s status.", str(self._status)
+            )
+        return self._session._wrapper(self._interactive_query_node.gaia())
 
     def subgraph(self, gremlin_script, request_options=None):
         if self._status != InteractiveQueryStatus.Running:

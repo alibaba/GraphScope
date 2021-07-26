@@ -16,15 +16,14 @@
 # limitations under the License.
 #
 
-# The gremlinpython has a async event loop, which may conflicts with
-# jupyter notebook's event loop.
+from gremlin_python import statics
+from gremlin_python.process.graph_traversal import GraphTraversal
+from gremlin_python.process.traversal import Bytecode
 
-import nest_asyncio
 
-nest_asyncio.apply()
+def gaia(cls, *args):
+    # cls.bytecode.add_step("process", *args)
+    return cls
 
-from graphscope.interactive import graph_traversal
-from graphscope.interactive.query import InteractiveQuery
-from graphscope.interactive.query import InteractiveQueryStatus
 
-del graph_traversal
+setattr(GraphTraversal, "gaia", gaia)

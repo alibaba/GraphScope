@@ -16,15 +16,10 @@
 # limitations under the License.
 #
 
-# The gremlinpython has a async event loop, which may conflicts with
-# jupyter notebook's event loop.
-
-import nest_asyncio
-
-nest_asyncio.apply()
-
-from graphscope.interactive import graph_traversal
-from graphscope.interactive.query import InteractiveQuery
-from graphscope.interactive.query import InteractiveQueryStatus
-
-del graph_traversal
+# For a better test experience, can we use
+# 1. Set up a local client, no need to pre-setup grape remotely,
+# 2. Use a np array as source data and compare the result with correct result
+# 3. Load from odps is slow, use 1 or 2 test cases to test is enough, no need all the test
+#    need the data from odps.
+# 4. The current test are flawed, some is not complete, some is not runnable, some is not correct
+#    under current commit, they are just guidelines that lead us to make then correct.

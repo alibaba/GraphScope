@@ -336,6 +336,7 @@ class Session(object):
         timeout_seconds=gs_config.timeout_seconds,
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         with_mars=gs_config.with_mars,
+        enable_gaia=gs_config.enable_gaia,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -437,6 +438,9 @@ class Session(object):
 
             with_mars (bool, optional):
                 Launch graphscope with mars. Defaults to False.
+
+            enable_gaia (bool, optional):
+                Launch graphscope with gaia enabled. Defaults to False.
 
             k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the
                 containers in a pod. Defaults to {}.
@@ -558,6 +562,7 @@ class Session(object):
             "k8s_mars_scheduler_cpu",
             "k8s_mars_scheduler_mem",
             "with_mars",
+            "enable_gaia",
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
@@ -1196,6 +1201,7 @@ def set_option(**kwargs):
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
         - with_mars
+        - enable_gaia
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
@@ -1249,6 +1255,7 @@ def get_option(key):
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
         - with_mars
+        - enable_gaia
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
