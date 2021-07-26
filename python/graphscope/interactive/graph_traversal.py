@@ -19,6 +19,8 @@
 from gremlin_python import statics
 from gremlin_python.process.graph_traversal import GraphTraversal
 from gremlin_python.process.traversal import Bytecode
+from gremlin_python.driver.serializer import GraphSONMessageSerializer
+from gremlin_python.driver import request
 
 
 def process(cls, *args):
@@ -54,6 +56,53 @@ def expr(*args):
 
 
 statics.add_static("expr", expr)
+
+
+def patch_for_gremlin_python():
+    def get_processor(self, processor):
+        if processor == "gae":
+            return getattr(self, "standard", None)
+        elif processor == "gae_traversal":
+            return getattr(self, "traversal", None)
+        processor = getattr(self, processor, None)
+        if not processor:
+            raise Exception("Unknown processor")
+        return processor
+
+    setattr(GraphSONMessageSerializer, "get_processor", get_processor)
+
+    def submitAsync(self, message, bindings=None, request_options=None):
+        if isinstance(message, Bytecode):
+            message = request.RequestMessage(
+                processor="traversal",
+                op="bytecode",
+                args={"gremlin": message, "aliases": {"g": self._traversal_source}},
+            )
+        elif isinstance(message, str):
+            message = request.RequestMessage(
+                processor="",
+                op="eval",
+                args={"gremlin": message, "aliases": {"g": self._traversal_source}},
+            )
+            if bindings:
+                message.args.update({"bindings": bindings})
+            if self._sessionEnabled:
+                message = message._replace(processor="session")
+                message.args.update({"session": self._session})
+        # Determind if is a GAE style Bytecode
+        if isinstance(message, Bytecode):
+            for step in message.step_instructions:
+                if step[0] == "process":
+                    message = message._replace(processor="gae_traversal")
+                    break
+        conn = self._pool.get(True)
+        if request_options:
+            message.args.update(request_options)
+        return conn.write(message)
+
+
+patch_for_gremlin_python()
+
 
 """
 import graphscope
