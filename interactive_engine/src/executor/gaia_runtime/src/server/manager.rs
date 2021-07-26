@@ -187,9 +187,6 @@ where
             while self.server_manager_common.manager_switch.load(Ordering::Relaxed) {
                 let hb_resp = self.server_manager_common.get_hb_response();
                 if hb_resp.is_none() || network_manager.is_serving() {
-                    if hb_resp.is_none() {
-                        info!("hb_resp is none");
-                    }
                     thread::sleep(time::Duration::from_millis(store_config.hb_interval_ms));
                     continue;
                 }
@@ -217,13 +214,11 @@ where
                     network_manager.update_number(worker_id as usize, ip_list.len());
                     network_center.initialize(ip_list);
 
-                    info!("We have already initial_task_partition_manager {:?}", task_partition_manager);
                     self.initial_task_partition_manager(task_partition_manager);
                     self.signal.store(true, Ordering::Relaxed);
 
                     // start gaia_pegasus rpc service
                     let (ip, gaia_rpc_service_port) = self.start_rpc_service();
-                    info!("gaia_rpc_service bind to: {:?} {:?}", ip, gaia_rpc_service_port);
                 } else {
                     continue;
                 }
