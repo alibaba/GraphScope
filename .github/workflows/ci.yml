@@ -537,9 +537,7 @@ jobs:
     needs: [build-gss]
     strategy:
       matrix:
-        #executor: [maxgraph, gaia]
-        # Add gaia when supported
-        executor: [maxgraph]
+        executor: [maxgraph, gaia]
     steps:
     - name: Clean up
       run: |
