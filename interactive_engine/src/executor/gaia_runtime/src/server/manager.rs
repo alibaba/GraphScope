@@ -137,12 +137,12 @@ where
                 "partition_task_list in starting gaia {:?}",
                 partition_task_list
             );
-            let _task_partition_list_mapping =
-                task_partition_manager.get_task_partition_list_mapping();
+            let worker_partition_list = task_partition_manager.get_task_partition_list_mapping();
             let query_vineyard = QueryVineyard::new(
                 self.graph.clone(),
                 self.partition_manager.clone(),
                 partition_task_list,
+                worker_partition_list,
                 self.store_config.worker_num as usize,
                 self.store_config.worker_id as u64,
             );
@@ -218,7 +218,7 @@ where
                     self.signal.store(true, Ordering::Relaxed);
 
                     // start gaia_pegasus rpc service
-                    let (ip, gaia_rpc_service_port) = self.start_rpc_service();
+                    let (_ip, _gaia_rpc_service_port) = self.start_rpc_service();
                 } else {
                     continue;
                 }

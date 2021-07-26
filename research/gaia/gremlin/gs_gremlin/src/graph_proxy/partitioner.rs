@@ -69,7 +69,7 @@ impl Partitioner for MaxGraphMultiPartition {
         let mut worker_partition_list = vec![];
         let process_partition_list = self.graph_partition_manager.get_process_partition_list();
         for pid in process_partition_list {
-            if pid % job_workers == worker_id % job_workers {
+            if pid % (job_workers as u32) == worker_id % (job_workers as u32) {
                 worker_partition_list.push(pid as u64)
             }
         }
