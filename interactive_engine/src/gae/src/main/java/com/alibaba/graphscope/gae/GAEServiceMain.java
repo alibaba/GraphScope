@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class GaeServiceMain {
-    private static final Logger logger = LoggerFactory.getLogger(GaeServiceMain.class);
+public class GAEServiceMain {
+    private static final Logger logger = LoggerFactory.getLogger(GAEServiceMain.class);
 
     public static void main(String[] args) throws Exception {
         logger.info("start server");
@@ -34,7 +34,7 @@ public class GaeServiceMain {
 
         Properties properties = new Properties();
         properties.setProperty("graph.name", "test_graph");
-        GaeProcessLoader.load(new InstanceConfig(properties));
+        GAEProcessLoader.load(new InstanceConfig(properties));
 
         // start gremlin server
         server.start().exceptionally(t -> {

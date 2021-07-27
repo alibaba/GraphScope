@@ -27,6 +27,8 @@ def patch_for_gremlin_python():
     def get_processor(self, processor):
         if processor == "gae":
             return getattr(self, "standard", None)
+        elif processor == "gae_traversal":
+            return getattr(self, "traversal", None)
         processor = getattr(self, processor, None)
         if not processor:
             raise Exception("Unknown processor")

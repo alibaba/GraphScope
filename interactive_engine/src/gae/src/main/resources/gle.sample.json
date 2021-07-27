@@ -1,0 +1,9 @@
+{
+  "engine": "GLE",
+  "operation": "sample",
+  "graph": "graph_name_78vc72",
+  "params": {
+    "format": "xxxxxxx"
+  },
+  "output_type": "dataframe"
+}

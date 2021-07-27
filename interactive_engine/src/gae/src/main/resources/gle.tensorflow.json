@@ -1,0 +1,8 @@
+{
+  "engine": "GLE",
+  "operation": "to_tensorflow",
+  "graph": "",
+  "params": {
+  },
+  "output_type": "dataframe"
+}

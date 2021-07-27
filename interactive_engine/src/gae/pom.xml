@@ -72,7 +72,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.alibaba.graphscope.gae.GaeServiceMain</mainClass>
+                            <mainClass>com.alibaba.graphscope.gae.GAEServiceMain</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
