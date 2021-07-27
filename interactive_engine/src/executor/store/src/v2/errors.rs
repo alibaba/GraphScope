@@ -13,6 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::db::api::GraphError;
+
 pub enum Error {
     Internal(String),
 }
@@ -24,5 +26,11 @@ impl Error {
                 println!("{}", msg);
             }
         }
+    }
+}
+
+impl From<GraphError> for Error {
+    fn from(err: GraphError) -> Self {
+        Error::Internal(format!("{:?}", err))
     }
 }

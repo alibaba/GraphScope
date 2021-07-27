@@ -26,7 +26,6 @@ mod v2;
 
 #[macro_use]
 extern crate log;
-#[macro_use]
 extern crate maxgraph_common;
 #[allow(unused_imports)]
 #[macro_use]

@@ -13,124 +13,97 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::v2::api::{VertexId, LabelId, PropertyId, EdgeId, Records, SerialId, SnapshotId};
+use crate::v2::api::{SnapshotId, VertexId, LabelId, PropertyId, EdgeId, Records, SerialId};
 use crate::v2::api::types::{Vertex, Edge, EdgeRelation};
 use crate::v2::api::condition::Condition;
 use crate::v2::Result;
 
-/// Snapshot of a graph partition. All the interfaces should be thread-safe
-pub trait PartitionSnapshot: Send + Sync {
+pub trait MultiVersionGraph {
     type V: Vertex;
     type E: Edge;
 
-    /// Returns the vertex entity of given `vertex_id`, properties are filtered
-    /// by the `property_ids` optionally.
-    ///
-    /// If `label_id` is [`None`], all vertex labels will be searched and the
-    /// first match vertex will be returned.
     fn get_vertex(
         &self,
+        snapshot_id: SnapshotId,
         vertex_id: VertexId,
         label_id: Option<LabelId>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> Result<Option<Self::V>>;
 
-    /// Returns the edge entity of given `edge_id`, properties are filtered
-    /// by the `property_ids` optionally.
-    ///
-    /// If `edge_relation` is [`None`], all edge relations will be searched and
-    /// the first match edge will be returned.
     fn get_edge(
         &self,
+        snapshot_id: SnapshotId,
         edge_id: EdgeId,
         edge_relation: Option<&EdgeRelation>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> Result<Option<Self::E>>;
 
-
-    /// Returns all vertices, filtered by `label_id` and `condition`
-    /// optionally.
-    ///
-    /// Properties of the vertices are filtered by the `property_ids`
-    /// optionally.
     fn scan_vertex(
         &self,
+        snapshot_id: SnapshotId,
         label_id: Option<LabelId>,
         condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> Result<Records<Self::V>>;
 
-    /// Returns all edges, filtered by `edge_relation` and `condition`
-    /// optionally.
-    ///
-    /// Properties of the edges are filtered by the `property_ids` optionally.
     fn scan_edge(
         &self,
+        snapshot_id: SnapshotId,
         edge_relation: Option<&EdgeRelation>,
         condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> Result<Records<Self::E>>;
 
-    /// Returns out edges of vertex `vertex_id`, filtered by `label_id` and
-    /// `condition` optionally.
-    ///
-    /// Properties of the edges are filtered by the `property_ids` optionally.
     fn get_out_edges(
         &self,
+        snapshot_id: SnapshotId,
         vertex_id: VertexId,
         label_id: Option<LabelId>,
         condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> Result<Records<Self::E>>;
 
-    /// Returns in edges of vertex `vertex_id`, filtered by `label_id` and
-    /// `condition` optionally.
-    ///
-    /// Properties of the edges are filtered by the `property_ids` optionally.
     fn get_in_edges(
         &self,
+        snapshot_id: SnapshotId,
         vertex_id: VertexId,
         label_id: Option<LabelId>,
         condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> Result<Records<Self::E>>;
 
-    /// Returns the out-degree of vertex `vertex_id` in `edge_relation`
     fn get_out_degree(
         &self,
+        snapshot_id: SnapshotId,
         vertex_id: VertexId,
         edge_relation: &EdgeRelation,
     ) -> Result<usize>;
 
-    /// Returns the in-degree of vertex `vertex_id` in `edge_relation`
     fn get_in_degree(
         &self,
+        snapshot_id: SnapshotId,
         vertex_id: VertexId,
         edge_relation: &EdgeRelation,
     ) -> Result<usize>;
 
-    /// Returns the `k`th out edge of vertex `vertex_id` in `edge_relation`.
-    ///
-    /// Properties of the edge are filtered by the `property_ids` optionally.
     fn get_kth_out_edge(
         &self,
+        snapshot_id: SnapshotId,
         vertex_id: VertexId,
         edge_relation: &EdgeRelation,
         k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> Result<Option<Self::E>>;
 
-    /// Returns the `k`th in edge of vertex `vertex_id` in `edge_relation`.
-    ///
-    /// Properties of the edge are filtered by the `property_ids` optionally.
     fn get_kth_in_edge(
         &self,
+        snapshot_id: SnapshotId,
         vertex_id: VertexId,
         edge_relation: &EdgeRelation,
         k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> Result<Option<Self::E>>;
 
-    /// Returns the id of the snapshot
-    fn get_snapshot_id(&self) -> SnapshotId;
 }
+
+

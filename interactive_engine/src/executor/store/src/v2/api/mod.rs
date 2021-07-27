@@ -15,9 +15,9 @@
 
 use crate::v2::Result;
 
-mod partition_snapshot;
-mod types;
-mod condition;
+pub mod partition_snapshot;
+pub mod types;
+pub mod condition;
 
 pub use self::partition_snapshot::*;
 pub use self::types::*;
@@ -33,6 +33,7 @@ pub type SerialId = usize;
 pub type Records<T> = Box<dyn Iterator<Item=Result<T>> + Send>;
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct EdgeId {
     edge_inner_id: EdgeInnerId,
     src_vertex_id: VertexId,
