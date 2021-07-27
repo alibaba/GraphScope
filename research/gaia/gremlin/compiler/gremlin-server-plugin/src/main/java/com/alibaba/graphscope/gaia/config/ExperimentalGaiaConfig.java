@@ -20,6 +20,9 @@ public final class ExperimentalGaiaConfig implements GaiaConfig {
     public static String WORKERS = "workers";
     public static String HOSTS = "hosts";
     public static String TIME_LIMIT = "time_limit";
+    public static String BATCH_SIZE = "batch_size";
+    public static String OUT_CAPACITY = "output_capacity";
+    public static String MEMORY_LIMIT = "memory_limit";
     public static String GREMLIN_GRAPH_SCHEMA = "gremlin.graph.schema";
     public static String GREMLIN_GRAPH_TYPE = "gremlin.graph.type";
     public static String OPTIMIZATIONS = "optimizations";
@@ -76,6 +79,21 @@ public final class ExperimentalGaiaConfig implements GaiaConfig {
         } else {
             return (Integer) this.gaiaArgsJson.getOrDefault(TIME_LIMIT, DEFAULT_PEGASUS_TIMEOUT);
         }
+    }
+
+    @Override
+    public int getPegasusBatchSize() {
+        return (int) this.gaiaArgsJson.getOrDefault(BATCH_SIZE, DEFAULT_PEGASUS_BATCH_SIZE);
+    }
+
+    @Override
+    public int getPegasusOutputCapacity() {
+        return (int) this.gaiaArgsJson.getOrDefault(OUT_CAPACITY, DEFAULT_PEGASUS_OUTPUT_CAPACITY);
+    }
+
+    @Override
+    public int getPegasusMemoryLimit() {
+        return (int) this.gaiaArgsJson.getOrDefault(MEMORY_LIMIT, DEFAULT_PEGASUS_MEMORY_LIMIT);
     }
 
     @Override

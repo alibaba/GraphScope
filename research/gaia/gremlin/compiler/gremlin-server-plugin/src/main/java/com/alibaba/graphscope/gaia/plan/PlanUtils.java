@@ -88,6 +88,9 @@ public class PlanUtils {
                     .setWorkers(config.getPegasusWorkerNum())
                     .addAllServers(config.getPegasusServers())
                     .setTimeLimit(config.getPegasusTimeout())
+                    .setBatchSize(config.getPegasusBatchSize())
+                    .setOutputCapacity(config.getPegasusOutputCapacity())
+                    .setMemoryLimit(config.getPegasusMemoryLimit())
                     .build();
         } catch (Exception e) {
             throw new RuntimeException(e);

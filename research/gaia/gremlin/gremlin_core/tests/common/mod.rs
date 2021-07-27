@@ -294,13 +294,17 @@ pub mod test {
             let mut step = GremlinStepPb::decode(&src[0..])
                 .map_err(|e| format!("protobuf decode failure: {}", e))?;
             if let Some(worker_id) = pegasus::get_current_worker() {
-                let num_workers = worker_id.peers as usize / self.inner.get_num_servers();
-                let mut step = graph_step_from(&mut step, self.inner.get_partitioner())?;
-                step.set_num_workers(num_workers);
+                let job_workers = worker_id.peers as usize / self.inner.get_num_servers();
+                let mut step = graph_step_from(
+                    &mut step,
+                    job_workers,
+                    worker_id.index,
+                    self.inner.get_partitioner(),
+                )?;
                 step.set_requirement(self.requirement);
                 Ok(step.gen_source(worker_id.index as usize))
             } else {
-                let mut step = graph_step_from(&mut step, self.inner.get_partitioner())?;
+                let mut step = graph_step_from(&mut step, 1, 0, self.inner.get_partitioner())?;
                 step.set_requirement(self.requirement);
                 Ok(step.gen_source(self.inner.get_server_index() as usize))
             }
