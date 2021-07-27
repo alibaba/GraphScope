@@ -35,13 +35,14 @@ class DegreeAssortativityContext : public TensorContext<FRAG_T, double> {
   // using vid_t = typename FRAG_T::vid_t;
   explicit DegreeAssortativityContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, double>(fragment) {}
-
+  typedef double degree_t;
   void Init(grape::DefaultMessageManager& messages,
             std::string source_degree_type = "out",
-            std::string target_degree_type = "in", bool directed = false) {
+            std::string target_degree_type = "in", bool directed = false,
+            bool weighted = false) {
     merge_stage = false;
-    max_degree = 0;
     this->directed = directed;
+    this->weighted = weighted;
     if (source_degree_type == "in") {
       source_degree_type_ = DegreeType::IN;
     } else if (source_degree_type == "out") {
@@ -69,10 +70,12 @@ class DegreeAssortativityContext : public TensorContext<FRAG_T, double> {
   }
   // std::unordered_map<std::pair<int, int>, int, pair_hash> degree_mixing_map;
   // {source_degree: {target_degree: num}}
-  std::unordered_map<int, std::unordered_map<int, int>> degree_mixing_map;
+  std::unordered_map<degree_t, std::unordered_map<degree_t, int>>
+      degree_mixing_map;
   bool merge_stage;
-  int max_degree;
+  // int max_degree;
   bool directed;
+  bool weighted;
   DegreeType source_degree_type_;
   DegreeType target_degree_type_;
   double degree_assortativity;

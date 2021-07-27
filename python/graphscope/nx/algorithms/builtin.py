@@ -898,7 +898,7 @@ def weakly_connected_components(G):
 
 
 @project_to_simple
-def degree_assortativity_coefficient(G, x="out", y="in", directed=False):
+def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
     """Compute degree assortativity of graph.
 
     Assortativity measures the similarity of connections
@@ -947,9 +947,13 @@ def degree_assortativity_coefficient(G, x="out", y="in", directed=False):
     .. [2] Foster, J.G., Foster, D.V., Grassberger, P. & Paczuski, M.
        Edge direction and the structure of networks, PNAS 107, 10815-20 (2010).
     """
-
+    weighted = False if weight is None else True
     ctx = AppAssets(algo="degree_assortativity_coefficient", context="tensor")(
-        G, source_degree_type=x, target_degree_type=y, directed=directed
+        G,
+        source_degree_type=x,
+        target_degree_type=y,
+        directed=G.is_directed(),
+        weighted=weighted,
     )
     return ctx.to_numpy("r", axis=0)[0]
 

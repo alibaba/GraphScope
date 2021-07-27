@@ -26,6 +26,7 @@ limitations under the License.
 #include "apps/assortativity/degree/degree_assortativity_coefficient_context.h"
 #include "apps/assortativity/utils.h"
 #include "core/app/app_base.h"
+#include "core/utils/app_utils.h"
 #include "core/worker/default_worker.h"
 
 namespace gs {
@@ -49,6 +50,9 @@ class DegreeAssortativity
   using vertex_t = typename fragment_t::vertex_t;
   using vid_t = typename fragment_t::vid_t;
   using oid_t = typename fragment_t::oid_t;
+  using edata_t = typename fragment_t::edata_t;
+
+  typedef double degree_t;
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
@@ -57,8 +61,8 @@ class DegreeAssortativity
     auto inner_vertices = frag.InnerVertices();
     // v of type: Vertex
     for (auto v : inner_vertices) {
-      vid_t vid = frag.Vertex2Gid(v);
-      VLOG(0) << "peval: " << frag.fid() << ": " << vid << std::endl;
+      // vid_t vid = frag.Vertex2Gid(v);
+      // VLOG(0) << "peval: " << frag.fid() << ": " << vid << std::endl;
       ProcessVertex(v, frag, ctx, messages);
     }
     messages.ForceContinue();
@@ -68,12 +72,12 @@ class DegreeAssortativity
                message_manager_t& messages) {
     if (!ctx.merge_stage) {
       vertex_t v;
-      int source_degree;
-      while (messages.GetMessage<fragment_t, int>(frag, v, source_degree)) {
-        VLOG(0) << "inceval: " << frag.fid() << ": " << frag.Vertex2Gid(v)
-                << std::endl;
-        int target_degree =
-            GetDegreeByType(frag, v, ctx.target_degree_type_, ctx.directed);
+      degree_t source_degree;
+      while (messages.GetMessage(frag, v, source_degree)) {
+        // VLOG(0) << "inceval: " << frag.fid() << ": " << frag.Vertex2Gid(v)
+        //         << std::endl;
+        degree_t target_degree =
+            GetDegreeByType(frag, v, ctx.target_degree_type_, ctx);
         DegreeMixingCount(source_degree, target_degree, ctx);
       }
       ctx.merge_stage = true;
@@ -84,19 +88,11 @@ class DegreeAssortativity
     } else {
       // merge in work 0
       if (frag.fid() == 0) {
-        // {{source_degree, target_degree}, num}
-        // std::unordered_map<std::pair<int, int>, int, pair_hash> msg;
-        std::unordered_map<int, std::unordered_map<int, int>> msg;
+        // {{source_degree, {target_degree, num}}
+        std::unordered_map<degree_t, std::unordered_map<degree_t, int>> msg;
         while (messages.GetMessage(msg)) {
           for (auto& pair1 : msg) {
             for (auto& pair2 : pair1.second) {
-              // update max degree
-              if (ctx.max_degree < pair1.first) {
-                ctx.max_degree = pair1.first;
-              }
-              if (ctx.max_degree < pair2.first) {
-                ctx.max_degree = pair2.first;
-              }
               // merge
               if (ctx.degree_mixing_map.count(pair1.first) == 0 ||
                   ctx.degree_mixing_map[pair1.first].count(pair2.first) == 0) {
@@ -107,11 +103,11 @@ class DegreeAssortativity
             }
           }
         }
-        std::vector<std::vector<double>> degree_mixing_matrix(
-            ctx.max_degree + 1, std::vector<double>(ctx.max_degree + 1, 0.0));
+        std::vector<std::vector<double>> degree_mixing_matrix;
+        std::unordered_map<int, degree_t> map;
         // get degree mixing matrix
-        GetDegreeMixingMatrix(ctx, degree_mixing_matrix);
-        ctx.degree_assortativity = ProcessMatrix(degree_mixing_matrix);
+        GetDegreeMixingMatrix(ctx, degree_mixing_matrix, map);
+        ctx.degree_assortativity = ProcessMatrix(degree_mixing_matrix, map);
 
         std::vector<size_t> shape{1};
         ctx.set_shape(shape);
@@ -124,35 +120,25 @@ class DegreeAssortativity
 
   void ProcessVertex(const vertex_t& v, const fragment_t& frag, context_t& ctx,
                      message_manager_t& messages) {
-    int source_degree, target_degree;
-    source_degree =
-        GetDegreeByType(frag, v, ctx.source_degree_type_, ctx.directed);
-    // update max degree
-    if (ctx.max_degree < source_degree) {
-      ctx.max_degree = source_degree;
-    }
-    // bool need_sync = false;
+    degree_t source_degree, target_degree;
+    source_degree = GetDegreeByType(frag, v, ctx.source_degree_type_, ctx);
     // get all neighbors of vertex v
     auto oes = frag.GetOutgoingAdjList(v);
     for (auto& e : oes) {
       vertex_t neighbor = e.get_neighbor();
-      VLOG(0) << frag.Vertex2Gid(v) << "-->" << frag.Vertex2Gid(neighbor)
-              << std::endl;
+      // VLOG(0) << frag.Vertex2Gid(v) << "-->" << frag.Vertex2Gid(neighbor)
+      //         << std::endl;
       if (frag.IsOuterVertex(neighbor)) {
         messages.SyncStateOnOuterVertex(frag, neighbor, source_degree);
-        // need_sync = true;
       } else {
-        target_degree = GetDegreeByType(frag, neighbor, ctx.target_degree_type_,
-                                        ctx.directed);
+        target_degree =
+            GetDegreeByType(frag, neighbor, ctx.target_degree_type_, ctx);
         DegreeMixingCount(source_degree, target_degree, ctx);
       }
     }
-    // if (need_sync) {
-    //   VLOG(0) << "source vertex: " << frag.Vertex2Gid(v) << std::endl;
-    //   messages.SendMsgThroughOEdges<fragment_t, int>(frag, v, source_degree);
-    // }
   }
-  double ProcessMatrix(std::vector<std::vector<double>>& degree_mixing_matrix) {
+  double ProcessMatrix(std::vector<std::vector<double>>& degree_mixing_matrix,
+                       std::unordered_map<int, degree_t>& map) {
     int n = degree_mixing_matrix.size();
     std::vector<double> a;
     // sum of column
@@ -171,35 +157,65 @@ class DegreeAssortativity
     double sum = 0.0;
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
-        sum += i * j * (degree_mixing_matrix[i][j] - a[i] * b[j]);
+        sum += map[i] * map[j] * (degree_mixing_matrix[i][j] - a[i] * b[j]);
       }
     }
-    double vara = Variance(a);
-    double varb = Variance(b);
+    double vara = Variance(a, map);
+    double varb = Variance(b, map);
     return sum / (vara * varb);
   }
 
-  double Variance(std::vector<double>& vec) {
+  double Variance(std::vector<double>& vec,
+                  std::unordered_map<int, degree_t>& map) {
     double sum1 = 0.0, sum2 = 0.0;
     int n = vec.size();
     for (int i = 0; i < n; i++) {
-      sum1 += i * i * vec[i];
-      sum2 += i * vec[i];
+      sum1 += map[i] * map[i] * vec[i];
+      sum2 += map[i] * vec[i];
     }
     return sqrt(sum1 - sum2 * sum2);
   }
-  int GetDegreeByType(const fragment_t& frag, const vertex_t& vertex,
-                      DegreeType type, bool directed) {
-    // For GraphScope, the inDegree of the undirected graph may be 0
-    if (!directed) {
-      return frag.GetLocalOutDegree(vertex);
+  degree_t GetDegreeByType(const fragment_t& frag, const vertex_t& vertex,
+                           DegreeType type, context_t& ctx) {
+    bool directed = ctx.directed;
+    bool weighted = ctx.weighted;
+    degree_t res;
+    if (weighted) {  // process weighted graph
+      if (!directed || type == DegreeType::OUT) {
+        auto oes = frag.GetOutgoingAdjList(vertex);
+        res = ComputeWeightedDegree(oes);
+      } else {
+        auto oes = frag.GetIncomingAdjList(vertex);
+        res = ComputeWeightedDegree(oes);
+      }
+    } else {  // process unweighted graph
+      // For GraphScope, the inDegree of the undirected graph may be 0
+      if (!directed) {
+        res = static_cast<degree_t>(frag.GetLocalOutDegree(vertex));
+      } else if (type == DegreeType::IN) {
+        res = static_cast<degree_t>(frag.GetLocalInDegree(vertex));
+      } else {
+        res = static_cast<degree_t>(frag.GetLocalOutDegree(vertex));
+      }
     }
-    if (type == DegreeType::IN) {
-      return frag.GetLocalInDegree(vertex);
-    }
-    return frag.GetLocalOutDegree(vertex);
+    return res;
   }
-  void DegreeMixingCount(int source_degree, int target_degree, context_t& ctx) {
+
+  template <typename T>
+  degree_t ComputeWeightedDegree(T adjList) {
+    degree_t res = 0;
+    for (auto& e : adjList) {
+      degree_t data = 0;
+      static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+          [&](auto& e, auto& edata) {
+            edata = static_cast<degree_t>(e.get_data());
+          })(e, data);
+      res += data;
+    }
+    return res;
+  }
+  void DegreeMixingCount(degree_t source_degree, degree_t target_degree,
+                         context_t& ctx) {
     if (ctx.degree_mixing_map.count(source_degree) == 0 ||
         ctx.degree_mixing_map[source_degree].count(target_degree) == 0) {
       ctx.degree_mixing_map[source_degree][target_degree] = 1;
@@ -208,21 +224,34 @@ class DegreeAssortativity
     }
   }
   void GetDegreeMixingMatrix(
-      context_t& ctx, std::vector<std::vector<double>>& degree_mixing_matrix) {
-    int total_edge_num = 0;
+      context_t& ctx, std::vector<std::vector<double>>& degree_mixing_matrix,
+      std::unordered_map<int, degree_t>& map) {
+    int norm = 0, count = 0;
+    std::unordered_map<degree_t, int> index_map;
     for (auto& pair1 : ctx.degree_mixing_map) {
       for (auto& pair2 : pair1.second) {
-        total_edge_num += pair2.second;
+        if (index_map.count(pair1.first) == 0) {
+          index_map[pair1.first] = count;
+          map[count] = pair1.first;
+          count++;
+        }
+        if (index_map.count(pair2.first) == 0) {
+          index_map[pair2.first] = count;
+          map[count] = pair2.first;
+          count++;
+        }
+        norm += pair2.second;
       }
     }
-    int n = degree_mixing_matrix.size();
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        if (ctx.degree_mixing_map.count(i) != 0 &&
-            ctx.degree_mixing_map[i].count(j) != 0) {
-          degree_mixing_matrix[i][j] =
-              ctx.degree_mixing_map[i][j] / static_cast<double>(total_edge_num);
-        }
+    int n = map.size();
+    degree_mixing_matrix =
+        std::vector<std::vector<double>>(n, std::vector<double>(n, 0));
+    for (auto& pair1 : ctx.degree_mixing_map) {
+      for (auto& pair2 : pair1.second) {
+        int row = index_map[pair1.first];
+        int column = index_map[pair2.first];
+        degree_mixing_matrix[row][column] =
+            pair2.second / static_cast<double>(norm);
       }
     }
   }
