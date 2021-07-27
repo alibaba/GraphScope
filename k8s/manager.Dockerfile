@@ -18,7 +18,7 @@ RUN mkdir -p /home/maxgraph/config
 # copy binary from builder
 COPY --from=builder /root/maxgraph/src/assembly/target/0.0.1-SNAPSHOT.tar.gz /home/maxgraph/
 COPY --from=builder /root/maxgraph/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz
-COPY --from=builder /root/maxgraph/src/bin/giectl.sh /home/maxgraph/bin
+COPY --from=builder /root/maxgraph/bin/giectl.sh /home/maxgraph/bin
 COPY --from=builder /root/maxgraph/src/config/* /home/maxgraph/config
 RUN tar -xf /home/maxgraph/0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
 RUN tar -xf /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
