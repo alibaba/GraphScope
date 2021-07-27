@@ -75,7 +75,7 @@ pub extern fn updatePeerView(engine_handle: EngineHandle, peer_view_string_raw: 
         let mut fields = item.split("#");
         let id = fields.next().unwrap().parse::<u64>().unwrap();
         let addr_str = fields.next().unwrap();
-        let mut addr_iter = addr_str.to_socket_addrs().expect("parse addr failed: " + addr_str);
+        let mut addr_iter = addr_str.to_socket_addrs().expect(format!("parse addr failed [{}]", addr_str).as_str());
         (id, addr_iter.next().unwrap())
     }).collect::<Vec<(u64, SocketAddr)>>();
     let engine_ptr = unsafe {
