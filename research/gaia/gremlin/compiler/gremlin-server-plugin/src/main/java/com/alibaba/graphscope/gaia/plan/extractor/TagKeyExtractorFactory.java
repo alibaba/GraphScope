@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
@@ -172,7 +173,11 @@ public enum TagKeyExtractorFactory implements TagKeyExtractor {
             } else if (key.equals(T.id.getAccessor())) {
                 builder.setId(Common.IdKey.newBuilder());
             } else {
-                builder.setName((String) key);
+                if (StringUtils.isNumeric(key)) {
+                    builder.setNameId(Integer.valueOf(key));
+                } else {
+                    builder.setName(key);
+                }
             }
             return Gremlin.TagKey.newBuilder().setByKey(Gremlin.ByKey.newBuilder().setKey(builder)).build();
         }

@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gaia.JsonUtils;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
+import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
@@ -87,6 +88,9 @@ public class PlanUtils {
                     .setWorkers(config.getPegasusWorkerNum())
                     .addAllServers(config.getPegasusServers())
                     .setTimeLimit(config.getPegasusTimeout())
+                    .setBatchSize(config.getPegasusBatchSize())
+                    .setOutputCapacity(config.getPegasusOutputCapacity())
+                    .setMemoryLimit(config.getPegasusMemoryLimit())
                     .build();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -378,5 +382,12 @@ public class PlanUtils {
         } catch (Exception e) {
             throw new RuntimeException("field " + field + " not exist in step " + step.getClass(), e);
         }
+    }
+
+    public static String convertToPropertyId(GraphStoreService graphStore, String key) {
+        if (key.equals(T.label.getAccessor()) || key.equals(T.id.getAccessor())) {
+            return key;
+        }
+        return String.valueOf(graphStore.getPropertyId(key));
     }
 }

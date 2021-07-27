@@ -151,55 +151,6 @@ class GRPCClient(object):
         return self._stub.HeartBeat(request)
 
     @catch_grpc_error
-    def create_interactive_engine(
-        self,
-        object_id,
-        schema_path,
-        gremlin_server_cpu,
-        gremlin_server_mem,
-        engine_params,
-    ):
-        request = message_pb2.CreateInteractiveRequest(
-            object_id=object_id,
-            schema_path=schema_path,
-            gremlin_server_cpu=gremlin_server_cpu,
-            gremlin_server_mem=gremlin_server_mem,
-            engine_params=engine_params,
-        )
-        response = self._stub.CreateInteractiveInstance(request)
-        return check_grpc_response(response)
-
-    @catch_grpc_error
-    def close_interactive_engine(self, object_id):
-        request = message_pb2.CloseInteractiveRequest(object_id=object_id)
-        response = self._stub.CloseInteractiveInstance(request)
-        return check_grpc_response(response)
-
-    @catch_grpc_error
-    def create_learning_engine(self, object_id, handle, config):
-        request = message_pb2.CreateLearningInstanceRequest(
-            object_id=object_id,
-            handle=handle,
-            config=config,
-        )
-        response = self._stub.CreateLearningInstance(request)
-        response = check_grpc_response(response)
-        return response.endpoints
-
-    @catch_grpc_error
-    def close_learning_engine(self, object_id):
-        request = message_pb2.CloseLearningInstanceRequest(object_id=object_id)
-        response = self._stub.CloseLearningInstance(request)
-        return check_grpc_response(response)
-
-    def close(self):
-        if self._session_id:
-            self._close_session_impl()
-            self._session_id = None
-        if self._logs_fetching_thread:
-            self._logs_fetching_thread.join(timeout=5)
-
-    @catch_grpc_error
     def _connect_session_impl(self, cleanup_instance=True, dangling_timeout_seconds=60):
         """
         Args:

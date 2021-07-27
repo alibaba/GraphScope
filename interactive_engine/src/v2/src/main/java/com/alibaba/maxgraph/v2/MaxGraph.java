@@ -23,6 +23,7 @@ import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.coordinator.Coordinator;
 import com.alibaba.maxgraph.v2.grafting.frontend.Frontend;
 import com.alibaba.maxgraph.v2.ingestor.Ingestor;
+import com.alibaba.maxgraph.v2.store.GaiaStore;
 import com.alibaba.maxgraph.v2.store.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,22 +46,28 @@ public class MaxGraph {
             }
         } else {
             String roleName = args[0];
-            RoleType roleType = RoleType.fromName(roleName);
-            switch (roleType) {
-                case FRONTEND:
-                    node = new Frontend(conf);
-                    break;
-                case INGESTOR:
-                    node = new Ingestor(conf);
-                    break;
-                case STORE:
-                    node = new Store(conf);
-                    break;
-                case COORDINATOR:
-                    node = new Coordinator(conf);
-                    break;
-                default:
-                    throw new IllegalArgumentException("invalid roleType [" + roleType + "]");
+            if (roleName.equalsIgnoreCase("store-gaia")) {
+                node = new GaiaStore(conf);
+            } else if(roleName.equalsIgnoreCase("store-frontend")) {
+                node = new com.alibaba.graphscope.gaia.Frontend(conf);
+            } else {
+                RoleType roleType = RoleType.fromName(roleName);
+                switch (roleType) {
+                    case FRONTEND:
+                        node = new Frontend(conf);
+                        break;
+                    case INGESTOR:
+                        node = new Ingestor(conf);
+                        break;
+                    case STORE:
+                        node = new Store(conf);
+                        break;
+                    case COORDINATOR:
+                        node = new Coordinator(conf);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("invalid roleType [" + roleType + "]");
+                }
             }
         }
         new NodeLauncher(node).start();

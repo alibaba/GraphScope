@@ -186,6 +186,11 @@
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba.graphscope</groupId>
+            <artifactId>gremlin-server-plugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -279,6 +284,7 @@
                             <includes>
                                 <include>proto/graph_def.proto</include>
                                 <include>proto/ddl_service.proto</include>
+                                <include>proto/write_service.proto</include>
                             </includes>
                         </configuration>
                         <goals>

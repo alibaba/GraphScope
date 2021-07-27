@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,6 +54,9 @@ public class InstanceConfig extends MaxGraphConfiguration {
      */
     public static final String PEGASUS_WORKER_NUM = "pegasus.worker.num";
     public static final String PEGASUS_TIMEOUT = "pegasus.timeout";
+    public static final String PEGASUS_BATCH_SIZE = "pegasus.batch.size";
+    public static final String PEGASUS_OUTPUT_CAPACITY = "pegasus.output.capacity";
+    public static final String PEGASUS_MEMORY_LIMIT = "pegasus.memory.limit";
 
     /**
      * machine count
@@ -376,11 +379,23 @@ public class InstanceConfig extends MaxGraphConfiguration {
     }
 
     public int getPegasusTimeoutMS() {
-        return getInt(PEGASUS_TIMEOUT, 60000);
+        return getInt(PEGASUS_TIMEOUT, 240000);
     }
 
     public int getPegasusWorkerNum() {
-        return getInt(PEGASUS_WORKER_NUM, 1);
+        return getInt(PEGASUS_WORKER_NUM, 2);
+    }
+
+    public int getPegasusBatchSize() {
+        return getInt(PEGASUS_BATCH_SIZE, 1024);
+    }
+
+    public int getPegasusOutputCapacity() {
+        return getInt(PEGASUS_OUTPUT_CAPACITY, 16);
+    }
+
+    public int getPegasusMemoryLimit() {
+        return getInt(PEGASUS_MEMORY_LIMIT, Integer.MAX_VALUE);
     }
 
     public String getJuteMaxbuffer() {

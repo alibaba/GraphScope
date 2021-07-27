@@ -16,6 +16,9 @@
 # limitations under the License.
 #
 
+import json
+import pickle
+
 import numpy as np
 
 from graphscope.framework import utils
@@ -866,5 +869,199 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
         config=config,
         inputs=[graph.op],
         output_types=types_pb2.DATAFRAME,
+    )
+    return op
+
+
+def create_interactive_query(graph, engine_params, cpu, mem):
+    """Create a interactive engine that query on the :code:`graph`
+
+    Args:
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`):
+            Source property graph.
+        engine_params (dict, optional):
+            Configuration to startup the interactive engine. See detail in:
+            `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`
+        cpu (float): The number of CPU cores for gremlin server.
+        mem (str): The number of mem  for gremlin server.
+
+    Returns:
+        An op to create a interactive engine based on a graph.
+    """
+    config = {}
+    config[types_pb2.GIE_GREMLIN_SERVER_CPU] = utils.f_to_attr(cpu)
+    config[types_pb2.GIE_GREMLIN_SERVER_MEM] = utils.s_to_attr(mem)
+    if engine_params is not None:
+        config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS] = utils.s_to_attr(
+            json.dumps(engine_params)
+        )
+    op = Operation(
+        graph.session_id,
+        types_pb2.CREATE_INTERACTIVE_QUERY,
+        config=config,
+        inputs=[graph.op],
+        output_types=types_pb2.INTERACTIVE_QUERY,
+    )
+    return op
+
+
+def create_learning_instance(graph, nodes=None, edges=None, gen_labels=None):
+    """Create an engine for graph learning.
+
+    Args:
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`):
+            Source property graph.
+        nodes (list): The node types that will be used for gnn training.
+        edges (list): The edge types that will be used for gnn training.
+        gen_labels (list): Extra node and edge labels on original graph for gnn training.
+
+    Returns:
+        An op to create a learning engine based on a graph.
+    """
+    config = {}
+    if nodes is not None:
+        config[types_pb2.NODES] = utils.bytes_to_attr(pickle.dumps(nodes))
+    if edges is not None:
+        config[types_pb2.EDGES] = utils.bytes_to_attr(pickle.dumps(edges))
+    if gen_labels is not None:
+        config[types_pb2.GLE_GEN_LABELS] = utils.bytes_to_attr(pickle.dumps(gen_labels))
+    op = Operation(
+        graph.session_id,
+        types_pb2.CREATE_LEARNING_INSTANCE,
+        config=config,
+        inputs=[graph.op],
+        output_types=types_pb2.LEARNING_GRAPH,
+    )
+    return op
+
+
+def close_interactive_query(interactive_query):
+    """Close the interactive instance.
+
+    Args:
+        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):
+            The GIE instance holds the graph that gremlin query on.
+    Returns:
+        An op to close the instance.
+    """
+    config = {}
+    op = Operation(
+        interactive_query.session_id,
+        types_pb2.CLOSE_INTERACTIVE_QUERY,
+        config=config,
+        inputs=[interactive_query.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def close_learning_instance(learning_instance):
+    """Close the learning instance.
+
+    Args:
+        learning_instance (:class:`graphscope.learning.graph.GraphDAGNode`):
+            The learning instance.
+    Returns:
+        An op to close the instance.
+    """
+    config = {}
+    op = Operation(
+        learning_instance.session_id,
+        types_pb2.CLOSE_LEARNING_INSTANCE,
+        config=config,
+        inputs=[learning_instance.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def gremlin_query(interactive_query, query, request_options=None):
+    """Execute a gremlin query.
+
+    Args:
+        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):
+            The GIE instance holds the graph that gremlin query on.
+        query (str):
+            Scripts that written in gremlin quering language.
+        request_options (dict, optional): gremlin request options. format:
+            {
+                "engine": "gae"
+            }
+
+    Returns:
+        An op to execute a gremlin query on the GIE instance.
+    """
+    config = {}
+    config[types_pb2.GIE_GREMLIN_QUERY_MESSAGE] = utils.s_to_attr(query)
+    if request_options:
+        config[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS] = utils.s_to_attr(
+            json.dumps(request_options)
+        )
+    op = Operation(
+        interactive_query.session_id,
+        types_pb2.GREMLIN_QUERY,
+        config=config,
+        inputs=[interactive_query.op],
+        output_types=types_pb2.GREMLIN_RESULTS,
+    )
+    return op
+
+
+def gremlin_to_subgraph(
+    interactive_query, gremlin_script, request_options=None, oid_type="int64"
+):
+    """Create a subgraph from gremlin output.
+
+    Args:
+        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):
+            The GIE instance holds the graph that gremlin query on.
+        gremlin_script (str):
+            gremlin script to be executed.
+        request_options (dict, optional): gremlin request options. format:
+            {
+                "engine": "gae"
+            }
+        oid_type (str, optional):
+            Type of vertex original id. Defaults to "int64".
+
+    Returns:
+        An op to create the subgraph from gremlin script
+    """
+    config = {}
+    config[types_pb2.GIE_GREMLIN_QUERY_MESSAGE] = utils.s_to_attr(gremlin_script)
+    config[types_pb2.OID_TYPE] = utils.s_to_attr(oid_type)
+    if request_options:
+        config[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS] = utils.s_to_attr(
+            json.dumps(request_options)
+        )
+    op = Operation(
+        interactive_query.session_id,
+        types_pb2.SUBGRAPH,
+        config=config,
+        inputs=[interactive_query.op],
+        output_types=types_pb2.GRAPH,
+    )
+    return op
+
+
+def fetch_gremlin_result(result_set, fetch_type="one"):
+    """Fetch the gremlin query result.
+
+    Args:
+        result_set (:class:`raphscope.interactive.query.ResultSetDAGNode`):
+            The instance holds the resultSet in coordinator that can fetch the gremlin result from.
+        fetch_type (str): "one" or "all". Defaults to "one".
+
+    Returns:
+        An op to fetch the gremlin result.
+    """
+    config = {}
+    config[types_pb2.GIE_GREMLIN_FETCH_RESULT_TYPE] = utils.s_to_attr(fetch_type)
+    op = Operation(
+        result_set.session_id,
+        types_pb2.FETCH_GREMLIN_RESULT,
+        config=config,
+        inputs=[result_set.op],
+        output_types=types_pb2.RESULTS,
     )
     return op

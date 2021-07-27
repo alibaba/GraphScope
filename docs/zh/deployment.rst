@@ -48,8 +48,8 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 检测GraphScope服务可用性
 
 .. code:: bash
-    
-    # Helm 3 or 2 
+
+    # Helm 3 or 2
     $ helm test [RELEASE_NAME]
 
 参考 `该链接 <https://github.com/alibaba/GraphScope/blob/main/charts/graphscope/README.md>`_ 以通过python客户端连接到预启动的GraphScope服务。
@@ -58,7 +58,7 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 在AWS/阿里云上部署集群
 ------------------------
 我们提供了一个可在AWS或阿里云上创建 Kubernetes 集群的交互式脚本。这一脚本可以帮助用户使用已有的集群或创建新的 Kubernetes 集群，然后输出集群的配置文件。
-用法如下。你也可以通过 `./script/launch_cluster.py --help` 获得更详细的帮助信息。
+用法如下。你也可以通过 `./scripts/launch_cluster.py --help` 获得更详细的帮助信息。
 
 * AWS
 .. code:: shell
@@ -71,3 +71,21 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 
     pip3 install click PyYAML alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
     ./scripts/launch_cluster.py --type aliyun --id your_access_key_id --secret your_access_key_secret --region your_region_id --output kube_config_path
+
+本地部署GraphScope
+----------------------
+我们提供了一个可在本地安装GraphScope相关依赖以及部署GraphScope的脚本，这一脚本可以运行在
+Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 `./scripts/deploy_local.sh -h`
+获取更详细的帮助信息。
+
+* 使用`deploy_local.sh`安装GraphScope相关依赖
+.. code:: shell
+
+    ./scripts/deploy_local.sh install_deps
+    source ~/.graphscope_env
+
+* 使用`deploy_local.sh`本地部署GraphScope
+.. code:: shell
+
+    ./scripts/deploy_local.sh build_and_deploy
+    export GRAPHSCOPE_HOME=/usr/local

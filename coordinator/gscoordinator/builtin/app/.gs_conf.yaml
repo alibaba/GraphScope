@@ -201,10 +201,18 @@ app:
     src: apps/boundary/node_boundary.h
     compatible_graph:
       - gs::DynamicProjectedFragment
-
   - algo: edge_boundary
     type: cpp_pie
     class_name: gs::EdgeBoundary
     src: apps/boundary/edge_boundary.h
     compatible_graph:
       - gs::DynamicProjectedFragment
+  - algo: is_simple_path
+    type: cpp_pie
+    class_name: gs::IsSimplePath
+    src: apps/simple_path/is_simple_path.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment
+      

@@ -81,29 +81,17 @@ You can use the script as follows or use `./script/launch_cluster.py --help` to 
 
 Deployment on local
 ----------------------
-We provide scripts to install dependencies and build GraphScope locally on
+We provide script to install dependencies and deploy GraphScope locally on
 Ubuntu 20.04+ or MacOS.
 
-* install independencies on Ubuntu 20.04+
+* install independencies of GraphScope
 .. code:: shell
 
-    ./script/install_denpendencies.sh
-    export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
-    export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin:/usr/share/maven/bin
-    export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+    ./scripts/deploy_local.sh install_deps
+    source ~/.graphscope_env
 
-* install independencies on MacOS
+* build and deploy GraphScope locally
 .. code:: shell
 
-    ./script/install_denpendencies.sh
-    export JAVA_HOME=$(/usr/libexec/java_home)
-    export PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/zookeeper/bin
-    export GRAPHSCOPE_PREFIX=/tmp/graphscope_prefix
-    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
-
-* build GraphScope on local
-.. code:: shell
-
-    ./script/build.sh
-
+    ./scripts/deploy_local.sh build_and_deploy
+    export GRAPHSCOPE_HOME=/usr/local
