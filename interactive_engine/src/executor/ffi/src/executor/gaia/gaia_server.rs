@@ -11,7 +11,6 @@ use pegasus_server::rpc::start_rpc_server;
 use pegasus_network::manager::SimpleServerDetector;
 use pegasus_network::config::NetworkConfig;
 use gs_gremlin::{InitializeJobCompiler, QueryMaxGraph};
-use std::collections::HashMap;
 use maxgraph_store::api::PartitionId;
 
 pub struct GaiaServer {

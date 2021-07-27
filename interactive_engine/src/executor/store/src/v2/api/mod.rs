@@ -18,6 +18,7 @@ use crate::v2::Result;
 pub mod partition_snapshot;
 pub mod types;
 pub mod condition;
+pub mod partition_graph;
 
 pub use self::partition_snapshot::*;
 pub use self::types::*;
@@ -28,7 +29,7 @@ pub type LabelId = u32;
 pub type PropertyId = u32;
 pub type VertexId = u64;
 pub type EdgeInnerId = u64;
-pub type SerialId = usize;
+pub type SerialId = u32;
 
 pub type Records<T> = Box<dyn Iterator<Item=Result<T>> + Send>;
 

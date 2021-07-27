@@ -1,4 +1,3 @@
-//
 //! Copyright 2020 Alibaba Group Holding Limited.
 //!
 //! Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +14,15 @@
 
 use std::os::raw::c_void;
 
-use crate::v2::api::*;
-use crate::v2::Error;
-use crate::v2::mock::*;
+use maxgraph_store::v2::api::*;
+use maxgraph_store::v2::errors::Error;
+use crate::store::graph::{PartitionGraphHandle, FfiPartitionGraph};
+use maxgraph_store::v2::wrapper::wrapper_partition_graph::WrapperPartitionSnapshot;
+use maxgraph_store::v2::wrapper::graph_storage::{GraphStorageWrapper, WrapperVertex, WrapperEdge, WrapperProperty};
+use maxgraph_store::db::graph::store::GraphStore;
+use maxgraph_store::v2::api::partition_graph::PartitionGraph;
+use maxgraph_store::v2::Result;
+use std::vec::IntoIter;
 
 pub type PartitionSnapshotHandle = *const c_void;
 pub type ErrorHandle = *const c_void;
@@ -27,6 +32,15 @@ pub type EdgeHandle = *const c_void;
 pub type EdgeIteratorHandle = *const c_void;
 pub type PropertyHandle = *const c_void;
 pub type PropertyIteratorHandle = *const c_void;
+
+// pub type FfiMultiVersionGraph = WrapperPartitionGraph<GraphStorageWrapper<GraphStore>>;
+pub type FfiSnapshot = WrapperPartitionSnapshot<GraphStorageWrapper<GraphStore>>;
+pub type FfiVertex = WrapperVertex;
+pub type FfiEdge = WrapperEdge;
+pub type FfiVertexIterator = IntoIter<Result<FfiVertex>>;
+pub type FfiEdgeIterator = IntoIter<Result<FfiEdge>>;
+pub type FfiProperty = WrapperProperty;
+pub type FfiPropertyIterator = IntoIter<Result<FfiProperty>>;
 
 #[repr(C)]
 pub struct StringSlice {
@@ -53,9 +67,10 @@ impl StringSlice {
 /// Partition Snapshot FFIs
 
 #[no_mangle]
-pub extern fn GetSnapshot() -> PartitionSnapshotHandle {
-    let snapshot = Box::new(PartitionSnapshotImpl::new());
-    Box::into_raw(snapshot) as PartitionSnapshotHandle
+pub extern fn GetSnapshot(handle: PartitionGraphHandle, snapshot_id: SnapshotId) -> PartitionSnapshotHandle {
+    let graph_store_ptr = unsafe { &*(handle as *const FfiPartitionGraph) };
+    let snapshot = graph_store_ptr.get_snapshot(snapshot_id);
+    Box::into_raw(Box::new(snapshot)) as PartitionSnapshotHandle
 }
 
 #[no_mangle]
@@ -64,7 +79,7 @@ pub extern fn GetVertex(partition_snapshot: PartitionSnapshotHandle,
                         error: *mut ErrorHandle)
                         -> VertexHandle {
     unsafe {
-        let handler = &*(partition_snapshot as *const PartitionSnapshotImpl);
+        let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_vertex(vertex_id, label_option(label_id), None) {
             Ok(Some(data)) => {
                 let data_hdl = Box::new(data);
@@ -86,7 +101,7 @@ pub extern fn GetEdge(partition_snapshot: PartitionSnapshotHandle,
                       error: *mut ErrorHandle)
                       -> EdgeHandle {
     unsafe {
-        let handler = &*(partition_snapshot as *const PartitionSnapshotImpl);
+        let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_edge(edge_id, edge_relation_option(edge_relation), None) {
             Ok(Some(data)) => {
                 let data_hdl = Box::new(data);
@@ -108,7 +123,7 @@ pub extern fn ScanVertex(partition_snapshot: PartitionSnapshotHandle,
                          error: *mut ErrorHandle)
                          -> VertexIteratorHandle {
     unsafe {
-        let handler = &*(partition_snapshot as *const PartitionSnapshotImpl);
+        let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.scan_vertex(label_option(label_id), None, None) {
             Ok(data) => {
                 Box::into_raw(data) as VertexIteratorHandle
@@ -128,7 +143,7 @@ pub extern fn ScanEdge(partition_snapshot: PartitionSnapshotHandle,
                        error: *mut ErrorHandle)
                        -> EdgeIteratorHandle {
     unsafe {
-        let handler = &*(partition_snapshot as *const PartitionSnapshotImpl);
+        let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.scan_edge(edge_relation_option(edge_relation), None, None) {
             Ok(data) => {
                 Box::into_raw(data) as EdgeIteratorHandle
@@ -148,7 +163,7 @@ pub extern fn GetOutEdges(partition_snapshot: PartitionSnapshotHandle,
                           error: *mut ErrorHandle)
                           -> EdgeIteratorHandle {
     unsafe {
-        let handler = &*(partition_snapshot as *const PartitionSnapshotImpl);
+        let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_out_edges(vertex_id, label_option(edge_label_id), None, None) {
             Ok(data) => {
                 Box::into_raw(data) as EdgeIteratorHandle
@@ -168,7 +183,7 @@ pub extern fn GetInEdges(partition_snapshot: PartitionSnapshotHandle,
                          error: *mut ErrorHandle)
                          -> EdgeIteratorHandle {
     unsafe {
-        let handler = &*(partition_snapshot as *const PartitionSnapshotImpl);
+        let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_in_edges(vertex_id, label_option(edge_label_id), None, None) {
             Ok(data) => {
                 Box::into_raw(data) as EdgeIteratorHandle
@@ -188,7 +203,7 @@ pub extern fn GetOutDegree(partition_snapshot: PartitionSnapshotHandle,
                            error: *mut ErrorHandle)
                            -> usize {
     unsafe {
-        let handler = &*(partition_snapshot as *const PartitionSnapshotImpl);
+        let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_out_degree(vertex_id, edge_relation) {
             Ok(degree) => {
                 degree
@@ -208,7 +223,7 @@ pub extern fn GetInDegree(partition_snapshot: PartitionSnapshotHandle,
                           error: *mut ErrorHandle)
                           -> usize {
     unsafe {
-        let handler = &*(partition_snapshot as *const PartitionSnapshotImpl);
+        let handler = &*(partition_snapshot as *const FfiSnapshot);
         match handler.get_in_degree(vertex_id, edge_relation) {
             Ok(degree) => {
                 degree
@@ -228,7 +243,7 @@ pub extern fn GetKthOutEdge(partition_snapshot: PartitionSnapshotHandle,
                             error: *mut ErrorHandle)
                             -> EdgeHandle {
     unsafe {
-        let handler = &*(partition_snapshot as *const PartitionSnapshotImpl);
+        let handler = &*(partition_snapshot as *const FfiSnapshot);
         let mut ret : EdgeHandle = ::std::ptr::null();
         match handler.get_kth_out_edge(vertex_id, edge_relation, k, None) {
             Ok(Some(data)) => {
@@ -251,7 +266,7 @@ pub extern fn GetKthInEdge(partition_snapshot: PartitionSnapshotHandle,
                            error: *mut ErrorHandle)
                            -> EdgeHandle {
     unsafe {
-        let handler = &*(partition_snapshot as *const PartitionSnapshotImpl);
+        let handler = &*(partition_snapshot as *const FfiSnapshot);
         let mut ret : EdgeHandle = ::std::ptr::null();
         match handler.get_kth_in_edge(vertex_id, edge_relation, k, None) {
             Ok(Some(data)) => {
@@ -271,7 +286,7 @@ pub extern fn GetKthInEdge(partition_snapshot: PartitionSnapshotHandle,
 #[no_mangle]
 pub extern fn GetSnapshotId(partition_snapshot: PartitionSnapshotHandle) -> SnapshotId {
     unsafe {
-        let handler = &*(partition_snapshot as *const PartitionSnapshotImpl);
+        let handler = &*(partition_snapshot as *const FfiSnapshot);
         handler.get_snapshot_id()
     }
 }
@@ -283,7 +298,7 @@ pub extern fn VertexIteratorNext(vertex_iterator_handle: VertexIteratorHandle,
                                  error: *mut ErrorHandle)
                                  -> VertexHandle {
     unsafe {
-        let handler = &mut *(vertex_iterator_handle as *mut VertexIteratorImpl);
+        let handler = &mut *(vertex_iterator_handle as *mut FfiVertexIterator);
         match handler.next() {
             Some(Ok(data)) => {
                 let data_hdl = Box::new(data);
@@ -302,7 +317,7 @@ pub extern fn VertexIteratorNext(vertex_iterator_handle: VertexIteratorHandle,
 #[no_mangle]
 pub extern fn GetVertexId(vertex_handle: VertexHandle) -> VertexId {
     unsafe {
-        let handler = &*(vertex_handle as *const VertexImpl);
+        let handler = &*(vertex_handle as *const FfiVertex);
         handler.get_vertex_id()
     }
 }
@@ -310,7 +325,7 @@ pub extern fn GetVertexId(vertex_handle: VertexHandle) -> VertexId {
 #[no_mangle]
 pub extern fn GetVertexLabelId(vertex_handle: VertexHandle) -> LabelId {
     unsafe {
-        let handler = &*(vertex_handle as *const VertexImpl);
+        let handler = &*(vertex_handle as *const FfiVertex);
         handler.get_label_id()
     }
 }
@@ -318,7 +333,7 @@ pub extern fn GetVertexLabelId(vertex_handle: VertexHandle) -> LabelId {
 #[no_mangle]
 pub extern fn GetVertexProperty(vertex_handle: VertexHandle, property_id: PropertyId) -> PropertyHandle {
     unsafe {
-        let handler = &*(vertex_handle as *const VertexImpl);
+        let handler = &*(vertex_handle as *const FfiVertex);
         match handler.get_property(property_id) {
             Some(prop) => {
                 let prop_hdl = Box::new(prop);
@@ -334,7 +349,7 @@ pub extern fn GetVertexProperty(vertex_handle: VertexHandle, property_id: Proper
 #[no_mangle]
 pub extern fn GetVertexPropertyIterator(vertex_handle: VertexHandle) -> PropertyIteratorHandle {
     unsafe {
-        let handler = &*(vertex_handle as *const VertexImpl);
+        let handler = &*(vertex_handle as *const FfiVertex);
         let iter_hdl = Box::new(handler.get_property_iterator());
         Box::into_raw(iter_hdl) as PropertyIteratorHandle
     }
@@ -347,7 +362,7 @@ pub extern fn EdgeIteratorNext(edge_iterator_handle: EdgeIteratorHandle,
                                error: *mut ErrorHandle)
                                -> EdgeHandle {
     unsafe {
-        let handler = &mut *(edge_iterator_handle as *mut EdgeIteratorImpl);
+        let handler = &mut *(edge_iterator_handle as *mut FfiEdgeIterator);
         match handler.next() {
             Some(Ok(data)) => {
                 let data_hdl = Box::new(data);
@@ -366,7 +381,7 @@ pub extern fn EdgeIteratorNext(edge_iterator_handle: EdgeIteratorHandle,
 #[no_mangle]
 pub extern fn GetEdgeId(edge_handle: EdgeHandle) -> EdgeId {
     unsafe {
-        let handler = &*(edge_handle as *const EdgeImpl);
+        let handler = &*(edge_handle as *const FfiEdge);
         handler.get_edge_id()
     }
 }
@@ -374,7 +389,7 @@ pub extern fn GetEdgeId(edge_handle: EdgeHandle) -> EdgeId {
 #[no_mangle]
 pub extern fn GetEdgeRelation(edge_handle: EdgeHandle) -> EdgeRelation {
     unsafe {
-        let handler = &*(edge_handle as *const EdgeImpl);
+        let handler = &*(edge_handle as *const FfiEdge);
         handler.get_edge_relation()
     }
 }
@@ -382,7 +397,7 @@ pub extern fn GetEdgeRelation(edge_handle: EdgeHandle) -> EdgeRelation {
 #[no_mangle]
 pub extern fn GetEdgeProperty(edge_handle: EdgeHandle, property_id: PropertyId) -> PropertyHandle {
     unsafe {
-        let handler = &*(edge_handle as *const EdgeImpl);
+        let handler = &*(edge_handle as *const FfiEdge);
         match handler.get_property(property_id) {
             Some(prop) => {
                 let prop_hdl = Box::new(prop);
@@ -398,7 +413,7 @@ pub extern fn GetEdgeProperty(edge_handle: EdgeHandle, property_id: PropertyId) 
 #[no_mangle]
 pub extern fn GetEdgePropertyIterator(edge_handle: EdgeHandle) -> PropertyIteratorHandle {
     unsafe {
-        let handler = &*(edge_handle as *const EdgeImpl);
+        let handler = &*(edge_handle as *const FfiEdge);
         let iter_hdl = Box::new(handler.get_property_iterator());
         Box::into_raw(iter_hdl) as PropertyIteratorHandle
     }
@@ -411,7 +426,7 @@ pub extern fn PropertyIteratorNext(property_iterator_handle: PropertyIteratorHan
                                    error: *mut ErrorHandle)
                                    -> PropertyHandle {
     unsafe {
-        let handler = &mut *(property_iterator_handle as *mut PropertyIteratorImpl);
+        let handler = &mut *(property_iterator_handle as *mut FfiPropertyIterator);
         match handler.next() {
             Some(Ok(data)) => {
                 let data_hdl = Box::new(data);
@@ -430,7 +445,7 @@ pub extern fn PropertyIteratorNext(property_iterator_handle: PropertyIteratorHan
 #[no_mangle]
 pub extern fn GetPropertyId(property_handle: PropertyHandle) -> PropertyId {
     unsafe {
-        let handler = &*(property_handle as *const PropertyImpl);
+        let handler = &*(property_handle as *const FfiProperty);
         handler.get_property_id()
     }
 }
@@ -438,7 +453,7 @@ pub extern fn GetPropertyId(property_handle: PropertyHandle) -> PropertyId {
 #[no_mangle]
 pub extern fn GetPropertyAsInt32(property_handle: PropertyHandle, error: *mut ErrorHandle) -> i32 {
     unsafe {
-        let handler = &*(property_handle as *const PropertyImpl);
+        let handler = &*(property_handle as *const FfiProperty);
         match handler.get_property_value() {
             PropertyValue::Int(data) => {
                 *data
@@ -460,7 +475,7 @@ pub extern fn GetPropertyAsInt32(property_handle: PropertyHandle, error: *mut Er
 #[no_mangle]
 pub extern fn GetPropertyAsInt64(property_handle: PropertyHandle, error: *mut ErrorHandle) -> i64 {
     unsafe {
-        let handler = &*(property_handle as *const PropertyImpl);
+        let handler = &*(property_handle as *const FfiProperty);
         match handler.get_property_value() {
             PropertyValue::Long(data) => {
                 *data
@@ -482,7 +497,7 @@ pub extern fn GetPropertyAsInt64(property_handle: PropertyHandle, error: *mut Er
 #[no_mangle]
 pub extern fn GetPropertyAsFloat(property_handle: PropertyHandle, error: *mut ErrorHandle) -> f32 {
     unsafe {
-        let handler = &*(property_handle as *const PropertyImpl);
+        let handler = &*(property_handle as *const FfiProperty);
         match handler.get_property_value() {
             PropertyValue::Float(data) => {
                 *data
@@ -504,7 +519,7 @@ pub extern fn GetPropertyAsFloat(property_handle: PropertyHandle, error: *mut Er
 #[no_mangle]
 pub extern fn GetPropertyAsDouble(property_handle: PropertyHandle, error: *mut ErrorHandle) -> f64 {
     unsafe {
-        let handler = &*(property_handle as *const PropertyImpl);
+        let handler = &*(property_handle as *const FfiProperty);
         match handler.get_property_value() {
             PropertyValue::Double(data) => {
                 *data
@@ -526,7 +541,7 @@ pub extern fn GetPropertyAsDouble(property_handle: PropertyHandle, error: *mut E
 #[no_mangle]
 pub extern fn GetPropertyAsString(property_handle: PropertyHandle, error: *mut ErrorHandle) -> StringSlice {
     unsafe {
-        let handler = &*(property_handle as *const PropertyImpl);
+        let handler = &*(property_handle as *const FfiProperty);
         match handler.get_property_value() {
             PropertyValue::String(data) => {
                 StringSlice::new(data.as_ptr(), data.len())
@@ -560,7 +575,7 @@ pub extern fn PrintError(error_handle: ErrorHandle) {
 #[no_mangle]
 pub extern fn ReleasePartitionSnapshotHandle(ptr: PartitionSnapshotHandle) {
     println!("[Rust FFI] <Release PartitionSnapshotHandle>");
-    let handler = ptr as *mut PartitionSnapshotImpl;
+    let handler = ptr as *mut FfiSnapshot;
     unsafe {
         Box::from_raw(handler);
     }
@@ -578,7 +593,7 @@ pub extern fn ReleaseErrorHandle(ptr: ErrorHandle) {
 #[no_mangle]
 pub extern fn ReleaseVertexHandle(ptr: VertexHandle) {
     println!("[Rust FFI] <Release VertexHandle>");
-    let handler = ptr as *mut VertexImpl;
+    let handler = ptr as *mut FfiVertex;
     unsafe {
         Box::from_raw(handler);
     }
@@ -587,7 +602,7 @@ pub extern fn ReleaseVertexHandle(ptr: VertexHandle) {
 #[no_mangle]
 pub extern fn ReleaseVertexIteratorHandle(ptr: VertexIteratorHandle) {
     println!("[Rust FFI] <Release VertexIteratorHandle>");
-    let handler = ptr as *mut VertexIteratorImpl;
+    let handler = ptr as *mut FfiVertexIterator;
     unsafe {
         Box::from_raw(handler);
     }
@@ -596,7 +611,7 @@ pub extern fn ReleaseVertexIteratorHandle(ptr: VertexIteratorHandle) {
 #[no_mangle]
 pub extern fn ReleaseEdgeHandle(ptr: EdgeHandle) {
     println!("[Rust FFI] <Release EdgeHandle>");
-    let handler = ptr as *mut EdgeImpl;
+    let handler = ptr as *mut FfiEdge;
     unsafe {
         Box::from_raw(handler);
     }
@@ -605,7 +620,7 @@ pub extern fn ReleaseEdgeHandle(ptr: EdgeHandle) {
 #[no_mangle]
 pub extern fn ReleaseEdgeIteratorHandle(ptr: EdgeIteratorHandle) {
     println!("[Rust FFI] <Release EdgeIteratorHandle>");
-    let handler = ptr as *mut EdgeIteratorImpl;
+    let handler = ptr as *mut FfiEdgeIterator;
     unsafe {
         Box::from_raw(handler);
     }
@@ -614,7 +629,7 @@ pub extern fn ReleaseEdgeIteratorHandle(ptr: EdgeIteratorHandle) {
 #[no_mangle]
 pub extern fn ReleasePropertyHandle(ptr: PropertyHandle) {
     println!("[Rust FFI] <Release PropertyHandle>");
-    let handler = ptr as *mut PropertyImpl;
+    let handler = ptr as *mut FfiProperty;
     unsafe {
         Box::from_raw(handler);
     }
@@ -623,7 +638,7 @@ pub extern fn ReleasePropertyHandle(ptr: PropertyHandle) {
 #[no_mangle]
 pub extern fn ReleasePropertyIteratorHandle(ptr: PropertyIteratorHandle) {
     println!("[Rust FFI] <Release PropertyIteratorHandle>");
-    let handler = ptr as *mut PropertyIteratorImpl;
+    let handler = ptr as *mut FfiPropertyIterator;
     unsafe {
         Box::from_raw(handler);
     }

@@ -264,7 +264,7 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
     ) -> Result<Option<Self::E>> {
         let mut edges_iter = self.get_out_edges(snapshot_id, vertex_id, Some(edge_relation.get_edge_label_id()), None,
                                                 property_ids)?;
-        edges_iter.nth(k).transpose()
+        edges_iter.nth(k as usize).transpose()
     }
 
     fn get_kth_in_edge(&self,
@@ -276,7 +276,7 @@ impl<G: GraphStorage> MultiVersionGraph for GraphStorageWrapper<G> {
     ) -> Result<Option<Self::E>> {
         let mut edges_iter = self.get_in_edges(snapshot_id, vertex_id, Some(edge_relation.get_edge_label_id()), None,
                                                 property_ids)?;
-        edges_iter.nth(k).transpose()
+        edges_iter.nth(k as usize).transpose()
     }
 }
 
