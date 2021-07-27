@@ -74,7 +74,7 @@ pub extern fn updatePeerView(engine_handle: EngineHandle, peer_view_string_raw: 
     let peer_view = peer_view_string.split(",").map(|item| {
         let mut fields = item.split("#");
         let id = fields.next().unwrap().parse::<u64>().unwrap();
-        let host = fields.next().unwrap().parse().unwrap();
+        let host = fields.next().unwrap().parse().expect(format!("parse host failed. item {}", item).as_str());
         let port = fields.next().unwrap().parse().unwrap();
         (id, SocketAddr::new(host, port))
     }).collect::<Vec<(u64, SocketAddr)>>();
