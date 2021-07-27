@@ -6,7 +6,7 @@ use std::sync::Arc;
 use maxgraph_store::db::common::unsafe_util::to_mut;
 use maxgraph_store::db::graph::store::GraphStore;
 use std::ffi::CStr;
-use std::net::SocketAddr;
+use std::net::{SocketAddr, ToSocketAddrs};
 use crate::executor::gaia::gaia_server::GaiaServer;
 use crate::executor::gaia::engine_ports_response::EnginePortsResponse;
 
@@ -74,9 +74,9 @@ pub extern fn updatePeerView(engine_handle: EngineHandle, peer_view_string_raw: 
     let peer_view = peer_view_string.split(",").map(|item| {
         let mut fields = item.split("#");
         let id = fields.next().unwrap().parse::<u64>().unwrap();
-        let host = fields.next().unwrap().parse().expect(format!("parse host failed. item {}", item).as_str());
-        let port = fields.next().unwrap().parse().unwrap();
-        (id, SocketAddr::new(host, port))
+        let addr_str = fields.next().unwrap();
+        let mut addr_iter = addr_str.to_socket_addrs().expect("parse addr failed: " + addr_str);
+        (id, addr_iter.next().unwrap())
     }).collect::<Vec<(u64, SocketAddr)>>();
     let engine_ptr = unsafe {
         to_mut(&*(engine_handle as *const GaiaServer))
