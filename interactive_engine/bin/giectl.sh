@@ -61,8 +61,51 @@ set_common_envs() {
   fi
 }
 
+# parallel run for k8s
+parallel_run() {
+  run_cmd=$1
+  pod_hosts=$2
+  engine=$3
+  _id=1
+  for pod in `echo $pod_hosts`
+  do
+    kubectl --namespace=$ENGINE_NAMESPACE exec $pod -c $engine -- sh -c "export server_id=$_id && $run_cmd"
+    let _id+=1
+  done
+}
+
+random_generator() {
+  min=$1
+  range=$2
+  _port=$(( ((RANDOM<<15)|RANDOM) % $range + $min ))
+  echo ${_port}
+}
+
 start_coordinator() {
-  JAVA_OPT="-server -Xmx1024m -Xms1024m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./java.hprof -verbose:gc -Xloggc:${LOG_DIR}/maxgraph-coordinator.gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-coordinator.log -Dlogbasedir=${LOG_DIR}/coordinator -Dlog4j.configurationFile=file:${WORKSPACE}/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath ${WORKSPACE}/0.0.1-SNAPSHOT/conf/*:${WORKSPACE}/0.0.1-SNAPSHOT/lib/*:"
+  JAVA_OPT="-server
+            -Xmx1024m
+            -Xms1024m
+            -XX:+HeapDumpOnOutOfMemoryError
+            -XX:HeapDumpPath=./java.hprof
+            -verbose:gc
+            -Xloggc:${LOG_DIR}/maxgraph-coordinator.gc.log
+            -XX:+PrintGCDetails
+            -XX:+PrintGCDateStamps
+            -XX:+PrintHeapAtGC
+            -XX:+PrintTenuringDistribution
+            -Djava.awt.headless=true
+            -Dsun.net.client.defaultConnectTimeout=10000
+            -Dsun.net.client.defaultReadTimeout=30000
+            -XX:+DisableExplicitGC
+            -XX:-OmitStackTraceInFastThrow
+            -XX:+UseG1GC
+            -XX:InitiatingHeapOccupancyPercent=75
+            -Dfile.encoding=UTF-8
+            -Dsun.jnu.encoding=UTF-8
+            -Dlogfilename=${LOG_DIR}/maxgraph-coordinator.log
+            -Dlogbasedir=${LOG_DIR}/coordinator
+            -Dlog4j.configurationFile=file:${WORKSPACE}/config/log4j2.xml
+            -classpath ${WORKSPACE}/0.0.1-SNAPSHOT/conf/*:${WORKSPACE}/0.0.1-SNAPSHOT/lib/*:"
   inner_config=$CONFIG_DIR/coordinator.application.properties
   cp $WORKSPACE/config/coordinator.application.properties $inner_config
   sed -i "s/ZOOKEEPER_PORT/$2/g" $inner_config
@@ -73,7 +116,26 @@ start_coordinator() {
 }
 
 start_frontend() {
-  JAVA_OPT="-server -verbose:gc -Xloggc:${LOG_DIR}/maxgraph-frontend.gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-frontend.log -Dlogbasedir=${LOG_DIR}/frontend -Dlog4j.configurationFile=file:$WORKSPACE/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath $WORKSPACE/0.0.1-SNAPSHOT/conf/*:$WORKSPACE/0.0.1-SNAPSHOT/lib/*:"
+  JAVA_OPT="-server
+            -verbose:gc
+            -Xloggc:${LOG_DIR}/maxgraph-frontend.gc.log
+            -XX:+PrintGCDetails
+            -XX:+PrintGCDateStamps
+            -XX:+PrintHeapAtGC
+            -XX:+PrintTenuringDistribution
+            -Djava.awt.headless=true
+            -Dsun.net.client.defaultConnectTimeout=10000
+            -Dsun.net.client.defaultReadTimeout=30000
+            -XX:+DisableExplicitGC
+            -XX:-OmitStackTraceInFastThrow
+            -XX:+UseG1GC
+            -XX:InitiatingHeapOccupancyPercent=75
+            -Dfile.encoding=UTF-8
+            -Dsun.jnu.encoding=UTF-8
+            -Dlogfilename=${LOG_DIR}/maxgraph-frontend.log
+            -Dlogbasedir=${LOG_DIR}/frontend
+            -Dlog4j.configurationFile=file:$WORKSPACE/config/log4j2.xml
+            -classpath $WORKSPACE/0.0.1-SNAPSHOT/conf/*:$WORKSPACE/0.0.1-SNAPSHOT/lib/*:"
   REPLACE_SCHEMA_PATH=`echo ${2//\//\\\/}`
 
   inner_config=$CONFIG_DIR/frontend.vineyard.properties
@@ -122,9 +184,10 @@ start_executor() {
   echo $! > $PID_DIR/executor.pid
 }
 
-create_instance() {
-  object_id=$1
-  schema_path=$2
+create_instance_on_local() {
+  cluster_type=$1
+  object_id=$2
+  schema_path=$3
   server_id=$3
   vineyard_ipc_socket=$4
   zookeeper_port=$5
@@ -142,7 +205,99 @@ create_instance() {
                  ${zookeeper_port}
 }
 
-close_instance() {
+create_instance_on_k8s() {
+  object_id=$1
+  schema_path=$2
+  engine_count=`echo $3 | awk -F"," '{print NF}'`
+  pod_hosts=`echo $3 | awk -F"," '{for(i=1;i<=NF;++i) {print $i" "}}'`
+  engine_container=$4
+  preemptive=$5
+  gremlin_server_cpu=$6
+  gremlin_server_mem=$7
+  engine_paras=$8
+  launch_engine_cmd="export object_id=${object_id} && /home/maxgraph/executor-entrypoint.sh"
+
+  requests_cpu=0.5
+  requests_mem="512Mi"
+
+  # render schema path
+  config=/home/maxgraph/config_${object_id}
+  mkdir -p $config
+  file=${schema_path##*/}
+  cp $schema_path $config/$file
+  schema_path=/home/maxgraph/config/$file
+
+  # setup config
+  update_cmd="/root/maxgraph/set_config.sh $object_id $schema_path $(hostname -i) $engine_count $engine_paras"
+  sh -c "$update_cmd"
+  parallel_run "$update_cmd" "$pod_hosts" $engine_container
+
+  # create pods
+  log "Launch coordinator & frontend in one pod."
+  gremlin_image=$GREMLIN_IMAGE
+  coordinator_image=$COORDINATOR_IMAGE
+  config_name=config-${object_id}
+  pod_name=pod-${object_id}
+  gremlin_image=$(printf '%s\n' "$gremlin_image" | sed -e 's/[\/&]/\\&/g')
+  coordinator_image=$(printf '%s\n' "$coordinator_image" | sed -e 's/[\/&]/\\&/g')
+  # node_host=`kubectl describe pods -l "app=manager" | grep "Node:" | head -1 | awk -F '[ /]+' '{print $2}'`
+  kubectl create configmap $config_name --from-file /home/maxgraph/config_$object_id
+
+  if [ "$preemptive" = "True" ]; then
+    sed -e "s/unique_pod_name/$pod_name/g" -e "s/unique_config_name/$config_name/g" \
+        -e "s/gremlin_image/$gremlin_image/g" -e "s/unique_object_id/$object_id/g" \
+        -e "s/requests_cpu/$requests_cpu/g" -e "s/requests_mem/$requests_mem/g" \
+        -e "s/limits_cpu/$gremlin_server_cpu/g" -e "s/limits_mem/$gremlin_server_mem/g" \
+        -e "s/coordinator_image/$coordinator_image/g" \
+        /root/maxgraph/pod.yaml > /root/maxgraph/pod_${object_id}.yaml
+  else
+    sed -e "s/unique_pod_name/$pod_name/g" -e "s/unique_config_name/$config_name/g" \
+        -e "s/gremlin_image/$gremlin_image/g" -e "s/unique_object_id/$object_id/g" \
+        -e "s/requests_cpu/$gremlin_server_cpu/g" -e "s/requests_mem/$gremlin_server_mem/g" \
+        -e "s/limits_cpu/$gremlin_server_cpu/g" -e "s/limits_mem/$gremlin_server_mem/g" \
+        -e "s/coordinator_image/$coordinator_image/g" \
+        /root/maxgraph/pod.yaml > /root/maxgraph/pod_${object_id}.yaml
+  fi
+  kubectl apply -f /root/maxgraph/pod_${object_id}.yaml
+
+  log "launch interactive engine per analytical pod."
+  parallel_run "$launch_engine_cmd" "$pod_hosts" $engine_container 1>/dev/null 2>&1
+
+  log "expose gremlin server"
+  gremlin_pod=`kubectl get pods -l "graph=pod-${object_id}" | grep -v NAME | awk '{print $1}'`
+  if [ "$GREMLIN_EXPOSE" = "LoadBalancer" ]; then
+    port=8182
+    # range [50001, 53000)
+    external_port=$( random_generator 50001 3000 )
+    kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${external_port} \
+      --target-port=${port} --type=LoadBalancer 1>/dev/null 2>&1
+    [ $? -eq 0 ] || exit 1
+    wait_period_seconds=0
+    while true
+    do
+      external_ip=`kubectl describe service gremlin-${object_id} | grep "LoadBalancer Ingress" | awk -F'[ :]+' '{print $3}'`
+      if [ -n "${external_ip}" ]; then
+        break
+        fi
+        wait_period_seconds=$(($wait_period_seconds+5))
+        if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+          echo "Get external ip of ${GREMLIN_EXPOSE} failed."
+          break
+        fi
+        sleep 5
+    done
+  else
+    kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${port} \
+      --target-port=${port} --type=NodePort 1>/dev/null 2>&1
+    [ $? -eq 0 ] || exit 1
+    external_port=`kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]"`
+    [ $? -eq 0 ] || exit 1
+    EXTERNAL_IP=`kubectl describe pods pod-${object_id} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}'`
+  fi
+  log "FEONTEND_PORT: $external_ip:$external_port"
+}
+
+close_instance_on_local() {
   object_id=$1
 
   set_common_envs ${object_id}
@@ -154,6 +309,22 @@ close_instance() {
   kill $coordinator_id || true
   kill $frontend_id || true
   kill $executor_id || true
+}
+
+close_instance_on_k8s() {
+  object_id=$1
+  pod_hosts=`echo $2 | awk -F"," '{for(i=1;i<=NF;++i) {print $i" "}}'`
+  engine_container=$3
+  waiting_for_delete=$4
+
+  log "Delete pods"
+  kubectl delete -f /root/maxgraph/pod_${object_id}.yaml --wait=${waiting_for_delete}
+  kubectl delete configmap config-${object_id}
+  kubectl delete service gremlin-${object_id}
+
+  log "Close maxgraph instance of $object_id"
+  kill_cmd="/root/maxgraph/kill_process.sh $object_id"
+  parallel_run "$kill_cmd" "$pod_hosts" $engine_container
 }
 
 start_service() {
@@ -212,7 +383,7 @@ while test $# -ne 0; do
   case $arg in
     -h|--help) usage; exit ;;
     create_instance) create_instance "$@"; exit;;
-    close_instance) close_instance; exit;;
+    close_instance) close_instance "$@"; exit;;
     start_service) start_service "$@"; exit;;
     stop_service) stop_service "$@"; exit;;
     *)
