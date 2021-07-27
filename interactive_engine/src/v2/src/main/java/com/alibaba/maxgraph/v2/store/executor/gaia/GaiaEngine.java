@@ -10,12 +10,15 @@ import com.alibaba.maxgraph.v2.store.executor.jna.GaiaLibrary;
 import com.alibaba.maxgraph.v2.store.executor.jna.GaiaPortsResponse;
 import com.alibaba.maxgraph.v2.store.jna.JnaGraphStore;
 import com.sun.jna.Pointer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class GaiaEngine implements ExecutorEngine {
+    private static final Logger logger = LoggerFactory.getLogger(GaiaEngine.class);
 
     private Configs configs;
     private Pointer pointer;
@@ -89,6 +92,7 @@ public class GaiaEngine implements ExecutorEngine {
                 String peerViewString = nodes.values().stream()
                         .map(n -> String.format("%s#%s#%s", n.getIdx(), n.getHost(), n.getPort()))
                         .collect(Collectors.joining(","));
+                logger.info("updatePeerView [" + peerViewString + "]");
                 GaiaLibrary.INSTANCE.updatePeerView(this.pointer, peerViewString);
             }
         }
