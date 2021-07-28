@@ -27,6 +27,7 @@ import com.alibaba.maxgraph.v2.coordinator.Coordinator;
 import com.alibaba.maxgraph.v2.grafting.frontend.Frontend;
 import com.alibaba.maxgraph.v2.ingestor.Ingestor;
 import com.alibaba.maxgraph.v2.store.Store;
+import com.google.common.annotations.VisibleForTesting;
 import com.salesforce.kafka.test.KafkaTestCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,4 +167,8 @@ public class MaxNode extends NodeBase {
         nodeLauncher.start();
     }
 
+    @VisibleForTesting
+    public List<NodeBase> getStores() {
+        return stores;
+    }
 }

@@ -52,6 +52,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 @Graph.OptIn("com.alibaba.maxgraph.tests.gremlin.GremlinStandardTestSuite")
@@ -485,5 +486,9 @@ public class MaxTestGraph implements Graph {
     @Override
     public Configuration configuration() {
         return null;
+    }
+
+    public List<NodeBase> getStoreNodes() {
+        return ((MaxNode) this.maxNode).getStores();
     }
 }

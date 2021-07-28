@@ -16,8 +16,16 @@
 
 package com.alibaba.maxgraph.tests.ffi;
 
+import com.alibaba.maxgraph.tests.gremlin.MaxTestGraph;
 import com.alibaba.maxgraph.tests.gremlin.MaxTestGraphProvider;
+import com.alibaba.maxgraph.v2.common.NodeBase;
 import com.alibaba.maxgraph.v2.common.config.CommonConfig;
+import com.alibaba.maxgraph.v2.store.GraphPartition;
+import com.alibaba.maxgraph.v2.store.Store;
+import com.alibaba.maxgraph.v2.store.StoreService;
+import com.alibaba.maxgraph.v2.store.jna.GraphLibrary;
+import com.alibaba.maxgraph.v2.store.jna.JnaGraphStore;
+import com.sun.jna.Pointer;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.GraphProvider;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
@@ -26,9 +34,13 @@ import org.junit.Test;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+
 public class FfiTest {
+
     @Test
     void testFfi() throws Exception {
         GraphProvider provider = new MaxTestGraphProvider();
@@ -50,5 +62,14 @@ public class FfiTest {
             }
         };
         provider.loadGraphData(graph, loadGraphWith, FfiTest.class, "testFfi");
+        List<NodeBase> storeNodes = ((MaxTestGraph) graph).getStoreNodes();
+        assertEquals(storeNodes.size(), 1);
+        Store store = (Store) storeNodes.get(0);
+        StoreService storeService = store.getStoreService();
+        JnaGraphStore jnaGraphStore = (JnaGraphStore) storeService.getIdToPartition().get(0);
+        Pointer wrapperPartitionGraph = GraphLibrary.INSTANCE.createWrapperPartitionGraph(jnaGraphStore.getPointer());
+        GnnLibrary.INSTANCE.setPartitionGraph(wrapperPartitionGraph);
+        GnnLibrary.INSTANCE.runLocalTests();
+        provider.clear(graph, graphConf);
     }
 }
