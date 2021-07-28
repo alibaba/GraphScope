@@ -89,6 +89,23 @@ where
             let filter = params.filter.clone();
             let partitions: Vec<PartitionId> =
                 partitions.iter().map(|pid| *pid as PartitionId).collect();
+            let worker_id = if let Some(wid) = pegasus::get_current_worker() { wid.index} else {0};
+            let all_vertices_iter =  store
+                .get_all_vertices(
+                    si,
+                    label_ids.as_ref(),
+                    // None means no filter condition pushed down to storage as not supported yet. Same as follows.
+                    None,
+                    // None means no need to dedup by properties. Same as follows.
+                    None,
+                    prop_ids.as_ref(),
+                    // Zero limit means no limit. Same as follows.
+                    params.limit.unwrap_or(0),
+                    // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
+                    partitions.as_ref(),
+                );
+            let count = all_vertices_iter.count();
+            info!("worker_id: {:?} partitions: {:?} count: {:?}", worker_id, partitions, count);
             let result = store
                 .get_all_vertices(
                     si,
