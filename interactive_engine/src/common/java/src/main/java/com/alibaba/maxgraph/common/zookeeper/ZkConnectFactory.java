@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ZkConnectFactory {
     private static final Logger LOG = LoggerFactory.getLogger(ZkConnectFactory.class);
-    private static ZkClient zkClient = null;
+    private static volatile ZkClient zkClient = null;
     private static String zkUrl;
 
     private static final Object LOCK = new Object();
