@@ -39,18 +39,34 @@ graphscope.set_option(show_log=True)
 graphscope.set_option(initializing_interactive_engine=False)
 
 test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
-
-
-@pytest.fixture
-def sess():
-    s = graphscope.session(cluster_type="hosts", num_workers=2)
-    yield s
-    s.close()
+property_dir = os.path.join(test_repo_dir, "property")
 
 
 @pytest.fixture
 def ogbn_mag_small():
     return "{}/ogbn_mag_small".format(test_repo_dir)
+
+
+@pytest.fixture(scope="module")
+def p2p_property_graph(graphscope_session):
+    g = graphscope_session.load_from(
+        edges={
+            "knows": (
+                Loader("{}/p2p-31_property_e_0".format(property_dir), header_row=True),
+                ["src_label_id", "dst_label_id", "dist"],
+                ("src_id", "person"),
+                ("dst_id", "person"),
+            ),
+        },
+        vertices={
+            "person": Loader(
+                "{}/p2p-31_property_v_0".format(property_dir), header_row=True
+            ),
+        },
+        generate_eid=False,
+    )
+    yield g
+    g.unload()
 
 
 QUERY_1 = (
@@ -65,28 +81,19 @@ QUERY_1 = (
     ".property('$pr', expr('$new')))"
     ".until(count().is(0))"
     ").with('$pr', 'pr')"
-    ".order().by('pr', desc).limit(10).valueMap('name', 'pr')"
+    ".order().by('pr', desc).limit(10).valueMap('id', 'pr')"
 )
 
 
-def demo(sess, ogbn_mag_small):
-    graph = load_ogbn_mag(sess, ogbn_mag_small)
-
+def demo(sess, graph):
     # Interactive engine
     interactive = sess.gremlin(graph)
     papers = interactive.execute(
-        "g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()"
+        QUERY_1,
+        request_options={"engine": "gae"},
     ).one()
     print(papers)
 
-    source_to_source_json = interactive.execute(
-        QUERY_1, request_options={"engine": "gae"}
-    ).one()
-    assert len(source_to_source_json) == 1
-    print(json.loads(source_to_source_json[0]))
 
-
-def test_demo(ogbn_mag_small):
-    sess = graphscope.session(cluster_type="hosts", num_workers=2)
-    demo(sess, ogbn_mag_small)
-    sess.close()
+def test_query_1(graphscope_session, p2p_property_graph):
+    demo(graphscope_session, p2p_property_graph)

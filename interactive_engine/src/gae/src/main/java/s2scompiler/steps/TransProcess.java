@@ -60,7 +60,11 @@ public final class TransProcess extends TransStep{
         if ((times_pos == repeat_pos + 1 && until_pos == -1) || (times_pos == -1 && until_pos == repeat_pos + 1)) {
             set_code = GenerateCode.generateSetup(properties);
             init_code = GenerateCode.generateInit(init_code);
-            return new Result(true, GenerateCode.generateHead() + set_code + init_code + repeat_code + until_code + GenerateCode.tail_code);
+            String class_name = GenerateCode.generateRandomString(10);
+            Result rlt = new Result(true, GenerateCode.generateHead(class_name) + set_code + init_code + repeat_code + until_code + GenerateCode.tail_code);
+            rlt.set_class_name(class_name);
+            rlt.set_app_type("cpp_gas");
+            return rlt;
         } 
         return new Result(false, "Need repeat().until() or repeat().times() for the repeat step.");
     }

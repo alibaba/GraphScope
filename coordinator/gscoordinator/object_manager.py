@@ -46,12 +46,13 @@ class LibMeta(object):
 
 
 class GraphMeta(object):
-    def __init__(self, key, vineyard_id, graph_def, schema_path=None):
+    def __init__(self, key, vineyard_id, graph_def, schema_path=None, op_key=None):
         self.key = key
         self.type = "graph"
         self.vineyard_id = vineyard_id
         self.graph_def = graph_def
         self.schema_path = schema_path
+        self.op_key = op_key
 
 
 class InteractiveQueryManager(object):
@@ -84,10 +85,16 @@ class InteractiveQueryManager(object):
 
 
 class GremlinResultSet(object):
-    def __init__(self, key, result_set):
+    def __init__(self, key, request_options, result_set):
         self.key = key
         self.type = "result_set"
+        self.request_options = request_options
         self.result_set = result_set
+
+    def query_on_gae_processor(self):
+        if self.request_options is not None and "engine" in self.request_options:
+            return "gae" == self.request_options["engine"]
+        return False
 
 
 class LearningInstanceManager(object):

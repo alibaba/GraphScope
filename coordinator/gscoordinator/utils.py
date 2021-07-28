@@ -43,6 +43,7 @@ from queue import Queue
 from string import Template
 
 import yaml
+from graphscope.analytical.udf.utils import InMemoryZip
 from graphscope.framework import utils
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.proto import attr_value_pb2
@@ -855,6 +856,9 @@ def _transform_labeled_vertex_data_r(schema, label):
 
 
 def _transform_labeled_vertex_property_data_r(schema, label, prop):
+    if label == "_V":
+        assert len(schema.vertex_labels) == 1
+        label = schema.vertex_labels[0]
     label_id = schema.get_vertex_label_id(label)
     return "label{}.{}".format(label_id, prop)
 
@@ -1427,3 +1431,215 @@ def check_argument(condition, message=None):
         if message is None:
             message = "in '%s'" % inspect.stack()[1].code_context[0]
         raise ValueError("Check failed: %s" % message)
+
+
+def create_op(op_type, output_type, inputs=None, config=None):
+    op_def = op_def_pb2.OpDef(op=op_type, key=uuid.uuid4().hex, output_type=output_type)
+    if config:
+        for k, v in config.items():
+            op_def.attr[k].CopyFrom(v)
+    if inputs:
+        for op in inputs:
+            op_def.parents.extend([op])
+    return op_def
+
+
+def create_op_from_gae_compiler_value(
+    object_manager, step_op_key_map, json_dict, step, value
+):
+    """
+    value: {
+        "engine": "GAE",
+        "operation": "run_app",
+        "graph": "dummy",
+        "params": {
+            "type": "cpp_gas",
+            "name": "lpwcgitdly",
+            "cpp_code": "xxxx",
+        },
+        "output_type": "context",
+        "deps": []
+    }
+    """
+    print("[DEBUG]: run step - {0}".format(step))
+    print("[DEBUG] value: {0}".format(value))
+    print("[DEBUG] step_op_key_map: {0}".format(step_op_key_map))
+
+    GAS_APP_HEADER = [
+        "#ifndef __$_cpp_define__",
+        "#define __$_cpp_define__",
+        "",
+        "#include <iostream>",
+        "#include <cmath>",
+        "#include <cstdint>",
+        "#include <numeric>",
+        "",
+        "using namespace std;",
+        "",
+        '#include "apps/GatherScatter/IVertexProgram.h"',
+        "",
+        "namespace gs {",
+        "",
+        "namespace gather_scatter {",
+    ]
+    GAS_APP_FOOTER = [
+        "}  // namespace gather_scatter",
+        "",
+        "}  // namespace gs",
+        "#endif",
+    ]
+
+    def _get_graph_op_key_from_object_id(object_id):
+        # hack graph, cause missing object id from gae compiler
+        # graph_count = 0
+        # op_key = None
+        # for key in object_manager.keys():
+        # obj = object_manager.get(key)
+        # obj_type = obj.type
+        # if obj_type == "graph":
+        # graph_count += 1
+        # op_key = obj.op_key
+        # if obj.vineyard_id == object_id:
+        # return obj.op_key
+        # if graph_count == 1:
+        # print(
+        # "only one graph in vineyard with op key {0}, return it.".format(op_key)
+        # )
+        # return op_key
+
+        for key in object_manager.keys():
+            obj = object_manager.get(key)
+            obj_type = obj.type
+            if obj_type == "graph":
+                if int(obj.vineyard_id) == int(object_id):
+                    return obj.op_key
+        raise RuntimeError("Get graph op key from object id failed.")
+
+    # json_dict for dependencies of ops
+    op_def_list = []
+    if value["operation"] == "run_app":
+        algo_name = value["params"]["name"]
+        # create_app
+        gs_config = {
+            "app": [
+                {
+                    "algo": algo_name,
+                    "context_type": "labeled_vertex_data",
+                    "type": value["params"]["type"],
+                    "class_name": "gs::gather_scatter::{0}".format(algo_name),
+                    "compatible_graph": ["vineyard::ArrowFragment"],
+                }
+            ]
+        }
+        cpp_code = "\n".join(
+            [
+                "\n".join(GAS_APP_HEADER),
+                value["params"]["cpp_code"],
+                "\n".join(GAS_APP_FOOTER),
+            ]
+        )
+        cpp_code = Template(cpp_code).safe_substitute(_cpp_define=algo_name)
+        garfile = InMemoryZip()
+        garfile.append("{0}.h".format(algo_name), cpp_code)
+        garfile.append(".gs_conf.yaml", yaml.dump(gs_config))
+        config = {
+            types_pb2.APP_ALGO: utils.s_to_attr(algo_name),
+            types_pb2.GAR: utils.bytes_to_attr(garfile.read_bytes(raw=True)),
+        }
+        create_app_op = create_op(types_pb2.CREATE_APP, types_pb2.APP, config=config)
+        op_def_list.append(create_app_op)
+        # bind_app
+        bind_app_op = create_op(
+            types_pb2.BIND_APP,
+            types_pb2.BOUND_APP,
+            inputs=[
+                _get_graph_op_key_from_object_id(value["graph"]),
+                create_app_op.key,
+            ],
+            config={},
+        )
+        op_def_list.append(bind_app_op)
+        # run_app
+        config = {types_pb2.OUTPUT_PREFIX: utils.s_to_attr(".")}
+        run_app_op = create_op(
+            types_pb2.RUN_APP,
+            types_pb2.RESULTS,
+            inputs=[bind_app_op.key],
+            config=config,
+        )
+        op_def_list.append(run_app_op)
+    elif value["operation"] == "add_column":
+        selector = json.dumps(
+            {value["params"]["new_column_name"]: value["params"]["use_data"]}
+        )
+        config = {types_pb2.SELECTOR: utils.s_to_attr(selector)}
+        # get deps op key
+        deps_key = step_op_key_map[value["deps"]]
+        # add_column
+        add_column_op = create_op(
+            types_pb2.ADD_COLUMN,
+            types_pb2.GRAPH,
+            inputs=[
+                _get_graph_op_key_from_object_id(value["graph"]),
+                deps_key,
+            ],
+            config=config,
+        )
+        op_def_list.append(add_column_op)
+    elif value["operation"] == "gremlin_query":
+        if value["deps"] and json_dict[value["deps"]]["output_type"] == "graph":
+            # launch a new gremlin server
+            config = {
+                types_pb2.GIE_GREMLIN_SERVER_CPU: utils.f_to_attr(1.0),
+                types_pb2.GIE_GREMLIN_SERVER_MEM: utils.s_to_attr("1Gi"),
+            }
+            create_gie_op = create_op(
+                types_pb2.CREATE_INTERACTIVE_QUERY,
+                types_pb2.INTERACTIVE_QUERY,
+                inputs=[step_op_key_map[value["deps"]]],
+                config=config,
+            )
+            op_def_list.append(create_gie_op)
+        else:
+            raise NotImplementedError("Gremlin query must be on a new graph")
+        # execute gremlin query
+        config = {
+            types_pb2.GIE_GREMLIN_QUERY_MESSAGE: utils.s_to_attr(
+                value["params"]["query"]
+            )
+        }
+        gremlin_query_op = create_op(
+            types_pb2.GREMLIN_QUERY,
+            types_pb2.GREMLIN_RESULTS,
+            inputs=[create_gie_op.key],
+            config=config,
+        )
+        op_def_list.append(gremlin_query_op)
+        # fetch gremlin query result
+        config = {types_pb2.GIE_GREMLIN_FETCH_RESULT_TYPE: utils.s_to_attr("all")}
+        fetch_gremlin_query_op = create_op(
+            types_pb2.FETCH_GREMLIN_RESULT,
+            types_pb2.RESULTS,
+            inputs=[gremlin_query_op.key],
+            config=config,
+        )
+        op_def_list.append(fetch_gremlin_query_op)
+    step_op_key_map[step] = op_def_list[-1].key
+    return op_def_list
+
+
+def create_dag_from_gae_compiler(object_manager, json_dict: dict):
+    print("[DEBUG] json dict from gae compiler: ", json_dict)
+    step_op_key_map = {}
+    dag_def = op_def_pb2.DagDef()
+    for step, value in json_dict.items():
+        if not isinstance(value, dict):
+            continue
+        dag_def.op.extend(
+            create_op_from_gae_compiler_value(
+                object_manager, step_op_key_map, json_dict, step, value
+            )
+        )
+
+    print("[DEBUG] dag def: ", dag_def)
+    return dag_def

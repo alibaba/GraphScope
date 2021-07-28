@@ -63,10 +63,10 @@ class Context {
 
 template <typename ID_T, typename GATHER_T, typename MESSAGE_T>
 class IVertexProgram {
+ public:
   using context_t = Context;
   using vertex_t = Vertex<ID_T>;
 
- public:
   using id_type = ID_T;
   using gather_type = GATHER_T;
   using message_type = MESSAGE_T;
