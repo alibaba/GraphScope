@@ -29,12 +29,12 @@ public class MaxGraphConfig implements GaiaConfig {
 
     @Override
     public int getPegasusWorkerNum() {
-        return CommonConfig.STORE_NODE_COUNT.get(configs);
+        return PegasusConfig.PEGASUS_WORKER_NUM.get(configs);
     }
 
     @Override
     public int getPegasusServerNum() {
-        return PegasusConfig.PEGASUS_WORKER_NUM.get(configs);
+        return CommonConfig.STORE_NODE_COUNT.get(configs);
     }
 
     @Override
