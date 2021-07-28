@@ -118,13 +118,13 @@ dependencies of GraphScope.
 .. code::shell
 
     ./scripts/deploy_local.sh install_deps
-    source ./gs_env
+    source ~/.graphscope_env
 
 Deploy the GraphScope with the script
 
 .. code::shell
 
-    ./scripts/deploy_local.sh deploy
+    ./scripts/deploy_local.sh build_and_deploy
 
 
 Code Format

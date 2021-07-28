@@ -74,68 +74,78 @@ where
         &self,
         params: &QueryParams<Vertex>,
     ) -> DynResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        let store = self.store.clone();
-        let si = params
-            .get_extra_param(SNAPSHOT_ID)
-            .ok_or(str_to_dyn_error("get snapshot_id failed"))?
-            .as_i64()
-            .map_err(|e| str_to_dyn_error(&e.to_string()))? as SnapshotId;
-        let schema = store
-            .get_schema(si)
-            .ok_or(str_to_dyn_error("get schema failed"))?;
-        let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-        let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
-        let filter = params.filter.clone();
-        let result = store
-            .get_all_vertices(
-                si,
-                label_ids.as_ref(),
-                // None means no filter condition pushed down to storage as not supported yet. Same as follows.
-                None,
-                // None means no need to dedup by properties. Same as follows.
-                None,
-                prop_ids.as_ref(),
-                // Zero limit means no limit. Same as follows.
-                params.limit.unwrap_or(0),
-                // TODO(bingqing): optimization, each worker may scan some partitions on current server.
-                // Empty vector means all partitions, since we use worker 0 to scan all for now.
-                &vec![],
-            )
-            .map(move |v| to_runtime_vertex(&v));
+        if let Some(partitions) = params.partitions.as_ref() {
+            let store = self.store.clone();
+            let si = params
+                .get_extra_param(SNAPSHOT_ID)
+                .ok_or(str_to_dyn_error("get snapshot_id failed"))?
+                .as_i64()
+                .map_err(|e| str_to_dyn_error(&e.to_string()))? as SnapshotId;
+            let schema = store
+                .get_schema(si)
+                .ok_or(str_to_dyn_error("get schema failed"))?;
+            let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
+            let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
+            let filter = params.filter.clone();
+            let partitions: Vec<PartitionId> =
+                partitions.iter().map(|pid| *pid as PartitionId).collect();
+            let result = store
+                .get_all_vertices(
+                    si,
+                    label_ids.as_ref(),
+                    // None means no filter condition pushed down to storage as not supported yet. Same as follows.
+                    None,
+                    // None means no need to dedup by properties. Same as follows.
+                    None,
+                    prop_ids.as_ref(),
+                    // Zero limit means no limit. Same as follows.
+                    params.limit.unwrap_or(0),
+                    // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
+                    partitions.as_ref(),
+                )
+                .map(move |v| to_runtime_vertex(&v));
 
-        Ok(filter_limit!(result, filter, None))
+            Ok(filter_limit!(result, filter, None))
+        } else {
+            Ok(Box::new(std::iter::empty()))
+        }
     }
 
     fn scan_edge(
         &self,
         params: &QueryParams<Edge>,
     ) -> DynResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        let store = self.store.clone();
-        let si = params
-            .get_extra_param(SNAPSHOT_ID)
-            .ok_or(str_to_dyn_error("get snapshot_id failed"))?
-            .as_i64()
-            .map_err(|e| str_to_dyn_error(&e.to_string()))? as SnapshotId;
-        let schema = store
-            .get_schema(si)
-            .ok_or(str_to_dyn_error("get schema failed"))?;
-        let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-        let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
-        let filter = params.filter.clone();
-        let result = store
-            .get_all_edges(
-                si,
-                label_ids.as_ref(),
-                None,
-                None,
-                prop_ids.as_ref(),
-                params.limit.unwrap_or(0),
-                // TODO(bingqing): optimization, each worker may scan some partitions on current server.
-                &vec![],
-            )
-            .map(move |e| to_runtime_edge(&e));
+        if let Some(partitions) = params.partitions.as_ref() {
+            let store = self.store.clone();
+            let si = params
+                .get_extra_param(SNAPSHOT_ID)
+                .ok_or(str_to_dyn_error("get snapshot_id failed"))?
+                .as_i64()
+                .map_err(|e| str_to_dyn_error(&e.to_string()))? as SnapshotId;
+            let schema = store
+                .get_schema(si)
+                .ok_or(str_to_dyn_error("get schema failed"))?;
+            let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
+            let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
+            let filter = params.filter.clone();
+            let partitions: Vec<PartitionId> =
+                partitions.iter().map(|pid| *pid as PartitionId).collect();
+            let result = store
+                .get_all_edges(
+                    si,
+                    label_ids.as_ref(),
+                    None,
+                    None,
+                    prop_ids.as_ref(),
+                    params.limit.unwrap_or(0),
+                    partitions.as_ref(),
+                )
+                .map(move |e| to_runtime_edge(&e));
 
-        Ok(filter_limit!(result, filter, None))
+            Ok(filter_limit!(result, filter, None))
+        } else {
+            Ok(Box::new(std::iter::empty()))
+        }
     }
 
     fn get_vertex(

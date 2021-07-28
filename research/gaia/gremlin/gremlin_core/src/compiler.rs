@@ -67,12 +67,13 @@ impl JobCompiler<Traverser> for GremlinJobCompiler {
     fn source(&self, src: &[u8]) -> CompileResult<Box<dyn Iterator<Item = Traverser> + Send>> {
         let mut step = decode::<pb::gremlin::GremlinStep>(src)?;
         if let Some(worker_id) = pegasus::get_current_worker() {
-            let num_workers = worker_id.peers as usize / self.num_servers;
-            let mut step = graph_step_from(&mut step, self.partitioner.clone())?;
-            step.set_num_workers(num_workers);
+            let job_workers = worker_id.peers as usize / self.num_servers;
+            let step =
+                graph_step_from(&mut step, job_workers, worker_id.index, self.partitioner.clone())?;
             Ok(step.gen_source(worker_id.index as usize))
         } else {
-            let step = graph_step_from(&mut step, self.partitioner.clone())?;
+            let step =
+                graph_step_from(&mut step, 1, self.server_index as u32, self.partitioner.clone())?;
             Ok(step.gen_source(self.server_index as usize))
         }
     }
