@@ -33,22 +33,21 @@ namespace gs {
 
 template <typename FRAG_T>
 class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
-public:
+ public:
   using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
   using vertex_t = typename FRAG_T::vertex_t;
 
-  explicit AllSimplePathsContext(const FRAG_T &fragment)
+  explicit AllSimplePathsContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, bool>(fragment) {}
 
-  void Init(grape::DefaultMessageManager &messages, oid_t source_id,
-            const std::string &targets_json, int cutoff = INT_MAX) {
-    std::set<vid_t> visit;
-    vid_t p;
-    auto &frag = this->fragment();
+  void Init(grape::DefaultMessageManager& messages, oid_t source_id,
+            const std::string& targets_json,
+            int cutoff = std::numeric_limits<int>::max()) {
+    auto& frag = this->fragment();
     this->source_id = source_id;
 
-    if (cutoff == INT_MAX) {
+    if (cutoff == std::numeric_limits<int>::max()) {
       this->cutoff = frag.GetTotalVerticesNum() - 1;
     } else {
       this->cutoff = cutoff;
@@ -57,23 +56,23 @@ public:
             << std::endl;
 
     // init targets.
+    vid_t v;
     folly::dynamic nodes_array = folly::parseJson(targets_json);
-    for (const auto &val : nodes_array) {
-      oid_t key = val.getInt(); // pass cmake
-      if (!frag.Oid2Gid(key, p)) {
+    for (const auto& val : nodes_array) {
+      oid_t key = val.getInt();  // pass cmake
+      if (!frag.Oid2Gid(key, v)) {
         LOG(ERROR) << "Input oid error" << std::endl;
         break;
       }
-      if (!visit.count(p)) {
-        visit.insert(p);
-        targets.push_back(p);
+      if (!visit.count(v)) {
+        visit.insert(v);
       }
     }
   }
 
-  void Output(std::ostream &os) override {
-    auto &frag = this->fragment();
-    // os<<"num of result"<< result_queue.size()<<std::endl;
+  void Output(std::ostream& os) override {
+    auto& frag = this->fragment();
+    os << "num of result" << result_queue.size() << std::endl;
     while (!result_queue.empty()) {
       std::vector<vid_t> s = result_queue.front();
       result_queue.pop();
@@ -87,11 +86,10 @@ public:
 
   oid_t source_id;
   std::queue<std::vector<vid_t>> curr_level_inner, next_level_inner;
-  std::vector<vid_t> targets;
+  std::set<vid_t> visit;
   int cutoff;
-  int depth;
   std::queue<std::vector<vid_t>> result_queue;
 };
-} // namespace gs
+}  // namespace gs
 
-#endif // ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_CONTEXT_H_
+#endif  // ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_CONTEXT_H_
