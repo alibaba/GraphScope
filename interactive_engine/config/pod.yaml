@@ -25,12 +25,12 @@ spec:
         memory: limits_mem
     name: gremlin-container
     imagePullPolicy: IfNotPresent
-    args: ["/home/maxgraph/bin/giectl.sh", "start_frontend", "unique_object_id", "schema_path", "2181"]
+    args: ["/home/maxgraph/bin/giectl.sh", "start_frontend", "unique_object_id", "unique_schema_path", "zookeeper_ip", "2181", "unique_executor_count"]
     env:
     - name: OBJECT_ID
       value: 'unique_object_id'
     volumeMounts:
-    - mountPath: /home/maxgraph/config
+    - mountPath: /home/maxgraph/schema
       name: config-volume
   - image: coordinator_image
     resources:
@@ -42,14 +42,14 @@ spec:
         memory: limits_mem
     name: coordinator-container
     imagePullPolicy: IfNotPresent
-    args: ["/home/maxgraph/bin/giectl.sh", "start_coordinator", "unique_object_id", "2181"]
+    args: ["/home/maxgraph/bin/giectl.sh", "start_coordinator", "unique_object_id", "zookeeper_ip", "2181", "unique_executor_count"]
     env:
     - name: OBJECT_ID
       value: 'unique_object_id'
     volumeMounts:
-    - mountPath: /home/maxgraph/config
+    - mountPath: /home/maxgraph/schema
       name: config-volume
   volumes:
   - name: config-volume
     configMap:
-      name: unique_config_name
+      name: unique_schema_name

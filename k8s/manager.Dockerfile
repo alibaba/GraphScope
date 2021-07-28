@@ -19,7 +19,7 @@ RUN mkdir -p /home/maxgraph/config
 COPY --from=builder /root/maxgraph/src/assembly/target/0.0.1-SNAPSHOT.tar.gz /home/maxgraph/
 COPY --from=builder /root/maxgraph/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz
 COPY --from=builder /root/maxgraph/bin/giectl.sh /home/maxgraph/bin
-COPY --from=builder /root/maxgraph/src/config/* /home/maxgraph/config
+COPY --from=builder /root/maxgraph/config/* /home/maxgraph/config
 RUN tar -xf /home/maxgraph/0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
 RUN tar -xf /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
 RUN chmod a+x /home/maxgraph/bin/giectl.sh
@@ -45,5 +45,6 @@ RUN chmod a+x /home/maxgraph/bin/giectl.sh
 # COPY ./deploy/docker/dockerfile/expose_gremlin_server.sh /root/maxgraph/expose_gremlin_server.sh
 
 ENV GRAPHSCOPE_HOME=/home/maxgraph
+ENV GRAPHSCOPE_RUNTIME=/tmp/graphscope
 
 WORKDIR /home/maxgraph/

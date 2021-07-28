@@ -106,10 +106,13 @@ COPY --from=builder /root/gs/k8s/precompile.py /tmp/precompile.py
 RUN python3 /tmp/precompile.py && rm /tmp/precompile.py
 
 RUN mkdir -p /home/maxgraph
+RUN mkdir -p /home/maxgraph/bin
 ENV VINEYARD_IPC_SOCKET /home/maxgraph/data/vineyard/vineyard.sock
-COPY --from=builder /root/gs/interactive_engine/src/executor/target/$profile/executor /home/maxgraph/executor
+COPY --from=builder /root/gs/interactive_engine/src/executor/target/$profile/executor /home/maxgraph/bin/executor
+COPY --from=builder /root/gs/interactive_engine/bin/giectl.sh /home/maxgraph/bin/giectl.sh
+RUN chmod a+x /home/maxgraph/bin/giectl.sh
 
-COPY --from=builder /root/gs/interactive_engine/src/executor/store/log4rs.yml /home/maxgraph/log4rs.yml
+COPY --from=builder /root/gs/interactive_engine/src/executor/store/log4rs.yml /home/maxgraph/bin/log4rs.yml
 RUN mkdir -p /home/maxgraph/native
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/home/maxgraph/native
 
@@ -121,9 +124,12 @@ ENV RUST_BACKTRACE=1
 
 # copy start script from builder
 RUN mkdir -p /home/maxgraph/config
-COPY interactive_engine/deploy/docker/dockerfile/executor-entrypoint.sh /home/maxgraph/executor-entrypoint.sh
-COPY interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties /home/maxgraph/config/executor.application.properties
+COPY interactive/config/* /home/maxgraph/config
+ENV GRAPHSCOPE_HOME=/home/maxgraph
+ENV GRAPHSCOPE_RUNTIME=/tmp/graphscope
+# COPY interactive_engine/deploy/docker/dockerfile/executor-entrypoint.sh /home/maxgraph/executor-entrypoint.sh
+# COPY interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties /home/maxgraph/config/executor.application.properties
 
-RUN mkdir -p /root/maxgraph
-COPY interactive_engine/deploy/docker/dockerfile/set_config.sh /root/maxgraph/set_config.sh
-COPY interactive_engine/deploy/docker/dockerfile/kill_process.sh /root/maxgraph/kill_process.sh
+# RUN mkdir -p /root/maxgraph
+# COPY interactive_engine/deploy/docker/dockerfile/set_config.sh /root/maxgraph/set_config.sh
+# COPY interactive_engine/deploy/docker/dockerfile/kill_process.sh /root/maxgraph/kill_process.sh

@@ -103,7 +103,7 @@ public class InstanceManagerController {
             List<String> createCommandList = new ArrayList<>();
 
             createCommandList.add(instanceProperties.getCreateScript());
-            createCommandList.add("create_instance");
+            createCommandList.add("create_instance_in_local");
             createCommandList.add(graphName);
             createCommandList.add(schemaPath);
             createCommandList.add("1"); // server id
@@ -214,6 +214,7 @@ public class InstanceManagerController {
         try {
             List<String> createCommandList = new ArrayList<>();
             createCommandList.add(instanceProperties.getCreateScript());
+            createCommandList.add("create_instance_on_k8s");
             createCommandList.add(graphName);
             createCommandList.add(schemaPath);
             createCommandList.add(podNameList);
@@ -377,6 +378,7 @@ public class InstanceManagerController {
         try {
             List<String> closeCommandList = new ArrayList<>();
             closeCommandList.add(instanceProperties.getCloseScript());
+            closeCommandList.add("close_instance_on_k8s");
             closeCommandList.add(graphName);
             closeCommandList.add(podNameList);
             closeCommandList.add(containerName);
@@ -405,7 +407,7 @@ public class InstanceManagerController {
         try{
             List<String> closeCommandList = new ArrayList<>();
             closeCommandList.add(instanceProperties.getCloseScript());
-            closeCommandList.add("close_instance");
+            closeCommandList.add("close_instance_on_local");
             closeCommandList.add(graphName);
             String command = StringUtils.join(closeCommandList, " ");
             logger.info("start to close instance with command " + command);
