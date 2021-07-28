@@ -65,7 +65,7 @@ QUERY_1 = (
     ".property('$pr', expr('$new')))"
     ".until(count().is(0))"
     ").with('$pr', 'pr')"
-    ".order().by('pr', desc).limit(10).valueMap('name', 'pr')"
+    ".order().by('pr', desc).limit(10).valueMap('id', 'pr')"
 )
 
 
