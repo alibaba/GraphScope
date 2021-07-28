@@ -55,7 +55,6 @@ public class MaxNode extends NodeBase {
         int frontendCount = 1;
         int ingestorCount = 2;
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
-        int partitionCount = 4;
 
         Configs baseConfigs = Configs.newBuilder(configs)
                 .put(ZkConfig.ZK_CONNECT_STRING.getKey(), this.kafkaTestCluster.getZookeeperConnectString())
@@ -68,7 +67,6 @@ public class MaxNode extends NodeBase {
                 .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_QUERY.getName()), String.valueOf(storeCount))
                 .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.GAIA_RPC.getName()), String.valueOf(storeCount))
                 .put(String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.GAIA_ENGINE.getName()), String.valueOf(storeCount))
-                .put(CommonConfig.PARTITION_COUNT.getKey(), String.valueOf(partitionCount))
                 .put(CommonConfig.FRONTEND_NODE_COUNT.getKey(), String.valueOf(frontendCount))
                 .build();
 
@@ -81,7 +79,7 @@ public class MaxNode extends NodeBase {
             Configs frontendConfigs = Configs.newBuilder(baseConfigs)
                     .put(CommonConfig.ROLE_NAME.getKey(), RoleType.FRONTEND.getName())
                     .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
-                    .put(CommonConfig.RPC_PORT.getKey(), "55555")
+                    .put(CommonConfig.RPC_PORT.getKey(), "55556")
                     .build();
             this.frontends.add(new Frontend(frontendConfigs));
         }
