@@ -17,6 +17,7 @@ limitations under the License.
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_VERTEX_H_
 
 #include <map>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -97,6 +98,27 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
       return this->fake_edges().at(dst_id);
     }
     return edata_t();
+  }
+
+  edata_t get_edge_values(const std::set<vid_t>& dst_ids) {
+    edata_t ret = 0;
+    if (!this->use_fake_edges()) {
+      for (auto& edge : this->incoming_edges()) {
+        if (dst_ids.find(edge.get_neighbor()) == dst_ids.end()) {
+          ret += edge.get_data();
+        }
+      }
+      for (auto& edge : this->outgoing_edges()) {
+        if (dst_ids.find(edge.get_neighbor()) == dst_ids.end()) {
+          ret += edge.get_data();
+        }
+      }
+    } else {
+      for (auto gid : dst_ids) {
+        ret += this->fake_edges().at(gid);
+      }
+    }
+    return ret;
   }
 
   void set_fake_edges(std::map<vid_t, edata_t>&& edges) {
