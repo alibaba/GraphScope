@@ -9,6 +9,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkperpop.gremlin.groovy.custom.StringProcessStep;
 import org.apache.tinkperpop.gremlin.groovy.custom.TraversalProcessStep;
+import s2scompiler.Result;
 import s2scompiler.S2SCompiler;
 
 import java.util.Arrays;
@@ -42,7 +43,7 @@ public enum GAE implements Generator {
             for (Step step : steps) {
                 if (step instanceof TraversalProcessStep) {
                     String srcColumn = ((TraversalProcessStep) step).getSrcColumn();
-                    srcColumn = (srcColumn.charAt(0) == '$') ? srcColumn.substring(1) : srcColumn;
+                    // srcColumn = (srcColumn.charAt(0) == '$') ? srcColumn.substring(1) : srcColumn;
                     String dstColumn = ((TraversalProcessStep) step).getDstColumn();
                     return Arrays.asList(srcColumn, dstColumn);
                 }
@@ -72,9 +73,11 @@ public enum GAE implements Generator {
         public Map<String, Object> generate(Map<String, Object> args) {
             String graphName = getGraphName(args);
             Step processStep = evalProcessStep(getTraversal(args));
+            Result r = new Result(false, "");
             String srcCode;
             if (processStep instanceof TraversalProcessStep) {
-                srcCode = runPageRank((TraversalProcessStep) processStep);
+                r = runPageRank((TraversalProcessStep) processStep);
+                srcCode = r.s;
             } else if (processStep instanceof StringProcessStep) {
                 srcCode = ((StringProcessStep) processStep).getIdentifier();
             } else {
@@ -86,6 +89,10 @@ public enum GAE implements Generator {
             runApp.put("graph", graphName);
             Map params = (Map) runApp.get("params");
             params.put("cpp_code", srcCode);
+            if (processStep instanceof TraversalProcessStep) {
+                params.put("type", r.app_type);
+                params.put("name", r.class_name);
+            }
             return runApp;
         }
 
@@ -99,13 +106,13 @@ public enum GAE implements Generator {
             return null;
         }
 
-        private String runPageRank(TraversalProcessStep step) {
+        private Result runPageRank(TraversalProcessStep step) {
             // mock
             // String srcCode = readFileFromResource("src");
             // return srcCode;
             try{
-                String srcCode = (new S2SCompiler()).compile(step);
-                return srcCode;
+                Result rlt = (new S2SCompiler()).compile(step);
+                return rlt;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

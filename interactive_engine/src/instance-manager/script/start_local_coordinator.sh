@@ -27,6 +27,7 @@ JAVA_OPT="-server -Xmx1024m -Xms1024m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDu
 inner_config=$CONFIG_DIR/coordinator.local.application.properties
 cp $WORKSPACE/config/coordinator.local.application.properties.tpl $inner_config
 sed -i "s/ZOOKEEPER_PORT/$zookeeper_port/g" $inner_config
+sed -i "s/graphname/${object_id}/g" $inner_config
 
 cd $WORKSPACE/coordinator/target/classes/
 

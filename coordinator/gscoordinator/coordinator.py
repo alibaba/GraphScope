@@ -75,6 +75,7 @@ from gscoordinator.object_manager import LibMeta
 from gscoordinator.object_manager import ObjectManager
 from gscoordinator.utils import compile_app
 from gscoordinator.utils import compile_graph_frame
+from gscoordinator.utils import create_dag_from_gae_compiler
 from gscoordinator.utils import create_single_op_dag
 from gscoordinator.utils import dump_string
 from gscoordinator.utils import get_app_sha256
@@ -428,6 +429,7 @@ class CoordinatorServiceServicer(
                             vy_info.vineyard_id,
                             op_result.graph_def,
                             schema_path,
+                            op_result.key,
                         ),
                     )
                     if op_result.graph_def.graph_type == graph_def_pb2.ARROW_PROPERTY:
@@ -509,25 +511,34 @@ class CoordinatorServiceServicer(
         )
 
     def RunStep(self, request, context):
+        if request.session_id != self._session_id:
+            return self._make_response(
+                message_pb2.RunStepResponse,
+                code=error_codes_pb2.UNAVAILABLE_ERROR,
+                error_msg="Run step failed with session id {0}".format(
+                    request.session_id
+                ),
+            )
+        return self._run_step_impl(request.dag_def)
+
+    def _run_step_impl(self, dag_def: op_def_pb2.DagDef):
         op_results = list()
         # split dag
-        dag_manager = DAGManager(request.dag_def)
+        dag_manager = DAGManager(dag_def)
         while not dag_manager.empty():
             next_dag = dag_manager.get_next_dag()
             run_dag_on, dag_def = next_dag
             if run_dag_on == GSEngine.analytical_engine:
                 ret = self.run_on_analytical_engine(
-                    request.session_id, dag_def, op_results
+                    self._session_id, dag_def, op_results
                 )
             if run_dag_on == GSEngine.interactive_engine:
                 ret = self.run_on_interactive_engine(
-                    request.session_id, dag_def, op_results
+                    self._session_id, dag_def, op_results
                 )
 
             if run_dag_on == GSEngine.learning_engine:
-                ret = self.run_on_learning_engine(
-                    request.session_id, dag_def, op_results
-                )
+                ret = self.run_on_learning_engine(self._session_id, dag_def, op_results)
             if ret.status.code != error_codes_pb2.OK:
                 return ret
         return self._make_response(
@@ -773,7 +784,9 @@ class CoordinatorServiceServicer(
                 error_msg=error_message,
             )
         else:
-            self._object_manager.put(op.key, GremlinResultSet(op.key, rlt))
+            self._object_manager.put(
+                op.key, GremlinResultSet(op.key, request_options, rlt)
+            )
             return op_def_pb2.OpResult(
                 code=error_codes_pb2.OK,
                 key=op.key,
@@ -782,7 +795,8 @@ class CoordinatorServiceServicer(
     def _fetch_gremlin_result(self, op: op_def_pb2.OpDef):
         fetch_result_type = op.attr[types_pb2.GIE_GREMLIN_FETCH_RESULT_TYPE].s.decode()
         key_of_parent_op = op.parents[0]
-        result_set = self._object_manager.get(key_of_parent_op).result_set
+        result_set_wrapper = self._object_manager.get(key_of_parent_op)
+        result_set = result_set_wrapper.result_set
         try:
             if fetch_result_type == "one":
                 rlt = result_set.one()
@@ -799,6 +813,15 @@ class CoordinatorServiceServicer(
                 error_msg=error_message,
             )
         else:
+            if result_set_wrapper.query_on_gae_processor():
+                dag_def = create_dag_from_gae_compiler(
+                    self._object_manager, json.loads(rlt[0])
+                )
+                # set the same key to the last op
+                dag_def.op[-1].key = op.key
+                run_step_rsp = self._run_step_impl(dag_def)
+                assert run_step_rsp.status.code == error_codes_pb2.OK
+                return run_step_rsp.results[-1]
             return op_def_pb2.OpResult(
                 code=error_codes_pb2.OK, key=op.key, result=pickle.dumps(rlt)
             )

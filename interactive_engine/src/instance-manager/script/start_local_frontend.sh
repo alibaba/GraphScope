@@ -30,6 +30,7 @@ inner_config=$CONFIG_DIR/frontend.local.vineyard.properties
 cp $WORKSPACE/config/frontend.local.vineyard.properties.tpl $inner_config
 sed -i "s/VINEYARD_SCHEMA_PATH/$REPLACE_SCHEMA_PATH/g" $inner_config
 sed -i "s/ZOOKEEPER_PORT/$zookeeper_port/g" $inner_config
+sed -i "s/graphname/${object_id}/g" $inner_config
 
 cd $WORKSPACE/frontend/frontendservice/target/classes/
 
@@ -40,7 +41,7 @@ wait_period_seconds=0
 
 while true
 do
-  gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.log | awk -F: '{print $6}'`
+  gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.err| awk -F: '{print $4}'`
   if [ -n "$gremlin_server_port" ]; then
     echo "FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
     break

@@ -175,11 +175,11 @@ public class S2SCompiler{
         return Collections.singletonList(new TransStep(t.toString())); //others
     }
 
-    public String compile(final TraversalProcessStep s) {
+    public Result compile(final TraversalProcessStep s) {
         List<TransStep> trans_steps = translateSteps(s);
         Result res = trans_steps.get(0).translate();
         if (!res.t)
             throw new RuntimeException(res.s);
-        return res.s;
+        return res;
     }
 }

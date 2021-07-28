@@ -30,6 +30,7 @@ inner_config=$CONFIG_DIR/executor.local.vineyard.properties
 cp $WORKSPACE/config/executor.local.vineyard.properties.tpl $inner_config
 sed -i "s/VINEYARD_OBJECT_ID/$object_id/g" $inner_config
 sed -i "s/ZOOKEEPER_PORT/$zookeeper_port/g" $inner_config
+sed -i "s/graphname/${object_id}/g" $inner_config
 
 server_id=1
 

@@ -50,15 +50,18 @@ public final class GenerateCode {
         return res;
     }
 
-    public static String generateHead() {
-        Random r = new Random();
-        int size = 10;
-        char[] c = new char[size];
-        for (int i = 0; i < size; i++) {
-            c[i] = (char)('a' + r.nextInt(26));
-        }
-        String s = new String(c);
-        return "class " + s + head_code;
+    public static String generateRandomString(int num) {
+      Random r = new Random();
+      char[] c = new char[num]; 
+      for (int i = 0; i < num; i++) {
+        c[i] = (char)('a' + r.nextInt(26));
+      }
+      String s = new String(c);
+      return s;
+    }
+
+    public static String generateHead(final String class_name) {
+        return "class " + class_name + head_code;
     }
 
     public static String generateInit(final String s) {
