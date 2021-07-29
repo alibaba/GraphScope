@@ -1,7 +1,7 @@
 {
   "engine": "GLE",
   "operation": "sample",
-  "graph": "graph_name_78vc72",
+  "graph": "object_id",
   "params": {
     "format": "xxxxxxx"
   },

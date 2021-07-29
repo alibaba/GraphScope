@@ -72,7 +72,7 @@ QUERY_1 = (
     ".where(expr('abs($new-$pr)>1e-10'))"
     ".property('$pr', expr('$new')))"
     ".until(count().is(0))"
-    ").with('$pr', 'pr')"
+    ").withProperty('$pr', 'pr')"
     ".order().by('pr', desc).limit(10).valueMap('id', 'pr')"
 )
 
@@ -103,7 +103,7 @@ def demo(sess, graph):
             )
             .until(count().is_(0))
         )
-        .with_("$pr", "pr")
+        .withProperty("$pr", "pr")
         .order()
         .by("pr", desc)
         .limit(10)

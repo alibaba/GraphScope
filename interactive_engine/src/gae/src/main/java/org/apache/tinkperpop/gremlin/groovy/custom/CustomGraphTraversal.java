@@ -36,6 +36,21 @@ public class CustomGraphTraversal<S, E> extends DefaultTraversal<S, E> implement
         return this.asAdmin().addStep(new ExprStep<S>(this.asAdmin(), expression));
     }
 
+    public GraphTraversal<S, Vertex> sample(final String format) {
+        this.asAdmin().getBytecode().addStep("sample", format);
+        return this.asAdmin().addStep(new SampleStep<>(this.asAdmin(), format));
+    }
+
+    public GraphTraversal<S, Vertex> toTensorFlowDataset() {
+        this.asAdmin().getBytecode().addStep("toTensorFlowDataset");
+        return this.asAdmin().addStep(new TensorFlowStep<>(this.asAdmin()));
+    }
+
+    public GraphTraversal<S, Vertex> withProperty(String srcColumn, String dstColumn) {
+        this.asAdmin().getBytecode().addStep("withProperty", srcColumn, dstColumn);
+        return this.asAdmin().addStep(new AddColumnStep<>(this.asAdmin(), srcColumn, dstColumn));
+    }
+
     public CustomGraphTraversal() {
         super();
     }

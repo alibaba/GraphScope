@@ -33,6 +33,7 @@ public enum GIE implements Generator {
 
         private boolean isExtendBytecode(Bytecode.Instruction instruction) {
             if (instruction.getOperator().equals("with")
+                    || instruction.getOperator().equals("withProperty")
                     || instruction.getOperator().equals("process")
                     || instruction.getOperator().equals("scatter")
                     || instruction.getOperator().equals("gather")
