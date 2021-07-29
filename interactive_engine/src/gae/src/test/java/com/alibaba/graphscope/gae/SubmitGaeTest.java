@@ -33,18 +33,30 @@ public class SubmitGaeTest {
                 .serializer(serializer)
                 .create();
         Client client = cluster.connect();
-        String query = "g.V().hasLabel(\"person\").process(\n" +
-                "   V().property('$pr', expr('1.0/TOTAL_V')) \n" +
-                "      .repeat( \n" +
-                "         V().property('$tmp', expr('$pr/OUT_DEGREE')) \n" +
-                "         .scatter('$tmp').by(out())\n" +
-                "         .gather('$tmp', sum) \n" +
-                "         .property('$new', expr('0.15/TOTAL_V+0.85*$tmp')) \n" +
-                "         .where(expr('abs($new-$pr)>1e-10')) \n" +
-                "         .property('$pr', expr('$new')))\n" +
-                "      .until(count().is(0)) \n" +
-                "   ).with('$pr', 'pr') \n" +
-                "   .order().by('pr', desc).limit(10) \n";
+//        String query = "g.V().process(\n" +
+//                "   V().property('$pr', expr('1.0/TOTAL_V')) \n" +
+//                "      .repeat( \n" +
+//                "         V().property('$tmp', expr('$pr/OUT_DEGREE')) \n" +
+//                "         .scatter('$tmp').by(out())\n" +
+//                "         .gather('$tmp', sum) \n" +
+//                "         .property('$new', expr('0.15/TOTAL_V+0.85*$tmp')) \n" +
+//                "         .where(expr('abs($new-$pr)>1e-10')) \n" +
+//                "         .property('$pr', expr('$new')))\n" +
+//                "      .until(count().is(0)) \n" +
+//                "   ).withProperty('$pr', 'pr') \n" +
+//                "   .order().by('pr', desc).limit(10) \n";
+//        String query = "g.V().hasLabel('p1')" +
+//                "    .process('SSSP')\n" +
+//                "    .with('edgeProperty', 'weight')\n" +
+//                "    .with('distProperty', '$dist')\n" +
+//                "    .with('srcID', 1234)\n" +
+//                "    .withProperty('$dist', 'dist')";
+        String query = "g.V()" +
+                "    .process('pageRank')\n" +
+                "    .with('prProperty', '$pr')\n" +
+                "    .withProperty('$pr', 'pr')\n" +
+                "    .sample('g.V().out().out()')\n" +
+                "    .toTensorFlowDataset()";
         RequestMessage request = RequestMessage
                 .build(Tokens.OPS_EVAL)
                 .add(Tokens.ARGS_GREMLIN, query)

@@ -7,6 +7,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkperpop.gremlin.groovy.custom.AddColumnStep;
 import org.apache.tinkperpop.gremlin.groovy.custom.StringProcessStep;
 import org.apache.tinkperpop.gremlin.groovy.custom.TraversalProcessStep;
 import s2scompiler.Result;
@@ -38,10 +39,9 @@ public enum GAE implements Generator {
         private List<String> getWithParams(Traversal traversal) {
             List<Step> steps = traversal.asAdmin().getSteps();
             for (Step step : steps) {
-                if (step instanceof TraversalProcessStep) {
-                    String srcColumn = ((TraversalProcessStep) step).getSrcColumn();
-                    // srcColumn = (srcColumn.charAt(0) == '$') ? srcColumn.substring(1) : srcColumn;
-                    String dstColumn = ((TraversalProcessStep) step).getDstColumn();
+                if (step instanceof AddColumnStep) {
+                    String srcColumn = ((AddColumnStep) step).getSrcColumn();
+                    String dstColumn = ((AddColumnStep) step).getDstColumn();
                     return Arrays.asList(srcColumn, dstColumn);
                 }
             }
