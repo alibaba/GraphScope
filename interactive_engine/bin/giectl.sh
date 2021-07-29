@@ -268,6 +268,7 @@ create_instance_on_k8s() {
   log "Launch coordinator and frontend in one pod."
   schema_name="schema-${object_id}"
   pod_name="pod-${object_id}"
+  # TODO: just use the env
   gremlin_image=$(printf '%s\n' "${GREMLIN_IMAGE}")
   coordinator_image=$(printf '%s\n' "${COORDINATOR_IMAGE}")
   kubectl create configmap $schema_name --from-file ${WORKSPACE}/schema_$object_id
@@ -308,16 +309,17 @@ create_instance_on_k8s() {
   for pod in `echo ${pod_hosts}`
   do
     launch_executor_cmd="${WORKSPACE}/bin/giectl.sh start_executor $object_id ${_server_id} $(hostname -i) 2181 ${engine_count} ${engine_params}"
-    kubectl --namespace=$ENGINE_NAMESPACE exec $pod -c $engine_container -- /bin/bash -c "$run_cmd"
+    kubectl --namespace=$ENGINE_NAMESPACE exec $pod -c $engine_container -- /bin/bash -c "$launch_executor_cmd"
     let _server_id+=1
   done
 
   log "Expose gremlin server"
   gremlin_pod=`kubectl get pods -l "graph=pod-${object_id}" | grep -v NAME | awk '{print $1}'`
+  # TODO: hard-code on k8s
+  port="8182"
   if [ "$GREMLIN_EXPOSE" = "LoadBalancer" ]; then
-    port=8182
-    # range [50001, 53000)
-    external_port=$( random_generator 50001 3000 )
+    # random from range [50001, 53000)
+    external_port=$(( ((RANDOM<<15)|RANDOM) % 50001 + 53000 ))
     kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${external_port} \
       --target-port=${port} --type=LoadBalancer 1>/dev/null 2>&1
     [ $? -eq 0 ] || exit 1

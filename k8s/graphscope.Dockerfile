@@ -124,7 +124,7 @@ ENV RUST_BACKTRACE=1
 
 # copy start script from builder
 RUN mkdir -p /home/maxgraph/config
-COPY interactive/config/* /home/maxgraph/config
+COPY interactive_engine/config/* /home/maxgraph/config
 ENV GRAPHSCOPE_HOME=/home/maxgraph
 ENV GRAPHSCOPE_RUNTIME=/tmp/graphscope
 # COPY interactive_engine/deploy/docker/dockerfile/executor-entrypoint.sh /home/maxgraph/executor-entrypoint.sh

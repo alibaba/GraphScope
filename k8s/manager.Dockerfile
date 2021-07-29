@@ -3,10 +3,10 @@
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest AS builder
 
 # copy maxgraph code to container
-ADD .. /root/maxgraph/
+ADD . /root/maxgraph/
 # compile maxgraph java
 # RUN cd /root/maxgraph/ && mvn clean -T 1 install -DskipTests -P java-release
-COPY ./deploy/docker/dockerfile/maven.settings.xml /root/.m2/settings.xml
+COPY ./interactive_engine/deploy/docker/dockerfile/maven.settings.xml /root/.m2/settings.xml
 RUN cd /root/maxgraph/interactive_engine && \
     mvn clean package -DskipTests -Pjava-release --quiet
 
@@ -19,7 +19,7 @@ RUN mkdir -p /home/maxgraph/config
 COPY --from=builder /root/maxgraph/interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz /home/maxgraph/
 COPY --from=builder /root/maxgraph/interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz
 COPY --from=builder /root/maxgraph/interactive_engine/bin/giectl.sh /home/maxgraph/bin
-COPY --from=builder /root/maxgraph/interactive_engine/config/* /home/maxgraph/config
+COPY --from=builder /root/maxgraph/interactive_engine/config/* /home/maxgraph/config/
 RUN tar -xf /home/maxgraph/0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
 RUN tar -xf /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
 RUN chmod a+x /home/maxgraph/bin/giectl.sh
