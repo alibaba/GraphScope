@@ -765,7 +765,7 @@ class CoordinatorServiceServicer(
             )
 
     def _execute_gremlin_query(self, op: op_def_pb2.OpDef):
-        message = op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s.decode()
+        message = pickle.loads(op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s)
         request_options = None
         if types_pb2.GIE_GREMLIN_REQUEST_OPTIONS in op.attr:
             request_options = json.loads(
@@ -814,8 +814,11 @@ class CoordinatorServiceServicer(
             )
         else:
             if result_set_wrapper.query_on_gae_processor():
+                json_dict = rlt[0]
+                if not isinstance(json_dict, str):
+                    json_dict = str(json_dict)
                 dag_def = create_dag_from_gae_compiler(
-                    self._object_manager, json.loads(rlt[0])
+                    self._object_manager, json.loads(json_dict)
                 )
                 # set the same key to the last op
                 dag_def.op[-1].key = op.key

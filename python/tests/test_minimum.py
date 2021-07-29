@@ -107,7 +107,7 @@ def demo(sess, graph):
         .order()
         .by("pr", desc)
         .limit(10)
-        .valueMap("name", "pr")
+        .valueMap("id", "pr")
         .toList()
     )
     print(ret)

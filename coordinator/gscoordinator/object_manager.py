@@ -16,8 +16,10 @@
 # limitations under the License.
 #
 
+from gremlin_python.driver import request
 from gremlin_python.driver.client import Client
 from gremlin_python.driver.serializer import GraphSONMessageSerializer
+from gremlin_python.process.traversal import Bytecode
 
 """Patch for gremlin_python serializer to support "gae" processor
 """
@@ -35,6 +37,39 @@ def patch_for_gremlin_python():
         return processor
 
     setattr(GraphSONMessageSerializer, "get_processor", get_processor)
+
+    def submitAsync(self, message, bindings=None, request_options=None):
+        has_gae_step = False
+        if isinstance(message, Bytecode):
+            for step in message.step_instructions:
+                if step[0] == "process":
+                    has_gae_step = True
+                    break
+            message = request.RequestMessage(
+                processor="traversal",
+                op="bytecode",
+                args={"gremlin": message, "aliases": {"g": self._traversal_source}},
+            )
+        elif isinstance(message, str):
+            message = request.RequestMessage(
+                processor="",
+                op="eval",
+                args={"gremlin": message, "aliases": {"g": self._traversal_source}},
+            )
+            if bindings:
+                message.args.update({"bindings": bindings})
+            if self._sessionEnabled:
+                message = message._replace(processor="session")
+                message.args.update({"session": self._session})
+        # Determind if is a GAE style Bytecode
+        if has_gae_step:
+            message = message._replace(processor="gae_traversal")
+        conn = self._pool.get(True)
+        if request_options:
+            message.args.update(request_options)
+        return conn.write(message)
+
+    setattr(Client, "submitAsync", submitAsync)
 
 
 patch_for_gremlin_python()
@@ -69,7 +104,11 @@ class InteractiveQueryManager(object):
         self.closed = False
 
     def submit(self, message, bindings=None, request_options=None):
-        if request_options is not None and "engine" in request_options:
+        if (
+            request_options is not None
+            and "engine" in request_options
+            and request_options["engine"] == "gae"
+        ):
             from gremlin_python.driver import request
 
             rm = request.RequestMessage(
@@ -95,7 +134,10 @@ class GremlinResultSet(object):
 
     def query_on_gae_processor(self):
         if self.request_options is not None and "engine" in self.request_options:
-            return "gae" == self.request_options["engine"]
+            return (
+                "gae" == self.request_options["engine"]
+                or "gae_traversal" == self.request_options["engine"]
+            )
         return False
 
 
