@@ -19,7 +19,7 @@ use crate::v2::api::condition::Condition;
 use crate::v2::Result;
 
 /// Snapshot of a graph partition. All the interfaces should be thread-safe
-pub trait PartitionSnapshot: Send + Sync {
+pub trait PartitionSnapshot {
     type V: Vertex;
     type E: Edge;
 

@@ -7,12 +7,33 @@ use maxgraph_store::db::api::PropertyMap;
 use maxgraph_store::db::proto::common::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, PrepareDataLoadPb, CommitDataLoadPb, EdgeLocationPb};
 use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::db::common::bytes::util::parse_pb;
-use std::sync::Once;
+use std::sync::{Once, Arc};
 use crate::store::jna_response::JnaResponse;
+use maxgraph_store::v2::wrapper::graph_storage::GraphStorageWrapper;
+use maxgraph_store::v2::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
 
 pub type GraphHandle = *const c_void;
+pub type PartitionGraphHandle = *const c_void;
+pub type FfiPartitionGraph = WrapperPartitionGraph<GraphStorageWrapper<GraphStore>>;
 
 static INIT: Once = Once::new();
+
+#[no_mangle]
+pub extern fn createWrapperPartitionGraph(handle: GraphHandle) -> PartitionGraphHandle {
+    let graph_store = unsafe { Arc::from_raw(handle as *const GraphStore) };
+    let storage_wrapper = GraphStorageWrapper::new(graph_store);
+    let multi_version_graph = Arc::new(storage_wrapper);
+    let partition_graph = WrapperPartitionGraph::new(multi_version_graph);
+    Box::into_raw(Box::new(partition_graph)) as PartitionGraphHandle
+}
+
+#[no_mangle]
+pub extern fn deleteWrapperPartitionGraph(handle: PartitionGraphHandle) {
+    let ptr = handle as *mut FfiPartitionGraph;
+    unsafe {
+        Box::from_raw(ptr);
+    }
+}
 
 #[no_mangle]
 pub extern fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHandle {
@@ -252,7 +273,7 @@ fn overwrite_vertex<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &Operation
     let label_id_pb = parse_pb::<LabelIdPb>(data_operation_pb.get_locationBlob())?;
     let label_id = label_id_pb.get_id();
 
-    let property_map = PropertyMap::from_proto(data_operation_pb.get_props());
+    let property_map = <dyn PropertyMap>::from_proto(data_operation_pb.get_props());
     graph.insert_overwrite_vertex(snapshot_id, vertex_id, label_id, &property_map)
 }
 
@@ -265,7 +286,7 @@ fn update_vertex<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb)
     let label_id_pb = parse_pb::<LabelIdPb>(data_operation_pb.get_locationBlob())?;
     let label_id = label_id_pb.get_id();
 
-    let property_map = PropertyMap::from_proto(data_operation_pb.get_props());
+    let property_map = <dyn PropertyMap>::from_proto(data_operation_pb.get_props());
     graph.insert_update_vertex(snapshot_id, vertex_id, label_id, &property_map)
 }
 
@@ -290,7 +311,7 @@ fn overwrite_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb
     let edge_location_pb = parse_pb::<EdgeLocationPb>(data_operation_pb.get_locationBlob())?;
     let edge_kind_pb = edge_location_pb.get_edgeKind();
     let edge_kind = EdgeKind::from_proto(edge_kind_pb);
-    let property_map = PropertyMap::from_proto(data_operation_pb.get_props());
+    let property_map = <dyn PropertyMap>::from_proto(data_operation_pb.get_props());
     graph.insert_overwrite_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward(), &property_map)
 }
 
@@ -303,7 +324,7 @@ fn update_edge<G: GraphStorage>(graph: &G, snapshot_id: i64, op: &OperationPb) -
     let edge_location_pb = parse_pb::<EdgeLocationPb>(data_operation_pb.get_locationBlob())?;
     let edge_kind_pb = edge_location_pb.get_edgeKind();
     let edge_kind = EdgeKind::from_proto(edge_kind_pb);
-    let property_map = PropertyMap::from_proto(data_operation_pb.get_props());
+    let property_map = <dyn PropertyMap>::from_proto(data_operation_pb.get_props());
     graph.insert_update_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward(), &property_map)
 }
 

@@ -13,4 +13,5 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod graph_storage;
+pub mod graph_storage;
+pub mod wrapper_partition_graph;

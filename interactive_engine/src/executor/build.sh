@@ -23,4 +23,4 @@ else
     SUFFIX="so"
 fi
 
-ln -sf `pwd`/target/${MODE}/libmaxgraph_jna.${SUFFIX} ./target/libmaxgraph_jna.${SUFFIX}
+ln -sf `pwd`/target/${MODE}/libmaxgraph_ffi.${SUFFIX} ./target/libmaxgraph_ffi.${SUFFIX}

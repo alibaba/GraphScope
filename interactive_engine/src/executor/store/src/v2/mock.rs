@@ -208,7 +208,7 @@ impl Iterator for EdgeIteratorImpl {
 pub struct PartitionSnapshotImpl {}
 
 impl PartitionSnapshotImpl {
-    pub(crate) fn new() -> PartitionSnapshotImpl {
+    pub fn new() -> PartitionSnapshotImpl {
         PartitionSnapshotImpl {}
     }
 }

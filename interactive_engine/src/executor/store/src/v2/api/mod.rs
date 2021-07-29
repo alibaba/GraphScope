@@ -18,6 +18,7 @@ use crate::v2::Result;
 pub mod partition_snapshot;
 pub mod types;
 pub mod condition;
+pub mod partition_graph;
 
 pub use self::partition_snapshot::*;
 pub use self::types::*;
