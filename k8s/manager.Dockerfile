@@ -15,34 +15,19 @@ RUN cd /root/maxgraph/interactive_engine && \
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest AS manager
 RUN mkdir -p /home/maxgraph/bin
 RUN mkdir -p /home/maxgraph/config
-# copy binary from builder
+# copy binary and script from builder
 COPY --from=builder /root/maxgraph/interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz /home/maxgraph/
 COPY --from=builder /root/maxgraph/interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz
-COPY --from=builder /root/maxgraph/interactive_engine/bin/giectl.sh /home/maxgraph/bin
+COPY --from=builder /root/maxgraph/interactive_engine/bin/giectl /home/maxgraph/bin
 COPY --from=builder /root/maxgraph/interactive_engine/config/* /home/maxgraph/config/
 RUN tar -xf /home/maxgraph/0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
 RUN tar -xf /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
-RUN chmod a+x /home/maxgraph/bin/giectl.sh
-# copy start script from builder
-# COPY ./deploy/docker/dockerfile/coordinator-entrypoint.sh /home/maxgraph/coordinator-entrypoint.sh
-# COPY ./deploy/docker/dockerfile/coordinator.application.properties /home/maxgraph/config/coordinator.application.properties
+RUN chmod a+x /home/maxgraph/bin/giectl
 
 # copy binary from builder
 # COPY --from=builder /root/maxgraph/src/api/loader/target/maxgraph-loader-0.0.1-SNAPSHOT-jar-with-dependencies.jar /home/maxgraph/
 # TODO: copy benchmark
 # COPY --from=builder /root/maxgraph/benchmark/target/benchmark-0.0.1-SNAPSHOT-dist.tar.gz /home/maxgraph/
-# copy start script from builder
-# COPY ./deploy/docker/dockerfile/frontend-entrypoint.sh /home/maxgraph/frontend-entrypoint.sh
-# COPY ./deploy/docker/dockerfile/frontend.vineyard.properties /home/maxgraph/config/frontend.application.properties
-# COPY ./deploy/docker/dockerfile/manager-entrypoint.sh /home/maxgraph/manager-entrypoint.sh
-
-# COPY ./deploy/docker/dockerfile/create_maxgraph_instance.sh  /root/maxgraph/create_maxgraph_instance.sh
-# COPY ./deploy/docker/dockerfile/delete_maxgraph_instance.sh /root/maxgraph/delete_maxgraph_instance.sh
-# COPY ./deploy/docker/dockerfile/kill_process.sh /root/maxgraph/kill_process.sh
-# COPY ./deploy/docker/dockerfile/set_config.sh /root/maxgraph/set_config.sh
-# COPY ./deploy/docker/dockerfile/func.sh /root/maxgraph/func.sh
-# COPY ./deploy/docker/dockerfile/pod.yaml /root/maxgraph/pod.yaml
-# COPY ./deploy/docker/dockerfile/expose_gremlin_server.sh /root/maxgraph/expose_gremlin_server.sh
 
 ENV GRAPHSCOPE_HOME=/home/maxgraph
 ENV GRAPHSCOPE_RUNTIME=/tmp/graphscope

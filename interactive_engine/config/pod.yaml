@@ -25,7 +25,15 @@ spec:
         memory: limits_mem
     name: gremlin-container
     imagePullPolicy: IfNotPresent
-    args: ["/home/maxgraph/bin/giectl.sh", "start_frontend", "unique_object_id", "unique_schema_path", "zookeeper_ip", "2181", "unique_executor_count"]
+    args:
+      - "/home/maxgraph/bin/giectl"
+      - "start_frontend"
+      - "k8s"
+      - "unique_object_id"
+      - "unique_schema_path"
+      - "zookeeper_ip"
+      - "2181"
+      - "unique_executor_count"
     env:
     - name: OBJECT_ID
       value: 'unique_object_id'
@@ -42,7 +50,14 @@ spec:
         memory: limits_mem
     name: coordinator-container
     imagePullPolicy: IfNotPresent
-    args: ["/home/maxgraph/bin/giectl.sh", "start_coordinator", "unique_object_id", "zookeeper_ip", "2181", "unique_executor_count"]
+    args:
+      - "/home/maxgraph/bin/giectl"
+      - "start_coordinator"
+      - "k8s"
+      - "unique_object_id"
+      - "zookeeper_ip"
+      - "2181"
+      - "unique_executor_count"
     env:
     - name: OBJECT_ID
       value: 'unique_object_id'
