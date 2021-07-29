@@ -12,6 +12,7 @@ import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.groovy.jsr223.GroovyTranslator;
+import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -71,7 +72,7 @@ public class GAETraversalOpProcessor extends AbstractOpProcessor {
                             "traversal", traversal);
                     Map<String, Object> steps = GAEOpProcessor.processQuery(traversal, config);
                     String json = JsonUtils.toJson(steps);
-                    AbstractGraphOpProcessor.writeResultList(ctx, Collections.singletonList(json), ResponseStatusCode.SUCCESS);
+                    AbstractGraphOpProcessor.writeResultList(ctx, Collections.singletonList(new DefaultRemoteTraverser(json, 1)), ResponseStatusCode.SUCCESS);
                 });
                 return op;
             default:
