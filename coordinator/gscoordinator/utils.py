@@ -1604,8 +1604,8 @@ def create_op_from_gae_compiler_value(
             raise NotImplementedError("Gremlin query must be on a new graph")
         # execute gremlin query
         config = {
-            types_pb2.GIE_GREMLIN_QUERY_MESSAGE: utils.s_to_attr(
-                value["params"]["query"]
+            types_pb2.GIE_GREMLIN_QUERY_MESSAGE: utils.bytes_to_attr(
+                pickle.dumps(value["params"]["query"])
             )
         }
         gremlin_query_op = create_op(

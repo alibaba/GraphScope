@@ -992,7 +992,9 @@ def gremlin_query(interactive_query, query, request_options=None):
         An op to execute a gremlin query on the GIE instance.
     """
     config = {}
-    config[types_pb2.GIE_GREMLIN_QUERY_MESSAGE] = utils.s_to_attr(query)
+    if not isinstance(query, bytes):
+        query = pickle.dumps(query)
+    config[types_pb2.GIE_GREMLIN_QUERY_MESSAGE] = utils.bytes_to_attr(query)
     if request_options:
         config[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS] = utils.s_to_attr(
             json.dumps(request_options)

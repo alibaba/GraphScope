@@ -22,6 +22,7 @@ from gremlin_python.driver.client import Client
 from gremlin_python.driver.serializer import GraphSONMessageSerializer
 from gremlin_python.process.graph_traversal import GraphTraversal
 from gremlin_python.process.traversal import Bytecode
+from gremlin_python.process.traversal import Traversal
 
 
 def process(cls, *args):
@@ -60,6 +61,36 @@ statics.add_static("expr", expr)
 
 
 def patch_for_gremlin_python():
+    def toList(self):
+        import pickle
+
+        import graphscope
+        from graphscope.client.session import __graphscope_interactive_query__
+
+        interactive = __graphscope_interactive_query__[0]
+        bytecode_pickle = pickle.dumps(self.bytecode)
+        return list(
+            interactive.execute(
+                bytecode_pickle, request_options={"engine": "gae_traversal"}
+            ).all()
+        )
+
+    setattr(Traversal, "toList", toList)
+
+    def toSet(self):
+        import pickle
+
+        import graphscope
+        from graphscope.client.session import __graphscope_interactive_query__
+
+        interactive = __graphscope_interactive_query__[0]
+        bytecode_pickle = pickle.dumps(self.bytecode)
+        return set(
+            interactive.execute(
+                bytecode_pickle, request_options={"engine": "gae_traversal"}
+            ).all()
+        )
+
     def get_processor(self, processor):
         if processor == "gae":
             return getattr(self, "standard", None)

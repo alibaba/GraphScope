@@ -765,7 +765,7 @@ class CoordinatorServiceServicer(
             )
 
     def _execute_gremlin_query(self, op: op_def_pb2.OpDef):
-        message = op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s.decode()
+        message = pickle.loads(op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s)
         request_options = None
         if types_pb2.GIE_GREMLIN_REQUEST_OPTIONS in op.attr:
             request_options = json.loads(
