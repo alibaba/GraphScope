@@ -914,8 +914,8 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
     y: string ('in','out')
        The degree type for target node (directed graphs only).
 
-    directed: bool (True, False)
-        directed graph or undirected graph
+    weighted: bool (True, False)
+        weighted graph or unweighted graph
 
     Returns
     -------
@@ -947,15 +947,7 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
     .. [2] Foster, J.G., Foster, D.V., Grassberger, P. & Paczuski, M.
        Edge direction and the structure of networks, PNAS 107, 10815-20 (2010).
     """
-    weighted = False if weight is None else True
-    ctx = AppAssets(algo="degree_assortativity_coefficient", context="tensor")(
-        G,
-        source_degree_type=x,
-        target_degree_type=y,
-        directed=G.is_directed(),
-        weighted=weighted,
-    )
-    return ctx.to_numpy("r", axis=0)[0]
+    return graphscope.degree_assortativity_coefficient(G, x, y, weight)
 
 
 @project_to_simple
