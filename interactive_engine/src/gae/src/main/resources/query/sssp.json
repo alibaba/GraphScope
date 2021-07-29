@@ -1,0 +1,15 @@
+{
+  "version": 0.1,
+  "step-1": {
+    "engine": "GAE",
+    "operation": "run_app",
+    "graph": "graphname-1",
+    "params": {
+      "name": "SSSP",
+      "type": "cython_pie",
+      "edgeProperty": "dist"
+    },
+    "output_type": "context",
+    "deps": []
+  }
+}

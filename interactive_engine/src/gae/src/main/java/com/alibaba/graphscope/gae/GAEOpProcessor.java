@@ -23,17 +23,15 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.function.Supplier;
 
-public class GAEGremlinProcessor extends AbstractGraphOpProcessor {
-    private static final Logger logger = LoggerFactory.getLogger(GAEGremlinProcessor.class);
+public class GAEOpProcessor extends AbstractGraphOpProcessor {
+    private static final Logger logger = LoggerFactory.getLogger(GAEOpProcessor.class);
     private InstanceConfig instanceConfig;
-    private GAEStepChainMaker stepChainMaker;
     private Graph graph;
     private GraphTraversalSource traversalSource;
 
-    public GAEGremlinProcessor(InstanceConfig instanceConfig) {
+    public GAEOpProcessor(InstanceConfig instanceConfig) {
         super(null, null);
         this.instanceConfig = instanceConfig;
-        this.stepChainMaker = new GAEStepChainMaker();
         this.graph = TraversalSourceGraph.open(new BaseConfiguration());
         this.traversalSource = graph.traversal(CustomGraphTraversalSource.class);
     }
@@ -69,7 +67,7 @@ public class GAEGremlinProcessor extends AbstractGraphOpProcessor {
                             "graph", instanceConfig.getGraphName(),
                             "traversal", (Traversal) o);
                     if (o != null && o instanceof Traversal) {
-                        Map<String, Object> steps = stepChainMaker.generate(config);
+                        Map<String, Object> steps = processQuery((Traversal) o, config);
                         String json = JsonUtils.toJson(steps);
                         writeResultList(ctx, Collections.singletonList(json), ResponseStatusCode.SUCCESS);
                     } else {
@@ -85,5 +83,17 @@ public class GAEGremlinProcessor extends AbstractGraphOpProcessor {
     @Override
     public void close() throws Exception {
 
+    }
+
+    public static Map<String, Object> processQuery(Traversal query, Map<String, Object> config) {
+        if (QueryType.PAGE_RANK.isValid(query)) {
+            return QueryType.PAGE_RANK.generate(config);
+        } else if (QueryType.SSSP.isValid(query)) {
+            return QueryType.SSSP.generate(config);
+        } else if (QueryType.GRAPH_LEARN.isValid(query)) {
+            return QueryType.GRAPH_LEARN.generate(config);
+        } else {
+            throw new UnsupportedOperationException("");
+        }
     }
 }

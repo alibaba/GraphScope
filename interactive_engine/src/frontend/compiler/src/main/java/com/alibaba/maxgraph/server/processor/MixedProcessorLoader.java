@@ -15,7 +15,8 @@
  */
 package com.alibaba.maxgraph.server.processor;
 
-import com.alibaba.graphscope.gae.GAEGremlinProcessor;
+import com.alibaba.graphscope.gae.GAEOpProcessor;
+import com.alibaba.graphscope.gae.GAETraversalOpProcessor;
 import com.alibaba.maxgraph.api.manager.RecordProcessorManager;
 import com.alibaba.maxgraph.api.query.QueryCallbackManager;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
@@ -82,8 +83,10 @@ public class MixedProcessorLoader implements ProcessorLoader {
         MaxGraphOpLoader.addOpProcessor(mixedTraversalOpProcessor.getName(), mixedTraversalOpProcessor);
 
         // add gae
-        GAEGremlinProcessor gaeGremlinProcessor = new GAEGremlinProcessor(instanceConfig);
+        GAEOpProcessor gaeGremlinProcessor = new GAEOpProcessor(instanceConfig);
         MaxGraphOpLoader.addOpProcessor(gaeGremlinProcessor.getName(), gaeGremlinProcessor);
+        GAETraversalOpProcessor traversalOpProcessor = new GAETraversalOpProcessor(instanceConfig);
+        MaxGraphOpLoader.addOpProcessor(traversalOpProcessor.getName(), traversalOpProcessor);
     }
 
     public static ProcessorLoader newProcessorLoader(TinkerMaxGraph graph,

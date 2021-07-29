@@ -12,10 +12,7 @@ import org.apache.tinkperpop.gremlin.groovy.custom.TraversalProcessStep;
 import s2scompiler.Result;
 import s2scompiler.S2SCompiler;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public enum GAE implements Generator {
     Add_Column {
@@ -47,7 +44,6 @@ public enum GAE implements Generator {
                     String dstColumn = ((TraversalProcessStep) step).getDstColumn();
                     return Arrays.asList(srcColumn, dstColumn);
                 }
-                // todo: process("").with(...)
             }
             return Collections.emptyList();
         }
@@ -72,27 +68,32 @@ public enum GAE implements Generator {
         @Override
         public Map<String, Object> generate(Map<String, Object> args) {
             String graphName = getGraphName(args);
+            String json = readFileFromResource("gae.run.app.json");
+            Map<String, Object> runApp = JsonUtils.fromJson(json, new TypeReference<Map<String, Object>>() {
+            });
+            runApp.put("graph", graphName);
+            Map params = new HashMap();
             Step processStep = evalProcessStep(getTraversal(args));
             Result r = new Result(false, "");
             String srcCode;
             if (processStep instanceof TraversalProcessStep) {
                 r = runPageRank((TraversalProcessStep) processStep);
                 srcCode = r.s;
+                params.put("type", "cpp_pie");
+                params.put("cpp_code", srcCode);
             } else if (processStep instanceof StringProcessStep) {
-                srcCode = ((StringProcessStep) processStep).getIdentifier();
+                String name = ((StringProcessStep) processStep).getIdentifier();
+                params.put("name", name);
+                params.put("type", "cython_pie");
+                params.putAll(((StringProcessStep) processStep).getKeyValues());
             } else {
                 throw new UnsupportedOperationException("cannot support step " + processStep);
             }
-            String json = readFileFromResource("gae.run.app.json");
-            Map<String, Object> runApp = JsonUtils.fromJson(json, new TypeReference<Map<String, Object>>() {
-            });
-            runApp.put("graph", graphName);
-            Map params = (Map) runApp.get("params");
-            params.put("cpp_code", srcCode);
             if (processStep instanceof TraversalProcessStep) {
                 params.put("type", r.app_type);
                 params.put("name", r.class_name);
             }
+            runApp.put("params", params);
             return runApp;
         }
 

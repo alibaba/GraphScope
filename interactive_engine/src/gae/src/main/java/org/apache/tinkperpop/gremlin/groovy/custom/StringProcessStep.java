@@ -8,13 +8,14 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.Parameters;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public final class StringProcessStep<S> extends MapStep<S, Vertex> implements Configuring {
 
     private String identifier;
-    private String key;
-    private Object value;
+    private Map<String, Object> keyValues = new HashMap<>();
 
     public StringProcessStep(final Traversal.Admin traversal, final String identifier) {
         super(traversal);
@@ -47,19 +48,14 @@ public final class StringProcessStep<S> extends MapStep<S, Vertex> implements Co
 
     @Override
     public void configure(final Object... keyValues) {
-        if (keyValues.length > 0) {
-            key = (String) keyValues[0];
-        }
         if (keyValues.length > 1) {
-            value = keyValues[1];
+            String key = (String) keyValues[0];
+            Object value = keyValues[1];
+            this.keyValues.put(key, value);
         }
     }
 
-    public String getKey() {
-        return key;
-    }
-
-    public Object getValue() {
-        return value;
+    public Map<String, Object> getKeyValues() {
+        return keyValues;
     }
 }
