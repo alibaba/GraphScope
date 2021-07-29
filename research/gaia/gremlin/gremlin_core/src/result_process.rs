@@ -132,6 +132,7 @@ fn object_to_pb_value(value: &Object) -> common_pb::Value {
                 }
                 Primitives::Integer(v) => common_pb::value::Item::I32(*v),
                 Primitives::Long(v) => common_pb::value::Item::I64(*v),
+                Primitives::LLLong(v) => common_pb::value::Item::Blob(v.to_be_bytes().to_vec()),
                 Primitives::Float(v) => common_pb::value::Item::F64(*v),
             }
         }

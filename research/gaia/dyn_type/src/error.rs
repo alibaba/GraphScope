@@ -35,6 +35,7 @@ impl fmt::Display for CastError {
             RawType::Byte => write!(f, "can't cast i8 into {}", self.target),
             RawType::Integer => write!(f, "can't cast i32 into {}", self.target),
             RawType::Long => write!(f, "can't cast i64 into {}", self.target),
+            RawType::LLLong => write!(f, "can't cast u128 into {}", self.target),
             RawType::Float => write!(f, "can't cast f64 into {}", self.target),
             RawType::Blob(len) => write!(f, "can't cast Blob({}) into {}", len, self.target),
             RawType::String => write!(f, "can't cast String into {}", self.target),
