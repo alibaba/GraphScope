@@ -45,6 +45,11 @@ def expr_(cls, *args):
     return cls
 
 
+def withProperty(cls, *args):
+    cls.bytecode.add_step("withProperty", *args)
+    return cls
+
+
 def sample(cls, *args):
     cls.bytecode.add_step("sample", *tuple(str(arg) for arg in args))
     return cls
@@ -64,6 +69,7 @@ setattr(GraphTraversal, "process", process)
 setattr(GraphTraversal, "scatter", scatter)
 setattr(GraphTraversal, "gather", gather)
 setattr(GraphTraversal, "expr", expr_)
+setattr(GraphTraversal, "withProperty", withProperty)
 setattr(GraphTraversal, "sample", sample)
 setattr(GraphTraversal, "toTensorFlowDataset", toTensorFlowDataset)
 setattr(GraphTraversal, "toPyTorchDataset", toPyTorchDataset)
