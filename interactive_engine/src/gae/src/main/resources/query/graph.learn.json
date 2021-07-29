@@ -1,3 +1,44 @@
 {
-
+  "version": 0.1,
+  "step-1": {
+    "engine": "GAE",
+    "operation": "run_app",
+    "graph": "object_id",
+    "params": {
+      "prProperty": "$pr",
+      "type": "cython_pie",
+      "name": "pageRank"
+    },
+    "output_type": "context",
+    "deps": []
+  },
+  "step-2": {
+    "engine": "GAE",
+    "operation": "add_colomn",
+    "graph": "object_id",
+    "params": {
+      "new_column_name": "pr",
+      "use_data": "r:_V.$pr"
+    },
+    "output_type": "graph",
+    "deps": ["step-1"]
+  },
+  "step-3": {
+    "engine": "GLE",
+    "operation": "sample",
+    "graph": "object_id",
+    "params": {
+      "format": "xxxxxxx"
+    },
+    "output_type": "dataframe",
+    "deps": ["step-2"]
+  },
+  "step-4": {
+    "engine": "GLE",
+    "operation": "to_tensorflow",
+    "graph": "object_id",
+    "params": {},
+    "output_type": "dataframe",
+    "deps": ["step-3"]
+  }
 }
