@@ -7,7 +7,6 @@
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
-        </fileSet>
         <fileSet>
             <directory>${project.basedir}/script</directory>
             <includes>
