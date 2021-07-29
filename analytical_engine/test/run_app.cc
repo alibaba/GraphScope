@@ -79,6 +79,10 @@ DEFINE_int32(app_concurrency, -1, "concurrency of application");
 DEFINE_int64(dfs_source, 0, "source vertex of dfs.");
 DEFINE_string(dfs_format, "edges", "output format of dfs.");
 
+DEFINE_int64(source_id, 0, "source vertex of all_simple_paths.");
+DEFINE_string(targets_json, "", "targets json");
+DEFINE_int32(cutoff, std::numeric_limits<int>::max(), "cutoff");
+
 int main(int argc, char* argv[]) {
   FLAGS_stderrthreshold = 0;
 

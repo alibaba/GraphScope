@@ -83,7 +83,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
         ctx.result_queue.push(msg);
       }
 
-      if (msg.size() <= (long unsigned int) ctx.cutoff) {
+      if (msg.size() <= (u_int64_t) ctx.cutoff) {
         auto oes = frag.GetOutgoingAdjList(v);
         for (auto& e : oes) {
           vertex_t u = e.get_neighbor();
