@@ -18,10 +18,10 @@
 
 namespace DB_NAMESPACE {
 
-thread_local std::unique_ptr<Snapshot> local_snapshot_{nullptr};
+thread_local PartitionGraphHandle local_graph_handle_ = nullptr;
 
-void SetLocalSnapshot(SnapshotHandle handle) {
-  local_snapshot_ = std::make_unique<Snapshot>(handle);
+void setPartitionGraph(PartitionGraphHandle handle) {
+  local_graph_handle_ = handle;
 }
 
 }  // namespace DB_NAMESPACE

@@ -18,6 +18,6 @@
 
 namespace DB_NAMESPACE {
 
-extern "C" DLL_EXPORT void RunLocalTests();
+extern "C" DLL_EXPORT void runLocalTests();
 
 }  // namespace DB_NAMESPACE
