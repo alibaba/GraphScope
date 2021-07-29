@@ -23,7 +23,7 @@ import pytest
 from gremlin_python import statics
 
 import graphscope
-from graphscope.dataset.ogbn_mag import load_ogbn_mag
+from graphscope.framework.loader import Loader
 
 statics.load_statics(globals())
 
@@ -32,6 +32,7 @@ graphscope.set_option(initializing_interactive_engine=False)
 
 test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 property_dir = os.path.join(test_repo_dir, "property")
+
 
 @pytest.fixture
 def ogbn_mag_small():
@@ -111,6 +112,6 @@ def demo(sess, graph):
     )
     print(ret)
 
+
 def test_query_1(graphscope_session, p2p_property_graph):
     demo(graphscope_session, p2p_property_graph)
-
