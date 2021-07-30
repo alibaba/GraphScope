@@ -17,53 +17,107 @@
 #include <cassert>
 
 #include "jna/test.h"
+#include "store_ffi/store_ffi.h"
 
 namespace DB_NAMESPACE {
 
-void CheckProperty(Property* p) {
-  assert(p->Valid());
-  auto r = p->GetAsInt64();
-  assert(r.isErr());
-  std::cout << "(PropertyId = " << p->GetPropertyId() << ", PropertyValue = Null)" << std::endl;
-  std::cout << "(Rust Print Error Msg...)" << std::endl;
-  r.unwrapErr().Print();
-}
+void PrintVertexInfo(Vertex* v) {
+  std::string info;
+  info += "<VertexID: " + std::to_string(v->GetVertexId()) + ">";
+  info += "<LabelID: " + std::to_string(v->GetLabelId()) + ">";
 
-void TestGetVertex() {
-  std::cout << "[C++ End] <GetVertexTest>" << std::endl;
-
-  std::cout << "---- Get Vertex" << std::endl;
-  auto r1 = local_snapshot_->GetVertex(1001, none_label_id);
-  assert(r1.isOk());
-  Vertex v = r1.unwrap();
-  assert(v.Valid());
-  std::cout << "(VertexId = " << v.GetVertexId() << ", LabelId = " << v.GetLabelId() << ")" << std::endl;
-
-  std::cout << "--- Get Property" << std::endl;
-  auto p1 = v.GetPropertyBy(1002);
-  CheckProperty(&p1);
-
-  std::cout << "--- Get Vertex Property Iterator" << std::endl;
-  auto pi = v.GetPropertyIterator();
+  auto pi = v->GetPropertyIterator();
   assert(pi.Valid());
-  std::cout << "--- Call Iterator Next()" << std::endl;
-  unsigned count = 0;
   while (true) {
-    auto res_p = pi.Next();
-    assert(res_p.isOk());
-    auto p = res_p.unwrap();
+    auto rp = pi.Next();
+    assert(rp.isOk());
+    auto p = rp.unwrap();
     if (!p.Valid()) {
       break;
     }
-    count++;
-    CheckProperty(&p);
+    info += "<PropertyID: " + std::to_string(p.GetPropertyId()) + ">";
   }
-  std::cout << "(Total Record number in iterator: " << count << ")" << std::endl;
+  std::cout << info << std::endl;
 }
 
-void RunLocalTests() {
-  assert(local_snapshot_.get() != nullptr);
-  TestGetVertex();
+void TestScanVertex(Snapshot* ss) {
+  std::cout << std::endl << "[lgraph] <ScanVertexTest Begin>" << std::endl;
+
+  auto r = ss->ScanVertex();
+  assert(r.isOk());
+  auto vi = r.unwrap();
+  assert(vi.Valid());
+
+  unsigned v_cnt = 0;
+  while(true) {
+    auto rv = vi.Next();
+    assert(rv.isOk());
+    auto v = rv.unwrap();
+    if (!v.Valid()) { break; }
+    v_cnt++;
+    PrintVertexInfo(&v);
+  }
+  std::cout << "-- Total Vertex Number: " << v_cnt << std::endl;
+
+  std::cout << "[lgraph] <ScanVertexTest Finish>" << std::endl;
+}
+
+void PrintEdgeInfo(Edge* e) {
+  std::string info;
+
+  auto e_id = e->GetEdgeId();
+  info += "<EdgeID: ("
+      + std::to_string(e_id.edge_inner_id) + ", "
+      + std::to_string(e_id.src_vertex_id) + ", "
+      + std::to_string(e_id.dst_vertex_id) + ")>";
+  auto e_rel = e->GetEdgeRelation();
+  info += "<EdgeRelation: ("
+      + std::to_string(e_rel.edge_label_id) + ", "
+      + std::to_string(e_rel.src_vertex_label_id) + ", "
+      + std::to_string(e_rel.dst_vertex_label_id) + ")>";
+
+  auto pi = e->GetPropertyIterator();
+  assert(pi.Valid());
+  while (true) {
+    auto rp = pi.Next();
+    assert(rp.isOk());
+    auto p = rp.unwrap();
+    if (!p.Valid()) {
+      break;
+    }
+    info += "<PropertyID: " + std::to_string(p.GetPropertyId()) + ">";
+  }
+  std::cout << info << std::endl;
+}
+
+void TestScanEdge(Snapshot* ss) {
+  std::cout << std::endl << "[lgraph] <ScanEdgeTest Begin>" << std::endl;
+
+  auto r = ss->ScanEdge();
+  assert(r.isOk());
+  auto ei = r.unwrap();
+  assert(ei.Valid());
+
+  unsigned e_cnt = 0;
+  while(true) {
+    auto re = ei.Next();
+    assert(re.isOk());
+    auto e = re.unwrap();
+    if (!e.Valid()) { break; }
+    e_cnt++;
+    PrintEdgeInfo(&e);
+  }
+  std::cout << "-- Total Edge Number: " << e_cnt << std::endl;
+
+  std::cout << "[lgraph] <ScanEdgeTest Finish>" << std::endl;
+}
+
+void runLocalTests() {
+  assert(local_graph_handle_ != nullptr);
+  Snapshot latest_ss(ffi::GetSnapshot(local_graph_handle_, std::numeric_limits<SnapshotId>::max()));
+
+  TestScanVertex(&latest_ss);
+  TestScanEdge(&latest_ss);
 }
 
 }  // namespace DB_NAMESPACE

@@ -23,7 +23,7 @@ namespace DB_NAMESPACE {
 
 class Snapshot {
 public:
-  explicit Snapshot(SnapshotHandle handle);
+  explicit Snapshot(PartitionSnapshotHandle handle);
   ~Snapshot();
 
   // Move Only!
@@ -70,7 +70,7 @@ public:
   SnapshotId GetSnapshotId();
 
 private:
-  SnapshotHandle handle_;
+  PartitionSnapshotHandle handle_;
 
   Snapshot();
 };

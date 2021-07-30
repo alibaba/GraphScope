@@ -26,8 +26,8 @@
 
 namespace DB_NAMESPACE {
 
-extern thread_local std::unique_ptr<Snapshot> local_snapshot_;
+extern thread_local PartitionGraphHandle local_graph_handle_;
 
-extern "C" DLL_EXPORT void SetLocalSnapshot(SnapshotHandle handle);
+extern "C" DLL_EXPORT void setPartitionGraph(PartitionGraphHandle handle);
 
 }  // namespace DB_NAMESPACE

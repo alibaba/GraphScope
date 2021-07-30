@@ -51,7 +51,8 @@ struct StringSlice {
 const LabelId none_label_id = std::numeric_limits<LabelId>::max();
 const EdgeRelation none_edge_relation{};
 
-typedef void* SnapshotHandle;
+typedef void* PartitionGraphHandle;
+typedef void* PartitionSnapshotHandle;
 typedef void* ErrorHandle;
 typedef void* VertexHandle;
 typedef void* VertexIterHandle;

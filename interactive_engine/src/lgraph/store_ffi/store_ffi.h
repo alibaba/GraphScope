@@ -27,18 +27,18 @@ namespace ffi {
 
 extern "C" {
   /// Snapshot FFIs
-  SnapshotHandle GetSnapshot();
-  VertexHandle GetVertex(SnapshotHandle snapshot, VertexId vertex_id, LabelId label_id, ErrorHandle* error);
-  EdgeHandle GetEdge(SnapshotHandle snapshot, EdgeId edge_id, const EdgeRelation& edge_relation, ErrorHandle* error);
-  VertexIterHandle ScanVertex(SnapshotHandle snapshot, LabelId label_id, ErrorHandle* error);
-  EdgeIterHandle ScanEdge(SnapshotHandle snapshot, const EdgeRelation& edge_relation, ErrorHandle* error);
-  EdgeIterHandle GetOutEdges(SnapshotHandle snapshot, VertexId vertex_id, LabelId edge_label_id, ErrorHandle* error);
-  EdgeIterHandle GetInEdges(SnapshotHandle snapshot, VertexId vertex_id, LabelId edge_label_id, ErrorHandle* error);
-  size_t GetOutDegree(SnapshotHandle snapshot, VertexId vertex_id, const EdgeRelation& edge_relation, ErrorHandle* error);
-  size_t GetInDegree(SnapshotHandle snapshot, VertexId vertex_id, const EdgeRelation& edge_relation, ErrorHandle* error);
-  EdgeHandle GetKthOutEdge(SnapshotHandle snapshot, VertexId vertex_id, const EdgeRelation& edge_relation, SerialId k, ErrorHandle* error);
-  EdgeHandle GetKthInEdge(SnapshotHandle snapshot, VertexId vertex_id, const EdgeRelation& edge_relation, SerialId k, ErrorHandle* error);
-  SnapshotId GetSnapshotId(SnapshotHandle snapshot);
+  PartitionSnapshotHandle GetSnapshot(PartitionGraphHandle graph, SnapshotId snapshot_id);
+  VertexHandle GetVertex(PartitionSnapshotHandle snapshot, VertexId vertex_id, LabelId label_id, ErrorHandle* error);
+  EdgeHandle GetEdge(PartitionSnapshotHandle snapshot, EdgeId edge_id, const EdgeRelation& edge_relation, ErrorHandle* error);
+  VertexIterHandle ScanVertex(PartitionSnapshotHandle snapshot, LabelId label_id, ErrorHandle* error);
+  EdgeIterHandle ScanEdge(PartitionSnapshotHandle snapshot, const EdgeRelation& edge_relation, ErrorHandle* error);
+  EdgeIterHandle GetOutEdges(PartitionSnapshotHandle snapshot, VertexId vertex_id, LabelId edge_label_id, ErrorHandle* error);
+  EdgeIterHandle GetInEdges(PartitionSnapshotHandle snapshot, VertexId vertex_id, LabelId edge_label_id, ErrorHandle* error);
+  size_t GetOutDegree(PartitionSnapshotHandle snapshot, VertexId vertex_id, const EdgeRelation& edge_relation, ErrorHandle* error);
+  size_t GetInDegree(PartitionSnapshotHandle snapshot, VertexId vertex_id, const EdgeRelation& edge_relation, ErrorHandle* error);
+  EdgeHandle GetKthOutEdge(PartitionSnapshotHandle snapshot, VertexId vertex_id, const EdgeRelation& edge_relation, SerialId k, ErrorHandle* error);
+  EdgeHandle GetKthInEdge(PartitionSnapshotHandle snapshot, VertexId vertex_id, const EdgeRelation& edge_relation, SerialId k, ErrorHandle* error);
+  SnapshotId GetSnapshotId(PartitionSnapshotHandle snapshot);
 
   /// Vertex FFIs
   VertexHandle VertexIteratorNext(VertexIterHandle vertex_iter, ErrorHandle* error);
@@ -67,7 +67,7 @@ extern "C" {
   void PrintError(ErrorHandle error_hdl);
 
   /// Release FFIs
-  void ReleasePartitionSnapshotHandle(SnapshotHandle ptr);
+  void ReleasePartitionSnapshotHandle(PartitionSnapshotHandle ptr);
   void ReleaseErrorHandle(ErrorHandle ptr);
   void ReleaseVertexHandle(VertexHandle ptr);
   void ReleaseVertexIteratorHandle(VertexIterHandle ptr);

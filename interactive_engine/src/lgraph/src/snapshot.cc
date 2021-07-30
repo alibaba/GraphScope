@@ -15,11 +15,11 @@
  */
 
 #include "db/graph/snapshot.h"
-#include "rust_store_ffi.h"
+#include "store_ffi/store_ffi.h"
 
 namespace DB_NAMESPACE {
 
-Snapshot::Snapshot(SnapshotHandle handle) : handle_(handle) {}
+Snapshot::Snapshot(PartitionSnapshotHandle handle) : handle_(handle) {}
 
 Snapshot::~Snapshot() {
   if (handle_ != nullptr) {

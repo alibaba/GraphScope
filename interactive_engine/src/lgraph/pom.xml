@@ -14,6 +14,14 @@
     <artifactId>c-end-lgraph</artifactId>
     <name>lgraph</name>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.alibaba.maxgraph</groupId>
+            <artifactId>maxgraph-executor</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+    </dependencies>
+
     <profiles>
         <profile>
             <id>dev</id>
@@ -39,6 +47,7 @@
                             <workingDirectory>.</workingDirectory>
                             <arguments>
                                 <argument>build.sh</argument>
+                                <argument>${rust.compile.mode}</argument>
                             </arguments>
                         </configuration>
                     </plugin>
@@ -60,10 +69,6 @@
                     <filesets>
                         <fileset>
                             <directory>build</directory>
-                            <followSymlinks>true</followSymlinks>
-                        </fileset>
-                        <fileset>
-                            <directory>lib</directory>
                             <followSymlinks>true</followSymlinks>
                         </fileset>
                     </filesets>

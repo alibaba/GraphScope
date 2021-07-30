@@ -15,7 +15,7 @@
  */
 
 #include "db/graph/property.h"
-#include "rust_store_ffi.h"
+#include "store_ffi/store_ffi.h"
 
 namespace DB_NAMESPACE {
 
