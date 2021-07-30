@@ -81,3 +81,9 @@ pub extern fn connectEngineServerList(executor_handle: ExecutorHandle, addrs: *c
     };
     executor_ptr.engine_connect(address_list);
 }
+
+#[no_mangle]
+pub extern fn stopEngineServer(_handle: ExecutorHandle) {}
+
+#[no_mangle]
+pub extern fn stopRpcServer(_handle: ExecutorHandle) {}
