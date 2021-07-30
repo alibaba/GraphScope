@@ -24,6 +24,7 @@ from gremlin_python import statics
 
 import graphscope
 from graphscope.framework.loader import Loader
+from graphscope.learning.extra import ___
 
 statics.load_statics(globals())
 
@@ -119,6 +120,40 @@ def demo(sess, graph):
     for item in ret:
         assert "id" in item
         assert "pr" in item
+    # case3: GraphLearn Sample
+    ret = (
+        g.V()
+        .process(
+            V()
+            .property("$pr", expr("1.0/TOTAL_V"))
+            .repeat(
+                V()
+                .property("$tmp", expr("$pr/OUT_DEGREE"))
+                .scatter("$tmp")
+                .by(out())
+                .gather("$tmp", sum)
+                .property("$new", expr("0.15/TOTAL_V+0.85*$tmp"))
+                .where(expr("abs($new-$pr)>1e-10"))
+                .property("$pr", expr("$new"))
+            )
+            .until(count().is_(0))
+        )
+        .withProperty("$pr", "pr")
+        .sample(
+            ___.V("person").batch(64).outV("knows").sample(10).by("random").values()
+        )
+        .toTensorFlowDataset()
+        .toList()
+    )
+    # ret = (
+    # g.V()
+    # .process("pageRank")
+    # .withProperty("$pr", "pr")
+    # .sample(___.V('person').batch(64).outV('knows').sample(10).by('random').values())
+    # .toTensorFlowDataset()
+    # .toList()
+    # )
+    print("[Ret]: ", type(ret))
 
 
 def test_query_1(graphscope_session, p2p_property_graph):
