@@ -21,7 +21,6 @@ import com.alibaba.maxgraph.tests.gremlin.MaxTestGraphProvider;
 import com.alibaba.maxgraph.v2.MaxNode;
 import com.alibaba.maxgraph.v2.common.NodeBase;
 import com.alibaba.maxgraph.v2.common.config.CommonConfig;
-import com.alibaba.maxgraph.v2.store.GraphPartition;
 import com.alibaba.maxgraph.v2.store.Store;
 import com.alibaba.maxgraph.v2.store.StoreService;
 import com.alibaba.maxgraph.v2.store.jna.GraphLibrary;
@@ -72,8 +71,7 @@ public class FfiTest {
         Pointer wrapperPartitionGraph = GraphLibrary.INSTANCE.createWrapperPartitionGraph(jnaGraphStore.getPointer());
         GnnLibrary.INSTANCE.setPartitionGraph(wrapperPartitionGraph);
         GnnLibrary.INSTANCE.runLocalTests();
-        GraphLibrary.INSTANCE.deleteWrapperPartitionGraph(jnaGraphStore.getPointer());
-        maxNode.close();
         provider.clear(graph, graphConf);
+        maxNode.close();
     }
 }
