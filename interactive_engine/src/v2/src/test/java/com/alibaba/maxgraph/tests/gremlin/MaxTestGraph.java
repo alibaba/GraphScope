@@ -488,7 +488,7 @@ public class MaxTestGraph implements Graph {
         return null;
     }
 
-    public List<NodeBase> getStoreNodes() {
-        return ((MaxNode) this.maxNode).getStores();
+    public MaxNode getMaxNode() {
+        return (MaxNode) maxNode;
     }
 }
