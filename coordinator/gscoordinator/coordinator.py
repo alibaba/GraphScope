@@ -580,6 +580,8 @@ class CoordinatorServiceServicer(
                 op_result = self._create_learning_instance(op)
             elif op.op == types_pb2.CLOSE_LEARNING_INSTANCE:
                 op_result = self._close_learning_instance(op)
+            elif op.op == types_pb2.SAMPLE:
+                op_result = self._sample(op)
             else:
                 logger.error("Unsupport op type: %s", str(op.op))
             op_results.append(op_result)
@@ -944,6 +946,28 @@ class CoordinatorServiceServicer(
                 key=op.key,
                 error_msg=error_message,
             )
+
+    def _sample(self, op: op_def_pb2.OpDef):
+        from graphscope.learning.extra import QueryInterpreter
+        from graphscope.learning.graph import Graph as LearningGraph
+
+        sample_params = op.attr[types_pb2.GLE_SAMPLE_PARAMS].s.decode()
+
+        key_of_parent_op = op.parents[0]
+        op_result = self._op_result_pool[key_of_parent_op]
+        handle = op_result.handle
+        handle = json.loads(base64.b64decode(handle).decode("utf-8"))
+        config = op_result.config.decode("utf-8")
+        handle["server"] = op_result.result.decode("utf-8")
+        handle["client_count"] = 1
+
+        g = LearningGraph(None, handle, config, op_result.extra_info.decode("utf-8"))
+        rlt = QueryInterpreter().run(g, sample_params.replace("'", "\""))
+        return op_def_pb2.OpResult(
+            code=error_codes_pb2.OK,
+            key=op.key,
+            result=pickle.dumps(rlt),
+        )
 
     def _create_learning_instance(self, op: op_def_pb2.OpDef):
         object_id = op.attr[types_pb2.VINEYARD_ID].i

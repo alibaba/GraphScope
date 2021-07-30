@@ -59,6 +59,7 @@ class DAGManager(object):
     _learning_engine_split_op = [
         types_pb2.CREATE_LEARNING_INSTANCE,
         types_pb2.CLOSE_LEARNING_INSTANCE,
+        types_pb2.SAMPLE,
     ]
 
     def __init__(self, dag_def: op_def_pb2.DagDef):

@@ -56,12 +56,12 @@ def sample(cls, *args):
 
 
 def toTensorFlowDataset(cls, *args):
-    cls.bytecode.add_step("to_tensorflow", *args)
+    cls.bytecode.add_step("toTensorFlowDataset", *args)
     return cls
 
 
 def toPyTorchDataset(cls, *args):
-    cls.bytecode.add_step("to_pytorch", *args)
+    cls.bytecode.add_step("toPyTorchDataset", *args)
     return cls
 
 

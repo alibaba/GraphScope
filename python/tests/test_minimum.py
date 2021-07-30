@@ -80,11 +80,16 @@ QUERY_1 = (
 def demo(sess, graph):
     # Interactive engine
     interactive = sess.gremlin(graph)
-    papers = interactive.execute(
+    # case1: PageRank Orderby with String
+    ret = interactive.execute(
         QUERY_1,
         request_options={"engine": "gae"},
     ).one()
-    print(papers)
+    assert len(ret) == 10
+    for item in ret:
+        assert "id" in item
+        assert "pr" in item
+    # case2: PageRank Orderby with traversal source
     g = interactive.traversal_source()
     ret = (
         g.V()
@@ -110,7 +115,10 @@ def demo(sess, graph):
         .valueMap("id", "pr")
         .toList()
     )
-    print(ret)
+    assert len(ret) == 10
+    for item in ret:
+        assert "id" in item
+        assert "pr" in item
 
 
 def test_query_1(graphscope_session, p2p_property_graph):
