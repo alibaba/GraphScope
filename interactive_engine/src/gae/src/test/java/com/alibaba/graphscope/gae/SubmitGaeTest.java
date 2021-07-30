@@ -51,11 +51,18 @@ public class SubmitGaeTest {
 //                "    .with('distProperty', '$dist')\n" +
 //                "    .with('srcID', 1234)\n" +
 //                "    .withProperty('$dist', 'dist')";
-        String query = "g.V()" +
-                "    .process('pageRank')\n" +
-                "    .with('prProperty', '$pr')\n" +
-                "    .withProperty('$pr', 'pr')\n" +
-                "    .sample('g.V().out().out()')\n" +
+        String query = "g.V().process(\n" +
+                "  V().property('$pr', expr('1.0/TOTAL_V')) \n" +
+                "     .repeat( \n" +
+                "        V().property('$tmp', expr('$pr/OUT_DEGREE')) \n" +
+                "        .scatter('$tmp').by(out())\n" +
+                "        .gather('$tmp', sum) \n" +
+                "        .property('$new', expr('0.15/TOTAL_V+0.85*$tmp')) \n" +
+                "        .where(expr('abs($new-$pr)>1e-10')) \n" +
+                "        .property('$pr', expr('$new'))\n" +
+                "    ).until(count().is(0))\n" +
+                ").withProperty('$pr', 'pr')" +
+                ".sample('g.V().out().out()')\n" +
                 "    .toTensorFlowDataset()";
         RequestMessage request = RequestMessage
                 .build(Tokens.OPS_EVAL)

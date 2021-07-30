@@ -33,6 +33,8 @@ public enum GIE implements Generator {
 
         private boolean isExtendBytecode(Bytecode.Instruction instruction) {
             if (instruction.getOperator().equals("with")
+                    || instruction.getOperator().equals("sample")
+                    || instruction.getOperator().equals("toTensorFlowDataset")
                     || instruction.getOperator().equals("withProperty")
                     || instruction.getOperator().equals("process")
                     || instruction.getOperator().equals("scatter")
