@@ -287,9 +287,31 @@ impl Traverser {
                     }
                 }
             }
-            Traverser::LabeledPath(_) => unimplemented!(),
-            Traverser::NoPath(_) => unimplemented!(),
-            Traverser::Object(_) => unimplemented!(),
+            Traverser::LabeledPath(p) => {
+                if requirement.contains(Requirement::PATH) {
+                    warn!("Current is LabeledPath traverser, transform to Path should not happen");
+                    Traverser::Path(p)
+                } else if requirement.contains(Requirement::LABELED_PATH) {
+                    Traverser::LabeledPath(p)
+                } else {
+                    match p.head() {
+                        Some(PathItem::OnGraph(e)) => Traverser::NoPath(e.clone()),
+                        Some(PathItem::Detached(o)) => Traverser::Object(o.clone()),
+                        Some(PathItem::Empty) => unimplemented!(),
+                        None => unimplemented!(),
+                    }
+                }
+            }
+            Traverser::NoPath(e) => {
+                warn!("Current is NoPath traverser, transform will do nothing");
+                Traverser::NoPath(e)
+            }
+            Traverser::Object(o) => {
+                warn!(
+                    "Current is object traverser, transform will do nothing. It may happen when object is ResultPath"
+                );
+                Traverser::Object(o)
+            }
         }
     }
 }
