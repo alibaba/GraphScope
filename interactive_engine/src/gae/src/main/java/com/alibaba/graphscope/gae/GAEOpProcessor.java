@@ -86,10 +86,10 @@ public class GAEOpProcessor extends AbstractGraphOpProcessor {
     }
 
     public static Map<String, Object> processQuery(Traversal query, Map<String, Object> config) {
-        if (QueryType.PAGE_RANK.isValid(query)) {
-            return QueryType.PAGE_RANK.generate(config);
-        } else if (QueryType.GRAPH_LEARN.isValid(query)) {
+        if (QueryType.GRAPH_LEARN.isValid(query)) {
             return QueryType.GRAPH_LEARN.generate(config);
+        } else if (QueryType.PAGE_RANK.isValid(query)) {
+            return QueryType.PAGE_RANK.generate(config);
         } else if (QueryType.SSSP.isValid(query)) {
             return QueryType.SSSP.generate(config);
         } else {
