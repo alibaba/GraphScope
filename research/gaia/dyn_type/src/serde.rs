@@ -37,9 +37,9 @@ impl Encode for Primitives {
                 writer.write_u8(3)?;
                 f.write_to(writer)?;
             }
-            Primitives::LLLong(lll) => {
+            Primitives::ULLong(ull) => {
                 writer.write_u8(4)?;
-                lll.write_to(writer)?;
+                ull.write_to(writer)?;
             }
         }
         Ok(())
@@ -68,7 +68,7 @@ impl Decode for Primitives {
             }
             4 => {
                 let lll = <u128>::read_from(reader)?;
-                Ok(Primitives::LLLong(lll))
+                Ok(Primitives::ULLong(lll))
             }
             _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
         }
