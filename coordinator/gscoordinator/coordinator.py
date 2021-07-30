@@ -962,7 +962,7 @@ class CoordinatorServiceServicer(
         handle["client_count"] = 1
 
         g = LearningGraph(None, handle, config, op_result.extra_info.decode("utf-8"))
-        rlt = QueryInterpreter().run(g, sample_params.replace("'", "\""))
+        rlt = QueryInterpreter().run(g, sample_params.replace("'", '"'))
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,

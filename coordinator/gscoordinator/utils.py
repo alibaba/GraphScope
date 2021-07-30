@@ -1512,14 +1512,7 @@ def create_op_from_gae_compiler_value(
             print(
                 "only one graph in vineyard with op key {0}, return it.".format(op_key)
             )
-        return op_key
-
-        for key in object_manager.keys():
-            obj = object_manager.get(key)
-            obj_type = obj.type
-            if obj_type == "graph":
-                if int(obj.vineyard_id) == int(object_id):
-                    return obj.op_key
+            return op_key
         raise RuntimeError("Get graph op key from object id failed.")
 
     # json_dict for dependencies of ops
