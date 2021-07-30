@@ -1678,6 +1678,8 @@ def create_op_from_gae_compiler_value(
 
 
 def create_dag_from_gae_compiler(object_manager, json_dict: dict):
+    with open("/root/alibaba/runtime/test_json_2", "r") as f:
+        json_dict = json.loads(f.read())
     print("[DEBUG] json dict from gae compiler: ", json_dict)
     step_op_key_map = {}
     dag_def = op_def_pb2.DagDef()
