@@ -288,7 +288,7 @@ impl Traverser {
             }
             Traverser::LabeledPath(p) => {
                 if requirement.contains(Requirement::PATH) {
-                    warn!("Current is LabeledPath traverser, transform to Path should not happen");
+                    debug!("Current is LabeledPath traverser, transform to Path should not happen");
                     Traverser::Path(p)
                 } else if requirement.contains(Requirement::LABELED_PATH) {
                     Traverser::LabeledPath(p)
@@ -302,11 +302,11 @@ impl Traverser {
                 }
             }
             Traverser::NoPath(e) => {
-                warn!("Current is NoPath traverser, transform will do nothing");
+                debug!("Current is NoPath traverser, transform will do nothing");
                 Traverser::NoPath(e)
             }
             Traverser::Object(o) => {
-                warn!(
+                debug!(
                     "Current is object traverser, transform will do nothing. It may happen when object is ResultPath"
                 );
                 Traverser::Object(o)
