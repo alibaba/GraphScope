@@ -28,6 +28,7 @@ pub enum RawType {
     Byte,
     Integer,
     Long,
+    ULLong,
     Float,
     String,
     Blob(usize),
@@ -39,6 +40,7 @@ pub enum Primitives {
     Byte(i8),
     Integer(i32),
     Long(i64),
+    ULLong(u128),
     Float(f64),
 }
 
@@ -75,6 +77,7 @@ impl Primitives {
             Primitives::Byte(_) => RawType::Byte,
             Primitives::Integer(_) => RawType::Integer,
             Primitives::Long(_) => RawType::Long,
+            Primitives::ULLong(_) => RawType::ULLong,
             Primitives::Float(_) => RawType::Float,
         }
     }
@@ -94,6 +97,9 @@ impl Primitives {
             Primitives::Long(v) => {
                 i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::Long))
             }
+            Primitives::ULLong(v) => {
+                i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::ULLong))
+            }
             Primitives::Float(_) => Err(CastError::new::<i8>(RawType::Float)),
         }
     }
@@ -108,6 +114,9 @@ impl Primitives {
             Primitives::Long(v) => {
                 i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::Long))
             }
+            Primitives::ULLong(v) => {
+                i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::ULLong))
+            }
             Primitives::Float(_) => Err(CastError::new::<i16>(RawType::Float)),
         }
     }
@@ -120,6 +129,9 @@ impl Primitives {
             Primitives::Long(v) => {
                 i32::try_from(*v).map_err(|_| CastError::new::<i32>(RawType::Long))
             }
+            Primitives::ULLong(v) => {
+                i32::try_from(*v).map_err(|_| CastError::new::<i32>(RawType::ULLong))
+            }
             Primitives::Float(_) => Err(CastError::new::<i32>(RawType::Float)),
         }
     }
@@ -130,6 +142,9 @@ impl Primitives {
             Primitives::Byte(v) => Ok(*v as i64),
             Primitives::Integer(v) => Ok(*v as i64),
             Primitives::Long(v) => Ok(*v),
+            Primitives::ULLong(v) => {
+                i64::try_from(*v).map_err(|_| CastError::new::<i64>(RawType::ULLong))
+            }
             Primitives::Float(_) => Err(CastError::new::<i64>(RawType::Float)),
         }
     }
@@ -140,6 +155,9 @@ impl Primitives {
             Primitives::Byte(v) => Ok(*v as i128),
             Primitives::Integer(v) => Ok(*v as i128),
             Primitives::Long(v) => Ok(*v as i128),
+            Primitives::ULLong(v) => {
+                i128::try_from(*v).map_err(|_| CastError::new::<i128>(RawType::ULLong))
+            }
             Primitives::Float(_) => Err(CastError::new::<i128>(RawType::Float)),
         }
     }
@@ -155,6 +173,9 @@ impl Primitives {
             }
             Primitives::Long(v) => {
                 u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Long))
+            }
+            Primitives::ULLong(v) => {
+                u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::ULLong))
             }
             Primitives::Float(_) => Err(CastError::new::<u8>(RawType::Float)),
         }
@@ -172,6 +193,9 @@ impl Primitives {
             Primitives::Long(v) => {
                 u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::Long))
             }
+            Primitives::ULLong(v) => {
+                u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::ULLong))
+            }
             Primitives::Float(_) => Err(CastError::new::<u16>(RawType::Float)),
         }
     }
@@ -188,6 +212,9 @@ impl Primitives {
             Primitives::Long(v) => {
                 u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::Long))
             }
+            Primitives::ULLong(v) => {
+                u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::ULLong))
+            }
             Primitives::Float(_) => Err(CastError::new::<u32>(RawType::Float)),
         }
     }
@@ -203,6 +230,9 @@ impl Primitives {
             }
             Primitives::Long(v) => {
                 u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::Long))
+            }
+            Primitives::ULLong(v) => {
+                u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::ULLong))
             }
             Primitives::Float(_) => Err(CastError::new::<u64>(RawType::Float)),
         }
@@ -225,6 +255,7 @@ impl Primitives {
             Primitives::Long(v) => {
                 u128::try_from(*v).map_err(|_| CastError::new::<u128>(RawType::Long))
             }
+            Primitives::ULLong(v) => Ok(*v),
             Primitives::Float(_) => Err(CastError::new::<u128>(RawType::Float)),
         }
     }
@@ -241,6 +272,10 @@ impl Primitives {
             Primitives::Long(v) => {
                 let t = i16::try_from(*v).map_err(|_| CastError::new::<f64>(RawType::Long))?;
                 f64::try_from(t).map_err(|_| CastError::new::<f64>(RawType::Long))
+            }
+            Primitives::ULLong(v) => {
+                let t = i16::try_from(*v).map_err(|_| CastError::new::<f64>(RawType::ULLong))?;
+                f64::try_from(t).map_err(|_| CastError::new::<f64>(RawType::ULLong))
             }
             Primitives::Float(v) => Ok(*v),
         }
@@ -359,6 +394,10 @@ impl PartialEq for Primitives {
                 Primitives::Float(o) => (*v as f64).eq(o),
                 _ => other.as_i64().map(|o| o == *v).unwrap_or(false),
             },
+            Primitives::ULLong(v) => match other {
+                Primitives::Float(o) => (*v as f64).eq(o),
+                _ => other.as_u128().map(|o| o == *v).unwrap_or(false),
+            },
             Primitives::Float(v) => other.as_f64().map(|o| o == *v).unwrap_or(false),
         }
     }
@@ -380,6 +419,10 @@ impl PartialOrd for Primitives {
             Primitives::Long(v) => match other {
                 Primitives::Float(o) => (*v as f64).partial_cmp(o),
                 _ => other.as_i64().map(|o| v.cmp(&o)).ok(),
+            },
+            Primitives::ULLong(v) => match other {
+                Primitives::Float(o) => (*v as f64).partial_cmp(o),
+                _ => other.as_u128().map(|o| v.cmp(&o)).ok(),
             },
             Primitives::Float(v) => other.as_f64().map(|o| v.partial_cmp(&o)).unwrap_or(None),
         }
@@ -866,6 +909,9 @@ impl Hash for Object {
                 Primitives::Float(v) => {
                     integer_decode(*v).hash(state);
                 }
+                Primitives::ULLong(v) => {
+                    v.hash(state);
+                }
             },
             Object::String(s) => {
                 s.hash(state);
@@ -954,8 +1000,7 @@ impl From<u64> for Object {
         if i <= (i64::MAX as u64) {
             Object::Primitive(Primitives::Long(i as i64))
         } else {
-            let b = i.to_le_bytes().to_vec().into_boxed_slice();
-            Object::Blob(b)
+            Object::Primitive(Primitives::ULLong(i as u128))
         }
     }
 }
@@ -967,13 +1012,8 @@ impl From<usize> for Object {
 }
 
 impl From<u128> for Object {
-    fn from(i: u128) -> Self {
-        if i <= (i64::MAX as u128) {
-            Object::Primitive(Primitives::Long(i as i64))
-        } else {
-            let b = i.to_le_bytes().to_vec().into_boxed_slice();
-            Object::Blob(b)
-        }
+    fn from(u: u128) -> Self {
+        Object::Primitive(Primitives::ULLong(u))
     }
 }
 
