@@ -281,9 +281,8 @@ impl Traverser {
                     match p.head() {
                         Some(PathItem::OnGraph(e)) => Traverser::NoPath(e.clone()),
                         Some(PathItem::Detached(o)) => Traverser::Object(o.clone()),
-                        // TODO(bingqing) unimplemented!()
-                        Some(PathItem::Empty) => unimplemented!(),
-                        None => unimplemented!(),
+                        Some(PathItem::Empty) => unreachable!(),
+                        None => unreachable!(),
                     }
                 }
             }
@@ -297,8 +296,8 @@ impl Traverser {
                     match p.head() {
                         Some(PathItem::OnGraph(e)) => Traverser::NoPath(e.clone()),
                         Some(PathItem::Detached(o)) => Traverser::Object(o.clone()),
-                        Some(PathItem::Empty) => unimplemented!(),
-                        None => unimplemented!(),
+                        Some(PathItem::Empty) => unreachable!(),
+                        None => unreachable!(),
                     }
                 }
             }
