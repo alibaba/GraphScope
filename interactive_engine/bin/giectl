@@ -60,13 +60,6 @@ cat <<END
 END
 }
 
-random_generator() {
-  min=$1
-  range=$2
-  _port=$(( ((RANDOM<<15)|RANDOM) % $range + $min ))
-  echo ${_port}
-}
-
 ##########################
 # Start the coordinator of maxgraph instance.
 # Globals:
