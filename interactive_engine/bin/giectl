@@ -520,7 +520,7 @@ start_service() {
       -e "s@ZOOKEEPER_PORT@$zookeeper_port@g" \
       $WORKSPACE/config/application.properties > $service_dir/application.properties
   if [[ "$cluster_type" == "local" ]]; then
-    java -cp ${LIBPATH} -Dspring.config.location=$service_dir/application.properties \
+    java -cp ${libpath} -Dspring.config.location=$service_dir/application.properties \
          com.alibaba.maxgraph.admin.InstanceManagerApplication &
     echo $! > $service_dir/graphmanager.pid
   else
