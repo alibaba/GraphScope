@@ -237,6 +237,8 @@ start_executor() {
   log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
   pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
+  # log4rs needs LOG_DIRS env
+  export LOG_DIRS=${log_dir}
 
   # set executor config file
   sed -e "s@GRAPH_NAME@${object_id}@g" \
@@ -403,8 +405,7 @@ create_instance_on_k8s() {
   _server_id=1
   for pod in `echo ${pod_hosts}`
   do
-    launch_executor_cmd="${WORKSPACE}/bin/giectl start_executor $object_id
-        ${_server_id} ${zookeeper_ip} ${zookeeper_port} ${engine_count} ${engine_params}"
+    launch_executor_cmd="${WORKSPACE}/bin/giectl start_executor $object_id ${_server_id} ${zookeeper_ip} ${zookeeper_port} ${engine_count} ${engine_params}"
     kubectl --namespace=$ENGINE_NAMESPACE exec $pod -c $engine_container -- /bin/bash -c "$launch_executor_cmd"
     let _server_id+=1
   done
@@ -513,7 +514,10 @@ start_service() {
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
   fi
 
-  readonly LIBPATH=".:${WORKSPACE}/lib/*:"
+  libpath="."
+  for file in `ls ${WORKSPACE}/lib`; do
+    libpath=$libpath":"$WORKSPACE/lib/$file
+  done
 
   service_dir=$GRAPHSCOPE_RUNTIME/$service_id
   mkdir -p $service_dir
@@ -522,12 +526,12 @@ start_service() {
       -e "s@CLOSE_SCRIPT@$WORKSPACE/bin/giectl@g" \
       -e "s@ZOOKEEPER_PORT@$zookeeper_port@g" \
       $WORKSPACE/config/application.properties > $service_dir/application.properties
-  if [ "$cluster_type" == "local" ]; then
+  if [[ "$cluster_type" == "local" ]]; then
     java -cp ${LIBPATH} -Dspring.config.location=$service_dir/application.properties \
          com.alibaba.maxgraph.admin.InstanceManagerApplication &
     echo $! > $service_dir/graphmanager.pid
   else
-    java -cp ${LIBPATH} -Dspring.config.location=$service_dir/application.properties \
+    java -cp ${libpath} -Dspring.config.location=$service_dir/application.properties \
          com.alibaba.maxgraph.admin.InstanceManagerApplication
   fi
 }
@@ -548,7 +552,7 @@ stop_service() {
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
   fi
 
-  if [ "$cluster_type" == "local" ]; then
+  if [[ "$cluster_type" == "local" ]]; then
     service_dir=$GRAPHSCOPE_RUNTIME/$service_id
     manager_pid=`cat $service_dir/graphmanager.pid`
     kill $manager_pid || true > /dev/null 2>&1

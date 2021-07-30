@@ -103,7 +103,7 @@ public class InstanceManagerController {
             List<String> createCommandList = new ArrayList<>();
 
             createCommandList.add(instanceProperties.getCreateScript());
-            createCommandList.add("create_instance_in_local");
+            createCommandList.add("create_instance_on_local");
             createCommandList.add(graphName);
             createCommandList.add(schemaPath);
             createCommandList.add("1"); // server id
