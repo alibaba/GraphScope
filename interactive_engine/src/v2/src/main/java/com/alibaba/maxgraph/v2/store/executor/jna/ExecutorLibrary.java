@@ -20,7 +20,7 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 
 public interface ExecutorLibrary extends Library {
-    ExecutorLibrary INSTANCE = Native.load("maxgraph_jna", ExecutorLibrary.class);
+    ExecutorLibrary INSTANCE = Native.load("maxgraph_ffi", ExecutorLibrary.class);
 
     /**
      * Open executor server and get handler with given config

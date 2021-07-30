@@ -18,6 +18,7 @@ package com.alibaba.maxgraph.tests.ffi;
 
 import com.alibaba.maxgraph.tests.gremlin.MaxTestGraph;
 import com.alibaba.maxgraph.tests.gremlin.MaxTestGraphProvider;
+import com.alibaba.maxgraph.v2.MaxNode;
 import com.alibaba.maxgraph.v2.common.NodeBase;
 import com.alibaba.maxgraph.v2.common.config.CommonConfig;
 import com.alibaba.maxgraph.v2.store.GraphPartition;
@@ -42,7 +43,7 @@ import static org.junit.Assert.assertEquals;
 public class FfiTest {
 
     @Test
-    void testFfi() throws Exception {
+    public void testFfi() throws Exception {
         GraphProvider provider = new MaxTestGraphProvider();
         LoadGraphWith.GraphData modern = LoadGraphWith.GraphData.MODERN;
         Map<String, Object> conf = new HashMap<>();
@@ -62,7 +63,8 @@ public class FfiTest {
             }
         };
         provider.loadGraphData(graph, loadGraphWith, FfiTest.class, "testFfi");
-        List<NodeBase> storeNodes = ((MaxTestGraph) graph).getStoreNodes();
+        MaxNode maxNode = ((MaxTestGraph) graph).getMaxNode();
+        List<NodeBase> storeNodes = maxNode.getStores();
         assertEquals(storeNodes.size(), 1);
         Store store = (Store) storeNodes.get(0);
         StoreService storeService = store.getStoreService();
@@ -70,6 +72,8 @@ public class FfiTest {
         Pointer wrapperPartitionGraph = GraphLibrary.INSTANCE.createWrapperPartitionGraph(jnaGraphStore.getPointer());
         GnnLibrary.INSTANCE.setPartitionGraph(wrapperPartitionGraph);
         GnnLibrary.INSTANCE.runLocalTests();
+        GraphLibrary.INSTANCE.deleteWrapperPartitionGraph(jnaGraphStore.getPointer());
+        maxNode.close();
         provider.clear(graph, graphConf);
     }
 }
