@@ -18,6 +18,7 @@ schema_path=$2
 server_id=$3
 VINEYARD_IPC_SOCKET=$4
 zookeeper_port=$5
+enable_gaia=$6
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
 
@@ -32,7 +33,7 @@ sleep 1
 bash ${SCRIPT_DIR}/start_local_executor.sh $object_id $server_id $VINEYARD_IPC_SOCKET $zookeeper_port
 sleep 1
 #start gaia
-if [ $ENABLE_GAIA ];then
+if [ $enable_gaia ];then
   graph_name=${object_id}"_gaia"
   bash ${SCRIPT_DIR}/start_local_gaia_coordinator.sh $object_id $zookeeper_port $graph_name
   sleep 1

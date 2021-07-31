@@ -42,6 +42,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.ComparatorHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
 import org.apache.tinkerpop.gremlin.structure.Element;
+import org.apache.tinkerpop.gremlin.server.GremlinServer;
+import org.apache.tinkerpop.gremlin.server.util.ServerGremlinExecutor;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
@@ -132,6 +134,15 @@ public class PlanUtils {
             return (Bindings) FieldUtils.readField(executor, field, true);
         } catch (Exception e) {
             throw new RuntimeException("field " + field + "not exist in step " + executor.getClass(), e);
+        }
+    }
+
+    public static ServerGremlinExecutor getServerGremlinExecutor(GremlinServer server) {
+        String field = "serverGremlinExecutor";
+        try {
+            return (ServerGremlinExecutor) FieldUtils.readField(server, field, true);
+        } catch (Exception e) {
+            throw new RuntimeException("field " + field + "not exist in step " + server.getClass(), e);
         }
     }
 

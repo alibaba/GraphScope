@@ -40,14 +40,14 @@ wait_period_seconds=0
 
 while true
 do
-	gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.log | awk -F: '{print $6}'`
+  gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.log | awk -F: '{print $6}'`
   gremlin_server_port2=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.out | awk -F: '{print $7}'`
   if [ -n "$gremlin_server_port" ]; then
-    echo "FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
+    echo "MAXGRAPH_FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
     break
   fi
   if [ -n "$gremlin_server_port2" ]; then
-    echo "FRONTEND_PORT:127.0.0.1:$gremlin_server_port2"
+    echo "MAXGRAPH_FRONTEND_PORT:127.0.0.1:$gremlin_server_port2"
     break
   fi
   wait_period_seconds=$(($wait_period_seconds+5))

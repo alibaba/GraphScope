@@ -37,4 +37,4 @@ server_id=1
 export flag="maxgraph"$object_id"executor"
 RUST_BACKTRACE=full $WORKSPACE/bin/gaia_executor --config $inner_config $flag $server_id $graph_name 1>> $LOG_DIR/gaia-executor.out 2>> $LOG_DIR/gaia-executor.err &
 
-echo $! > $PID_DIR/executor.pid
+echo $! >> $PID_DIR/executor.pid

@@ -32,6 +32,7 @@ import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.OpProcessor;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.op.OpLoader;
+import org.apache.tinkerpop.gremlin.server.util.ServerGremlinExecutor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +80,9 @@ public class GaiaGraphServer implements MaxGraphServer {
 
         // bind g to traversal source
         Graph traversalGraph = TraversalSourceGraph.open(new BaseConfiguration());
+        ServerGremlinExecutor serverGremlinExecutor = PlanUtils.getServerGremlinExecutor(this.server);
+        serverGremlinExecutor.getGraphManager().putGraph("graph", traversalGraph);
+        serverGremlinExecutor.getGraphManager().putTraversalSource("g", traversalGraph.traversal());
         Bindings globalBindings = PlanUtils.getGlobalBindings(server.getServerGremlinExecutor().getGremlinExecutor());
         globalBindings.put("graph", traversalGraph);
         globalBindings.put("g", traversalGraph.traversal());

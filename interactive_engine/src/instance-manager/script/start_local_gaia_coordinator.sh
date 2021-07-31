@@ -34,4 +34,4 @@ cd $WORKSPACE/coordinator/target/classes/
 
 java ${JAVA_OPT} com.alibaba.maxgraph.coordinator.CoordinatorMain $inner_config $object_id $graph_name 1>$LOG_DIR/gaia-coordinator.out 2>$LOG_DIR/gaia-coordinator.err &
 
-echo $! > $PID_DIR/coordinator.pid
+echo $! >> $PID_DIR/coordinator.pid
