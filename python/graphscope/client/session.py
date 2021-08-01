@@ -186,7 +186,7 @@ class _FetchHandler(object):
         result_set_dag_node = self._fetches[seq]
         return ResultSet(result_set_dag_node)
 
-    def wrapper_results(self, response: message_pb2.RunStepResponse):
+    def wrapper_results(self, response: message_pb2.RunStepResponse):  # noqa: C901
         rets = list()
         for seq, op in enumerate(self._ops):
             for op_result in response.results:
@@ -205,6 +205,8 @@ class _FetchHandler(object):
                         rets.append(self._rebuild_graph(seq, op, op_result))
                     if op.output_types == types_pb2.LEARNING_GRAPH:
                         rets.append(self._rebuild_learning_graph(seq, op, op_result))
+                    if op.output_types == types_pb2.SAMPLE_RESULT:
+                        rets.append(pickle.loads(op_result.result))
                     if op.output_types == types_pb2.APP:
                         rets.append(None)
                     if op.output_types == types_pb2.BOUND_APP:

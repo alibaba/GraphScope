@@ -80,11 +80,12 @@ class Graph(GLGraph):
     def __init__(self, graph_node, handle, config=None, object_id=None):
         """Initialize a graph for the learning engine using a handle."""
         self.graph_node = graph_node
-        self.graphscope_session = self.graph_node.session
-        # copy and set op evaluated
-        self.graph_node.op = deepcopy(self.graph_node.op)
-        self.graph_node.evaluated = True
-        self.graphscope_session.dag.add_op(self.graph_node.op)
+        if self.graph_node is not None:
+            self.graphscope_session = self.graph_node.session
+            # copy and set op evaluated
+            self.graph_node.op = deepcopy(self.graph_node.op)
+            self.graph_node.evaluated = True
+            self.graphscope_session.dag.add_op(self.graph_node.op)
 
         handle = self.decode_arg(handle)
         config = self.decode_arg(config)

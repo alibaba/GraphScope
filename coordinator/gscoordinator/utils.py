@@ -392,6 +392,8 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         _pre_process_for_close_learning_instance_op(
             op, op_result_pool, key_to_op, **kwargs
         )
+    if op.op == types_pb2.SAMPLE:
+        _pre_process_for_sample_op(op, op_result_pool, key_to_op, **kwargs)
 
 
 def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs):
@@ -439,6 +441,11 @@ def _pre_process_for_create_interactive_query_op(
 def _pre_process_for_close_learning_instance_op(
     op, op_result_pool, key_to_op, **kwargs
 ):
+    assert len(op.parents) == 1
+    assert op.parents[0] in op_result_pool
+
+
+def _pre_process_for_sample_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     assert op.parents[0] in op_result_pool
 
@@ -1491,29 +1498,24 @@ def create_op_from_gae_compiler_value(
 
     def _get_graph_op_key_from_object_id(object_id):
         # hack graph, cause missing object id from gae compiler
-        # graph_count = 0
-        # op_key = None
-        # for key in object_manager.keys():
-        # obj = object_manager.get(key)
-        # obj_type = obj.type
-        # if obj_type == "graph":
-        # graph_count += 1
-        # op_key = obj.op_key
-        # if obj.vineyard_id == object_id:
-        # return obj.op_key
-        # if graph_count == 1:
-        # print(
-        # "only one graph in vineyard with op key {0}, return it.".format(op_key)
-        # )
-        # return op_key
-
+        graph_count = 0
+        op_key = None
         for key in object_manager.keys():
             obj = object_manager.get(key)
             obj_type = obj.type
             if obj_type == "graph":
+                graph_count += 1
+                op_key = obj.op_key
                 if int(obj.vineyard_id) == int(object_id):
                     return obj.op_key
-        raise RuntimeError("Get graph op key from object id failed.")
+        if graph_count == 1:
+            print(
+                "only one graph in vineyard with op key {0}, return it.".format(op_key)
+            )
+            return op_key
+        raise RuntimeError(
+            "Get graph op key from object id failed: {0}".format(object_id)
+        )
 
     # json_dict for dependencies of ops
     op_def_list = []
@@ -1586,6 +1588,52 @@ def create_op_from_gae_compiler_value(
             config=config,
         )
         op_def_list.append(add_column_op)
+    elif value["operation"] == "sample":
+        if value["deps"] and json_dict[value["deps"]]["output_type"] == "graph":
+            # launch a graphlearn server
+            # hack for nodes/edges/gen_labels
+            nodes = [("person", ["id", "pr"])]
+            edges = [("person", "knows", "person")]
+            gen_labels = [
+                ("train", "person", 100, (0, 75)),
+                ("val", "person", 100, (0, 75)),
+                ("test", "person", 100, (0, 75)),
+            ]
+            config = {
+                types_pb2.NODES: utils.bytes_to_attr(pickle.dumps(nodes)),
+                types_pb2.EDGES: utils.bytes_to_attr(pickle.dumps(edges)),
+                types_pb2.GLE_GEN_LABELS: utils.bytes_to_attr(pickle.dumps(gen_labels)),
+            }
+            create_learning_op = create_op(
+                types_pb2.CREATE_LEARNING_INSTANCE,
+                types_pb2.LEARNING_GRAPH,
+                inputs=[step_op_key_map[value["deps"]]],
+                config=config,
+            )
+            op_def_list.append(create_learning_op)
+        else:
+            raise NotImplementedError("Learning instance must be on a new graph")
+        # sample
+        config = {
+            types_pb2.GLE_SAMPLE_PARAMS: utils.s_to_attr(value["params"]["format"])
+        }
+        sample_op = create_op(
+            types_pb2.SAMPLE,
+            types_pb2.SAMPLE_RESULT,
+            inputs=[create_learning_op.key],
+            config=config,
+        )
+        op_def_list.append(sample_op)
+    elif value["operation"] == "to_tensorflow":
+        config = {}
+        sample_to_tensorflow_op = create_op(
+            types_pb2.SAMPLE_TO_DATAFRAME,
+            types_pb2.DATAFRAME,
+            inputs=[step_op_key_map[value["deps"]]],
+            config=config,
+        )
+        print(sample_to_tensorflow_op.key)
+        # to_tensorflow is reserve op
     elif value["operation"] == "gremlin_query":
         if value["deps"] and json_dict[value["deps"]]["output_type"] == "graph":
             # launch a new gremlin server
@@ -1624,7 +1672,8 @@ def create_op_from_gae_compiler_value(
             config=config,
         )
         op_def_list.append(fetch_gremlin_query_op)
-    step_op_key_map[step] = op_def_list[-1].key
+    if op_def_list:
+        step_op_key_map[step] = op_def_list[-1].key
     return op_def_list
 
 

@@ -112,7 +112,7 @@ class QueryInterpreter:
                 r = r.outV(q["label"])
             elif q["op"] == "inV":
                 r = r.inV(q["label"])
-            elif q["values"] == "values":
+            elif q["op"] == "values":
                 r = r.values(self._retrieve_values)
         dataset, round = [], 0
         while round < 100:
