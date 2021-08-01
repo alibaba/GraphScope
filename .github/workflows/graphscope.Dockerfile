@@ -21,6 +21,6 @@ RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e
 ENV RUST_BACKTRACE=1
 
 # copy start script from builder
-COPY ./interactive_engine/config/* /home/maxgraph/config
+COPY ./interactive_engine/config/* /home/maxgraph/config/
 ENV GRAPHSCOPE_HOME=/home/maxgraph
 ENV GRAPHSCOPE_RUNTIME=/tmp/graphscope
