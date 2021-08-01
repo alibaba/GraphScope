@@ -13,8 +13,7 @@ RUN cd /root/maxgraph/interactive_engine && \
 # # # # # # # # # # # # # # # # # # # # # #
 # RUNTIME: manager
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest AS manager
-RUN mkdir -p /home/maxgraph/bin
-RUN mkdir -p /home/maxgraph/config
+RUN mkdir -p /home/maxgraph/{bin,config}
 # copy binary and script from builder
 COPY --from=builder /root/maxgraph/interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz /home/maxgraph/
 COPY --from=builder /root/maxgraph/interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz

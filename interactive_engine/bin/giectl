@@ -507,10 +507,12 @@ start_service() {
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
   fi
 
+  set +x
   libpath="."
   for file in `ls ${WORKSPACE}/lib`; do
-    libpath=$libpath":"$WORKSPACE/lib/$file
+    libpath="${libpath}:$WORKSPACE/lib/${file}"
   done
+  set -x
 
   service_dir=$GRAPHSCOPE_RUNTIME/$service_id
   mkdir -p $service_dir

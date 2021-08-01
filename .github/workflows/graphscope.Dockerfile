@@ -5,9 +5,10 @@ ARG profile=release
 COPY ./opt/graphscope/ /usr/local/
 RUN cd /usr/local/dist/ && pip3 install ./*.whl
 
-RUN mkdir -p /home/maxgraph
+RUN mkdir -p /home/maxgraph/{bin,config}
 ENV VINEYARD_IPC_SOCKET /home/maxgraph/data/vineyard/vineyard.sock
-COPY ./interactive_engine/src/executor/target/release/executor /home/maxgraph/executor
+COPY ./interactive_engine/src/executor/target/release/executor /home/maxgraph/bin/executor
+COPY ./interactive_engine/bin/giectl /home/maxgraph/bin/giectl
 
 COPY ./interactive_engine/src/executor/store/log4rs.yml /home/maxgraph/log4rs.yml
 RUN mkdir -p /home/maxgraph/native
@@ -20,10 +21,6 @@ RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e
 ENV RUST_BACKTRACE=1
 
 # copy start script from builder
-RUN mkdir -p /home/maxgraph/config
-COPY ./interactive_engine/deploy/docker/dockerfile/executor-entrypoint.sh /home/maxgraph/executor-entrypoint.sh
-COPY ./interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties /home/maxgraph/config/executor.application.properties
-
-RUN mkdir -p /root/maxgraph
-COPY ./interactive_engine/deploy/docker/dockerfile/set_config.sh /root/maxgraph/set_config.sh
-COPY ./interactive_engine/deploy/docker/dockerfile/kill_process.sh /root/maxgraph/kill_process.sh
+COPY ./interactive_engine/config/* /home/maxgraph/config
+ENV GRAPHSCOPE_HOME=/home/maxgraph
+ENV GRAPHSCOPE_RUNTIME=/tmp/graphscope
