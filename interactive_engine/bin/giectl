@@ -245,23 +245,23 @@ start_executor() {
   if [ ! -z "${interactive_engine_params}" ]; then
     params=`echo ${interactive_engine_params} |
       awk -F";" '{for(i=1; i<=NF; ++i){print $i}}'` # trans to key-value pairs
-    for p in `echo ${params}`
+    for param in $(echo ${params})
     do
-      key=`echo $p | awk -F":" '{print $1}'`
-      value=`echo $p | awk -F":" '{print $2}'`
-      key=$(printf '%s\n' "$key" | sed -e 's/[\/&]/\\&/g')
-      value=$(printf '%s\n' "$value" | sed -e 's/[\/&]/\\&/g')
-      sed -i "s/^\($key\s*=\s*\).*\$/\1$value/" ${config_dir}/executor.vineyard.properties
+      key=$(echo ${param} | awk -F":" '{print $1}')
+      value=$(echo ${param} | awk -F":" '{print $2}')
+      key=$(printf '%s\n' "${key}" | sed -e 's/[\/&]/\\&/g')
+      value=$(printf '%s\n' "${value}" | sed -e 's/[\/&]/\\&/g')
+      sed -i "s/^\(${key}\s*=\s*\).*\$/\1${value}/" ${config_dir}/executor.vineyard.properties
     done
   fi
 
 
   # launch executor
   flag="maxgraph${object_id}executor"
-  RUST_BACKTRACE=full $WORKSPACE/bin/executor --config ${config_dir}/executor.vineyard.properties \
-    ${flag} ${server_id} 1>> $log_dir/maxgraph-executor.out 2>> $log_dir/maxgraph-executor.err &
+  RUST_BACKTRACE=full ${WORKSPACE}/bin/executor --config ${config_dir}/executor.vineyard.properties \
+    ${flag} ${server_id} 1>> ${log_dir}/maxgraph-executor.out 2>> ${log_dir}/maxgraph-executor.err &
 
-  echo $! > $pid_dir/executor.pid
+  echo $! > ${pid_dir}/executor.pid
 }
 
 ##########################
@@ -282,7 +282,7 @@ create_instance_on_local() {
   export VINEYARD_IPC_SOCKET=$4
   zookeeper_port=$5
 
-  if [ ! -n "$GRAPHSCOPE_RUNTIME" ]; then
+  if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
   fi
 
@@ -308,7 +308,7 @@ create_instance_on_local() {
   while true
   do
     gremlin_server_port=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $6}')
-    if [ -n "$gremlin_server_port" ]; then
+    if [ -n "${gremlin_server_port}" ]; then
       log "FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
       break
     fi
@@ -355,15 +355,15 @@ create_instance_on_k8s() {
   schema_dir=${WORKSPACE}/schema_${object_id}
   mkdir -p ${schema_dir}
   schema_file=${schema_path##*/}  # get file name from path
-  cp $schema_path ${schema_dir}/$schema_file
+  cp ${schema_path} ${schema_dir}/${schema_file}
   schema_name="schema-${object_id}"
-  kubectl create configmap $schema_name --from-file ${schema_dir}
+  kubectl create configmap ${schema_name} --from-file ${schema_dir}
 
   # create coordinator and frontend pods
   log "Launch coordinator and frontend in one pod."
   pod_name="pod-${object_id}"
-  schema_path_in_container=${WORKSPACE}/schema/$schema_file
-  if [ "$preemptive" = "True" ]; then
+  schema_path_in_container=${WORKSPACE}/schema/${schema_file}
+  if [ "${preemptive}" = "True" ]; then
     sed -e "s@unique_pod_name@${pod_name}@g" \
         -e "s@unique_schema_name@${schema_name}@g" \
         -e "s@gremlin_image@${GREMLIN_IMAGE}@g" \
@@ -396,17 +396,17 @@ create_instance_on_k8s() {
 
   log "Launch interactive engine(executor) in per analytical pod."
   _server_id=1
-  for pod in `echo ${pod_hosts}`
+  for pod in $(echo ${pod_hosts})
   do
     launch_executor_cmd="${WORKSPACE}/bin/giectl start_executor $object_id ${_server_id} ${zookeeper_ip} ${zookeeper_port} ${engine_count} ${engine_params}"
-    kubectl --namespace=$ENGINE_NAMESPACE exec $pod -c $engine_container -- /bin/bash -c "$launch_executor_cmd"
+    kubectl --namespace=${ENGINE_NAMESPACE} exec ${pod} -c ${engine_container} -- /bin/bash -c "${launch_executor_cmd}"
     let _server_id+=1
   done
 
   log "Expose gremlin server."
-  gremlin_pod=`kubectl get pods -l "graph=pod-${object_id}" | grep -v NAME | awk '{print $1}'`
+  gremlin_pod=$(kubectl get pods -l "graph=pod-${object_id}" | grep -v NAME | awk '{print $1}')
   frontend_port="8182"  # frontend port always be 8182 on k8s
-  if [ "$GREMLIN_EXPOSE" = "LoadBalancer" ]; then
+  if [ "${GREMLIN_EXPOSE}" = "LoadBalancer" ]; then
     # random from range [50001, 53000)
     external_port=$(( ((RANDOM<<15)|RANDOM) % 50001 + 53000 ))
     kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${external_port} \
@@ -415,7 +415,7 @@ create_instance_on_k8s() {
     wait_period_seconds=0
     while true
     do
-      external_ip=`kubectl describe service gremlin-${object_id} | grep "LoadBalancer Ingress" | awk -F'[ :]+' '{print $3}'`
+      external_ip=$(kubectl describe service gremlin-${object_id} | grep "LoadBalancer Ingress" | awk -F'[ :]+' '{print $3}')
       if [ -n "${external_ip}" ]; then
         break
         fi
@@ -430,11 +430,11 @@ create_instance_on_k8s() {
     kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${frontend_port} \
       --target-port=${frontend_port} --type=NodePort 1>/dev/null 2>&1
     [ $? -eq 0 ] || exit 1
-    external_port=`kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]"`
+    external_port=$(kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]")
     [ $? -eq 0 ] || exit 1
-    external_ip=`kubectl describe pods pod-${object_id} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}'`
+    external_ip=$(kubectl describe pods pod-${object_id} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
   fi
-  log "FRONTEND_PORT:$external_ip:$external_port"
+  log "FRONTEND_PORT:${external_ip}:${external_port}"
 }
 
 ##########################
@@ -448,13 +448,13 @@ close_instance_on_local() {
   object_id=$1
   pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
 
-  coordinator_id=`cat $pid_dir/coordinator.pid`
-  frontend_id=`cat $pid_dir/frontend.pid`
-  executor_id=`cat $pid_dir/executor.pid`
+  coordinator_id=$(cat ${pid_dir}/coordinator.pid)
+  frontend_id=$(cat ${pid_dir}/frontend.pid)
+  executor_id=$(cat ${pid_dir}/executor.pid)
 
-  kill $coordinator_id || true
-  kill $frontend_id || true
-  kill $executor_id || true
+  kill ${coordinator_id} || true
+  kill ${frontend_id} || true
+  kill ${executor_id} || true
 }
 
 ##########################
@@ -479,11 +479,11 @@ close_instance_on_k8s() {
   kubectl delete service gremlin-${object_id}
 
   log "Close executor process on engine container."
-  for pod in `echo ${pod_hosts}`
+  for pod in $(echo ${pod_hosts})
   do
     kill_executor_process_cmd="ps -ef | grep maxgraph${object_id}executor |
         grep -v grep | awk '{print \$2}' | xargs kill -9"
-    kubectl --namespace=$ENGINE_NAMESPACE exec $pod -c ${engine_container} -- sh -c "$kill_executor_process_cmd"
+    kubectl --namespace=${ENGINE_NAMESPACE} exec ${pod} -c ${engine_container} -- sh -c "${kill_executor_process_cmd}"
   done
 }
 
@@ -503,30 +503,30 @@ start_service() {
   service_id=$3
   zookeeper_port=$4
 
-  if [ ! -n "$GRAPHSCOPE_RUNTIME" ]; then
+  if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
   fi
 
   set +x
   libpath="."
   for file in `ls ${WORKSPACE}/lib`; do
-    libpath="${libpath}:$WORKSPACE/lib/${file}"
+    libpath="${libpath}:${WORKSPACE}/lib/${file}"
   done
   set -x
 
-  service_dir=$GRAPHSCOPE_RUNTIME/$service_id
-  mkdir -p $service_dir
-  sed -e "s@SERVER_PORT@$server_port@g" \
-      -e "s@CREATE_SCRIPT@$WORKSPACE/bin/giectl@g" \
-      -e "s@CLOSE_SCRIPT@$WORKSPACE/bin/giectl@g" \
-      -e "s@ZOOKEEPER_PORT@$zookeeper_port@g" \
-      $WORKSPACE/config/application.properties > $service_dir/application.properties
-  if [[ "$cluster_type" == "local" ]]; then
-    java -cp ${libpath} -Dspring.config.location=$service_dir/application.properties \
+  service_dir=${GRAPHSCOPE_RUNTIME}/${service_id}
+  mkdir -p ${service_dir}
+  sed -e "s@SERVER_PORT@${server_port}@g" \
+      -e "s@CREATE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
+      -e "s@CLOSE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
+      -e "s@ZOOKEEPER_PORT@${zookeeper_port}@g" \
+      ${WORKSPACE}/config/application.properties > ${service_dir}/application.properties
+  if [[ "${cluster_type}" == "local" ]]; then
+    java -cp ${libpath} -Dspring.config.location=${service_dir}/application.properties \
          com.alibaba.maxgraph.admin.InstanceManagerApplication &
-    echo $! > $service_dir/graphmanager.pid
+    echo $! > ${service_dir}/graphmanager.pid
   else
-    java -cp ${libpath} -Dspring.config.location=$service_dir/application.properties \
+    java -cp ${libpath} -Dspring.config.location=${service_dir}/application.properties \
          com.alibaba.maxgraph.admin.InstanceManagerApplication
   fi
 }
@@ -543,14 +543,14 @@ stop_service() {
   cluster_type=$1
   service_id=$2
 
-  if [ ! -n "$GRAPHSCOPE_RUNTIME" ]; then
+  if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
   fi
 
-  if [[ "$cluster_type" == "local" ]]; then
-    service_dir=$GRAPHSCOPE_RUNTIME/$service_id
-    manager_pid=`cat $service_dir/graphmanager.pid`
-    kill $manager_pid || true > /dev/null 2>&1
+  if [[ "${cluster_type}" == "local" ]]; then
+    service_dir=${GRAPHSCOPE_RUNTIME}/$service_id
+    manager_pid=$(cat ${service_dir}/graphmanager.pid)
+    kill ${manager_pid} || true > /dev/null 2>&1
   else
     jps | grep InstanceManagerApplication | awk '{print $1}' | xargs kill -9
   fi
