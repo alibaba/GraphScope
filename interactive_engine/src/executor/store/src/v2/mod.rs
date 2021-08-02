@@ -16,7 +16,6 @@
 use crate::v2::errors::Error;
 
 pub mod api;
-mod mock;
 pub mod errors;
 pub mod wrapper;
 mod multi_version_graph;

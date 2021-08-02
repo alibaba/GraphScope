@@ -16,7 +16,6 @@ on:
   pull_request:
     branches:
       - main
-      - store_v2
     paths-ignore:
       - 'gnn_engine/**'
       - '**.md'
