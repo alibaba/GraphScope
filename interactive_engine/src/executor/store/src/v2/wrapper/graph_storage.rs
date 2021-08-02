@@ -21,6 +21,7 @@ use std::sync::Arc;
 use crate::db::api::{GraphStorage, EdgeKind, PropIter, ValueRef, PropertiesRef, ValueType};
 use std::collections::{HashMap, HashSet};
 use std::iter::FromIterator;
+use std::vec::IntoIter;
 
 pub struct GraphStorageWrapper<G: GraphStorage> {
     storage: Arc<G>,
@@ -325,17 +326,17 @@ impl Vertex for WrapperVertex {
 
 impl PropertyReader for WrapperVertex {
     type P = WrapperProperty;
-    type PropertyIterator = Box<dyn Iterator<Item=Result<Self::P>>>;
+    type PropertyIterator = IntoIter<Result<Self::P>>;
 
     fn get_property(&self, property_id: PropertyId) -> Option<Self::P> {
         self.properties.get(&property_id).cloned()
     }
 
     fn get_property_iterator(&self) -> Self::PropertyIterator {
-        Box::new(self.properties.clone().into_iter()
+        self.properties.clone().into_iter()
             .map(|(_, p)| Ok(p))
             .collect::<Vec<Result<WrapperProperty>>>()
-            .into_iter())
+            .into_iter()
     }
 }
 
@@ -368,16 +369,16 @@ impl Edge for WrapperEdge {
 
 impl PropertyReader for WrapperEdge {
     type P = WrapperProperty;
-    type PropertyIterator = Box<dyn Iterator<Item=Result<Self::P>>>;
+    type PropertyIterator = IntoIter<Result<Self::P>>;
 
     fn get_property(&self, property_id: PropertyId) -> Option<Self::P> {
         self.properties.get(&property_id).cloned()
     }
 
     fn get_property_iterator(&self) -> Self::PropertyIterator {
-        Box::new(self.properties.clone().into_iter()
+        self.properties.clone().into_iter()
             .map(|(_, p)| Ok(p))
             .collect::<Vec<Result<WrapperProperty>>>()
-            .into_iter())
+            .into_iter()
     }
 }
