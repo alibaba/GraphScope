@@ -11,7 +11,10 @@ on:
       - '**.rst'
       - 'docs/**'
       - 'research/**'
-      - 'scripts/**'
+      - 'scripts/**.py'
+      - 'scripts/prepare_dev.sh'
+      - 'scripts/prepare_env.sh'
+      - 'scripts/test.sh'
       - 'tutorials/**'
   pull_request:
     branches:
@@ -22,7 +25,10 @@ on:
       - '**.rst'
       - 'docs/**'
       - 'research/**'
-      - 'scripts/**'
+      - 'scripts/**.py'
+      - 'scripts/prepare_dev.sh'
+      - 'scripts/prepare_env.sh'
+      - 'scripts/test.sh'
       - 'tutorials/**'
 
 jobs:
@@ -43,7 +49,7 @@ jobs:
 
     - name: Install Dependencies of GraphScope
       run: |
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh --verbose install_deps
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh install_deps --verbose
 
         # avoid access node by DNS hostnames
         r=`cat /etc/hosts | grep $(hostname) || true`
@@ -56,8 +62,7 @@ jobs:
 
     - name: Build GraphScope
       run: |
-        source ${GITHUB_WORKSPACE}/gs_env
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh --verbose deploy
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose
 
     - name: DEBUG
       if: false
@@ -67,9 +72,8 @@ jobs:
       env:
         OS : ${{ matrix.os }}
       run: |
-        source ${GITHUB_WORKSPACE}/gs_env
-        export GRAPHSCOPE_PREFIX=/usr/local
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+        source ~/.graphscope_env
+        export GRAPHSCOPE_HOME=/usr/local
 
         # install tensorflow for graphlearn if os is ubuntu20.04
         if [ "${OS}" == "ubuntu-20.04" ];
@@ -93,9 +97,8 @@ jobs:
     - name: Run Gaia on Maxgraph Store Test
       if: matrix.os == 'ubuntu-20.04'
       run: |
-        source ${GITHUB_WORKSPACE}/gs_env
-        export GRAPHSCOPE_PREFIX=/usr/local
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+        source ~/.graphscope_env
+        export GRAPHSCOPE_HOME=/usr/local
         # run test
         cd interactive_engine/src/gaia-adaptor && ./gremlin_test.sh
 

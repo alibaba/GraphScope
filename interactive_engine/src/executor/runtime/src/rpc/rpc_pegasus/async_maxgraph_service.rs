@@ -58,7 +58,6 @@ use futures_cpupool::{Builder, CpuPool};
 use tokio_sync::semaphore::Semaphore;
 use pegasus::operator::advanced::inspect::Inspect;
 use pegasus::operator::advanced::sink::Output;
-//use pegasus::operator::sink::*;
 use execution::{build_route_fn, build_worker_partition_ids, build_partition_router, build_process_router, build_empty_router};
 use dataflow::manager::context::{RuntimeContext, BuilderContext};
 use dataflow::plan::tiny_builder::TinyDataflowBuilder;

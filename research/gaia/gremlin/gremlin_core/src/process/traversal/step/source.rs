@@ -36,8 +36,6 @@ pub struct GraphVertexStep {
     as_tags: BitSet,
     requirement: Requirement,
     return_type: EntityType,
-    // workers per server, for gen_source
-    workers: usize,
 }
 
 impl_as_any!(GraphVertexStep);
@@ -53,7 +51,6 @@ impl GraphVertexStep {
             v_params: QueryParams::default(),
             e_params: QueryParams::default(),
             return_type,
-            workers: 1,
         }
     }
 
@@ -61,14 +58,11 @@ impl GraphVertexStep {
         self.return_type = return_type;
     }
 
-    pub fn set_num_workers(&mut self, workers: usize) {
-        self.workers = workers;
-    }
-
-    pub fn set_src(&mut self, ids: Vec<ID>, partitioner: Arc<dyn Partitioner>) {
+    /// Assign source vertex ids for each worker to call get_vertex
+    pub fn set_src(&mut self, ids: Vec<ID>, job_workers: usize, partitioner: Arc<dyn Partitioner>) {
         let mut partitions = HashMap::new();
         for id in ids {
-            if let Ok(wid) = partitioner.get_partition(&id, self.workers) {
+            if let Ok(wid) = partitioner.get_partition(&id, job_workers) {
                 partitions.entry(wid).or_insert_with(Vec::new).push(id);
             } else {
                 debug!("get server id failed in graph_partition_manager in source op");
@@ -76,6 +70,22 @@ impl GraphVertexStep {
         }
 
         self.src = Some(partitions);
+    }
+
+    /// Assign partition_list for each worker to call scan_vertex
+    pub fn set_partitions(
+        &mut self, job_workers: usize, worker_index: u32, partitioner: Arc<dyn Partitioner>,
+    ) {
+        if let Ok(partition_list) = partitioner.get_worker_partitions(job_workers, worker_index) {
+            debug!("Assign worker {:?} to scan partition list: {:?}", worker_index, partition_list);
+            if self.return_type == EntityType::Vertex {
+                self.v_params.partitions = partition_list
+            } else {
+                self.e_params.partitions = partition_list
+            }
+        } else {
+            debug!("get partition list failed in graph_partition_manager in source op");
+        }
     }
 
     pub fn set_requirement(&mut self, requirement: Requirement) {
@@ -108,11 +118,8 @@ impl GraphVertexStep {
                     }
                 }
             } else {
-                // worker 0 is going to scan
-                if worker_index % self.workers == 0 {
-                    v_source =
-                        graph.scan_vertex(&self.v_params).unwrap_or(Box::new(std::iter::empty()))
-                }
+                // parallel scan, and each worker should scan the partitions assigned to it in self.v_params.partitions
+                v_source = graph.scan_vertex(&self.v_params).unwrap_or(Box::new(std::iter::empty()))
             };
         } else {
             if let Some(ref seeds) = self.src {
@@ -124,11 +131,8 @@ impl GraphVertexStep {
                     }
                 }
             } else {
-                // worker 0 is going to scan
-                if worker_index % self.workers == 0 {
-                    e_source =
-                        graph.scan_edge(&self.e_params).unwrap_or(Box::new(std::iter::empty()));
-                }
+                // parallel scan, and each worker should scan the partitions assigned to it in self.e_params.partitions
+                e_source = graph.scan_edge(&self.e_params).unwrap_or(Box::new(std::iter::empty()));
             }
         }
 
@@ -153,7 +157,8 @@ impl GraphVertexStep {
 }
 
 pub fn graph_step_from(
-    gremlin_step: &mut pb::GremlinStep, partitioner: Arc<dyn Partitioner>,
+    gremlin_step: &mut pb::GremlinStep, job_workers: usize, worker_index: u32,
+    partitioner: Arc<dyn Partitioner>,
 ) -> Result<GraphVertexStep, BuildJobError> {
     if let Some(option) = gremlin_step.step.take() {
         match option {
@@ -168,13 +173,15 @@ pub fn graph_step_from(
                     let id = ID::from_str(&id).unwrap();
                     ids.push(id);
                 }
-                if !ids.is_empty() {
-                    step.set_src(ids, partitioner);
-                }
                 if return_type == EntityType::Vertex {
                     step.v_params = QueryParams::from_pb(opt.query_params)?;
                 } else {
                     step.e_params = QueryParams::from_pb(opt.query_params)?;
+                }
+                if !ids.is_empty() {
+                    step.set_src(ids, job_workers, partitioner);
+                } else {
+                    step.set_partitions(job_workers, worker_index, partitioner);
                 }
                 return Ok(step);
             }

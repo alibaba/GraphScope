@@ -12,6 +12,7 @@ members = [
     "server",
     "Pegasus",
     "ffi",
+    "gaia_runtime"
 ]
 
 [profile.release]

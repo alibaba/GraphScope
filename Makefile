@@ -64,7 +64,7 @@ gae:
 gie:
 	# coordinator/frontend/graphmanager
 	cd $(WORKING_DIR)/interactive_engine && \
-	mvn clean package -DskipTests -Pjava-release --quiet
+	mvn clean package -DskipTests -Pjava-release
 	# executor
 	cd $(WORKING_DIR)/interactive_engine/src/executor && \
 	rustup component add rustfmt && \
@@ -77,6 +77,7 @@ gie:
 	cp -r $(WORKING_DIR)/interactive_engine/src/coordinator/target $(WORKING_DIR)/.install_prefix/coordinator && \
 	cp -r $(WORKING_DIR)/interactive_engine/src/frontend/frontendservice/target $(WORKING_DIR)/.install_prefix/frontend/frontendservice && \
 	cp $(WORKING_DIR)/interactive_engine/src/executor/target/debug/executor $(WORKING_DIR)/.install_prefix/bin/executor && \
+	cp $(WORKING_DIR)/interactive_engine/src/executor/target/debug/gaia_executor $(WORKING_DIR)/.install_prefix/bin/gaia_executor && \
 	cp $(WORKING_DIR)/interactive_engine/src/executor/store/log4rs.yml $(WORKING_DIR)/.install_prefix/conf/log4rs.yml && \
 	sudo cp -r $(WORKING_DIR)/.install_prefix/* $(INSTALL_PREFIX) && \
 	rm -fr $(WORKING_DIR)/.install_prefix
