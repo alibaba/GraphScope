@@ -7,7 +7,7 @@ RUN tar -xf /home/maxgraph/0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
 RUN tar -xf /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
 # copy bin and config from builder
 RUN mkdir -p /home/maxgraph/{bin,config}
-COPY ./interactive_engine/bin/giectl /home/maxgraph/bin
+COPY ./interactive_engine/bin/giectl /home/maxgraph/bin/giectl
 COPY ./interactive_engine/config/* /home/maxgraph/config/
 RUN chmod a+x /home/maxgraph/bin/giectl
 
