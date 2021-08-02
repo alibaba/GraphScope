@@ -25,7 +25,7 @@ import com.alibaba.maxgraph.v2.common.discovery.RoleType;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.coordinator.Coordinator;
 import com.alibaba.maxgraph.v2.ingestor.Ingestor;
-import com.alibaba.maxgraph.v2.store.Store;
+import com.alibaba.maxgraph.v2.store.GaiaStore;
 import com.salesforce.kafka.test.KafkaTestCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +92,7 @@ public class MaxNode extends NodeBase {
                     .put(CommonConfig.ROLE_NAME.getKey(), RoleType.STORE.getName())
                     .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
                     .build();
-            this.stores.add(new Store(storeConfigs));
+            this.stores.add(new GaiaStore(storeConfigs));
         }
     }
 

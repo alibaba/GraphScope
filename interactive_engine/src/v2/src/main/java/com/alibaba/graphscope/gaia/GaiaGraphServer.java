@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.gaia;
 
-import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
+import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
@@ -28,6 +28,7 @@ import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
 import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
 import io.netty.channel.Channel;
 import org.apache.commons.configuration.BaseConfiguration;
+import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.OpProcessor;
 import org.apache.tinkerpop.gremlin.server.Settings;
@@ -47,16 +48,16 @@ import java.util.Map;
 public class GaiaGraphServer implements MaxGraphServer {
     private static final Logger logger = LoggerFactory.getLogger(GaiaGraphServer.class);
     private Configs configs;
-    private RpcChannelFetcher rpcChannelFetcher;
     private GraphStoreService storeService;
 
     private Settings settings;
     private GremlinServer server;
     private GaiaConfig gaiaConfig;
+    private AbstractBroadcastProcessor broadcastProcessor;
 
-    public GaiaGraphServer(Configs configs, GraphStoreService storeService, RpcChannelFetcher rpcChannelFetcher) {
+    public GaiaGraphServer(Configs configs, GraphStoreService storeService, AbstractBroadcastProcessor broadcastProcessor) {
         this.configs = configs;
-        this.rpcChannelFetcher = rpcChannelFetcher;
+        this.broadcastProcessor = broadcastProcessor;
         this.storeService = storeService;
         this.gaiaConfig = new MaxGraphConfig(new InstanceConfig(configs.getInnerProperties()));
     }
@@ -75,7 +76,7 @@ public class GaiaGraphServer implements MaxGraphServer {
         settings.writeBufferLowWaterMark = FrontendConfig.SERVER_WRITE_BUFFER_LOW_WATER.get(this.configs);
         this.server = new GremlinServer(settings);
 
-        loadProcessor(gaiaConfig, rpcChannelFetcher, storeService);
+        loadProcessor(gaiaConfig, broadcastProcessor, storeService);
 
         // bind g to traversal source
         Graph traversalGraph = TraversalSourceGraph.open(new BaseConfiguration());
@@ -113,18 +114,22 @@ public class GaiaGraphServer implements MaxGraphServer {
         }
     }
 
+    public GremlinExecutor getGremlinExecutor() {
+        return this.server.getServerGremlinExecutor().getGremlinExecutor();
+    }
+
     private void loadSettings() {
         InputStream input = com.alibaba.maxgraph.server.MaxGraphServer.class.getClassLoader()
                 .getResourceAsStream("conf/server.gaia.yaml");
         this.settings = Settings.read(input);
     }
 
-    private static void loadProcessor(GaiaConfig config, RpcChannelFetcher rpcChannelFetcher, GraphStoreService storeService) {
+    private static void loadProcessor(GaiaConfig config, AbstractBroadcastProcessor broadcastProcessor, GraphStoreService storeService) {
         try {
             Map<String, OpProcessor> gaiaProcessors = new HashMap<>();
-            gaiaProcessors.put("", new GaiaGraphOpProcessor(config, storeService, rpcChannelFetcher));
+            gaiaProcessors.put("", new GaiaGraphOpProcessor(config, storeService, broadcastProcessor));
             gaiaProcessors.put("plan", new LogicPlanProcessor(config, storeService));
-            gaiaProcessors.put("traversal", new TraversalOpProcessor(config, storeService, rpcChannelFetcher));
+            gaiaProcessors.put("traversal", new TraversalOpProcessor(config, storeService, broadcastProcessor));
             PlanUtils.setFinalStaticField(OpLoader.class, "processors", gaiaProcessors);
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -26,18 +26,15 @@ use crate::structure::{Edge, GraphElement, Label, PropKey, Vertex, VertexOrEdge}
 use dyn_type::object::{Object, Primitives};
 
 fn label_to_pb(label: Option<&Label>) -> Option<result_pb::Label> {
-    label.map(|lab|
-        match lab {
-            // we will only pass label by id for current storages
-            Label::Str(_) => {
-                unreachable!()
-            }
-            Label::Id(label_id) => {
-                result_pb::Label{ item: Some(result_pb::label::Item::NameId(*label_id as i32)) }
-
-            }
+    label.map(|lab| match lab {
+        // we will only pass label by id for current storages
+        Label::Str(_) => {
+            unreachable!()
         }
-    )
+        Label::Id(label_id) => {
+            result_pb::Label { item: Some(result_pb::label::Item::NameId(*label_id as i32)) }
+        }
+    })
 }
 
 fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
@@ -132,6 +129,7 @@ fn object_to_pb_value(value: &Object) -> common_pb::Value {
                 }
                 Primitives::Integer(v) => common_pb::value::Item::I32(*v),
                 Primitives::Long(v) => common_pb::value::Item::I64(*v),
+                Primitives::ULLong(v) => common_pb::value::Item::Blob(v.to_be_bytes().to_vec()),
                 Primitives::Float(v) => common_pb::value::Item::F64(*v),
             }
         }
