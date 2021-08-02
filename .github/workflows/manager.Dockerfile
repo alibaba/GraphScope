@@ -9,6 +9,7 @@ RUN tar -xf /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
 RUN mkdir -p /home/maxgraph/{bin,config}
 COPY ./interactive_engine/bin/giectl /home/maxgraph/bin
 COPY ./interactive_engine/config/* /home/maxgraph/config/
+RUN chmod a+x /home/maxgraph/bin/giectl
 
 
 ENV GRAPHSCOPE_HOME=/home/maxgraph

@@ -5,12 +5,15 @@ ARG profile=release
 COPY ./opt/graphscope/ /usr/local/
 RUN cd /usr/local/dist/ && pip3 install ./*.whl
 
-RUN mkdir -p /home/maxgraph/{bin,config}
+RUN mkdir -p /home/maxgraph/{bin,config,conf}
 ENV VINEYARD_IPC_SOCKET /home/maxgraph/data/vineyard/vineyard.sock
 COPY ./interactive_engine/src/executor/target/release/executor /home/maxgraph/bin/executor
-COPY ./interactive_engine/bin/giectl /home/maxgraph/bin/giectl
+COPY ./interactive_engine/bin/giectl /home/maxgraph/bin/giect
+RUN chmod a+x /home/maxgraph/bin/giectl
+
 
 COPY ./interactive_engine/src/executor/store/log4rs.yml /home/maxgraph/log4rs.yml
+COPY ./interactive_engine/src/executor/store/log4rs.yml /home/maxgraph/conf/log4rs.yml
 RUN mkdir -p /home/maxgraph/native
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/home/maxgraph/native
 

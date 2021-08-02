@@ -240,8 +240,7 @@ jobs:
         mvn clean package -DskipTests -Pjava-release --quiet
         cd ${GITHUB_WORKSPACE}
         tar -cf manager.tar interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz \
-                            interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz \
-                            interactive_engine/deploy/docker/dockerfile
+                            interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz
 
     - uses: actions/upload-artifact@v2
       with:

@@ -79,6 +79,7 @@ RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
 ENV PATH=${PATH}:/usr/local/go/bin
 
 RUN source ~/.bashrc \
+    && rustup component add rustfmt \
     && echo "build with profile: $profile" \
     && cd /root/gs/interactive_engine/src/executor \
     && export CMAKE_PREFIX_PATH=/opt/graphscope \
@@ -106,8 +107,7 @@ COPY --from=builder /root/gs/k8s/precompile.py /tmp/precompile.py
 RUN python3 /tmp/precompile.py && rm /tmp/precompile.py
 
 RUN mkdir -p /home/maxgraph
-RUN mkdir -p /home/maxgraph/bin
-RUN mkdir -p /home/maxgraph/conf
+RUN mkdir -p /home/maxgraph/{bin,config}
 ENV VINEYARD_IPC_SOCKET /home/maxgraph/data/vineyard/vineyard.sock
 COPY --from=builder /root/gs/interactive_engine/src/executor/target/$profile/executor /home/maxgraph/bin/executor
 COPY --from=builder /root/gs/interactive_engine/bin/giectl /home/maxgraph/bin/giectl
@@ -124,7 +124,6 @@ RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e
 ENV RUST_BACKTRACE=1
 
 # copy start script from builder
-RUN mkdir -p /home/maxgraph/config
 COPY interactive_engine/config/* /home/maxgraph/config/
 ENV GRAPHSCOPE_HOME=/home/maxgraph
 ENV GRAPHSCOPE_RUNTIME=/tmp/graphscope
