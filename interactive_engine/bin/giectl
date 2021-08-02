@@ -76,6 +76,7 @@ start_coordinator() {
   zookeeper_ip=$3
   zookeeper_port=$4
   executor_count=$5
+  enable_gaia=$6
 
   # create related directories
   config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
@@ -114,6 +115,13 @@ start_coordinator() {
       -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
       -e "s@PARTITION_NUM@${executor_count}@g" \
       ${WORKSPACE}/config/coordinator.application.properties > ${config_dir}/coordinator.application.properties
+  if [ ${enable_gaia} ]; then
+    sed -e "s@GRAPH_NAME@${object_id}_gaia@g" \
+        -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
+        -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
+        -e "s@PARTITION_NUM@${executor_count}@g" \
+        ${WORKSPACE}/config/coordinator.application.properties > ${config_dir}/gaia-coordinator.application.properties
+  fi
 
   if [[ "${cluster_type}" == "k8s" ]]; then
     # we just hangs here in k8s
@@ -127,7 +135,17 @@ start_coordinator() {
        com.alibaba.maxgraph.coordinator.CoordinatorMain \
        ${config_dir}/coordinator.application.properties \
        ${object_id} 1>${log_dir}/maxgraph-coordinator.out 2>${log_dir}/maxgraph-coordinator.err&
-    echo $! > ${pid_dir}/coordinator.pid
+    echo $! >> ${pid_dir}/coordinator.pid
+
+    if [ ${enable_gaia} ]; then
+      java_opt=${java_opt//maxgraph-coordinator/gaia-coordinator}
+      java ${java_opt} \
+        com.alibaba.maxgraph.coordinator.CoordinatorMain \
+        ${config_dir}/gaia-coordinator.application.properties \
+        ${object_id} ${object_id}_gaia 1>${log_dir}/gaia-coordinator.out \
+        2>${log_dir}/gaia-coordinator.err&
+      echo $! >> ${pid_dir}/coordinator.pid
+    fi
   fi
 }
 
@@ -189,6 +207,15 @@ start_frontend() {
       -e "s@PARTITION_NUM@${executor_count}@g" \
       -e "s@SERVER_PORT@${frontend_port}@g" \
       ${WORKSPACE}/config/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
+  if [ ${enable_gaia} ]; then
+    sed -e "s@GRAPH_NAME@${object_id}_gaia@g" \
+        -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
+        -e "s@SCHEMA_PATH@${schema_path}@g" \
+        -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
+        -e "s@PARTITION_NUM@${executor_count}@g" \
+        -e "s@SERVER_PORT@${frontend_port}@g" \
+        ${WORKSPACE}/config/frontend.vineyard.properties > ${config_dir}/gaia-frontend.vineyard.properties
+  fi
 
   if [[ "${cluster_type}" == "k8s" ]]; then
     # just hangs here in k8s
@@ -202,7 +229,17 @@ start_frontend() {
        com.alibaba.maxgraph.frontendservice.FrontendServiceMain \
        ${config_dir}/frontend.vineyard.properties \
        ${object_id} 1>${log_dir}/maxgraph-frontend.out 2>${log_dir}/maxgraph-frontend.err&
-    echo $! > ${pid_dir}/frontend.pid
+    echo $! >> ${pid_dir}/frontend.pid
+
+    if [ ${enable_gaia} ]; then
+      java_opt=${java_opt//maxgraph-frontend/gaia-frontend}
+      java ${java_opt} \
+        com.alibaba.graphscope.gaia.vineyard.store.FrontendServiceMain \
+        ${config_dir}/gaia-frontend.application.properties \
+        ${object_id} ${object_id}_gaia 1>${log_dir}/gaia-frontend.out \
+        2>${log_dir}/gaia-frontend.err&
+      echo $! >> ${pid_dir}/frontend.pid
+    fi
   fi
 }
 
@@ -225,6 +262,7 @@ start_executor() {
   zookeeper_port=$4
   engine_count=$5
   interactive_engine_params=$6
+  enable_gaia=$7
 
   config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
   log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
@@ -240,6 +278,14 @@ start_executor() {
       -e "s@WORKER_NUM@${engine_count}@g" \
       -e "s@PARTITION_NUM@${engine_count}@g" \
       ${WORKSPACE}/config/executor.vineyard.properties > ${config_dir}/executor.vineyard.properties
+  if [ ${enable_gaia} ]; then
+    sed -e "s@GRAPH_NAME@${object_id}_gaia@g" \
+        -e "s@VINEYARD_OBJECT_ID@${object_id}@g" \
+        -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
+        -e "s@WORKER_NUM@${engine_count}@g" \
+        -e "s@PARTITION_NUM@${engine_count}@g" \
+        ${WORKSPACE}/config/executor.vineyard.properties > ${config_dir}/gaia-executor.vineyard.properties
+  fi
 
   # update parameters(key-value) in config file
   if [ ! -z "${interactive_engine_params}" ]; then
@@ -262,6 +308,13 @@ start_executor() {
     ${flag} ${server_id} 1>> ${log_dir}/maxgraph-executor.out 2>> ${log_dir}/maxgraph-executor.err &
 
   echo $! > ${pid_dir}/executor.pid
+  if [ ${enable_gaia} ]; then
+    RUST_BACKTRACE=full ${WORKSPACE}/bin/executor --config ${config_dir}/gaia-executor.vineyard.properties \
+      ${flag} ${server_id} ${object_id}_gaia 1>> ${log_dir}/gaia-executor.out \
+      2>> ${log_dir}/gaia-executor.err &
+    echo $! >> ${pid_dir}/executor.pid
+  fi
+
 }
 
 ##########################
@@ -281,6 +334,7 @@ create_instance_on_local() {
   server_id=$3
   export VINEYARD_IPC_SOCKET=$4
   zookeeper_port=$5
+  enable_gaia=false
 
   if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
@@ -290,15 +344,15 @@ create_instance_on_local() {
   zookeeper_ip="localhost"
   executor_count="1"  # local mode only start one executor
   start_coordinator ${cluster_type} ${object_id} ${zookeeper_ip} ${zookeeper_port} \
-                    ${executor_count}
+                    ${executor_count} ${enable_gaia}
   sleep 1
 
   start_frontend ${cluster_type} ${object_id} ${schema_path} ${zookeeper_ip} \
-                 ${zookeeper_port} ${executor_count}
+                 ${zookeeper_port} ${executor_count} ${enable_gaia}
   sleep 1
 
   start_executor ${object_id} ${server_id} ${zookeeper_ip} ${zookeeper_port} \
-                 ${executor_count}
+                 ${executor_count} ${enable_gaia}
 
   # expose gremlin server host:port
   timeout_seconds=60
