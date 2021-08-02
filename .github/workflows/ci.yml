@@ -503,7 +503,7 @@ jobs:
       run: |
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
         tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
-        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.53.0
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
         rustup component add rustfmt
@@ -519,7 +519,7 @@ jobs:
         source ~/.bashrc
 
         cd interactive_engine
-        mvn clean package -Pv2 -Drust.compile.mode=release -DskipTests --quiet
+        mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
