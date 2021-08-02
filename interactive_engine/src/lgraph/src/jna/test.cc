@@ -114,7 +114,7 @@ void TestScanEdge(Snapshot* ss) {
 
 void runLocalTests() {
   assert(local_graph_handle_ != nullptr);
-  Snapshot latest_ss(ffi::GetSnapshot(local_graph_handle_, std::numeric_limits<SnapshotId>::max()));
+  Snapshot latest_ss(ffi::GetSnapshot(local_graph_handle_, std::numeric_limits<uint32_t>::max()));
 
   TestScanVertex(&latest_ss);
   TestScanEdge(&latest_ss);
