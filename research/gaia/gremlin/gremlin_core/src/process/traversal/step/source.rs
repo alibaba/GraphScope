@@ -170,7 +170,14 @@ pub fn graph_step_from(
                 step.set_tags(gremlin_step.get_tags());
                 let mut ids = vec![];
                 for id in opt.ids {
-                    let id = ID::from_str(&id).unwrap();
+                    let id = if let Ok(uid) = ID::from_str(&id) {
+                        uid
+                    } else if let Ok(id) = i64::from_str(&id) {
+                        // in case that source id is negative
+                        id as ID
+                    } else {
+                        return Err("Parse source id failed")?;
+                    };
                     ids.push(id);
                 }
                 if return_type == EntityType::Vertex {
