@@ -82,7 +82,7 @@ logger = logging.getLogger("graphscope")
 class _FetchHandler(object):
     """Handler for structured fetches.
     This class takes care of extracting a sub-DAG as targets for a user-provided structure for fetches,
-    which can be used for a low level `run` call of grpc_client.
+    which can be used for a low level `run` call of grpc_client
 
     Given the results of the low level run call, this class can also rebuild a result structure
     matching the user-provided structure for fetches, but containing the corresponding results.
