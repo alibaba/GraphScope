@@ -1,5 +1,5 @@
 [package]
-name = "maxgraph-jna"
+name = "maxgraph-ffi"
 version = "0.1.0"
 authors = ["maxgraph@alibaba-inc.com"]
 edition = "2018"

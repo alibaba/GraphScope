@@ -46,6 +46,11 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.alibaba.maxgraph</groupId>
+            <artifactId>c-end-lgraph</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
@@ -211,7 +216,7 @@
                                 <include>**/GremlinStandardTest.java</include>
                             </includes>
                             <argLine>
-                                -Djna.library.path=${project.parent.basedir}/executor/target:/usr/local/lib
+                                -Djna.library.path=${project.parent.basedir}/executor/target/debug:/usr/local/lib:${project.parent.basedir}/lgraph/build
                             </argLine>
                             <environmentVariables>
                                 <RUST_BACKTRACE>1</RUST_BACKTRACE>
@@ -237,7 +242,7 @@
                 <version>${maven.surefire.version}</version>
                 <configuration>
                     <argLine>
-                        -Djna.library.path=${project.parent.basedir}/executor/target
+                        -Djna.library.path=${project.parent.basedir}/executor/target/debug:/usr/loca/lib:${project.parent.basedir}/lgraph/build
                     </argLine>
                     <environmentVariables>
                         <RUST_BACKTRACE>1</RUST_BACKTRACE>
