@@ -505,12 +505,17 @@ jobs:
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
         rustup component add rustfmt
+        yum install -y sudo
+        yum install -y apt-get
+
+    - name: Setup tmate
+      if: always()
+      uses: mxschmitt/action-tmate@v2
 
     - uses: actions/checkout@v2.3.2
 
     - name: Build
       run: |
-        yum install -y sudo
         export PATH=${PATH}:/usr/local/go/bin
         export CMAKE_PREFIX_PATH=/opt/graphscope
         export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib
