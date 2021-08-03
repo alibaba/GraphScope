@@ -362,8 +362,13 @@ create_instance_on_local() {
   while true
   do
     gremlin_server_port=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $6}')
+    gremlin_server_port_2=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $7}')
     if [ -n "${gremlin_server_port}" ]; then
-      log "FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
+      log "FRONTEND_PORT:127.0.0.1:${gremlin_server_port}"
+      break
+    fi
+    if [ -n "${gremlin_server_port_2}" ]; then
+      log "FRONTEND_PORT:127.0.0.1:${gremlin_server_port2}"
       break
     fi
     wait_period_seconds=$(($wait_period_seconds+5))
