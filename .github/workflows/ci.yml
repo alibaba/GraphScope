@@ -510,7 +510,7 @@ jobs:
 
     - name: Build
       run: |
-        apt install -y sudo
+        yum install -y sudo
         export PATH=${PATH}:/usr/local/go/bin
         export CMAKE_PREFIX_PATH=/opt/graphscope
         export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib
