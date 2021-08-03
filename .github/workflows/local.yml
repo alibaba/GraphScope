@@ -88,6 +88,10 @@ jobs:
         # delete etcd dir
         rm -fr /tmp/default.etcd || true
 
+    - name: DEBUG
+      if: true
+      uses: mxschmitt/action-tmate@v2
+
     - name: Run Gaia on Maxgraph Store Test
       if: matrix.os == 'ubuntu-20.04'
       run: |
