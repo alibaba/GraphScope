@@ -18,12 +18,13 @@ use crate::generated::gremlin as pb;
 use crate::structure::filter::*;
 use crate::structure::{Label, PropId};
 use crate::{Element, ID};
+use dyn_type::object::RawType;
 use dyn_type::{CastError, Object, Primitives};
 use graph_store::prelude::INVALID_LABEL_ID;
 use pegasus::BuildJobError;
 use prost::{DecodeError, Message};
 use std::collections::HashSet;
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::fmt::Display;
 
 pub fn pb_chain_to_filter<E: Element>(
@@ -204,8 +205,11 @@ fn eq(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter, Pars
         Some(pb_type::key::Item::Id(_)) => {
             let r = right.map(|r|
                 // try to parse as i64 in case id is negative
-                if let Ok(id) = r.as_i64() { Ok(id as ID) } else { r.as_u128()})
-                .transpose()?;
+                if let Ok(id) = r.as_i64() {
+                    ID::try_from(id).or_else(|_| Err(CastError::new::<i64>(RawType::Long)))
+                } else {
+                    r.as_u128()
+                }).transpose()?;
             Ok(has_id(r))
         }
         Some(pb_type::key::Item::Label(_)) => {
@@ -301,7 +305,10 @@ fn with_in(left: &pb_type::Key, right: &pb_type::Value) -> Result<ElementFilter,
                 for obj in right {
                     // try to parse as i64 in case id is negative
                     if let Ok(id) = obj.as_i64() {
-                        right_ids.insert(id as ID);
+                        right_ids.insert(
+                            ID::try_from(id)
+                                .or_else(|_| Err("parse id from i64 failed in contains_id"))?,
+                        );
                     } else if let Ok(id) = obj.as_u128() {
                         right_ids.insert(id);
                     } else {
