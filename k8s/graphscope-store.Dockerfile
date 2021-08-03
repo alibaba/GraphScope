@@ -38,6 +38,10 @@ COPY --from=builder /opt/graphscope /usr/local/
 COPY --from=builder /root/gs/interactive_engine/distribution/target/maxgraph.tar.gz /tmp/maxgraph.tar.gz
 RUN mkdir -p /home/maxgraph \
     && tar -zxf /tmp/maxgraph.tar.gz -C /home/maxgraph
+RUN mkdir -p /home/maxgraph/{bin,config}
+COPY --from=builder /root/gs/interactive_engine/bin/giectl /home/maxgraph/bin/giectl
+COPY --from=builder /root/gs/interactive_engine/config/* /home/maxgraph/config/
 
+ENV GRAPHSCOPE_HOME=/usr/local
+ENV GRAPHSCOPE_RUNTIME=/tmp/graphscope
 WORKDIR /home/maxgraph/
-

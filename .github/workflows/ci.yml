@@ -521,6 +521,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
+        tar -zcf giectl.tar.gz interactive_engine/bin interactive_engine/config
 
     - uses: actions/upload-artifact@v2
       with:
@@ -528,6 +529,7 @@ jobs:
         path: |
           maxgraph.tar.gz
           lib.tar.gz
+          giectl.tar.gz
         retention-days: 5
 
   gss-test:
@@ -561,6 +563,7 @@ jobs:
         pushd artifacts
         tar -zxf ./gss-${{ github.sha }}/lib.tar.gz
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
+        tar -zxf ./gss-${{ github.sha }}/giectl.tar.gz
 
         sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \

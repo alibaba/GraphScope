@@ -76,7 +76,7 @@ spec:
                 -e "s/COORDINATOR/$(DNS_NAME_PREFIX_COORDINATOR)/g" \
                 -e "s/STORE/$(DNS_NAME_PREFIX_STORE)/g" \
             /etc/graphscope-store/my.cnf.tpl > /etc/graphscope-store/my.cnf
-            LOG_NAME=graphscope-store.log MAXGRAPH_CONF_FILE=/etc/graphscope-store/my.cnf /home/maxgraph/maxgraph/bin/maxgraph.sh coordinator
+            /home/maxgraph/bin/giectl maxgraph graphscope-store.log /etc/graphscope-store/my.cnf coordinator
             tail -f /dev/null
           env:
             - name: DEBUG
