@@ -500,7 +500,7 @@ jobs:
 
     - name: Setup tmate
       if: always()
-      uses: mxschmitt/action-tmate@v2
+      uses: mxschmitt/action-tmate@v3
       with:
         sudo: false
 
