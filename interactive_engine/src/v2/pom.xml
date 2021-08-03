@@ -216,11 +216,10 @@
                                 <include>**/GremlinStandardTest.java</include>
                             </includes>
                             <argLine>
-                                -Djna.library.path=${project.parent.basedir}/executor/target/debug:/usr/local/lib:${project.parent.basedir}/lgraph/build
+                                -Djna.library.path=${project.parent.basedir}/executor/target:/usr/local/lib:${project.parent.basedir}/lgraph/build
                             </argLine>
                             <environmentVariables>
                                 <RUST_BACKTRACE>1</RUST_BACKTRACE>
-                                <LD_LIBRARY_PATH>/usr/local/lib/</LD_LIBRARY_PATH>
                             </environmentVariables>
                         </configuration>
                     </plugin>
