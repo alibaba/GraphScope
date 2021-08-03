@@ -510,6 +510,7 @@ jobs:
 
     - name: Build
       run: |
+        apt install -y sudo
         export PATH=${PATH}:/usr/local/go/bin
         export CMAKE_PREFIX_PATH=/opt/graphscope
         export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib
@@ -523,6 +524,10 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
+
+    - name: Setup tmate
+      if: always()
+      uses: mxschmitt/action-tmate@v2
 
     - uses: actions/upload-artifact@v2
       with:
