@@ -25,7 +25,6 @@ use pegasus::BuildJobError;
 use pegasus_common::downcast::*;
 use prost::alloc::str::FromStr;
 use std::collections::HashMap;
-use std::convert::TryFrom;
 use std::sync::Arc;
 
 /// V(), E()
@@ -175,7 +174,7 @@ pub fn graph_step_from(
                         uid
                     } else if let Ok(id) = i64::from_str(&id) {
                         // in case that source id is negative
-                        ID::try_from(id).or_else(|_| Err("Parse source id from i64 failed"))?
+                        id as ID
                     } else {
                         return Err("Parse source id failed")?;
                     };
