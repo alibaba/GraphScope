@@ -62,7 +62,7 @@ public class Frontend extends com.alibaba.maxgraph.frontendservice.Frontend {
         AsyncRpcChannelFetcher gaiaRpcFetcher = new AddressChannelFetcher(new ExecutorAddressFetcher(this.clientManager));
         GraphStoreService gaiaStoreService = new MaxGraphStore(schemaFetcher);
         AbstractBroadcastProcessor broadcastProcessor = new AsyncRpcBroadcastProcessor(gaiaRpcFetcher);
-        gaiaGraphServer = new GaiaGraphServer(configs, gaiaStoreService, broadcastProcessor);
+        gaiaGraphServer = new GaiaGraphServer(configs, gaiaStoreService, broadcastProcessor, new VineyardConfig(instanceConfig));
 
         gaiaGraphServer.start();
         this.gremlinServerPort = gaiaGraphServer.getGremlinServerPort();
