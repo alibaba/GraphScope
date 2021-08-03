@@ -10,11 +10,7 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
-      - 'research/**'
-      - 'scripts/**.py'
-      - 'scripts/prepare_dev.sh'
-      - 'scripts/prepare_env.sh'
-      - 'scripts/test.sh'
+      - 'scripts/**'
       - 'tutorials/**'
   pull_request:
     branches:
@@ -24,11 +20,7 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
-      - 'research/**'
-      - 'scripts/**.py'
-      - 'scripts/prepare_dev.sh'
-      - 'scripts/prepare_env.sh'
-      - 'scripts/test.sh'
+      - 'scripts/**'
       - 'tutorials/**'
 
 jobs:

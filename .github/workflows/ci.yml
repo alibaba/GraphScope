@@ -10,7 +10,6 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
-      - 'research/**'
       - 'scripts/**'
       - 'tutorials/**'
   pull_request:
@@ -21,7 +20,6 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
-      - 'research/**'
       - 'scripts/**'
       - 'tutorials/**'
 
@@ -537,9 +535,7 @@ jobs:
     needs: [build-gss]
     strategy:
       matrix:
-        #executor: [maxgraph, gaia]
-        # Add gaia when supported
-        executor: [maxgraph]
+        executor: [maxgraph, gaia]
     steps:
     - name: Clean up
       run: |

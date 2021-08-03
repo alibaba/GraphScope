@@ -73,6 +73,7 @@ impl Partitioner for MaxGraphMultiPartition {
                 worker_partition_list.push(pid as u64)
             }
         }
+        info!("job_workers {:?}, worker id: {:?},  worker_partition_list {:?}", job_workers, worker_id, worker_partition_list);
         Ok(Some(worker_partition_list))
     }
 }

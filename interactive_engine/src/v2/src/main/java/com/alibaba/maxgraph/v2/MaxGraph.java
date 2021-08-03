@@ -48,7 +48,7 @@ public class MaxGraph {
             String roleName = args[0];
             if (roleName.equalsIgnoreCase("store-gaia")) {
                 node = new GaiaStore(conf);
-            } else if(roleName.equalsIgnoreCase("store-frontend")) {
+            } else if(roleName.equalsIgnoreCase("frontend-gaia")) {
                 node = new com.alibaba.graphscope.gaia.Frontend(conf);
             } else {
                 RoleType roleType = RoleType.fromName(roleName);

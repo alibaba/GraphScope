@@ -103,7 +103,7 @@ public class Frontend extends NodeBase {
         // add gaia compiler
         AsyncRpcChannelFetcher gaiaRpcFetcher = new ChannelManagerFetcher(this.channelManager, executorCount, RoleType.GAIA_RPC);
         GraphStoreService gaiaStoreService = new MaxGraphStore(wrappedSchemaFetcher);
-        this.maxGraphServer = new GaiaGraphServer(configs, gaiaStoreService, new AsyncRpcBroadcastProcessor(gaiaRpcFetcher));
+        this.maxGraphServer = new GaiaGraphServer(configs, gaiaStoreService, new AsyncRpcBroadcastProcessor(gaiaRpcFetcher), new MaxGraphConfig(configs));
     }
 
     @Override
