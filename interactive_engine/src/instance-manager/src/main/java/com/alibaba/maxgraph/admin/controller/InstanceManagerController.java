@@ -92,11 +92,12 @@ public class InstanceManagerController {
     public CreateInstanceEntity createLocalInstance(@RequestParam("graphName") String graphName,
                                                     @RequestParam("schemaPath") String schemaPath,
                                                     @RequestParam("vineyardIpcSocket") String vineyardIpcSocket,
-                                                    @RequestParam("zookeeperPort") String zookeeperPort) throws Exception{
+                                                    @RequestParam("zookeeperPort") String zookeeperPort,
+                                                    @RequestParam("enableGaia") String enableGaia) throws Exception{
         CreateInstanceEntity createInstanceEntity = new CreateInstanceEntity();
         int errorCode;
         String errorMessage = "";
-        int frontendPort = 0;
+        String stdoutMessage = "";
 
         try {
             List<String> createCommandList = new ArrayList<>();
@@ -107,6 +108,7 @@ public class InstanceManagerController {
             createCommandList.add("1"); // server id
             createCommandList.add(vineyardIpcSocket);
             createCommandList.add(zookeeperPort);
+            createCommandList.add(enableGaia);
             String command = StringUtils.join(createCommandList, " ");
             logger.info("start to create instance with command " + command);
             Process process = Runtime.getRuntime().exec(command);
@@ -114,33 +116,60 @@ public class InstanceManagerController {
             List<String> errorValueList = IOUtils.readLines(process.getErrorStream(), "UTF-8");
             List<String> infoValueList = IOUtils.readLines(process.getInputStream(), "UTF-8");
             infoValueList.addAll(errorValueList);
-            errorMessage = StringUtils.join(infoValueList, "\n");
+            stdoutMessage = StringUtils.join(infoValueList, "\n");
             errorCode = process.waitFor();
             if (errorCode == 0) {
-              Pattern endpointPattern = Pattern.compile("FRONTEND_PORT:\\S+");
-              Matcher matcher = endpointPattern.matcher(errorMessage);
+              logger.info("Trying to find MAXGRAPH_FRONTEND_PORT");
+              Pattern endpointPattern = Pattern.compile("MAXGRAPH_FRONTEND_PORT:\\S+");
+              Matcher matcher = endpointPattern.matcher(stdoutMessage);
               if (matcher.find()) {
-                String frontendEndpoint = StringUtils.splitByWholeSeparator(StringUtils.removeStart(matcher.group(), "FRONTEND_PORT:"), " ")[0];
+                String frontendEndpoint = StringUtils.splitByWholeSeparator(StringUtils.removeStart(matcher.group(), "MAXGRAPH_FRONTEND_PORT:"), " ")[0];
                 InstanceEntity instanceEntity = new InstanceEntity(frontendEndpoint, "", "", this.instanceProperties.getCloseScript());
                 FrontendMemoryStorage.getFrontendStorage().addFrontendEndpoint(graphName, instanceEntity);
                 String[] endpointArray = StringUtils.split(frontendEndpoint, ":");
                 String ip = endpointArray[0];
-                frontendPort = Integer.parseInt(endpointArray[1]);
+                int frontendPort = Integer.parseInt(endpointArray[1]);
                 createInstanceEntity.setFrontHost(ip);
                 createInstanceEntity.setFrontPort(frontendPort);
-                logger.info("Found Frontend with ip: "+ ip + " and port:" + frontendEndpoint);
+                logger.info("Found Maxgraph Frontend with ip: "+ ip + " and port:" + frontendEndpoint);
                 if (!this.checkInstanceReady(ip, frontendPort)) {
                   errorCode = -1;
                   errorMessage = "Check instance ready timeout";
                 }
               } else {
                 errorCode = -1;
-                errorMessage = "FRONTEND_PORT match failed.";
+                errorMessage = "MAXGRAPH_FRONTEND_PORT match failed.";
+              }
+              if (errorCode != -1 && enableGaia.equals("True")) {
+                logger.info("Trying to find GAIA_FRONTEND_PORT");
+                endpointPattern = Pattern.compile("GAIA_FRONTEND_PORT:\\S+");
+                matcher = endpointPattern.matcher(stdoutMessage);
+                if (matcher.find()) {
+                    String frontendEndpoint = StringUtils.splitByWholeSeparator(StringUtils.removeStart(matcher.group(), "GAIA_FRONTEND_PORT:"), " ")[0];
+                    // InstanceEntity instanceEntity = new InstanceEntity(frontendEndpoint, "", "", this.instanceProperties.getCloseScript());
+                    // FrontendMemoryStorage.getFrontendStorage().addFrontendEndpoint(graphName, instanceEntity);
+                    String[] endpointArray = StringUtils.split(frontendEndpoint, ":");
+                    String ip = endpointArray[0];
+                    int frontendPort = Integer.parseInt(endpointArray[1]);
+                    createInstanceEntity.setGaiaFrontHost(ip);
+                    createInstanceEntity.setGaiaFrontPort(frontendPort);
+                    logger.info("Found Gaia Frontend with ip: "+ ip + " and port:" + frontendEndpoint);
+                    if (!this.checkInstanceReady(ip, frontendPort)) {
+                    errorCode = -1;
+                    errorMessage = "Check instance ready timeout";
+                    }
+                } else {
+                    errorCode = -1;
+                    errorMessage = "GAIA_FRONTEND_PORT match failed.";
+                }
               }
             }
         } catch (Exception e) {
             errorCode = -1;
             errorMessage = ExceptionUtils.getMessage(e);
+        }
+        if (errorCode == -1) {
+            this.closeInstance(graphName);
         }
 
         createInstanceEntity.setErrorCode(errorCode);
@@ -367,7 +396,7 @@ public class InstanceManagerController {
         return new CloseInstanceEntity(errorCode, errorMessage);
     }
 
-		@RequestMapping("close_local")
+    @RequestMapping("close_local")
     public CloseInstanceEntity closeInstance(@RequestParam("graphName") String graphName) {
         int errorCode;
         String errorMessage;

@@ -688,7 +688,7 @@ class CoordinatorServiceServicer(
             )
         else:
             engine_params = {}
-
+        enable_gaia = op.attr[types_pb2.GIE_ENABLE_GAIA].b
         with open(schema_path) as file:
             schema_json = file.read()
 
@@ -706,6 +706,7 @@ class CoordinatorServiceServicer(
                     "preemptive": str(self._launcher.preemptive),
                     "gremlinServerCpu": str(gremlin_server_cpu),
                     "gremlinServerMem": gremlin_server_mem,
+                    "enableGaia": str(enable_gaia),
                 }
             )
             engine_params = [
@@ -719,6 +720,7 @@ class CoordinatorServiceServicer(
                     "vineyardIpcSocket": self._launcher.vineyard_socket,
                     "schemaPath": schema_path,
                     "zookeeperPort": str(self._launcher.zookeeper_port),
+                    "enableGaia": str(enable_gaia),
                 }
             )
             post_url = "http://%s/instance/create_local" % manager_host
@@ -728,17 +730,27 @@ class CoordinatorServiceServicer(
         res_json = json.load(create_res)
         error_code = res_json["errorCode"]
         if error_code == 0:
-            frontend_endpoint = "{0}:{1}".format(
-                res_json["frontHost"], res_json["frontPort"]
+            maxgraph_endpoint = f"{res_json['frontHost']}:{res_json['frontPort']}"
+            logger.info(
+                "build maxgraph frontend %s for graph %ld", maxgraph_endpoint, object_id
             )
-            logger.info("build frontend %s for graph %ld", frontend_endpoint, object_id)
+            endpoints = [maxgraph_endpoint]
+            if enable_gaia:
+                gaia_endpoint = (
+                    f"{res_json['gaiaFrontHost']}:{res_json['gaiaFrontPort']}"
+                )
+                endpoints.append(gaia_endpoint)
+                logger.info(
+                    "build gaia frontend %s for graph %ld", gaia_endpoint, object_id
+                )
             self._object_manager.put(
-                op.key, InteractiveQueryManager(op.key, frontend_endpoint, object_id)
+                op.key,
+                InteractiveQueryManager(op.key, endpoints, object_id),
             )
             return op_def_pb2.OpResult(
                 code=error_codes_pb2.OK,
                 key=op.key,
-                result=frontend_endpoint.encode("utf-8"),
+                result=",".join(endpoints).encode("utf-8"),
                 extra_info=str(object_id).encode("utf-8"),
             )
         else:
@@ -760,10 +772,14 @@ class CoordinatorServiceServicer(
             request_options = json.loads(
                 op.attr[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS].s.decode()
             )
+        query_gaia = op.attr[types_pb2.GIE_QUERY_GAIA].b
         key_of_parent_op = op.parents[0]
+
         gremlin_client = self._object_manager.get(key_of_parent_op)
         try:
-            rlt = gremlin_client.submit(message, request_options=request_options)
+            rlt = gremlin_client.submit(
+                message, request_options=request_options, query_gaia=query_gaia
+            )
         except Exception as e:
             error_message = "Gremlin query failed with error message {0}".format(str(e))
             logger.error(error_message)

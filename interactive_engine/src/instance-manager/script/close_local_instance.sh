@@ -24,6 +24,18 @@ coordinator_id=`cat $PID_DIR/coordinator.pid`
 frontend_id=`cat $PID_DIR/frontend.pid`
 executor_id=`cat $PID_DIR/executor.pid`
 
-sudo kill $coordinator_id || true
-sudo kill $frontend_id || true
-sudo kill $executor_id || true
+declare -a components=("coordinator" "frontend" "executor")
+
+for component in "${components[@]}"; do
+
+    str=$(cat $PID_DIR/${component}.pid)
+
+    # The file may have multiple pids, each in a single line
+    # This will read each line into an array
+    while read -r pid; do pids+=("$pid"); done <<<"${str}"
+
+    for pid in "${pids[@]}"; do
+        sudo kill ${pid} || true
+    done
+
+done
