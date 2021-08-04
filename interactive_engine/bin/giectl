@@ -746,7 +746,7 @@ while test $# -ne 0; do
     start_executor) start_executor "$@"; exit;;
     max_node_gaia) max_node "gaia" "$@"; exit;;
     max_node_maxgraph) max_node "maxgraph" "$@"; exit;;
-    maxgraph) max_graph "$@"; exit;;
+    maxgraph) maxgraph "$@"; exit;;
     admin_tools) admin_tools "$@"; exit;;
     load_tools) load_tools "$@"; exit;;
     *)
