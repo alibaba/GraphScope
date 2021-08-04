@@ -521,7 +521,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
-        tar -zcf giectl.tar.gz interactive_engine/bin interactive_engine/config
+        tar -zcf giectl.tar.gz interactive_engine/bin interactive_engine/conf
 
     - uses: actions/upload-artifact@v2
       with:
