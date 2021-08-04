@@ -522,7 +522,7 @@ jobs:
         cd interactive_engine
         mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
         cd src/v2
-        mvn test -Pgremlin-test
+        mvn test -Pgremlin-test --quiet
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
