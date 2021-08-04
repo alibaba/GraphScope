@@ -300,7 +300,7 @@ def test_enable_gaia(
 
     # Interactive engine
     interactive = sess_enable_gaia.gremlin(graph)
-    papers = interactive.gaia().execute(ogbn_small_script).one()
+    papers = interactive.gaia().execute(ogbn_small_script).one()[0]
     assert papers == 1
 
     g = interactive.traversal_source()
