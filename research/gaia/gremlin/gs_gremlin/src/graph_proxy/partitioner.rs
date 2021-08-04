@@ -134,11 +134,15 @@ impl Partitioner for VineyardMultiPartition {
 
     fn get_worker_partitions(
         &self,
-        _job_workers: usize,
+        job_workers: usize,
         worker_id: u32,
     ) -> DynResult<Option<Vec<u64>>> {
+        // If only one worker each server, it will process all partitions
+        if job_workers == 1 {
+            Ok(Some(self.graph_partition_manager.get_process_partition_list().into_iter().map(|pid| pid as u64).collect()))
+        }
         // Vineyard will pre-allocate the worker_partition_list mapping
-        if let Ok(worker_partition_list_mapping) = self.worker_partition_list_mapping.read() {
+        else if let Ok(worker_partition_list_mapping) = self.worker_partition_list_mapping.read() {
             if let Some(worker_partition_list_mapping) = worker_partition_list_mapping.as_ref() {
                 if let Some(partition_list) = worker_partition_list_mapping.get(&worker_id) {
                     Ok(Some(partition_list.iter().map(|pid| *pid as u64).collect()))
