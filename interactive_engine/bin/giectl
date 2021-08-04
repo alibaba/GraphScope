@@ -620,10 +620,11 @@ _setup_maxgraph_env() {
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
   fi
 
-  export LD_LIBRARY_PATH=${GRAPHSCOPE_HOME}/native:${LD_LIBRARY_PATH}:/usr/local/lib
+  export LD_LIBRARY_PATH=${GRAPHSCOPE_HOME}/maxgraph/native:${LD_LIBRARY_PATH}:/usr/local/lib
 
   log_dir=${GRAPHSCOPE_RUNTIME}/logs
-  mkdir -p ${log_dir}
+  config_dir=${GRAPHSCOPE_RUNTIME}/config
+  mkdir -p ${log_dir} ${config_dir}
 
   libpath="$(echo "${GRAPHSCOPE_HOME}"/maxgraph/lib/*.jar | tr ' ' ':')"
 }
@@ -631,15 +632,17 @@ _setup_maxgraph_env() {
 max_node() {
   type=$1
   log_name=$2
-  config_file=$3
-  shift 3
+  shift 2
 
   _setup_maxgraph_env
 
-  if [[ "${typr}" == "gaia" ]]; then
+  sed -e "s@LOG4RS_FILE@${GRAPHSCOPE_HOME}/config/log4rs.yml@g" \
+      ${GRAPHSCOPE_HOME}/config/config.template > ${config_dir}/max_node_${type}.config
+
+  if [[ "${type}" == "gaia" ]]; then
     java -server \
          -Dlogback.configurationFile="${WORKSPACE}/config/logback.xml" \
-         -Dconfig.file="${config_file}" \
+         -Dconfig.file="${config_dir}/max_node_${type}.config" \
          -Dlog.dir="${log_dir}" \
          -Dlog.name="${log_name}" \
          -cp "${libpath}" com.alibaba.graphscope.gaia.MaxNode \
@@ -647,7 +650,7 @@ max_node() {
   else
     java -server \
          -Dlogback.configurationFile="${WORKSPACE}/config/logback.xml" \
-         -Dconfig.file="${config_file}" \
+         -Dconfig.file="${config_dir}/max_node_${type}.config" \
          -Dlog.dir="${log_dir}" \
          -Dlog.name="${log_name}" \
          -cp "${libpath}" com.alibaba.maxgraph.v2.MaxNode \
@@ -685,11 +688,12 @@ load_tools() {
 }
 
 maxgraph() {
-  log_name=$1
+  log_name=$1;
   config_file=$2
   shift 2
 
   _setup_maxgraph_env
+  sed
 
   java_opt="-server
             -Djava.awt.headless=true
