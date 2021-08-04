@@ -51,7 +51,7 @@ jobs:
         cat /etc/hosts
 
     - name: Setup tmate session
-      if: true
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Build GraphScope
