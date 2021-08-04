@@ -693,7 +693,6 @@ maxgraph() {
   shift 2
 
   _setup_maxgraph_env
-  sed
 
   java_opt="-server
             -Djava.awt.headless=true
