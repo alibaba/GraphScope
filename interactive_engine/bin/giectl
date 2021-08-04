@@ -625,7 +625,7 @@ _setup_maxgraph_env() {
   log_dir=${GRAPHSCOPE_RUNTIME}/logs
   mkdir -p ${log_dir}
 
-  libpath="$(echo "${GRAPHSCOPE_HOME}"/lib/*.jar | tr ' ' ':')"
+  libpath="$(echo "${GRAPHSCOPE_HOME}"/maxgraph/lib/*.jar | tr ' ' ':')"
 }
 
 max_node() {

@@ -51,7 +51,7 @@ jobs:
         cat /etc/hosts
 
     - name: Setup tmate session
-      if: false
+      if: true
       uses: mxschmitt/action-tmate@v2
 
     - name: Build GraphScope
@@ -89,7 +89,7 @@ jobs:
         rm -fr /tmp/default.etcd || true
 
     - name: DEBUG
-      if: true
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Run Gaia on Maxgraph Store Test
