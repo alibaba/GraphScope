@@ -71,7 +71,8 @@ gie:
 	cargo build --all
 	# install
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
-	mkdir -p $(WORKING_DIR)/.install_prefix/{bin,conf} && \
+	mkdir -p $(WORKING_DIR)/.install_prefix/bin && \
+	mkdir -p $(WORKING_DIR)/.install_prefix/conf && \
 	tar -xf $(WORKING_DIR)/interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz -C $(WORKING_DIR)/.install_prefix && \
 	tar -xf $(WORKING_DIR)/interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz -C $(WORKING_DIR)/.install_prefix && \
 	cp $(WORKING_DIR)/interactive_engine/src/executor/target/debug/executor $(WORKING_DIR)/.install_prefix/bin/executor && \
