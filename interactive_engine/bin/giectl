@@ -634,7 +634,7 @@ max_node() {
 
   _setup_maxgraph_env
 
-  sed -e "s@LOG4RS_FILE@${GRAPHSCOPE_HOME}/conf/log4rs.yml@g" \
+  sed -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/conf/log4rs.yml@g" \
       ${GRAPHSCOPE_HOME}/conf/config.template > ${config_dir}/max_node_${type}.config
 
   if [[ "${type}" == "gaia" ]]; then

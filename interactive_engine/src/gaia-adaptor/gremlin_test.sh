@@ -4,7 +4,7 @@ ps -ef | grep "com.alibaba.graphscope.gaia.MaxNode" | grep -v grep | awk '{print
 cd ${base_dir}/../.. && mvn clean install -DskipTests -Pv2
 cd ./distribution/target/ && sudo tar xvzf maxgraph.tar.gz -C ${GRAPHSCOPE_HOME}
 # start server
-${GRAPHSCOPE_HOME}/bin/giectl max_node_gaia max_node
+LOG_NAME=maxnode ${GRAPHSCOPE_HOME}/bin/giectl max_node_gaia
 sleep 20
 cd ${base_dir} && mvn test
 exit_code=$?
