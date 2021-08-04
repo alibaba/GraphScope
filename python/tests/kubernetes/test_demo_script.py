@@ -252,7 +252,7 @@ def test_traversal_modern_graph(gs_session, modern_graph_data_dir, modern_byteco
 
     with pytest.raises(
         NotImplementedError,
-        match="GAIA not enabled. Enable gaia with `session(enable_gaia=True)`",
+        match="GAIA not enabled",
     ):
         g.gaia().V().count().toList()
 

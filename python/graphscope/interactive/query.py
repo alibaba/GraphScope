@@ -146,14 +146,15 @@ class InteractiveQueryDAGNode(DAGNode):
         # add op to dag
         self._session.dag.add_op(self._op)
 
-    # def gaia(self):
-    #     if not self._enable_gaia:
-    #         raise NotImplementedError(
-    #             "GAIA not enabled. Enable gaia with `session(enable_gaia=True)`"
-    #         )
-    #     cls = self.clone()
-    #     cls._query_gaia = True
-    #     return cls
+    def clone(self):
+        cls = InteractiveQueryDAGNode.__new__(InteractiveQueryDAGNode)
+        cls._session = self._session
+        cls._graph = self._graph
+        cls._engine_params = self._engine_params
+        cls._enable_gaia = self._enable_gaia
+        cls._query_gaia = self._query_gaia
+        cls._op = self._op
+        return cls
 
     def execute(self, query, request_options=None):
         """Execute gremlin querying scripts.
@@ -254,7 +255,7 @@ class InteractiveQuery(object):
         ret._status = self._status
         ret._graph_url = self._graph_url
         ret._object_id = self._object_id
-        ret._interactive_query_node = self._interactive_query_node
+        ret._interactive_query_node = self._interactive_query_node.clone()
         ret._session = self._interactive_query_node.session
         return ret
 
