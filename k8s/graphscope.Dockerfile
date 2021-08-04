@@ -107,13 +107,11 @@ COPY --from=builder /root/gs/k8s/precompile.py /tmp/precompile.py
 RUN python3 /tmp/precompile.py && rm /tmp/precompile.py
 
 RUN mkdir -p /home/maxgraph
-RUN mkdir -p /home/maxgraph/{bin,config}
+RUN mkdir -p /home/maxgraph/{bin,conf}
 ENV VINEYARD_IPC_SOCKET /home/maxgraph/data/vineyard/vineyard.sock
 COPY --from=builder /root/gs/interactive_engine/src/executor/target/$profile/executor /home/maxgraph/bin/executor
 COPY --from=builder /root/gs/interactive_engine/bin/giectl /home/maxgraph/bin/giectl
-RUN chmod a+x /home/maxgraph/bin/giectl
 
-COPY --from=builder /root/gs/interactive_engine/src/executor/store/log4rs.yml /home/maxgraph/conf/log4rs.yml
 RUN mkdir -p /home/maxgraph/native
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/home/maxgraph/native
 
@@ -124,6 +122,6 @@ RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e
 ENV RUST_BACKTRACE=1
 
 # copy start script from builder
-COPY interactive_engine/config/* /home/maxgraph/config/
+COPY interactive_engine/conf/* /home/maxgraph/conf
 ENV GRAPHSCOPE_HOME=/home/maxgraph
 ENV GRAPHSCOPE_RUNTIME=/tmp/graphscope

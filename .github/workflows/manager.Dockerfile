@@ -6,11 +6,9 @@ COPY ./interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz /hom
 RUN tar -xf /home/maxgraph/0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
 RUN tar -xf /home/maxgraph/instance-0.0.1-SNAPSHOT.tar.gz -C /home/maxgraph
 # copy bin and config from builder
-RUN mkdir -p /home/maxgraph/{bin,config}
+RUN mkdir -p /home/maxgraph/{bin,conf}
 COPY ./interactive_engine/bin/giectl /home/maxgraph/bin/giectl
-COPY ./interactive_engine/config/* /home/maxgraph/config/
-RUN chmod a+x /home/maxgraph/bin/giectl
-
+COPY ./interactive_engine/conf/* /home/maxgraph/conf/
 
 ENV GRAPHSCOPE_HOME=/home/maxgraph
 ENV GRAPHSCOPE_RUNTIME=/tmp/graphscope

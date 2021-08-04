@@ -106,7 +106,7 @@ start_coordinator() {
             -Dsun.jnu.encoding=UTF-8
             -Dlogfilename=${log_dir}/maxgraph-coordinator.log
             -Dlogbasedir=${log_dir}/coordinator
-            -Dlog4j.configurationFile=file:${WORKSPACE}/config/log4j2.xml
+            -Dlog4j.configurationFile=file:${WORKSPACE}/conf/log4j2.xml
             -classpath ${WORKSPACE}/0.0.1-SNAPSHOT/conf/*:${WORKSPACE}/0.0.1-SNAPSHOT/lib/*:"
 
   # set coordinator config file
@@ -114,13 +114,13 @@ start_coordinator() {
       -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
       -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
       -e "s@PARTITION_NUM@${executor_count}@g" \
-      ${WORKSPACE}/config/coordinator.application.properties > ${config_dir}/coordinator.application.properties
+      ${WORKSPACE}/conf/coordinator.application.properties > ${config_dir}/coordinator.application.properties
   if [ ${enable_gaia} ]; then
     sed -e "s@GRAPH_NAME@${object_id}_gaia@g" \
         -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
         -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
         -e "s@PARTITION_NUM@${executor_count}@g" \
-        ${WORKSPACE}/config/coordinator.application.properties > ${config_dir}/gaia-coordinator.application.properties
+        ${WORKSPACE}/conf/coordinator.application.properties > ${config_dir}/gaia-coordinator.application.properties
   fi
 
   if [[ "${cluster_type}" == "k8s" ]]; then
@@ -192,7 +192,7 @@ start_frontend() {
             -Dsun.jnu.encoding=UTF-8
             -Dlogfilename=${log_dir}/maxgraph-frontend.log
             -Dlogbasedir=${log_dir}/frontend
-            -Dlog4j.configurationFile=file:${WORKSPACE}/config/log4j2.xml
+            -Dlog4j.configurationFile=file:${WORKSPACE}/conf/log4j2.xml
             -classpath ${WORKSPACE}/0.0.1-SNAPSHOT/conf/*:${WORKSPACE}/0.0.1-SNAPSHOT/lib/*:"
 
   frontend_port="0"  # 0 means random
@@ -206,7 +206,7 @@ start_frontend() {
       -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
       -e "s@PARTITION_NUM@${executor_count}@g" \
       -e "s@SERVER_PORT@${frontend_port}@g" \
-      ${WORKSPACE}/config/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
+      ${WORKSPACE}/conf/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
   if [ ${enable_gaia} ]; then
     sed -e "s@GRAPH_NAME@${object_id}_gaia@g" \
         -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
@@ -214,7 +214,7 @@ start_frontend() {
         -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
         -e "s@PARTITION_NUM@${executor_count}@g" \
         -e "s@SERVER_PORT@${frontend_port}@g" \
-        ${WORKSPACE}/config/frontend.vineyard.properties > ${config_dir}/gaia-frontend.vineyard.properties
+        ${WORKSPACE}/conf/frontend.vineyard.properties > ${config_dir}/gaia-frontend.vineyard.properties
   fi
 
   if [[ "${cluster_type}" == "k8s" ]]; then
@@ -277,14 +277,14 @@ start_executor() {
       -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
       -e "s@WORKER_NUM@${engine_count}@g" \
       -e "s@PARTITION_NUM@${engine_count}@g" \
-      ${WORKSPACE}/config/executor.vineyard.properties > ${config_dir}/executor.vineyard.properties
+      ${WORKSPACE}/conf/executor.vineyard.properties > ${config_dir}/executor.vineyard.properties
   if [ ${enable_gaia} ]; then
     sed -e "s@GRAPH_NAME@${object_id}_gaia@g" \
         -e "s@VINEYARD_OBJECT_ID@${object_id}@g" \
         -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
         -e "s@WORKER_NUM@${engine_count}@g" \
         -e "s@PARTITION_NUM@${engine_count}@g" \
-        ${WORKSPACE}/config/executor.vineyard.properties > ${config_dir}/gaia-executor.vineyard.properties
+        ${WORKSPACE}/conf/executor.vineyard.properties > ${config_dir}/gaia-executor.vineyard.properties
   fi
 
   # update parameters(key-value) in config file
@@ -435,7 +435,7 @@ create_instance_on_k8s() {
         -e "s@limits_mem@${gremlin_server_mem}@g" \
         -e "s@unique_schema_path@${schema_path_in_container}@g" \
         -e "s@unique_executor_count@${engine_count}@g" \
-        ${WORKSPACE}/config/pod.yaml > ${WORKSPACE}/config/pod_${object_id}.yaml
+        ${WORKSPACE}/conf/pod.yaml > ${WORKSPACE}/conf/pod_${object_id}.yaml
   else
     sed -e "s@unique_pod_name@${pod_name}@g" \
         -e "s@unique_schema_name@${schema_name}@g" \
@@ -449,9 +449,9 @@ create_instance_on_k8s() {
         -e "s@limits_mem@${gremlin_server_mem}@g" \
         -e "s@unique_schema_path@${schema_path_in_container}@g" \
         -e "s@unique_executor_count@${engine_count}@g" \
-        ${WORKSPACE}/config/pod.yaml > ${WORKSPACE}/config/pod_${object_id}.yaml
+        ${WORKSPACE}/conf/pod.yaml > ${WORKSPACE}/conf/pod_${object_id}.yaml
   fi
-  kubectl apply -f ${WORKSPACE}/config/pod_${object_id}.yaml
+  kubectl apply -f ${WORKSPACE}/conf/pod_${object_id}.yaml
 
   log "Launch interactive engine(executor) in per analytical pod."
   _server_id=1
@@ -533,7 +533,7 @@ close_instance_on_k8s() {
   waiting_for_delete=$4
 
   log "Delete frontend and corrdinator pods."
-  kubectl delete -f ${WORKSPACE}/config/pod_${object_id}.yaml --wait=${waiting_for_delete}
+  kubectl delete -f ${WORKSPACE}/conf/pod_${object_id}.yaml --wait=${waiting_for_delete}
   kubectl delete configmap schema-${object_id}
   kubectl delete service gremlin-${object_id}
 
@@ -566,12 +566,7 @@ start_service() {
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
   fi
 
-  set +x
-  libpath="."
-  for file in `ls ${WORKSPACE}/lib`; do
-    libpath="${libpath}:${WORKSPACE}/lib/${file}"
-  done
-  set -x
+  libpath="$(echo "${WORKSPACE}"/lib/*.jar | tr ' ' ':')"
 
   service_dir=${GRAPHSCOPE_RUNTIME}/${service_id}
   mkdir -p ${service_dir}
@@ -579,7 +574,7 @@ start_service() {
       -e "s@CREATE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
       -e "s@CLOSE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
       -e "s@ZOOKEEPER_PORT@${zookeeper_port}@g" \
-      ${WORKSPACE}/config/application.properties > ${service_dir}/application.properties
+      ${WORKSPACE}/conf/application.properties > ${service_dir}/application.properties
   if [[ "${cluster_type}" == "local" ]]; then
     java -cp ${libpath} -Dspring.config.location=${service_dir}/application.properties \
          com.alibaba.maxgraph.admin.InstanceManagerApplication &
@@ -615,9 +610,14 @@ stop_service() {
   fi
 }
 
+# below is commands of v2 and gaia
 _setup_maxgraph_env() {
   if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
+  fi
+
+  if [ -z "${LOG_NAME}" ]; then
+    LOG_NAME="maxgraph"
   fi
 
   export LD_LIBRARY_PATH=${GRAPHSCOPE_HOME}/maxgraph/native:${LD_LIBRARY_PATH}:/usr/local/lib
@@ -630,31 +630,29 @@ _setup_maxgraph_env() {
 }
 
 max_node() {
-  type=$1
-  log_name=$2
-  shift 2
+  type=$1; shift
 
   _setup_maxgraph_env
 
-  sed -e "s@LOG4RS_FILE@${GRAPHSCOPE_HOME}/config/log4rs.yml@g" \
-      ${GRAPHSCOPE_HOME}/config/config.template > ${config_dir}/max_node_${type}.config
+  sed -e "s@LOG4RS_FILE@${GRAPHSCOPE_HOME}/conf/log4rs.yml@g" \
+      ${GRAPHSCOPE_HOME}/conf/config.template > ${config_dir}/max_node_${type}.config
 
   if [[ "${type}" == "gaia" ]]; then
     java -server \
-         -Dlogback.configurationFile="${WORKSPACE}/config/logback.xml" \
+         -Dlogback.configurationFile="${WORKSPACE}/conf/logback.xml" \
          -Dconfig.file="${config_dir}/max_node_${type}.config" \
          -Dlog.dir="${log_dir}" \
-         -Dlog.name="${log_name}" \
+         -Dlog.name="${LOG_NAME}" \
          -cp "${libpath}" com.alibaba.graphscope.gaia.MaxNode \
-         "$@" > "${log_dir}/${log_name}.out" 2>&1 <&- &
+         "$@" > "${log_dir}/${LOG_NAME}.out" 2>&1 <&- &
   else
     java -server \
-         -Dlogback.configurationFile="${WORKSPACE}/config/logback.xml" \
+         -Dlogback.configurationFile="${WORKSPACE}/conf/logback.xml" \
          -Dconfig.file="${config_dir}/max_node_${type}.config" \
          -Dlog.dir="${log_dir}" \
-         -Dlog.name="${log_name}" \
+         -Dlog.name="${LOG_NAME}" \
          -cp "${libpath}" com.alibaba.maxgraph.v2.MaxNode \
-         "$@" > "${log_dir}/${log_name}.out" 2>&1 <&- &
+         "$@" > "${log_dir}/${LOG_NAME}.out" 2>&1 <&- &
   fi
 
   pid=$!
@@ -665,9 +663,7 @@ max_node() {
 }
 
 admin_tools() {
-  log_name=$1
-  config_file=$2
-  shift 2
+  config_file=$1; shift
 
   _setup_maxgraph_env
 
@@ -676,7 +672,7 @@ admin_tools() {
       -Dlogback.configurationFile="${WORKSPACE}/logback.xml" \
       -Dconfig.file="${config_file}" \
       -Dlog.dir="${log_dir}" \
-      -Dlog.name="${log_name}" \
+      -Dlog.name="${LOG_NAME}" \
       -cp "${libpath}" com.alibaba.maxgraph.v2.AdminTools \
       "$@"
 }
@@ -688,9 +684,7 @@ load_tools() {
 }
 
 maxgraph() {
-  log_name=$1;
-  config_file=$2
-  shift 2
+  config_file=$1; shift
 
   _setup_maxgraph_env
 
@@ -705,12 +699,12 @@ maxgraph() {
             -XX:InitiatingHeapOccupancyPercent=20
             -XX:-OmitStackTraceInFastThrow
             -XX:+HeapDumpOnOutOfMemoryError
-            -XX:HeapDumpPath=${log_dir}/${log_name}.hprof
+            -XX:HeapDumpPath=${log_dir}/${LOG_NAME}.hprof
             -XX:+PrintGCDetails
             -XX:+PrintGCDateStamps
             -XX:+PrintTenuringDistribution
             -XX:+PrintGCApplicationStoppedTime
-            -Xloggc:${log_dir}/${log_name}.gc.log
+            -Xloggc:${log_dir}/${LOG_NAME}.gc.log
             -XX:+UseGCLogFileRotation
             -XX:NumberOfGCLogFiles=32
             -XX:GCLogFileSize=64m"
@@ -719,9 +713,9 @@ maxgraph() {
       -Dlogback.configurationFile="${WORKSPACE}/logback.xml" \
       -Dconfig.file=${config_file} \
       -Dlog.dir="${log_dir}" \
-      -Dlog.name="${log_name}" \
+      -Dlog.name="${LOG_NAME}" \
       -cp "${libpath}" com.alibaba.maxgraph.v2.MaxGraph \
-      "$@" > "${log_dir}/${log_name}.out" 2>&1 <&- &
+      "$@" > "${log_dir}/${LOG_NAME}.out" 2>&1 <&- &
 
   pid=$!
   if ! ps -p $pid > /dev/null ; then

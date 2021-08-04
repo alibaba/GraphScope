@@ -54,7 +54,7 @@ data:
     executor.query.thread.count={{ .Values.executorQueryThreadCount }}
     executor.query.manager.thread.count={{ .Values.executorQueryManagerThreadCount }}
     executor.query.store.thread.count={{ .Values.executorQueryStoreThreadCount }}
-    log4rs.config=LOG4RS_FILE
+    log4rs.config={{ .Values.log4rsConfig }}
 
     dns.name.prefix.frontend=FRONTEND
     dns.name.prefix.ingestor=INGESTOR
