@@ -590,7 +590,7 @@ jobs:
         export JAVA_HOME=/usr/lib/jvm/default-java/
 
         cd /tmp
-        wget -q https://mirrors.bfsu.edu.cn/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
+        wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
         tar -zxf hadoop-2.10.1.tar.gz
 
         cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
