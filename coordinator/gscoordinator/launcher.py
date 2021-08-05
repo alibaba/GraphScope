@@ -239,7 +239,7 @@ class LocalLauncher(Launcher):
         cmd = [
             "bash",
             gm_sh,
-            "start_service",
+            "start_manager_service",
             "local",
             str(port),
             self._instance_id,

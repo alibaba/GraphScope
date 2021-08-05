@@ -719,7 +719,7 @@ class KubernetesClusterLauncher(Launcher):
         graph_manager_builder.add_manager_container(
             cmd=["/bin/bash", "-c", "--"],
             args=[
-                "/home/maxgraph/bin/giectl start_service k8s {} 0 {}".format(
+                "/home/maxgraph/bin/giectl start_manager_service k8s {} 0 {}".format(
                     self._interactive_engine_manager_port, self._zookeeper_port
                 )
             ],
