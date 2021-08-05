@@ -30,9 +30,11 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.*;
 
-public class MaxTestGraphProvider extends AbstractGraphProvider {
+public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(MaxTestGraphProvider.class);
+
+    private MaxTestGraph graph;
 
     @Override
     public Map<String, Object> getBaseConfiguration(String graphName, Class<?> test, String testMethodName,
@@ -52,6 +54,7 @@ public class MaxTestGraphProvider extends AbstractGraphProvider {
     public void clear(Graph graph, Configuration configuration) throws Exception {
         if (graph != null) {
             graph.close();
+            this.graph = (MaxTestGraph) graph;
         }
         deleteDirectory(new File(configuration.getString(StoreConfig.STORE_DATA_PATH.getKey())));
     }
@@ -74,4 +77,8 @@ public class MaxTestGraphProvider extends AbstractGraphProvider {
         return null;
     }
 
+    @Override
+    public void close() throws Exception {
+        this.graph.getMaxNode().close();
+    }
 }
