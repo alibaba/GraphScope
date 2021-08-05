@@ -7,13 +7,11 @@ on:
       - main
     paths:
       - 'research/gaia/**'
-      - 'interactive_engine/bin/giectl'
   pull_request:
     branches:
       - main
     paths:
       - 'research/gaia/**'
-      - 'interactive_engine/bin/giectl'
 
 jobs:
   gaia-test:
