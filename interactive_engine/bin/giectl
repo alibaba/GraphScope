@@ -536,7 +536,7 @@ close_instance_on_local() {
   declare -a components=("coordinator" "frontend" "executor")
 
   for component in "${components[@]}"; do
-    str=$(cat $PID_DIR/${component}.pid)
+    str=$(cat ${pid_dir}/${component}.pid)
 
     # The file may have multiple pids, each in a single line
     # This will read each line into an array
