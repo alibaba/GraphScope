@@ -351,6 +351,12 @@ import java.util.Properties;
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesTest",
         method = "g_injectXg_VX1X_propertiesXnameX_nextX_value",
         reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest",
+        method = "g_V_hasLabelXpersonX_order_byXageX_skipX1X_valuesXnameX",
+        reason = "Memory allocation bug, see Issue: https://github.com/alibaba/GraphScope/issues/653")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest",
+        method = "g_V_hasLabelXpersonX_order_byXageX_valuesXnameX_skipX1X",
+        reason = "Memory allocation bug, see Issue: https://github.com/alibaba/GraphScope/issues/653")
 public class MaxTestGraph implements Graph {
     private static final Logger logger = LoggerFactory.getLogger(MaxTestGraph.class);
 
