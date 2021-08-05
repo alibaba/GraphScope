@@ -15,7 +15,7 @@
  */
 
 #include <cassert>
-#include <fstream>
+#include <sstream>
 
 #include "jna/ffi_test.h"
 #include "store_ffi/store_ffi.h"
@@ -81,12 +81,9 @@ std::string GetPropValueAsStr(Property* p) {
   return std::string{};
 }
 
-/// Dump file
-std::ofstream dumper;
-
 /// Test Functions
 
-bool LogVertexInfo(Vertex* v) {
+bool LogVertexInfo(Vertex* v, std::stringstream& logger) {
   std::string v_id = std::to_string(v->GetVertexId());
 
   std::string info = "[INFO] ";
@@ -95,24 +92,24 @@ bool LogVertexInfo(Vertex* v) {
 
   auto pi = v->GetPropertyIterator();
   if (!pi.Valid()) {
-    dumper << "[Error] Got invalid Property iterator handle of vertex<" << v_id << ">!\n";
+    logger << "[Error] Got invalid Property iterator handle of vertex<" << v_id << ">!\n";
     return false;
   }
   while (true) {
     auto rp = pi.Next();
     if (rp.isErr()) {
-      dumper << "[Error] PropertyIterator.Next(): " << rp.unwrapErr().GetInfo() << "\n";
+      logger << "[Error] PropertyIterator.Next(): " << rp.unwrapErr().GetInfo() << "\n";
       return false;
     }
     auto p = rp.unwrap();
     if (!p.Valid()) { break; }
     info += "<" + PropName(p.GetPropertyId()) + ": " + GetPropValueAsStr(&p) + "> ";
   }
-  dumper << info << "\n";
+  logger << info << "\n";
   return true;
 }
 
-bool LogEdgeInfo(Edge* e) {
+bool LogEdgeInfo(Edge* e, std::stringstream& logger) {
   auto e_id = e->GetEdgeId();
   std::string e_id_str = "(" + std::to_string(e_id.edge_inner_id) + ", "
                          + std::to_string(e_id.src_vertex_id) + ", " + std::to_string(e_id.dst_vertex_id) + ")";
@@ -126,66 +123,66 @@ bool LogEdgeInfo(Edge* e) {
 
   auto pi = e->GetPropertyIterator();
   if (!pi.Valid()) {
-    dumper << "[Error] Got invalid Property iterator handle of edge<" << e_id_str << ">!\n";
+    logger << "[Error] Got invalid Property iterator handle of edge<" << e_id_str << ">!\n";
     return false;
   }
   while (true) {
     auto rp = pi.Next();
     if (rp.isErr()) {
-      dumper << "[Error] PropertyIterator.Next(): " << rp.unwrapErr().GetInfo() << "\n";
+      logger << "[Error] PropertyIterator.Next(): " << rp.unwrapErr().GetInfo() << "\n";
       return false;
     }
     auto p = rp.unwrap();
     if (!p.Valid()) { break; }
     info += "<" + PropName(p.GetPropertyId()) + ": " + GetPropValueAsStr(&p) + "> ";
   }
-  dumper << info << "\n";
+  logger << info << "\n";
   return true;
 }
 
-bool TestScanVertex(Snapshot* ss) {
+bool TestScanVertex(Snapshot* ss, std::stringstream& logger) {
   auto r = ss->ScanVertex();
   if (r.isErr()) {
-    dumper << "[Error] ScanVertex: " << r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] ScanVertex: " << r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto vi = r.unwrap();
   if (!vi.Valid()) {
-    dumper << "[Error] Got invalid vertex iterator handle!\n";
+    logger << "[Error] Got invalid vertex iterator handle!\n";
     return false;
   }
   unsigned v_cnt = 0;
   while (true) {
     auto rv = vi.Next();
     if (rv.isErr()) {
-      dumper << "[Error] VertexIterator.Next(): " << rv.unwrapErr().GetInfo() << "\n";
+      logger << "[Error] VertexIterator.Next(): " << rv.unwrapErr().GetInfo() << "\n";
       return false;
     }
     auto v = rv.unwrap();
     if (!v.Valid()) { break; }
     v_cnt++;
-    if (!LogVertexInfo(&v)) {
+    if (!LogVertexInfo(&v, logger)) {
       return false;
     }
   }
   if (v_cnt != total_vertex_count) {
-    dumper << "[Error] Incorrect vertex number! "
+    logger << "[Error] Incorrect vertex number! "
            << "Expect: " << total_vertex_count << ", Got: " << v_cnt << "!\n";
     return false;
   }
-  dumper << "[INFO] --- Total Vertex Number: " << v_cnt << "\n";
+  logger << "[INFO] --- Total Vertex Number: " << v_cnt << "\n";
   return true;
 }
 
-bool TestScanEdge(Snapshot* ss) {
+bool TestScanEdge(Snapshot* ss, std::stringstream& logger) {
   auto r = ss->ScanEdge();
   if (r.isErr()) {
-    dumper << "[Error] ScanEdge: " << r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] ScanEdge: " << r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto ei = r.unwrap();
   if (!ei.Valid()) {
-    dumper << "[Error] Got invalid edge iterator handle!\n";
+    logger << "[Error] Got invalid edge iterator handle!\n";
     return false;
   }
 
@@ -193,26 +190,26 @@ bool TestScanEdge(Snapshot* ss) {
   while (true) {
     auto re = ei.Next();
     if (re.isErr()) {
-      dumper << "[Error] EdgeIterator.Next(): " << re.unwrapErr().GetInfo() << "\n";
+      logger << "[Error] EdgeIterator.Next(): " << re.unwrapErr().GetInfo() << "\n";
       return false;
     }
     auto e = re.unwrap();
     if (!e.Valid()) { break; }
     e_cnt++;
-    if (!LogEdgeInfo(&e)) {
+    if (!LogEdgeInfo(&e, logger)) {
       return false;
     }
   }
   if (e_cnt != total_edge_count) {
-    dumper << "[Error] Incorrect edge number! "
+    logger << "[Error] Incorrect edge number! "
            << "Expect: " << total_edge_count << ", Got: " << e_cnt << "!\n";
     return false;
   }
-  dumper << "[INFO] --- Total Edge Number: " << e_cnt << "\n";
+  logger << "[INFO] --- Total Edge Number: " << e_cnt << "\n";
   return true;
 }
 
-bool TestGetVertex(Snapshot* ss) {
+bool TestGetVertex(Snapshot* ss, std::stringstream& logger) {
   // Get vertex: <VertexID: 2233628339503041259> <Label: software> <id: 5> <lang: java> <name: ripple>
   VertexId query_vid = 2233628339503041259U;
   int64_t expect_id_prop = 5L;
@@ -221,78 +218,78 @@ bool TestGetVertex(Snapshot* ss) {
 
   auto r = ss->GetVertex(query_vid, software_LabelId);
   if (r.isErr()) {
-    dumper << "[Error] GetVertex: " << r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] GetVertex: " << r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto v = r.unwrap();
   if (!v.Valid()) {
-    dumper << "[Error] Got invalid vertex handle!\n";
+    logger << "[Error] Got invalid vertex handle!\n";
     return false;
   }
 
   // Check 'id' property
   auto id_prop = v.GetPropertyBy(id_PropId);
   if (!id_prop.Valid()) {
-    dumper << "[Error] Got invalid 'id' property handle!\n";
+    logger << "[Error] Got invalid 'id' property handle!\n";
     return false;
   }
   auto id_prop_r = id_prop.GetAsInt64();
   if (id_prop_r.isErr()) {
-    dumper << "[Error] Property.GetAsInt64(): " << id_prop_r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] Property.GetAsInt64(): " << id_prop_r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto id_prop_unwrapped = id_prop_r.unwrap();
   if (id_prop_unwrapped != expect_id_prop) {
-    dumper << "[Error] 'id' property mismatched! "
+    logger << "[Error] 'id' property mismatched! "
            << "Expect: " << expect_id_prop << ", Got: " << id_prop_unwrapped << "!\n";
     return false;
   }
-  dumper << "[INFO] --- 'id' property checking passed!\n";
+  logger << "[INFO] --- 'id' property checking passed!\n";
 
   // Check 'name' property
   auto name_prop = v.GetPropertyBy(name_PropId);
   if (!name_prop.Valid()) {
-    dumper << "[Error] Got invalid 'name' property handle!\n";
+    logger << "[Error] Got invalid 'name' property handle!\n";
     return false;
   }
   auto name_prop_r = name_prop.GetAsStr();
   if (name_prop_r.isErr()) {
-    dumper << "[Error] Property.GetAsStr(): " << name_prop_r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] Property.GetAsStr(): " << name_prop_r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto name_prop_unwrapped = name_prop_r.unwrap();
   std::string name_prop_str{static_cast<const char*>(name_prop_unwrapped.data), name_prop_unwrapped.len};
   if (name_prop_str != expect_name_prop) {
-    dumper << "[Error] 'name' property mismatched! "
+    logger << "[Error] 'name' property mismatched! "
            << "Expect: " << expect_name_prop << ", Got: " << name_prop_str << "!\n";
     return false;
   }
-  dumper << "[INFO] --- 'name' property checking passed!\n";
+  logger << "[INFO] --- 'name' property checking passed!\n";
 
   // Check 'lang' property
   auto lang_prop = v.GetPropertyBy(lang_PropId);
   if (!lang_prop.Valid()) {
-    dumper << "[Error] Got invalid 'lang' property handle!\n";
+    logger << "[Error] Got invalid 'lang' property handle!\n";
     return false;
   }
   auto lang_prop_r = lang_prop.GetAsStr();
   if (lang_prop_r.isErr()) {
-    dumper << "[Error] Property.GetAsStr(): " << lang_prop_r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] Property.GetAsStr(): " << lang_prop_r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto lang_prop_unwrapped = lang_prop_r.unwrap();
   std::string lang_prop_str{static_cast<const char*>(lang_prop_unwrapped.data), lang_prop_unwrapped.len};
   if (lang_prop_str != expect_lang_prop) {
-    dumper << "[Error] 'lang' property mismatched! "
+    logger << "[Error] 'lang' property mismatched! "
            << "Expect: " << expect_lang_prop << ", Got: " << lang_prop_str << "!\n";
     return false;
   }
-  dumper << "[INFO] --- 'lang' property checking passed!\n";
+  logger << "[INFO] --- 'lang' property checking passed!\n";
 
   return true;
 }
 
-bool TestGetEdge(Snapshot* ss) {
+bool TestGetEdge(Snapshot* ss, std::stringstream& logger) {
   // Get edge: <EdgeID: (0, 16401677891599130309, 10454779632061085998)>
   //           <EdgeRelation: (created, person, software)>
   //           <id: 12> <weight: 0.200000>
@@ -303,57 +300,57 @@ bool TestGetEdge(Snapshot* ss) {
 
   auto r = ss->GetEdge(query_edge_id, query_edge_rel);
   if (r.isErr()) {
-    dumper << "[Error] GetEdge: " << r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] GetEdge: " << r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto e = r.unwrap();
   if (!e.Valid()) {
-    dumper << "[Error] Got invalid edge handle!\n";
+    logger << "[Error] Got invalid edge handle!\n";
     return false;
   }
 
   // Check 'id' property
   auto id_prop = e.GetPropertyBy(id_PropId);
   if (!id_prop.Valid()) {
-    dumper << "[Error] Got invalid 'id' property handle!\n";
+    logger << "[Error] Got invalid 'id' property handle!\n";
     return false;
   }
   auto id_prop_r = id_prop.GetAsInt64();
   if (id_prop_r.isErr()) {
-    dumper << "[Error] Property.GetAsInt64(): " << id_prop_r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] Property.GetAsInt64(): " << id_prop_r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto id_prop_unwrapped = id_prop_r.unwrap();
   if (id_prop_unwrapped != expect_id_prop) {
-    dumper << "[Error] 'id' property mismatched! "
+    logger << "[Error] 'id' property mismatched! "
            << "Expect: " << expect_id_prop << ", Got: " << id_prop_unwrapped << "!\n";
     return false;
   }
-  dumper << "[INFO] --- 'id' property checking passed!\n";
+  logger << "[INFO] --- 'id' property checking passed!\n";
 
   // Check 'weight' property
   auto weight_prop = e.GetPropertyBy(weight_PropId);
   if (!weight_prop.Valid()) {
-    dumper << "[Error] Got invalid 'weight' property handle!\n";
+    logger << "[Error] Got invalid 'weight' property handle!\n";
     return false;
   }
   auto weight_prop_r = weight_prop.GetAsDouble();
   if (weight_prop_r.isErr()) {
-    dumper << "[Error] Property.GetAsDouble(): " << weight_prop_r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] Property.GetAsDouble(): " << weight_prop_r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto weight_prop_unwrapped = weight_prop_r.unwrap();
   if (weight_prop_unwrapped != expect_weight_prop) {
-    dumper << "[Error] 'weight' property mismatched! "
+    logger << "[Error] 'weight' property mismatched! "
            << "Expect: " << expect_weight_prop << ", Got: " << weight_prop_unwrapped << "!\n";
     return false;
   }
-  dumper << "[INFO] --- 'weight' property checking passed!\n";
+  logger << "[INFO] --- 'weight' property checking passed!\n";
 
   return true;
 }
 
-bool TestGetOutEdges(Snapshot* ss) {
+bool TestGetOutEdges(Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10714315738933730127> <Label: person> <age: 29> <name: marko> <id: 1>
   VertexId query_vid = 10714315738933730127U;
   unsigned expect_knows_num = 2;
@@ -361,109 +358,109 @@ bool TestGetOutEdges(Snapshot* ss) {
 
   auto knows_r = ss->GetOutEdges(query_vid, knows_EdgeLabelId);
   if (knows_r.isErr()) {
-    dumper << "[Error] GetOutEdges: " << knows_r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] GetOutEdges: " << knows_r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto knows_ei = knows_r.unwrap();
   if (!knows_ei.Valid()) {
-    dumper << "[Error] Got invalid edge iterator handle at GetOutEdges for (" << query_vid << ", knows)!\n";
+    logger << "[Error] Got invalid edge iterator handle at GetOutEdges for (" << query_vid << ", knows)!\n";
     return false;
   }
   unsigned knows_cnt = 0;
   while (true) {
     auto re = knows_ei.Next();
     if (re.isErr()) {
-      dumper << "[Error] EdgeIterator.Next(): " << re.unwrapErr().GetInfo() << "\n";
+      logger << "[Error] EdgeIterator.Next(): " << re.unwrapErr().GetInfo() << "\n";
       return false;
     }
     auto e = re.unwrap();
     if (!e.Valid()) { break; }
     knows_cnt++;
-    if (!LogEdgeInfo(&e)) {
+    if (!LogEdgeInfo(&e, logger)) {
       return false;
     }
   }
   if (knows_cnt != expect_knows_num) {
-    dumper << "[Error] Incorrect 'knows' out-neighbour number! "
+    logger << "[Error] Incorrect 'knows' out-neighbour number! "
            << "Expect: " << expect_knows_num << ", Got: " << knows_cnt << "!\n";
     return false;
   }
-  dumper << "[INFO] --- Get 'knows' out-edges passed! Total 'knows' out-neighbour number: " << knows_cnt << "\n";
+  logger << "[INFO] --- Get 'knows' out-edges passed! Total 'knows' out-neighbour number: " << knows_cnt << "\n";
 
   auto created_r = ss->GetOutEdges(query_vid, created_EdgeLabelId);
   if (created_r.isErr()) {
-    dumper << "[Error] GetOutEdges: " << created_r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] GetOutEdges: " << created_r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto created_ei = created_r.unwrap();
   if (!created_ei.Valid()) {
-    dumper << "[Error] Got invalid edge iterator handle at GetOutEdges for (" << query_vid << ", created)!\n";
+    logger << "[Error] Got invalid edge iterator handle at GetOutEdges for (" << query_vid << ", created)!\n";
     return false;
   }
   unsigned created_cnt = 0;
   while (true) {
     auto re = created_ei.Next();
     if (re.isErr()) {
-      dumper << "[Error] EdgeIterator.Next(): " << re.unwrapErr().GetInfo() << "\n";
+      logger << "[Error] EdgeIterator.Next(): " << re.unwrapErr().GetInfo() << "\n";
       return false;
     }
     auto e = re.unwrap();
     if (!e.Valid()) { break; }
     created_cnt++;
-    if (!LogEdgeInfo(&e)) {
+    if (!LogEdgeInfo(&e, logger)) {
       return false;
     }
   }
   if (created_cnt != expect_created_num) {
-    dumper << "[Error] Incorrect 'created' out-neighbour number! "
+    logger << "[Error] Incorrect 'created' out-neighbour number! "
            << "Expect: " << expect_created_num << ", Got: " << created_cnt << "!\n";
     return false;
   }
-  dumper << "[INFO] --- Get 'created' out-edges passed! Total 'created' out-neighbour number: " << created_cnt << "\n";
+  logger << "[INFO] --- Get 'created' out-edges passed! Total 'created' out-neighbour number: " << created_cnt << "\n";
 
   return true;
 }
 
-bool TestGetInEdges(Snapshot* ss) {
+bool TestGetInEdges(Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10454779632061085998> <Label: software> <id: 3> <name: lop> <lang: java>
   VertexId query_vid = 10454779632061085998U;
   unsigned expect_nbr_num = 3;
 
   auto r = ss->GetInEdges(query_vid);
   if (r.isErr()) {
-    dumper << "[Error] GetInEdges: " << r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] GetInEdges: " << r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto ei = r.unwrap();
   if (!ei.Valid()) {
-    dumper << "[Error] Got invalid edge iterator handle at GetInEdges for (" << query_vid << ", None)!\n";
+    logger << "[Error] Got invalid edge iterator handle at GetInEdges for (" << query_vid << ", None)!\n";
     return false;
   }
   unsigned nbr_cnt = 0;
   while (true) {
     auto re = ei.Next();
     if (re.isErr()) {
-      dumper << "[Error] EdgeIterator.Next(): " << re.unwrapErr().GetInfo() << "\n";
+      logger << "[Error] EdgeIterator.Next(): " << re.unwrapErr().GetInfo() << "\n";
       return false;
     }
     auto e = re.unwrap();
     if (!e.Valid()) { break; }
     nbr_cnt++;
-    if (!LogEdgeInfo(&e)) {
+    if (!LogEdgeInfo(&e, logger)) {
       return false;
     }
   }
   if (nbr_cnt != expect_nbr_num) {
-    dumper << "[Error] Incorrect in-neighbour number! "
+    logger << "[Error] Incorrect in-neighbour number! "
            << "Expect: " << expect_nbr_num << ", Got: " << nbr_cnt << "!\n";
     return false;
   }
-  dumper << "[INFO] --- Get in-edges passed! Total in-neighbour number: " << nbr_cnt << "\n";
+  logger << "[INFO] --- Get in-edges passed! Total in-neighbour number: " << nbr_cnt << "\n";
 
   return true;
 }
 
-bool TestGetOutDegree(Snapshot* ss) {
+bool TestGetOutDegree(Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 12334515728491031937> <Label: person> <name: josh> <id: 4> <age: 32>
   VertexId query_vid = 12334515728491031937U;
   EdgeRelation query_edge_rel = EdgeRelation::From(created_EdgeLabelId, person_LabelId, software_LabelId);
@@ -471,21 +468,21 @@ bool TestGetOutDegree(Snapshot* ss) {
 
   auto r = ss->GetOutDegree(query_vid, query_edge_rel);
   if (r.isErr()) {
-    dumper << "[Error] GetOutDegree: " << r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] GetOutDegree: " << r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto out_degree = r.unwrap();
   if (out_degree != expect_created_degree) {
-    dumper << "[Error] Incorrect 'created' out degree! "
+    logger << "[Error] Incorrect 'created' out degree! "
            << "Expect: " << expect_created_degree << ", Got: " << out_degree << "!\n";
     return false;
   }
-  dumper << "[INFO] --- Get 'created' out degree passed!\n";
+  logger << "[INFO] --- Get 'created' out degree passed!\n";
 
   return true;
 }
 
-bool TestGetInDegree(Snapshot* ss) {
+bool TestGetInDegree(Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10454779632061085998> <Label: software> <id: 3> <name: lop> <lang: java>
   VertexId query_vid = 10454779632061085998U;
   EdgeRelation query_edge_rel = EdgeRelation::From(created_EdgeLabelId, person_LabelId, software_LabelId);
@@ -493,21 +490,21 @@ bool TestGetInDegree(Snapshot* ss) {
 
   auto r = ss->GetInDegree(query_vid, query_edge_rel);
   if (r.isErr()) {
-    dumper << "[Error] GetInDegree: " << r.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] GetInDegree: " << r.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto in_degree = r.unwrap();
   if (in_degree != expect_created_degree) {
-    dumper << "[Error] Incorrect 'created' in degree! "
+    logger << "[Error] Incorrect 'created' in degree! "
            << "Expect: " << expect_created_degree << ", Got: " << in_degree << "!\n";
     return false;
   }
-  dumper << "[INFO] --- Get 'created' in degree passed!\n";
+  logger << "[INFO] --- Get 'created' in degree passed!\n";
 
   return true;
 }
 
-bool TestGetKthOutEdge(Snapshot* ss) {
+bool TestGetKthOutEdge(Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10714315738933730127> <Label: person> <age: 29> <id: 1> <name: marko>
   VertexId query_vid = 10714315738933730127U;
   EdgeRelation query_edge_rel = EdgeRelation::From(knows_EdgeLabelId, person_LabelId, person_LabelId);
@@ -517,40 +514,40 @@ bool TestGetKthOutEdge(Snapshot* ss) {
 
   auto r1 = ss->GetKthOutEdge(query_vid, query_edge_rel, k1);
   if (r1.isErr()) {
-    dumper << "[Error] GetKthOutEdge: " << r1.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] GetKthOutEdge: " << r1.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto e1 = r1.unwrap();
   if (!e1.Valid()) {
-    dumper << "[Error] Got invalid edge handle at GetKthOutEdge for (" << query_vid << ", knows, " << k1 << ")!\n";
+    logger << "[Error] Got invalid edge handle at GetKthOutEdge for (" << query_vid << ", knows, " << k1 << ")!\n";
     return false;
   }
   auto k1_nbr_vid = e1.GetEdgeId().dst_vertex_id;
   if (k1_nbr_vid != expect_k1_nbr_vid) {
-    dumper << "[Error] The k-th out-neighbour mismatched!(k = " << k1 << ") "
+    logger << "[Error] The k-th out-neighbour mismatched!(k = " << k1 << ") "
            << "Expect VertexId: " << expect_k1_nbr_vid << ", Got VertexId: " << k1_nbr_vid << "!\n";
     return false;
   }
-  dumper << "[INFO] Got k-th 'knows' out neighbour: " << k1_nbr_vid << "\n";
-  dumper << "[INFO] --- Case_1 Passed!\n";
+  logger << "[INFO] Got k-th 'knows' out neighbour: " << k1_nbr_vid << "\n";
+  logger << "[INFO] --- Case_1 Passed!\n";
 
   auto r2 = ss->GetKthOutEdge(query_vid, query_edge_rel, k2);
   if (r2.isErr()) {
-    dumper << "[Error] GetKthOutEdge: " << r2.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] GetKthOutEdge: " << r2.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto e2 = r2.unwrap();
   if (e2.Valid()) {
-    dumper << "[Error] Expect null edge handle, but got an exact one!\n";
+    logger << "[Error] Expect null edge handle, but got an exact one!\n";
     return false;
   }
-  dumper << "[INFO] Got expected null edge handle.\n";
-  dumper << "[INFO] --- Case_2 Passed!\n";
+  logger << "[INFO] Got expected null edge handle.\n";
+  logger << "[INFO] --- Case_2 Passed!\n";
 
   return true;
 }
 
-bool TestGetKthInEdge(Snapshot* ss) {
+bool TestGetKthInEdge(Snapshot* ss, std::stringstream& logger) {
   // Query src vertex: <VertexID: 10454779632061085998> <Label: software> <id: 3> <name: lop> <lang: java>
   VertexId query_vid = 10454779632061085998U;
   EdgeRelation query_edge_rel = EdgeRelation::From(created_EdgeLabelId, person_LabelId, software_LabelId);
@@ -560,99 +557,97 @@ bool TestGetKthInEdge(Snapshot* ss) {
 
   auto r1 = ss->GetKthInEdge(query_vid, query_edge_rel, k1);
   if (r1.isErr()) {
-    dumper << "[Error] GetKthInEdge: " << r1.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] GetKthInEdge: " << r1.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto e1 = r1.unwrap();
   if (!e1.Valid()) {
-    dumper << "[Error] Got invalid edge handle at GetKthInEdge for (" << query_vid << ", created, " << k1 << ")!\n";
+    logger << "[Error] Got invalid edge handle at GetKthInEdge for (" << query_vid << ", created, " << k1 << ")!\n";
     return false;
   }
   auto k1_nbr_vid = e1.GetEdgeId().src_vertex_id;
   if (k1_nbr_vid != expect_k1_nbr_vid) {
-    dumper << "[Error] The k-th in-neighbour mismatched!(k = " << k1 << ") "
+    logger << "[Error] The k-th in-neighbour mismatched!(k = " << k1 << ") "
            << "Expect VertexId: " << expect_k1_nbr_vid << ", Got VertexId: " << k1_nbr_vid << "!\n";
     return false;
   }
-  dumper << "[INFO] Got k-th 'created' in neighbour: " << k1_nbr_vid << "\n";
-  dumper << "[INFO] --- Case_1 Passed!\n";
+  logger << "[INFO] Got k-th 'created' in neighbour: " << k1_nbr_vid << "\n";
+  logger << "[INFO] --- Case_1 Passed!\n";
 
   auto r2 = ss->GetKthInEdge(query_vid, query_edge_rel, k2);
   if (r2.isErr()) {
-    dumper << "[Error] GetKthInEdge: " << r2.unwrapErr().GetInfo() << "\n";
+    logger << "[Error] GetKthInEdge: " << r2.unwrapErr().GetInfo() << "\n";
     return false;
   }
   auto e2 = r2.unwrap();
   if (e2.Valid()) {
-    dumper << "[Error] Expect null edge handle, but got an exact one!\n";
+    logger << "[Error] Expect null edge handle, but got an exact one!\n";
     return false;
   }
-  dumper << "[INFO] Got expected null edge handle.\n";
-  dumper << "[INFO] --- Case_2 Passed!\n";
+  logger << "[INFO] Got expected null edge handle.\n";
+  logger << "[INFO] --- Case_2 Passed!\n";
 
   return true;
 }
 
-bool TestGetSnapshotId(Snapshot* ss) {
+bool TestGetSnapshotId(Snapshot* ss, std::stringstream& logger) {
   SnapshotId expect_ss_id = std::numeric_limits<uint32_t>::max();
   auto ss_id = ss->GetSnapshotId();
   if (ss_id != expect_ss_id) {
-    dumper << "[Error] Snapshot id mismatched! "
+    logger << "[Error] Snapshot id mismatched! "
            << "Expect: " << expect_ss_id << ", Got: " << ss_id << "!\n";
     return false;
   }
-  dumper << "[INFO] Got correct snapshot id: " << ss_id << "\n";
+  logger << "[INFO] Got correct snapshot id: " << ss_id << "\n";
 
   return true;
 }
 
 const unsigned test_num = 11;
 
-typedef bool (*TestFunc)(Snapshot* ss);
+typedef bool (*TestFunc)(Snapshot* ss, std::stringstream& logger);
 
-bool RunTest(unsigned id, const std::string& test_name, TestFunc f, Snapshot* ss) {
-  dumper << "[INFO] ----------------------------------------------\n";
-  dumper << "[INFO] --- " << test_name << " Test [" << id << "/" << test_num << "]\n";
-  dumper << "[INFO] ----------------------------------------------\n";
-  bool result = f(ss);
-  dumper << "[INFO] --- " << (result? "PASSED!" : "FAILED!") << "\n";
-  dumper << "[INFO]\n";
+bool RunTest(unsigned id, const std::string& test_name, TestFunc f, Snapshot* ss, std::stringstream& logger) {
+  logger << "[INFO] ----------------------------------------------\n";
+  logger << "[INFO] --- " << test_name << " Test [" << id << "/" << test_num << "]\n";
+  logger << "[INFO] ----------------------------------------------\n";
+  bool result = f(ss, logger);
+  logger << "[INFO] --- " << (result ? "PASSED!" : "FAILED!") << "\n";
+  logger << "[INFO]\n";
   return result;
 }
 
 TestResult* runLocalTests() {
   assert(local_graph_handle_ != nullptr);
 
-  std::string dumper_file_path = "./target/surefire-reports/lgraph_ffi_test.dump";
-  dumper.open(dumper_file_path);
-  dumper << "----------------------- Store FFI Tests -----------------------\n";
+  std::stringstream logger;
+  logger << "\n----------------------- Store FFI Tests -----------------------\n";
 
   unsigned success_num = 0;
   SnapshotId query_snapshot_id = std::numeric_limits<uint32_t>::max();
   Snapshot latest_ss(ffi::GetSnapshot(local_graph_handle_, query_snapshot_id));
   if (latest_ss.Valid()) {
-    success_num += RunTest(1, "ScanVertex", TestScanVertex, &latest_ss) ? 1 : 0;
-    success_num += RunTest(2, "ScanEdge", TestScanEdge, &latest_ss) ? 1 : 0;
-    success_num += RunTest(3, "GetVertex", TestGetVertex, &latest_ss) ? 1 : 0;
-    success_num += RunTest(4, "GetEdge", TestGetEdge, &latest_ss) ? 1 : 0;
-    success_num += RunTest(5, "GetOutEdges", TestGetOutEdges, &latest_ss) ? 1 : 0;
-    success_num += RunTest(6, "GetInEdges", TestGetInEdges, &latest_ss) ? 1 : 0;
-    success_num += RunTest(7, "GetOutDegree", TestGetOutDegree, &latest_ss) ? 1 : 0;
-    success_num += RunTest(8, "GetInDegree", TestGetInDegree, &latest_ss) ? 1 : 0;
-    success_num += RunTest(9, "GetKthOutEdge", TestGetKthOutEdge, &latest_ss) ? 1 : 0;
-    success_num += RunTest(10, "GetKthInEdge", TestGetKthInEdge, &latest_ss) ? 1 : 0;
-    success_num += RunTest(11, "GetSnapshotId", TestGetSnapshotId, &latest_ss) ? 1 : 0;
+    success_num += RunTest(1, "ScanVertex", TestScanVertex, &latest_ss, logger) ? 1 : 0;
+    success_num += RunTest(2, "ScanEdge", TestScanEdge, &latest_ss, logger) ? 1 : 0;
+    success_num += RunTest(3, "GetVertex", TestGetVertex, &latest_ss, logger) ? 1 : 0;
+    success_num += RunTest(4, "GetEdge", TestGetEdge, &latest_ss, logger) ? 1 : 0;
+    success_num += RunTest(5, "GetOutEdges", TestGetOutEdges, &latest_ss, logger) ? 1 : 0;
+    success_num += RunTest(6, "GetInEdges", TestGetInEdges, &latest_ss, logger) ? 1 : 0;
+    success_num += RunTest(7, "GetOutDegree", TestGetOutDegree, &latest_ss, logger) ? 1 : 0;
+    success_num += RunTest(8, "GetInDegree", TestGetInDegree, &latest_ss, logger) ? 1 : 0;
+    success_num += RunTest(9, "GetKthOutEdge", TestGetKthOutEdge, &latest_ss, logger) ? 1 : 0;
+    success_num += RunTest(10, "GetKthInEdge", TestGetKthInEdge, &latest_ss, logger) ? 1 : 0;
+    success_num += RunTest(11, "GetSnapshotId", TestGetSnapshotId, &latest_ss, logger) ? 1 : 0;
   } else {
-    dumper << "[Error] Got invalid snapshot handle with SnapshotId=" << query_snapshot_id << "!\n";
+    logger << "[Error] Got invalid snapshot handle with SnapshotId=" << query_snapshot_id << "!\n";
   }
 
-  dumper << "---------------------------------------------------------------\n";
-  dumper << "[SUMMARY] " << "Successful: " << success_num << "/" << test_num
-                         << ", Failed: " << (test_num - success_num) << "/" << test_num << ".\n";
-  dumper << "---------------------------------------------------------------\n";
-  dumper.close();
+  logger << "---------------------------------------------------------------\n";
+  logger << "[SUMMARY] " << "Successful: " << success_num << "/" << test_num
+         << ", Failed: " << (test_num - success_num) << "/" << test_num << ".\n";
+  logger << "---------------------------------------------------------------\n";
 
-  return new TestResult(success_num == test_num, dumper_file_path);
+  return new TestResult(success_num == test_num, logger);
 }
 
 bool getTestResultFlag(const TestResult* r) {

@@ -20,11 +20,8 @@ namespace DB_NAMESPACE {
 
 class TestResult {
 public:
-  TestResult(bool successful, const std::string& dump_file_path) : successful_(successful), info_() {
-    std::ifstream ifs(dump_file_path);
-    info_ = std::string((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
-    ifs.close();
-  }
+  TestResult(bool successful, const std::stringstream& logger)
+    : successful_(successful), info_(std::move(logger.str())) {}
   ~TestResult() = default;
 
   bool GetResult() const { return successful_; }
