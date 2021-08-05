@@ -1,0 +1,22 @@
+digraph subtask_test_3 {
+    root_0[label="root_0"];
+    source_1[label="source_1"];
+    tumbling_2[label="tumbling_2"];
+    flat_map_3[label="flat_map_3"];
+    flat_map_4[label="flat_map_4"];
+    map_5[label="map_5"];
+    count_local_6[label="count_local_6"];
+    count_global_7[label="count_global_7"];
+    zip_subtask_8[label="zip_subtask_8"];
+    sink_stream_9[label="sink_stream_9"];
+    root_0 -> source_1[label="1_0_0_0"];
+    source_1 -> tumbling_2[label="2_0_0_1"];
+    tumbling_2 -> flat_map_3[label="3_0_0_1"];
+    flat_map_3 -> flat_map_4[label="4S_0_0_1"];
+    flat_map_4 -> map_5[label="5S_0_0_1"];
+    map_5 -> count_local_6[label="6_0_0_1"];
+    count_local_6 -> count_global_7[label="7S_0_0_1"];
+    source_1 -> zip_subtask_8[label="8_0_0_1"];
+    count_global_7 -> zip_subtask_8[label="9_0_1_1"];
+    zip_subtask_8 -> sink_stream_9[label="10_0_0_0"];
+}
