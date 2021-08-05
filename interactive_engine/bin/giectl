@@ -76,7 +76,7 @@ start_coordinator() {
   zookeeper_ip=$3
   zookeeper_port=$4
   executor_count=$5
-  # enable_gaia=$6
+  enable_gaia=$6
 
   # create related directories
   config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
@@ -129,9 +129,18 @@ start_coordinator() {
       ${config_dir}/coordinator.application.properties \
       ${object_id} 1>${log_dir}/maxgraph-coordinator.out 2>${log_dir}/maxgraph-coordinator.err&
     echo $! >> ${pid_dir}/coordinator.pid
+    # start gaia coordinator
+    if [ "${enable_gaia}" = True ]; then
+      java_opt=${java_opt//maxgraph-coordinator/gaia-coordinator}
+      java ${java_opt} \
+        com.alibaba.maxgraph.coordinator.CoordinatorMain \
+        ${config_dir}/coordinator.application.properties \
+        ${object_id} ${object_id}_gaia 1>${log_dir}/gaia-coordinator.out \
+        2>${log_dir}/gaia-coordinator.err&
+      echo $! >> ${pid_dir}/coordinator.pid
+    fi
   fi
 }
-
 
 start_gaia_coordinator() {
   object_id=$1
@@ -180,8 +189,8 @@ start_gaia_coordinator() {
 
   java ${java_opt} \
     com.alibaba.maxgraph.coordinator.CoordinatorMain \
-    ${config_dir}/gaia_coordinator.application.properties \
-    ${object_id} ${graph_name} 1>${log_dir}/gaia-coordinator.out \
+    ${config_dir}/coordinator.application.properties \
+    ${object_id} ${object_id}_gaia 1>${log_dir}/gaia-coordinator.out \
     2>${log_dir}/gaia-coordinator.err&
   echo $! >> ${pid_dir}/coordinator.pid
 }
@@ -204,7 +213,7 @@ start_frontend() {
   zookeeper_ip=$4
   zookeeper_port=$5
   executor_count=$6
-  # enable_gaia=$7
+  enable_gaia=$7
 
   # create related directories
   config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
@@ -245,7 +254,6 @@ start_frontend() {
       -e "s@PARTITION_NUM@${executor_count}@g" \
       -e "s@SERVER_PORT@${frontend_port}@g" \
       ${WORKSPACE}/conf/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
-  fi
 
   if [[ "${cluster_type}" == "k8s" ]]; then
     # just hangs here in k8s
@@ -259,31 +267,18 @@ start_frontend() {
       com.alibaba.maxgraph.frontendservice.FrontendServiceMain \
       ${config_dir}/frontend.vineyard.properties \
       ${object_id} 1>${log_dir}/maxgraph-frontend.out 2>${log_dir}/maxgraph-frontend.err&
-
-timeout_seconds=60
-wait_period_seconds=0
-
-sleep 3
-while true
-do
-  gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.err | awk -F: '{print $4}'`
-  gremlin_server_port2=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.out | awk -F: '{print $7}'`
-  if [ -n "$gremlin_server_port" ]; then
-    echo "MAXGRAPH_FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
-    break
-  fi
-  if [ -n "$gremlin_server_port2" ]; then
-    echo "MAXGRAPH_FRONTEND_PORT:127.0.0.1:$gremlin_server_port2"
-    break
-  fi
-  wait_period_seconds=$(($wait_period_seconds+5))
-  if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-    echo "Get external ip of ${GREMLIN_EXPOSE} failed."
-    break
-  fi
-  sleep 5
-done
     echo $! >> ${pid_dir}/frontend.pid
+
+    # start gaia frontend
+    if [ "${enable_gaia}" = True ]; then
+      java_opt=${java_opt//maxgraph-frontend/gaia-frontend}
+      java ${java_opt} \
+        com.alibaba.graphscope.gaia.vineyard.store.FrontendServiceMain \
+        ${config_dir}/frontend.vineyard.properties \
+        ${object_id} ${object_id}_gaia 1>${log_dir}/gaia-frontend.out \
+        2>${log_dir}/gaia-frontend.err&
+      echo $! >> ${pid_dir}/frontend.pid
+    fi
   fi
 }
 
@@ -331,7 +326,6 @@ start_gaia_frontend() {
       -e "s@PARTITION_NUM@${executor_count}@g" \
       -e "s@SERVER_PORT@${frontend_port}@g" \
       ${WORKSPACE}/conf/frontend.vineyard.properties > ${config_dir}/gaia_frontend.vineyard.properties
-  fi
 
     # local mode: echo frontend pid to frontend.pid
   java ${java_opt} \
@@ -346,8 +340,8 @@ wait_period_seconds=0
 sleep 3
 while true
 do
-  gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/gaia-frontend.err | awk -F: '{print $4}'`
-  gremlin_server_port2=`awk '/frontend host/ { print }' ${LOG_DIR}/gaia-frontend.out | awk -F: '{print $7}'`
+  gremlin_server_port=`awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.err | awk -F: '{print $4}'`
+  gremlin_server_port2=`awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $7}'`
   if [ -n "$gremlin_server_port" ]; then
     echo "GAIA_FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
     break
@@ -384,8 +378,8 @@ start_executor() {
   zookeeper_ip=$3
   zookeeper_port=$4
   engine_count=$5
-  # enable_gaia=$6
-  interactive_engine_params=$6
+  enable_gaia=$6
+  interactive_engine_params=$7
 
   config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
   log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
@@ -418,10 +412,18 @@ start_executor() {
 
 
   # launch executor
-  export flag="maxgraph${object_id}executor"
+  flag="maxgraph${object_id}executor"
   RUST_BACKTRACE=full ${WORKSPACE}/bin/executor --config ${config_dir}/executor.vineyard.properties \
     ${flag} ${server_id} 1>> ${log_dir}/maxgraph-executor.out 2>> ${log_dir}/maxgraph-executor.err &
   echo $! >> ${pid_dir}/executor.pid
+
+  # start gaia executor
+  if [ "${enable_gaia}" = True ]; then
+    RUST_BACKTRACE=full ${WORKSPACE}/bin/gaia_executor --config ${config_dir}/executor.vineyard.properties \
+      ${flag} ${server_id} ${object_id}_gaia 1>> ${log_dir}/gaia-executor.out \
+      2>> ${log_dir}/gaia-executor.err &
+    echo $! >> ${pid_dir}/executor.pid
+  fi
 }
 
 start_gaia_executor() {
@@ -480,31 +482,53 @@ create_instance_on_local() {
   zookeeper_ip="localhost"
   executor_count="1"  # local mode only start one executor
   start_coordinator ${cluster_type} ${object_id} ${zookeeper_ip} ${zookeeper_port} \
-                    ${executor_count}
+                    ${executor_count} ${if_enable_gaia}
   sleep 1
 
   start_frontend ${cluster_type} ${object_id} ${schema_path} ${zookeeper_ip} \
-                 ${zookeeper_port} ${executor_count}
+                 ${zookeeper_port} ${executor_count} ${if_enable_gaia}
   sleep 1
+
+  # expose gremlin server (NB: must before start executor)
+  timeout_seconds=60
+  wait_period_seconds=0
+
+  sleep 4
+  while true
+  do
+    gremlin_server_port=`awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $4}'`
+    if [ -n "$gremlin_server_port" ]; then
+      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
+    fi
+
+    # fetch gaia frontend port
+    if [ "${if_enable_gaia}" = True ]; then
+      gaia_gremlin_server_port=`awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.err | awk -F: '{print $4}'`
+      if [ -n "$gaia_gremlin_server_port" ]; then
+        log "GAIA_FRONTEND_PORT:127.0.0.1:$gaia_gremlin_server_port"
+      fi
+    fi
+
+    if [ "${if_enable_gaia}" = True ]; then
+      if [ -n "$gremlin_server_port" ] && [ -n "$gaia_gremlin_server_port" ]; then
+        break
+      fi
+    else
+      if [ -n "$gremlin_server_port" ]; then
+        break
+      fi
+    fi
+
+    wait_period_seconds=$(($wait_period_seconds+5))
+    if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+      echo "Get external ip of ${GREMLIN_EXPOSE} failed."
+      break
+    fi
+    sleep 5
+  done
 
   start_executor ${object_id} ${server_id} ${zookeeper_ip} ${zookeeper_port} \
-                 ${executor_count}
-  sleep 1
-
-  # start gaia
-  if [ "${if_enable_gaia}" = True ]; then
-    graph_name=${object_id}"_gaia"
-    start_gaia_coordinator ${object_id} ${zookeeper_ip} ${zookeeper_port} \
-                    ${executor_count} ${graph_name}
-    sleep 1
-
-    start_gaia_frontend ${object_id} ${schema_path} ${zookeeper_ip} \
-                 ${zookeeper_port} ${executor_count} ${graph_name}
-    sleep 1
-
-    start_executor ${object_id} ${server_id} ${zookeeper_ip} ${zookeeper_port} \
-                 ${executor_count} ${graph_name}
-  fi
+                 ${executor_count} ${if_enable_gaia}
 }
 
 ##########################
