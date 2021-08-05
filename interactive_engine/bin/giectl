@@ -334,7 +334,7 @@ create_instance_on_local() {
   server_id=$3
   export VINEYARD_IPC_SOCKET=$4
   zookeeper_port=$5
-  enable_gaia=false
+  enable_gaia=$6
 
   if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
@@ -368,7 +368,7 @@ create_instance_on_local() {
       gremlin_server_port=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $7}')
     fi
     if [ -n "${gremlin_server_port}" ]; then
-      log "FRONTEND_PORT:127.0.0.1:${gremlin_server_port}"
+      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port}"
       break
     fi
     wait_period_seconds=$(($wait_period_seconds+5))
@@ -378,6 +378,28 @@ create_instance_on_local() {
     fi
     sleep 5
   done
+
+  if [ ${enable_gaia} ];then
+    while true
+    do
+      gaia_gremlin_server_port=
+      if [ -f " ${log_dir}/gaia-frontend.log" ]; then
+        gaia_gremlin_server_port=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.log | awk -F: '{print $6}')
+      else
+        gaia_gremlin_server_port=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $7}')
+      fi
+      if [ -n "${gaia_gremlin_server_port}" ]; then
+        log "GAIA_FRONTEND_PORT:127.0.0.1:${gaia_gremlin_server_port}"
+        break
+      fi
+      wait_period_seconds=$(($wait_period_seconds+5))
+      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+        err "Get external ip of ${GREMLIN_EXPOSE} failed."
+        break
+      fi
+      sleep 5
+    done
+  fi
 }
 
 ##########################
@@ -511,9 +533,19 @@ close_instance_on_local() {
   frontend_id=$(cat ${pid_dir}/frontend.pid)
   executor_id=$(cat ${pid_dir}/executor.pid)
 
-  kill ${coordinator_id} || true
-  kill ${frontend_id} || true
-  kill ${executor_id} || true
+  declare -a components=("coordinator" "frontend" "executor")
+
+  for component in "${components[@]}"; do
+    str=$(cat $PID_DIR/${component}.pid)
+
+    # The file may have multiple pids, each in a single line
+    # This will read each line into an array
+    while read -r pid; do pids+=("$pid"); done <<<"${str}"
+
+    for pid in "${pids[@]}"; do
+        sudo kill ${pid} || true
+    done
+  done
 }
 
 ##########################
