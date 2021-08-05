@@ -45,7 +45,7 @@ set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads REQUIRED)
 
 # find vineyard-----------------------------------------------------------------
-find_package(vineyard 0.2.5 REQUIRED)
+find_package(vineyard 0.2.6 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 

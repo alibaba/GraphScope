@@ -12,8 +12,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.2.5"  # vineyard version
-readonly V6D_BRANCH="main-v0.2.5" # vineyard branch
+readonly V6D_VERSION="0.2.6"  # vineyard version
+readonly V6D_BRANCH="v0.2.6" # vineyard branch
 readonly LLVM_VERSION=9  # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
