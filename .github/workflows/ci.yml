@@ -527,12 +527,6 @@ jobs:
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
 
-    - name: Setup tmate
-      if: always()
-      uses: mxschmitt/action-tmate@v3
-      with:
-        sudo: false
-
     - uses: actions/upload-artifact@v2
       with:
         name: gss-${{ github.sha }}
