@@ -477,7 +477,7 @@ create_instance_on_k8s() {
   _server_id=1
   for pod in $(echo ${pod_hosts})
   do
-    launch_executor_cmd="${WORKSPACE}/bin/giectl start_executor $object_id ${_server_id} ${zookeeper_ip} ${zookeeper_port} ${engine_count} ${engine_params}"
+    launch_executor_cmd="${WORKSPACE}/bin/giectl start_executor $object_id ${_server_id} ${zookeeper_ip} ${zookeeper_port} ${engine_count} False ${engine_params}"
     kubectl --namespace=${ENGINE_NAMESPACE} exec ${pod} -c ${engine_container} -- /bin/bash -c "${launch_executor_cmd}"
     let _server_id+=1
   done
