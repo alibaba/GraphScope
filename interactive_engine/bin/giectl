@@ -115,7 +115,7 @@ start_coordinator() {
       -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
       -e "s@PARTITION_NUM@${executor_count}@g" \
       ${WORKSPACE}/conf/coordinator.application.properties > ${config_dir}/coordinator.application.properties
-  if [ ${enable_gaia} ]; then
+  if [ "${enable_gaia}" = True ]; then
     sed -e "s@GRAPH_NAME@${object_id}_gaia@g" \
         -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
         -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
@@ -137,7 +137,7 @@ start_coordinator() {
        ${object_id} 1>${log_dir}/maxgraph-coordinator.out 2>${log_dir}/maxgraph-coordinator.err&
     echo $! >> ${pid_dir}/coordinator.pid
 
-    if [ ${enable_gaia} ]; then
+    if [ "${enable_gaia}" = True ]; then
       java_opt=${java_opt//maxgraph-coordinator/gaia-coordinator}
       java ${java_opt} \
         com.alibaba.maxgraph.coordinator.CoordinatorMain \
@@ -207,7 +207,7 @@ start_frontend() {
       -e "s@PARTITION_NUM@${executor_count}@g" \
       -e "s@SERVER_PORT@${frontend_port}@g" \
       ${WORKSPACE}/conf/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
-  if [ ${enable_gaia} ]; then
+  if [ "${enable_gaia}" = True ]; then
     sed -e "s@GRAPH_NAME@${object_id}_gaia@g" \
         -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
         -e "s@SCHEMA_PATH@${schema_path}@g" \
@@ -231,7 +231,7 @@ start_frontend() {
        ${object_id} 1>${log_dir}/maxgraph-frontend.out 2>${log_dir}/maxgraph-frontend.err&
     echo $! >> ${pid_dir}/frontend.pid
 
-    if [ ${enable_gaia} ]; then
+    if [ "${enable_gaia}" = True ]; then
       java_opt=${java_opt//maxgraph-frontend/gaia-frontend}
       java ${java_opt} \
         com.alibaba.graphscope.gaia.vineyard.store.FrontendServiceMain \
@@ -278,7 +278,7 @@ start_executor() {
       -e "s@WORKER_NUM@${engine_count}@g" \
       -e "s@PARTITION_NUM@${engine_count}@g" \
       ${WORKSPACE}/conf/executor.vineyard.properties > ${config_dir}/executor.vineyard.properties
-  if [ ${enable_gaia} ]; then
+  if [ "${enable_gaia}" = True ]; then
     sed -e "s@GRAPH_NAME@${object_id}_gaia@g" \
         -e "s@VINEYARD_OBJECT_ID@${object_id}@g" \
         -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
@@ -308,7 +308,7 @@ start_executor() {
     ${flag} ${server_id} 1>> ${log_dir}/maxgraph-executor.out 2>> ${log_dir}/maxgraph-executor.err &
 
   echo $! > ${pid_dir}/executor.pid
-  if [ ${enable_gaia} ]; then
+  if [ "${enable_gaia}" = True ]; then
     RUST_BACKTRACE=full ${WORKSPACE}/bin/executor --config ${config_dir}/gaia-executor.vineyard.properties \
       ${flag} ${server_id} ${object_id}_gaia 1>> ${log_dir}/gaia-executor.out \
       2>> ${log_dir}/gaia-executor.err &
@@ -379,7 +379,7 @@ create_instance_on_local() {
     sleep 5
   done
 
-  if [ ${enable_gaia} ];then
+  if [ "${enable_gaia}" = True ];then
     while true
     do
       gaia_gremlin_server_port=
