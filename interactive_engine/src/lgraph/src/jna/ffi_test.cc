@@ -620,10 +620,11 @@ bool RunTest(unsigned id, const std::string& test_name, TestFunc f, Snapshot* ss
   return result;
 }
 
-bool runLocalTests() {
+TestResult* runLocalTests() {
   assert(local_graph_handle_ != nullptr);
 
-  dumper.open("./target/surefire-reports/lgraph_ffi_test.dump");
+  std::string dumper_file_path = "./target/surefire-reports/lgraph_ffi_test.dump";
+  dumper.open(dumper_file_path);
   dumper << "----------------------- Store FFI Tests -----------------------\n";
 
   unsigned success_num = 0;
@@ -651,7 +652,19 @@ bool runLocalTests() {
   dumper << "---------------------------------------------------------------\n";
   dumper.close();
 
-  return (success_num == test_num);
+  return new TestResult(success_num == test_num, dumper_file_path);
+}
+
+bool getTestResultFlag(const TestResult* r) {
+  return r->GetResult();
+}
+
+const char* getTestResultInfo(const TestResult* r) {
+  return r->GetInfo();
+}
+
+void freeTestResult(TestResult* r) {
+  delete r;
 }
 
 }  // namespace DB_NAMESPACE
