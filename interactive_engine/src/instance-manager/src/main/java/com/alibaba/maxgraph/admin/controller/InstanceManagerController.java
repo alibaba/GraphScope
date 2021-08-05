@@ -103,7 +103,7 @@ public class InstanceManagerController {
             List<String> createCommandList = new ArrayList<>();
 
             createCommandList.add(instanceProperties.getCreateScript());
-            createCommandList.add("create_instance_on_local");
+            createCommandList.add("create_gremlin_instance_on_local");
             createCommandList.add(graphName);
             createCommandList.add(schemaPath);
             createCommandList.add("1"); // server id
@@ -118,6 +118,7 @@ public class InstanceManagerController {
             List<String> infoValueList = IOUtils.readLines(process.getInputStream(), "UTF-8");
             infoValueList.addAll(errorValueList);
             stdoutMessage = StringUtils.join(infoValueList, "\n");
+            logger.info("Create instance command output: " + stdoutMessage);
             errorCode = process.waitFor();
             if (errorCode == 0) {
               logger.info("Trying to find MAXGRAPH_FRONTEND_PORT");
@@ -214,7 +215,7 @@ public class InstanceManagerController {
         try {
             List<String> createCommandList = new ArrayList<>();
             createCommandList.add(instanceProperties.getCreateScript());
-            createCommandList.add("create_instance_on_k8s");
+            createCommandList.add("create_gremlin_instance_on_k8s");
             createCommandList.add(graphName);
             createCommandList.add(schemaPath);
             createCommandList.add(podNameList);
@@ -378,7 +379,7 @@ public class InstanceManagerController {
         try {
             List<String> closeCommandList = new ArrayList<>();
             closeCommandList.add(instanceProperties.getCloseScript());
-            closeCommandList.add("close_instance_on_k8s");
+            closeCommandList.add("close_gremlin_instance_on_k8s");
             closeCommandList.add(graphName);
             closeCommandList.add(podNameList);
             closeCommandList.add(containerName);
@@ -407,7 +408,7 @@ public class InstanceManagerController {
         try{
             List<String> closeCommandList = new ArrayList<>();
             closeCommandList.add(instanceProperties.getCloseScript());
-            closeCommandList.add("close_instance_on_local");
+            closeCommandList.add("close_gremlin_instance_on_local");
             closeCommandList.add(graphName);
             String command = StringUtils.join(closeCommandList, " ");
             logger.info("start to close instance with command " + command);

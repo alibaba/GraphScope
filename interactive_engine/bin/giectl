@@ -2,6 +2,7 @@
 #
 # interactive_engine command tool
 
+# TODO: remove -x
 set -x
 set -e
 set -o pipefail
@@ -48,12 +49,12 @@ cat <<END
 
   Commands:
 
-    start_service               start maxgraph service
-    stop_service                stop maxgraph service
-    create_instance_on_local    create instance locally
-    create_instance_on_k8s      create instance on k8s
-    close_instance_on_local     close instance locally
-    close_instance_on_k8s       close instance on k8s
+    start_manager_service               start maxgraph service
+    stop_manager_service                stop maxgraph service
+    create_gremlin_instance_on_local    create instance locally
+    create_gremlin_instance_on_k8s      create instance on k8s
+    close_gremlin_instance_on_local     close instance locally
+    close_gremlin_instance_on_k8s       close instance on k8s
     start_coordinator           start coordinator of instance
     start_frontend              start frontend of instance
     start_executor              start executor of instance
@@ -63,12 +64,14 @@ END
 ##########################
 # Start the coordinator of maxgraph instance.
 # Globals:
-#   None
+#   WORKSPACE
+#   GRAPHSCOPE_RUNTIME
 # Arguments:
 #   object_id: id of vineyard object
 #   zookeeper_ip: ip of zookeeper host
 #   zookeeper_port
 #   executor_count: number of executor, equal to engine count
+#   enable_gaia: start gaia coordinator
 ##########################
 start_coordinator() {
   declare -r cluster_type=$1
@@ -145,13 +148,15 @@ start_coordinator() {
 ##########################
 # Start the frontend of maxgraph instance.
 # Globals:
-#   None
+#   WORKSPACE
+#   GRAPHSCOPE_RUNTIME
 # Arguments:
 #   object_id: id of vineyard object
 #   schema_path: path of graph schema file
 #   zookeeper_ip: ip of zookeeper host
 #   zookeeper_port
 #   executor_count: number of executor, equal to engine count
+#   enable_gaia: start gaia frontend
 ##########################
 start_frontend() {
   declare -r cluster_type=$1
@@ -232,13 +237,15 @@ start_frontend() {
 ##########################
 # Start the executor of maxgraph instance.
 # Globals:
-#   None
+#   WORKSPACE
+#   GRAPHSCOPE_RUNTIME
 # Arguments:
 #   object_id: id of vineyard object
 #   server_id: global id of executor server
 #   zookeeper_ip: ip of zookeeper host
 #   zookeeper_port
 #   executor_count: number of executor, equal to engine count
+#   enable_gaia: start gaia executor
 #   interactive_engine_params: parameters of interactive engine
 ##########################
 start_executor() {
@@ -298,15 +305,18 @@ start_executor() {
 ##########################
 # create maxgraph instance on local.
 # Globals:
-#   None
+#   WORKSPACE
+#   GRAPHSCOPE_RUNTIME
+#   VINEYARD_IPC_SOCKET
 # Arguments:
 #   object_id: id of vineyard object
 #   schema_path: path of graph schema file
 #   server_id: global server id of executor
 #   vineyard_ipc_socket
 #   zookeeper_port
+#   enable_gaia: create gaia instance
 ##########################
-create_instance_on_local() {
+create_gremlin_instance_on_local() {
   declare -r object_id=$1
   declare -r schema_path=$2
   declare -r server_id=$3
@@ -317,6 +327,7 @@ create_instance_on_local() {
   if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
   fi
+  declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
 
   declare -r cluster_type="local"
   declare -r zookeeper_ip="localhost"
@@ -328,32 +339,31 @@ create_instance_on_local() {
   start_frontend ${cluster_type} ${object_id} ${schema_path} ${zookeeper_ip} \
                  ${zookeeper_port} ${executor_count} ${enable_gaia}
 
-  # expose gremlin server (NB: must before start executor)
-  declare timeout_seconds=60
-  declare wait_period_seconds=0
-
   sleep 4
+  # expose gremlin server (NB: must before start executor)
+  declare -r timeout_seconds=60
+  declare wait_period_seconds=0
   while true
   do
-    declare gremlin_server_port=`awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $4}'`
-    if [ -n "$gremlin_server_port" ]; then
-      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
+    declare gremlin_server_port=`awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $7}'`
+    if [ -n "${gremlin_server_port}" ]; then
+      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port}"
     fi
 
     # fetch gaia frontend port
-    if [ "${if_enable_gaia}" = True ]; then
-      declare gaia_gremlin_server_port=`awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.err | awk -F: '{print $4}'`
-      if [ -n "$gaia_gremlin_server_port" ]; then
-        log "GAIA_FRONTEND_PORT:127.0.0.1:$gaia_gremlin_server_port"
+    if [ "${enable_gaia}" = True ]; then
+      declare gaia_gremlin_server_port=`awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $7}'`
+      if [ -n "${gaia_gremlin_server_port}" ]; then
+        log "GAIA_FRONTEND_PORT:127.0.0.1:${gaia_gremlin_server_port}"
       fi
     fi
 
-    if [ "${if_enable_gaia}" = True ]; then
-      if [ -n "$gremlin_server_port" ] && [ -n "$gaia_gremlin_server_port" ]; then
+    if [ "${enable_gaia}" = True ]; then
+      if [ -n "${gremlin_server_port}" ] && [ -n "${gaia_gremlin_server_port}" ]; then
         break
       fi
     else
-      if [ -n "$gremlin_server_port" ]; then
+      if [ -n "${gremlin_server_port}" ]; then
         break
       fi
     fi
@@ -385,7 +395,7 @@ create_instance_on_local() {
 #   gremlin_server_mem: memory resource of gremlin server
 #   engine_params: parameters of interactive engine
 ##########################
-create_instance_on_k8s() {
+create_gremlin_instance_on_k8s() {
   object_id=$1
   schema_path=$2
   pod_hosts=`echo $3 | awk -F"," '{for(i=1;i<=NF;++i) {print $i" "}}'`
@@ -489,11 +499,11 @@ create_instance_on_k8s() {
 ##########################
 # close maxgraph instance on local.
 # Globals:
-#   None
+#   GRAPHSCOPE_RUNTIME
 # Arguments:
 #   object_id: id of vineyard object
 ##########################
-close_instance_on_local() {
+close_gremlin_instance_on_local() {
   declare -r object_id=$1
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
 
@@ -526,7 +536,7 @@ close_instance_on_local() {
 #   engine_container
 #   waiting_for_delete
 ##########################
-close_instance_on_k8s() {
+close_gremlin_instance_on_k8s() {
   object_id=$1
   pod_hosts=`echo $2 | awk -F"," '{for(i=1;i<=NF;++i) {print $i" "}}'`
   engine_container=$3
@@ -547,7 +557,7 @@ close_instance_on_k8s() {
 }
 
 ##########################
-# Start interactice engine service.
+# Start graph manager service.
 # Globals:
 #   None
 # Arguments:
@@ -556,7 +566,7 @@ close_instance_on_k8s() {
 #   service_id
 #   zookeeper_port
 ##########################
-start_service() {
+start_manager_service() {
   declare -r cluster_type=$1
   declare -r server_port=$2
   declare -r service_id=$3
@@ -586,14 +596,14 @@ start_service() {
 }
 
 ##########################
-# Stop interactice engine service.
+# Stop graph manager service.
 # Globals:
 #   None
 # Arguments:
 #   cluster_type: local or k8s
 #   service_id
 ##########################
-stop_service() {
+stop_manager_service() {
   declare -r cluster_type=$1
   declare -r service_id=$2
 
@@ -729,12 +739,12 @@ while test $# -ne 0; do
   arg=$1; shift
   case $arg in
     -h|--help) usage; exit ;;
-    start_service) start_service "$@"; exit;;
-    stop_service) stop_service "$@"; exit;;
-    create_instance_on_local) create_instance_on_local "$@"; exit;;
-    create_instance_on_k8s) create_instance_on_k8s "$@"; exit;;
-    close_instance_on_local) close_instance_on_local "$@"; exit;;
-    close_instance_on_k8s) close_instance_on_k8s "$@"; exit;;
+    start_manager_service) start_manager_service "$@"; exit;;
+    stop_manager_service) stop_manager_service "$@"; exit;;
+    create_gremlin_instance_on_local) create_gremlin_instance_on_local "$@"; exit;;
+    create_gremlin_instance_on_k8s) create_gremlin_instance_on_k8s "$@"; exit;;
+    close_gremlin_instance_on_local) close_gremlin_instance_on_local "$@"; exit;;
+    close_gremlin_instance_on_k8s) close_gremlin_instance_on_k8s "$@"; exit;;
     start_coordinator) start_coordinator "$@"; exit;;
     start_frontend) start_frontend "$@"; exit;;
     start_executor) start_executor "$@"; exit;;
