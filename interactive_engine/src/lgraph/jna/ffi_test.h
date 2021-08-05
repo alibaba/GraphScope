@@ -18,6 +18,23 @@
 
 namespace DB_NAMESPACE {
 
-extern "C" DLL_EXPORT void runLocalTests();
+class TestResult {
+public:
+  TestResult(bool successful, const std::stringstream& logger)
+    : successful_(successful), info_(std::move(logger.str())) {}
+  ~TestResult() = default;
+
+  bool GetResult() const { return successful_; }
+  const char* GetInfo() const { return info_.c_str(); }
+
+private:
+  bool successful_;
+  std::string info_;
+};
+
+extern "C" DLL_EXPORT TestResult* runLocalTests();
+extern "C" DLL_EXPORT bool getTestResultFlag(const TestResult* r);
+extern "C" DLL_EXPORT const char* getTestResultInfo(const TestResult* r);
+extern "C" DLL_EXPORT void freeTestResult(TestResult* r);
 
 }  // namespace DB_NAMESPACE
