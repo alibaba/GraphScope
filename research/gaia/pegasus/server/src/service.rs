@@ -95,6 +95,7 @@ impl<D: AnyData> Service<D> {
         let pb::JobRequest { conf, source, plan, sink } = req;
         if let Some(conf) = conf {
             let conf = parse_job_conf(conf);
+            info!("job conf: {:?}", conf);
             let output = JobResultSink::new(conf.job_id, output);
             if let Some(source) = source {
                 if plan.is_some() && !plan.as_ref().unwrap().plan.is_empty() {

@@ -11,7 +11,8 @@ members = [
     "store",
     "server",
     "Pegasus",
-    "jna",
+    "ffi",
+    "gaia_runtime"
 ]
 
 [profile.release]

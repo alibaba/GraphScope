@@ -48,7 +48,7 @@ public class VertexTypeImpl implements VertexType {
 
     @Override
     public List<Integer> getPkPropertyIndices() {
-        return null;
+        return this.typeDef.getPkPropertyIndices();
     }
 
     @Override

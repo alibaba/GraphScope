@@ -115,6 +115,11 @@ public class CommonUtil {
         }
 
         config.set(InstanceConfig.SERVER_ID, serverId);
+
+        if (args != null && args.length > 2) {
+            String uniqueGraphName = args[2];
+            config.set(InstanceConfig.GRAPH_NAME, uniqueGraphName);
+        }
         return config;
     }
 

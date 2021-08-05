@@ -19,6 +19,7 @@ pub use self::init::*;
 mod store;
 pub use self::store::*;
 mod processor;
+pub use processor::heartbeat;
 
 mod filter;
 pub mod service;

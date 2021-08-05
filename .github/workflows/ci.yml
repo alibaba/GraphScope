@@ -10,7 +10,6 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
-      - 'research/**'
       - 'scripts/**'
       - 'tutorials/**'
   pull_request:
@@ -21,7 +20,6 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
-      - 'research/**'
       - 'scripts/**'
       - 'tutorials/**'
 
@@ -32,7 +30,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
       options:
         --shm-size 4096m
     strategy:
@@ -132,7 +130,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
     - name: Install Dependencies
       run: |
@@ -171,7 +169,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
     - uses: actions/checkout@v2.3.2
       with:
@@ -497,13 +495,13 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
     - name: Install Dependencies
       run: |
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
         tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
-        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.53.0
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
         rustup component add rustfmt
@@ -519,7 +517,7 @@ jobs:
         source ~/.bashrc
 
         cd interactive_engine
-        mvn clean package -Pv2 -Drust.compile.mode=release -DskipTests --quiet
+        mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
@@ -537,9 +535,7 @@ jobs:
     needs: [build-gss]
     strategy:
       matrix:
-        #executor: [maxgraph, gaia]
-        # Add gaia when supported
-        executor: [maxgraph]
+        executor: [maxgraph, gaia]
     steps:
     - name: Clean up
       run: |
@@ -594,7 +590,7 @@ jobs:
         export JAVA_HOME=/usr/lib/jvm/default-java/
 
         cd /tmp
-        wget -q https://mirrors.bfsu.edu.cn/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
+        wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
         tar -zxf hadoop-2.10.1.tar.gz
 
         cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts

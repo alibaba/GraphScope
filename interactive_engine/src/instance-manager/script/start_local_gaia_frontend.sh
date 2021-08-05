@@ -16,13 +16,14 @@
 object_id=$1
 schema_path=$2
 zookeeper_port=$3
+graph_name=$4
 
 SCRIPT_DIR=$(cd "$(dirname "$0")";pwd)
 WORKSPACE=$SCRIPT_DIR/../
 export object_id
 source $SCRIPT_DIR/common.sh
 
-JAVA_OPT="-server -verbose:gc -Xloggc:${LOG_DIR}/maxgraph-frontend.gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/maxgraph-frontend.log -Dlogbasedir=${LOG_DIR}/frontend -Dlog4j.configurationFile=file:$WORKSPACE/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath $WORKSPACE/0.0.1-SNAPSHOT/conf/*:$WORKSPACE/0.0.1-SNAPSHOT/lib/*:"
+JAVA_OPT="-server -verbose:gc -Xloggc:${LOG_DIR}/gaia-frontend.gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -XX:+PrintTenuringDistribution -Djava.awt.headless=true -Dsun.net.client.defaultConnectTimeout=10000 -Dsun.net.client.defaultReadTimeout=30000 -XX:+DisableExplicitGC -XX:-OmitStackTraceInFastThrow -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=75 -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlogfilename=${LOG_DIR}/gaia-frontend.log -Dlogbasedir=${LOG_DIR}/frontend -Dlog4j.configurationFile=file:$WORKSPACE/0.0.1-SNAPSHOT/conf/log4j2.xml -classpath $WORKSPACE/0.0.1-SNAPSHOT/conf/*:$WORKSPACE/0.0.1-SNAPSHOT/lib/*:"
 
 REPLACE_SCHEMA_PATH=`echo ${schema_path//\//\\\/}`
 
@@ -33,16 +34,21 @@ sed -i "s/ZOOKEEPER_PORT/$zookeeper_port/g" $inner_config
 
 cd $WORKSPACE/frontend/frontendservice/target/classes/
 
-java ${JAVA_OPT} com.alibaba.graphscope.gaia.vineyard.store.FrontendServiceMain $inner_config $object_id 1>$LOG_DIR/maxgraph-frontend.out 2>$LOG_DIR/maxgraph-frontend.err &
+java ${JAVA_OPT} com.alibaba.graphscope.gaia.vineyard.store.FrontendServiceMain $inner_config $object_id $graph_name 1>$LOG_DIR/gaia-frontend.out 2>$LOG_DIR/gaia-frontend.err &
 
 timeout_seconds=60
 wait_period_seconds=0
 
 while true
 do
-  gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/maxgraph-frontend.log | awk -F: '{print $6}'`
+  gremlin_server_port=`awk '/frontend host/ { print }' ${LOG_DIR}/gaia-frontend.log | awk -F: '{print $6}'`
+  gremlin_server_port2=`awk '/frontend host/ { print }' ${LOG_DIR}/gaia-frontend.out | awk -F: '{print $7}'`
   if [ -n "$gremlin_server_port" ]; then
-    echo "FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
+    echo "GAIA_FRONTEND_PORT:127.0.0.1:$gremlin_server_port"
+    break
+  fi
+  if [ -n "$gremlin_server_port2" ]; then
+    echo "GAIA_FRONTEND_PORT:127.0.0.1:$gremlin_server_port2"
     break
   fi
   wait_period_seconds=$(($wait_period_seconds+5))
@@ -53,4 +59,4 @@ do
   sleep 5
 done
 
-echo $! > $PID_DIR/frontend.pid
+echo $! >> $PID_DIR/frontend.pid

@@ -22,7 +22,6 @@ import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
 import com.alibaba.graphscope.gaia.processor.LogicPlanProcessor;
 import com.alibaba.graphscope.gaia.processor.TraversalOpProcessor;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
-import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
 import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
@@ -33,6 +32,7 @@ import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.OpProcessor;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.op.OpLoader;
+import org.apache.tinkerpop.gremlin.server.util.ServerGremlinExecutor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,11 +55,11 @@ public class GaiaGraphServer implements MaxGraphServer {
     private GaiaConfig gaiaConfig;
     private AbstractBroadcastProcessor broadcastProcessor;
 
-    public GaiaGraphServer(Configs configs, GraphStoreService storeService, AbstractBroadcastProcessor broadcastProcessor) {
+    public GaiaGraphServer(Configs configs, GraphStoreService storeService, AbstractBroadcastProcessor broadcastProcessor, GaiaConfig gaiaConfig) {
         this.configs = configs;
         this.broadcastProcessor = broadcastProcessor;
         this.storeService = storeService;
-        this.gaiaConfig = new MaxGraphConfig(new InstanceConfig(configs.getInnerProperties()));
+        this.gaiaConfig = gaiaConfig;
     }
 
     @Override
@@ -80,6 +80,9 @@ public class GaiaGraphServer implements MaxGraphServer {
 
         // bind g to traversal source
         Graph traversalGraph = TraversalSourceGraph.open(new BaseConfiguration());
+        ServerGremlinExecutor serverGremlinExecutor = PlanUtils.getServerGremlinExecutor(this.server);
+        serverGremlinExecutor.getGraphManager().putGraph("graph", traversalGraph);
+        serverGremlinExecutor.getGraphManager().putTraversalSource("g", traversalGraph.traversal());
         Bindings globalBindings = PlanUtils.getGlobalBindings(server.getServerGremlinExecutor().getGremlinExecutor());
         globalBindings.put("graph", traversalGraph);
         globalBindings.put("g", traversalGraph.traversal());
