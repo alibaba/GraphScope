@@ -17,6 +17,7 @@
 #pragma once
 
 #include <algorithm>
+#include <string>
 
 #include "db/common/namespace.h"
 #include "db/common/types.h"
@@ -40,7 +41,7 @@ public:
   Error(Error&& e) noexcept;
   Error& operator=(Error&& e) noexcept;
 
-  void Print();
+  std::string GetInfo();
 
 private:
   ErrorHandle handle_;

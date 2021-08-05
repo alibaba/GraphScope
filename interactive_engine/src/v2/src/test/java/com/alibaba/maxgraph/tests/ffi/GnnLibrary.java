@@ -24,5 +24,5 @@ public interface GnnLibrary extends Library {
     GnnLibrary INSTANCE = Native.load("lgraph", GnnLibrary.class);
 
     void setPartitionGraph(Pointer partitionGraph);
-    void runLocalTests();
+    boolean runLocalTests();
 }

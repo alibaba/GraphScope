@@ -563,10 +563,11 @@ pub extern fn GetPropertyAsString(property_handle: PropertyHandle, error: *mut E
 /// Error FFIs
 
 #[no_mangle]
-pub extern fn PrintError(error_handle: ErrorHandle) {
+pub extern fn GetErrorInfo(error_handle: ErrorHandle) -> StringSlice {
     unsafe {
         let handler = &*(error_handle as *const Error);
-        handler.what();
+        let info = handler.what();
+        StringSlice::new(info.as_ptr(), info.len())
     }
 }
 
@@ -574,7 +575,6 @@ pub extern fn PrintError(error_handle: ErrorHandle) {
 
 #[no_mangle]
 pub extern fn ReleasePartitionSnapshotHandle(ptr: PartitionSnapshotHandle) {
-    println!("[Rust FFI] <Release PartitionSnapshotHandle>");
     let handler = ptr as *mut FfiSnapshot;
     unsafe {
         Box::from_raw(handler);
@@ -583,7 +583,6 @@ pub extern fn ReleasePartitionSnapshotHandle(ptr: PartitionSnapshotHandle) {
 
 #[no_mangle]
 pub extern fn ReleaseErrorHandle(ptr: ErrorHandle) {
-    println!("[Rust FFI] <Release ErrorHandle>");
     let handler = ptr as *mut Error;
     unsafe {
         Box::from_raw(handler);
@@ -592,7 +591,6 @@ pub extern fn ReleaseErrorHandle(ptr: ErrorHandle) {
 
 #[no_mangle]
 pub extern fn ReleaseVertexHandle(ptr: VertexHandle) {
-    println!("[Rust FFI] <Release VertexHandle>");
     let handler = ptr as *mut FfiVertex;
     unsafe {
         Box::from_raw(handler);
@@ -601,7 +599,6 @@ pub extern fn ReleaseVertexHandle(ptr: VertexHandle) {
 
 #[no_mangle]
 pub extern fn ReleaseVertexIteratorHandle(ptr: VertexIteratorHandle) {
-    println!("[Rust FFI] <Release VertexIteratorHandle>");
     let handler = ptr as *mut FfiVertexIterator;
     unsafe {
         Box::from_raw(handler);
@@ -610,7 +607,6 @@ pub extern fn ReleaseVertexIteratorHandle(ptr: VertexIteratorHandle) {
 
 #[no_mangle]
 pub extern fn ReleaseEdgeHandle(ptr: EdgeHandle) {
-    println!("[Rust FFI] <Release EdgeHandle>");
     let handler = ptr as *mut FfiEdge;
     unsafe {
         Box::from_raw(handler);
@@ -619,7 +615,6 @@ pub extern fn ReleaseEdgeHandle(ptr: EdgeHandle) {
 
 #[no_mangle]
 pub extern fn ReleaseEdgeIteratorHandle(ptr: EdgeIteratorHandle) {
-    println!("[Rust FFI] <Release EdgeIteratorHandle>");
     let handler = ptr as *mut FfiEdgeIterator;
     unsafe {
         Box::from_raw(handler);
@@ -628,7 +623,6 @@ pub extern fn ReleaseEdgeIteratorHandle(ptr: EdgeIteratorHandle) {
 
 #[no_mangle]
 pub extern fn ReleasePropertyHandle(ptr: PropertyHandle) {
-    println!("[Rust FFI] <Release PropertyHandle>");
     let handler = ptr as *mut FfiProperty;
     unsafe {
         Box::from_raw(handler);
@@ -637,7 +631,6 @@ pub extern fn ReleasePropertyHandle(ptr: PropertyHandle) {
 
 #[no_mangle]
 pub extern fn ReleasePropertyIteratorHandle(ptr: PropertyIteratorHandle) {
-    println!("[Rust FFI] <Release PropertyIteratorHandle>");
     let handler = ptr as *mut FfiPropertyIterator;
     unsafe {
         Box::from_raw(handler);

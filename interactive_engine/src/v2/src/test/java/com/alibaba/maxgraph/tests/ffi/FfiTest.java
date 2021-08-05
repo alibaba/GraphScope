@@ -32,12 +32,15 @@ import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.junit.Test;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class FfiTest {
 
@@ -69,8 +72,18 @@ public class FfiTest {
         StoreService storeService = store.getStoreService();
         JnaGraphStore jnaGraphStore = (JnaGraphStore) storeService.getIdToPartition().get(0);
         Pointer wrapperPartitionGraph = GraphLibrary.INSTANCE.createWrapperPartitionGraph(jnaGraphStore.getPointer());
+
         GnnLibrary.INSTANCE.setPartitionGraph(wrapperPartitionGraph);
-        GnnLibrary.INSTANCE.runLocalTests();
+        boolean test_result = GnnLibrary.INSTANCE.runLocalTests();
+        try (BufferedReader dump_reader = new BufferedReader(
+                new FileReader("./target/surefire-reports/lgraph_ffi_test.dump"))) {
+            String line;
+            while ((line = dump_reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        }
+        assertTrue(test_result);
+
         provider.clear(graph, graphConf);
         maxNode.close();
     }
