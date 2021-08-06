@@ -156,7 +156,8 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         tar -cf gie.tar interactive_engine/src/executor/target/release/executor \
                         interactive_engine/src/executor/store/log4rs.yml \
-                        interactive_engine/deploy/docker/dockerfile
+                        interactive_engine/bin \
+                        interactive_engine/conf
 
     - uses: actions/upload-artifact@v2
       with:
@@ -239,8 +240,7 @@ jobs:
         mvn clean package -DskipTests -Pjava-release --quiet
         cd ${GITHUB_WORKSPACE}
         tar -cf manager.tar interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz \
-                            interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz \
-                            interactive_engine/deploy/docker/dockerfile
+                            interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz
 
     - uses: actions/upload-artifact@v2
       with:
@@ -526,6 +526,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
+        tar -zcf giectl.tar.gz interactive_engine/bin interactive_engine/conf
 
     - uses: actions/upload-artifact@v2
       with:
@@ -533,6 +534,7 @@ jobs:
         path: |
           maxgraph.tar.gz
           lib.tar.gz
+          giectl.tar.gz
         retention-days: 5
 
   gss-test:
@@ -566,6 +568,7 @@ jobs:
         pushd artifacts
         tar -zxf ./gss-${{ github.sha }}/lib.tar.gz
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
+        tar -zxf ./gss-${{ github.sha }}/giectl.tar.gz
 
         sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
