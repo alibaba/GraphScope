@@ -5,7 +5,7 @@ authors = ["chenqiang.mcq <chenqiang.mcq@alibaba-inc.com>"]
 edition = "2018"
 
 [dependencies]
-crossbeam-channel = "0.3.6"
+crossbeam-channel = "0.4.4"
 crossbeam-queue = "0.1"
 crossbeam-utils = "0.6"
 env_logger = { version = "0.6" }
