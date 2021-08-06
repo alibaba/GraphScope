@@ -32,7 +32,7 @@ cat <<END
     -h, --help           output help information
     --verbose            output the debug log
     --overwrite          overwrite the existed kubernetes config
-    --image_tag tag      specify image tag of graphscop
+    --image_tag tag      specify image tag of graphscope
   Note:
     The script only available on Ubuntu 18+ or CenOS 7+.
 END
