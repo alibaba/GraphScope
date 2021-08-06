@@ -14,6 +14,7 @@ IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_
 readonly IS_IN_WSL
 PLATFORM=
 OS_VERSION=
+image_tag=
 
 ##########################
 # Output useage information.
@@ -31,6 +32,7 @@ cat <<END
     -h, --help           output help information
     --verbose            output the debug log
     --overwrite          overwrite the existed kubernetes config
+    --image_tag tag      specify image tag of graphscope, default is 0.6.0
   Note:
     The script only available on Ubuntu 18+ or CenOS 7+.
 END
@@ -181,6 +183,11 @@ install_dependencies() {
   pip3 install -U pip --user
   pip3 install graphscope vineyard wheel --user
 
+  # image_tag need to consistent with graphscope client version
+  if [ -n "${image_tag}" ]; then
+    image_tag=$(python3 -c "import graphscope; print(graphscope.__version__)")
+  fi
+
   log "Install kubectl."
   K8S_VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
 
@@ -244,15 +251,15 @@ launch_k8s_cluster() {
 ##########################
 pull_images() {
   log "Pulling GraphScope images."
-  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${version} || true
-  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${version} || true
+  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${image_tag} || true
+  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${image_tag} || true
   sudo docker pull zookeeper:3.4.14 || true
   sudo docker pull quay.io/coreos/etcd:v3.4.13 || true
   log "GraphScope images pulled successfully."
 
   log "Loading images into kind cluster."
-  sudo kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${version} || true
-  sudo kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${version} || true
+  sudo kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${image_tag} || true
+  sudo kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${image_tag} || true
   sudo kind load docker-image zookeeper:3.4.14 || true
   sudo kind load docker-image quay.io/coreos/etcd:v3.4.13 || true
   log "GraphScope images loaded into kind cluster successfully."
@@ -310,7 +317,7 @@ while test $# -ne 0; do
   arg=$1; shift
   case $arg in
     -h|--help) usage; exit ;;
-    -V|--version) version; exit ;;
+    --image_tag) image_tag=$1; shift ;;
     --verbose) VERBOSE=true; ;;
     --overwrite) OVERWRITE=true; ;;
     *)

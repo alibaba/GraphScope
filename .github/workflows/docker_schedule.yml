@@ -1,0 +1,54 @@
+name: Scheduled GraphScope Docker Build CI
+
+on:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00 every day.
+    - cron:  '00 03 * * *'
+
+jobs:
+  build-images:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+    steps:
+    - uses: actions/checkout@v2.3.2
+
+    - name: Build graphscope image
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:docker_schedule_ci \
+                          --network=host \
+                          -f .k8s/graphscope.Dockerfile .
+
+    - name: Build maxgraph manager image
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:docker_schedule_ci \
+                          --network=host \
+                          -f .k8s/manager.Dockerfile .
+
+    - name: Build graphscope store image
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:docker_schedule_ci \
+                          --network=host \
+                          -f .k8s/graphscope-store.Dockerfile .
+
+    - name: Prepare kind environment
+      run: |
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/prepare_env.sh --image_tag docker_schedule_ci --verbose --overwrite
+        # update graphscope client
+        pip3 install -U pip --user
+        pip3 install grpcio-tools libclang parsec setuptools wheel twine --user
+        pip3 uninstall graphscope -y || true
+        pushd ${GITHUB_WORKSPACE}/python
+        pip3 install -r requirements.txt -r requirements-dev.txt --user
+        python3 setup.py install --user --prefix=
+        popd
+
+    - name: Run test with images
+      run: |
+        python3 -m pytest -s -v ${GITHUB_WORKSPACE}/.github/workflows/test_docker_schedule.py
