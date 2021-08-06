@@ -10,7 +10,11 @@ def test_create_session():
         k8s_gs_image="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:docker_schedule_ci",
         k8s_gie_graph_manager_image="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:docker_schedule_ci",
     )
-
     info = s.info
     assert info["status"] == "active"
+
+    graph = s.g()
+    interactive = s.gremlin(graph)
+    print(interactive)
+
     s.close
