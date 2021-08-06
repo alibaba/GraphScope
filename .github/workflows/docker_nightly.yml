@@ -62,7 +62,7 @@ jobs:
       run: |
         sudo docker rmi -f graphscope/graphscope:${{ github.sha }} \
             graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-            graphscope/graphscope-store:${{ github.sha}} || true
+            graphscope/graphscope-store:${{ github.sha}} \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly \
             registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:nightly \
-            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly \
+            registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly || true
