@@ -19,7 +19,7 @@ use crate::communication::decorator::broadcast::BroadcastBatchPush;
 use crate::communication::decorator::buffered::BufferedPush;
 use crate::communication::decorator::exchange::{ExchangeByScopePush, ExchangeMiniBatchPush};
 use crate::communication::IOResult;
-use crate::data::{Data, DataSet};
+use crate::data::{Data, DataSet, MicroBatch};
 use crate::data_plane::intra_thread::ThreadPush;
 use crate::data_plane::Push;
 use crate::graph::Port;
@@ -31,7 +31,7 @@ use pegasus_common::buffer::Batch;
 pub mod aggregate;
 pub mod broadcast;
 pub mod buffered;
-pub mod count;
+pub mod evented;
 pub mod exchange;
 
 pub trait ScopeStreamPush<T: Data> {
@@ -302,5 +302,52 @@ impl<T: Data> ScopeStreamPush<T> for DataPush<T> {
             DataPush::Broadcast(p) => p.close(),
             DataPush::ScopeShuffle(p) => p.close(),
         }
+    }
+}
+
+////////////////////////////////////////////////
+#[allow(dead_code)]
+pub struct LocalMicroBatchPush<T: Data> {
+    pub ch_info: ChannelInfo,
+    inner: ThreadPush<MicroBatch<T>>,
+    push_counts: TidyTagMap<(usize, usize)>,
+}
+
+#[allow(dead_code)]
+impl<T: Data> LocalMicroBatchPush<T> {
+    pub fn new(ch_info: ChannelInfo, push: ThreadPush<MicroBatch<T>>) -> Self {
+        let push_counts = TidyTagMap::new(ch_info.scope_level);
+        LocalMicroBatchPush { ch_info, inner: push, push_counts }
+    }
+}
+
+impl<T: Data> Push<MicroBatch<T>> for LocalMicroBatchPush<T> {
+    fn push(&mut self, msg: MicroBatch<T>) -> IOResult<()> {
+        if log_enabled!(log::Level::Trace) {
+            let c = self.push_counts.get_mut_or_insert(&msg.tag);
+            c.0 += msg.len();
+        }
+        self.inner.push(msg)
+    }
+
+    fn flush(&mut self) -> IOResult<()> {
+        if log_enabled!(log::Level::Trace) {
+            let port = self.ch_info.source_port;
+            for (a, b) in self.push_counts.iter_mut() {
+                let cnt = b.0;
+                if cnt > 0 {
+                    b.1 += cnt;
+                    b.0 = 0;
+                    trace_worker!("output[{:?}] flush {} data of {:?} to self;", port, cnt, a);
+                }
+            }
+        }
+        self.inner.flush()?;
+        Ok(())
+    }
+
+   fn close(&mut self) -> IOResult<()> {
+        self.flush()?;
+        self.inner.close()
     }
 }

@@ -20,8 +20,8 @@ use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
 use std::fmt::Debug;
 
-pub trait Data: Clone + Send + Debug + Encode + Decode + 'static {}
-impl<T: Clone + Send + Debug + Encode + Decode + 'static> Data for T {}
+pub trait Data: Clone + Send + Sync + Debug + Encode + Decode + 'static {}
+impl<T: Clone + Send + Sync + Debug + Encode + Decode + 'static> Data for T {}
 
 pub struct DataSet<T> {
     /// the tag of scope this data set belongs to;
@@ -355,11 +355,11 @@ impl<D> std::ops::Deref for MicroBatch<D> {
     }
 }
 
-impl<D> std::ops::DerefMut for MicroBatch<D> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.data
-    }
-}
+// impl<D> std::ops::DerefMut for MicroBatch<D> {
+//     fn deref_mut(&mut self) -> &mut Self::Target {
+//         &mut self.data
+//     }
+// }
 
 impl<D: Data> Clone for MicroBatch<D> {
     fn clone(&self) -> Self {
@@ -370,5 +370,31 @@ impl<D: Data> Clone for MicroBatch<D> {
             end: self.end.clone(),
             data: self.data.clone(),
         }
+    }
+}
+
+impl<D: Data> Encode for MicroBatch<D> {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        self.tag.write_to(writer)?;
+        writer.write_u64(self.seq)?;
+        writer.write_u32(self.src)?;
+        self.end.write_to(writer)?;
+        let len = self.data.len() as u64;
+        writer.write_u64(len)?;
+        for data in self.data.iter() {
+            data.write_to(writer)?;
+        }
+        Ok(())
+    }
+}
+
+impl<D: Data> Decode for MicroBatch<D> {
+    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
+        // let tag = Tag::read_from(reader)?;
+        // let seq = reader.read_u64()?;
+        // let src = reader.read_u32()?;
+        // let end = Option::<EndSignal>::read_from(reader)?;
+        // let len = reader.read_u64()?;
+        todo!("buffer reuse")
     }
 }

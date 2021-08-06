@@ -1,5 +1,5 @@
 use crate::channel_id::ChannelInfo;
-use crate::communication::decorator::count::ControlPush;
+use crate::communication::decorator::evented::ControlPush;
 use crate::communication::decorator::ScopeStreamPush;
 use crate::communication::IOResult;
 use crate::data::DataSet;

@@ -20,7 +20,7 @@ use crate::communication::decorator::broadcast::BroadcastBatchPush;
 use crate::communication::decorator::buffered::BufferedPush;
 use crate::communication::decorator::exchange::ExchangeByScopePush;
 use crate::communication::decorator::{
-    count::ControlPush, exchange::ExchangeMiniBatchPush, DataPush, LocalMiniBatchPush,
+    evented::ControlPush, exchange::ExchangeMiniBatchPush, DataPush, LocalMiniBatchPush,
 };
 use crate::data::{Data, DataSet};
 use crate::data_plane::{GeneralPull, GeneralPush};

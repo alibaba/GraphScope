@@ -15,7 +15,7 @@
 
 use crate::channel_id::ChannelInfo;
 use crate::communication::decorator::ScopeStreamPush;
-use crate::data::DataSet;
+use crate::data::{DataSet, MicroBatch};
 use crate::data_plane::{GeneralPush, Push};
 use crate::errors::IOResult;
 use crate::event::emitter::EventEmitter;
@@ -194,5 +194,50 @@ impl<T: Data> ScopeStreamPush<DataSet<T>> for ControlPush<T> {
     fn close(&mut self) -> IOResult<()> {
         self.flush()?;
         self.inner.close()
+    }
+}
+
+////////////////////////////////////////////////////////
+#[allow(dead_code)]
+pub struct EventEmitPush<T: Data> {
+    pub ch_info: ChannelInfo,
+    pub source_worker: u32,
+    pub target_worker: u32,
+    inner: GeneralPush<MicroBatch<T>>,
+    has_cycles: Arc<AtomicBool>,
+    event_emitter: EventEmitter,
+    push_counts: TidyTagMap<(usize, usize)>,
+}
+
+#[allow(dead_code)]
+impl<T: Data> EventEmitPush<T> {
+    pub fn new(
+        info: ChannelInfo, source_worker: u32, target_worker: u32, has_cycles: Arc<AtomicBool>, push: GeneralPush<MicroBatch<T>>,
+        emitter: EventEmitter,
+    ) -> Self {
+        let push_counts = TidyTagMap::new(info.scope_level);
+        EventEmitPush {
+            ch_info: info,
+            source_worker,
+            target_worker,
+            has_cycles,
+            inner: push,
+            event_emitter: emitter,
+            push_counts,
+        }
+    }
+}
+
+impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
+    fn push(&mut self, _msg: MicroBatch<D>) -> IOResult<()> {
+        todo!()
+    }
+
+    fn flush(&mut self) -> IOResult<()> {
+        todo!()
+    }
+
+    fn close(&mut self) -> IOResult<()> {
+        todo!()
     }
 }

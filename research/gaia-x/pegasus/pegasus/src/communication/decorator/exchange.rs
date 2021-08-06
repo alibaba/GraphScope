@@ -13,10 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::api::function::RouteFunction;
+use crate::api::function::{RouteFunction, FnResult};
 use crate::channel_id::ChannelInfo;
 use crate::communication::decorator::buffered::BufferedPush;
-use crate::communication::decorator::count::ControlPush;
+use crate::communication::decorator::evented::ControlPush;
 use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
 use crate::data::DataSet;
 use crate::data_plane::GeneralPush;
@@ -27,6 +27,7 @@ use crate::progress::{EndSignal, Weight};
 use crate::{Data, Tag};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::rc::Rc;
 
 pub struct ExchangeMiniBatchPush<D: Data> {
     pub ch_info: ChannelInfo,
@@ -269,5 +270,34 @@ impl<D: Data> ScopeStreamPush<DataSet<D>> for ExchangeByScopePush<D> {
             p.close()?;
         }
         Ok(())
+    }
+}
+
+////////////////////////////////////////////////////
+#[allow(dead_code)]
+struct Exchange<D> {
+    magic: Magic,
+    targets: u64,
+    router: Rc<dyn RouteFunction<D>>,
+}
+
+/// Won't be used by more than one thread at same time;
+/// It is safe to send to another thread with all rc points moved together.
+unsafe impl<D: Send> Send for Exchange<D> { }
+
+#[allow(dead_code)]
+impl<D: Data> Exchange<D> {
+    #[inline]
+    fn route(&self, item: &D) -> FnResult<u64> {
+        let par_key = self.router.route(item)?;
+        Ok(self.magic.exec(par_key))
+    }
+
+    fn share(&self) -> Exchange<D> {
+        Exchange {
+            magic: self.magic,
+            targets: self.targets,
+            router: self.router.clone(),
+        }
     }
 }

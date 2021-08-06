@@ -57,7 +57,7 @@ pub trait Fold<D: Data> {
     /// ```
     fn fold<B, F, C>(self, init: B, factory: C) -> Result<SingleItem<B>, BuildJobError>
     where
-        B: Clone + Send + Debug + 'static,
+        B: Clone + Send + Sync + Debug + 'static,
         F: FnMut(B, D) -> FnResult<B> + Send + 'static,
         C: Fn() -> F + Send + 'static;
 
@@ -98,7 +98,7 @@ pub trait Fold<D: Data> {
     /// ```
     fn fold_partition<B, F, C>(self, init: B, factory: C) -> Result<SingleItem<B>, BuildJobError>
     where
-        B: Clone + Send + Debug + 'static,
+        B: Clone + Send + Sync + Debug + 'static,
         F: FnMut(B, D) -> FnResult<B> + Send + 'static,
         C: Fn() -> F + Send + 'static;
 }

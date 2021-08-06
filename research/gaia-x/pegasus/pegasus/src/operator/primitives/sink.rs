@@ -65,7 +65,7 @@ impl<D, C> SinkSingleOperator<D, C> {
 
 impl<D, C> OperatorCore for SinkSingleOperator<D, C>
 where
-    D: Debug + Send + 'static,
+    D: Debug + Send + Sync + 'static,
     C: FromStream<D>,
 {
     fn on_receive(
@@ -87,7 +87,7 @@ impl<D: Data> Sink<D> for Stream<D> {
     }
 }
 
-impl<D: Debug + Send + 'static> Sink<D> for SingleItem<D> {
+impl<D: Debug + Send + Sync + 'static> Sink<D> for SingleItem<D> {
     fn sink_into<C: FromStream<D>>(self, collector: C) -> Result<(), BuildJobError> {
         self.inner
             .sink_by("sink_single", |_| SinkSingleOperator::new(collector))

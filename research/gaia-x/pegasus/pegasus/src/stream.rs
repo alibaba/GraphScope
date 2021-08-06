@@ -391,11 +391,11 @@ impl<T: Debug> Debug for Single<T> {
     }
 }
 
-pub struct SingleItem<D: Send + Debug + 'static> {
+pub struct SingleItem<D: Send + Sync + Debug + 'static> {
     pub(crate) inner: Stream<Single<D>>,
 }
 
-impl<D: Debug + Send + 'static> SingleItem<D> {
+impl<D: Debug + Send + Sync + 'static> SingleItem<D> {
     pub fn new(stream: Stream<Single<D>>) -> Self {
         SingleItem { inner: stream }
     }
@@ -411,7 +411,7 @@ impl<D: Debug + Send + 'static> SingleItem<D> {
 
     pub fn map<T, F>(self, f: F) -> Result<SingleItem<T>, BuildJobError>
     where
-        T: Debug + Send + 'static,
+        T: Debug + Send + Sync + 'static,
         F: Fn(D) -> FnResult<T> + Send + 'static,
     {
         let stream = self
