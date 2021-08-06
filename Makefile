@@ -33,6 +33,10 @@ graphscope:
 interactive_manager:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ manager VERSION=$(VERSION)
 
+.PHONY: graphscope-store
+graphscope-store:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-store VERSION=$(VERSION)
+
 .PHONY: push
 push:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ push
