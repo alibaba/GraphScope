@@ -6,15 +6,6 @@
         <format>tar.gz</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
-    <fileSets>
-        <fileSet>
-            <directory>${project.basedir}/script</directory>
-            <includes>
-                <include>*</include>
-            </includes>
-            <outputDirectory>script</outputDirectory>
-        </fileSet>
-    </fileSets>
     <dependencySets>
         <dependencySet>
             <outputDirectory>lib</outputDirectory>

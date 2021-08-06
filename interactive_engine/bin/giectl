@@ -2,8 +2,6 @@
 #
 # interactive_engine command tool
 
-# TODO: remove -x
-set -x
 set -e
 set -o pipefail
 # color
@@ -49,15 +47,20 @@ cat <<END
 
   Commands:
 
-    start_manager_service               start maxgraph service
-    stop_manager_service                stop maxgraph service
-    create_gremlin_instance_on_local    create instance locally
-    create_gremlin_instance_on_k8s      create instance on k8s
-    close_gremlin_instance_on_local     close instance locally
+    start_manager_service               start maxgraph manager service
+    stop_manager_service                stop maxgraph manager service
+    create_gremlin_instance_on_local    create gremlin instance locally
+    create_gremlin_instance_on_k8s      create gremlin instance on k8s
+    close_gremlin_instance_on_local     close gremlin instance locally
     close_gremlin_instance_on_k8s       close instance on k8s
-    start_coordinator           start coordinator of instance
-    start_frontend              start frontend of instance
-    start_executor              start executor of instance
+    start_coordinator                   start coordinator of instance
+    start_frontend                      start frontend of instance
+    start_executor                      start executor of instance
+    max_node_gaia                       start max_node of gaia
+    max_node                            start max_node of v2
+    maxgraph                            start maxgraph with v2
+    admin_tools                         start admin_tools of v2
+    load_tools                          start load_tools of maxgraph
 END
 }
 
@@ -345,6 +348,7 @@ create_gremlin_instance_on_local() {
   declare wait_period_seconds=0
   while true
   do
+    # FIXME: the port should fetch from .log file, not .out or .err
     declare gremlin_server_port=`awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $7}'`
     if [ -n "${gremlin_server_port}" ]; then
       log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port}"
@@ -359,6 +363,7 @@ create_gremlin_instance_on_local() {
     fi
 
     if [ "${enable_gaia}" = True ]; then
+      # both port fetch success, then we break the loop.
       if [ -n "${gremlin_server_port}" ] && [ -n "${gaia_gremlin_server_port}" ]; then
         break
       fi
@@ -621,6 +626,7 @@ stop_manager_service() {
 }
 
 # below is commands of v2 and gaia
+# a function to setup common variable and env
 _setup_maxgraph_env() {
   if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
     export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
@@ -639,6 +645,7 @@ _setup_maxgraph_env() {
   libpath="$(echo "${GRAPHSCOPE_HOME}"/maxgraph/lib/*.jar | tr ' ' ':')"
 }
 
+# start max_node of {gaia, v2}
 max_node() {
   type=$1; shift
 
@@ -672,6 +679,7 @@ max_node() {
   fi
 }
 
+# start admin_tools of v2
 admin_tools() {
   config_file=$1; shift
 
@@ -693,6 +701,7 @@ load_tools() {
        com.alibaba.maxgraph.dataload.LoadTool "$@"
 }
 
+# start maxgraph with v2
 maxgraph() {
   config_file=$1; shift
 
@@ -759,6 +768,5 @@ while test $# -ne 0; do
   esac
 done
 
-set +x
 set +e
 set +o pipefail
