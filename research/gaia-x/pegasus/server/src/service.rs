@@ -26,7 +26,7 @@ use std::sync::Arc;
 
 pub trait JobParser<I: Data, O: Send + Debug + 'static>: Send + Sync + 'static {
     fn parse(
-        &self, plan: &pb::JobRequest, input: Source<I>, output: ResultSink<O>,
+        &self, plan: &pb::JobRequest, input: &mut Source<I>, output: ResultSink<O>,
     ) -> Result<(), BuildJobError>;
 }
 
@@ -50,7 +50,7 @@ impl<I: Data, O: Send + Debug + Message + 'static, P: JobParser<I, O>> Service<I
 
     pub fn accept<'a>(
         &'a self, req: &'a pb::JobRequest,
-    ) -> impl FnOnce(Source<I>, ResultSink<O>) -> Result<(), BuildJobError> + 'a {
+    ) -> impl FnOnce(&mut Source<I>, ResultSink<O>) -> Result<(), BuildJobError> + 'a {
         move |input, output| self.parser.parse(req, input, output)
     }
 }

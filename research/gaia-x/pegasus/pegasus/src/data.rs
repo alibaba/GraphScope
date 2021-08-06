@@ -15,7 +15,7 @@
 
 use crate::progress::EndSignal;
 use crate::tag::Tag;
-use pegasus_common::buffer::{Batch, BatchFactory, BatchPool};
+use pegasus_common::buffer::{Batch, BatchFactory, BatchPool, BufferReader};
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
 use std::fmt::Debug;
@@ -271,5 +271,104 @@ impl<D: Send, F: BatchFactory<D>> DataSetPool<D, F> {
 
     pub fn get_seq(&self) -> u64 {
         self.seq
+    }
+}
+
+////////////////////////////////
+
+pub struct MicroBatch<T> {
+    /// the tag of scope this data set belongs to;
+    pub tag: Tag,
+    /// the index of worker who created this dataset;
+    pub src: u32,
+    /// sequence of the data batch;
+    pub seq: u64,
+    /// if this is the last batch of a scope;
+    end: Option<EndSignal>,
+    /// read only data details;
+    data: BufferReader<T>,
+}
+
+#[allow(dead_code)]
+impl<D> MicroBatch<D> {
+    #[inline]
+    pub fn empty() -> Self {
+        MicroBatch { tag: Tag::Root, seq: 0, src: 0, end: None, data: BufferReader::new() }
+    }
+
+    pub fn new(tag: Tag, src: u32, data: BufferReader<D>) -> Self {
+        MicroBatch { tag, src, seq: 0, end: None, data }
+    }
+
+    pub fn set_end(&mut self, end: EndSignal) {
+        self.end = Some(end);
+    }
+
+    pub fn set_tag(&mut self, tag: Tag) {
+        self.tag = tag;
+    }
+
+    pub fn is_last(&self) -> bool {
+        self.end.is_some()
+    }
+
+    pub fn take_end(&mut self) -> Option<EndSignal> {
+        self.end.take()
+    }
+
+    pub fn share(&mut self) -> Self {
+        let shared = self.data.make_share();
+        MicroBatch {
+            tag: self.tag.clone(),
+            src: self.src,
+            seq: self.seq,
+            end: self.end.clone(),
+            data: shared,
+        }
+    }
+
+    #[inline]
+    pub fn tag(&self) -> Tag {
+        self.tag.clone()
+    }
+}
+
+#[allow(dead_code)]
+impl<D: Clone> MicroBatch<D> {
+    #[inline]
+    pub fn drain(&mut self) -> impl Iterator<Item = D> + '_ {
+        &mut self.data
+    }
+}
+
+impl<D> Debug for MicroBatch<D> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "batch[{:?} len={}]", self.tag, self.data.len())
+    }
+}
+
+impl<D> std::ops::Deref for MicroBatch<D> {
+    type Target = BufferReader<D>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.data
+    }
+}
+
+impl<D> std::ops::DerefMut for MicroBatch<D> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.data
+    }
+}
+
+impl<D: Data> Clone for MicroBatch<D> {
+    fn clone(&self) -> Self {
+        MicroBatch {
+            tag: self.tag.clone(),
+            seq: self.seq,
+            src: self.src,
+            end: self.end.clone(),
+            data: self.data.clone(),
+        }
     }
 }
