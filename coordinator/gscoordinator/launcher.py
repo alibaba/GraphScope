@@ -427,7 +427,7 @@ class LocalLauncher(Launcher):
         self._graph_manager_endpoint = None
 
         gm_stop_sh = os.path.join(self._graphscope_home, "bin", "giectl")
-        cmd = ["bash", gm_stop_sh, "stop_service", "local", self._instance_id]
+        cmd = ["bash", gm_stop_sh, "stop_manager_service", "local", self._instance_id]
 
         process = subprocess.Popen(  # noqa: F841
             cmd,
