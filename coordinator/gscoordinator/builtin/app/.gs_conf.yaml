@@ -225,3 +225,16 @@ app:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
+  - algo: betweenness_centrality
+    type: cpp_pie
+    class_name: gs::BetweennessCentrality
+    src: apps/centrality/betweenness/betweenness_centrality.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::DynamicProjectedFragment
+  - algo: betweenness_centrality_generic
+    type: cpp_pie
+    class_name: gs::BetweennessCentralityGeneric
+    src: apps/centrality/betweenness/betweenness_centrality_generic.h
+    compatible_graph:
+      - gs::DynamicProjectedFragment 
