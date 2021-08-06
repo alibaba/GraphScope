@@ -17,17 +17,17 @@ jobs:
     - name: Build graphscope image
       run: |
         cd ${GITHUB_WORKSPACE}
-        make graphscope
+        sudo make graphscope
 
     - name: Build interactive_manager image
       run: |
         cd ${GITHUB_WORKSPACE}
-        make interactive_manager
+        sudo make interactive_manager
 
     - name: Build graphscope-store image
       run: |
         cd ${GITHUB_WORKSPACE}
-        make graphscope-store
+        sudo make graphscope-store
 
     - name: Kubernetes test
       env:
