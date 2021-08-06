@@ -1,4 +1,5 @@
 import graphscope
+import pytest
 
 graphscope.set_option(show_log=True)
 graphscope.set_option(initializing_interactive_engine=False)

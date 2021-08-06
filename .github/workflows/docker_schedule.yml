@@ -42,7 +42,7 @@ jobs:
         /bin/bash ${GITHUB_WORKSPACE}/scripts/prepare_env.sh --image_tag docker_schedule_ci --verbose --overwrite
         # update graphscope client
         pip3 install -U pip --user
-        pip3 install grpcio-tools libclang parsec setuptools wheel twine --user
+        pip3 install grpcio-tools libclang parsec setuptools wheel twine pytest --user
         pip3 uninstall graphscope -y || true
         pushd ${GITHUB_WORKSPACE}/python
         pip3 install -r requirements.txt -r requirements-dev.txt --user

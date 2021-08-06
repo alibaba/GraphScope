@@ -32,7 +32,7 @@ cat <<END
     -h, --help           output help information
     --verbose            output the debug log
     --overwrite          overwrite the existed kubernetes config
-    --image_tag tag      specify image tag of graphscope, default is 0.6.0
+    --image_tag tag      specify image tag of graphscop
   Note:
     The script only available on Ubuntu 18+ or CenOS 7+.
 END
@@ -184,7 +184,7 @@ install_dependencies() {
   pip3 install graphscope vineyard wheel --user
 
   # image_tag need to consistent with graphscope client version
-  if [ -n "${image_tag}" ]; then
+  if [ -z "${image_tag}" ]; then
     image_tag=$(python3 -c "import graphscope; print(graphscope.__version__)")
   fi
 
