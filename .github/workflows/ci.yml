@@ -526,6 +526,11 @@ jobs:
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
 
+    - name: tmate
+      uses: mxschmitt/action-tmate@v3
+      with:
+        sudo: false
+
     - name: gremlin-test
       run: |
         cd interactive_engine/src/v2
