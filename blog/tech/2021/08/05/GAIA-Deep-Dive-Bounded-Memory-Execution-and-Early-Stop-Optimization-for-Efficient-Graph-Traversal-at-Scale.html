@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">GAIA Deep Dive: Bounded-Memory Execution and Early-Stop Optimization for Efficient Graph Traversal at Scale</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2021-08-05">05 Aug 2021</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2021-08-05">05 Aug 2021</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">GAIA Deep Dive: Bounded-Memory Execution and Early-Stop Optimization for Efficient Graph Traversal at Scale</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/gaia.png" alt="knife" />
+<a href="https://graphscope.io/blog/tech/2021/04/29/Introducing-gaia-a-scalable-engine-for-gremlin-the-sql-for-graphs.html">Last time</a>, we presented an overview of the GAIA engine for scaling Gremlin for large distributed graphs. In contrast to other, existing batch-oriented big graph processing systems, such as <a href="https://research.google/pubs/pub37252">Google Pregel</a>, <a href="https://giraph.apache.org/">Apache Giraph</a>, <a href="https://github.com/jegonzal/PowerGraph">GraphLab PowerGraph</a>, and <a href="https://spark.apache.org/graphx/">Apache Spark GraphX</a>, GAIA focuses on low-latency graph traversal at scale. Achieving this goal requires a different distributed infrastructure. Today, we continue to explain why with highlighting two unique and key features of GAIA.</p>
+
+<h3 id="bounded-memory-execution">Bounded-Memory Execution</h3>
+
+<p>Graph traversal can produce paths of arbitrary length, leading to memory usage growing exponentially with the number of hops. Although it is very common for Gremlin queries to terminate with a top-k constraint and/or aggregate operation, such an explosion of <em>intermediate</em> results can often lead to memory crisis, especially in an interactive environment with limited memory configuration.</p>
+
+<p>On the other hand, the traversal strategies can greatly impact the memory usage. There are two typical traversal strategies, namely (breadth-first-search) BFS-like traversal and (depth-like-search) DFS-like traversal. BFS-like traversal can better utilize parallelism, while it may produce data all at once that drives high the memory usage. On the contrary, DFS-like traversal tends to consume much less memory, while it may suffer from low parallelism.</p>
+
+<p>To ensure <em>bounded-memory execution</em> without sacrificing performance (parallelism), GAIA employs <em>dynamic scheduling</em> for executing each Gremlin operator.  GAIA packs a segment of consecutive data entries in an input stream into a single batch, and such a batch constitutes the finest data granularity for communication and computation. A <em>task</em> can be logically viewed as the combination of an operator and a batch of data entries to be computed. GAIA dynamically creates such tasks corresponding to each operator when there is one or more batches available from all its inputs, and maintains all the tasks in a same scheduling queue to share resources.</p>
+
+<p>Furthermore, GAIA can schedule tasks with priorities according to the occurrence order of its corresponding operators in a Gremlin query. Specifically, it can schedule the operators that appear first with higher priority for a BFS-like traversal, and prioritize those that appear last to follow a DFS-like traversal. To balance the memory usage with the performance (parallelism), GAIA by default adopts a hybrid traversal strategy, that is, it uses BFS-prioritized scheduling as it has better opportunities for parallelization, and automatically switches to DFS-prioritized in case that the current operator arrives at the memory bound.</p>
+
+<p>To validate the hypothesis, we use the following cycle-detection query as an example to compare GAIA with the current <a href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine">MaxGraph release</a> in GraphScope without memory control.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>g.V([vertices]).as('a').repeat(out().simplePath())
+	.times(k-1)
+	.out().where(as('a'))
+	.path().limit(n)
+</code></pre></div></div>
+
+<p>The above cycle-detection query starts from <code class="language-plaintext highlighter-rouge">m</code> (default 10) vertices in V, it traverses from V via at most <code class="language-plaintext highlighter-rouge">k</code> (default 3) hops, and returns at most <code class="language-plaintext highlighter-rouge">n</code> cycles found along the traversal.</p>
+
+<p>We generate large LDBC data sets with scale factor 30. The generated LDBC data sets which have 89 million vertices and 541 million edges would be used for the following experiments. In this experiment, we set memory upper bound of GAIA to 256MB, and compare with MaxGraph. For this query, We vary the number of start vertices, set <code class="language-plaintext highlighter-rouge">k</code> to 3 and set result limit to infinity. We report both the query latency and max memory consumption in the following.</p>
+
+<p><img src="/blog/assets/images/memory-bound.jpg" alt="memory-bound.jpg" height="50%" width="50%" /></p>
+
+<p>As the figure shows, GAIA achieves much lower memory usage (up to 9× memory saving) comparing to MaxGraph as well as comparable performance. We can see the actual memory usage of all cases in GAIA is very close to the bounded value 256MB. This expriment shows that GAIA ensure <em>bounded-memory execution</em> without sacrificing performance (parallelism) thanks to powerful dynamic scheduling.</p>
+
+<h3 id="early-stop-optimization">Early-Stop Optimization</h3>
+
+<p>Traversing all candidate paths fully is often unnecessary, especially for interactive queries with dynamic conditions running on diverse input graphs. For example, in the above query, only the first <code class="language-plaintext highlighter-rouge">k</code> results are needed. This leads to an interesting tradeoff between parallel traversal and wasted computation, as further illustrated in the following figure.</p>
+
+<p><img src="/blog/assets/images/early_stop_case.jpg" alt="early_stop_case.png" height="50%" width="50%" /></p>
+
+<p>The figure shows an example run of the query with <code class="language-plaintext highlighter-rouge">k=1</code>. The circle denotes the traversal specified by the <code class="language-plaintext highlighter-rouge">repeat</code>-loop. Assume we have enough computation resource (CPU cores), the paths can be explored in a fully parallel fashion. However, once a <code class="language-plaintext highlighter-rouge">4</code>-hop path is found, all the remaining parallel traversal will be no longer required.</p>
+
+<p>For real-world queries on large graph data, such wasted computation can be hidden deeply in nested traversals (e.g., a predicate that can be evaluated early from partial inputs) and significantly impact query performance. While avoiding such wastage is straightforward in a sequential implementation, it is challenging to do so for a fully-parallel execution.</p>
+
+<p>To minimize such wastage, GAIA tracks data dependencies dynamically at runtime. When enough results are collected, the system automatically creates a <em>cancellation token</em> that is sent backward along input streams to its upstream operators within the same execution context. The token serves as a signal for receiving operators to clear any unsent output data and immediately cancel any on-going computation for the particular output stream. Such cancellation notification is implemented at a system level by GAIA. Below, we continue to use the cycle-detection query as a running example to demonstrate that such early-stop optimization can significantly improve query performance.</p>
+
+<p>In this experiment, we vary the number of result limit and report the latency of GAIA and MaxGraph.</p>
+
+<p><img src="/blog/assets/images/early-stop.jpg" alt="early-stop.jpg" height="50%" width="50%" /></p>
+
+<p>The figure shows that GAIA outpeforms MaxGraph in all cases thanks to the ablility of cancelling wasted computation. GAIA achieves 4.5× better performance in average, up to 8.1×. Even the number of limit results is close to the complete query result, GAIA can also show better performance due to the fine-grained early-stop mechanism. Note that MaxGraph can also achieve low latency when the limit size is small (50), this is because a naive early-stop is implemented in MaxGraph to cancel the job from source operator to the end when already collected needed results. But the performance degrades rapidly when the limit size become larger due to coarse-grained job cancelling in MaxGraph.</p>
+
+<h3 id="scalability">Scalability</h3>
+
+<p>Finally, we study the scalability while running the same query as above. This is to prove that both features do not introduce additional overheads that impact performance/scalability of GAIA.</p>
+
+<p>In this experiment, we set the query result limit to infinity and vary the number of computing threads to show the scale-up performance of GAIA. We test the scalability using different size of queries by varying the number of start vertices.</p>
+
+<p><img src="/blog/assets/images/gaia-scalability.jpg" alt="gaia-scalability.jpg" height="50%" width="50%" /></p>
+
+<p>As we can see from the above figure, GAIA has linear scalability in all type (both large and small) of queries. It shows that new features such as dynamic scheduling do not hurt the scalability of GAIA.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>Diverse and irregular graph data and algorithms impose significant challenges in efficient distributed and parallel execution. Implementation choices can have a huge impact on system performance and memory requirements. GAIA is the first engine to support efficient graph traversal at scale that enables bounded-memory execution with minimum wastage. It will be included as an experimental feature in the coming release of GraphScope v0.6.0. We welcome community feedback!</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=GAIA Deep Dive: Bounded-Memory Execution and Early-Stop Optimization for Efficient Graph Traversal at Scale&amp;url=https://graphscope.io/tech/2021/08/05/GAIA-Deep-Dive-Bounded-Memory-Execution-and-Early-Stop-Optimization-for-Efficient-Graph-Traversal-at-Scale.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2021/08/05/GAIA-Deep-Dive-Bounded-Memory-Execution-and-Early-Stop-Optimization-for-Efficient-Graph-Traversal-at-Scale.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2021/08/05/GAIA-Deep-Dive-Bounded-Memory-Execution-and-Early-Stop-Optimization-for-Efficient-Graph-Traversal-at-Scale.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2021 &bull; All rights reserved.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+    
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+</body>
+</html>
