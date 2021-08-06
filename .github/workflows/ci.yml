@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - fix_gss_build
     paths-ignore:
       - 'gnn_engine/**'
       - '**.md'
