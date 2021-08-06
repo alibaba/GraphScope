@@ -32,7 +32,6 @@ cat <<END
     -h, --help           output help information
     --verbose            output the debug log
     --overwrite          overwrite the existed kubernetes config
-    --image_tag tag      specify image tag of graphscope
   Note:
     The script only available on Ubuntu 18+ or CenOS 7+.
 END
@@ -187,6 +186,7 @@ install_dependencies() {
   if [ -z "${image_tag}" ]; then
     image_tag=$(python3 -c "import graphscope; print(graphscope.__version__)")
   fi
+  readonly image_tag
 
   log "Install kubectl."
   K8S_VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
@@ -317,7 +317,6 @@ while test $# -ne 0; do
   arg=$1; shift
   case $arg in
     -h|--help) usage; exit ;;
-    --image_tag) image_tag=$1; shift ;;
     --verbose) VERBOSE=true; ;;
     --overwrite) OVERWRITE=true; ;;
     *)

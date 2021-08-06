@@ -6,6 +6,9 @@ on:
     # last modified the cron syntax in the workflow file.
     # Trigger the workflow at 03:00 every day.
     - cron:  '00 03 * * *'
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build-images:
@@ -50,9 +53,9 @@ jobs:
         sudo docker tag graphscope/graphscope-store:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
 
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:nightly
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
+        # sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly
+        # sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:nightly
+        # sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
 
     - name: Clean
       if: always()
