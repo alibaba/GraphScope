@@ -27,7 +27,12 @@ jobs:
     - name: Build graphscope-store image
       run: |
         cd ${GITHUB_WORKSPACE}
-        sudo make graphscope-store
+        # sudo make graphscope-store
+      	docker build --progress=auto \
+                 --build-arg profile=release \
+                 -t graphscope/graphscope-store:${{ github.sha }} \
+                 --network=host \
+                 -f k8s/graphscope-store.Dockerfile ..
 
     - name: Kubernetes test
       env:
