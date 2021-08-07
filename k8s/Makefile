@@ -46,7 +46,7 @@ graphscope: submodule
 manager:
 	docker build --target manager \
 				 -t graphscope/maxgraph_standalone_manager:${SHORT_SHA} \
-				 -f $(WORKING_DIR)/k8s/manager.Dockerfile ..
+				 -f $(WORKING_DIR)/manager.Dockerfile ..
 
 graphscope-store:
 	docker build --progress=$(BUILD_PROGRESS) \
