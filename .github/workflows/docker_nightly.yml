@@ -1,17 +1,17 @@
 name: GraphScope Docker Nightly Build CI
 
 on:
-  schedule:
+  # schedule:
     # The notifications for scheduled workflows are sent to the user who
     # last modified the cron syntax in the workflow file.
     # Trigger the workflow at 03:00 every day.
-    - cron:  '00 03 * * *'
+    # - cron:  '00 03 * * *'
   pull_request:
     branches:
       - main
 
 jobs:
-  build-images:
+  docker-test:
     runs-on: self-hosted
     steps:
     - name: Build graphscope image
