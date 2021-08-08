@@ -32,7 +32,7 @@ jobs:
                  --build-arg profile=release \
                  -t graphscope/graphscope-store:${{ github.sha }} \
                  --network=host \
-                 -f k8s/graphscope-store.Dockerfile ..
+                 -f k8s/graphscope-store.Dockerfile .
 
     - name: Kubernetes test
       env:
