@@ -1,14 +1,11 @@
 name: GraphScope Docker Nightly Build CI
 
 on:
-  # schedule:
+  schedule:
     # The notifications for scheduled workflows are sent to the user who
     # last modified the cron syntax in the workflow file.
     # Trigger the workflow at 03:00 every day.
-    # - cron:  '00 03 * * *'
-  pull_request:
-    branches:
-      - main
+    - cron:  '00 03 * * *'
 
 jobs:
   docker-test:
@@ -27,12 +24,7 @@ jobs:
     - name: Build graphscope-store image
       run: |
         cd ${GITHUB_WORKSPACE}
-        # sudo make graphscope-store
-      	docker build --progress=auto \
-                 --build-arg profile=release \
-                 -t graphscope/graphscope-store:${{ github.sha }} \
-                 --network=host \
-                 -f k8s/graphscope-store.Dockerfile .
+        sudo make graphscope-store
 
     - name: Kubernetes test
       env:
@@ -58,9 +50,9 @@ jobs:
         sudo docker tag graphscope/graphscope-store:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
 
-        # sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly
-        # sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:nightly
-        # sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:nightly
+        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
 
     - name: Clean
       if: always()
