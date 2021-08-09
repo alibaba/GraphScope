@@ -19,7 +19,7 @@ use super::*;
 use crossbeam_channel::{Receiver, TryRecvError};
 
 lazy_static! {
-    static ref SOURCE_TAG: Tag = { Tag::new(0) };
+    static ref SOURCE_TAG: Tag =  Tag::new(0) ;
 }
 
 /// Input source of the dataflow job, which produce a bounded/unbounded data set/stream at once;
