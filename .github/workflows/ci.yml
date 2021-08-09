@@ -521,12 +521,17 @@ jobs:
 
         cd interactive_engine
         mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
-        cd src/v2
-        mvn test -Pgremlin-test --quiet
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
         tar -zcf giectl.tar.gz interactive_engine/bin interactive_engine/conf
+
+    - name: gremlin-test
+      run: |
+        export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
+        cd interactive_engine/src/v2
+        mvn test -Pgremlin-test
 
     - uses: actions/upload-artifact@v2
       with:
