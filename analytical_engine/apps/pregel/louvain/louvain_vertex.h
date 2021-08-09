@@ -121,7 +121,7 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
         if (edges.find(gid) != edges.end()) {
           ret += edges.at(gid);
         } else {
-          LOG(ERROR) << "Warning: Cannot find a edge from " << id() << " to "
+          LOG(ERROR) << "Warning: Cannot find a edge from " << this->id() << " to "
                      << gid;
         }
       }
