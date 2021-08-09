@@ -104,18 +104,26 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
     edata_t ret = 0;
     if (!this->use_fake_edges()) {
       for (auto& edge : this->incoming_edges()) {
-        if (dst_ids.find(edge.get_neighbor()) == dst_ids.end()) {
-          ret += edge.get_data();
+        auto gid = this->fragment_->Vertex2Gid(edge.get_neighbor());
+        if (dst_ids.find(gid) != dst_ids.end()) {
+          ret += static_cast<edata_t>(edge.get_data());
         }
       }
       for (auto& edge : this->outgoing_edges()) {
-        if (dst_ids.find(edge.get_neighbor()) == dst_ids.end()) {
-          ret += edge.get_data();
+        auto gid = this->fragment_->Vertex2Gid(edge.get_neighbor());
+        if (dst_ids.find(gid) != dst_ids.end()) {
+          ret += static_cast<edata_t>(edge.get_data());
         }
       }
     } else {
+      auto edges = this->fake_edges();
       for (auto gid : dst_ids) {
-        ret += this->fake_edges().at(gid);
+        if (edges.find(gid) != edges.end()) {
+          ret += edges.at(gid);
+        } else {
+          LOG(ERROR) << "Warning: Cannot find a edge from " << id() << " to "
+                     << gid;
+        }
       }
     }
     return ret;
