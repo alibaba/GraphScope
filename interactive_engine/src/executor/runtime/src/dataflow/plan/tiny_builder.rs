@@ -67,7 +67,6 @@ pub fn add_unary_operator<P, B>(comm: P, mut unary: Box<dyn UnaryOperator>,
     where P: Communicate<RawMessage>, B: PegasusPlanBuilder
 {
     let stream = stream.lazy_unary_notify("lazy_unary_notify", comm, |_info| {
-        (
             move |data: Vec<RawMessage>, notifies: Option<_>| {
                 if !data.is_empty() {
                     let mut collector: Box<MessageCollector> = Box::new(PegasusMessageCollector::new());
@@ -81,7 +80,6 @@ pub fn add_unary_operator<P, B>(comm: P, mut unary: Box<dyn UnaryOperator>,
                     }
                 }
             }
-        )
     });
 
     stream.port()
