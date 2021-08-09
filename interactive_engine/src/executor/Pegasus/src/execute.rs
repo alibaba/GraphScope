@@ -488,7 +488,6 @@ impl<T: Task> ThreadPool<T> {
                             Ok(x) => x,
                             Err(x) => x,
                         };
-                   //     let try_swap = in_running.compare_and_swap(running, running + 1, Ordering::SeqCst);
                         if try_swap == running {
                             let task = ready.take().unwrap();
                             debug!("task {:?} will be spawn, running {}", task, running);
@@ -537,7 +536,6 @@ impl Executor<GenericTask> for ThreadPool<GenericTask> {
                     Ok(x) => x,
                     Err(x) => x,
                 } ;
-            //    let new_running = self.in_running.compare_and_swap(running, running + 1, Ordering::SeqCst);
                 if new_running == running {
                     let guard = S_R.with(|(s, r)| {
                         self.ready_queue.push(ForkJoinTask::Sub((task, s.clone())));
@@ -660,7 +658,6 @@ impl Executor<GenericTask> for ThreadPool<GenericTask> {
     #[inline]
     fn shutdown(&self) {
         info!("ThreadPool begin shutdown...");
-        // self.shutdown_signal.compare_and_swap(false, true, Ordering::SeqCst);
         match self.shutdown_signal.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst) {
             Ok(x) => x,
             Err(x) => x,
