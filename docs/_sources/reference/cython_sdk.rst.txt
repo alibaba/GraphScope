@@ -835,3 +835,28 @@ PIE
 
          Aggregator for calculating products of values.
 
+   .. py:data:: kOverwriteAggregate
+      :noindex:
+
+         Aggregator that stores a value that is overwritten once another value is aggregated.
+         Note that, in case multiple vertices write to this aggregator, the behavior is
+         non-deterministic.
+
+   .. py:data:: kTextAppendAggregate
+      :noindex:
+
+         Aggregator with string as its value which keeps appending text to it.
+
+GraphScope types
+----------------
+.. autosummary::
+   :toctree: generated/
+
+   graphscope.Vertex
+
+Functions
+---------
+.. autosummary::
+   :toctree: generated/
+
+   graphscope.declare

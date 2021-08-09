@@ -384,7 +384,39 @@
             <span class="n">selector</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
         <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dump results to `fd`.</span>
+<span class="sd">        Support dumps data to local (respect to pod) files, hdfs or oss.</span>
+<span class="sd">        It first write results to a vineyard dataframe, and let vineyard</span>
+<span class="sd">        do the data dumping job.</span>
+<span class="sd">        `fd` must meet specific formats, with auth information if needed. As follows:</span>
+
+<span class="sd">            - local</span>
+<span class="sd">                `file:///tmp/result_path`</span>
+<span class="sd">            - oss</span>
+<span class="sd">                `oss:///bucket/object`</span>
+<span class="sd">            - hdfs</span>
+<span class="sd">                `hdfs:///tmp/result_path`</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fd (str): Output location.</span>
+<span class="sd">            selector (dict): Similar to `to_dataframe`.</span>
+<span class="sd">            vertex_range (dict, optional): Similar to `to_dataframe`. Defaults to None.</span>
+<span class="sd">            kwargs (dict, optional): Storage options with respect to output storage type.</span>
+<span class="sd">                    for example:</span>
+<span class="sd">                    key, secret, endpoint for oss,</span>
+<span class="sd">                    key, secret, client_kwargs for s3,</span>
+<span class="sd">                    host, port for hdfs,</span>
+<span class="sd">                    None for local.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`, evaluated in eager mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TensorContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.TensorContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">TensorContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
@@ -687,70 +719,16 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Dump results to `fd`.</span>
-<span class="sd">        Support dumps data to local (respect to pod) files, hdfs or oss.</span>
-<span class="sd">        It first write results to a vineyard dataframe, and let vineyard</span>
-<span class="sd">        do the data dumping job.</span>
-<span class="sd">        `fd` must meet specific formats, with auth information if needed. As follows:</span>
-
-<span class="sd">            - local</span>
-<span class="sd">                `file:///tmp/result_path`</span>
-<span class="sd">            - oss</span>
-<span class="sd">                `oss:///bucket/object`</span>
-<span class="sd">            - hdfs</span>
-<span class="sd">                `hdfs:///tmp/result_path`</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            fd (str): Output location.</span>
-<span class="sd">            selector (dict): Similar to `to_dataframe`.</span>
-<span class="sd">            vertex_range (dict, optional): Similar to `to_dataframe`. Defaults to None.</span>
-<span class="sd">            kwargs (dict, optional): Storage options with respect to output storage type.</span>
-<span class="sd">                    for example:</span>
-<span class="sd">                    key, secret, endpoint for oss,</span>
-<span class="sd">                    key, secret, client_kwargs for s3,</span>
-<span class="sd">                    host, port for hdfs,</span>
-<span class="sd">                    None for local.</span>
-
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Examples:</span>
 <span class="sd">            context.output(&#39;s3://test-bucket/res.csv&#39;, selector={&#39;id&#39;: &#39;v.id&#39;, &#39;rank&#39;: &#39;r&#39;},</span>
 <span class="sd">                           key=&#39;access-key&#39;, secret=&#39;access-secret&#39;, client_kwargs={})</span>
 <span class="sd">            context.output(&#39;hdfs:///output/res.csv&#39;, selector={&#39;id&#39;: &#39;v.id&#39;, &#39;rank&#39;: &#39;r&#39;},</span>
 <span class="sd">                           host=&#39;localhost&#39;, port=9000)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">vineyard</span>
-        <span class="kn">import</span> <span class="nn">vineyard.io</span>
-
-        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
-        <span class="n">sess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
-        <span class="n">deployment</span> <span class="o">=</span> <span class="s2">&quot;kubernetes&quot;</span> <span class="k">if</span> <span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;k8s&quot;</span> <span class="k">else</span> <span class="s2">&quot;ssh&quot;</span>
-        <span class="n">conf</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_config&quot;</span><span class="p">]</span>
-        <span class="n">vineyard_endpoint</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;vineyard_rpc_endpoint&quot;</span><span class="p">]</span>
-        <span class="n">vineyard_ipc_socket</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;vineyard_socket&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;k8s&quot;</span><span class="p">:</span>
-            <span class="n">hosts</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;namespace&quot;</span><span class="p">],</span> <span class="n">s</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-            <span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># type == &quot;hosts&quot;</span>
-            <span class="n">hosts</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;engine_hosts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-        <span class="c1"># Write vineyard dataframe as a readable stream</span>
-        <span class="n">dfstream</span> <span class="o">=</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
-            <span class="s2">&quot;vineyard://&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
-            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span>
-            <span class="n">vineyard_ipc_socket</span><span class="o">=</span><span class="n">vineyard_ipc_socket</span><span class="p">,</span>
-            <span class="n">vineyard_endpoint</span><span class="o">=</span><span class="n">vineyard_endpoint</span><span class="p">,</span>
-            <span class="n">deployment</span><span class="o">=</span><span class="n">deployment</span><span class="p">,</span>
-            <span class="n">hosts</span><span class="o">=</span><span class="n">hosts</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">vineyard</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
-            <span class="n">fd</span><span class="p">,</span>
-            <span class="n">dfstream</span><span class="p">,</span>
-            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
-            <span class="n">vineyard_ipc_socket</span><span class="o">=</span><span class="n">vineyard_ipc_socket</span><span class="p">,</span>
-            <span class="n">vineyard_endpoint</span><span class="o">=</span><span class="n">vineyard_endpoint</span><span class="p">,</span>
-            <span class="n">storage_options</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span>
-            <span class="n">deployment</span><span class="o">=</span><span class="n">deployment</span><span class="p">,</span>
-            <span class="n">hosts</span><span class="o">=</span><span class="n">hosts</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">output_to_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -896,6 +874,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

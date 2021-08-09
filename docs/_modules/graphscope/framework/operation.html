@@ -247,7 +247,9 @@
 <span class="sd">            TypeError: value in inputs is not a :class:`Operation`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">session_id</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_op_def</span> <span class="o">=</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpDef</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="n">op_type</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op_def</span> <span class="o">=</span> <span class="n">op_def_pb2</span><span class="o">.</span><span class="n">OpDef</span><span class="p">(</span>
+            <span class="n">op</span><span class="o">=</span><span class="n">op_type</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">,</span> <span class="n">output_type</span><span class="o">=</span><span class="n">output_types</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -420,6 +422,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

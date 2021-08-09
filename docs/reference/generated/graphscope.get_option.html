@@ -214,6 +214,7 @@
 <dt id="graphscope.get_option">
 <code class="sig-prename descclassname">graphscope.</code><code class="sig-name descname">get_option</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/client/session.html#get_option"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#graphscope.get_option" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the value of specified option.</p>
+<p>Find params detail in <a class="reference internal" href="../session.html#graphscope.Session" title="graphscope.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Session</span></code></a></p>
 <dl class="simple">
 <dt>Available options:</dt><dd><ul class="simple">
 <li><p>num_workers</p></li>
@@ -239,8 +240,21 @@
 <li><p>k8s_mars_worker_mem</p></li>
 <li><p>k8s_mars_scheduler_cpu</p></li>
 <li><p>k8s_mars_scheduler_mem</p></li>
+<li><p>k8s_gie_graph_manager_cpu</p></li>
+<li><p>k8s_gie_graph_manager_mem</p></li>
+<li><dl class="simple">
+<dt>k8s_gie_gremlin_server_cpu</dt><dd><p>Minimum number of CPU cores request for gremlin pod. Defaults to 0.5.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>k8s_gie_gremlin_server_mem</dt><dd><p>Minimum number of memory request for gremlin pod. Defaults to ‘512Mi’.</p>
+</dd>
+</dl>
+</li>
 <li><p>with_mars</p></li>
 <li><p>enable_gaia</p></li>
+<li><p>k8s_volumes</p></li>
 <li><p>k8s_waiting_for_delete</p></li>
 <li><p>engine_params</p></li>
 <li><p>initializing_interactive_engine</p></li>
@@ -347,6 +361,16 @@ Key of GraphScope config you want to get.</p>
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

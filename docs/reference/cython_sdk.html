@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Interactive Query" href="interactive.html" />
+    <link rel="next" title="graphscope.Vertex" href="generated/graphscope.Vertex.html" />
     <link rel="prev" title="graphscope.framework.dag_utils.graph_to_dataframe" href="generated/graphscope.framework.dag_utils.graph_to_dataframe.html" />
 
  
@@ -126,6 +126,14 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Cython SDK API</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pregel">Pregel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pie">PIE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#graphscope-types">GraphScope types</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.declare.html">graphscope.declare</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="interactive.html">Interactive Query</a></li>
@@ -1482,8 +1490,54 @@ non-deterministic.</p>
 </div></blockquote>
 </dd></dl>
 
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kOverwriteAggregate</code></dt>
+<dd><blockquote>
+<div><p>Aggregator that stores a value that is overwritten once another value is aggregated.
+Note that, in case multiple vertices write to this aggregator, the behavior is
+non-deterministic.</p>
+</div></blockquote>
 </dd></dl>
 
+<dl class="py data">
+<dt>
+<code class="sig-name descname">kTextAppendAggregate</code></dt>
+<dd><blockquote>
+<div><p>Aggregator with string as its value which keeps appending text to it.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="graphscope-types">
+<h2>GraphScope types<a class="headerlink" href="#graphscope-types" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.Vertex.html#graphscope.Vertex" title="graphscope.Vertex"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.Vertex</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.declare.html#graphscope.declare" title="graphscope.declare"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.declare</span></code></a>(graphscope_type, variable)</p></td>
+<td><p>Declare a GraphScope data type.</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 
@@ -1495,7 +1549,7 @@ non-deterministic.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="interactive.html" class="btn btn-neutral float-right" title="Interactive Query" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="generated/graphscope.Vertex.html" class="btn btn-neutral float-right" title="graphscope.Vertex" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="generated/graphscope.framework.dag_utils.graph_to_dataframe.html" class="btn btn-neutral" title="graphscope.framework.dag_utils.graph_to_dataframe" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -1572,6 +1626,16 @@ non-deterministic.</p>
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 
