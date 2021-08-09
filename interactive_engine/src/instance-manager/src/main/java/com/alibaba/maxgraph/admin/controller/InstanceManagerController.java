@@ -101,6 +101,7 @@ public class InstanceManagerController {
 
         try {
             if (!isValidGraphName(graphName)) {
+                logger.error("graphName {} is invalid", graphName);
                 createInstanceEntity.setErrorCode(-1);
                 createInstanceEntity.setErrorMessage("Invalid graph name");
                 return createInstanceEntity;
@@ -200,9 +201,15 @@ public class InstanceManagerController {
         int frontendPort = 0;
 
         String schemaPath = "/tmp/" + graphName + ".json";
-        if (!isValidGraphName(graphName) || StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
+        if (!isValidGraphName(graphName)) {
+            logger.error("graphName {} is invalid", graphName);
             createInstanceEntity.setErrorCode(-1);
             createInstanceEntity.setErrorMessage("Invalid graph name");
+            return createInstanceEntity;
+        }
+        if (StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
+            createInstanceEntity.setErrorCode(-1);
+            createInstanceEntity.setErrorMessage("Invalid schema path");
             return createInstanceEntity;
         }
         try {
@@ -317,9 +324,15 @@ public class InstanceManagerController {
         String errorMessage;
         int frontendPort = 0;
 
-        if (!isValidGraphName(graphName) || StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
+        if (!isValidGraphName(graphName)) {
+            logger.error("graphName {} is invalid", graphName);
             createInstanceEntity.setErrorCode(-1);
             createInstanceEntity.setErrorMessage("Invalid graph name");
+            return createInstanceEntity;
+        }
+        if (StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
+            createInstanceEntity.setErrorCode(-1);
+            createInstanceEntity.setErrorMessage("Invalid schema path");
             return createInstanceEntity;
         }
         try {
@@ -383,6 +396,7 @@ public class InstanceManagerController {
         String errorMessage;
         try {
             if (!isValidGraphName(graphName)) {
+                logger.error("graphName {} is invalid", graphName);
                 return new CloseInstanceEntity(-1, "Invalid graph name");
             }
             List<String> closeCommandList = new ArrayList<>();
@@ -415,6 +429,7 @@ public class InstanceManagerController {
 
         try{
             if (!isValidGraphName(graphName)) {
+                logger.error("graphName {} is invalid", graphName);
                 return new CloseInstanceEntity(-1, "Invalid graph name");
             }
             List<String> closeCommandList = new ArrayList<>();
@@ -444,6 +459,7 @@ public class InstanceManagerController {
     }
 
     public boolean isValidGraphName(String graphName) {
+        // contains word characters only, length range is from 1 to 128
         String validPattern = "^\\w{1,128}$";
         return graphName.matches(validPattern);
     }
