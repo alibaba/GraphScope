@@ -28,7 +28,7 @@ from graphscope.analytical.udf.utils import ProgramModel
 from graphscope.analytical.udf.wrapper import pyx_codegen
 from graphscope.framework.app import AppAssets
 
-__all__ = ["pie", "pregel"]
+__all__ = ["pie", "pregel", "step", "PIE"]
 
 PREGEL_NECESSARY_DEFS = ["Init", "Compute"]
 PREGEL_COMBINE_DEF = "Combine"
@@ -93,6 +93,7 @@ def pie(vd_type, md_type):
         pyx_header.putline("from pie cimport PIEAggregateType")
         pyx_header.putline("from pie cimport Vertex")
         pyx_header.putline("from pie cimport VertexArray")
+        pyx_header.putline("from pie cimport VertexHeap")
         pyx_header.putline("from pie cimport VertexRange")
         pyx_header.putline("from pie cimport MessageStrategy")
         pyx_header.putline("from pie cimport to_string")
@@ -103,6 +104,7 @@ def pie(vd_type, md_type):
         pyx_header.putline("from libc.stdint cimport uint64_t")
         pyx_header.putline("from libcpp cimport bool")
         pyx_header.putline("from libcpp.string cimport string")
+        pyx_header.putline("from libcpp.vector cimport vector")
 
         pyx_codegen(algo, defs, ProgramModel.PIE, pyx_header, vd_type, md_type)
         # pyx_codegen(algo, defs, pyx_wrapper, vd_type, md_type)
@@ -111,6 +113,10 @@ def pie(vd_type, md_type):
     vd_ctype = str(CType.from_string(vd_type))
     md_ctype = str(CType.from_string(md_type))
     return partial(_pie_wrapper, vd_ctype, md_ctype)
+
+
+step = partial(pie, "double", "double")
+PIE = AppAssets
 
 
 def pregel(vd_type, md_type):
@@ -201,6 +207,6 @@ def _check_and_reorder(necessary_defs: Sequence, algo: type, defs: OrderedDict):
     for d in necessary_defs:
         if d not in defs.keys():
             raise ValueError("Can't find method definition of {}".format(d))
-        if type(algo.__dict__[d]) is not staticmethod:
-            raise ValueError("Missing staticmethod decorator on method {}".format(d))
+        # if type(algo.__dict__[d]) is not staticmethod:
+        #     raise ValueError("Missing staticmethod decorator on method {}".format(d))
         defs.move_to_end(d)

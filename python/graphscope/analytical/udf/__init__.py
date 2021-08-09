@@ -19,4 +19,5 @@
 
 from graphscope.analytical.udf.decorators import pie
 from graphscope.analytical.udf.decorators import pregel
+from graphscope.analytical.udf.decorators import step
 from graphscope.analytical.udf.types import declare

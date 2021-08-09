@@ -39,6 +39,7 @@ class ExpectFuncDef(Enum):
     COMBINE = "Combine"
     PEVAL = "PEval"
     INCEVAL = "IncEval"
+    DIJKSTRA = "dijkstra"
 
 
 class LinesWrapper(object):

@@ -191,7 +191,7 @@ class _FetchHandler(object):
         for seq, op in enumerate(self._ops):
             for op_result in response.results:
                 if op.key == op_result.key:
-                    if op.output_types == types_pb2.RESULTS:
+                    if op_result.output_type == types_pb2.RESULTS:
                         if op.type == types_pb2.RUN_APP:
                             rets.append(self._rebuild_context(seq, op, op_result))
                         elif op.type == types_pb2.FETCH_GREMLIN_RESULT:
@@ -199,26 +199,26 @@ class _FetchHandler(object):
                         else:
                             # for nx Graph
                             rets.append(op_result.result.decode("utf-8"))
-                    if op.output_types == types_pb2.GREMLIN_RESULTS:
+                    if op_result.output_type == types_pb2.GREMLIN_RESULTS:
                         rets.append(self._rebuild_gremlin_results(seq, op, op_result))
-                    if op.output_types == types_pb2.GRAPH:
+                    if op_result.output_type == types_pb2.GRAPH:
                         rets.append(self._rebuild_graph(seq, op, op_result))
-                    if op.output_types == types_pb2.LEARNING_GRAPH:
+                    if op_result.output_type == types_pb2.LEARNING_GRAPH:
                         rets.append(self._rebuild_learning_graph(seq, op, op_result))
-                    if op.output_types == types_pb2.SAMPLE_RESULT:
+                    if op_result.output_type == types_pb2.SAMPLE_RESULT:
                         rets.append(pickle.loads(op_result.result))
-                    if op.output_types == types_pb2.APP:
+                    if op_result.output_type == types_pb2.APP:
                         rets.append(None)
-                    if op.output_types == types_pb2.BOUND_APP:
+                    if op_result.output_type == types_pb2.BOUND_APP:
                         rets.append(self._rebuild_app(seq, op, op_result))
-                    if op.output_types in (
+                    if op_result.output_type in (
                         types_pb2.VINEYARD_TENSOR,
                         types_pb2.VINEYARD_DATAFRAME,
                     ):
                         rets.append(
                             json.loads(op_result.result.decode("utf-8"))["object_id"]
                         )
-                    if op.output_types in (types_pb2.TENSOR, types_pb2.DATAFRAME):
+                    if op_result.output_type in (types_pb2.TENSOR, types_pb2.DATAFRAME):
                         if (
                             op.type == types_pb2.CONTEXT_TO_DATAFRAME
                             or op.type == types_pb2.GRAPH_TO_DATAFRAME
@@ -229,9 +229,9 @@ class _FetchHandler(object):
                             or op.type == types_pb2.GRAPH_TO_NUMPY
                         ):
                             rets.append(decode_numpy(op_result.result))
-                    if op.output_types == types_pb2.INTERACTIVE_QUERY:
+                    if op_result.output_type == types_pb2.INTERACTIVE_QUERY:
                         rets.append(self._rebuild_interactive_query(seq, op, op_result))
-                    if op.output_types == types_pb2.NULL_OUTPUT:
+                    if op_result.output_type == types_pb2.NULL_OUTPUT:
                         rets.append(None)
                     break
         return rets[0] if self._unpack else rets
@@ -816,6 +816,12 @@ class Session(object):
             if self._launcher:
                 self._launcher.stop()
             self._pod_name_list = []
+
+    def registerUDF(self, algo, udf_class):
+        udf = udf_class()
+        if not self._grpc_client:
+            raise RuntimeError("Disconnected session.")
+        self._grpc_client.register_udf(algo, udf.gar)
 
     def _close_interactive_instance(self, instance):
         """Close a interactive instance."""

@@ -20,7 +20,7 @@
 import array
 import functools
 
-__all__ = ["declare", "Vertex"]
+__all__ = ["declare", "Vertex", "VertexVector", "VertexHeap"]
 
 
 # Emulated PIE type
@@ -41,6 +41,8 @@ class GraphScopeType(GraphScopeTypeObject):
 
 
 Vertex = GraphScopeType("Vertex")
+VertexVector = GraphScopeType("VertexVector")
+VertexHeap = GraphScopeType("VertexHeap")
 
 
 # Place holder

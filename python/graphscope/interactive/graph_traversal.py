@@ -84,7 +84,7 @@ def expr(*args):
 statics.add_static("expr", expr)
 
 
-def patch_for_gremlin_python():
+def patch_for_gremlin_python():  # noqa: C901
     def toList(self):
         import pickle
 
@@ -93,11 +93,13 @@ def patch_for_gremlin_python():
 
         interactive = __graphscope_interactive_query__[0]
         bytecode_pickle = pickle.dumps(self.bytecode)
-        return list(
-            interactive.execute(
-                bytecode_pickle, request_options={"engine": "gae_traversal"}
-            ).all()
-        )
+        rlt = interactive.execute(
+            bytecode_pickle, request_options={"engine": "gae_traversal"}
+        ).all()
+        try:
+            return list(rlt)
+        except Exception:
+            return [rlt]
 
     setattr(Traversal, "toList", toList)
 
@@ -109,11 +111,15 @@ def patch_for_gremlin_python():
 
         interactive = __graphscope_interactive_query__[0]
         bytecode_pickle = pickle.dumps(self.bytecode)
-        return set(
-            interactive.execute(
-                bytecode_pickle, request_options={"engine": "gae_traversal"}
-            ).all()
-        )
+        rlt = interactive.execute(
+            bytecode_pickle, request_options={"engine": "gae_traversal"}
+        ).all()
+        try:
+            return set(rlt)
+        except Exception:
+            return set([rlt])
+
+    setattr(Traversal, "toSet", toSet)
 
     def get_processor(self, processor):
         if processor == "gae":

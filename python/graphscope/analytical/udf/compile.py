@@ -106,10 +106,20 @@ class GRAPECompiler(ast.NodeVisitor):
         self._program_model = program_model
 
         # store aggregate function indexed by name
+        self.__global_variable = []
         self.__registed_aggregators = {}
         self.__globals = {}
         self.__func_params_name_list = []
         self.__pyx_header = LinesWrapper()
+
+    def flat_list(self, source_list):
+        rlt = []
+        for l in source_list:
+            if isinstance(l, list):
+                rlt.extend(l)
+            else:
+                rlt.append(l)
+        return rlt
 
     def set_pregel_program_model(self):
         self._program_model = ProgramModel.Pregel
@@ -156,6 +166,26 @@ class GRAPECompiler(ast.NodeVisitor):
         cyast = self.parse(source)
         writer = patch_cython_codewriter(CodeWriter())
         return "\n".join(writer.write(cyast).lines)
+
+    def is_self_variable(self, node):
+        if isinstance(node, ast.Attribute):
+            if (
+                hasattr(node, "value")
+                and hasattr(node.value, "id")
+                and node.value.id == "self"
+            ):
+                return True
+        return False
+
+    def get_self_variable_name(self, node):
+        if isinstance(node, ast.Attribute):
+            if (
+                hasattr(node, "value")
+                and hasattr(node.value, "id")
+                and node.value.id == "self"
+            ):
+                return node.attr
+        return ""
 
     def make_plain_arg(self, name, arg_loc):
         return CArgDeclNode(
@@ -571,6 +601,10 @@ class GRAPECompiler(ast.NodeVisitor):
             return False
         if flat_func_name[0] in self.__func_params_name_list:
             return True
+        # vldb hack
+        if len(flat_func_name) >= 2:
+            if flat_func_name[0] == "e" and flat_func_name[1] == "data":
+                return True
         # check from graphscope module
         cascade = self.__globals.get(flat_func_name[0])
         if cascade is None:
@@ -589,6 +623,9 @@ class GRAPECompiler(ast.NodeVisitor):
             if name == "declare":
                 var = node.args[1].id
                 var_type = node.args[0].attr
+                # hack for vldb
+                if var_type == "VertexVector":
+                    var_type = "vector[Vertex]"
                 return CVarDefNode(
                     self.loc(node),
                     base_type=CSimpleBaseTypeNode(
@@ -669,6 +706,11 @@ class GRAPECompiler(ast.NodeVisitor):
                 args=[self.visit(arg) for arg in node.args],
             )
         else:
+            if obj == "e" and name == "data":
+                # hack for vldb
+                node.func.attr = "get_int"
+                if len(node.args) > 0:
+                    node.args[0].attr = "2"
             return SimpleCallNode(
                 self.loc(node),
                 function=self.visit(node.func),
@@ -716,6 +758,8 @@ class GRAPECompiler(ast.NodeVisitor):
         )
 
     def visit_Attribute(self, node):
+        if self.is_self_variable(node):
+            return NameNode(self.loc(node), name=node.attr)
         return AttributeNode(
             self.loc(node), obj=self.visit(node.value), attribute=node.attr
         )
@@ -885,8 +929,32 @@ class GRAPECompiler(ast.NodeVisitor):
             and node.targets[0].id in self.__func_params_name_list
         ):
             raise RuntimeError("Can't assign to internal variables.")
+        # vldb
+        if (
+            hasattr(node.targets[0], "id")
+            and isinstance(node.value, ast.Call)
+            and hasattr(node.value, "func")
+            and hasattr(node.value.func, "id")
+            and node.value.func.id == "VertexHeap"
+        ):
+            cdef_varialble_type = "{0}[{1}, {2}]".format(
+                node.value.func.id, self._vd_type, self._md_type
+            )
+            node.targets[0].id = "cdef {0} {1}".format(
+                cdef_varialble_type, node.targets[0].id
+            )
+            node.value.func.id = cdef_varialble_type
         lhs = self.visit(node.targets[0])
         rhs = self.visit(node.value)
+        if self.is_self_variable(node.targets[0]):
+            # insert global
+            global_val = self.get_self_variable_name(node.targets[0])
+            self.__global_variable.append(global_val)
+            self.__pyx_header.putline("global {0}".format(global_val))
+            return [
+                GlobalNode(self.loc(node), names=[global_val]),
+                SingleAssignmentNode(self.loc(node), lhs=lhs, rhs=rhs),
+            ]
         return SingleAssignmentNode(self.loc(node), lhs=lhs, rhs=rhs)
 
     def visit_AugAssign(self, node):
@@ -917,7 +985,8 @@ class GRAPECompiler(ast.NodeVisitor):
             pattern = None
             target = None
         body = StatListNode(
-            self.loc(node), stats=[self.visit(stat) for stat in node.body]
+            self.loc(node),
+            stats=self.flat_list([self.visit(stat) for stat in node.body]),
         )
         return ExceptClauseNode(
             self.loc(node),
@@ -929,12 +998,14 @@ class GRAPECompiler(ast.NodeVisitor):
 
     def visit_Try(self, node):
         body = StatListNode(
-            self.loc(node), stats=[self.visit(stat) for stat in node.body]
+            self.loc(node),
+            stats=self.flat_list([self.visit(stat) for stat in node.body]),
         )
         except_clauses = [self.visit(ec) for ec in node.handlers]
         if node.orelse:
             else_clause = StatListNode(
-                self.loc(node), stats=[self.visit(stat) for stat in node.orelse]
+                self.loc(node),
+                stats=self.flat_list([self.visit(stat) for stat in node.orelse]),
             )
         else:
             else_clause = None
@@ -948,7 +1019,8 @@ class GRAPECompiler(ast.NodeVisitor):
         # with `finally` statement or not
         if node.finalbody:
             final_clause = StatListNode(
-                self.loc(node), stats=[self.visit(stat) for stat in node.finalbody]
+                self.loc(node),
+                stats=self.flat_list([self.visit(stat) for stat in node.finalbody]),
             )
             return TryFinallyStatNode(
                 self.loc(node), body=try_except_stat_node, finally_clause=final_clause
@@ -974,11 +1046,13 @@ class GRAPECompiler(ast.NodeVisitor):
     def visit_If(self, node):
         condition = self.visit(node.test)
         body = StatListNode(
-            self.loc(node), stats=[self.visit(stat) for stat in node.body]
+            self.loc(node),
+            stats=self.flat_list([self.visit(stat) for stat in node.body]),
         )
         if node.orelse:
             else_body = StatListNode(
-                self.loc(node), stats=[self.visit(stat) for stat in node.orelse]
+                self.loc(node),
+                stats=self.flat_list([self.visit(stat) for stat in node.orelse]),
             )
         else:
             else_body = None
@@ -992,11 +1066,13 @@ class GRAPECompiler(ast.NodeVisitor):
         target_value = self.visit(node.target)
         iter_value = IteratorNode(self.loc(node.iter), sequence=self.visit(node.iter))
         body = StatListNode(
-            self.loc(node), stats=[self.visit(stat) for stat in node.body]
+            self.loc(node),
+            stats=self.flat_list([self.visit(stat) for stat in node.body]),
         )
         if node.orelse:
             else_body = StatListNode(
-                self.loc(node), stats=[self.visit(stat) for stat in node.orelse]
+                self.loc(node),
+                stats=self.flat_list([self.visit(stat) for stat in node.orelse]),
             )
         else:
             else_body = None
@@ -1012,11 +1088,13 @@ class GRAPECompiler(ast.NodeVisitor):
     def visit_While(self, node):
         condition = self.visit(node.test)
         body = StatListNode(
-            self.loc(node), stats=[self.visit(stat) for stat in node.body]
+            self.loc(node),
+            stats=self.flat_list([self.visit(stat) for stat in node.body]),
         )
         if node.orelse:
             else_body = StatListNode(
-                self.loc(node), stats=[self.visit(stat) for stat in node.orelse]
+                self.loc(node),
+                stats=self.flat_list([self.visit(stat) for stat in node.orelse]),
             )
         else:
             else_body = None
@@ -1033,7 +1111,8 @@ class GRAPECompiler(ast.NodeVisitor):
         manager = self.visit(node.items[0])
         target = self.visit(node.items[0].optional_vars)
         body = StatListNode(
-            self.loc(node), stats=[self.visit(stat) for stat in node.body]
+            self.loc(node),
+            stats=self.flat_list([self.visit(stat) for stat in node.body]),
         )
         return WithStatNode(self.loc(node), manager=manager, target=target, body=body)
 
@@ -1052,7 +1131,8 @@ class GRAPECompiler(ast.NodeVisitor):
             )
 
         if not is_static_method(node):
-            raise RuntimeError("Missing decorator staticmethod.")
+            pass
+            # raise RuntimeError("Missing decorator staticmethod.")
 
         function_name = node.name
         function_return_type = "void"
@@ -1062,7 +1142,13 @@ class GRAPECompiler(ast.NodeVisitor):
                 args = node.args.args
                 assert len(args) == 2, "The number of parameters does not match"
                 args = [
-                    self.make_ref_arg("Fragment", args[0].arg, self.loc(args[0])),
+                    self.make_template_arg(
+                        "Fragment",
+                        [self._vd_type, self._md_type],
+                        args[0].arg,
+                        self.loc(args[0]),
+                        use_ref=True,
+                    ),
                     self.make_template_arg(
                         "Context",
                         [self._vd_type, self._md_type],
@@ -1075,7 +1161,13 @@ class GRAPECompiler(ast.NodeVisitor):
                 args = node.args.args
                 assert len(args) == 2, "The number of parameters does not match"
                 args = [
-                    self.make_ref_arg("Fragment", args[0].arg, self.loc(args[0])),
+                    self.make_template_arg(
+                        "Fragment",
+                        [self._vd_type, self._md_type],
+                        args[0].arg,
+                        self.loc(args[0]),
+                        use_ref=True,
+                    ),
                     self.make_template_arg(
                         "Context",
                         [self._vd_type, self._md_type],
@@ -1088,13 +1180,38 @@ class GRAPECompiler(ast.NodeVisitor):
                 args = node.args.args
                 assert len(args) == 2, "The number of parameters does not match"
                 args = [
-                    self.make_ref_arg("Fragment", args[0].arg, self.loc(args[0])),
                     self.make_template_arg(
-                        "Context",
+                        "Fragment",
                         [self._vd_type, self._md_type],
+                        args[0].arg,
+                        self.loc(args[0]),
+                        use_ref=True,
+                    ),
+                    self.make_template_arg(
+                        "vector",
+                        ["Vertex"],
                         args[1].arg,
                         self.loc(args[1]),
+                        use_ref=False,
+                    ),
+                ]
+            elif function_name == ExpectFuncDef.DIJKSTRA.value:
+                args = node.args.args
+                assert len(args) == 2, "The number of parameters does not match"
+                args = [
+                    self.make_template_arg(
+                        "Fragment",
+                        [self._vd_type, self._md_type],
+                        args[0].arg,
+                        self.loc(args[0]),
                         use_ref=True,
+                    ),
+                    self.make_template_arg(
+                        "vector",
+                        ["Vertex"],
+                        args[1].arg,
+                        self.loc(args[1]),
+                        use_ref=False,
                     ),
                 ]
             else:
@@ -1187,7 +1304,8 @@ class GRAPECompiler(ast.NodeVisitor):
         )
         # traverse body
         body = StatListNode(
-            self.loc(node), stats=[self.visit(expr) for expr in node.body]
+            self.loc(node),
+            stats=self.flat_list([self.visit(expr) for expr in node.body]),
         )
         return CFuncDefNode(
             self.loc(node),

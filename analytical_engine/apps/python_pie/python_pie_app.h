@@ -34,10 +34,13 @@ class PythonPIEApp
           FRAG_T, PIEContext<FRAG_T, PythonPIEComputeContext<
                                          FRAG_T, typename PIE_PROGRAM_T::vd_t,
                                          typename PIE_PROGRAM_T::md_t>>> {
+  using vertex_t = typename FRAG_T::vertex_t;
+  using label_id_t = typename FRAG_T::label_id_t;
+
   using vd_t = typename PIE_PROGRAM_T::vd_t;
   using md_t = typename PIE_PROGRAM_T::md_t;
 
-  using wrapper_fragment_t = PythonPIEFragment<FRAG_T>;
+  using wrapper_fragment_t = PythonPIEFragment<FRAG_T, vd_t, md_t>;
   using wrapper_context_t = PythonPIEComputeContext<FRAG_T, vd_t, md_t>;
 
   using app_t = PythonPIEApp<FRAG_T, PIE_PROGRAM_T>;
@@ -51,6 +54,7 @@ class PythonPIEApp
 
   virtual void PEval(const fragment_t& frag, pie_context_t& context) {
     fragment_.set_fragment(&frag);
+    fragment_.set_compute_comtext(&(context.compute_context_));
     // call python function
     program_.Init(fragment_, context.compute_context_);
 
@@ -60,11 +64,23 @@ class PythonPIEApp
     program_.PEval(fragment_, context.compute_context_);
   }
 
-  virtual void IncEval(const fragment_t& graph, pie_context_t& context) {
+  virtual void IncEval(const fragment_t& frag, pie_context_t& context) {
     context.compute_context_.inc_superstep();
 
+    std::vector<vertex_t> updates;
+    label_id_t v_label_num = frag.vertex_label_num();
+    for (label_id_t i = 0; i < v_label_num; ++i) {
+      auto iv = frag.InnerVertices(i);
+      for (auto v : iv) {
+        if (context.compute_context_.is_updated(v)) {
+          updates.push_back(v);
+        }
+      }
+    }
+    context.compute_context_.set_update_vertices(updates);
+
     // call python function
-    program_.IncEval(fragment_, context.compute_context_);
+    program_.IncEval(fragment_, updates);
   }
 
  private:
