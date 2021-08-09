@@ -73,7 +73,7 @@ ARG profile=$profile
 RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
     curl -sf -L https://static.rust-lang.org/rustup.sh | \
-        sh -s -- -y --profile minimal --default-toolchain 1.48.0 && \
+        sh -s -- -y --profile minimal --default-toolchain 1.54.0 && \
     echo "source ~/.cargo/env" >> ~/.bashrc
 
 ENV PATH=${PATH}:/usr/local/go/bin
