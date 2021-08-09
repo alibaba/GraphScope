@@ -114,6 +114,7 @@
 <li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Developer Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#building-and-testing">Building and Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-and-testing-graphscope-locally-with-docker">Building and Testing GraphScope Locally with Docker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#build-python-wheels">Build Python Wheels</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#linux">Linux</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#macos">MacOS</a></li>
@@ -194,7 +195,7 @@
   <section id="developer-guide">
 <h1>Developer Guide<a class="headerlink" href="#developer-guide" title="Permalink to this headline">¶</a></h1>
 <p>GraphScope has been developed by an active team of software engineers and researchers.
-Any contributions from the open-source community to improve this project are  greatly appreciated!</p>
+Any contributions from the open-source community to improve this project are greatly appreciated!</p>
 <p>GraphScope is licensed under Apache License 2.0.</p>
 <section id="building-and-testing">
 <h2>Building and Testing<a class="headerlink" href="#building-and-testing" title="Permalink to this headline">¶</a></h2>
@@ -235,6 +236,34 @@ python3 setup.py install
 </div>
 <p>Or use the test script to pass all test cases.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/test.sh --all --image graphscope/graphscope:SHORTSHA
+</pre></div>
+</div>
+</section>
+<section id="building-and-testing-graphscope-locally-with-docker">
+<h2>Building and Testing GraphScope Locally with Docker<a class="headerlink" href="#building-and-testing-graphscope-locally-with-docker" title="Permalink to this headline">¶</a></h2>
+<p>We provide a docker images based on ubuntu:20.04 with all required dependencies
+installed.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu</p></li>
+</ul>
+</div></blockquote>
+<p>For developers, they just need to start a container with <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span></code> and
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> the latest version of code from our <a class="reference external" href="https://github.com/alibaba/GraphScope">repo</a>,
+make their changes to the code and build with command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu
+<span class="c1"># set docker container shared memory: 10G</span>
+docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:ubuntu /bin/bash
+<span class="c1"># inner container</span>
+git clone https://github.com/alibaba/GraphScope.git
+git clone https://github.com/GraphScope/gstest.git
+<span class="c1"># building</span>
+<span class="nb">cd</span> GraphScope <span class="o">&amp;&amp;</span> make install
+<span class="c1"># testing:</span>
+<span class="c1">#       export GS_TEST_DIR=&lt;path_to_your_gstest_dir&gt;</span>
+<span class="c1">#       export WITH_LEARNING_ENGINE=ON</span>
+<span class="c1">#       export GRAPHSCOPE_HOME=/usr/local</span>
+<span class="nb">cd</span> GraphScope/python <span class="o">&amp;&amp;</span> python3 -m pytest -s -v ./tests/unittest
 </pre></div>
 </div>
 </section>
@@ -375,6 +404,16 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 
