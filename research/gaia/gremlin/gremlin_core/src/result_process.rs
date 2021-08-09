@@ -193,23 +193,23 @@ pub fn result_to_pb(data: Vec<Traverser>) -> result_pb::Result {
     let mut values_encode = vec![];
     for t in data {
         if let Some(e) = t.get_element() {
-            info!("element: {:?}", e);
+            debug!("result_process element result: {:?}", e);
             elements_encode.push(element_to_pb(e));
         } else if let Some(o) = t.get_object() {
             match o {
                 Object::Primitive(_) | Object::String(_) | Object::Blob(_) => {
-                    info!("object result {:?}", o);
+                    debug!("result_process object result {:?}", o);
                     values_encode.push(object_to_pb_value(o));
                 }
                 Object::DynOwned(x) => {
                     if let Some(p) = x.try_downcast_ref::<ResultPath>() {
-                        info!("path: {:?}", p);
+                        debug!("result_process path result: {:?}", p);
                         paths_encode.push(path_to_pb(p));
                     } else if let Some(result_prop) = x.try_downcast_ref::<ResultProperty>() {
-                        info!("property: {:?}", result_prop);
+                        debug!("result_process property result: {:?}", result_prop);
                         properties_encode.push(property_to_pb(result_prop));
                     } else if let Some(result_pair) = try_downcast_pair(o) {
-                        info!("group result {:?}", result_pair);
+                        debug!("result_process group result {:?}", result_pair);
                         let (k, v) = result_pair;
                         let key_pb = pair_element_to_pb(&k);
                         let value_pb = pair_element_to_pb(&v);
@@ -217,12 +217,12 @@ pub fn result_to_pb(data: Vec<Traverser>) -> result_pb::Result {
                             result_pb::MapPair { first: Some(key_pb), second: Some(value_pb) };
                         pairs_encode.push(map_pair_pb);
                     } else {
-                        info!("other object result {:?}", x);
+                        debug!("result_process other object result {:?}", x);
                     }
                 }
             }
         } else {
-            info!("object result is none!");
+            debug!("result_process object result is none!");
         };
     }
     if !elements_encode.is_empty() {
