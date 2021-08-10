@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# Author: Ning Xin
+#
 
 
 from graphscope.framework.app import AppAssets
@@ -25,6 +27,7 @@ __all__ = ["degree_assortativity_coefficient"]
 
 
 @project_to_simple
+@not_compatible_for("arrow_property")
 def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
     """Compute degree assortativity of graph.
 
@@ -57,7 +60,7 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
         sess = gs.session()
         g = sess.g()
         pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.degree_assortativity_coefficient(pg, src=0)
+        r = gs.degree_assortativity_coefficient(pg)
         s.close()
 
     See Also

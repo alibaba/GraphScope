@@ -11,6 +11,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Author: Ning Xin
  */
 
 #ifndef ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_DEGREE_DEGREE_ASSORTATIVITY_COEFFICIENT_CONTEXT_H_
@@ -32,7 +34,6 @@ namespace gs {
 template <typename FRAG_T>
 class DegreeAssortativityContext : public TensorContext<FRAG_T, double> {
  public:
-  // using vid_t = typename FRAG_T::vid_t;
   explicit DegreeAssortativityContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, double>(fragment) {}
   typedef double degree_t;
@@ -68,12 +69,10 @@ class DegreeAssortativityContext : public TensorContext<FRAG_T, double> {
          << std::endl;
     }
   }
-  // std::unordered_map<std::pair<int, int>, int, pair_hash> degree_mixing_map;
   // {source_degree: {target_degree: num}}
   std::unordered_map<degree_t, std::unordered_map<degree_t, int>>
       degree_mixing_map;
   bool merge_stage;
-  // int max_degree;
   bool directed;
   bool weighted;
   DegreeType source_degree_type_;
