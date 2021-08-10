@@ -22,19 +22,16 @@ pub mod config;
 #[allow(unused_variables)]
 pub mod schema;
 pub mod test;
-mod v2;
+pub mod v2;
 
 #[macro_use]
 extern crate log;
-#[macro_use]
 extern crate maxgraph_common;
 #[allow(unused_imports)]
 #[macro_use]
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
-
-
 
 #[derive(Debug)]
 pub struct GraphError {

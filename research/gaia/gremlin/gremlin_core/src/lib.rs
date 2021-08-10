@@ -46,6 +46,7 @@ mod result_process;
 #[macro_use]
 pub mod graph_proxy;
 
+use crate::process::traversal::path::ResultPath;
 use crate::result_process::result_to_pb;
 use crate::structure::filter::codec::ParseError;
 pub use generated::gremlin::GremlinStep as GremlinStepPb;
@@ -162,5 +163,6 @@ pub fn register_gremlin_types() -> io::Result<()> {
     dyn_type::register_type::<ShadeSync<(Traverser, Traverser)>>()?;
     dyn_type::register_type::<ShadeSync<Count<Traverser>>>()?;
     dyn_type::register_type::<ShadeSync<ToList<Traverser>>>()?;
+    dyn_type::register_type::<ResultPath>()?;
     Ok(())
 }

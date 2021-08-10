@@ -20,6 +20,8 @@ public class CreateInstanceEntity {
     private String errorMessage;
     private String frontHost;
     private int frontPort;
+    private String gaiaFrontHost;
+    private int gaiaFrontPort;
 
     public void setErrorCode(int errorCode) {
         this.errorCode = errorCode;
@@ -37,6 +39,14 @@ public class CreateInstanceEntity {
         this.frontPort = frontPort;
     }
 
+    public void setGaiaFrontHost(String frontHost) {
+        this.gaiaFrontHost = frontHost;
+    }
+
+    public void setGaiaFrontPort(int frontPort) {
+        this.gaiaFrontPort = frontPort;
+    }
+
     public int getErrorCode() {
         return errorCode;
     }
@@ -51,5 +61,13 @@ public class CreateInstanceEntity {
 
     public int getFrontPort() {
         return frontPort;
+    }
+
+    public String getGaiaFrontHost() {
+        return gaiaFrontHost;
+    }
+
+    public int getGaiaFrontPort() {
+        return gaiaFrontPort;
     }
 }

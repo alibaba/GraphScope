@@ -13,6 +13,24 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::db::api::GraphError;
+
 pub enum Error {
     Internal(String),
+}
+
+impl Error {
+    pub fn what(&self) -> &String {
+        return match &self {
+            Error::Internal(msg) => {
+                msg
+            }
+        }
+    }
+}
+
+impl From<GraphError> for Error {
+    fn from(err: GraphError) -> Self {
+        Error::Internal(format!("{:?}", err))
+    }
 }

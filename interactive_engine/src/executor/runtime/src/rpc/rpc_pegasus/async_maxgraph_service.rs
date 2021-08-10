@@ -321,7 +321,11 @@ impl<V, VI, E, EI> AsyncMaxGraphService for AsyncMaxGraphServiceImpl<V, VI, E, E
         }
 
         // check and update store_service_manager
-        if self.signal.compare_and_swap(true, false, Ordering::Relaxed) {
+        let signal = match self.signal.compare_exchange(true, false, Ordering::Relaxed, Ordering::Relaxed) {
+            Ok(x) => x,
+            Err(x) => x,
+        };
+        if signal {
             let mut remote_store_service_manager_clone = (*self.remote_store_service_manager.read().unwrap()).clone();
             self.remote_store_service_manager_core = Arc::new(remote_store_service_manager_clone.take().unwrap());
         }

@@ -718,7 +718,11 @@ class KubernetesClusterLauncher(Launcher):
         # add manager container
         graph_manager_builder.add_manager_container(
             cmd=["/bin/bash", "-c", "--"],
-            args=["/home/maxgraph/manager-entrypoint.sh"],
+            args=[
+                "/home/maxgraph/bin/giectl start_manager_service k8s {} 0 {}".format(
+                    self._interactive_engine_manager_port, self._zookeeper_port
+                )
+            ],
             name=self._gie_manager_container_name,
             image=self._saved_locals["gie_graph_manager_image"],
             cpu=self._saved_locals["gie_graph_manager_cpu"],

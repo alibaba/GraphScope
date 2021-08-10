@@ -12,8 +12,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.2.5"  # vineyard version
-readonly V6D_BRANCH="main-v0.2.5" # vineyard branch
+readonly V6D_VERSION="0.2.6"  # vineyard version
+readonly V6D_BRANCH="v0.2.6" # vineyard branch
 readonly LLVM_VERSION=9  # llvm version we use in Darwin platform
 
 readonly SOURCE_DIR="$( cd "$(dirname $0)/.." >/dev/null 2>&1 ; pwd -P )"
@@ -463,7 +463,7 @@ install_dependencies() {
     if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
-      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
       # remove rust from packages_to_install
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
@@ -562,7 +562,7 @@ install_dependencies() {
     if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
-      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
       # remove rust from packages_to_install
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
@@ -621,7 +621,7 @@ install_dependencies() {
     if [[ "${packages_to_install[@]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
-      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
       # remove rust from packages_to_install
       packages_to_install=("${packages_to_install[@]/rust}")
     fi

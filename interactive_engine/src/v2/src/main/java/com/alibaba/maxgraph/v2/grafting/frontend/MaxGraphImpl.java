@@ -59,6 +59,7 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
     private String writeSession;
 
     private Map<Integer, RemoteProxy> proxys = new ConcurrentHashMap<>();
+    private long startEdgeInnerId;
 
     public MaxGraphImpl(NodeDiscovery discovery, SchemaFetcher schemaFetcher, GraphPartitionManager partitionManager,
                         GraphWriter graphWriter, WriteSessionGenerator writeSessionGenerator) {
@@ -67,6 +68,7 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
         this.graphWriter = graphWriter;
         this.writeSession = writeSessionGenerator.newWriteSession();
         discovery.addListener(this);
+        startEdgeInnerId = System.nanoTime();
     }
 
     @Override
@@ -214,7 +216,8 @@ public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
                 .setSrcVertexLabelId(new LabelId(src.id.typeId()))
                 .setDstVertexLabelId(new LabelId(dst.id.typeId()))
                 .build();
-        EdgeId edgeId = new EdgeId(new VertexId(src.id.id()), new VertexId(dst.id.id()), 0L);
+        long innerId = ++startEdgeInnerId;
+        EdgeId edgeId = new EdgeId(new VertexId(src.id.id()), new VertexId(dst.id.id()), innerId);
         EdgeTarget edgeTarget = new EdgeTarget(edgeKind, edgeId);
         DataRecord dataRecord = new DataRecord(edgeTarget, properties);
         WriteRequest writeRequest = new WriteRequest(OperationType.OVERWRITE_EDGE, dataRecord);

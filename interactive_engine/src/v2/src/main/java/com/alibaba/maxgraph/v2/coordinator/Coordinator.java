@@ -105,7 +105,6 @@ public class Coordinator extends NodeBase {
         }
         this.graphInitializer.initializeIfNeeded();
         this.metaService.start();
-        this.snapshotManager.start();
         this.idAllocator.start();
         try {
             this.rpcServer.start();
@@ -114,6 +113,7 @@ public class Coordinator extends NodeBase {
         }
         this.discovery.start();
         this.channelManager.start();
+        this.snapshotManager.start();
         this.snapshotNotifier.start();
         this.schemaManager.start();
         this.logRecycler.start();
