@@ -24,7 +24,7 @@ pub(crate) mod channel;
 pub(crate) mod decorator;
 pub(crate) mod input;
 pub(crate) mod output;
-
+mod buffer;
 use crate::channel_id::ChannelId;
 pub use channel::{Aggregate, Broadcast, Channel, Pipeline};
 

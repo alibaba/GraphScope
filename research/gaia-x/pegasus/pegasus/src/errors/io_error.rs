@@ -14,10 +14,10 @@
 //! limitations under the License.
 
 use crate::channel_id::ChannelId;
-use crate::Tag;
 use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::io;
+use std::any::Any;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ChannelErrorKind {
@@ -38,8 +38,8 @@ pub enum IOErrorKind {
     // IO error from system's IO derive, like network(tcp..), files,
     System(io::ErrorKind),
     Channel(ChannelError),
-    // the data of tag can't be pushed/pulled temporarily;
-    WouldBlock(Option<Tag>),
+    // block by flow control;
+    WouldBlock,
     Interrupt,
     Unknown,
 }
@@ -60,11 +60,12 @@ pub struct IOError {
     kind: IOErrorKind,
     cause: Option<ErrorCause>,
     origin: Option<String>,
+    resource: Option<Box<dyn Any + Send>>
 }
 
 impl IOError {
     pub fn new<K: Into<IOErrorKind>>(kind: K) -> Self {
-        IOError { ch_id: None, kind: kind.into(), cause: None, origin: None }
+        IOError { ch_id: None, kind: kind.into(), cause: None, origin: None, resource: None }
     }
 
     pub fn source_exhaust() -> Self {
@@ -72,7 +73,12 @@ impl IOError {
     }
 
     pub fn would_block() -> Self {
-        IOError::new(std::io::ErrorKind::WouldBlock)
+        IOError::new(IOErrorKind::WouldBlock)
+    }
+
+    pub fn would_block_with<A: Send + 'static>(res: A) -> Self {
+        let resource = Some(Box::new(res) as Box<dyn Any + Send>);
+        IOError { ch_id: None, kind: IOErrorKind::WouldBlock, cause: None, origin: None, resource }
     }
 
     pub fn interrupted() -> Self {
@@ -120,6 +126,7 @@ impl IOError {
     pub fn is_would_block(&self) -> bool {
         match self.kind {
             IOErrorKind::System(io_kind) if io_kind == io::ErrorKind::WouldBlock => true,
+            IOErrorKind::WouldBlock => true,
             _ => false,
         }
     }
@@ -130,6 +137,10 @@ impl IOError {
 
     pub fn kind(&self) -> &IOErrorKind {
         &self.kind
+    }
+
+    pub fn take_resource(&mut self) -> Option<Box<dyn Any + Send>> {
+        self.resource.take()
     }
 }
 

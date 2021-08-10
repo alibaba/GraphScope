@@ -305,11 +305,18 @@ impl<D> MicroBatch<D> {
     }
 
     pub fn set_tag(&mut self, tag: Tag) {
+        if let Some(end) = self.end.as_mut() {
+            end.tag = tag.clone();
+        }
         self.tag = tag;
     }
 
     pub fn is_last(&self) -> bool {
         self.end.is_some()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.data.len() == 0
     }
 
     pub fn take_end(&mut self) -> Option<EndSignal> {

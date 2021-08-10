@@ -122,6 +122,14 @@ impl<D> Drop for Buffer<D> {
     }
 }
 
+impl<D> Iterator for Buffer<D> {
+    type Item = D;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.pop()
+    }
+}
+
 pub struct SharedReadBuffer<D> {
     inner: Arc<Buffer<D>>,
     cursor: usize,
@@ -367,7 +375,7 @@ impl<D, F: BufferFactory<D>> Drop for BufferPool<D, F> {
     }
 }
 
-impl<D: Send, F: BufferFactory<D>> BufferFactory<D> for BufferPool<D, F> {
+impl<D, F: BufferFactory<D>> BufferFactory<D> for BufferPool<D, F> {
     fn create(&mut self, batch_size: usize) -> Option<Buffer<D>> {
         assert_eq!(batch_size, self.batch_size);
         if let Some(inner) = self.fetch() {

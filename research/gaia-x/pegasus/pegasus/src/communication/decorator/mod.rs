@@ -17,7 +17,7 @@ use crate::channel_id::ChannelInfo;
 use crate::communication::decorator::aggregate::AggregateBatchPush;
 use crate::communication::decorator::broadcast::BroadcastBatchPush;
 use crate::communication::decorator::buffered::BufferedPush;
-use crate::communication::decorator::exchange::{ExchangeByScopePush, ExchangeMiniBatchPush};
+use crate::communication::decorator::exchange::{ExchangeByScopePush, ExchangeMiniBatchPush, ExchangeMicroBatchPush};
 use crate::communication::IOResult;
 use crate::data::{Data, DataSet, MicroBatch};
 use crate::data_plane::intra_thread::ThreadPush;
@@ -27,6 +27,7 @@ use crate::progress::EndSignal;
 use crate::tag::tools::map::TidyTagMap;
 use crate::Tag;
 use pegasus_common::buffer::Batch;
+use crate::errors::IOError;
 
 pub mod aggregate;
 pub mod broadcast;
@@ -349,5 +350,37 @@ impl<T: Data> Push<MicroBatch<T>> for LocalMicroBatchPush<T> {
    fn close(&mut self) -> IOResult<()> {
         self.flush()?;
         self.inner.close()
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) enum MicroBatchPush<T: Data> {
+    Local(LocalMicroBatchPush<T>),
+    Exchange(ExchangeMicroBatchPush<T>),
+}
+
+impl<T: Data> Push<MicroBatch<T>> for MicroBatchPush<T> {
+    fn push(&mut self, _msg: MicroBatch<T>) -> Result<(), IOError> {
+        todo!()
+    }
+
+    fn flush(&mut self) -> Result<(), IOError> {
+        todo!()
+    }
+
+    fn close(&mut self) -> Result<(), IOError> {
+        todo!()
+    }
+}
+
+pub trait BlockPush {
+    // try to unblock data on scope, return true if the data is unblocked;
+    fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError>;
+}
+
+
+impl<T: Data> BlockPush for MicroBatchPush<T> {
+    fn try_unblock(&mut self, _tag: &Tag) -> Result<bool, IOError> {
+        todo!()
     }
 }

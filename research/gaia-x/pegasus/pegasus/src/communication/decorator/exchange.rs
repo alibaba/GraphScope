@@ -16,18 +16,20 @@
 use crate::api::function::{RouteFunction, FnResult};
 use crate::channel_id::ChannelInfo;
 use crate::communication::decorator::buffered::BufferedPush;
-use crate::communication::decorator::evented::ControlPush;
-use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
-use crate::data::DataSet;
-use crate::data_plane::GeneralPush;
-use crate::errors::IOResult;
+use crate::communication::decorator::evented::{ControlPush, EventEmitPush};
+use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush, BlockPush};
+use crate::data::{DataSet, MicroBatch};
+use crate::data_plane::{GeneralPush, Push};
+use crate::errors::{IOResult, IOError};
 use crate::event::emitter::EventEmitter;
 use crate::graph::Port;
 use crate::progress::{EndSignal, Weight};
 use crate::{Data, Tag};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::rc::Rc;
+use crate::communication::buffer::{ScopeBufferPool};
+use crate::tag::tools::map::TidyTagMap;
+use pegasus_common::buffer::{BufferPool, MemBufAlloc, Buffer, BufferReader};
 
 pub struct ExchangeMiniBatchPush<D: Data> {
     pub ch_info: ChannelInfo,
@@ -278,12 +280,8 @@ impl<D: Data> ScopeStreamPush<DataSet<D>> for ExchangeByScopePush<D> {
 struct Exchange<D> {
     magic: Magic,
     targets: u64,
-    router: Rc<dyn RouteFunction<D>>,
+    router: Box<dyn RouteFunction<D>>,
 }
-
-/// Won't be used by more than one thread at same time;
-/// It is safe to send to another thread with all rc points moved together.
-unsafe impl<D: Send> Send for Exchange<D> { }
 
 #[allow(dead_code)]
 impl<D: Data> Exchange<D> {
@@ -292,12 +290,173 @@ impl<D: Data> Exchange<D> {
         let par_key = self.router.route(item)?;
         Ok(self.magic.exec(par_key))
     }
+}
 
-    fn share(&self) -> Exchange<D> {
-        Exchange {
-            magic: self.magic,
-            targets: self.targets,
-            router: self.router.clone(),
+
+pub(crate) struct ExchangeMicroBatchPush<D: Data> {
+    pub src: u32,
+    buffers: Vec<ScopeBufferPool<D>>,
+    pushes: Vec<EventEmitPush<D>>,
+    route: Exchange<D>,
+    blocks: Blocking<D>
+}
+
+impl<D: Data> ExchangeMicroBatchPush<D> {
+    fn end_scope(&mut self, index: usize, end: EndSignal) -> Result<(), IOError> {
+        let tag = end.tag.clone();
+        let mut last = self.buffers[index].take_last_buf(&end.tag)
+            .map(|buf| MicroBatch::new(tag.clone(), self.src, buf.into_read_only()))
+            .unwrap_or_else(||  MicroBatch::new(tag, self.src, BufferReader::new()));
+        last.set_end(end.clone());
+        self.pushes[index].push(last)
+    }
+}
+
+impl<D: Data> Push<MicroBatch<D>> for ExchangeMicroBatchPush<D> {
+    fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
+        if batch.is_empty() {
+            if let Some(end) = batch.take_end() {
+                if cfg!(debug_assertions) {
+                    for i in 0..self.pushes.len() {
+                        assert!(!self.blocks.has_blocks(i, &batch.tag), "can't push more when still blocking")
+                    }
+                }
+                for i in 0..self.pushes.len() {
+                    self.end_scope(i, end.clone())?;
+                }
+            } else {
+                warn_worker!("ignore empty micro batch of {:?}", batch.tag);
+            }
+            return Ok(());
         }
+
+        let tag = batch.tag.clone();
+
+        if batch.len() > 1 {
+            for p in self.buffers.iter_mut() {
+                p.pin(&tag);
+            }
+        }
+
+        let mut has_block = false;
+        for item in batch.drain() {
+            let target = self.route.route(&item)? as usize;
+            match self.buffers[target].push(&tag, item) {
+                Ok(Some(buf)) => {
+                    let b = MicroBatch::new(tag.clone(), self.src, buf);
+                    self.pushes[target].push(b)?;
+                },
+                Err(e) => {
+                    if let Some(x) = e.0 {
+                        self.blocks.add_data(target, &tag, x);
+                        has_block = true;
+                    }
+                },
+                _ => ()
+            }
+        }
+
+        if let Some(end) = batch.take_end() {
+            for i in 0..self.pushes.len() {
+                if has_block && self.blocks.has_blocks(i, &tag) {
+                    self.blocks.add_end(i, &tag, end.clone());
+                } else {
+                    self.end_scope(i, end.clone())?;
+                }
+            }
+        }
+
+        if has_block {
+            would_block!("no buffer available")
+        } else {
+            Ok(())
+        }
+    }
+
+    fn flush(&mut self) -> Result<(), IOError> {
+        for i in 0..self.pushes.len() {
+            for (tag, buf) in self.buffers[i].buffers() {
+                if buf.len() > 0 {
+                    let batch = MicroBatch::new(tag, self.src, buf.into_read_only());
+                    self.pushes[i].push(batch)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn close(&mut self) -> Result<(), IOError> {
+        self.flush()?;
+        for p in self.pushes.iter_mut() {
+            p.close()?;
+        }
+        Ok(())
+    }
+}
+
+impl<D: Data> BlockPush for ExchangeMicroBatchPush<D> {
+    fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
+        let mut unblocked = true;
+        for i in 0..self.pushes.len() {
+            if let Some((mut buf, end)) = self.blocks.take_block(i, tag) {
+                loop {
+                    match self.buffers[i].push_iter(tag, &mut buf) {
+                        Ok(Some(buf)) => {
+                            let batch = MicroBatch::new(tag.clone(), self.src, buf);
+                            self.pushes[i].push(batch)?;
+                        },
+                        Ok(None) => {
+                            if let Some(end) = end {
+                                self.end_scope(i, end)?;
+                            }
+                            break
+                        },
+                        Err(e) => {
+                            if let Some(x) = e.0 {
+                                buf.push(x);
+                            }
+                            self.blocks.waiting_queue[i].insert(tag.clone(), (buf, end));
+                            unblocked = false;
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        Ok(unblocked)
+    }
+}
+
+struct Blocking<D: Data> {
+    buffer: BufferPool<D, MemBufAlloc<D>>,
+    waiting_queue: Vec<TidyTagMap<(Buffer<D>, Option<EndSignal>)>>
+}
+
+impl<D: Data> Blocking<D> {
+    fn add_data(&mut self, index: usize, tag: &Tag, item: D) {
+        if let Some(queue) = self.waiting_queue[index].get_mut(tag) {
+            queue.0.push(item);
+        } else {
+            let mut buf = self.buffer.fetch().unwrap_or(Buffer::with_capacity(64));
+            buf.push(item);
+            self.waiting_queue[index].insert(tag.clone(), (buf, None));
+        }
+    }
+
+    fn add_end(&mut self, index: usize, tag: &Tag, end: EndSignal) {
+        if let Some(queue) = self.waiting_queue[index].get_mut(tag) {
+            queue.1.replace(end);
+        } else {
+            let buf = self.buffer.fetch().unwrap_or(Buffer::new());
+            self.waiting_queue[index].insert(tag.clone(), (buf, Some(end)));
+        }
+    }
+
+    fn has_blocks(&self, index: usize, tag: &Tag) -> bool {
+        self.waiting_queue[index].contains_key(tag)
+    }
+
+    fn take_block(&mut self, index: usize, tag: &Tag) -> Option<(Buffer<D>, Option<EndSignal>)> {
+        self.waiting_queue[index].remove(tag)
     }
 }

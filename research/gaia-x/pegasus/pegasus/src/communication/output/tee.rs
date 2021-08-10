@@ -15,8 +15,8 @@
 
 use crate::api::scope::MergedScopeDelta;
 use crate::channel_id::ChannelInfo;
-use crate::communication::decorator::{DataPush, ScopeStreamBuffer, ScopeStreamPush};
-use crate::data::DataSet;
+use crate::communication::decorator::{DataPush, ScopeStreamBuffer, ScopeStreamPush, MicroBatchPush, BlockPush};
+use crate::data::{DataSet, MicroBatch};
 use crate::errors::{IOError, IOResult};
 use crate::graph::Port;
 use crate::progress::EndSignal;
@@ -24,6 +24,7 @@ use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
 use pegasus_common::buffer::{Batch, BatchPool, MemBatchPool, MemoryAlloc};
 use smallvec::SmallVec;
+use crate::data_plane::Push;
 
 struct Buffer<D> {
     pin: Tag,
@@ -547,3 +548,99 @@ where
         }
     }
 }
+
+///////////////////////////////////////////////////////////
+#[allow(dead_code)]
+pub(crate) struct ChannelMicroBatchSender<D: Data> {
+    pub ch_info: ChannelInfo,
+    delta: MergedScopeDelta,
+    push: MicroBatchPush<D>,
+}
+
+impl<D: Data> Push<MicroBatch<D>> for ChannelMicroBatchSender<D> {
+    fn push(&mut self, mut msg: MicroBatch<D>) -> Result<(), IOError> {
+        assert_eq!(msg.tag.len(), self.delta.origin_scope_level);
+        let tag = self.delta.evolve(&msg.tag);
+        msg.set_tag(tag);
+        self.push.push(msg)
+    }
+
+    fn flush(&mut self) -> Result<(), IOError> {
+        self.push.flush()
+    }
+
+    fn close(&mut self) -> Result<(), IOError> {
+        self.push.close()
+    }
+}
+
+impl<D: Data> BlockPush for ChannelMicroBatchSender<D> {
+    fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
+        self.push.try_unblock(tag)
+    }
+}
+
+pub(crate) struct MicroBatchTee<D: Data> {
+    main_sender: ChannelMicroBatchSender<D>,
+    other_senders: Vec<ChannelMicroBatchSender<D>>
+}
+
+impl<D: Data> Push<MicroBatch<D>> for MicroBatchTee<D> {
+    fn push(&mut self, mut msg: MicroBatch<D>) -> Result<(), IOError> {
+        let mut would_block = false;
+        if !self.other_senders.is_empty() {
+            for tx in self.other_senders.iter_mut() {
+                let msg_cp = msg.share();
+                match tx.push(msg_cp) {
+                    Ok(_) => (),
+                    Err(err) => {
+                        if err.is_would_block() {
+                            would_block = true;
+                        } else {
+                            return Err(err);
+                        }
+                    }
+                }
+            }
+        }
+        match self.main_sender.push(msg) {
+            Ok(_) => {
+                if would_block {
+                    would_block!("underlying channel push blocked")
+                } else {
+                    Ok(())
+                }
+            },
+            Err(err) => Err(err)
+        }
+    }
+
+
+    fn flush(&mut self) -> Result<(), IOError> {
+        self.main_sender.flush()?;
+        for o in self.other_senders.iter_mut() {
+            o.flush()?;
+        }
+        Ok(())
+    }
+
+    fn close(&mut self) -> Result<(), IOError> {
+        self.main_sender.close()?;
+        for o in self.other_senders.iter_mut() {
+            o.close()?;
+        }
+        Ok(())
+    }
+}
+
+impl<D: Data> BlockPush for MicroBatchTee<D> {
+    fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
+        let mut would_block = self.main_sender.try_unblock(tag)?;
+        for o in self.other_senders.iter_mut() {
+            would_block |= o.try_unblock(tag)?;
+        }
+        Ok(would_block)
+    }
+}
+
+
