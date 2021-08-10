@@ -11,6 +11,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Author: Ning Xin
  */
 
 #ifndef ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_AVERAGE_DEGREE_CONNECTIVITY_AVERAGE_DEGREE_CONNECTIVITY_CONTEXT_H_
@@ -31,7 +33,6 @@ namespace gs {
 template <typename FRAG_T>
 class AverageDegreeConnectivityContext : public TensorContext<FRAG_T, double> {
  public:
-  // using vid_t = typename FRAG_T::vid_t;
   explicit AverageDegreeConnectivityContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, double>(fragment) {}
 

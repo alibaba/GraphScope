@@ -11,6 +11,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+Author: Ning Xin
 */
 
 #ifndef ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_AVERAGE_DEGREE_CONNECTIVITY_AVERAGE_DEGREE_CONNECTIVITY_H_
@@ -30,9 +32,7 @@ limitations under the License.
 
 namespace gs {
 /**
- * @brief Compute the degree assortativity for graph.
- *  Assortativity measures the similarity of connections in the graph with
- * respect to the node degree.
+ * @brief Compute the average degree connectivity for graph.
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
@@ -73,7 +73,6 @@ class AverageDegreeConnectivity
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
     if (!ctx.merge_stage) {
-      // std::tuple<vid_t, int, edata_t> msg;
       pair_msg_t msg;
       vertex_t vertex;
       while (messages.GetMessage<fragment_t, pair_msg_t>(frag, vertex, msg)) {
