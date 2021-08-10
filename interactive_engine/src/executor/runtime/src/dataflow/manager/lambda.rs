@@ -73,8 +73,9 @@ impl LambdaManager {
         let schema_proto = parse_from_bytes::<SchemaProto>(schema_bytes.as_slice()).unwrap();
         lambda_base.set_schema(schema_proto);
 
-        self.lambda_service_client.as_ref().unwrap().prepare(&lambda_base);
-        info!("rust send LambdaBase successfully!!!");
+        if let Ok(_) = self.lambda_service_client.as_ref().unwrap().prepare(&lambda_base) {
+            info!("rust send LambdaBase successfully!!!");
+        }
     }
 
     pub fn send_lambda_base_with_bytecode(&self, bytecode: Vec<u8>, timeout_ms: u64, schema: Arc<Schema>) {
@@ -89,8 +90,9 @@ impl LambdaManager {
         let schema_proto = parse_from_bytes::<SchemaProto>(schema_bytes.as_slice()).unwrap();
         lambda_base.set_schema(schema_proto);
 
-        self.lambda_service_client.as_ref().unwrap().prepare(&lambda_base);
-        info!("rust send LambdaBase successfully!!!");
+        if let Ok(_) =  self.lambda_service_client.as_ref().unwrap().prepare(&lambda_base) {
+            info!("rust send LambdaBase successfully!!!");
+        }
     }
 
     pub fn send_lambda_filter_query(&self, message_list: ListProto, lambda_index: &str) -> HashSet<i64> {

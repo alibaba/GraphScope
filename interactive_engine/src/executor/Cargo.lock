@@ -1337,7 +1337,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "maxgraph-jna"
+name = "maxgraph-ffi"
 version = "0.1.0"
 dependencies = [
  "futures 0.3.15",

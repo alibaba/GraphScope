@@ -112,7 +112,7 @@ impl<V, VI, E, EI, F> VertexDirectionOperator<V, VI, E, EI, F>
     }
 
     fn collect_result_list<'a>(&self,
-                               mut keyed_message_list: HashMap<i64, Vec<RawMessage>>,
+                               keyed_message_list: HashMap<i64, Vec<RawMessage>>,
                                result_list: Box<Iterator<Item=(i64, VI)>>,
                                collector: &mut Box<'a + MessageCollector>) {
         let mut result_iter_vec = Vec::with_capacity(keyed_message_list.len());
@@ -332,7 +332,7 @@ impl<V, VI, E, EI, F> VertexDirectionEdgeOperator<V, VI, E, EI, F>
     }
 
     fn collect_result_list<'a>(&self,
-                               mut keyed_message_list: HashMap<i64, Vec<RawMessage>>,
+                               keyed_message_list: HashMap<i64, Vec<RawMessage>>,
                                result_list: Box<Iterator<Item=(i64, EI)>>,
                                collector: &mut Box<'a + MessageCollector>,
                                is_out: bool) {

@@ -82,7 +82,7 @@ def modern_graph_data_dir():
     return "/testingdata/modern_graph"
 
 
-@pytest.mark.skip(reason="GAIA is not supported yet")
+@pytest.mark.skip(reason="GAIA is not supported on k8s yet")
 def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_scripts):
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
@@ -91,7 +91,7 @@ def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_scripts):
         assert result == 1
 
 
-@pytest.mark.skip(reason="GAIA is not supported yet")
+@pytest.mark.skip(reason="GAIA is not supported on k8s yet")
 def test_traversal_modern_graph(gs_session, modern_graph_data_dir, modern_bytecode):
     gs_image, gie_manager_image = get_gs_image_on_ci_env()
     graph = load_modern_graph(gs_session, modern_graph_data_dir)

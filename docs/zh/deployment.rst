@@ -82,10 +82,10 @@ Ubuntu 20.04+或MacOS平台上, 主要的用法如下。你可以通过 `./scrip
 .. code:: shell
 
     ./scripts/deploy_local.sh install_deps
-    source ./gs_env
+    source ~/.graphscope_env
 
 * 使用`deploy_local.sh`本地部署GraphScope
 .. code:: shell
 
-    ./scripts/deploy_local.sh deploy
-    export GRAPHSCOPE_PREFIX=/usr/local
+    ./scripts/deploy_local.sh build_and_deploy
+    export GRAPHSCOPE_HOME=/usr/local

@@ -108,7 +108,7 @@ def ogbn_small_bytecode():
             .where(__.in_("writes").has("id", 4307))
             .count()
             .toList()[0]
-            == 2
+            == 1
         )
 
     return func
@@ -293,7 +293,6 @@ def test_demo_lazy_mode(sess_lazy, ogbn_mag_small, ogbn_small_script):
     train(config, r[1])
 
 
-@pytest.mark.skip(reason="Gaia is not supported yet.")
 def test_enable_gaia(
     sess_enable_gaia, ogbn_mag_small, ogbn_small_script, ogbn_small_bytecode
 ):
@@ -301,8 +300,8 @@ def test_enable_gaia(
 
     # Interactive engine
     interactive = sess_enable_gaia.gremlin(graph)
-    papers = interactive.gaia().execute(ogbn_small_script).one()
-    assert papers == 2
+    papers = interactive.gaia().execute(ogbn_small_script).one()[0]
+    assert papers == 1
 
     g = interactive.traversal_source()
     ogbn_small_bytecode(g.gaia())
