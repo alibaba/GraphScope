@@ -17,6 +17,13 @@
 #
 
 
+# fmt: off
+from graphscope.analytical.app.attribute_assortativity import \
+    attribute_assortativity_coefficient
+from graphscope.analytical.app.attribute_assortativity import \
+    numeric_assortativity_coefficient
+
+# fmt: on
 from graphscope.analytical.app.bfs import bfs
 from graphscope.analytical.app.bfs import property_bfs
 from graphscope.analytical.app.cdlp import cdlp
