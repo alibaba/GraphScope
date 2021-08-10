@@ -31,12 +31,20 @@ pub struct QueryParams<E: Element + Send + Sync> {
     pub limit: Option<usize>,
     pub props: Option<Vec<PropKey>>,
     pub filter: Option<Arc<Filter<E, ElementFilter>>>,
+    pub partitions: Option<Vec<u64>>,
     pub extra_params: Option<HashMap<String, Object>>,
 }
 
 impl<E: Element + Send + Sync> Default for QueryParams<E> {
     fn default() -> Self {
-        QueryParams { labels: vec![], limit: None, props: None, filter: None, extra_params: None }
+        QueryParams {
+            labels: vec![],
+            limit: None,
+            props: None,
+            filter: None,
+            partitions: None,
+            extra_params: None,
+        }
     }
 }
 

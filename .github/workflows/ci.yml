@@ -10,7 +10,6 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
-      - 'research/**'
       - 'scripts/**'
       - 'tutorials/**'
   pull_request:
@@ -21,7 +20,6 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
-      - 'research/**'
       - 'scripts/**'
       - 'tutorials/**'
 
@@ -32,7 +30,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
       options:
         --shm-size 4096m
     strategy:
@@ -132,13 +130,13 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
     - name: Install Dependencies
       run: |
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
         tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
-        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
         rustup component add rustfmt
@@ -158,7 +156,8 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         tar -cf gie.tar interactive_engine/src/executor/target/release/executor \
                         interactive_engine/src/executor/store/log4rs.yml \
-                        interactive_engine/deploy/docker/dockerfile
+                        interactive_engine/bin \
+                        interactive_engine/conf
 
     - uses: actions/upload-artifact@v2
       with:
@@ -171,7 +170,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
     - uses: actions/checkout@v2.3.2
       with:
@@ -241,8 +240,7 @@ jobs:
         mvn clean package -DskipTests -Pjava-release --quiet
         cd ${GITHUB_WORKSPACE}
         tar -cf manager.tar interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz \
-                            interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz \
-                            interactive_engine/deploy/docker/dockerfile
+                            interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz
 
     - uses: actions/upload-artifact@v2
       with:
@@ -497,16 +495,19 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.5
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
+
     - name: Install Dependencies
       run: |
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
         tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
-        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.48.0
+        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
         rustup component add rustfmt
+        yum install -y xz
+        ln -s /bin/true /bin/apt-get
 
     - uses: actions/checkout@v2.3.2
 
@@ -519,10 +520,18 @@ jobs:
         source ~/.bashrc
 
         cd interactive_engine
-        mvn clean package -Pv2 -Drust.compile.mode=release -DskipTests --quiet
+        mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
         cd ${GITHUB_WORKSPACE}
         mv interactive_engine/distribution/target/maxgraph.tar.gz ./
         tar -zcf lib.tar.gz /opt/graphscope
+        tar -zcf giectl.tar.gz interactive_engine/bin interactive_engine/conf
+
+    - name: gremlin-test
+      run: |
+        export LIBRARY_PATH=$LIBRARY_PATH:/opt/graphscope/lib
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
+        cd interactive_engine/src/v2
+        mvn test -Pgremlin-test
 
     - uses: actions/upload-artifact@v2
       with:
@@ -530,6 +539,7 @@ jobs:
         path: |
           maxgraph.tar.gz
           lib.tar.gz
+          giectl.tar.gz
         retention-days: 5
 
   gss-test:
@@ -537,9 +547,7 @@ jobs:
     needs: [build-gss]
     strategy:
       matrix:
-        #executor: [maxgraph, gaia]
-        # Add gaia when supported
-        executor: [maxgraph]
+        executor: [maxgraph, gaia]
     steps:
     - name: Clean up
       run: |
@@ -565,6 +573,7 @@ jobs:
         pushd artifacts
         tar -zxf ./gss-${{ github.sha }}/lib.tar.gz
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
+        tar -zxf ./gss-${{ github.sha }}/giectl.tar.gz
 
         sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
@@ -594,7 +603,7 @@ jobs:
         export JAVA_HOME=/usr/lib/jvm/default-java/
 
         cd /tmp
-        wget -q https://mirrors.bfsu.edu.cn/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
+        wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
         tar -zxf hadoop-2.10.1.tar.gz
 
         cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts

@@ -111,7 +111,7 @@ impl OrderManager {
 }
 
 pub fn order_message_list(val_list: &mut Vec<RawMessage>,
-                          mut message: RawMessage,
+                          message: RawMessage,
                           order_list: &[OrderComparator],
                           range_limit: usize,
                           has_limit: bool) {

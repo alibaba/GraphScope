@@ -121,7 +121,7 @@ class InteractiveQueryDAGNode(DAGNode):
         >>> print(g2) # <graphscope.framework.graph.Graph object>
     """
 
-    def __init__(self, session, graph, engine_params=None):
+    def __init__(self, session, graph, engine_params=None, enable_gaia=False):
         """
         Args:
             session (:class:`Session`): instance of GraphScope session.
@@ -134,18 +134,27 @@ class InteractiveQueryDAGNode(DAGNode):
         self._session = session
         self._graph = graph
         self._engine_params = engine_params
+        self._enable_gaia = enable_gaia
+        self._query_gaia = False
         self._op = create_interactive_query(
             self._graph,
             self._engine_params,
             gs_config.k8s_gie_gremlin_server_cpu,
             gs_config.k8s_gie_gremlin_server_mem,
+            enable_gaia,
         )
         # add op to dag
         self._session.dag.add_op(self._op)
 
-    # TODO(yuansi): Support gaia
-    def gaia(self):
-        return self
+    def clone(self):
+        cls = InteractiveQueryDAGNode.__new__(InteractiveQueryDAGNode)
+        cls._session = self._session
+        cls._graph = self._graph
+        cls._engine_params = self._engine_params
+        cls._enable_gaia = self._enable_gaia
+        cls._query_gaia = self._query_gaia
+        cls._op = self._op
+        return cls
 
     def execute(self, query, request_options=None):
         """Execute gremlin querying scripts.
@@ -161,7 +170,7 @@ class InteractiveQueryDAGNode(DAGNode):
             :class:`graphscope.framework.context.ResultDAGNode`:
                 A result holds the gremlin result, evaluated in eager mode.
         """
-        op = gremlin_query(self, query, request_options)
+        op = gremlin_query(self, query, request_options, self._query_gaia)
         return ResultSetDAGNode(self, op)
 
     def subgraph(self, gremlin_script, request_options=None):
@@ -236,7 +245,19 @@ class InteractiveQuery(object):
             self._interactive_query_node.evaluated = True
             self._session.dag.add_op(self._interactive_query_node.op)
         if frontend_endpoint is not None:
-            self._graph_url = "ws://{0}/gremlin".format(frontend_endpoint)
+            frontend_endpoint = frontend_endpoint.split(",")
+            self._graph_url = [
+                f"ws://{endpoint}/gremlin" for endpoint in frontend_endpoint
+            ]
+
+    def clone(self):
+        ret = InteractiveQuery()
+        ret._status = self._status
+        ret._graph_url = self._graph_url
+        ret._object_id = self._object_id
+        ret._interactive_query_node = self._interactive_query_node.clone()
+        ret._session = self._interactive_query_node.session
+        return ret
 
     @property
     def graph_url(self):
@@ -272,7 +293,13 @@ class InteractiveQuery(object):
             raise RuntimeError(
                 "Interactive query is unavailable with %s status.", str(self._status)
             )
-        return self._session._wrapper(self._interactive_query_node.gaia())
+        if not self._interactive_query_node._enable_gaia:
+            raise NotImplementedError(
+                "GAIA not enabled. Enable gaia with `session(enable_gaia=True)`"
+            )
+        cls = self.clone()
+        cls._interactive_query_node._query_gaia = True
+        return cls
 
     def subgraph(self, gremlin_script, request_options=None):
         if self._status != InteractiveQueryStatus.Running:
@@ -318,7 +345,23 @@ class InteractiveQuery(object):
             raise RuntimeError(
                 "Interactive query is unavailable with %s status.", str(self._status)
             )
-        return traversal().withRemote(DriverRemoteConnection(self._graph_url, "g"))
+        ret = traversal().withRemote(DriverRemoteConnection(self._graph_url[0], "g"))
+        if len(self.graph_url) == 1:
+
+            def gaia():
+                raise NotImplementedError(
+                    "GAIA not enabled. Enable gaia with `session(enable_gaia=True)`"
+                )
+
+        else:
+
+            def gaia():
+                return traversal().withRemote(
+                    DriverRemoteConnection(self._graph_url[1], "g")
+                )
+
+        setattr(ret, "gaia", gaia)
+        return ret
 
     def close(self):
         """Close interactive instance and release resources"""

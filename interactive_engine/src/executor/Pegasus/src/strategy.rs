@@ -103,7 +103,10 @@ impl MemResourceManager {
                     *capacity = 0;
                     return  None;
                 } else {
-                    let new_reserved = self.reserved.compare_and_swap(reserved, reserved + reserve, Ordering::SeqCst);
+                    let new_reserved = match self.reserved.compare_exchange(reserved, reserved + reserve,Ordering::SeqCst, Ordering::SeqCst ) {
+                        Ok(x) => x,
+                        Err(x) => x,
+                    };
                     if new_reserved == reserved {
                         *capacity = reserve;
                         return Some(Reserved::new(reserve, &self.reserved));

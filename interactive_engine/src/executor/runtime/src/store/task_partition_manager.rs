@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //!     http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,7 @@ impl PartitionTaskRoute {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TaskPartitionManager {
     task_partition_list: HashMap<u32, Vec<u32>>,    // task global index -> partition list
     partition_task_list: HashMap<u32, u32>,         // partition id -> task global index
@@ -99,5 +99,9 @@ impl TaskPartitionManager {
 
     pub fn get_partition_process_list(&self) -> HashMap<u32, u32> {
         self.partition_process_list.clone()
+    }
+
+    pub fn get_task_partition_list_mapping(&self) ->HashMap<u32, Vec<u32>> {
+        self.task_partition_list.clone()
     }
 }

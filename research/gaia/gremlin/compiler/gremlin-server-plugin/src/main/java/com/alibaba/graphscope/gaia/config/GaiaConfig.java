@@ -9,6 +9,9 @@ public interface GaiaConfig {
     int DEFAULT_PEGASUS_WORKER_NUM = 1;
     int DEFAULT_PEGASUS_SERVER_NUM = 0;
     int DEFAULT_PEGASUS_TIMEOUT = 60000;
+    int DEFAULT_PEGASUS_BATCH_SIZE = 1024;
+    int DEFAULT_PEGASUS_OUTPUT_CAPACITY = 16;
+    int DEFAULT_PEGASUS_MEMORY_LIMIT = Integer.MAX_VALUE;
     GraphType DEFAULT_GRAPH_TYPE = GraphType.MAXGRAPH;
     String DEFAULT_SCHEMA_PATH = ".";
     boolean DEFAULT_OPT_FLAG = false;
@@ -35,6 +38,12 @@ public interface GaiaConfig {
     int getPegasusServerNum();
 
     long getPegasusTimeout();
+
+    int getPegasusBatchSize();
+
+    int getPegasusOutputCapacity();
+
+    int getPegasusMemoryLimit();
 
     String getSchemaFilePath();
 

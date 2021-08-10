@@ -1090,8 +1090,9 @@ class Session(object):
             self._interactive_instance_dict[graph.vineyard_id] = interactive_query
 
         try:
+            enable_gaia = self._config_params["enable_gaia"]
             _wrapper = self._wrapper(
-                InteractiveQueryDAGNode(self, graph, engine_params)
+                InteractiveQueryDAGNode(self, graph, engine_params, enable_gaia)
             )
         except Exception as e:
             if self.eager():

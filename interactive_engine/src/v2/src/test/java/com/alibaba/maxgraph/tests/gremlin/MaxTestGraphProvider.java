@@ -15,6 +15,7 @@
  */
 package com.alibaba.maxgraph.tests.gremlin;
 
+import com.alibaba.maxgraph.v2.common.config.StoreConfig;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
@@ -25,33 +26,37 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-public class MaxTestGraphProvider extends AbstractGraphProvider {
+public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(MaxTestGraphProvider.class);
+
+    private MaxTestGraph graph;
 
     @Override
     public Map<String, Object> getBaseConfiguration(String graphName, Class<?> test, String testMethodName,
                                                     LoadGraphWith.GraphData loadGraphWith) {
-        return new HashMap<String, Object>() {
-            {
-                put(Graph.GRAPH, MaxTestGraph.class.getName());
-                put(MaxTestGraph.GRAPH_CONFIG_FILE, "gremlin-test.config");
-                put(MaxTestGraph.GRAPH_DATA_DIR, makeTestDirectory(graphName, test, testMethodName));
-            }
-        };
+        Properties properties = new Properties();
+        try (InputStream ins = Thread.currentThread().getContextClassLoader().getResourceAsStream("gremlin-test.config")) {
+            properties.load(ins);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        properties.put(Graph.GRAPH, MaxTestGraph.class.getName());
+        properties.put(StoreConfig.STORE_DATA_PATH.getKey(), makeTestDirectory(graphName, test, testMethodName));
+        return (Map) properties;
     }
 
     @Override
     public void clear(Graph graph, Configuration configuration) throws Exception {
         if (graph != null) {
             graph.close();
+            this.graph = (MaxTestGraph) graph;
         }
-        deleteDirectory(new File(configuration.getString(MaxTestGraph.GRAPH_DATA_DIR)));
+        deleteDirectory(new File(configuration.getString(StoreConfig.STORE_DATA_PATH.getKey())));
     }
 
     @Override
@@ -72,4 +77,8 @@ public class MaxTestGraphProvider extends AbstractGraphProvider {
         return null;
     }
 
+    @Override
+    public void close() throws Exception {
+        this.graph.getMaxNode().close();
+    }
 }

@@ -20,7 +20,7 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 
 public interface GraphLibrary extends Library {
-    GraphLibrary INSTANCE = Native.load("maxgraph_jna", GraphLibrary.class);
+    GraphLibrary INSTANCE = Native.load("maxgraph_ffi", GraphLibrary.class);
 
     Pointer openGraphStore(byte[] config, int len);
     boolean closeGraphStore(Pointer pointer);
@@ -29,4 +29,6 @@ public interface GraphLibrary extends Library {
     JnaResponse ingestData(Pointer pointer, String dataPath);
     void dropJnaResponse(JnaResponse jnaResponse);
 
+    Pointer createWrapperPartitionGraph(Pointer graphStore);
+    void deleteWrapperPartitionGraph(Pointer wrapperPartitionGraph);
 }

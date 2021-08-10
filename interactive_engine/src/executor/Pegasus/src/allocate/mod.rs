@@ -201,7 +201,11 @@ impl Runtime {
     }
 
     pub fn stop(&self) {
-        if !self.is_stopped.compare_and_swap(false, true, Ordering::Relaxed) {
+        let is_stopped = match self.is_stopped.compare_exchange(false, true, Ordering::Relaxed, Ordering::Relaxed) {
+            Ok(x) => x,
+            Err(x) => x,
+        };
+        if !is_stopped {
             self.executor.shutdown();
         }
     }

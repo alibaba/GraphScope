@@ -27,10 +27,13 @@ import com.google.protobuf.ByteString;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
 public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
+    private static final Logger logger = LoggerFactory.getLogger(ClientDdlService.class);
 
     public static final int FORMAT_VERSION = 1;
 
@@ -97,6 +100,7 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
                 GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
                 this.ddlExecutors.executeDdlRequestBatch(ddlRequestBatch, graphDef, 0);
             } catch (Exception e) {
+                logger.error("ddl failed", e);
                 throw new GraphCreateSchemaException("try execute DDL batch failed", e);
             }
             long snapshotId = this.schemaWriter.submitBatchDdl(UuidUtils.getBase64UUIDString(), "", ddlRequestBatch);

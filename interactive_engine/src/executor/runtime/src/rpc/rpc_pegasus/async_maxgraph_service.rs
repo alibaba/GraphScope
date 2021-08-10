@@ -58,7 +58,6 @@ use futures_cpupool::{Builder, CpuPool};
 use tokio_sync::semaphore::Semaphore;
 use pegasus::operator::advanced::inspect::Inspect;
 use pegasus::operator::advanced::sink::Output;
-//use pegasus::operator::sink::*;
 use execution::{build_route_fn, build_worker_partition_ids, build_partition_router, build_process_router, build_empty_router};
 use dataflow::manager::context::{RuntimeContext, BuilderContext};
 use dataflow::plan::tiny_builder::TinyDataflowBuilder;
@@ -322,7 +321,11 @@ impl<V, VI, E, EI> AsyncMaxGraphService for AsyncMaxGraphServiceImpl<V, VI, E, E
         }
 
         // check and update store_service_manager
-        if self.signal.compare_and_swap(true, false, Ordering::Relaxed) {
+        let signal = match self.signal.compare_exchange(true, false, Ordering::Relaxed, Ordering::Relaxed) {
+            Ok(x) => x,
+            Err(x) => x,
+        };
+        if signal {
             let mut remote_store_service_manager_clone = (*self.remote_store_service_manager.read().unwrap()).clone();
             self.remote_store_service_manager_core = Arc::new(remote_store_service_manager_clone.take().unwrap());
         }
