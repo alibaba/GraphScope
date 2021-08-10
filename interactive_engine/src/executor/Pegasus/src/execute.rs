@@ -484,7 +484,10 @@ impl<T: Task> ThreadPool<T> {
                             ::std::thread::park();
                             running = in_running.load(Ordering::SeqCst);
                         }
-                        let try_swap = in_running.compare_and_swap(running, running + 1, Ordering::SeqCst);
+                        let try_swap = match in_running.compare_exchange(running, running + 1, Ordering::SeqCst, Ordering::SeqCst) {
+                            Ok(x) => x,
+                            Err(x) => x,
+                        };
                         if try_swap == running {
                             let task = ready.take().unwrap();
                             debug!("task {:?} will be spawn, running {}", task, running);
@@ -529,7 +532,10 @@ impl Executor<GenericTask> for ThreadPool<GenericTask> {
             Err(RejectError(task))
         } else {
             loop {
-                let new_running = self.in_running.compare_and_swap(running, running + 1, Ordering::SeqCst);
+                let new_running = match self.in_running.compare_exchange(running, running + 1,  Ordering::SeqCst, Ordering::SeqCst) {
+                    Ok(x) => x,
+                    Err(x) => x,
+                } ;
                 if new_running == running {
                     let guard = S_R.with(|(s, r)| {
                         self.ready_queue.push(ForkJoinTask::Sub((task, s.clone())));
@@ -652,7 +658,10 @@ impl Executor<GenericTask> for ThreadPool<GenericTask> {
     #[inline]
     fn shutdown(&self) {
         info!("ThreadPool begin shutdown...");
-        self.shutdown_signal.compare_and_swap(false, true, Ordering::SeqCst);
+        match self.shutdown_signal.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst) {
+            Ok(x) => x,
+            Err(x) => x,
+        };
 //        unsafe {
 //            let queue_ptr = &self.spawn_queue as *const TaskQueue<ForkJoinTask<GenericTask>>
 //                as *mut TaskQueue<ForkJoinTask<GenericTask>>;

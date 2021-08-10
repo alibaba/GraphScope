@@ -17,43 +17,44 @@ package com.alibaba.graphscope.gaia;
 
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.store.GraphType;
-import com.alibaba.maxgraph.common.cluster.InstanceConfig;
+import com.alibaba.maxgraph.v2.common.config.CommonConfig;
+import com.alibaba.maxgraph.v2.common.config.Configs;
 
 public class MaxGraphConfig implements GaiaConfig {
-    private InstanceConfig instanceConfig;
+    private Configs configs;
 
-    public MaxGraphConfig(InstanceConfig instanceConfig) {
-        this.instanceConfig = instanceConfig;
+    public MaxGraphConfig(Configs configs) {
+        this.configs = configs;
     }
 
     @Override
     public int getPegasusWorkerNum() {
-        return instanceConfig.getPegasusWorkerNum();
+        return PegasusConfig.PEGASUS_WORKER_NUM.get(configs);
     }
 
     @Override
     public int getPegasusServerNum() {
-        return instanceConfig.getResourceExecutorCount();
+        return CommonConfig.STORE_NODE_COUNT.get(configs);
     }
 
     @Override
     public long getPegasusTimeout() {
-        return instanceConfig.getPegasusTimeoutMS();
+        return PegasusConfig.PEGASUS_TIMEOUT.get(configs);
     }
 
     @Override
     public int getPegasusBatchSize() {
-        return instanceConfig.getPegasusBatchSize();
+        return PegasusConfig.PEGASUS_BATCH_SIZE.get(configs);
     }
 
     @Override
     public int getPegasusOutputCapacity() {
-        return instanceConfig.getPegasusOutputCapacity();
+        return PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs);
     }
 
     @Override
     public int getPegasusMemoryLimit() {
-        return instanceConfig.getPegasusMemoryLimit();
+        return PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs);
     }
 
     @Override

@@ -14,6 +14,7 @@
 //! limitations under the License.
 
 #[derive(PartialEq, Copy, Clone, Debug)]
+#[allow(dead_code)]
 pub enum WorkerState {
     Normal,
     PrepareRecovering,
