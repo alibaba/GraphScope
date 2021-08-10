@@ -11,6 +11,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+Author: Ning Xin
 */
 
 #ifndef ANALYTICAL_ENGINE_APPS_ASSORTATIVITY_ATTRIBUTE_ATTRIBUTE_ASSORTATIVITY_H_
@@ -51,9 +53,7 @@ class AttributeAssortativity
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
-    // vid
     auto inner_vertices = frag.InnerVertices();
-    // v of type: Vertex
     for (auto v : inner_vertices) {
       ProcessVertex(v, frag, ctx, messages);
     }
@@ -98,6 +98,7 @@ class AttributeAssortativity
         std::vector<std::vector<double>> attribute_mixing_matrix;
         GetAttributeMixingMatrix(ctx, attribute_mixing_matrix);
         ctx.attribute_assortativity = ProcessMatrix(attribute_mixing_matrix);
+        // write result to ctx
         std::vector<size_t> shape{1};
         ctx.set_shape(shape);
         ctx.assign(ctx.attribute_assortativity);
@@ -110,7 +111,7 @@ class AttributeAssortativity
   void ProcessVertex(const vertex_t& v, const fragment_t& frag, context_t& ctx,
                      message_manager_t& messages) {
     vdata_t source_data = frag.GetData(v);
-    // get all neighbors of vertex w
+    // get all neighbors of vertex v
     auto oes = frag.GetOutgoingAdjList(v);
     for (auto& e : oes) {
       vertex_t neighbor = e.get_neighbor();
