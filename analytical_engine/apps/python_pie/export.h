@@ -23,12 +23,28 @@ limitations under the License.
 
 namespace python_grape {
 
+template <typename VD_T, typename MD_T>
 using Fragment = gs::PythonPIEFragment<
     vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
-                            vineyard::property_graph_types::VID_TYPE>>;
+                            vineyard::property_graph_types::VID_TYPE>,
+    VD_T, MD_T>;
 
 template <typename VD_T, typename MD_T>
 using Context = gs::PythonPIEComputeContext<
+    vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
+                            vineyard::property_graph_types::VID_TYPE>,
+    VD_T, MD_T>;
+
+// PythonPIEVertex
+template <typename VD_T, typename MD_T>
+using PVertex = gs::PythonPIEVertex<
+    vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
+                            vineyard::property_graph_types::VID_TYPE>,
+    VD_T, MD_T>;
+
+// VertexHeap
+template <typename VD_T, typename MD_T>
+using VertexHeap = gs::VertexHeap<
     vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
                             vineyard::property_graph_types::VID_TYPE>,
     VD_T, MD_T>;

@@ -16,7 +16,11 @@
 #ifndef ANALYTICAL_ENGINE_APPS_PYTHON_PIE_WRAPPER_H_
 #define ANALYTICAL_ENGINE_APPS_PYTHON_PIE_WRAPPER_H_
 
+#include <functional>
+#include <limits>
 #include <memory>
+#include <queue>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -32,9 +36,69 @@ namespace gs {
 template <typename FRAG_T>
 class PIEAdjList;
 
-template <typename FRAG_T>
-class PythonPIEFragment {
+template <typename FRAG_T, typename VD_T, typename MD_T>
+class PythonPIEComputeContext;
+
+template <typename FRAG_T, typename VD_T, typename MD_T>
+class PythonPIEVertex {
   using fragment_t = FRAG_T;
+  using vd_t = VD_T;
+  using md_t = MD_T;
+  using vertex_t = typename fragment_t::vertex_t;
+
+ public:
+  PythonPIEVertex() = default;
+
+  PythonPIEVertex(const fragment_t* fragment, void* compute_context,
+                  vd_t* dummy_values)
+      : fragment_(fragment), available_(false) {
+    compute_context_ =
+        reinterpret_cast<PythonPIEComputeContext<FRAG_T, VD_T, MD_T>*>(
+            compute_context);
+    dummy_values_ = dummy_values;
+  }
+
+  PythonPIEVertex(const PythonPIEVertex& other) {
+    fragment_ = other.fragment_;
+    compute_context_ = other.compute_context_;
+    grape_vertex_ = other.grape_vertex_;
+    available_ = other.available_;
+  }
+
+  vd_t& operator[](const std::string& property_name) const {
+    // Note, the context of cython app is labeledVertexData,
+    // So only one property_name supported
+    if (available_) {
+      compute_context_->set_updated(grape_vertex_);
+      return compute_context_->get_node_value(grape_vertex_);
+    }
+    return *dummy_values_;
+  }
+
+  void set_grape_vertex(const vertex_t& grape_vertex) {
+    grape_vertex_ = grape_vertex;
+    available_ = true;
+  }
+
+  size_t lid() const {
+    // grape_vertex_ will be defaults value when available_ is false
+    return grape_vertex_.GetValue();
+  }
+
+ private:
+  const fragment_t* fragment_;
+  PythonPIEComputeContext<fragment_t, VD_T, MD_T>* compute_context_;
+  vertex_t grape_vertex_;
+  bool available_;
+  VD_T* dummy_values_;
+};
+
+template <typename FRAG_T, typename VD_T, typename MD_T>
+class PythonPIEFragment {
+ public:
+  using fragment_t = FRAG_T;
+  using vd_t = VD_T;
+  using md_t = MD_T;
   using oid_t = typename fragment_t::oid_t;
   using vid_t = typename fragment_t::vid_t;
   using eid_t = typename fragment_t::eid_t;
@@ -45,6 +109,7 @@ class PythonPIEFragment {
   using nbr_t = typename fragment_t::nbr_t;
   using vertex_map_t = typename fragment_t::vertex_map_t;
   using adj_list_t = PIEAdjList<fragment_t>;
+  using python_pie_vertex_t = PythonPIEVertex<fragment_t, VD_T, MD_T>;
 
  public:
   PythonPIEFragment() = default;
@@ -53,6 +118,36 @@ class PythonPIEFragment {
   fid_t fid() { return fragment_->fid(); }
 
   fid_t fnum() { return fragment_->fnum(); }
+
+  const fragment_t* frag() const { return fragment_; }
+
+  python_pie_vertex_t operator[](const oid_t& oid) const {
+    python_pie_vertex_t pvertex(fragment_, compute_context_,
+                                const_cast<vd_t*>(&dummy_values_));
+    vertex_t vertex;
+    auto v_label_num = fragment_->vertex_label_num();
+    for (label_id_t v_label = 0; v_label < v_label_num; ++v_label) {
+      if (fragment_->GetVertex(v_label, oid, vertex)) {
+        pvertex.set_grape_vertex(vertex);
+        return pvertex;
+      }
+    }
+    return pvertex;
+  }
+
+  python_pie_vertex_t operator[](const vertex_t& grape_vertex) const {
+    python_pie_vertex_t pvertex(fragment_, compute_context_,
+                                const_cast<vd_t*>(&dummy_values_));
+    pvertex.set_grape_vertex(grape_vertex);
+    return pvertex;
+  }
+
+  python_pie_vertex_t operator[](const std::string& oid) const {
+    oid_t cast_oid;
+    std::stringstream ss(oid);
+    ss >> cast_oid;
+    return operator[](cast_oid);
+  }
 
   label_id_t vertex_label_num() const { return fragment_->vertex_label_num(); }
 
@@ -104,10 +199,10 @@ class PythonPIEFragment {
   bool get_node(label_id_t label, const oid_t& oid, vertex_t& v) {
     return fragment_->GetVertex(label, oid, v);
   }
-  bool get_inner_node(label_id_t label, const oid_t& oid, vertex_t& v) {
+  bool get_inner_node(const oid_t& oid, vertex_t& v, label_id_t label = 0) {
     return fragment_->GetInnerVertex(label, oid, v);
   }
-  bool get_outer_node(label_id_t label, const oid_t& oid, vertex_t& v) {
+  bool get_outer_node(const oid_t& oid, vertex_t& v, label_id_t label = 0) {
     return fragment_->GetOuterVertex(label, oid, v);
   }
   bool get_node_by_gid(vid_t gid, vertex_t& v) {
@@ -124,10 +219,10 @@ class PythonPIEFragment {
   bool get_gid_by_oid(const oid_t& oid, vid_t& gid) {
     return fragment_->Oid2Gid(oid, gid);
   }
-  adj_list_t get_outgoing_edges(const vertex_t& v, label_id_t e_label) {
+  adj_list_t get_outgoing_edges(const vertex_t& v, label_id_t e_label = 0) {
     return adj_list_t(fragment_->GetOutgoingAdjList(v, e_label));
   }
-  adj_list_t get_incoming_edges(const vertex_t& v, label_id_t e_label) {
+  adj_list_t get_incoming_edges(const vertex_t& v, label_id_t e_label = 0) {
     return adj_list_t(fragment_->GetIncomingAdjList(v, e_label));
   }
   bool has_child(const vertex_t& v, label_id_t e_label) {
@@ -248,8 +343,14 @@ class PythonPIEFragment {
 
   void set_fragment(const fragment_t* fragment) { fragment_ = fragment; }
 
+  void set_compute_comtext(void* compute_context) {
+    compute_context_ = compute_context;
+  }
+
  private:
   const fragment_t* fragment_;
+  void* compute_context_;
+  VD_T dummy_values_;
 };
 
 template <typename FRAG_T, typename VD_T, typename MD_T>
@@ -283,6 +384,10 @@ class PythonPIEComputeContext {
     }
   }
 
+  void set_update_vertices(std::vector<vertex_t>& updates) {
+    update_vertices_ = updates;
+  }
+
   void inc_superstep() { superstep_++; }
 
   int superstep() { return superstep_; }
@@ -300,12 +405,21 @@ class PythonPIEComputeContext {
     }
   }
 
-  void set_node_value(vertex_t& v, VD_T value) {
+  std::string get_param(const std::string& key) {
+    auto iter = config_.find(key);
+    if (iter != config_.end()) {
+      return iter->second;
+    } else {
+      return "";
+    }
+  }
+
+  void set_node_value(vertex_t v, VD_T value) {
     auto label = fragment_->vertex_label(v);
     partial_result_[label].SetValue(v, value);
   }
 
-  VD_T get_node_value(const vertex_t& v) {
+  VD_T& get_node_value(const vertex_t& v) {
     auto label = fragment_->vertex_label(v);
     return partial_result_[label][v];
   }
@@ -324,6 +438,11 @@ class PythonPIEComputeContext {
   bool is_updated(const vertex_t& v) {
     auto label = fragment_->vertex_label(v);
     return partial_result_[label].IsUpdated(v);
+  }
+
+  void set_updated(const vertex_t& v) {
+    auto label = fragment_->vertex_label(v);
+    partial_result_[label].SetUpdated(v);
   }
 
   grape::SyncBuffer<VD_T, vid_t>& partial_result(label_id_t label) {
@@ -354,6 +473,58 @@ class PythonPIEComputeContext {
   // message auto parallel
   std::vector<grape::VertexArray<VD_T, vid_t>>& data_;
   std::vector<grape::SyncBuffer<VD_T, vid_t>> partial_result_;
+
+  // for vldb API
+  std::vector<vertex_t> update_vertices_;
+};
+
+template <typename FRAG_T, typename VD_T, typename MD_T>
+class VertexHeap {
+  using fragment_t = FRAG_T;
+  using vd_t = VD_T;
+  using md_t = MD_T;
+  using oid_t = typename fragment_t::oid_t;
+  using vid_t = typename fragment_t::vid_t;
+  using label_id_t = typename fragment_t::label_id_t;
+  using vertex_t = typename fragment_t::vertex_t;
+  using python_pie_frag_t = PythonPIEFragment<fragment_t, vd_t, md_t>;
+
+ public:
+  VertexHeap() = default;
+  ~VertexHeap() {}
+
+  VertexHeap(const python_pie_frag_t& g, const std::string& property)
+      : g_(&g) {}
+
+  void push(const std::string& oid, vd_t val) {
+    oid_t cast_oid;
+    std::stringstream ss(oid);
+    ss >> cast_oid;
+    push(cast_oid, val);
+  }
+
+  void push(const oid_t& oid, vd_t val) {
+    vertex_t vertex;
+    auto v_label_num = g_->frag()->vertex_label_num();
+    for (label_id_t v_label = 0; v_label < v_label_num; ++v_label) {
+      if (g_->frag()->GetVertex(v_label, oid, vertex)) {
+        heap_.emplace(val, vertex);
+        break;
+      }
+    }
+  }
+
+  void push(const vertex_t& v, vd_t val) { heap_.emplace(val, v); }
+
+  std::pair<vd_t, vertex_t> top() { return heap_.top(); }
+
+  void pop() { heap_.pop(); }
+
+  bool empty() { return heap_.empty(); }
+
+ private:
+  const python_pie_frag_t* g_;
+  std::priority_queue<std::pair<vd_t, vertex_t>> heap_;
 };
 
 template <typename FRAG_T>

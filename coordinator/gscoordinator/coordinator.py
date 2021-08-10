@@ -226,6 +226,8 @@ class CoordinatorServiceServicer(
         # dict of op_def_pb2.OpResult
         self._op_result_pool = dict()
         self._udf_app_workspace = os.path.join(WORKSPACE, self._session_id)
+        # udf app
+        self._register_udf = dict()
 
         # Session connected, fetch logs via gRPC.
         self._streaming_logs = True
@@ -282,6 +284,14 @@ class CoordinatorServiceServicer(
             return self._make_response(
                 message_pb2.HeartBeatResponse, error_codes_pb2.OK
             )
+
+    def RegisterUDF(self, request, context):
+        # todo
+        algo = request.algo
+        gar = request.gar
+        self._register_udf[algo] = gar
+        logger.info("UDF app %s registered", algo)
+        return self._make_response(message_pb2.RegisterUDFResponse, error_codes_pb2.OK)
 
     def run_on_analytical_engine(  # noqa: C901
         self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
@@ -536,7 +546,6 @@ class CoordinatorServiceServicer(
                 ret = self.run_on_interactive_engine(
                     self._session_id, dag_def, op_results
                 )
-
             if run_dag_on == GSEngine.learning_engine:
                 ret = self.run_on_learning_engine(self._session_id, dag_def, op_results)
             if ret.status.code != error_codes_pb2.OK:
@@ -751,6 +760,7 @@ class CoordinatorServiceServicer(
             return op_def_pb2.OpResult(
                 code=error_codes_pb2.OK,
                 key=op.key,
+                output_type=op.output_type,
                 result=frontend_endpoint.encode("utf-8"),
                 extra_info=str(object_id).encode("utf-8"),
             )
@@ -763,6 +773,7 @@ class CoordinatorServiceServicer(
             return op_def_pb2.OpResult(
                 code=error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR,
                 key=op.key,
+                output_type=op.output_type,
                 error_msg=error_message,
             )
 
@@ -783,6 +794,7 @@ class CoordinatorServiceServicer(
             return op_def_pb2.OpResult(
                 code=error_codes_pb2.GREMLIN_QUERY_ERROR,
                 key=op.key,
+                output_type=op.output_type,
                 error_msg=error_message,
             )
         else:
@@ -792,6 +804,7 @@ class CoordinatorServiceServicer(
             return op_def_pb2.OpResult(
                 code=error_codes_pb2.OK,
                 key=op.key,
+                output_type=op.output_type,
             )
 
     def _fetch_gremlin_result(self, op: op_def_pb2.OpDef):
@@ -812,6 +825,7 @@ class CoordinatorServiceServicer(
             return op_def_pb2.OpResult(
                 code=error_codes_pb2.GREMLIN_QUERY_ERROR,
                 key=op.key,
+                output_type=op.output_type,
                 error_msg=error_message,
             )
         else:
@@ -820,7 +834,7 @@ class CoordinatorServiceServicer(
                 if not isinstance(json_dict, str):
                     json_dict = str(json_dict)
                 dag_def = create_dag_from_gae_compiler(
-                    self._object_manager, json.loads(json_dict)
+                    self._register_udf, self._object_manager, json.loads(json_dict)
                 )
                 # set the same key to the last op
                 dag_def.op[-1].key = op.key
@@ -828,7 +842,10 @@ class CoordinatorServiceServicer(
                 assert run_step_rsp.status.code == error_codes_pb2.OK
                 return run_step_rsp.results[-1]
             return op_def_pb2.OpResult(
-                code=error_codes_pb2.OK, key=op.key, result=pickle.dumps(rlt)
+                code=error_codes_pb2.OK,
+                key=op.key,
+                output_type=op.output_type,
+                result=pickle.dumps(rlt),
             )
 
     def _close_interactive_instance(self, op: op_def_pb2.OpDef):
@@ -871,6 +888,7 @@ class CoordinatorServiceServicer(
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
+            output_type=op.output_type,
         )
 
     def _gremlin_to_subgraph(self, op: op_def_pb2.OpDef):
@@ -944,6 +962,7 @@ class CoordinatorServiceServicer(
             return op_def_pb2.OpResult(
                 code=error_codes_pb2.GREMLIN_QUERY_ERROR,
                 key=op.key,
+                output_type=op.output_type,
                 error_msg=error_message,
             )
 
@@ -966,6 +985,7 @@ class CoordinatorServiceServicer(
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
+            output_type=op.output_type,
             result=pickle.dumps(rlt),
         )
 
@@ -984,6 +1004,7 @@ class CoordinatorServiceServicer(
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
+            output_type=op.output_type,
             handle=handle,
             config=config,
             result=",".join(endpoints).encode("utf-8"),
@@ -1003,6 +1024,7 @@ class CoordinatorServiceServicer(
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
+            output_type=op.output_type,
         )
 
     @staticmethod

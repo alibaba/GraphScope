@@ -49,6 +49,7 @@ from graphscope.framework.graph_schema import GraphSchema
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
+from graphscope.proto import query_args_pb2
 from graphscope.proto import types_pb2
 
 from gscoordinator.io_utils import PipeWatcher
@@ -858,6 +859,9 @@ def _transform_labeled_vertex_data_e(schema, label, prop):
 
 
 def _transform_labeled_vertex_data_r(schema, label):
+    if label == "_V":
+        assert len(schema.vertex_labels) == 1
+        label = schema.vertex_labels[0]
     label_id = schema.get_vertex_label_id(label)
     return "label{}".format(label_id)
 
@@ -1440,7 +1444,7 @@ def check_argument(condition, message=None):
         raise ValueError("Check failed: %s" % message)
 
 
-def create_op(op_type, output_type, inputs=None, config=None):
+def create_op(op_type, output_type, inputs=None, config=None, query_args=None):
     op_def = op_def_pb2.OpDef(op=op_type, key=uuid.uuid4().hex, output_type=output_type)
     if config:
         for k, v in config.items():
@@ -1448,11 +1452,13 @@ def create_op(op_type, output_type, inputs=None, config=None):
     if inputs:
         for op in inputs:
             op_def.parents.extend([op])
+    if query_args:
+        op_def.query_args.CopyFrom(query_args)
     return op_def
 
 
 def create_op_from_gae_compiler_value(
-    object_manager, step_op_key_map, json_dict, step, value
+    register_udf, object_manager, step_op_key_map, json_dict, step, value
 ):
     """
     value: {
@@ -1522,31 +1528,38 @@ def create_op_from_gae_compiler_value(
     if value["operation"] == "run_app":
         algo_name = value["params"]["name"]
         # create_app
-        gs_config = {
-            "app": [
-                {
-                    "algo": algo_name,
-                    "context_type": "labeled_vertex_data",
-                    "type": value["params"]["type"],
-                    "class_name": "gs::gather_scatter::{0}".format(algo_name),
-                    "compatible_graph": ["vineyard::ArrowFragment"],
-                }
-            ]
-        }
-        cpp_code = "\n".join(
-            [
-                "\n".join(GAS_APP_HEADER),
-                value["params"]["cpp_code"],
-                "\n".join(GAS_APP_FOOTER),
-            ]
-        )
-        cpp_code = Template(cpp_code).safe_substitute(_cpp_define=algo_name)
-        garfile = InMemoryZip()
-        garfile.append("{0}.h".format(algo_name), cpp_code)
-        garfile.append(".gs_conf.yaml", yaml.dump(gs_config))
+        if value["params"]["type"] == "cpp_gas":
+            gs_config = {
+                "app": [
+                    {
+                        "algo": algo_name,
+                        "context_type": "labeled_vertex_data",
+                        "type": value["params"]["type"],
+                        "class_name": "gs::gather_scatter::{0}".format(algo_name),
+                        "compatible_graph": ["vineyard::ArrowFragment"],
+                    }
+                ]
+            }
+            cpp_code = "\n".join(
+                [
+                    "\n".join(GAS_APP_HEADER),
+                    value["params"]["cpp_code"],
+                    "\n".join(GAS_APP_FOOTER),
+                ]
+            )
+            cpp_code = Template(cpp_code).safe_substitute(_cpp_define=algo_name)
+            garfile = InMemoryZip()
+            garfile.append("{0}.h".format(algo_name), cpp_code)
+            garfile.append(".gs_conf.yaml", yaml.dump(gs_config))
+            gar_bytes = garfile.read_bytes(raw=True)
+        else:
+            # get udf app registered in coordinator
+            if algo_name not in register_udf:
+                raise RuntimeError("Algo {0} not registered.".format(algo_name))
+            gar_bytes = register_udf[algo_name]
         config = {
             types_pb2.APP_ALGO: utils.s_to_attr(algo_name),
-            types_pb2.GAR: utils.bytes_to_attr(garfile.read_bytes(raw=True)),
+            types_pb2.GAR: utils.bytes_to_attr(gar_bytes),
         }
         create_app_op = create_op(types_pb2.CREATE_APP, types_pb2.APP, config=config)
         op_def_list.append(create_app_op)
@@ -1562,18 +1575,30 @@ def create_op_from_gae_compiler_value(
         )
         op_def_list.append(bind_app_op)
         # run_app
+        if value["params"]["type"] == "cpp_gas":
+            query_args = None
+        else:
+            params = utils.pack_query_params(json.dumps(value["params"]))
+            query_args = query_args_pb2.QueryArgs()
+            query_args.args.extend(params)
         config = {types_pb2.OUTPUT_PREFIX: utils.s_to_attr(".")}
         run_app_op = create_op(
             types_pb2.RUN_APP,
             types_pb2.RESULTS,
             inputs=[bind_app_op.key],
             config=config,
+            query_args=query_args,
         )
         op_def_list.append(run_app_op)
     elif value["operation"] == "add_column":
-        selector = json.dumps(
-            {value["params"]["new_column_name"]: value["params"]["use_data"]}
-        )
+        app_type = json_dict[value["deps"]]["params"]["type"]
+        if app_type == "cython_pie" or app_type == "cython_pregel":
+            # the context of cython app is LabeledVertexData
+            selector = json.dumps({value["params"]["new_column_name"]: "r:_V"})
+        else:
+            selector = json.dumps(
+                {value["params"]["new_column_name"]: value["params"]["use_data"]}
+            )
         config = {types_pb2.SELECTOR: utils.s_to_attr(selector)}
         # get deps op key
         deps_key = step_op_key_map[value["deps"]]
@@ -1677,7 +1702,7 @@ def create_op_from_gae_compiler_value(
     return op_def_list
 
 
-def create_dag_from_gae_compiler(object_manager, json_dict: dict):
+def create_dag_from_gae_compiler(register_udf, object_manager, json_dict: dict):
     print("[DEBUG] json dict from gae compiler: ", json_dict)
     step_op_key_map = {}
     dag_def = op_def_pb2.DagDef()
@@ -1686,9 +1711,7 @@ def create_dag_from_gae_compiler(object_manager, json_dict: dict):
             continue
         dag_def.op.extend(
             create_op_from_gae_compiler_value(
-                object_manager, step_op_key_map, json_dict, step, value
+                register_udf, object_manager, step_op_key_map, json_dict, step, value
             )
         )
-
-    print("[DEBUG] dag def: ", dag_def)
     return dag_def

@@ -31,6 +31,9 @@ service CoordinatorService {
   // Fetch engine logs.
   rpc FetchLogs(FetchLogsRequest) returns (stream FetchLogsResponse);
 
+  // Register UDF app.
+  rpc RegisterUDF(RegisterUDFRequest) returns (RegisterUDFResponse);
+
   // Closes a session.
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
 }

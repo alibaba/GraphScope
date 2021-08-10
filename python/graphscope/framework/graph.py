@@ -702,12 +702,12 @@ class Graph(GraphInterface):
             pass
 
     def update_from_graph_def(self, graph_def):
-        check_argument(
-            self._graph_node.graph_type == graph_def.graph_type,
-            "Graph type doesn't match {} versus {}".format(
-                self._graph_node.graph_type, graph_def.graph_type
-            ),
-        )
+        # check_argument(
+        # self._graph_node.graph_type == graph_def.graph_type,
+        # "Graph type doesn't match {} versus {}".format(
+        # self._graph_node.graph_type, graph_def.graph_type
+        # ),
+        # )
         self._key = graph_def.key
         self._directed = graph_def.directed
         vy_info = graph_def_pb2.VineyardInfoPb()
@@ -826,7 +826,10 @@ class Graph(GraphInterface):
             [f"EDGE: {label}\tsrc: {src}\tdst: {dst}" for label, src, dst in relations]
         )
 
-        return f"graphscope.Graph\n{graph_def_pb2.GraphTypePb.Name(self._graph_type)}\n{v_str}\n{e_str}"
+        try:
+            return f"graphscope.Graph\n{graph_def_pb2.GraphTypePb.Name(self._graph_type)}\n{v_str}\n{e_str}"
+        except Exception:
+            return "<Intermediate graphscope.Graph from gremlin query"
 
     def __repr__(self):
         return self.__str__()

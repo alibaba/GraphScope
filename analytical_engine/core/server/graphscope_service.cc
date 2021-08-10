@@ -42,6 +42,7 @@ namespace rpc {
   for (const auto& op : dag_def.op()) {
     OpResult* op_result = response->add_results();
     op_result->set_key(op.key());
+    op_result->set_output_type(op.output_type());
     op_key_to_result.emplace(op.key(), op_result);
     CommandDetail cmd = OpToCmd(op);
 

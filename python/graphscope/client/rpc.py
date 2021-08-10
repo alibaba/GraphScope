@@ -137,6 +137,13 @@ class GRPCClient(object):
     def run(self, dag_def):
         return self._run_step_impl(dag_def)
 
+    def register_udf(self, algo, gar):
+        request = message_pb2.RegisterUDFRequest(
+            algo=algo,
+            gar=gar,
+        )
+        return self._stub.RegisterUDF(request)
+
     def fetch_logs(self):
         if self._logs_fetching_thread is None:
             self._logs_fetching_thread = threading.Thread(

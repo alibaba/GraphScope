@@ -32,8 +32,14 @@ cdef extern from "apps/python_pie/export.h" namespace "python_grape":
         Vertex() except +
         Vertex& operator*()
         Vertex& operator++()
+        int GetValue()
         bool operator==(const Vertex&)
         bool operator!=(const Vertex&)
+
+    cdef cppclass PVertex[VD_TYPE, MD_TYPE]:
+        PVertex() except +
+        VD_TYPE& operator[](const string&)
+        size_t lid()
 
     cdef cppclass VertexRange:
         VertexRange()
@@ -50,6 +56,7 @@ cdef extern from "apps/python_pie/export.h" namespace "python_grape":
     cdef cppclass Nbr:
         Nbr() except +
         Vertex neighbor()
+        Vertex get_neighbor()
         string get_str(int)
         double get_double(int)
         int64_t get_int(int)
@@ -65,10 +72,13 @@ cdef extern from "apps/python_pie/export.h" namespace "python_grape":
         iterator end()
         size_t size()
 
-    cdef cppclass Fragment:
+    cdef cppclass Fragment[VD_TYPE, MD_TYPE]:
         Fragment() except +
         int fid()
         int fnum()
+        PVertex[VD_TYPE, MD_TYPE] operator[](int)
+        PVertex[VD_TYPE, MD_TYPE] operator[](const string&)
+        PVertex[VD_TYPE, MD_TYPE] operator[](const Vertex&)
         int vertex_label_num()
         int edge_label_num()
         size_t get_total_nodes_num()
@@ -82,10 +92,14 @@ cdef extern from "apps/python_pie/export.h" namespace "python_grape":
         bool is_inner_node(const Vertex&)
         bool is_outer_node(const Vertex&)
         bool get_node(int, const int64_t&, Vertex&)
-        bool get_inner_node(int, const int64_t&, Vertex&)
-        bool get_outer_node(int, const int64_t&, Vertex&)
+        bool get_inner_node(const int64_t&, Vertex&, int)
+        bool get_inner_node(const int64_t&, Vertex&)
+        bool get_outer_node(const int64_t&, Vertex&, int)
+        bool get_outer_node(const int64_t&, Vertex&)
         int64_t get_node_id(const Vertex&)
+        AdjList get_outgoing_edges(const Vertex&)
         AdjList get_outgoing_edges(const Vertex&, int)
+        AdjList get_incoming_edges(const Vertex&)
         AdjList get_incoming_edges(const Vertex&, int)
         bool has_child(const Vertex&, int)
         bool has_parent(const Vertex&, int)
@@ -113,16 +127,26 @@ cdef extern from "apps/python_pie/export.h" namespace "python_grape":
         string get_edge_property_by_id(const string&, int)
         string get_edge_property_by_id(int, int)
 
+    cdef cppclass VertexHeap[VD_TYPE, MD_TYPE]:
+        VertexHeap() except +
+        VertexHeap(Fragment[VD_TYPE, MD_TYPE]&, const string&) except +
+        void push(int, VD_TYPE)
+        void push(const string&, VD_TYPE)
+        void push(const Vertex&, VD_TYPE)
+        void pop()
+        bool empty()
+        pair[VD_TYPE, Vertex] top()
 
     cdef cppclass Context[VD_TYPE, MD_TYPE]:
         Context() except +
         int superstep()
         string get_config(const string&)
+        string get_param(const string&)
         void init_value(VertexRange, int, MD_TYPE, PIEAggregateType)
         void init_value(VertexRange, int, MD_TYPE, ap_aggregate_func)
         void register_sync_buffer(int, MessageStrategy)
-        void set_node_value(Vertex&, const VD_TYPE&)
-        VD_TYPE get_node_value(const Vertex&)
+        void set_node_value(Vertex, const VD_TYPE&)
+        VD_TYPE& get_node_value(const Vertex&)
         bool is_updated(const Vertex&)
 
     cdef enum class PIEAggregateType:

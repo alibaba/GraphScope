@@ -16,6 +16,8 @@
 #ifndef ANALYTICAL_ENGINE_APPS_PYTHON_PIE_CYTHON_PIE_PROGRAM_H_
 #define ANALYTICAL_ENGINE_APPS_PYTHON_PIE_CYTHON_PIE_PROGRAM_H_
 
+#include <vector>
+
 #include "apps/python_pie/export.h"
 #include "apps/python_pie/wrapper.h"
 
@@ -26,11 +28,12 @@ class CythonPIEProgram {
  public:
   using vd_t = VD_TYPE;
   using md_t = MD_TYPE;
-  using wrapper_fragment_t = python_grape::Fragment;
+  using wrapper_fragment_t = python_grape::Fragment<vd_t, md_t>;
   using wrapper_context_t = python_grape::Context<vd_t, md_t>;
+  using vertex_t = typename wrapper_fragment_t::vertex_t;
   typedef void (*InitFuncT)(wrapper_fragment_t&, wrapper_context_t&);
   typedef void (*PEvalFuncT)(wrapper_fragment_t&, wrapper_context_t&);
-  typedef void (*IncEvalFuncT)(wrapper_fragment_t&, wrapper_context_t&);
+  typedef void (*IncEvalFuncT)(wrapper_fragment_t&, std::vector<vertex_t>);
 
   CythonPIEProgram()
       : init_func_(nullptr), peval_func_(nullptr), inceval_func_(nullptr) {}
@@ -51,8 +54,8 @@ class CythonPIEProgram {
     peval_func_(frag, context);
   }
 
-  inline void IncEval(wrapper_fragment_t& frag, wrapper_context_t& context) {
-    inceval_func_(frag, context);
+  inline void IncEval(wrapper_fragment_t& frag, std::vector<vertex_t> updates) {
+    inceval_func_(frag, updates);
   }
 
  private:

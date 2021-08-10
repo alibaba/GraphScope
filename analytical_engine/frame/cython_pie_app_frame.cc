@@ -75,16 +75,18 @@ using string = std::string;
  */
 namespace python_grape {
 
-void _Init(Fragment& frag, Context<_VD_TYPE, _MD_TYPE>& context) {
+void _Init(Fragment<_VD_TYPE, _MD_TYPE>& frag,
+           Context<_VD_TYPE, _MD_TYPE>& context) {
   Init(frag, context);
 }
 
-void _PEval(Fragment& frag, Context<_VD_TYPE, _MD_TYPE>& context) {
+void _PEval(Fragment<_VD_TYPE, _MD_TYPE>& frag,
+            Context<_VD_TYPE, _MD_TYPE>& context) {
   PEval(frag, context);
 }
 
-void _IncEval(Fragment& frag, Context<_VD_TYPE, _MD_TYPE>& context) {
-  IncEval(frag, context);
+void _IncEval(Fragment<_VD_TYPE, _MD_TYPE>& frag, std::vector<Vertex> updates) {
+  IncEval(frag, updates);
 }
 
 void AppInit() {

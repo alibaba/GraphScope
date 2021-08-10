@@ -76,6 +76,9 @@ message OpResult {
   //  2) CREATE_LEARNING_INSTANCE: object_id
   bytes extra_info = 8;
 
+  // Different types of op may create different output.
+  OutputType output_type = 9;
+
   // if the op create a graph or modify a graph, return the meta data of the graph.
   gs.rpc.graph.GraphDefPb graph_def = 31;
 };
