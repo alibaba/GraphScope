@@ -192,7 +192,7 @@ def demo(sess, graph):
     )
     print("[Ret]: ", type(ret))
     # case4: UDF SSSP
-    graphscope_session.registerUDF("SSSP", SSSP)
+    sess.registerUDF("SSSP", SSSP)
     ret = (
         g.V()
         .process("SSSP")
