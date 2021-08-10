@@ -766,6 +766,10 @@ class Graph(GraphInterface):
         ).hexdigest()
 
     @property
+    def op(self):
+        return self._graph_node.op
+
+    @property
     def template_str(self):
         # transform str/string to std::string
         oid_type = utils.normalize_data_type_str(self._oid_type)

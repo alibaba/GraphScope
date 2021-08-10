@@ -10,8 +10,8 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
-      - 'research/**'
       - 'scripts/**'
+      - '!scripts/deploy_local.sh'
       - 'tutorials/**'
   pull_request:
     branches:
@@ -21,8 +21,8 @@ on:
       - '**.md'
       - '**.rst'
       - 'docs/**'
-      - 'research/**'
       - 'scripts/**'
+      - '!scripts/deploy_local.sh'
       - 'tutorials/**'
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macOS-latest]
+        os: [ubuntu-20.04]
 
     steps:
     - uses: actions/checkout@v2
@@ -43,7 +43,7 @@ jobs:
 
     - name: Install Dependencies of GraphScope
       run: |
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh --verbose install_deps
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh install_deps --verbose
 
         # avoid access node by DNS hostnames
         r=`cat /etc/hosts | grep $(hostname) || true`
@@ -56,20 +56,14 @@ jobs:
 
     - name: Build GraphScope
       run: |
-        source ${GITHUB_WORKSPACE}/gs_env
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh --verbose deploy
-
-    - name: DEBUG
-      if: false
-      uses: mxschmitt/action-tmate@v2
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/deploy_local.sh build_and_deploy --verbose
 
     - name: Run Local Test
       env:
         OS : ${{ matrix.os }}
       run: |
-        source ${GITHUB_WORKSPACE}/gs_env
-        export GRAPHSCOPE_PREFIX=/usr/local
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+        source ~/.graphscope_env
+        export GRAPHSCOPE_HOME=/usr/local
 
         # install tensorflow for graphlearn if os is ubuntu20.04
         if [ "${OS}" == "ubuntu-20.04" ];
@@ -82,19 +76,23 @@ jobs:
 
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-        cp ${GITHUB_WORKSPACE}/python/tests/test_run_locally.py /tmp/test_run_locally.py
+        # Copy test_run_locally.py out of graphscope to enable import graph-learn from system path
+        cp ${GITHUB_WORKSPACE}/python/tests/local/test_run_locally.py /tmp/test_run_locally.py
         rm -rf ~/.ccache ~/.m2 ~/.cargo || true
         python3 -m pytest -s -v /tmp/test_run_locally.py
 
         # delete etcd dir
         rm -fr /tmp/default.etcd || true
 
+    - name: DEBUG
+      if: false
+      uses: mxschmitt/action-tmate@v2
+
     - name: Run Gaia on Maxgraph Store Test
       if: matrix.os == 'ubuntu-20.04'
       run: |
-        source ${GITHUB_WORKSPACE}/gs_env
-        export GRAPHSCOPE_PREFIX=/usr/local
-        export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+        source ~/.graphscope_env
+        export GRAPHSCOPE_HOME=/usr/local
         # run test
         cd interactive_engine/src/gaia-adaptor && ./gremlin_test.sh
 

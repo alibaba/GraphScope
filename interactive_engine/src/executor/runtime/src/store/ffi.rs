@@ -569,11 +569,11 @@ impl Vertex for IdOnlyVertex {
     }
 
     fn get_property(&self, prop_id: u32) -> Option<Property> {
-        unimplemented!()
+        None
     }
 
     fn get_properties(&self) -> Self::PI {
-        unimplemented!()
+        FFIPropertiesIter::empty()
     }
 }
 
@@ -869,6 +869,12 @@ impl FFIPropertiesIter {
     pub fn new(iter: PropertiesIterator) -> Self {
         FFIPropertiesIter {
             iter,
+        }
+    }
+
+    pub fn empty() -> Self {
+        FFIPropertiesIter {
+            iter: std::ptr::null(),
         }
     }
 }

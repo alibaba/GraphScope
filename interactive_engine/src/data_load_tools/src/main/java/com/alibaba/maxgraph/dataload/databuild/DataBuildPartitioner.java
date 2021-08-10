@@ -34,13 +34,7 @@ public class DataBuildPartitioner extends Partitioner<BytesWritable, BytesWritab
         long partitionKey;
         if (key.getLength() > 24) {
             // Edge
-            if ((keyBuf.getLong(0) & 1) == 1) {
-                // In
-                partitionKey = keyBuf.getLong(16);
-            } else {
-                // Out
-                partitionKey = keyBuf.getLong(8);
-            }
+            partitionKey = keyBuf.getLong(8);
         } else {
             // Vertex
             partitionKey = keyBuf.getLong(8);

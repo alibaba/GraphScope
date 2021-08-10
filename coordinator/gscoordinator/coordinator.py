@@ -20,6 +20,8 @@
 
 import argparse
 import atexit
+import base64
+import datetime
 import hashlib
 import json
 import logging
@@ -34,6 +36,7 @@ import threading
 import time
 import urllib.parse
 import urllib.request
+import uuid
 from concurrent import futures
 from io import StringIO
 
@@ -45,6 +48,12 @@ from gscoordinator.io_utils import StdoutWrapper
 # capture system stdout
 sys.stdout = StdoutWrapper(sys.stdout)
 
+from graphscope.framework.dag_utils import create_graph
+from graphscope.framework.graph_utils import assemble_op_config
+from graphscope.framework.graph_utils import normalize_parameter_edges
+from graphscope.framework.graph_utils import normalize_parameter_vertices
+from graphscope.framework.loader import Loader
+from graphscope.framework.utils import normalize_data_type_str
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import engine_service_pb2_grpc
@@ -59,6 +68,9 @@ from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
 from gscoordinator.launcher import LocalLauncher
 from gscoordinator.object_manager import GraphMeta
+from gscoordinator.object_manager import GremlinResultSet
+from gscoordinator.object_manager import InteractiveQueryManager
+from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import LibMeta
 from gscoordinator.object_manager import ObjectManager
 from gscoordinator.utils import compile_app
@@ -276,7 +288,17 @@ class CoordinatorServiceServicer(
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             try:
-                op_pre_process(op, self._op_result_pool, self._key_to_op)
+                if self._launcher_type == types_pb2.K8S:
+                    engine_hosts = ",".join(self._pods_list)
+                else:
+                    engine_hosts = self._launcher.hosts
+                op_pre_process(
+                    op,
+                    self._op_result_pool,
+                    self._key_to_op,
+                    engine_hosts=engine_hosts,
+                    engine_config=self._get_engine_config(),
+                )
             except Exception as e:
                 error_msg = (
                     "Failed to pre process op {0} with error message {1}".format(
@@ -426,6 +448,66 @@ class CoordinatorServiceServicer(
                     self._object_manager.pop(op.attr[types_pb2.APP_NAME].s.decode())
         return response
 
+    def run_on_interactive_engine(
+        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
+    ):
+        for op in dag_def.op:
+            self._key_to_op[op.key] = op
+            try:
+                if self._launcher_type == types_pb2.K8S:
+                    engine_hosts = ",".join(self._pods_list)
+                else:
+                    engine_hosts = self._launcher.hosts
+                op_pre_process(
+                    op,
+                    self._op_result_pool,
+                    self._key_to_op,
+                    engine_hosts=engine_hosts,
+                    engine_config=self._get_engine_config(),
+                )
+            except Exception as e:
+                error_msg = (
+                    "Failed to pre process op {0} with error message {1}".format(
+                        op, str(e)
+                    )
+                )
+                logger.error(error_msg)
+                return self._make_response(
+                    message_pb2.RunStepResponse,
+                    error_codes_pb2.COORDINATOR_INTERNAL_ERROR,
+                    error_msg,
+                    full_exception=pickle.dumps(e),
+                    results=op_results,
+                )
+            if op.op == types_pb2.CREATE_INTERACTIVE_QUERY:
+                op_result = self._create_interactive_instance(op)
+            elif op.op == types_pb2.GREMLIN_QUERY:
+                op_result = self._execute_gremlin_query(op)
+            elif op.op == types_pb2.FETCH_GREMLIN_RESULT:
+                op_result = self._fetch_gremlin_result(op)
+            elif op.op == types_pb2.CLOSE_INTERACTIVE_QUERY:
+                op_result = self._close_interactive_instance(op)
+            elif op.op == types_pb2.SUBGRAPH:
+                op_result = self._gremlin_to_subgraph(op)
+            else:
+                logger.error("Unsupport op type: %s", str(op.op))
+            op_results.append(op_result)
+            if op_result.code == error_codes_pb2.OK:
+                # don't record the results of these ops to avoid
+                # taking up too much memory in coordinator
+                if op.op not in [types_pb2.FETCH_GREMLIN_RESULT]:
+                    self._op_result_pool[op.key] = op_result
+            else:
+                return self._make_response(
+                    message_pb2.RunStepResponse,
+                    error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR,
+                    error_msg=op_result.error_msg,
+                    results=op_results,
+                )
+        return self._make_response(
+            message_pb2.RunStepResponse, error_codes_pb2.OK, results=op_results
+        )
+
     def RunStep(self, request, context):
         op_results = list()
         # split dag
@@ -437,8 +519,61 @@ class CoordinatorServiceServicer(
                 ret = self.run_on_analytical_engine(
                     request.session_id, dag_def, op_results
                 )
+            if run_dag_on == GSEngine.interactive_engine:
+                ret = self.run_on_interactive_engine(
+                    request.session_id, dag_def, op_results
+                )
+
+            if run_dag_on == GSEngine.learning_engine:
+                ret = self.run_on_learning_engine(
+                    request.session_id, dag_def, op_results
+                )
             if ret.status.code != error_codes_pb2.OK:
                 return ret
+        return self._make_response(
+            message_pb2.RunStepResponse, error_codes_pb2.OK, results=op_results
+        )
+
+    def run_on_learning_engine(
+        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
+    ):
+        for op in dag_def.op:
+            self._key_to_op[op.key] = op
+            try:
+                if self._launcher_type == types_pb2.K8S:
+                    engine_hosts = ",".join(self._pods_list)
+                else:
+                    engine_hosts = self._launcher.hosts
+                op_pre_process(
+                    op,
+                    self._op_result_pool,
+                    self._key_to_op,
+                    engine_hosts=engine_hosts,
+                    engine_config=self._get_engine_config(),
+                )
+            except Exception as e:
+                error_msg = (
+                    "Failed to pre process op {0} with error message {1}".format(
+                        op, str(e)
+                    )
+                )
+                logger.error(error_msg)
+                return self._make_response(
+                    message_pb2.RunStepResponse,
+                    error_codes_pb2.COORDINATOR_INTERNAL_ERROR,
+                    error_msg,
+                    full_exception=pickle.dumps(e),
+                    results=op_results,
+                )
+            if op.op == types_pb2.CREATE_LEARNING_INSTANCE:
+                op_result = self._create_learning_instance(op)
+            elif op.op == types_pb2.CLOSE_LEARNING_INSTANCE:
+                op_result = self._close_learning_instance(op)
+            else:
+                logger.error("Unsupport op type: %s", str(op.op))
+            op_results.append(op_result)
+            if op_result.code == error_codes_pb2.OK:
+                self._op_result_pool[op.key] = op_result
         return self._make_response(
             message_pb2.RunStepResponse, error_codes_pb2.OK, results=op_results
         )
@@ -542,12 +677,19 @@ class CoordinatorServiceServicer(
 
         return self._make_response(message_pb2.CloseSessionResponse, error_codes_pb2.OK)
 
-    def CreateInteractiveInstance(self, request, context):
-        object_id = request.object_id
-        gremlin_server_cpu = request.gremlin_server_cpu
-        gremlin_server_mem = request.gremlin_server_mem
-
-        with open(request.schema_path) as file:
+    def _create_interactive_instance(self, op: op_def_pb2.OpDef):
+        object_id = op.attr[types_pb2.VINEYARD_ID].i
+        schema_path = op.attr[types_pb2.SCHEMA_PATH].s.decode()
+        gremlin_server_cpu = op.attr[types_pb2.GIE_GREMLIN_SERVER_CPU].f
+        gremlin_server_mem = op.attr[types_pb2.GIE_GREMLIN_SERVER_MEM].s.decode()
+        if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in op.attr:
+            engine_params = json.loads(
+                op.attr[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
+            )
+        else:
+            engine_params = {}
+        enable_gaia = op.attr[types_pb2.GIE_ENABLE_GAIA].b
+        with open(schema_path) as file:
             schema_json = file.read()
 
         params = {
@@ -564,11 +706,11 @@ class CoordinatorServiceServicer(
                     "preemptive": str(self._launcher.preemptive),
                     "gremlinServerCpu": str(gremlin_server_cpu),
                     "gremlinServerMem": gremlin_server_mem,
+                    "enableGaia": str(enable_gaia),
                 }
             )
             engine_params = [
-                "{}:{}".format(key, value)
-                for key, value in request.engine_params.items()
+                "{}:{}".format(key, value) for key, value in engine_params.items()
             ]
             params["engineParams"] = "'{}'".format(";".join(engine_params))
         else:
@@ -576,8 +718,9 @@ class CoordinatorServiceServicer(
             params.update(
                 {
                     "vineyardIpcSocket": self._launcher.vineyard_socket,
-                    "schemaPath": request.schema_path,
+                    "schemaPath": schema_path,
                     "zookeeperPort": str(self._launcher.zookeeper_port),
+                    "enableGaia": str(enable_gaia),
                 }
             )
             post_url = "http://%s/instance/create_local" % manager_host
@@ -587,19 +730,28 @@ class CoordinatorServiceServicer(
         res_json = json.load(create_res)
         error_code = res_json["errorCode"]
         if error_code == 0:
-            front_host = res_json["frontHost"]
-            front_port = res_json["frontPort"]
+            maxgraph_endpoint = f"{res_json['frontHost']}:{res_json['frontPort']}"
             logger.info(
-                "build frontend %s:%d for graph %ld",
-                front_host,
-                front_port,
-                object_id,
+                "build maxgraph frontend %s for graph %ld", maxgraph_endpoint, object_id
             )
-            return message_pb2.CreateInteractiveResponse(
-                status=message_pb2.ResponseStatus(code=error_codes_pb2.OK),
-                frontend_host=front_host,
-                frontend_port=front_port,
-                object_id=object_id,
+            endpoints = [maxgraph_endpoint]
+            if enable_gaia:
+                gaia_endpoint = (
+                    f"{res_json['gaiaFrontHost']}:{res_json['gaiaFrontPort']}"
+                )
+                endpoints.append(gaia_endpoint)
+                logger.info(
+                    "build gaia frontend %s for graph %ld", gaia_endpoint, object_id
+                )
+            self._object_manager.put(
+                op.key,
+                InteractiveQueryManager(op.key, endpoints, object_id),
+            )
+            return op_def_pb2.OpResult(
+                code=error_codes_pb2.OK,
+                key=op.key,
+                result=",".join(endpoints).encode("utf-8"),
+                extra_info=str(object_id).encode("utf-8"),
             )
         else:
             error_message = (
@@ -607,87 +759,216 @@ class CoordinatorServiceServicer(
                 % (object_id, error_code, res_json["errorMessage"])
             )
             logger.error(error_message)
-            return message_pb2.CreateInteractiveResponse(
-                status=message_pb2.ResponseStatus(
-                    code=error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR,
-                    error_msg=error_message,
-                ),
-                frontend_host="",
-                frontend_port=0,
-                object_id=object_id,
+            return op_def_pb2.OpResult(
+                code=error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR,
+                key=op.key,
+                error_msg=error_message,
             )
 
-    def CloseInteractiveInstance(self, request, context):
-        object_id = request.object_id
-        if self._launcher_type == types_pb2.K8S:
-            manager_host = self._launcher.get_manager_host()
-            pod_name_list = ",".join(self._pods_list)
-            close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
-                manager_host,
-                object_id,
-                pod_name_list,
-                ENGINE_CONTAINER,
-                str(self._launcher.waiting_for_delete()),
+    def _execute_gremlin_query(self, op: op_def_pb2.OpDef):
+        message = op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s.decode()
+        request_options = None
+        if types_pb2.GIE_GREMLIN_REQUEST_OPTIONS in op.attr:
+            request_options = json.loads(
+                op.attr[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS].s.decode()
             )
-        else:
-            manager_host = self._launcher.graph_manager_endpoint
-            close_url = "http://%s/instance/close_local?graphName=%ld" % (
-                manager_host,
-                object_id,
-            )
-        logger.info("Coordinator close interactive instance with url[%s]" % close_url)
+        query_gaia = op.attr[types_pb2.GIE_QUERY_GAIA].b
+        key_of_parent_op = op.parents[0]
+
+        gremlin_client = self._object_manager.get(key_of_parent_op)
         try:
-            close_res = urllib.request.urlopen(close_url).read()
-        except Exception as e:
-            logger.error("Failed to close interactive instance: %s", e)
-            return message_pb2.CloseInteractiveResponse(
-                status=message_pb2.ResponseStatus(
-                    code=error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR,
-                    error_msg="Internal error during close interactive instance: %d, %s"
-                    % (400, e),
-                )
+            rlt = gremlin_client.submit(
+                message, request_options=request_options, query_gaia=query_gaia
             )
-        res_json = json.loads(close_res.decode("utf-8", errors="ignore"))
-        error_code = res_json["errorCode"]
-        if 0 == error_code:
-            return message_pb2.CloseInteractiveResponse(
-                status=message_pb2.ResponseStatus(code=error_codes_pb2.OK)
+        except Exception as e:
+            error_message = "Gremlin query failed with error message {0}".format(str(e))
+            logger.error(error_message)
+            return op_def_pb2.OpResult(
+                code=error_codes_pb2.GREMLIN_QUERY_ERROR,
+                key=op.key,
+                error_msg=error_message,
             )
         else:
-            error_message = (
-                "Failed to close interactive instance for object id %ld with error code %d message %s"
-                % (object_id, error_code, res_json["errorMessage"])
-            )
-            logger.error("Failed to close interactive instance: %s", error_message)
-            return message_pb2.CloseInteractiveResponse(
-                status=message_pb2.ResponseStatus(
-                    code=error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR,
-                    error_msg=error_message,
-                )
+            self._object_manager.put(op.key, GremlinResultSet(op.key, rlt))
+            return op_def_pb2.OpResult(
+                code=error_codes_pb2.OK,
+                key=op.key,
             )
 
-    def CreateLearningInstance(self, request, context):
+    def _fetch_gremlin_result(self, op: op_def_pb2.OpDef):
+        fetch_result_type = op.attr[types_pb2.GIE_GREMLIN_FETCH_RESULT_TYPE].s.decode()
+        key_of_parent_op = op.parents[0]
+        result_set = self._object_manager.get(key_of_parent_op).result_set
+        try:
+            if fetch_result_type == "one":
+                rlt = result_set.one()
+            elif fetch_result_type == "all":
+                rlt = result_set.all().result()
+        except Exception as e:
+            error_message = "Fetch gremlin result failed with error message {0}".format(
+                e
+            )
+            logger.error(error_message)
+            return op_def_pb2.OpResult(
+                code=error_codes_pb2.GREMLIN_QUERY_ERROR,
+                key=op.key,
+                error_msg=error_message,
+            )
+        else:
+            return op_def_pb2.OpResult(
+                code=error_codes_pb2.OK, key=op.key, result=pickle.dumps(rlt)
+            )
+
+    def _close_interactive_instance(self, op: op_def_pb2.OpDef):
+        try:
+            key_of_parent_op = op.parents[0]
+            gremlin_client = self._object_manager.get(key_of_parent_op)
+            object_id = gremlin_client.object_id
+            if self._launcher_type == types_pb2.K8S:
+                manager_host = self._launcher.get_manager_host()
+                pod_name_list = ",".join(self._pods_list)
+                close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
+                    manager_host,
+                    object_id,
+                    pod_name_list,
+                    ENGINE_CONTAINER,
+                    str(self._launcher.waiting_for_delete()),
+                )
+            else:
+                manager_host = self._launcher.graph_manager_endpoint
+                close_url = "http://%s/instance/close_local?graphName=%ld" % (
+                    manager_host,
+                    object_id,
+                )
+            logger.info(
+                "Coordinator close interactive instance with url[%s]" % close_url
+            )
+            close_res = urllib.request.urlopen(close_url).read()
+            gremlin_client.closed = True
+        except Exception as e:
+            logger.error("Failed to close interactive instance: %s", str(e))
+        else:
+            res_json = json.loads(close_res.decode("utf-8", errors="ignore"))
+            error_code = res_json["errorCode"]
+            if error_code != 0:
+                error_message = (
+                    "Failed to close interactive instance for object id %ld with error code %d message %s"
+                    % (object_id, error_code, res_json["errorMessage"])
+                )
+                logger.error("Failed to close interactive instance: %s", error_message)
+        return op_def_pb2.OpResult(
+            code=error_codes_pb2.OK,
+            key=op.key,
+        )
+
+    def _gremlin_to_subgraph(self, op: op_def_pb2.OpDef):
+        gremlin_script = op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s.decode()
+        oid_type = op.attr[types_pb2.OID_TYPE].s.decode()
+        request_options = None
+        if types_pb2.GIE_GREMLIN_REQUEST_OPTIONS in op.attr:
+            request_options = json.loads(
+                op.attr[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS].s.decode()
+            )
+        key_of_parent_op = op.parents[0]
+        gremlin_client = self._object_manager.get(key_of_parent_op)
+
+        def load_subgraph(oid_type, name):
+            import vineyard
+
+            vertices = [Loader(vineyard.ObjectName("__%s_vertex_stream" % name))]
+            edges = [Loader(vineyard.ObjectName("__%s_edge_stream" % name))]
+            oid_type = normalize_data_type_str(oid_type)
+            v_labels = normalize_parameter_vertices(vertices)
+            e_labels = normalize_parameter_edges(edges)
+            config = assemble_op_config(
+                v_labels, e_labels, oid_type, directed=True, generate_eid=False
+            )
+            new_op = create_graph(
+                self._session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
+            )
+            # set the same key from subgraph to new op
+            new_op_def = new_op.as_op_def()
+            new_op_def.key = op.key
+            dag = op_def_pb2.DagDef()
+            dag.op.extend([new_op_def])
+            resp = self.run_on_analytical_engine(self._session_id, dag, [])
+            logger.info("subgraph has been loaded")
+            return resp.results[0]
+
+        # generate a random graph name
+        now_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        random_num = random.randint(0, 10000000)
+        graph_name = "%s_%s" % (str(now_time), str(random_num))
+
+        try:
+            # create a graph handle by name
+            gremlin_client.submit(
+                "g.createGraph('{0}').with('graphType', 'vineyard')".format(graph_name),
+                request_options=request_options,
+            ).all().result()
+
+            # start a thread to launch the graph
+            pool = futures.ThreadPoolExecutor()
+            subgraph_task = pool.submit(
+                load_subgraph,
+                oid_type,
+                graph_name,
+            )
+
+            # add subgraph vertices and edges
+            subgraph_script = "{0}.subgraph('{1}').outputVineyard('{2}')".format(
+                gremlin_script, graph_name, graph_name
+            )
+            gremlin_client.submit(
+                subgraph_script, request_options=request_options
+            ).all().result()
+
+            return subgraph_task.result()
+        except Exception as e:
+            error_message = "Failed to create subgraph from gremlin query with error message: {0}".format(
+                str(e)
+            )
+            logger.error(error_message)
+            return op_def_pb2.OpResult(
+                code=error_codes_pb2.GREMLIN_QUERY_ERROR,
+                key=op.key,
+                error_msg=error_message,
+            )
+
+    def _create_learning_instance(self, op: op_def_pb2.OpDef):
+        object_id = op.attr[types_pb2.VINEYARD_ID].i
         logger.info(
             "Coordinator create learning instance with object id %ld",
-            request.object_id,
+            object_id,
         )
-        object_id = request.object_id
-        handle = request.handle
-        config = request.config
-        endpoints = self._launcher.create_learning_instance(object_id, handle, config)
-        return message_pb2.CreateLearningInstanceResponse(
-            status=message_pb2.ResponseStatus(code=error_codes_pb2.OK),
-            endpoints=",".join(endpoints),
+        handle = op.attr[types_pb2.GLE_HANDLE].s
+        config = op.attr[types_pb2.GLE_CONFIG].s
+        endpoints = self._launcher.create_learning_instance(
+            object_id, handle.decode("utf-8"), config.decode("utf-8")
+        )
+        self._object_manager.put(op.key, LearningInstanceManager(op.key, object_id))
+        return op_def_pb2.OpResult(
+            code=error_codes_pb2.OK,
+            key=op.key,
+            handle=handle,
+            config=config,
+            result=",".join(endpoints).encode("utf-8"),
+            extra_info=str(object_id).encode("utf-8"),
         )
 
-    def CloseLearningInstance(self, request, context):
+    def _close_learning_instance(self, op: op_def_pb2.OpDef):
+        key_of_parent_op = op.parents[0]
+        learning_instance_manager = self._object_manager.get(key_of_parent_op)
+        object_id = learning_instance_manager.object_id
         logger.info(
             "Coordinator close learning instance with object id %ld",
-            request.object_id,
+            object_id,
         )
-        self._launcher.close_learning_instance(request.object_id)
-        return message_pb2.CloseLearningInstanceResponse(
-            status=message_pb2.ResponseStatus(code=error_codes_pb2.OK)
+        self._launcher.close_learning_instance(object_id)
+        learning_instance_manager.closed = True
+        return op_def_pb2.OpResult(
+            code=error_codes_pb2.OK,
+            key=op.key,
         )
 
     @staticmethod
@@ -729,6 +1010,22 @@ class CoordinatorServiceServicer(
                 if obj.vineyard_id != -1:
                     config[types_pb2.VINEYARD_ID] = attr_value_pb2.AttrValue(
                         i=obj.vineyard_id
+                    )
+            elif obj_type == "gie_manager":
+                if not obj.closed:
+                    self._close_interactive_instance(
+                        op=op_def_pb2.OpDef(
+                            op=types_pb2.CLOSE_INTERACTIVE_QUERY, parents=[key]
+                        )
+                    )
+
+            elif obj_type == "gle_manager":
+                if not obj.closed:
+                    self._close_learning_instance(
+                        op=op_def_pb2.OpDef(
+                            op=types_pb2.CLOSE_LEARNING_INSTANCE,
+                            parents=[key],
+                        )
                     )
 
             if unload_type:

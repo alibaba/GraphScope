@@ -104,12 +104,12 @@ class LocalLauncher(Launcher):
         self._instance_id = instance_id
         self._timeout_seconds = timeout_seconds
 
-        if "GRAPHSCOPE_PREFIX" not in os.environ:
+        if "GRAPHSCOPE_HOME" not in os.environ:
             # only launch GAE
-            logger.info("Can't found GRAPHSCOPE_PREFIX in environment.")
-            self._graphscope_prefix = None
+            logger.info("Can't found GRAPHSCOPE_HOME in environment.")
+            self._graphscope_home = None
         else:
-            self._graphscope_prefix = os.environ["GRAPHSCOPE_PREFIX"]
+            self._graphscope_home = os.environ["GRAPHSCOPE_HOME"]
 
         if "GRAPHSCOPE_RUNTIME" not in os.environ:
             self._graphscope_runtime_workspace = os.path.join(
@@ -151,7 +151,7 @@ class LocalLauncher(Launcher):
 
     def stop(self, is_dangling=False):
         if not self._closed:
-            if self._graphscope_prefix is not None:
+            if self._graphscope_home is not None:
                 self._stop_interactive_engine_service()
             self._stop_vineyard()
             self._stop_analytical_engine()
@@ -235,10 +235,11 @@ class LocalLauncher(Launcher):
 
     def _launch_graph_manager(self):
         port = self._get_free_port(self._hosts.split(",")[0])
-        gm_sh = os.path.join(self._graphscope_prefix, "bin", "start.sh")
+        gm_sh = os.path.join(self._graphscope_home, "bin", "giectl")
         cmd = [
             "bash",
             gm_sh,
+            "start_manager_service",
             "local",
             str(port),
             self._instance_id,
@@ -322,7 +323,7 @@ class LocalLauncher(Launcher):
 
     def _create_services(self):
         # create GIE graph manager
-        if self._graphscope_prefix is not None:
+        if self._graphscope_home is not None:
             self._create_interactive_engine_service()
         # create vineyard
         self._create_vineyard()
@@ -425,8 +426,8 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._graph_manager_process)
         self._graph_manager_endpoint = None
 
-        gm_stop_sh = os.path.join(self._graphscope_prefix, "bin", "stop.sh")
-        cmd = ["bash", gm_stop_sh, "local", self._instance_id]
+        gm_stop_sh = os.path.join(self._graphscope_home, "bin", "giectl")
+        cmd = ["bash", gm_stop_sh, "stop_manager_service", "local", self._instance_id]
 
         process = subprocess.Popen(  # noqa: F841
             cmd,

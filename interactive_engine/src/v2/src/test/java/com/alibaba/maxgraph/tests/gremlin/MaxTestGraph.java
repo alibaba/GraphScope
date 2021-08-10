@@ -52,6 +52,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 @Graph.OptIn("com.alibaba.maxgraph.tests.gremlin.GremlinStandardTestSuite")
@@ -350,6 +351,12 @@ import java.util.Properties;
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesTest",
         method = "g_injectXg_VX1X_propertiesXnameX_nextX_value",
         reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest",
+        method = "g_V_hasLabelXpersonX_order_byXageX_skipX1X_valuesXnameX",
+        reason = "Memory allocation bug, see Issue: https://github.com/alibaba/GraphScope/issues/653")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest",
+        method = "g_V_hasLabelXpersonX_order_byXageX_valuesXnameX_skipX1X",
+        reason = "Memory allocation bug, see Issue: https://github.com/alibaba/GraphScope/issues/653")
 public class MaxTestGraph implements Graph {
     private static final Logger logger = LoggerFactory.getLogger(MaxTestGraph.class);
 
@@ -360,16 +367,13 @@ public class MaxTestGraph implements Graph {
     private Cluster cluster;
     private com.alibaba.maxgraph.v2.sdk.Client sdkClient;
 
-    public static final String GRAPH_CONFIG_FILE = "graph.config.file";
-    public static final String GRAPH_DATA_DIR = "graph.data.dir";
-
     public MaxTestGraph(Configs configs) {
         try {
             this.maxNode = new MaxNode(configs);
             this.maxNode.start();
             int port = FrontendConfig.GREMLIN_PORT.get(configs);
             this.cluster = createCluster("localhost", port);
-            this.sdkClient = new com.alibaba.maxgraph.v2.sdk.Client("localhost", 55555);
+            this.sdkClient = new com.alibaba.maxgraph.v2.sdk.Client("localhost", 55556);
             this.remoteConnection = DriverRemoteConnection.using(cluster);
         } catch (Throwable e) {
             this.closeGraph();
@@ -380,17 +384,11 @@ public class MaxTestGraph implements Graph {
     public static MaxTestGraph open(final Configuration conf) throws Exception {
         if (INSTANCE == null) {
             logger.info("open new MaxTestGraph");
-            String configFile = conf.getString(GRAPH_CONFIG_FILE);
-            Properties properties = new Properties();
-            try (InputStream ins = Thread.currentThread().getContextClassLoader().getResourceAsStream(configFile)) {
-                properties.load(ins);
-            }
             String log4rsPath =
                     Paths.get(Thread.currentThread().getContextClassLoader().getResource("log4rs.yml").toURI()).toString();
-            Configs configs = Configs.newBuilder(properties)
-                    .put(StoreConfig.STORE_DATA_PATH.getKey(), conf.getString(GRAPH_DATA_DIR))
-                    .put(CommonConfig.LOG4RS_CONFIG.getKey(), log4rsPath)
-                    .build();
+            Configs.Builder builder = Configs.newBuilder();
+            conf.getKeys().forEachRemaining((k) -> builder.put(k, conf.getString(k)));
+            Configs configs = builder.put(CommonConfig.LOG4RS_CONFIG.getKey(), log4rsPath).build();
             INSTANCE = new MaxTestGraph(configs);
         }
         return INSTANCE;
@@ -494,5 +492,9 @@ public class MaxTestGraph implements Graph {
     @Override
     public Configuration configuration() {
         return null;
+    }
+
+    public MaxNode getMaxNode() {
+        return (MaxNode) maxNode;
     }
 }

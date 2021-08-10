@@ -17,5 +17,7 @@ use crate::v2::errors::Error;
 
 pub mod api;
 pub mod errors;
+pub mod wrapper;
+mod multi_version_graph;
 
 pub type Result<T> = std::result::Result<T, Error>;

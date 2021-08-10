@@ -55,6 +55,8 @@ enum Code {
 
   UNIMPLEMENTED_ERROR = 13;
 
+  GREMLIN_QUERY_ERROR = 14;
+
   // Errors raised by analytical engine
   ANALYTICAL_ENGINE_INTERNAL_ERROR = 30;
 

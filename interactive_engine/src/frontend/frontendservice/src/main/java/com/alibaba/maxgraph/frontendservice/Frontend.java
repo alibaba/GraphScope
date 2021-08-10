@@ -51,26 +51,26 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Frontend {
     private static final Logger LOG = LoggerFactory.getLogger(Frontend.class);
-    private InstanceConfig instanceConfig;
-    private ClientManager clientManager;
+    protected InstanceConfig instanceConfig;
+    protected ClientManager clientManager;
     private Endpoint endpoint;
-    private GremlinExecutor gremlinExecutor;
-    private TinkerMaxGraph graph;
+    protected GremlinExecutor gremlinExecutor;
+    protected TinkerMaxGraph graph;
     private long currentExecutorVersion = 0L;
 
     private ScheduledExecutorService hbSchedule;
 
     private MemoryMonitor memoryMonitor;
 
-    private MaxGraphServer graphGremlinServer;
+    protected MaxGraphServer graphGremlinServer;
 
-    private RemoteGraph remoteGraph;
+    protected RemoteGraph remoteGraph;
     private PreparedQueryManager preparedQueryManager;
 
-    private int gremlinServerPort;
+    protected int gremlinServerPort;
     private int roleId;
 
-    private FrontendQueryManager queryManager;
+    protected FrontendQueryManager queryManager;
 
     private AtomicReference<Long> aliveId = new AtomicReference<>(0L);
 
@@ -102,7 +102,7 @@ public class Frontend {
         this.preparedQueryManager = null;
     }
 
-    private void initAndStartGremlinServer() throws Exception {
+    protected void initAndStartGremlinServer() throws Exception {
         SchemaFetcher schemaFetcher;
         String vineyardSchemaPath = this.instanceConfig.getVineyardSchemaPath();
 
@@ -169,7 +169,7 @@ public class Frontend {
         }
     }
 
-    private void startHBThread() {
+    protected void startHBThread() {
         hbSchedule = new ScheduledThreadPoolExecutor(1,
                 CommonUtil.createFactoryWithDefaultExceptionHandler("HB_THREAD", LOG));
         hbSchedule.scheduleWithFixedDelay(() -> {
@@ -224,7 +224,7 @@ public class Frontend {
         this.gremlinExecutor = graphGremlinServer.getGremlinExecutor();
     }
 
-    private void startRpcService() throws Exception {
+    protected void startRpcService() throws Exception {
         String hostName = InetAddress.getLocalHost().getHostAddress();
         int threadCount = this.instanceConfig.getFrontendGrpcThreadCount();
         LOG.info("rpc server thread count: " + threadCount);

@@ -20,12 +20,19 @@ import datetime
 import logging
 import random
 from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 from enum import Enum
 
-from gremlin_python.driver.client import Client
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
 
+from graphscope.config import GSConfig as gs_config
+from graphscope.framework.dag import DAGNode
+from graphscope.framework.dag_utils import close_interactive_query
+from graphscope.framework.dag_utils import create_interactive_query
+from graphscope.framework.dag_utils import fetch_gremlin_result
+from graphscope.framework.dag_utils import gremlin_query
+from graphscope.framework.dag_utils import gremlin_to_subgraph
 from graphscope.framework.loader import Loader
 
 logger = logging.getLogger("graphscope")
@@ -38,6 +45,170 @@ class InteractiveQueryStatus(Enum):
     Running = 1
     Failed = 2
     Closed = 3
+
+
+class ResultSetDAGNode(DAGNode):
+    """A class represents a result set node in a DAG.
+
+    This is a wrapper for :class:`gremlin_python.driver.resultset.ResultSet`,
+    and you can get the result by :method:`one()` or :method:`all()`.
+    """
+
+    def __init__(self, dag_node, op):
+        self._session = dag_node.session
+        self._op = op
+        # add op to dag
+        self._session.dag.add_op(self._op)
+
+    def one(self):
+        """See details in :method:`gremlin_python.driver.resultset.ResultSet.one`"""
+        # avoid circular import
+        from graphscope.framework.context import ResultDAGNode
+
+        op = fetch_gremlin_result(self, "one")
+        return ResultDAGNode(self, op)
+
+    def all(self):
+        """See details in :method:`gremlin_python.driver.resultset.ResultSet.all`
+
+        Note that this method is equal to `ResultSet.all().result()`
+        """
+        # avoid circular import
+        from graphscope.framework.context import ResultDAGNode
+
+        op = fetch_gremlin_result(self, "all")
+        return ResultDAGNode(self, op)
+
+
+class ResultSet(object):
+    def __init__(self, result_set_node):
+        self._result_set_node = result_set_node
+        self._session = self._result_set_node.session
+        # copy and set op evaluated
+        self._result_set_node.op = deepcopy(self._result_set_node.op)
+        self._result_set_node.evaluated = True
+        self._session.dag.add_op(self._result_set_node.op)
+
+    def one(self):
+        return self._session._wrapper(self._result_set_node.one())
+
+    def all(self):
+        return self._session._wrapper(self._result_set_node.all())
+
+
+class InteractiveQueryDAGNode(DAGNode):
+    """A class represents an interactive query node in a DAG.
+
+    The following example demonstrates its usage:
+
+    .. code:: python
+
+        >>> # lazy node
+        >>> import graphscope as gs
+        >>> sess = gs.session(mode="lazy")
+        >>> g = sess.g() # <graphscope.framework.graph.GraphDAGNode object>
+        >>> ineractive = sess.gremlin(g)
+        >>> print(ineractive) # <graphscope.interactive.query.InteractiveQueryDAGNode object>
+        >>> rs = ineractive.execute("g.V()")
+        >>> print(rs) # <graphscope.ineractive.query.ResultSetDAGNode object>
+        >>> r = rs.one()
+        >>> print(r) # <graphscope.framework.context.ResultDAGNode>
+        >>> print(sess.run(r))
+        [2]
+        >>> subgraph = ineractive.subgraph("xxx")
+        >>> print(subgraph) # <graphscope.framework.graph.GraphDAGNode object>
+        >>> g2 = sess.run(subgraph)
+        >>> print(g2) # <graphscope.framework.graph.Graph object>
+    """
+
+    def __init__(self, session, graph, engine_params=None, enable_gaia=False):
+        """
+        Args:
+            session (:class:`Session`): instance of GraphScope session.
+            graph (:class:`graphscope.framework.graph.GraphDAGNode`):
+                A graph instance that the gremlin query on.
+            engine_params (dict, optional):
+                Configuration to startup the interactive engine. See detail in:
+                `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`
+        """
+        self._session = session
+        self._graph = graph
+        self._engine_params = engine_params
+        self._enable_gaia = enable_gaia
+        self._query_gaia = False
+        self._op = create_interactive_query(
+            self._graph,
+            self._engine_params,
+            gs_config.k8s_gie_gremlin_server_cpu,
+            gs_config.k8s_gie_gremlin_server_mem,
+            enable_gaia,
+        )
+        # add op to dag
+        self._session.dag.add_op(self._op)
+
+    def clone(self):
+        cls = InteractiveQueryDAGNode.__new__(InteractiveQueryDAGNode)
+        cls._session = self._session
+        cls._graph = self._graph
+        cls._engine_params = self._engine_params
+        cls._enable_gaia = self._enable_gaia
+        cls._query_gaia = self._query_gaia
+        cls._op = self._op
+        return cls
+
+    def execute(self, query, request_options=None):
+        """Execute gremlin querying scripts.
+
+        Args:
+            query (str): Scripts that written in gremlin quering language.
+            request_options (dict, optional): Gremlin request options. format:
+            {
+                "engine": "gae"
+            }
+
+        Returns:
+            :class:`graphscope.framework.context.ResultDAGNode`:
+                A result holds the gremlin result, evaluated in eager mode.
+        """
+        op = gremlin_query(self, query, request_options, self._query_gaia)
+        return ResultSetDAGNode(self, op)
+
+    def subgraph(self, gremlin_script, request_options=None):
+        """Create a subgraph, which input is the result of the execution of `gremlin_script`.
+
+        Any gremlin script that output a set of edges can be used to contruct a subgraph.
+
+        Args:
+            gremlin_script (str): Gremlin script to be executed.
+            request_options (dict, optional): Gremlin request options. format:
+            {
+                "engine": "gae"
+            }
+
+        Returns:
+            :class:`graphscope.framework.graph.GraphDAGNode`:
+                A new graph constructed by the gremlin output, that also stored in vineyard.
+        """
+        # avoid circular import
+        from graphscope.framework.graph import GraphDAGNode
+
+        op = gremlin_to_subgraph(
+            self,
+            gremlin_script=gremlin_script,
+            request_options=request_options,
+            oid_type=self._graph._oid_type,
+        )
+        return GraphDAGNode(self._session, op)
+
+    def close(self):
+        """Close interactive engine and release the resources.
+
+        Returns:
+            :class:`graphscope.interactive.query.ClosedInteractiveQuery`
+                Evaluated in eager mode.
+        """
+        op = close_interactive_query(self)
+        return ClosedInteractiveQuery(self._session, op)
 
 
 class InteractiveQuery(object):
@@ -55,30 +226,38 @@ class InteractiveQuery(object):
     to get a `GraphTraversalSource` for further traversal.
     """
 
-    def __init__(self, session, object_id, front_ip=None, front_port=None):
+    def __init__(
+        self, interactive_query_node=None, frontend_endpoint=None, object_id=None
+    ):
+        """Construct a :class:`InteractiveQuery` object."""
+
         self._status = InteractiveQueryStatus.Initializing
-        self._session = session
+        self._graph_url = None
+        # graph object id stored in vineyard
         self._object_id = object_id
-        self._error_msg = ""
+        # interactive_query_node is None used for create a interative query
+        # implicitly in eager mode
+        if interactive_query_node is not None:
+            self._interactive_query_node = interactive_query_node
+            self._session = self._interactive_query_node.session
+            # copy and set op evaluated
+            self._interactive_query_node.op = deepcopy(self._interactive_query_node.op)
+            self._interactive_query_node.evaluated = True
+            self._session.dag.add_op(self._interactive_query_node.op)
+        if frontend_endpoint is not None:
+            frontend_endpoint = frontend_endpoint.split(",")
+            self._graph_url = [
+                f"ws://{endpoint}/gremlin" for endpoint in frontend_endpoint
+            ]
 
-        if front_ip is not None and front_port is not None:
-            self._graph_url = "ws://%s:%d/gremlin" % (front_ip, front_port)
-            self._client = Client(self._graph_url, "g")
-        else:
-            self._graph_url = None
-            self._client = None
-
-    def __repr__(self):
-        return f"graphscope.InteractiveQuery <{self._graph_url}>"
-
-    @property
-    def object_id(self):
-        """Get the vineyard object id of graph.
-
-        Returns:
-            str: object id
-        """
-        return self._object_id
+    def clone(self):
+        ret = InteractiveQuery()
+        ret._status = self._status
+        ret._graph_url = self._graph_url
+        ret._object_id = self._object_id
+        ret._interactive_query_node = self._interactive_query_node.clone()
+        ret._session = self._interactive_query_node.session
+        return ret
 
     @property
     def graph_url(self):
@@ -88,6 +267,10 @@ class InteractiveQuery(object):
     @property
     def status(self):
         return self._status
+
+    @property
+    def object_id(self):
+        return self._object_id
 
     @status.setter
     def status(self, value):
@@ -101,83 +284,40 @@ class InteractiveQuery(object):
     def error_msg(self, error_msg):
         self._error_msg = error_msg
 
-    def set_frontend(self, front_ip, front_port):
-        self._graph_url = "ws://%s:%d/gremlin" % (front_ip, front_port)
-        self._client = Client(self._graph_url, "g")
-
     def closed(self):
         """Return if the current instance is closed."""
         return self._status == InteractiveQueryStatus.Closed
 
-    def subgraph(self, gremlin_script):
-        """Create a subgraph, which input is the result of the execution of `gremlin_script`.
-        Any gremlin script that will output a set of edges can be used to contruct a subgraph.
-        Args:
-            gremlin_script (str): gremlin script to be executed
-
-        Raises:
-            RuntimeError: If the interactive instance is not running.
-
-        Returns:
-            :class:`Graph`: constructed subgraph. which is also stored in vineyard.
-        """
+    def gaia(self):
         if self._status != InteractiveQueryStatus.Running:
             raise RuntimeError(
                 "Interactive query is unavailable with %s status.", str(self._status)
             )
-
-        now_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        random_num = random.randint(0, 10000000)
-        graph_name = "%s_%s" % (str(now_time), str(random_num))
-
-        # create graph handle by name
-        self._client.submit(
-            "g.createGraph('%s').with('graphType', 'vineyard')" % graph_name
-        ).all().result()
-
-        # start a thread to launch the graph
-        def load_subgraph(name):
-            import vineyard
-
-            graph = self._session.load_from(
-                vertices=[Loader(vineyard.ObjectName("__%s_vertex_stream" % name))],
-                edges=[Loader(vineyard.ObjectName("__%s_edge_stream" % name))],
-                generate_eid=False,
+        if not self._interactive_query_node._enable_gaia:
+            raise NotImplementedError(
+                "GAIA not enabled. Enable gaia with `session(enable_gaia=True)`"
             )
-            logger.info("subgraph has been loaded")
-            return graph
+        cls = self.clone()
+        cls._interactive_query_node._query_gaia = True
+        return cls
 
-        pool = ThreadPoolExecutor()
-        subgraph_task = pool.submit(load_subgraph, (graph_name,))
-
-        # add subgraph vertices and edges
-        subgraph_script = "%s.subgraph('%s').outputVineyard('%s')" % (
-            gremlin_script,
-            graph_name,
-            graph_name,
+    def subgraph(self, gremlin_script, request_options=None):
+        if self._status != InteractiveQueryStatus.Running:
+            raise RuntimeError(
+                "Interactive query is unavailable with %s status.", str(self._status)
+            )
+        return self._session._wrapper(
+            self._interactive_query_node.subgraph(gremlin_script, request_options)
         )
-        self._client.submit(subgraph_script).all().result()
 
-        return subgraph_task.result()
-
-    def execute(self, query):
-        """Execute gremlin querying scripts.
-        Behind the scene, it uses `gremlinpython` to send the query.
-
-        Args:
-            query (str): Scripts that written in gremlin quering language.
-
-        Raises:
-            RuntimeError: If the interactive script is not running.
-
-        Returns:
-            execution results
-        """
+    def execute(self, query, request_options=None):
         if self._status != InteractiveQueryStatus.Running:
             raise RuntimeError(
                 "Interactive query is unavailable with %s status.", str(self._status)
             )
-        return self._client.submit(query)
+        return self._session._wrapper(
+            self._interactive_query_node.execute(query, request_options)
+        )
 
     def traversal_source(self):
         """Create a GraphTraversalSource and return.
@@ -205,10 +345,37 @@ class InteractiveQuery(object):
             raise RuntimeError(
                 "Interactive query is unavailable with %s status.", str(self._status)
             )
-        return traversal().withRemote(DriverRemoteConnection(self._graph_url, "g"))
+        ret = traversal().withRemote(DriverRemoteConnection(self._graph_url[0], "g"))
+        if len(self.graph_url) == 1:
+
+            def gaia():
+                raise NotImplementedError(
+                    "GAIA not enabled. Enable gaia with `session(enable_gaia=True)`"
+                )
+
+        else:
+
+            def gaia():
+                return traversal().withRemote(
+                    DriverRemoteConnection(self._graph_url[1], "g")
+                )
+
+        setattr(ret, "gaia", gaia)
+        return ret
 
     def close(self):
         """Close interactive instance and release resources"""
-        if not self.closed():
+        if not self.closed() and not self._session.closed:
+            self._session._wrapper(self._interactive_query_node.close())
             self._session._close_interactive_instance(self)
             self._status = InteractiveQueryStatus.Closed
+
+
+class ClosedInteractiveQuery(DAGNode):
+    """Closed interactive query node in a DAG."""
+
+    def __init__(self, session, op):
+        self._session = session
+        self._op = op
+        # add op to dag
+        self._session.dag.add_op(self._op)

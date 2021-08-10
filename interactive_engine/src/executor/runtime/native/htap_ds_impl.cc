@@ -505,6 +505,9 @@ void get_edge_properties(FRAGMENT_TYPE* frag, LabelId label, int64_t offset,
 }
 
 int properties_next(PropertiesIteratorImpl* iter, Property* p_out) {
+  if (iter==nullptr) {
+    return -1;
+  }
   while (iter->col_id < iter->col_num &&
          iter->table->field(iter->col_id)->type() == arrow::null()) {
     ++iter->col_id;

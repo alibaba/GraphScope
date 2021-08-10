@@ -29,6 +29,7 @@ import com.alibaba.maxgraph.v2.store.executor.ExecutorEngine;
 import com.alibaba.maxgraph.v2.store.executor.ExecutorService;
 import com.alibaba.maxgraph.v2.store.executor.gaia.GaiaEngine;
 import com.alibaba.maxgraph.v2.store.executor.gaia.GaiaService;
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.NameResolver;
 
 import java.io.IOException;
@@ -42,7 +43,6 @@ public class Store extends NodeBase {
     private WriterAgent writerAgent;
     private RpcServer rpcServer;
     private ExecutorService executorService;
-    private GaiaService gaiaService;
 
     public Store(Configs configs) {
         super(configs);
@@ -63,8 +63,6 @@ public class Store extends NodeBase {
         this.rpcServer = new RpcServer(configs, localNodeProvider, storeWriteService, storeSchemaService,
                 storeIngestService);
         this.executorService = new ExecutorService(configs, storeService, discoveryFactory, this.metaService);
-        ExecutorEngine executorEngine = new GaiaEngine(configs, discoveryFactory);
-        this.gaiaService = new GaiaService(configs, executorEngine, this.storeService, this.metaService);
     }
 
     @Override
@@ -91,12 +89,10 @@ public class Store extends NodeBase {
         this.discovery.start();
         this.channelManager.start();
         this.executorService.start();
-        this.gaiaService.start();
     }
 
     @Override
     public void close() throws IOException {
-        this.gaiaService.stop();
         this.executorService.close();
         this.rpcServer.stop();
         this.writerAgent.stop();
@@ -112,5 +108,10 @@ public class Store extends NodeBase {
         Store store = new Store(conf);
         NodeLauncher nodeLauncher = new NodeLauncher(store);
         nodeLauncher.start();
+    }
+
+    @VisibleForTesting
+    public StoreService getStoreService() {
+        return storeService;
     }
 }
