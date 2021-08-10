@@ -17,6 +17,7 @@ limitations under the License.
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_VERTEX_H_
 
 #include <map>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -97,6 +98,35 @@ class LouvainVertex : public PregelVertex<FRAG_T, VD_T, MD_T> {
       return this->fake_edges().at(dst_id);
     }
     return edata_t();
+  }
+
+  edata_t get_edge_values(const std::set<vid_t>& dst_ids) {
+    edata_t ret = 0;
+    if (!this->use_fake_edges()) {
+      for (auto& edge : this->incoming_edges()) {
+        auto gid = this->fragment_->Vertex2Gid(edge.get_neighbor());
+        if (dst_ids.find(gid) != dst_ids.end()) {
+          ret += static_cast<edata_t>(edge.get_data());
+        }
+      }
+      for (auto& edge : this->outgoing_edges()) {
+        auto gid = this->fragment_->Vertex2Gid(edge.get_neighbor());
+        if (dst_ids.find(gid) != dst_ids.end()) {
+          ret += static_cast<edata_t>(edge.get_data());
+        }
+      }
+    } else {
+      auto edges = this->fake_edges();
+      for (auto gid : dst_ids) {
+        if (edges.find(gid) != edges.end()) {
+          ret += edges.at(gid);
+        } else {
+          LOG(ERROR) << "Warning: Cannot find a edge from " << this->id()
+                     << " to " << gid;
+        }
+      }
+    }
+    return ret;
   }
 
   void set_fake_edges(std::map<vid_t, edata_t>&& edges) {

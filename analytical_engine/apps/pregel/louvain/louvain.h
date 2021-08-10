@@ -17,6 +17,7 @@
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_H_
 
 #include <map>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -336,11 +337,13 @@ class PregelLouvain
                                 const grape::IteratorPair<md_t*>& messages) {
     auto& state = vertex.state();
     edata_t k_i_in = state.internal_weight;
+    std::set<vid_t> source_ids;
     for (auto& m : messages) {
       if (m.community_id == state.community) {
-        k_i_in += vertex.get_edge_value(m.source_id);
+        source_ids.insert(m.source_id);
       }
     }
+    k_i_in += vertex.get_edge_values(source_ids);
     edata_t sigma_tot = state.community_sigma_total;
     edata_t m2 = getTotalEdgeWeight(context, vertex);
     edata_t k_i = state.node_weight + state.internal_weight;
