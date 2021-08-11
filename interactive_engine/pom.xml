@@ -55,7 +55,7 @@
         <kafka.version>2.5.0</kafka.version>
         <kafka.junit.version>3.2.1</kafka.junit.version>
         <jna.version>5.5.0</jna.version>
-        <junit.jupiter.version>5.6.2</junit.jupiter.version>
+        <junit.jupiter.version>5.6.3</junit.jupiter.version>
         <mockito.version>3.4.4</mockito.version>
         <rocksdb.version>5.15.10</rocksdb.version>
         <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
