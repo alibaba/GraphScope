@@ -15,7 +15,7 @@
 
 use crate::api::scope::{MergedScopeDelta, ScopeDelta};
 use crate::channel_id::ChannelInfo;
-use crate::communication::decorator::DataPush;
+use crate::communication::decorator::MicroBatchPush;
 use crate::communication::output::output::OutputHandle;
 use crate::communication::output::tee::{ChannelPush, Tee};
 use crate::communication::output::{OutputBuilder, OutputProxy, RefWrapOutput};
@@ -43,7 +43,7 @@ impl<D: Data> OutputBuilderImpl<D> {
     }
 
     #[inline]
-    pub fn set_push(&self, ch_info: ChannelInfo, delta: MergedScopeDelta, push: DataPush<D>) {
+    pub fn set_push(&self, ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>) {
         let push = ChannelPush::new(ch_info, delta, push);
         self.shared.borrow_mut()[self.cursor] = Some(push);
     }

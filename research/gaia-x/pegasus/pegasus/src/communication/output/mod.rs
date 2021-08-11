@@ -44,13 +44,12 @@ pub trait OutputBuilder: AsAny {
 
 mod builder;
 mod output;
-mod session;
 mod tee;
 use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
 use crate::communication::output::output::OutputHandle;
 use crate::progress::EndSignal;
 pub(crate) use builder::OutputBuilderImpl;
-pub use session::OutputSession;
+pub use output::OutputSession;
 use std::any::Any;
 use std::cell::{Ref, RefCell};
 use std::collections::VecDeque;

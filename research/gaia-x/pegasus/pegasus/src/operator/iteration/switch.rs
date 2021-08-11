@@ -3,7 +3,7 @@ use crate::communication::input::{new_input_session, InputProxy};
 use crate::communication::output::{new_output, OutputProxy};
 use crate::communication::Output;
 use crate::config::LOOP_OPT;
-use crate::data::{DataSet, MarkedData};
+use crate::data::{MarkedData, MicroBatch};
 use crate::errors::JobExecError;
 use crate::graph::Port;
 use crate::operator::{Notifiable, OperatorCore};
@@ -121,7 +121,7 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
 }
 
 fn switch<D: Data>(
-    dataset: &mut DataSet<D>, cond: &IterCondition<D>, leave: &Output<D>, enter: &Output<D>,
+    dataset: &mut MicroBatch<D>, cond: &IterCondition<D>, leave: &Output<D>, enter: &Output<D>,
 ) -> Result<(), JobExecError> {
     if !dataset.is_last() {
         // not last batch;

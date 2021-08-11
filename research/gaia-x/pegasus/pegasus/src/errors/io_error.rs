@@ -14,10 +14,10 @@
 //! limitations under the License.
 
 use crate::channel_id::ChannelId;
+use std::any::Any;
 use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::io;
-use std::any::Any;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ChannelErrorKind {
@@ -60,7 +60,7 @@ pub struct IOError {
     kind: IOErrorKind,
     cause: Option<ErrorCause>,
     origin: Option<String>,
-    resource: Option<Box<dyn Any + Send>>
+    resource: Option<Box<dyn Any + Send>>,
 }
 
 impl IOError {

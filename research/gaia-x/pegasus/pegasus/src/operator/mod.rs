@@ -21,7 +21,7 @@ use crate::communication::input::{new_input, InputBlockGuard, InputProxy};
 use crate::communication::output::{OutputBuilder, OutputBuilderImpl, OutputProxy};
 use crate::config::BRANCH_OPT;
 use crate::config::CANCEL_DESC;
-use crate::data::DataSet;
+use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPull, GeneralPush};
 use crate::errors::{IOResult, JobExecError};
 use crate::event::emitter::EventEmitter;
@@ -432,8 +432,8 @@ impl OperatorBuilder {
     }
 
     pub(crate) fn add_input<T: Data>(
-        &mut self, ch_info: ChannelInfo, pull: GeneralPull<DataSet<T>>,
-        notify: Option<GeneralPush<DataSet<T>>>, event_emitter: &EventEmitter, delta: MergedScopeDelta,
+        &mut self, ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<T>>,
+        notify: Option<GeneralPush<MicroBatch<T>>>, event_emitter: &EventEmitter, delta: MergedScopeDelta,
     ) {
         assert_eq!(ch_info.target_port.port, self.inputs.len());
         let input = new_input(ch_info, pull, event_emitter, delta);

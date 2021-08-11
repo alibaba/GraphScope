@@ -17,7 +17,7 @@ use crate::api::scope::MergedScopeDelta;
 use crate::channel_id::ChannelInfo;
 use crate::communication::input::{InputProxy, InputSession};
 use crate::config::CANCEL_DESC;
-use crate::data::DataSet;
+use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPull, Pull};
 use crate::errors::IOResult;
 use crate::event::emitter::EventEmitter;
@@ -45,7 +45,7 @@ impl Drop for InputBlockGuard {
 
 pub struct InputHandle<D: Data> {
     pub ch_info: ChannelInfo,
-    pull: GeneralPull<DataSet<D>>,
+    pull: GeneralPull<MicroBatch<D>>,
     stash_index: TidyTagMap<StashedQueue<D>>,
     current_end: VecDeque<EndSignal>,
     parent_ends: VecDeque<EndSignal>,
@@ -57,7 +57,7 @@ pub struct InputHandle<D: Data> {
 
 impl<D: Data> InputHandle<D> {
     pub fn new(
-        ch_info: ChannelInfo, pull: GeneralPull<DataSet<D>>, event_emitter: EventEmitter,
+        ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<D>>, event_emitter: EventEmitter,
         delta: MergedScopeDelta,
     ) -> Self {
         let scope_level = ch_info.scope_level;
@@ -87,7 +87,7 @@ impl<D: Data> InputHandle<D> {
         }
     }
 
-    pub(crate) fn next(&mut self) -> IOResult<Option<DataSet<D>>> {
+    pub(crate) fn next(&mut self) -> IOResult<Option<MicroBatch<D>>> {
         if self.stash_index.is_empty() {
             if let Some(dataset) = self.pull()? {
                 return Ok(Some(dataset));
@@ -120,7 +120,7 @@ impl<D: Data> InputHandle<D> {
         }
     }
 
-    pub(crate) fn next_of(&mut self, tag: &Tag) -> IOResult<Option<DataSet<D>>> {
+    pub(crate) fn next_of(&mut self, tag: &Tag) -> IOResult<Option<MicroBatch<D>>> {
         let mut stash_index = std::mem::replace(&mut self.stash_index, Default::default());
         if let Some(stash) = stash_index.get_mut(tag) {
             if !stash.is_block() {
@@ -166,7 +166,7 @@ impl<D: Data> InputHandle<D> {
         }
     }
 
-    fn stash_back(&mut self, dataset: DataSet<D>) {
+    fn stash_back(&mut self, dataset: MicroBatch<D>) {
         if let Some(stash) = self.stash_index.get_mut(&dataset.tag) {
             stash.stash(dataset);
         } else {
@@ -177,7 +177,7 @@ impl<D: Data> InputHandle<D> {
         }
     }
 
-    pub(crate) fn stash_block_front(&mut self, dataset: DataSet<D>) -> InputBlockGuard {
+    pub(crate) fn stash_block_front(&mut self, dataset: MicroBatch<D>) -> InputBlockGuard {
         let tag = dataset.tag.clone();
         if let Some(queue) = self.stash_index.get_mut(&dataset.tag) {
             queue.push_front(dataset);
@@ -227,12 +227,12 @@ impl<D: Data> InputHandle<D> {
     }
 
     #[inline]
-    fn pull(&mut self) -> IOResult<Option<DataSet<D>>> {
+    fn pull(&mut self) -> IOResult<Option<MicroBatch<D>>> {
         if self.data_exhaust {
             return Ok(None);
         }
         loop {
-            let result: IOResult<Option<DataSet<D>>> = self.pull.next();
+            let result: IOResult<Option<MicroBatch<D>>> = self.pull.next();
             match result {
                 Ok(Some(mut dataset)) => {
                     if self.is_skipped(&dataset.tag) {
@@ -255,7 +255,7 @@ impl<D: Data> InputHandle<D> {
                     } else {
                         if let Some(mut end) = dataset.take_end() {
                             end.update();
-                            dataset.set_last(end);
+                            dataset.set_end(end);
                             if dataset.tag.is_root() {
                                 debug_worker!("channel {:?} exhaust;", self.ch_info.id);
                                 self.data_exhaust = true;
@@ -477,7 +477,7 @@ impl<D: Data> InputProxy for RefWrapInput<D> {
 
 struct StashedQueue<D> {
     block_cnt: Option<Arc<AtomicUsize>>,
-    queue: VecDeque<DataSet<D>>,
+    queue: VecDeque<MicroBatch<D>>,
 }
 
 impl<D> StashedQueue<D> {
@@ -495,7 +495,7 @@ impl<D> StashedQueue<D> {
         }
     }
 
-    fn stash(&mut self, dataset: DataSet<D>) {
+    fn stash(&mut self, dataset: MicroBatch<D>) {
         if dataset.is_empty() {
             if dataset.is_last() {
                 if let Some(last) = self.queue.back_mut() {
@@ -511,7 +511,7 @@ impl<D> StashedQueue<D> {
 }
 
 impl<D> Deref for StashedQueue<D> {
-    type Target = VecDeque<DataSet<D>>;
+    type Target = VecDeque<MicroBatch<D>>;
 
     fn deref(&self) -> &Self::Target {
         &self.queue

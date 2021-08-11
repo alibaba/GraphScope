@@ -1,8 +1,8 @@
 use crate::channel_id::ChannelInfo;
-use crate::communication::decorator::evented::{ControlPush};
+use crate::communication::decorator::evented::EventEmitPush;
 use crate::communication::decorator::ScopeStreamPush;
 use crate::communication::IOResult;
-use crate::data::DataSet;
+use crate::data::MicroBatch;
 use crate::data_plane::GeneralPush;
 use crate::event::emitter::EventEmitter;
 use crate::graph::Port;
@@ -13,21 +13,21 @@ use std::sync::Arc;
 
 pub struct AggregateBatchPush<D: Data> {
     pub ch_info: ChannelInfo,
-    data_push: ControlPush<D>,
-    event_push: Vec<ControlPush<D>>,
+    data_push: EventEmitPush<D>,
+    event_push: Vec<EventEmitPush<D>>,
     has_cycles: Arc<AtomicBool>,
 }
 
 impl<D: Data> AggregateBatchPush<D> {
     pub fn new(
         info: ChannelInfo, source_worker: u32, target: u32, has_cycles: Arc<AtomicBool>,
-        push: Vec<GeneralPush<DataSet<D>>>, emitter: EventEmitter,
+        push: Vec<GeneralPush<MicroBatch<D>>>, emitter: EventEmitter,
     ) -> Self {
         let mut event_push = Vec::with_capacity(push.len());
         for (t, p) in push.into_iter().enumerate() {
             let target_worker = t as u32;
             let has_cycles = has_cycles.clone();
-            let p = ControlPush::new(info, source_worker, target_worker, has_cycles, p, emitter.clone());
+            let p = EventEmitPush::new(info, source_worker, target_worker, has_cycles, p, emitter.clone());
             event_push.push(p);
         }
 
@@ -36,16 +36,16 @@ impl<D: Data> AggregateBatchPush<D> {
     }
 }
 
-impl<T: Data> ScopeStreamPush<DataSet<T>> for AggregateBatchPush<T> {
+impl<T: Data> ScopeStreamPush<MicroBatch<T>> for AggregateBatchPush<T> {
     fn port(&self) -> Port {
         self.ch_info.source_port
     }
 
-    fn push(&mut self, tag: &Tag, msg: DataSet<T>) -> IOResult<()> {
+    fn push(&mut self, tag: &Tag, msg: MicroBatch<T>) -> IOResult<()> {
         self.data_push.push(tag, msg)
     }
 
-    fn push_last(&mut self, msg: DataSet<T>, end: EndSignal) -> IOResult<()> {
+    fn push_last(&mut self, msg: MicroBatch<T>, end: EndSignal) -> IOResult<()> {
         if msg.tag.is_root() {
             for p in self.event_push.iter_mut() {
                 p.notify_end(end.clone())?;
@@ -79,5 +79,3 @@ impl<T: Data> ScopeStreamPush<DataSet<T>> for AggregateBatchPush<T> {
 }
 
 ///////////////////////////////////////////////////
-
-

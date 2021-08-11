@@ -1,5 +1,5 @@
 use crate::communication::IOResult;
-use crate::data::DataSet;
+use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPush, Push};
 use crate::graph::Port;
 use crate::progress::{EndSignal, Weight};
@@ -73,11 +73,11 @@ pub trait InputEndNotify: Send + 'static {
     fn notify(&mut self, end: EndSignal) -> IOResult<()>;
 }
 
-impl<T: Data> InputEndNotify for GeneralPush<DataSet<T>> {
+impl<T: Data> InputEndNotify for GeneralPush<MicroBatch<T>> {
     fn notify(&mut self, mut end: EndSignal) -> IOResult<()> {
         end.update();
         assert_eq!(end.update_weight, None);
-        let mut d = DataSet::empty();
+        let mut d = MicroBatch::empty();
         d.tag = end.tag.clone();
         d.end = Some(end);
         if d.tag.is_root() {

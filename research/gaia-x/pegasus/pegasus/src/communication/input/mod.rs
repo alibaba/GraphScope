@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::channel_id::ChannelInfo;
-use crate::data::DataSet;
+use crate::data::MicroBatch;
 use crate::data_plane::GeneralPull;
 use crate::progress::EndSignal;
 use crate::{Data, Tag};
@@ -49,7 +49,7 @@ pub use session::InputSession;
 
 #[inline]
 pub(crate) fn new_input<D: Data>(
-    ch_info: ChannelInfo, pull: GeneralPull<DataSet<D>>, event_emitter: &EventEmitter,
+    ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<D>>, event_emitter: &EventEmitter,
     delta: MergedScopeDelta,
 ) -> Box<dyn InputProxy> {
     let input = InputHandle::new(ch_info, pull, event_emitter.clone(), delta);

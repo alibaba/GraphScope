@@ -15,7 +15,7 @@
 
 use crate::communication::input::input::InputBlockGuard;
 use crate::communication::input::InputHandle;
-use crate::data::DataSet;
+use crate::data::MicroBatch;
 use crate::errors::{ErrorKind, IOResult, JobExecError};
 use crate::{Data, Tag};
 use std::cell::RefMut;
@@ -45,7 +45,7 @@ impl<'a, D: Data> InputSession<'a, D> {
 
     pub fn for_each_batch<F>(&mut self, mut func: F) -> Result<(), JobExecError>
     where
-        F: FnMut(&mut DataSet<D>) -> Result<(), JobExecError>,
+        F: FnMut(&mut MicroBatch<D>) -> Result<(), JobExecError>,
     {
         loop {
             if self.input.is_exhaust() {
@@ -101,7 +101,7 @@ impl<'a, D: Data> InputSession<'a, D> {
 
     pub(crate) fn for_each_batch_of<F>(&mut self, tag: &Tag, func: &mut F) -> Result<(), JobExecError>
     where
-        F: FnMut(&mut DataSet<D>) -> Result<(), JobExecError>,
+        F: FnMut(&mut MicroBatch<D>) -> Result<(), JobExecError>,
     {
         while let Some(mut dataset) = self.input.next_of(tag)? {
             let is_last = dataset.is_last();
@@ -147,7 +147,7 @@ impl<'a, D: Data> InputSession<'a, D> {
     }
 
     #[inline]
-    fn on_interrupt(&mut self, dataset: DataSet<D>) {
+    fn on_interrupt(&mut self, dataset: MicroBatch<D>) {
         if !dataset.is_empty() || dataset.is_last() {
             trace_worker!("block pull data of scope {:?}", dataset.tag);
             let b = self.input.stash_block_front(dataset);
@@ -156,7 +156,7 @@ impl<'a, D: Data> InputSession<'a, D> {
     }
 
     #[inline]
-    fn on_finish(&mut self, dataset: &mut DataSet<D>) {
+    fn on_finish(&mut self, dataset: &mut MicroBatch<D>) {
         assert!(dataset.is_empty());
         if let Some(end) = dataset.take_end() {
             self.input.end_on(end);
@@ -164,7 +164,7 @@ impl<'a, D: Data> InputSession<'a, D> {
     }
 
     #[inline]
-    fn on_cancel(&mut self, dataset: &mut DataSet<D>) -> Result<(), JobExecError> {
+    fn on_cancel(&mut self, dataset: &mut MicroBatch<D>) -> Result<(), JobExecError> {
         if dataset.is_discarded() {
             dataset.clear();
             self.cancel_scope(&dataset.tag);

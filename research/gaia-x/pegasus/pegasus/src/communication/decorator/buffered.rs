@@ -15,13 +15,13 @@
 
 use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
 use crate::communication::IOResult;
-use crate::data::{DataSet, DataSetPool};
+use crate::data::{DataSetPool, MicroBatch};
 use crate::errors::IOError;
 use crate::graph::Port;
 use crate::progress::EndSignal;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
-use pegasus_common::buffer::{Batch, BatchPool, MemBatchPool, MemoryAlloc};
+use pegasus_common::buffer::{Batch, BatchPool, MemBatchPool, MemBufAlloc};
 use pegasus_common::rc::RcPointer;
 use pegasus_common::utils::ExecuteTimeMetric;
 use std::cell::RefCell;
@@ -41,7 +41,7 @@ impl<D: Data> ScopeBatchPool<D> {
         src: u32, batch_size: usize, batch_capacity: usize, scope_capacity: usize, scope_level: usize,
     ) -> Self {
         let global_batch_capacity = scope_capacity * batch_capacity;
-        let pool = BatchPool::new(batch_size, global_batch_capacity, MemoryAlloc::new());
+        let pool = BatchPool::new(batch_size, global_batch_capacity, MemBufAlloc::new());
         let top_pool = RcPointer::new(RefCell::new(pool));
         let enable = std::env::var("BATCH_POOL_METRIC")
             .map(|v| v.parse::<bool>().unwrap_or(false))
@@ -80,7 +80,7 @@ impl<D: Data> ScopeBatchPool<D> {
         Some(pool)
     }
 
-    fn get_batch_mut(&mut self, tag: &Tag) -> Option<&mut DataSet<D>> {
+    fn get_batch_mut(&mut self, tag: &Tag) -> Option<&mut MicroBatch<D>> {
         if let Some(pool) = self.get_pool_mut(tag) {
             pool.get_batch_mut()
         } else {
@@ -114,7 +114,7 @@ impl<D: Data> Drop for ScopeBatchPool<D> {
     }
 }
 
-pub struct BufferedPush<D: Data, P: ScopeStreamPush<DataSet<D>>> {
+pub struct BufferedPush<D: Data, P: ScopeStreamPush<MicroBatch<D>>> {
     pub src: u32,
     pub scope_level: usize,
     pub batch_capacity: usize,
@@ -125,7 +125,7 @@ pub struct BufferedPush<D: Data, P: ScopeStreamPush<DataSet<D>>> {
     single_pool: MemBatchPool<D>,
 }
 
-impl<D: Data, P: ScopeStreamPush<DataSet<D>>> BufferedPush<D, P> {
+impl<D: Data, P: ScopeStreamPush<MicroBatch<D>>> BufferedPush<D, P> {
     pub fn new(
         scope_level: usize, batch_size: usize, scope_capacity: usize, batch_capacity: usize, push: P,
     ) -> Self {
@@ -140,12 +140,12 @@ impl<D: Data, P: ScopeStreamPush<DataSet<D>>> BufferedPush<D, P> {
             batch_size,
             push,
             pool,
-            single_pool: BatchPool::new(1, scope_capacity, MemoryAlloc::new()),
+            single_pool: BatchPool::new(1, scope_capacity, MemBufAlloc::new()),
         }
     }
 
     /// inner usage only for pipeline channel;
-    pub fn forward_buffer(&mut self, data: DataSet<D>) -> IOResult<()> {
+    pub fn forward_buffer(&mut self, data: MicroBatch<D>) -> IOResult<()> {
         self.push.push(&data.tag.clone(), data)
     }
 
@@ -155,7 +155,7 @@ impl<D: Data, P: ScopeStreamPush<DataSet<D>>> BufferedPush<D, P> {
     }
 }
 
-impl<D: Data, P: ScopeStreamPush<DataSet<D>>> ScopeStreamBuffer for BufferedPush<D, P> {
+impl<D: Data, P: ScopeStreamPush<MicroBatch<D>>> ScopeStreamBuffer for BufferedPush<D, P> {
     fn scope_size(&self) -> usize {
         self.pool.scope_size() + self.single_pool.in_use_size()
     }
@@ -192,7 +192,7 @@ impl<D: Data, P: ScopeStreamPush<DataSet<D>>> ScopeStreamBuffer for BufferedPush
     fn flush_scope(&mut self, tag: &Tag) -> IOResult<()> {
         if let Some(batch) = self.pool.get_batch_mut(tag) {
             if !batch.is_empty() {
-                let force = std::mem::replace(batch, DataSet::empty());
+                let force = std::mem::replace(batch, MicroBatch::empty());
                 self.push.push(tag, force)?;
             }
         }
@@ -200,7 +200,7 @@ impl<D: Data, P: ScopeStreamPush<DataSet<D>>> ScopeStreamBuffer for BufferedPush
     }
 }
 
-impl<D: Data, P: ScopeStreamPush<DataSet<D>>> ScopeStreamPush<D> for BufferedPush<D, P> {
+impl<D: Data, P: ScopeStreamPush<MicroBatch<D>>> ScopeStreamPush<D> for BufferedPush<D, P> {
     fn port(&self) -> Port {
         self.push.port()
     }
@@ -213,7 +213,7 @@ impl<D: Data, P: ScopeStreamPush<DataSet<D>>> ScopeStreamPush<D> for BufferedPus
             if let Some(batch) = p.get_batch_mut() {
                 batch.push(msg);
                 if batch.is_full() {
-                    let full = std::mem::replace(batch, DataSet::empty());
+                    let full = std::mem::replace(batch, MicroBatch::empty());
                     self.push.push(tag, full)?;
                 }
                 Ok(())
@@ -225,7 +225,7 @@ impl<D: Data, P: ScopeStreamPush<DataSet<D>>> ScopeStreamPush<D> for BufferedPus
                 }
             }
         } else {
-            let mut batch = DataSet::new(tag.clone(), self.src, 0, Batch::with_capacity(1));
+            let mut batch = MicroBatch::new(tag.clone(), self.src, 0, Batch::with_capacity(1));
             batch.push(msg);
             match self.push.push(tag, batch) {
                 Ok(_) => {
@@ -249,7 +249,7 @@ impl<D: Data, P: ScopeStreamPush<DataSet<D>>> ScopeStreamPush<D> for BufferedPus
         if let Some(pool) = self.pool.sec_pool.get_mut(&end.tag) {
             if let Some(batch) = pool.get_batch_mut() {
                 batch.push(msg);
-                let last = std::mem::replace(batch, DataSet::empty());
+                let last = std::mem::replace(batch, MicroBatch::empty());
                 self.push.push_last(last, end)
             } else {
                 let batch = pool.tmp(msg);
@@ -257,11 +257,11 @@ impl<D: Data, P: ScopeStreamPush<DataSet<D>>> ScopeStreamPush<D> for BufferedPus
             }
         } else {
             if let Some(batch) = self.single_pool.fetch() {
-                let mut batch = DataSet::new(end.tag.clone(), self.src, 0, batch);
+                let mut batch = MicroBatch::new(end.tag.clone(), self.src, 0, batch);
                 batch.push(msg);
                 self.push.push_last(batch, end)
             } else {
-                let mut tmp = DataSet::new(end.tag.clone(), self.src, 0, Batch::with_capacity(1));
+                let mut tmp = MicroBatch::new(end.tag.clone(), self.src, 0, Batch::with_capacity(1));
                 tmp.push(msg);
                 match self.push.push_last(tmp, end) {
                     Ok(_) => interrupt!("scope up-bound"),
@@ -278,7 +278,7 @@ impl<D: Data, P: ScopeStreamPush<DataSet<D>>> ScopeStreamPush<D> for BufferedPus
                     while let Some(item) = iter.next() {
                         batch.push(item);
                         if batch.is_full() {
-                            let full = std::mem::replace(batch, DataSet::empty());
+                            let full = std::mem::replace(batch, MicroBatch::empty());
                             self.push.push(tag, full)?;
                             continue 'a;
                         }

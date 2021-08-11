@@ -1,8 +1,8 @@
 use crate::channel_id::ChannelInfo;
-use crate::communication::decorator::evented::ControlPush;
+use crate::communication::decorator::evented::EventEmitPush;
 use crate::communication::decorator::ScopeStreamPush;
 use crate::communication::IOResult;
-use crate::data::DataSet;
+use crate::data::MicroBatch;
 use crate::data_plane::GeneralPush;
 use crate::event::emitter::EventEmitter;
 use crate::graph::Port;
@@ -14,31 +14,31 @@ use std::sync::Arc;
 pub struct BroadcastBatchPush<D: Data> {
     pub ch_info: ChannelInfo,
     //pool: MemBatchPool<D>,
-    pushes: Vec<ControlPush<D>>,
+    pushes: Vec<EventEmitPush<D>>,
 }
 
 impl<D: Data> BroadcastBatchPush<D> {
     pub fn new(
-        ch_info: ChannelInfo, has_cycles: Arc<AtomicBool>, pushes: Vec<GeneralPush<DataSet<D>>>,
+        ch_info: ChannelInfo, has_cycles: Arc<AtomicBool>, pushes: Vec<GeneralPush<MicroBatch<D>>>,
         event_emitter: &EventEmitter,
     ) -> Self {
         let mut decorated = Vec::with_capacity(pushes.len());
         let source = crate::worker_id::get_current_worker().index;
         for (i, p) in pushes.into_iter().enumerate() {
             let has_cycles = has_cycles.clone();
-            let p = ControlPush::new(ch_info, source, i as u32, has_cycles, p, event_emitter.clone());
+            let p = EventEmitPush::new(ch_info, source, i as u32, has_cycles, p, event_emitter.clone());
             decorated.push(p);
         }
         BroadcastBatchPush { ch_info, pushes: decorated }
     }
 }
 
-impl<T: Data> ScopeStreamPush<DataSet<T>> for BroadcastBatchPush<T> {
+impl<T: Data> ScopeStreamPush<MicroBatch<T>> for BroadcastBatchPush<T> {
     fn port(&self) -> Port {
         self.ch_info.source_port
     }
 
-    fn push(&mut self, tag: &Tag, msg: DataSet<T>) -> IOResult<()> {
+    fn push(&mut self, tag: &Tag, msg: MicroBatch<T>) -> IOResult<()> {
         for i in 1..self.pushes.len() {
             // TODO: avoid clone msg;
             self.pushes[i].push(tag, msg.clone())?;
@@ -46,7 +46,7 @@ impl<T: Data> ScopeStreamPush<DataSet<T>> for BroadcastBatchPush<T> {
         self.pushes[0].push(tag, msg)
     }
 
-    fn push_last(&mut self, msg: DataSet<T>, mut end: EndSignal) -> IOResult<()> {
+    fn push_last(&mut self, msg: MicroBatch<T>, mut end: EndSignal) -> IOResult<()> {
         end.update_to(Weight::all());
         for i in 1..self.pushes.len() {
             // TODO: avoid clone msg;

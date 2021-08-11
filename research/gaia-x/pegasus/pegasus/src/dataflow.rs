@@ -17,7 +17,7 @@ use crate::api::meta::OperatorInfo;
 use crate::api::scope::MergedScopeDelta;
 use crate::channel_id::ChannelInfo;
 use crate::communication::output::OutputBuilderImpl;
-use crate::data::DataSet;
+use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPull, GeneralPush};
 use crate::errors::{BuildJobError, IOResult, JobExecError};
 use crate::event::emitter::EventEmitter;
@@ -208,8 +208,8 @@ impl OperatorRef {
     }
 
     pub fn add_input<T: Data>(
-        &self, ch_info: ChannelInfo, pull: GeneralPull<DataSet<T>>,
-        notify: Option<GeneralPush<DataSet<T>>>, event_emitter: &EventEmitter, delta: MergedScopeDelta,
+        &self, ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<T>>,
+        notify: Option<GeneralPush<MicroBatch<T>>>, event_emitter: &EventEmitter, delta: MergedScopeDelta,
     ) {
         let mut b = self.borrow.borrow_mut();
         b[self.index - 1].add_input(ch_info, pull, notify, event_emitter, delta)

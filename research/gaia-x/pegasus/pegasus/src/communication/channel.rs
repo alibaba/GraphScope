@@ -20,9 +20,9 @@ use crate::communication::decorator::broadcast::BroadcastBatchPush;
 use crate::communication::decorator::buffered::BufferedPush;
 use crate::communication::decorator::exchange::ExchangeByScopePush;
 use crate::communication::decorator::{
-    evented::ControlPush, exchange::ExchangeMiniBatchPush, DataPush, LocalMiniBatchPush,
+    evented::EventEmitPush, exchange::ExchangeMicroBatchPush, MicroBatchPush, LocalMiniBatchPush,
 };
-use crate::data::{Data, DataSet};
+use crate::data::{Data, MicroBatch};
 use crate::data_plane::{GeneralPull, GeneralPush};
 use crate::dataflow::DataflowBuilder;
 use crate::errors::BuildJobError;
@@ -56,15 +56,15 @@ pub struct Channel<T: Data> {
 
 pub(crate) struct MaterializedChannel<T: Data> {
     pub ch_info: ChannelInfo,
-    push: DataPush<T>,
-    pull: GeneralPull<DataSet<T>>,
-    notify: Option<GeneralPush<DataSet<T>>>,
+    push: MicroBatchPush<T>,
+    pull: GeneralPull<MicroBatch<T>>,
+    notify: Option<GeneralPush<MicroBatch<T>>>,
 }
 
 impl<T: Data> MaterializedChannel<T> {
     pub fn take(
         self,
-    ) -> (ChannelInfo, DataPush<T>, GeneralPull<DataSet<T>>, Option<GeneralPush<DataSet<T>>>) {
+    ) -> (ChannelInfo, MicroBatchPush<T>, GeneralPull<MicroBatch<T>>, Option<GeneralPush<MicroBatch<T>>>) {
         (self.ch_info, self.push, self.pull, self.notify)
     }
 }
@@ -113,22 +113,22 @@ impl<T: Data> Channel<T> {
                 Self::build_pipeline(source, target, scope_level, id, batch_size, capacity, scope_cap)
             }
             ChannelKind::Shuffle(r) => {
-                let (mut raw, pull) = super::build_channel::<DataSet<T>>(index, &dfb.config)?.take();
+                let (mut raw, pull) = super::build_channel::<MicroBatch<T>>(index, &dfb.config)?.take();
                 let worker_index = crate::worker_id::get_current_worker().index as usize;
                 let notify = raw.swap_remove(worker_index);
                 let ch_info = ChannelInfo::new(id, scope_level, raw.len(), raw.len(), source, target);
                 let pushes =
                     decorate(scope_level, batch_size, capacity, scope_cap, has_cycles, ch_info, raw, &dfb);
-                let push = ExchangeMiniBatchPush::new(ch_info, pushes, r);
+                let push = ExchangeMicroBatchPush::new(ch_info, pushes, r);
                 Ok(MaterializedChannel {
                     ch_info,
-                    push: DataPush::Shuffle(push),
+                    push: MicroBatchPush::Shuffle(push),
                     pull: pull.into(),
                     notify: Some(notify),
                 })
             }
             ChannelKind::Broadcast => {
-                let (mut raw, pull) = super::build_channel::<DataSet<T>>(index, &dfb.config)?.take();
+                let (mut raw, pull) = super::build_channel::<MicroBatch<T>>(index, &dfb.config)?.take();
                 let worker_index = crate::worker_id::get_current_worker().index as usize;
                 let notify = raw.swap_remove(worker_index);
                 let ch_info = ChannelInfo::new(id, scope_level, raw.len(), raw.len(), source, target);
@@ -136,13 +136,13 @@ impl<T: Data> Channel<T> {
                 let push = BufferedPush::new(scope_level, batch_size, scope_cap, capacity, push);
                 Ok(MaterializedChannel {
                     ch_info,
-                    push: DataPush::Broadcast(push),
+                    push: MicroBatchPush::Broadcast(push),
                     pull: pull.into(),
                     notify: Some(notify),
                 })
             }
             ChannelKind::Aggregate(worker) => {
-                let (mut raw, pull) = super::build_channel::<DataSet<T>>(index, &dfb.config)?.take();
+                let (mut raw, pull) = super::build_channel::<MicroBatch<T>>(index, &dfb.config)?.take();
                 let worker_index = crate::worker_id::get_current_worker().index as usize;
                 let notify = raw.swap_remove(worker_index);
                 let ch_info = ChannelInfo::new(id, scope_level, raw.len(), 1, source, target);
@@ -158,13 +158,13 @@ impl<T: Data> Channel<T> {
                 let push = BufferedPush::new(scope_level, batch_size, scope_cap, capacity, push);
                 Ok(MaterializedChannel {
                     ch_info,
-                    push: DataPush::Aggregate(push),
+                    push: MicroBatchPush::Aggregate(push),
                     pull: pull.into(),
                     notify: Some(notify),
                 })
             }
             ChannelKind::ShuffleScope => {
-                let (mut raw, pull) = super::build_channel::<DataSet<T>>(index, &dfb.config)?.take();
+                let (mut raw, pull) = super::build_channel::<MicroBatch<T>>(index, &dfb.config)?.take();
                 let worker_index = crate::worker_id::get_current_worker().index as usize;
                 let notify = raw.swap_remove(worker_index);
                 let ch_info = ChannelInfo::new(id, scope_level, raw.len(), raw.len(), source, target);
@@ -172,7 +172,7 @@ impl<T: Data> Channel<T> {
                 let push = BufferedPush::new(scope_level, batch_size, scope_cap, capacity, push);
                 Ok(MaterializedChannel {
                     ch_info,
-                    push: DataPush::ScopeShuffle(push),
+                    push: MicroBatchPush::ScopeShuffle(push),
                     pull: pull.into(),
                     notify: Some(notify),
                 })
@@ -184,25 +184,26 @@ impl<T: Data> Channel<T> {
         source: Port, target: Port, scope_level: usize, id: ChannelId, batch_size: usize, capacity: usize,
         scope_cap: usize,
     ) -> Result<MaterializedChannel<T>, BuildJobError> {
-        let (tx, rx) = crate::data_plane::pipeline::<DataSet<T>>(id);
+        let (tx, rx) = crate::data_plane::pipeline::<MicroBatch<T>>(id);
         let ch_info = ChannelInfo::new(id, scope_level, 1, 1, source, target);
         let push = LocalMiniBatchPush::new(ch_info, tx);
         let push = BufferedPush::new(scope_level, batch_size, scope_cap, capacity, push);
 
-        Ok(MaterializedChannel { ch_info, push: DataPush::Pipeline(push), pull: rx.into(), notify: None })
+        Ok(MaterializedChannel { ch_info, push: MicroBatchPush::Pipeline(push), pull: rx.into(), notify: None })
     }
 }
 
 #[inline]
 fn decorate<T: Data>(
     scope_level: usize, batch_size: usize, capacity: usize, scope_cap: usize, has_cycles: Arc<AtomicBool>,
-    ch_info: ChannelInfo, raw: Vec<GeneralPush<DataSet<T>>>, dfb: &DataflowBuilder,
-) -> Vec<BufferedPush<T, ControlPush<T>>> {
+    ch_info: ChannelInfo, raw: Vec<GeneralPush<MicroBatch<T>>>, dfb: &DataflowBuilder,
+) -> Vec<BufferedPush<T, EventEmitPush<T>>> {
     let mut pushes = Vec::with_capacity(raw.len());
     let source = dfb.worker_id.index;
     for (idx, p) in raw.into_iter().enumerate() {
         let has_cycles = has_cycles.clone();
-        let push = ControlPush::new(ch_info, source, idx as u32, has_cycles, p, dfb.event_emitter.clone());
+        let push =
+            EventEmitPush::new(ch_info, source, idx as u32, has_cycles, p, dfb.event_emitter.clone());
         let push = BufferedPush::new(scope_level, batch_size, scope_cap, capacity, push);
         pushes.push(push);
     }

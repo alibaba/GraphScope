@@ -23,7 +23,7 @@ pub use primitive::sink::{FromStream, Sink};
 pub use primitive::source::{IntoDataflow, Source};
 pub use primitive::unary::Unary;
 
-use crate::data::DataSet;
+use crate::data::MicroBatch;
 use crate::progress::EndSignal;
 use crate::Tag;
 
@@ -38,7 +38,7 @@ pub enum BranchEnum {
 }
 
 pub enum ResultSet<'a, D> {
-    Data(&'a mut DataSet<D>),
+    Data(&'a mut MicroBatch<D>),
     End,
 }
 
