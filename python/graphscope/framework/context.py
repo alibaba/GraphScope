@@ -29,6 +29,7 @@ from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import run_app
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
+from graphscope.framework.graph import GraphDAGNode
 
 
 class ResultDAGNode(DAGNode):
@@ -43,6 +44,15 @@ class ResultDAGNode(DAGNode):
         self._op = op
         # add op to dag
         self._session.dag.add_op(self._op)
+
+    def add_column(self, results, selector):
+        for key, value in selector.items():
+            results._check_selector(value)
+        selector = json.dumps(selector)
+        op = dag_utils.add_column(self, results, selector)
+        graph_dag_node = GraphDAGNode(self._session, op)
+        graph_dag_node._base_graph = self
+        return graph_dag_node
 
 
 class BaseContextDAGNode(DAGNode):

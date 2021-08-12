@@ -1709,6 +1709,13 @@ def create_dag_from_gae_compiler(register_udf, object_manager, json_dict: dict):
     for step, value in json_dict.items():
         if not isinstance(value, dict):
             continue
+        # TODO, GAE compiler always return a gremlin query "g.V()" latest that we didn't need
+        if (
+            "params" in value
+            and "query" in value["params"]
+            and value["params"]["query"] == "g.V()"
+        ):
+            continue
         dag_def.op.extend(
             create_op_from_gae_compiler_value(
                 register_udf, object_manager, step_op_key_map, json_dict, step, value

@@ -21,6 +21,32 @@ import os
 from graphscope.framework.graph import Graph
 
 
+def load_ogbn_mag_small(sess, prefix):
+    """Load ogbn_mag graph.
+    The ogbn-mag dataset is a heterogeneous network composed of a subset of the Microsoft Academic Graph (MAG).
+    See more details here:
+    https://ogb.stanford.edu/docs/nodeprop/#ogbn-mag
+
+    Args:
+        sess (:class:`graphscope.Session`): Load graph within the session.
+        prefix (str): Data directory.
+        directed (bool, optional): Determine to load a directed or undirected graph.
+            Defaults to True.
+
+    Returns:
+        :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
+    """
+    graph = sess.g()
+    graph = graph.add_vertices(os.path.join(prefix, "paper.csv"), "paper").add_edges(
+        os.path.join(prefix, "paper_cites_paper.csv"),
+        "cites",
+        src_label="paper",
+        dst_label="paper",
+    )
+
+    return graph
+
+
 def load_ogbn_mag(sess, prefix):
     """Load ogbn_mag graph.
     The ogbn-mag dataset is a heterogeneous network composed of a subset of the Microsoft Academic Graph (MAG).
