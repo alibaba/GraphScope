@@ -33,6 +33,10 @@ class ____:
         target.renew = False
         return target
 
+    def check_if_continable(self):
+        if self.ops and self.ops[-1]["op"] == "repeat":
+            raise ValueError(".repeat() is the final operator in a sampler")
+
     def __repr__(self) -> str:
         return json.dumps(self.ops)
 
@@ -40,43 +44,57 @@ class ____:
         return self.__repr__()
 
     def V(self, label):
+        self.check_if_continable()
         target = self.renew_if_needed()
         target.ops.append({"op": "V", "label": label})
         return target
 
     def E(self, label):
+        self.check_if_continable()
         target = self.renew_if_needed()
         target.ops.append({"op": "E", "label": label})
         return target
 
     def by(self, strategy):
+        self.check_if_continable()
         target = self.renew_if_needed()
         target.ops.append({"op": "by", "strategy": strategy})
         return target
 
     def sample(self, k):
+        self.check_if_continable()
         target = self.renew_if_needed()
         target.ops.append({"op": "sample", "k": k})
         return target
 
     def batch(self, batch_size):
+        self.check_if_continable()
         target = self.renew_if_needed()
         target.ops.append({"op": "batch", "batch_size": batch_size})
         return target
 
     def outV(self, label):
+        self.check_if_continable()
         target = self.renew_if_needed()
         target.ops.append({"op": "outV", "label": label})
         return target
 
     def inV(self, label):
+        self.check_if_continable()
         target = self.renew_if_needed()
         target.ops.append({"op": "inV", "label": label})
         return target
 
     def values(self):
+        self.check_if_continable()
         target = self.renew_if_needed()
         target.ops.append({"op": "values"})
+        return target
+
+    def repeat(self, repeats=128):
+        self.check_if_continable()
+        target = self.renew_if_needed()
+        target.ops.append({"op": "repeat", "repeats": repeats})
         return target
 
 
@@ -97,6 +115,7 @@ class QueryInterpreter:
         if isinstance(query, str):
             query = json.loads(query)
         r = g
+        repeats = 128
         for q in query:
             if q["op"] == "V":
                 r = r.V(q["label"])
@@ -114,8 +133,10 @@ class QueryInterpreter:
                 r = r.inV(q["label"])
             elif q["op"] == "values":
                 r = r.values(self._retrieve_values)
+            elif q["op"] == "repeats":
+                repeats = q["repeats"]
         dataset, round = [], 0
-        while round < 100:
+        while round < repeats:
             try:
                 dataset.append(r.next())
                 round += 1
