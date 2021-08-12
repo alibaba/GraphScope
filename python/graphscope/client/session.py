@@ -1102,8 +1102,6 @@ class Session(object):
             if self.eager():
                 interactive_query = _wrapper
                 graph._attach_interactive_instance(interactive_query)
-                # hack for vldb gremlin process
-                __graphscope_interactive_query__.append(interactive_query)
         return _wrapper
 
     def learning(self, graph, nodes=None, edges=None, gen_labels=None):
@@ -1345,9 +1343,6 @@ class _DefaultSessionStack(object):
 
 
 _default_session_stack = _DefaultSessionStack()  # pylint: disable=protected-access
-
-
-__graphscope_interactive_query__ = []
 
 
 def g(incoming_data=None, oid_type="int64", directed=True, generate_eid=True):
