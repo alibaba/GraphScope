@@ -1474,9 +1474,9 @@ def create_op_from_gae_compiler_value(
         "deps": []
     }
     """
-    print("[DEBUG]: run step - {0}".format(step))
-    print("[DEBUG] value: {0}".format(value))
-    print("[DEBUG] step_op_key_map: {0}".format(step_op_key_map))
+    # print("[DEBUG]: run step - {0}".format(step))
+    # print("[DEBUG] value: {0}".format(value))
+    # print("[DEBUG] step_op_key_map: {0}".format(step_op_key_map))
 
     GAS_APP_HEADER = [
         "#ifndef __$_cpp_define__",
@@ -1703,7 +1703,7 @@ def create_op_from_gae_compiler_value(
 
 
 def create_dag_from_gae_compiler(register_udf, object_manager, json_dict: dict):
-    print("[DEBUG] json dict from gae compiler: ", json_dict)
+    # print("[DEBUG] json dict from gae compiler: ", json_dict)
     step_op_key_map = {}
     dag_def = op_def_pb2.DagDef()
     for step, value in json_dict.items():
