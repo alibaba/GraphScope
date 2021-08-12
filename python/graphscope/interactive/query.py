@@ -25,6 +25,7 @@ from enum import Enum
 
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
+from gremlin_python.structure.graph import Graph as TraversalGraph
 
 from graphscope.config import GSConfig as gs_config
 from graphscope.framework.dag import DAGNode
@@ -307,7 +308,13 @@ class InteractiveQuery(object):
             raise RuntimeError(
                 "Interactive query is unavailable with %s status.", str(self._status)
             )
-        return traversal().withRemote(DriverRemoteConnection(self._graph_url, "g"))
+        graph = TraversalGraph()
+        setattr(graph, "__interactive", self)
+        return (
+            traversal()
+            .withGraph(graph)
+            .withRemote(DriverRemoteConnection(self._graph_url, "g"))
+        )
 
     def close(self):
         """Close interactive instance and release resources"""

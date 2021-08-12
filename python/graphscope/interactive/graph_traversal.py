@@ -88,10 +88,9 @@ def patch_for_gremlin_python():  # noqa: C901
     def toList(self):
         import pickle
 
-        import graphscope
-        from graphscope.client.session import __graphscope_interactive_query__
-
-        interactive = __graphscope_interactive_query__[0]
+        interactive = getattr(self.graph, "__interactive", None)
+        if interactive is None:
+            raise RuntimeError("Unable to find associated interactive query instance")
         bytecode_pickle = pickle.dumps(self.bytecode)
         rlt = interactive.execute(
             bytecode_pickle, request_options={"engine": "gae_traversal"}
@@ -106,10 +105,9 @@ def patch_for_gremlin_python():  # noqa: C901
     def toSet(self):
         import pickle
 
-        import graphscope
-        from graphscope.client.session import __graphscope_interactive_query__
-
-        interactive = __graphscope_interactive_query__[0]
+        interactive = getattr(self.graph, "__interactive", None)
+        if interactive is None:
+            raise RuntimeError("Unable to find associated interactive query instance")
         bytecode_pickle = pickle.dumps(self.bytecode)
         rlt = interactive.execute(
             bytecode_pickle, request_options={"engine": "gae_traversal"}
