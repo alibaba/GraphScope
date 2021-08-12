@@ -32,7 +32,7 @@ pub enum ScopePrior {
 pub struct OperatorInfo {
     pub name: String,
     pub index: usize,
-    pub scope_level: usize,
+    pub scope_level: u32,
 }
 
 impl std::fmt::Debug for OperatorInfo {
@@ -42,7 +42,7 @@ impl std::fmt::Debug for OperatorInfo {
 }
 
 impl OperatorInfo {
-    pub fn new(name: &str, index: usize, scope_level: usize) -> Self {
+    pub fn new(name: &str, index: usize, scope_level: u32) -> Self {
         OperatorInfo { name: name.to_owned(), index, scope_level }
     }
 }

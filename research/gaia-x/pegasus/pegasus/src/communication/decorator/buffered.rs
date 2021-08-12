@@ -38,7 +38,7 @@ struct ScopeBatchPool<D: Data> {
 
 impl<D: Data> ScopeBatchPool<D> {
     fn new(
-        src: u32, batch_size: usize, batch_capacity: usize, scope_capacity: usize, scope_level: usize,
+        src: u32, batch_size: usize, batch_capacity: usize, scope_capacity: usize, scope_level: u32,
     ) -> Self {
         let global_batch_capacity = scope_capacity * batch_capacity;
         let pool = BatchPool::new(batch_size, global_batch_capacity, MemBufAlloc::new());
@@ -116,7 +116,7 @@ impl<D: Data> Drop for ScopeBatchPool<D> {
 
 pub struct BufferedPush<D: Data, P: ScopeStreamPush<MicroBatch<D>>> {
     pub src: u32,
-    pub scope_level: usize,
+    pub scope_level: u32,
     pub batch_capacity: usize,
     batch_size: usize,
     scope_capacity: usize,
@@ -127,7 +127,7 @@ pub struct BufferedPush<D: Data, P: ScopeStreamPush<MicroBatch<D>>> {
 
 impl<D: Data, P: ScopeStreamPush<MicroBatch<D>>> BufferedPush<D, P> {
     pub fn new(
-        scope_level: usize, batch_size: usize, scope_capacity: usize, batch_capacity: usize, push: P,
+        scope_level: u32, batch_size: usize, scope_capacity: usize, batch_capacity: usize, push: P,
     ) -> Self {
         assert!(batch_size > 0);
         let src = crate::worker_id::get_current_worker().index;

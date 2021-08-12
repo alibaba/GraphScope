@@ -63,6 +63,7 @@ impl<D: Data> Fold<D> for Stream<D> {
                         if dataset.is_last() {
                             let mut session = output.new_session(&dataset.tag)?;
                             let end = dataset.take_end().expect("unreachable");
+                            trace_worker!("fold all data and emit result of {:?} ;", dataset.tag);
                             session.give_last(Single(accum), end)?;
                         } else {
                             table.insert(dataset.tag.clone(), (accum, f));
@@ -80,6 +81,7 @@ impl<D: Data> Fold<D> for Stream<D> {
                             dataset.tag.current_uncheck() % peers == index
                         };
                         if flag {
+                            trace_worker!("fold all data and emit result of {:?} ;", dataset.tag);
                             session.give_last(Single(accum), end)?;
                         } else {
                             session.notify_end(end)?;

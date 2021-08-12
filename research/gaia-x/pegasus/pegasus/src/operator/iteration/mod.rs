@@ -33,14 +33,14 @@ impl<D: Data> Iteration<D> for Stream<D> {
         let max_iters = until.max_iters;
         let (leave, enter) = self
             .enter()?
-            .make_branches_notify("switch", |info| SwitchOperator::<D>::new(info.scope_level, until))?;
+            .binary_branch_notify("switch", |info| SwitchOperator::<D>::new(info.scope_level, until))?;
 
         let index = enter.port().index;
         let after_iter = func(enter)?;
         let (pipeline, sync): (Stream<D>, Stream<D>) =
-            after_iter.make_branches_notify("sync", |info| IterSyncOperator::<D>::new(info.scope_level))?;
+            after_iter.binary_branch_notify("sync", |info| IterSyncOperator::<D>::new(info.scope_level))?;
         let sync = sync.broadcast();
-        let feedback: Stream<D> = pipeline.union_branches_notify("feedback", sync, move |info| {
+        let feedback: Stream<D> = pipeline.union_notify_transform("feedback", sync, move |info| {
             FeedbackOperator::<D>::new(info.scope_level, max_iters)
         })?;
         feedback.feedback_to(index)?;

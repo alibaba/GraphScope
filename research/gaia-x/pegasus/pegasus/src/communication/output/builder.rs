@@ -13,9 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::api::scope::{MergedScopeDelta, ScopeDelta};
-use crate::channel_id::ChannelInfo;
-use crate::communication::decorator::MicroBatchPush;
+use crate::api::scope::ScopeDelta;
 use crate::communication::output::output::OutputHandle;
 use crate::communication::output::tee::{ChannelPush, Tee};
 use crate::communication::output::{OutputBuilder, OutputProxy, RefWrapOutput};
@@ -25,11 +23,18 @@ use pegasus_common::downcast::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+pub struct OutputMeta {
+    pub port: Port,
+    /// This is the the scope level of operator with this output port belongs to.
+    pub scope_level: u32,
+    pub batch_size: usize,
+    pub batch_capacity: u32,
+    pub scope_capacity: u32,
+}
+
 pub struct OutputBuilderImpl<D: Data> {
     ///
-    pub(crate) port: Port,
-    /// The scope level of operator this output belongs to; Not the scope level of data it will output;
-    pub(crate) scope_level: usize,
+    meta: Rc<RefCell<OutputMeta>>,
     ///
     cursor: usize,
     ///
@@ -37,14 +42,45 @@ pub struct OutputBuilderImpl<D: Data> {
 }
 
 impl<D: Data> OutputBuilderImpl<D> {
-    pub fn new(port: Port, scope_level: usize) -> Self {
+    pub fn new(
+        port: Port, scope_level: u32, batch_size: usize, batch_capacity: u32, scope_capacity: u32,
+    ) -> Self {
         let shared = vec![None];
-        OutputBuilderImpl { port, scope_level, cursor: 0, shared: Rc::new(RefCell::new(shared)) }
+        OutputBuilderImpl {
+            meta: Rc::new(RefCell::new(OutputMeta {
+                port,
+                scope_level,
+                batch_size,
+                batch_capacity,
+                scope_capacity,
+            })),
+            cursor: 0,
+            shared: Rc::new(RefCell::new(shared)),
+        }
+    }
+
+    pub fn get_batch_size(&self) -> usize {
+        self.meta.borrow().batch_size
+    }
+
+    pub fn get_scope_level(&self) -> u32 {
+        self.meta.borrow().scope_level
+    }
+
+    pub fn get_batch_capacity(&self) -> u32 {
+        self.meta.borrow().batch_capacity
+    }
+
+    pub fn get_scope_capacity(&self) -> u32 {
+        self.meta.borrow().scope_capacity
+    }
+
+    pub fn get_port(&self) -> Port {
+        self.meta.borrow().port
     }
 
     #[inline]
-    pub fn set_push(&self, ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>) {
-        let push = ChannelPush::new(ch_info, delta, push);
+    pub(crate) fn set_push(&self, push: ChannelPush<D>) {
         self.shared.borrow_mut()[self.cursor] = Some(push);
     }
 
@@ -61,23 +97,13 @@ impl<D: Data> OutputBuilderImpl<D> {
 
     pub fn copy_data(&self) -> Self {
         self.shared.borrow_mut().push(None);
-        OutputBuilderImpl {
-            port: self.port,
-            scope_level: self.scope_level,
-            cursor: self.cursor + 1,
-            shared: self.shared.clone(),
-        }
+        OutputBuilderImpl { meta: self.meta.clone(), cursor: self.cursor + 1, shared: self.shared.clone() }
     }
 }
 
 impl<D: Data> Clone for OutputBuilderImpl<D> {
     fn clone(&self) -> Self {
-        OutputBuilderImpl {
-            port: self.port,
-            scope_level: self.scope_level,
-            cursor: self.cursor,
-            shared: self.shared.clone(),
-        }
+        OutputBuilderImpl { meta: self.meta.clone(), cursor: self.cursor, shared: self.shared.clone() }
     }
 }
 
@@ -95,14 +121,15 @@ impl<D: Data> OutputBuilder for OutputBuilderImpl<D> {
         }
 
         if let Some(main_push) = main_push {
-            let mut tee = Tee::<D>::new(self.port, self.scope_level, main_push);
+            let meta = self.meta.borrow();
+            let mut tee = Tee::<D>::new(meta.port, meta.scope_level, main_push);
             for p in shared.iter_mut() {
                 if let Some(push) = p.take() {
                     tee.add_push(push);
                 }
             }
 
-            let output = OutputHandle::new(self.port, self.scope_level, tee);
+            let output = OutputHandle::new(meta.port, meta.scope_level, tee);
             Some(Box::new(RefWrapOutput::wrap(output)) as Box<dyn OutputProxy>)
         } else {
             None

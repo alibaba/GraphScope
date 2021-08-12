@@ -21,7 +21,7 @@ use crate::{Data, Tag};
 use std::cell::RefMut;
 
 pub struct InputSession<'a, D: Data> {
-    scope_level: usize,
+    scope_level: u32,
     input: RefMut<'a, InputHandle<D>>,
     block_tmp: Vec<InputBlockGuard>,
 }

@@ -40,9 +40,7 @@ mod rob {
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
     use crate::data::MicroBatch;
-    use crate::data_plane::GeneralPush;
     use crate::errors::IOResult;
-    use crate::event::emitter::EventEmitter;
     use crate::graph::Port;
     use crate::progress::{EndSignal, Weight};
     use crate::{Data, Tag};
@@ -203,22 +201,12 @@ mod rob {
     }
 
     impl<D: Data> ExchangeByScopePush<D> {
-        pub fn new(
-            ch_info: ChannelInfo, has_cycles: Arc<AtomicBool>, pushes: Vec<GeneralPush<MicroBatch<D>>>,
-            event_emitter: &EventEmitter,
-        ) -> Self {
+        pub fn new(ch_info: ChannelInfo, cyclic: &Arc<AtomicBool>, pushes: Vec<EventEmitPush<D>>) -> Self {
             assert!(ch_info.scope_level > 0);
-            let mut decorated = Vec::with_capacity(pushes.len());
-            let source = crate::worker_id::get_current_worker().index;
             let len = pushes.len();
-            for (i, p) in pushes.into_iter().enumerate() {
-                let has_cycles = Arc::new(AtomicBool::new(true));
-                let p = EventEmitPush::new(ch_info, source, i as u32, has_cycles, p, event_emitter.clone());
-                decorated.push(p);
-            }
             let magic =
                 if len & (len - 1) == 0 { Magic::And(len as u64 - 1) } else { Magic::Modulo(len as u64) };
-            ExchangeByScopePush { ch_info, pushes: decorated, magic, has_cycles }
+            ExchangeByScopePush { ch_info, pushes, magic, has_cycles: cyclic.clone() }
         }
     }
 
@@ -250,7 +238,7 @@ mod rob {
         }
 
         fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
-            if end.tag.len() < self.ch_info.scope_level || self.has_cycles.load(Ordering::SeqCst) {
+            if end.tag.len() < self.ch_info.scope_level as usize || self.has_cycles.load(Ordering::SeqCst) {
                 for p in self.pushes.iter_mut() {
                     p.notify_end(end.clone())?;
                 }

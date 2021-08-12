@@ -14,6 +14,7 @@
 //! limitations under the License.
 
 use crate::api::primitive::source::Source;
+use crate::channel_id::ChannelId;
 use crate::communication::output::{OutputBuilder, OutputBuilderImpl};
 use crate::dataflow::{Dataflow, DataflowBuilder};
 use crate::errors::{BuildJobError, JobExecError};
@@ -70,12 +71,19 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
     {
         // set current worker's id into tls variable to make it accessible at anywhere;
         let _g = crate::worker_id::guard(self.id);
-        let resource = crate::communication::build_channel::<Event>(0, &self.conf)?;
+        let resource =
+            crate::communication::build_channel::<Event>(ChannelId::new(self.id.job_id, 0), &self.conf)?;
         assert_eq!(resource.ch_id.index, 0);
         let (tx, rx) = resource.take();
         let event_emitter = EventEmitter::new(tx);
         let dfb = DataflowBuilder::new(self.id, event_emitter.clone(), &self.conf);
-        let root_builder = OutputBuilderImpl::new(Port::new(0, 0), 0);
+        let root_builder = OutputBuilderImpl::new(
+            Port::new(0, 0),
+            0,
+            self.conf.batch_size as usize,
+            self.conf.batch_capacity,
+            self.conf.scope_capacity,
+        );
         let mut input = Source::new(root_builder.copy_data(), &dfb);
         let output = self.sink.clone();
         func(&mut input, output)?;

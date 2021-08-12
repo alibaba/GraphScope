@@ -18,13 +18,13 @@ use crate::Tag;
 use std::collections::HashSet;
 
 pub struct CancelPolicy {
-    scope_level: usize,
+    scope_level: u32,
     port_peers: usize,
     received: Vec<TidyTagMap<HashSet<u32>>>,
 }
 
 impl CancelPolicy {
-    pub fn new(scope_level: usize, peers: usize) -> Self {
+    pub fn new(scope_level: u32, peers: usize) -> Self {
         let received = (0..scope_level + 1)
             .map(|i| TidyTagMap::new(i))
             .collect();
@@ -33,7 +33,7 @@ impl CancelPolicy {
 
     pub fn on_cancel(&mut self, src: u32, cancel_scope: Tag) -> Option<Tag> {
         let idx = cancel_scope.len();
-        assert!(idx <= self.scope_level);
+        assert!(idx <= self.scope_level as usize);
         if self.port_peers != 1 {
             if let Some(mut worker_set) = self.received[idx].remove(&cancel_scope) {
                 worker_set.insert(src);

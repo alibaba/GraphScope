@@ -57,7 +57,7 @@ impl Schedule {
     }
 
     pub fn add_schedule_op(
-        &mut self, index: usize, scope_level: usize, state: Vec<Option<Box<dyn InputEndNotify>>>,
+        &mut self, index: usize, scope_level: u32, state: Vec<Option<Box<dyn InputEndNotify>>>,
         output_ports: Option<&[Vec<(usize, bool, usize)>]>,
     ) {
         let op = OperatorScheduler::new(index, scope_level, state, output_ports);

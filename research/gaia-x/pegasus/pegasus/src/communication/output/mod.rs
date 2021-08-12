@@ -16,6 +16,9 @@
 use crate::errors::IOResult;
 use crate::{Data, Tag};
 use pegasus_common::downcast::AsAny;
+use std::any::Any;
+use std::cell::{Ref, RefCell};
+use std::collections::VecDeque;
 
 pub trait OutputProxy: AsAny + Send {
     fn flush(&self) -> IOResult<()>;
@@ -50,9 +53,7 @@ use crate::communication::output::output::OutputHandle;
 use crate::progress::EndSignal;
 pub(crate) use builder::OutputBuilderImpl;
 pub use output::OutputSession;
-use std::any::Any;
-use std::cell::{Ref, RefCell};
-use std::collections::VecDeque;
+pub(crate) use tee::ChannelPush;
 
 pub struct RefWrapOutput<D: Data> {
     pub(crate) output: RefCell<OutputHandle<D>>,

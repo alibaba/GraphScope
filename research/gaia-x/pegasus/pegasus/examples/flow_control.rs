@@ -21,7 +21,7 @@ fn main() {
     let mut conf = JobConf::new("flatmap");
     conf.plan_print = true;
     conf.batch_size = config.batch_size as u32;
-    conf.output_capacity = config.capacity as u32;
+    conf.batch_capacity = config.capacity as u32;
     let start = Instant::now();
     let num = config.number as u64;
     let mut result = pegasus::run(conf, move || {

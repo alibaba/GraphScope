@@ -110,7 +110,7 @@ pub struct JobConf {
     /// the size used to batching streaming data;
     pub batch_size: u32,
     /// the size used to limit each operator's output size per-schedule;
-    pub output_capacity: u32,
+    pub batch_capacity: u32,
     ///
     pub scope_capacity: u32,
     /// the most memory(MB) this job can use in each server;
@@ -174,7 +174,7 @@ impl Default for JobConf {
             workers: 1,
             time_limit: !0,
             batch_size: 1024,
-            output_capacity: 64,
+            batch_capacity: 64,
             scope_capacity: 128,
             memory_limit: !0u32,
             plan_print: false,

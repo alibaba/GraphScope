@@ -242,7 +242,7 @@ impl<D: Data> InputHandle<D> {
                             continue;
                         }
                     }
-                    if dataset.tag.len() < self.ch_info.scope_level {
+                    if dataset.tag.len() < self.ch_info.scope_level as usize {
                         // this is a end signal from parent scope;
                         assert!(dataset.is_empty());
                         assert!(dataset.is_last());
@@ -299,7 +299,7 @@ impl<D: Data> InputHandle<D> {
 
     pub fn cancel_scope(&mut self, tag: &Tag) {
         self.skips.insert(tag.clone());
-        if *CANCEL_DESC && self.ch_info.scope_level > tag.len() {
+        if *CANCEL_DESC && self.ch_info.scope_level as usize > tag.len() {
             self.stash_index.retain(|t, stash| {
                 if tag.is_parent_of(t) {
                     InputHandle::clear_stash(stash);
@@ -335,7 +335,7 @@ impl<D: Data> InputHandle<D> {
 
     #[inline]
     fn is_skipped(&self, tag: &Tag) -> bool {
-        if *CANCEL_DESC && self.ch_info.scope_level > tag.len() {
+        if *CANCEL_DESC && self.ch_info.scope_level as usize > tag.len() {
             for skip_tag in self.skips.iter() {
                 if skip_tag.is_parent_of(tag) {
                     return true;
@@ -359,7 +359,7 @@ impl<D: Data> InputHandle<D> {
     /// TODO(yyy): the data of source output when handling tag evolving after receiving.
     pub fn propagate_cancel(&mut self, tag: &Tag) -> IOResult<bool> {
         let scope_level = self.ch_info.scope_level;
-        if tag.len() == scope_level {
+        if tag.len() == scope_level as usize {
             // early-stop signal in the same scope level, tag evolving back may be needed
             let backward_tag = self.delta.evolve_back(tag);
             if backward_tag.len() == tag.len() {
@@ -374,7 +374,7 @@ impl<D: Data> InputHandle<D> {
                 // ScopeDelta::ToChild, early-stop signal should not propagate backward to parent scope
                 Ok(false)
             }
-        } else if tag.len() < scope_level {
+        } else if tag.len() < scope_level as usize {
             // parent early-stop signal
             self.send_cancel(tag)?;
             Ok(true)

@@ -171,6 +171,12 @@ impl MergedScopeDelta {
         MergedScopeDelta { origin_scope_level, scope_level_delta: 0, deltas: vec![] }
     }
 
+    pub fn output_scope_level(&self) -> usize {
+        let x = self.origin_scope_level as i32 + self.scope_level_delta;
+        assert!(x >= 0);
+        x as usize
+    }
+
     pub fn add_delta(&mut self, delta: ScopeDelta) {
         match delta {
             ScopeDelta::None => (),

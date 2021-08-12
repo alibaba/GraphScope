@@ -62,7 +62,7 @@ impl DataflowBuilder {
     pub fn get_operator(&self, index: usize) -> OperatorRef {
         let operators = self.operators.clone();
         assert!(index < operators.borrow().len(), "invalid operator index;");
-        OperatorRef::new(index, operators)
+        OperatorRef::new(index, operators, self.config.clone())
     }
 
     #[inline]
@@ -72,7 +72,7 @@ impl DataflowBuilder {
         *idx - 1
     }
 
-    pub(crate) fn add_operator<F, O>(&self, name: &str, scope_level: usize, construct: F) -> OperatorRef
+    pub(crate) fn add_operator<F, O>(&self, name: &str, scope_level: u32, construct: F) -> OperatorRef
     where
         O: OperatorCore,
         F: FnOnce(&OperatorInfo) -> O,
@@ -82,11 +82,11 @@ impl DataflowBuilder {
         let core = Box::new(construct(&info));
         let op_b = OperatorBuilder::new(info, GeneralOperator::Simple(core));
         self.operators.borrow_mut().push(op_b);
-        OperatorRef::new(index, self.operators.clone())
+        OperatorRef::new(index, self.operators.clone(), self.config.clone())
     }
 
     pub(crate) fn add_notify_operator<F, O>(
-        &self, name: &str, scope_level: usize, construct: F,
+        &self, name: &str, scope_level: u32, construct: F,
     ) -> OperatorRef
     where
         O: NotifiableOperator,
@@ -97,7 +97,7 @@ impl DataflowBuilder {
         let core = Box::new(construct(&info));
         let op_b = OperatorBuilder::new(info, GeneralOperator::Notifiable(core));
         self.operators.borrow_mut().push(op_b);
-        OperatorRef::new(index, self.operators.clone())
+        OperatorRef::new(index, self.operators.clone(), self.config.clone())
     }
 
     pub(crate) fn add_edge(&self, edge: Edge) {
@@ -191,11 +191,12 @@ impl Clone for DataflowBuilder {
 pub struct OperatorRef {
     index: usize,
     borrow: Rc<RefCell<Vec<OperatorBuilder>>>,
+    conf: Arc<JobConf>,
 }
 
 impl OperatorRef {
-    pub(crate) fn new(index: usize, borrow: Rc<RefCell<Vec<OperatorBuilder>>>) -> Self {
-        OperatorRef { index, borrow }
+    fn new(index: usize, borrow: Rc<RefCell<Vec<OperatorBuilder>>>, conf: Arc<JobConf>) -> Self {
+        OperatorRef { index, borrow, conf }
     }
 
     pub fn get_index(&self) -> usize {
@@ -217,7 +218,10 @@ impl OperatorRef {
 
     pub fn new_output<D: Data>(&self) -> OutputBuilderImpl<D> {
         let mut b = self.borrow.borrow_mut();
-        b[self.index - 1].new_output()
+        let batch_size = self.conf.batch_size as usize;
+        let scope_capacity = self.conf.scope_capacity;
+        let batch_capacity = self.conf.batch_capacity;
+        b[self.index - 1].new_output_port(batch_size, scope_capacity, batch_capacity)
     }
 }
 

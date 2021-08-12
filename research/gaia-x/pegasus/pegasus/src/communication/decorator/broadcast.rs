@@ -3,13 +3,9 @@ use crate::communication::decorator::evented::EventEmitPush;
 use crate::communication::decorator::ScopeStreamPush;
 use crate::communication::IOResult;
 use crate::data::MicroBatch;
-use crate::data_plane::GeneralPush;
-use crate::event::emitter::EventEmitter;
 use crate::graph::Port;
 use crate::progress::{EndSignal, Weight};
 use crate::{Data, Tag};
-use std::sync::atomic::AtomicBool;
-use std::sync::Arc;
 
 pub struct BroadcastBatchPush<D: Data> {
     pub ch_info: ChannelInfo,
@@ -18,18 +14,8 @@ pub struct BroadcastBatchPush<D: Data> {
 }
 
 impl<D: Data> BroadcastBatchPush<D> {
-    pub fn new(
-        ch_info: ChannelInfo, has_cycles: Arc<AtomicBool>, pushes: Vec<GeneralPush<MicroBatch<D>>>,
-        event_emitter: &EventEmitter,
-    ) -> Self {
-        let mut decorated = Vec::with_capacity(pushes.len());
-        let source = crate::worker_id::get_current_worker().index;
-        for (i, p) in pushes.into_iter().enumerate() {
-            let has_cycles = has_cycles.clone();
-            let p = EventEmitPush::new(ch_info, source, i as u32, has_cycles, p, event_emitter.clone());
-            decorated.push(p);
-        }
-        BroadcastBatchPush { ch_info, pushes: decorated }
+    pub fn new(ch_info: ChannelInfo, pushes: Vec<EventEmitPush<D>>) -> Self {
+        BroadcastBatchPush { ch_info, pushes }
     }
 }
 

@@ -32,7 +32,7 @@ mod rob {
 
     pub struct OutputHandle<D: Data> {
         pub port: Port,
-        pub scope_level: usize,
+        pub scope_level: u32,
         tee: Tee<D>,
         in_block: TidyTagMap<Box<dyn Iterator<Item = D> + Send + 'static>>,
         blocks: VecDeque<Tag>,
@@ -41,7 +41,7 @@ mod rob {
     }
 
     impl<D: Data> OutputHandle<D> {
-        pub(crate) fn new(port: Port, scope_level: usize, output: Tee<D>) -> Self {
+        pub(crate) fn new(port: Port, scope_level: u32, output: Tee<D>) -> Self {
             OutputHandle {
                 port,
                 scope_level,
@@ -123,7 +123,7 @@ mod rob {
                     }
                 }
             }
-            if *CANCEL_DESC && self.scope_level > tag.len() {
+            if *CANCEL_DESC && self.scope_level as usize > tag.len() {
                 self.in_block
                     .retain(|t, _| !tag.is_parent_of(t));
             } else {
@@ -133,7 +133,7 @@ mod rob {
 
         #[inline]
         fn is_skipped(&self, tag: &Tag) -> bool {
-            if *CANCEL_DESC && self.scope_level > tag.len() {
+            if *CANCEL_DESC && self.scope_level as usize > tag.len() {
                 for skip_tag in self.skips.iter() {
                     if skip_tag.is_parent_of(tag) {
                         return true;
@@ -294,20 +294,17 @@ mod rob {
     }
 
     impl<D: Data> OutputHandle<D> {
-
         pub(crate) fn new(port: Port, scope_level: usize, output: Tee<D>) -> Self {
             OutputHandle {
                 port,
                 scope_level,
                 tee: output,
-                buf_pool:
-                in_block: TidyTagMap::new(scope_level),
+                buf_pool: in_block: TidyTagMap::new(scope_level),
                 blocks: VecDeque::new(),
                 is_closed: false,
                 skips: HashSet::new(),
             }
         }
-
 
         fn flush_batch(&mut self, batch: MicroBatch<D>) -> IOResult<()> {
             match self.tee.push(batch) {

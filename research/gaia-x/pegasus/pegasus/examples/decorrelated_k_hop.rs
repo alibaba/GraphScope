@@ -45,7 +45,7 @@ fn main() {
     // config job;
     let mut conf = JobConf::new("de_correlated_k_hop");
     conf.set_workers(config.partitions);
-    conf.output_capacity = config.batch_width;
+    conf.batch_capacity = config.batch_width;
     if config.servers.is_some() {
         conf.reset_servers(ServerConf::All);
     }

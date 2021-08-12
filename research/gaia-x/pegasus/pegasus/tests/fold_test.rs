@@ -83,6 +83,7 @@ fn collect_test() {
 fn collect_in_apply_test() {
     let mut conf = JobConf::new("collect_in_apply");
     conf.set_workers(2);
+    conf.plan_print = true;
     let num = 100u32;
     let mut result = pegasus::run(conf, || {
         let index = pegasus::get_current_worker().index;
@@ -115,7 +116,7 @@ fn collect_in_apply_test() {
 }
 
 #[test]
-fn collect_in_apply_test_2() {
+fn collect_in_apply_2_test() {
     let mut conf = JobConf::new("collect_in_apply_2");
     conf.set_workers(2);
     let mut result = pegasus::run(conf, || {

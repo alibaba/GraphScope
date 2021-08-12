@@ -13,13 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-
-
-
-use crate::{Data, Tag};
-use crate::graph::Port;
 use crate::communication::IOResult;
+use crate::graph::Port;
 use crate::progress::EndSignal;
+use crate::{Data, Tag};
 
 pub mod aggregate;
 pub mod broadcast;
@@ -77,7 +74,6 @@ mod rob {
     use crate::Tag;
     use pegasus_common::buffer::Batch;
 
-
     pub struct LocalMiniBatchPush<T: Data> {
         pub ch_info: ChannelInfo,
         worker: u32,
@@ -116,11 +112,11 @@ mod rob {
                 let size = c.0 + c.1 + msg.len();
                 if size > 0 {
                     trace_worker!(
-                    "output[{:?}]: push last data of {:?}, total pushed {} to self;",
-                    self.port(),
-                    msg.tag,
-                    size
-                );
+                        "output[{:?}]: push last data of {:?}, total pushed {} to self;",
+                        self.port(),
+                        msg.tag,
+                        size
+                    );
                 }
             }
             let (tag, w, u) = end.take();
@@ -132,18 +128,18 @@ mod rob {
 
         fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
             if log_enabled!(log::Level::Trace) {
-                if end.tag.len() == self.push_counts.scope_level {
+                if end.tag.len() == self.push_counts.scope_level as usize {
                     let c = self
                         .push_counts
                         .remove(&end.tag)
                         .unwrap_or((0, 0));
                     let size = c.0 + c.1;
                     trace_worker!(
-                    "output[{:?}]: notify end of {:?}, total pushed {} to self;",
-                    self.port(),
-                    end.tag,
-                    size
-                );
+                        "output[{:?}]: notify end of {:?}, total pushed {} to self;",
+                        self.port(),
+                        end.tag,
+                        size
+                    );
                 } else {
                     trace_worker!("output[{:?}] notify end of {:?}", self.port(), end.tag);
                 }
@@ -275,7 +271,7 @@ mod rob {
             }
         }
 
-        fn push_iter<I: Iterator<Item=T>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
+        fn push_iter<I: Iterator<Item = T>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
             match self {
                 MicroBatchPush::Pipeline(p) => p.push_iter(tag, iter),
                 MicroBatchPush::Shuffle(p) => p.push_iter(tag, iter),

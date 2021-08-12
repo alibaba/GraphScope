@@ -15,7 +15,7 @@ pub(crate) struct IterSyncOperator<D: Data> {
 }
 
 impl<D: Data> IterSyncOperator<D> {
-    pub fn new(scope_level: usize) -> Self {
+    pub fn new(scope_level: u32) -> Self {
         IterSyncOperator {
             observer: TidyTagMap::new(scope_level),
             notify: DefaultNotify::Single,
@@ -98,14 +98,14 @@ impl<D: Data> Notifiable for IterSyncOperator<D> {
 }
 
 pub(crate) struct FeedbackOperator<D: Data> {
-    pub _scope_level: usize,
+    pub _scope_level: u32,
     max_iters: u32,
     observer: TidyTagMap<()>,
     _ph: std::marker::PhantomData<D>,
 }
 
 impl<D: Data> FeedbackOperator<D> {
-    pub fn new(_scope_level: usize, max_iters: u32) -> Self {
+    pub fn new(_scope_level: u32, max_iters: u32) -> Self {
         FeedbackOperator {
             _scope_level,
             max_iters,

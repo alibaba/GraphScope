@@ -13,7 +13,7 @@ use crate::{Data, Tag};
 use std::rc::Rc;
 
 pub(crate) struct SwitchOperator<D> {
-    scope_level: usize,
+    scope_level: u32,
     cond: IterCondition<D>,
     // record scopes in iteration;
     // e.g. if scope ( [0, 0], [1, 0] ) need iteration:
@@ -25,7 +25,7 @@ pub(crate) struct SwitchOperator<D> {
 }
 
 impl<D> SwitchOperator<D> {
-    pub fn new(scope_level: usize, cond: IterCondition<D>) -> Self {
+    pub fn new(scope_level: u32, cond: IterCondition<D>) -> Self {
         assert!(scope_level > 0);
         SwitchOperator { scope_level, cond, iter_scope: TidyTagMap::new(scope_level - 1) }
     }
@@ -178,7 +178,7 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
     fn on_notify(&mut self, n: Notification, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
         debug_worker!("on notify of {:?} on in port {}", n.tag(), n.port);
         let n_len = n.tag().len();
-        assert!(n_len < self.scope_level);
+        assert!(n_len < self.scope_level as usize);
 
         if n.port == 0 {
             if self.iter_scope.is_empty() {
@@ -205,7 +205,7 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
     ) -> Result<bool, JobExecError> {
         if port.port == 0 {
             // received from outer loop
-            assert!(tag.len() < self.scope_level);
+            assert!(tag.len() < self.scope_level as usize);
             for input in inputs.iter() {
                 input.cancel_scope(&tag);
                 input.propagate_cancel(&tag)?;
@@ -215,7 +215,7 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
             }
         } else {
             assert_eq!(port.port, 1);
-            if tag.len() == self.scope_level {
+            if tag.len() == self.scope_level as usize {
                 if let Some(nth) = tag.current() {
                     // in the middle iteration, should propagated into previous iteration
                     if nth != 0 {

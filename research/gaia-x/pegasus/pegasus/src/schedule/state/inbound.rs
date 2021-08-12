@@ -92,13 +92,13 @@ impl<T: Data> InputEndNotify for GeneralPush<MicroBatch<T>> {
 
 pub struct InboundStreamState {
     port: Port,
-    scope_level: usize,
+    scope_level: u32,
     notify_guards: Vec<TidyTagMap<Panel>>,
     notify: Box<dyn InputEndNotify>,
 }
 
 impl InboundStreamState {
-    pub fn new(port: Port, scope_level: usize, notify: Box<dyn InputEndNotify>) -> Self {
+    pub fn new(port: Port, scope_level: u32, notify: Box<dyn InputEndNotify>) -> Self {
         let mut notify_guards = Vec::new();
         for i in 0..scope_level + 1 {
             notify_guards.push(TidyTagMap::new(i));
@@ -110,12 +110,12 @@ impl InboundStreamState {
         //debug_worker!("accept eos {:?} from {}", end, src);
         assert!(end.source_weight.value() > 1);
         let idx = end.tag.len();
-        assert!(idx <= self.scope_level);
+        assert!(idx <= self.scope_level as usize);
         let tag = end.tag.clone();
-        if idx < self.scope_level {
+        if idx < self.scope_level as usize {
             // this is an end of parent scope;
             let mut notify_guards = std::mem::replace(&mut self.notify_guards, vec![]);
-            for i in idx + 1..self.scope_level + 1 {
+            for i in idx + 1..self.scope_level as usize + 1 {
                 for (t, p) in notify_guards[i].iter_mut() {
                     if tag.is_parent_of(&*t) {
                         if let Some(end) = p.add_end_source(src) {

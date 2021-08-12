@@ -14,7 +14,7 @@ pub struct OperatorScheduler {
 
 impl OperatorScheduler {
     pub fn new(
-        index: usize, scope_level: usize, inputs_notify: Vec<Option<Box<dyn InputEndNotify>>>,
+        index: usize, scope_level: u32, inputs_notify: Vec<Option<Box<dyn InputEndNotify>>>,
         output_ports: Option<&[Vec<(usize, bool, usize)>]>,
     ) -> Self {
         let mut input_events = Vec::with_capacity(inputs_notify.len());

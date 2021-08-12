@@ -141,7 +141,7 @@ mod rob {
                 // self.flush()?;
             } else {
                 if log_enabled!(log::Level::Trace) {
-                    if end.tag.len() == self.push_counts.scope_level {
+                    if end.tag.len() == self.push_counts.scope_level as usize {
                         let c = self
                             .push_counts
                             .remove(&end.tag)

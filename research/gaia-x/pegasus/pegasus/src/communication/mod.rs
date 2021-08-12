@@ -26,7 +26,7 @@ pub(crate) mod decorator;
 pub(crate) mod input;
 pub(crate) mod output;
 use crate::channel_id::ChannelId;
-pub use channel::{Aggregate, Broadcast, Channel, Pipeline};
+pub use channel::Channel;
 
 pub type IOResult<D> = Result<D, IOError>;
 pub type Input<'a, D> = input::InputSession<'a, D>;
@@ -37,10 +37,9 @@ thread_local! {
 }
 
 pub(crate) fn build_channel<T: Data>(
-    ch_index: u32, conf: &JobConf,
+    ch_id: ChannelId, conf: &JobConf,
 ) -> Result<ChannelResource<T>, BuildJobError> {
     let worker_id = crate::worker_id::get_current_worker();
-    let ch_id = ChannelId::new(worker_id.job_id, ch_index);
     let ch = CHANNEL_RESOURCES.with(|res| {
         let mut map = res.borrow_mut();
         map.get_mut(&ch_id)
@@ -54,7 +53,7 @@ pub(crate) fn build_channel<T: Data>(
                 BuildJobError::Unsupported(format!(
                     "type {} is unsupported in channel {}",
                     std::any::type_name::<T>(),
-                    ch_index
+                    ch_id.index
                 ))
             })?;
         Ok(*ch)
@@ -76,7 +75,7 @@ pub(crate) fn build_channel<T: Data>(
             }
             Ok(ch)
         } else {
-            BuildJobError::server_err(format!("channel {} resources is empty;", ch_index))
+            BuildJobError::server_err(format!("channel {} resources is empty;", ch_id.index))
         }
     }
 }

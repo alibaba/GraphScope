@@ -61,7 +61,7 @@ impl<I: Data> Unary<I> for Stream<I> {
         B: FnOnce(&OperatorInfo) -> F,
         F: FnMut(&mut Input<I>, &Output<O>) -> Result<(), JobExecError> + Send + 'static,
     {
-        self.and_then(name, |info| {
+        self.transform(name, |info| {
             let func = construct(info);
             Box::new(UnaryOperator::new(func))
         })

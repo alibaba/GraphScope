@@ -15,7 +15,7 @@
 
 use crate::api::function::FnResult;
 use crate::api::meta::OperatorInfo;
-use crate::api::scope::{MergedScopeDelta, ScopeDelta};
+use crate::api::scope::ScopeDelta;
 use crate::api::{Map, Unary};
 use crate::communication::channel::ChannelKind;
 use crate::communication::output::OutputBuilderImpl;
@@ -33,38 +33,36 @@ use std::sync::Arc;
 
 #[must_use = "this `Stream` may be consumed"]
 pub struct Stream<D: Data> {
-    /// the level of scope of data that through this stream;
-    pub scope_level: usize,
     has_cycles: Vec<Arc<AtomicBool>>,
-    batch_size: Option<usize>,
-    delta: MergedScopeDelta,
-    output: OutputBuilderImpl<D>,
-    ch_kind: ChannelKind<D>,
+    port: OutputBuilderImpl<D>,
+    ch: Channel<D>,
     dfb: DataflowBuilder,
 }
 
 impl<D: Data> Stream<D> {
-    pub(crate) fn create(output: OutputBuilderImpl<D>, dfb: &DataflowBuilder) -> Self {
-        Stream {
-            scope_level: 0,
-            has_cycles: vec![Arc::new(Default::default())],
-            batch_size: None,
-            delta: MergedScopeDelta::new(0),
-            output,
-            ch_kind: ChannelKind::Pipeline,
-            dfb: dfb.clone(),
-        }
+    pub(crate) fn create(port: OutputBuilderImpl<D>, dfb: &DataflowBuilder) -> Self {
+        let ch = Channel::mount_to(&port);
+        Stream { has_cycles: vec![Arc::new(Default::default())], port, ch, dfb: dfb.clone() }
+    }
+
+    pub fn get_conf(&self) -> Arc<JobConf> {
+        self.dfb.config.clone()
+    }
+
+    pub fn port(&self) -> Port {
+        self.port.get_port()
+    }
+
+    pub fn get_scope_level(&self) -> u32 {
+        self.ch.get_scope_level()
     }
 
     pub fn copied(self) -> Result<(Stream<D>, Stream<D>), BuildJobError> {
-        if self.ch_kind.is_local() {
+        if self.ch.is_local() {
             let copy = Stream {
-                scope_level: self.scope_level,
                 has_cycles: self.has_cycles.clone(),
-                batch_size: None,
-                delta: self.delta.clone(),
-                output: self.output.copy_data(),
-                ch_kind: ChannelKind::Pipeline,
+                port: self.port.copy_data(),
+                ch: self.ch.clone(),
                 dfb: self.dfb.clone(),
             };
             Ok((self, copy))
@@ -81,27 +79,22 @@ impl<D: Data> Stream<D> {
             })?;
 
             let copy = Stream {
-                scope_level: shuffled.scope_level,
                 has_cycles: shuffled.has_cycles.clone(),
-                batch_size: None,
-                delta: shuffled.delta.clone(),
-                output: shuffled.output.copy_data(),
-                ch_kind: ChannelKind::Pipeline,
+                port: shuffled.port.copy_data(),
+                ch: shuffled.ch.clone(),
                 dfb: shuffled.dfb.clone(),
             };
             Ok((shuffled, copy))
         }
     }
 
-    pub fn get_conf(&self) -> Arc<JobConf> {
-        self.dfb.config.clone()
-    }
-
     pub fn aggregate(mut self) -> Stream<D> {
-        if self.scope_level == 0 {
-            self = self.aggregate_to(0);
+        if self.port.get_scope_level() == 0 {
+            self.ch
+                .set_channel_kind(ChannelKind::Aggregate(0));
         } else {
-            self.ch_kind = ChannelKind::ShuffleScope;
+            self.ch
+                .set_channel_kind(ChannelKind::ShuffleScope);
         }
         self
     }
@@ -110,26 +103,161 @@ impl<D: Data> Stream<D> {
     where
         F: Fn(&D) -> FnResult<u64> + Send + 'static,
     {
-        self.ch_kind = ChannelKind::Shuffle(box_route!(route));
+        self.ch
+            .set_channel_kind(ChannelKind::Shuffle(box_route!(route)));
         self
     }
 
     pub fn broadcast(mut self) -> Stream<D> {
-        self.ch_kind = ChannelKind::Broadcast;
+        self.ch.set_channel_kind(ChannelKind::Broadcast);
         self
     }
 
-    fn aggregate_to(mut self, target: u32) -> Stream<D> {
-        self.ch_kind = ChannelKind::Aggregate(target);
-        self
+    pub fn set_batch_size(&mut self, batch_size: usize) {
+        self.ch.set_batch_size(batch_size);
     }
 
-    pub fn set_batch_size(&mut self, batch_size: u32) {
-        self.batch_size = Some(batch_size as usize)
+    pub fn transform<F, O, T>(mut self, name: &str, op_builder: F) -> Result<Stream<O>, BuildJobError>
+    where
+        O: Data,
+        T: OperatorCore,
+        F: FnOnce(&OperatorInfo) -> T,
+    {
+        let dfb = self.dfb.clone();
+        let has_cycles = self.has_cycles.clone();
+        let op = self.add_operator(name, op_builder)?;
+
+        let port = op.new_output::<O>();
+        let ch = Channel::mount_to(&port);
+
+        Ok(Stream { has_cycles, port, ch, dfb })
     }
 
-    pub(crate) fn port(&self) -> Port {
-        self.output.port
+    pub fn union_transform<R, O, F, T>(
+        mut self, name: &str, mut other: Stream<R>, op_builder: F,
+    ) -> Result<Stream<O>, BuildJobError>
+    where
+        R: Data,
+        O: Data,
+        T: OperatorCore,
+        F: FnOnce(&OperatorInfo) -> T,
+    {
+        if self.get_scope_level() != other.get_scope_level() {
+            BuildJobError::unsupported(format!(
+                "Build {} operator failure, can't union streams with different scope level;",
+                name
+            ))
+        } else {
+            let mut op = self.add_operator(name, op_builder)?;
+            let edge = other.connect(&mut op)?;
+            self.dfb.add_edge(edge);
+            let dfb = self.dfb.clone();
+            let port = op.new_output::<O>();
+
+            let ch = Channel::mount_to(&port);
+            Ok(Stream { has_cycles: self.has_cycles.clone(), port, ch, dfb })
+        }
+    }
+
+    pub fn union_notify_transform<R, O, F, T>(
+        mut self, name: &str, mut other: Stream<R>, op_builder: F,
+    ) -> Result<Stream<O>, BuildJobError>
+    where
+        R: Data,
+        O: Data,
+        T: NotifiableOperator,
+        F: FnOnce(&OperatorInfo) -> T,
+    {
+        if self.get_scope_level() != other.get_scope_level() {
+            BuildJobError::unsupported(format!(
+                "Build {} operator failure, can't union streams with different scope level;",
+                name
+            ))
+        } else {
+            let mut op = self.add_notify_operator(name, op_builder)?;
+            let edge = other.connect(&mut op)?;
+            self.dfb.add_edge(edge);
+            let dfb = self.dfb.clone();
+            let output = op.new_output::<O>();
+            let ch = Channel::mount_to(&output);
+            Ok(Stream { has_cycles: self.has_cycles.clone(), ch, port: output, dfb })
+        }
+    }
+
+    pub fn binary_branch<F, L, R, T>(
+        mut self, name: &str, op_builder: F,
+    ) -> Result<(Stream<L>, Stream<R>), BuildJobError>
+    where
+        L: Data,
+        R: Data,
+        T: OperatorCore,
+        F: FnOnce(&OperatorInfo) -> T,
+    {
+        let op = self.add_operator(name, op_builder)?;
+        let left = op.new_output::<L>();
+        let right = op.new_output::<R>();
+        let dfb = self.dfb.clone();
+        let ch = Channel::mount_to(&left);
+        let left = Stream { has_cycles: self.has_cycles.clone(), port: left, ch, dfb: dfb.clone() };
+        let ch = Channel::mount_to(&right);
+        let right = Stream { has_cycles: self.has_cycles.clone(), port: right, ch, dfb };
+        Ok((left, right))
+    }
+
+    pub fn binary_branch_notify<F, L, R, T>(
+        mut self, name: &str, op_builder: F,
+    ) -> Result<(Stream<L>, Stream<R>), BuildJobError>
+    where
+        L: Data,
+        R: Data,
+        T: NotifiableOperator,
+        F: FnOnce(&OperatorInfo) -> T,
+    {
+        let op = self.add_notify_operator(name, op_builder)?;
+        let left = op.new_output::<L>();
+        let right = op.new_output::<R>();
+        let dfb = self.dfb.clone();
+        let ch = Channel::mount_to(&left);
+        let left = Stream { has_cycles: self.has_cycles.clone(), port: left, ch, dfb: dfb.clone() };
+        let ch = Channel::mount_to(&right);
+        let right = Stream { has_cycles: self.has_cycles.clone(), port: right, ch, dfb };
+        Ok((left, right))
+    }
+
+    pub fn sink_by<F, T>(mut self, name: &str, op_builder: F) -> Result<(), BuildJobError>
+    where
+        T: OperatorCore,
+        F: FnOnce(&OperatorInfo) -> T,
+    {
+        let op_ref = self.add_operator(name, op_builder)?;
+        self.dfb.add_sink(op_ref.get_index());
+        Ok(())
+    }
+
+    pub fn feedback_to(mut self, op_index: usize) -> Result<(), BuildJobError> {
+        if self.get_scope_level() == 0 {
+            Err("can't create feedback stream on root scope;")?;
+        }
+        self.ch.add_delta(ScopeDelta::ToSibling(1));
+        let mut op = self.dfb.get_operator(op_index);
+        let edge = self.connect(&mut op)?;
+        self.dfb.add_edge(edge);
+        let cyclic = self.has_cycles.last().expect("unreachable");
+        cyclic.store(true, Ordering::SeqCst);
+        Ok(())
+    }
+
+    pub fn enter(mut self) -> Result<Self, BuildJobError> {
+        self.ch.add_delta(ScopeDelta::ToChild(1));
+        self.has_cycles
+            .push(Arc::new(Default::default()));
+        Ok(self)
+    }
+
+    pub fn leave(mut self) -> Result<Self, BuildJobError> {
+        self.ch.add_delta(ScopeDelta::ToParent(1));
+        self.has_cycles.pop();
+        Ok(self)
     }
 
     pub fn add_operator<O, F>(&mut self, name: &str, builder: F) -> Result<OperatorRef, BuildJobError>
@@ -139,7 +267,7 @@ impl<D: Data> Stream<D> {
     {
         let mut op = self
             .dfb
-            .add_operator(name, self.scope_level, builder);
+            .add_operator(name, self.get_scope_level(), builder);
         let edge = self.connect(&mut op)?;
         self.dfb.add_edge(edge);
         Ok(op)
@@ -154,221 +282,21 @@ impl<D: Data> Stream<D> {
     {
         let mut op = self
             .dfb
-            .add_notify_operator(name, self.scope_level, builder);
+            .add_notify_operator(name, self.get_scope_level(), builder);
         let edge = self.connect(&mut op)?;
         self.dfb.add_edge(edge);
         Ok(op)
     }
 
-    pub fn and_then<F, O, T>(mut self, name: &str, op_builder: F) -> Result<Stream<O>, BuildJobError>
-    where
-        O: Data,
-        T: OperatorCore,
-        F: FnOnce(&OperatorInfo) -> T,
-    {
-        let op = self.add_operator(name, op_builder)?;
-        let output = op.new_output::<O>();
-        let dfb = self.dfb.clone();
-        Ok(Stream {
-            scope_level: self.scope_level,
-            has_cycles: self.has_cycles.clone(),
-            batch_size: None,
-            delta: MergedScopeDelta::new(self.scope_level),
-            output,
-            ch_kind: ChannelKind::Pipeline,
-            dfb,
-        })
-    }
-
-    pub fn sink_by<F, T>(mut self, name: &str, op_builder: F) -> Result<(), BuildJobError>
-    where
-        T: OperatorCore,
-        F: FnOnce(&OperatorInfo) -> T,
-    {
-        let op_ref = self.add_operator(name, op_builder)?;
-        self.dfb.add_sink(op_ref.get_index());
-        Ok(())
-    }
-
-    pub fn union_branches<R, O, F, T>(
-        mut self, name: &str, mut other: Stream<R>, op_builder: F,
-    ) -> Result<Stream<O>, BuildJobError>
-    where
-        R: Data,
-        O: Data,
-        T: OperatorCore,
-        F: FnOnce(&OperatorInfo) -> T,
-    {
-        if self.scope_level != other.scope_level {
-            BuildJobError::unsupported(format!(
-                "Build {} operator failure, can't union streams with different scope level;",
-                name
-            ))
-        } else {
-            let mut op = self.add_operator(name, op_builder)?;
-            let edge = other.connect(&mut op)?;
-            self.dfb.add_edge(edge);
-            let dfb = self.dfb.clone();
-            let output = op.new_output::<O>();
-            Ok(Stream {
-                scope_level: self.scope_level,
-                has_cycles: self.has_cycles.clone(),
-                batch_size: None,
-                delta: MergedScopeDelta::new(self.scope_level),
-                output,
-                ch_kind: ChannelKind::Pipeline,
-                dfb,
-            })
-        }
-    }
-
-    pub fn make_branches<F, L, R, T>(
-        mut self, name: &str, op_builder: F,
-    ) -> Result<(Stream<L>, Stream<R>), BuildJobError>
-    where
-        L: Data,
-        R: Data,
-        T: OperatorCore,
-        F: FnOnce(&OperatorInfo) -> T,
-    {
-        let op = self.add_operator(name, op_builder)?;
-        let left = op.new_output::<L>();
-        let right = op.new_output::<R>();
-        let dfb = self.dfb.clone();
-        let left = Stream {
-            scope_level: self.scope_level,
-            has_cycles: self.has_cycles.clone(),
-            batch_size: None,
-            delta: MergedScopeDelta::new(self.scope_level),
-            output: left,
-            ch_kind: ChannelKind::Pipeline,
-            dfb: dfb.clone(),
-        };
-        let right = Stream {
-            scope_level: self.scope_level,
-            has_cycles: self.has_cycles.clone(),
-            batch_size: None,
-            delta: MergedScopeDelta::new(self.scope_level),
-            output: right,
-            ch_kind: ChannelKind::Pipeline,
-            dfb,
-        };
-        Ok((left, right))
-    }
-
-    pub fn make_branches_notify<F, L, R, T>(
-        mut self, name: &str, op_builder: F,
-    ) -> Result<(Stream<L>, Stream<R>), BuildJobError>
-    where
-        L: Data,
-        R: Data,
-        T: NotifiableOperator,
-        F: FnOnce(&OperatorInfo) -> T,
-    {
-        let op = self.add_notify_operator(name, op_builder)?;
-        let left = op.new_output::<L>();
-        let right = op.new_output::<R>();
-        let scope_level = self.scope_level;
-        let dfb = self.dfb.clone();
-        let left = Stream {
-            scope_level,
-            has_cycles: self.has_cycles.clone(),
-            batch_size: None,
-            delta: MergedScopeDelta::new(scope_level),
-            output: left,
-            ch_kind: ChannelKind::Pipeline,
-            dfb: dfb.clone(),
-        };
-        let right = Stream {
-            scope_level,
-            has_cycles: self.has_cycles.clone(),
-            batch_size: None,
-            delta: MergedScopeDelta::new(scope_level),
-            output: right,
-            ch_kind: ChannelKind::Pipeline,
-            dfb,
-        };
-        Ok((left, right))
-    }
-
-    pub fn union_branches_notify<R, O, F, T>(
-        mut self, name: &str, mut other: Stream<R>, op_builder: F,
-    ) -> Result<Stream<O>, BuildJobError>
-    where
-        R: Data,
-        O: Data,
-        T: NotifiableOperator,
-        F: FnOnce(&OperatorInfo) -> T,
-    {
-        if self.scope_level != other.scope_level {
-            BuildJobError::unsupported(format!(
-                "Build {} operator failure, can't union streams with different scope level;",
-                name
-            ))
-        } else {
-            let mut op = self.add_notify_operator(name, op_builder)?;
-            let edge = other.connect(&mut op)?;
-            self.dfb.add_edge(edge);
-            let dfb = self.dfb.clone();
-            let scope_level = self.scope_level;
-            let output = op.new_output::<O>();
-            Ok(Stream {
-                scope_level,
-                has_cycles: self.has_cycles.clone(),
-                batch_size: None,
-                delta: MergedScopeDelta::new(scope_level),
-                output,
-                ch_kind: ChannelKind::Pipeline,
-                dfb,
-            })
-        }
-    }
-
-    pub fn feedback_to(mut self, op_index: usize) -> Result<(), BuildJobError> {
-        if self.scope_level == 0 {
-            Err("can't create feedback stream on root scope;")?;
-        }
-        self.delta.add_delta(ScopeDelta::ToSibling(1));
-        let mut op = self.dfb.get_operator(op_index);
-        let edge = self.connect(&mut op)?;
-        self.dfb.add_edge(edge);
-        let cyclic = self.has_cycles.last().expect("unreachable");
-        cyclic.store(true, Ordering::SeqCst);
-        Ok(())
-    }
-
-    pub fn enter(mut self) -> Result<Self, BuildJobError> {
-        self.delta.add_delta(ScopeDelta::ToChild(1));
-        self.scope_level += 1;
-        self.output.scope_level += 1;
-        self.has_cycles
-            .push(Arc::new(Default::default()));
-        Ok(self)
-    }
-
-    pub fn leave(mut self) -> Result<Self, BuildJobError> {
-        self.delta.add_delta(ScopeDelta::ToParent(1));
-        self.scope_level -= 1;
-        self.output.scope_level -= 1;
-        self.has_cycles.pop();
-        Ok(self)
-    }
-
     fn connect(&mut self, op: &OperatorRef) -> Result<Edge, BuildJobError> {
         let target = op.next_input_port();
-        let kind = std::mem::replace(&mut self.ch_kind, ChannelKind::Pipeline);
-        let mut ch = Channel::new(kind);
-        if let Some(batch_size) = self.batch_size {
-            ch.set_batch_size(batch_size as usize);
-        }
-        let port = self.output.port;
-        let scope_level = self.scope_level as usize;
-        let has_cycles = self.has_cycles[scope_level].clone();
-        let channel = ch.materialize(port, target, scope_level, has_cycles, &self.dfb)?;
-        let (ch_info, push, pull, notify) = channel.take();
-        let delta = std::mem::replace(&mut self.delta, Default::default());
-        self.output
-            .set_push(ch_info, delta.clone(), push);
+        let ch = std::mem::replace(&mut self.ch, Channel::default());
+        let cyclic = self.has_cycles.last().unwrap().clone();
+        let channel = ch.connect_to(target, cyclic, &self.dfb)?;
+        let (push, pull, notify) = channel.take();
+        let ch_info = push.ch_info;
+        let delta = push.delta.clone();
+        self.port.set_push(push);
         op.add_input(ch_info, pull, notify, &self.dfb.event_emitter, delta);
         let edge = Edge::new(ch_info);
         Ok(edge)

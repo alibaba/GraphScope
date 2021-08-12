@@ -68,7 +68,7 @@ impl<L: Data> Binary<L> for Stream<L> {
         B: FnOnce(&OperatorInfo) -> F,
         F: FnMut(&mut Input<L>, &mut Input<R>, &Output<O>) -> Result<(), JobExecError> + Send + 'static,
     {
-        self.union_branches(name, other, |info| {
+        self.union_transform(name, other, |info| {
             let func = construct(info);
             BinaryOperator::new(func)
         })

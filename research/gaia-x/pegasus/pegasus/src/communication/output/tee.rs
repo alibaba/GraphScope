@@ -272,7 +272,7 @@ mod rob {
     }
 
     impl<D: Data> Tee<D> {
-        pub fn new(port: Port, scope_level: usize, push: ChannelPush<D>) -> Self {
+        pub fn new(port: Port, scope_level: u32, push: ChannelPush<D>) -> Self {
             Tee {
                 port,
                 main_push: push,
@@ -556,13 +556,13 @@ mod rob {
 
 #[cfg(feature = "rob")]
 mod rob {
-    use crate::{Data, Tag};
-    use crate::channel_id::ChannelInfo;
     use crate::api::scope::MergedScopeDelta;
-    use crate::communication::decorator::{MicroBatchPush, BlockPush};
-    use crate::data_plane::Push;
+    use crate::channel_id::ChannelInfo;
+    use crate::communication::decorator::{BlockPush, MicroBatchPush};
     use crate::data::MicroBatch;
+    use crate::data_plane::Push;
     use crate::errors::IOError;
+    use crate::{Data, Tag};
 
     #[allow(dead_code)]
     pub(crate) struct ChannelPush<D: Data> {

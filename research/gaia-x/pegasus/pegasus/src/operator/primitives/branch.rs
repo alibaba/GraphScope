@@ -59,7 +59,7 @@ impl<D: Data> Branch<D> for Stream<D> {
         B: FnOnce(&OperatorInfo) -> F,
         F: FnMut(&mut Input<D>, &Output<L>, &Output<R>) -> Result<(), JobExecError> + Send + 'static,
     {
-        self.make_branches(name, |info| {
+        self.binary_branch(name, |info| {
             let func = construct(info);
             BranchOperator::new(func)
         })

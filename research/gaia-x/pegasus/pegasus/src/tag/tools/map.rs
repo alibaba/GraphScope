@@ -4,14 +4,14 @@ use nohash_hasher::IntMap;
 use std::borrow::Cow;
 
 pub struct TidyTagMap<V> {
-    pub scope_level: usize,
+    pub scope_level: u32,
     root: Option<V>,
     first: IntMap<u32, V>,
     others: AHashMap<Tag, V>,
 }
 
 impl<V> TidyTagMap<V> {
-    pub fn new(scope_level: usize) -> Self {
+    pub fn new(scope_level: u32) -> Self {
         TidyTagMap { scope_level, root: None, first: IntMap::default(), others: AHashMap::new() }
     }
 }
@@ -24,7 +24,7 @@ impl<V> Default for TidyTagMap<V> {
 
 impl<V> TidyTagMap<V> {
     pub fn insert(&mut self, tag: Tag, value: V) -> Option<V> {
-        if tag.len() == self.scope_level {
+        if tag.len() == self.scope_level as usize {
             match tag {
                 Tag::Root => self.root.replace(value),
                 Tag::One(t) => self.first.insert(t, value),
@@ -36,7 +36,7 @@ impl<V> TidyTagMap<V> {
     }
 
     pub fn get(&self, tag: &Tag) -> Option<&V> {
-        if tag.len() == self.scope_level {
+        if tag.len() == self.scope_level as usize {
             match tag {
                 Tag::Root => self.root.as_ref(),
                 Tag::One(v) => self.first.get(v),
@@ -48,7 +48,7 @@ impl<V> TidyTagMap<V> {
     }
 
     pub fn get_mut(&mut self, tag: &Tag) -> Option<&mut V> {
-        if tag.len() == self.scope_level {
+        if tag.len() == self.scope_level as usize {
             match tag {
                 Tag::Root => self.root.as_mut(),
                 Tag::One(v) => self.first.get_mut(v),
@@ -74,7 +74,7 @@ impl<V> TidyTagMap<V> {
     }
 
     pub fn remove(&mut self, tag: &Tag) -> Option<V> {
-        if tag.len() == self.scope_level {
+        if tag.len() == self.scope_level as usize {
             match tag {
                 Tag::Root => self.root.take(),
                 Tag::One(v) => self.first.remove(v),
@@ -86,7 +86,7 @@ impl<V> TidyTagMap<V> {
     }
 
     pub fn contains_key(&self, tag: &Tag) -> bool {
-        if tag.len() == self.scope_level {
+        if tag.len() == self.scope_level as usize {
             match tag {
                 Tag::Root => self.root.is_some(),
                 Tag::One(v) => self.first.contains_key(v),

@@ -63,8 +63,8 @@ struct MultiNotifyMerge {
 }
 
 impl MultiNotifyMerge {
-    pub fn new(input_size: usize, scope_level: usize) -> Self {
-        let mut merge = Vec::with_capacity(scope_level + 1);
+    pub fn new(input_size: usize, scope_level: u32) -> Self {
+        let mut merge = Vec::with_capacity(scope_level as usize + 1);
         for i in 0..scope_level + 1 {
             merge.push(TidyTagMap::new(i))
         }
@@ -106,7 +106,7 @@ pub struct DefaultNotifyOperator<T> {
 }
 
 impl<T> DefaultNotifyOperator<T> {
-    fn new(input_size: usize, scope_level: usize, op: T) -> Self {
+    fn new(input_size: usize, scope_level: u32, op: T) -> Self {
         let notify = if input_size > 1 {
             DefaultNotify::Merge(MultiNotifyMerge::new(input_size, scope_level))
         } else {
@@ -446,9 +446,12 @@ impl OperatorBuilder {
         Port::new(self.info.index, self.inputs.len())
     }
 
-    pub(crate) fn new_output<D: Data>(&mut self) -> OutputBuilderImpl<D> {
+    pub(crate) fn new_output_port<D: Data>(
+        &mut self, batch_size: usize, scope_capacity: u32, batch_capacity: u32,
+    ) -> OutputBuilderImpl<D> {
         let port = Port::new(self.info.index, self.outputs.len());
-        let output = OutputBuilderImpl::new(port, self.info.scope_level);
+        let output =
+            OutputBuilderImpl::new(port, self.info.scope_level, batch_size, batch_capacity, scope_capacity);
         self.outputs.push(Box::new(output.clone()));
         output
     }

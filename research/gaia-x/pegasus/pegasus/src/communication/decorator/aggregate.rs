@@ -3,8 +3,6 @@ use crate::communication::decorator::evented::EventEmitPush;
 use crate::communication::decorator::ScopeStreamPush;
 use crate::communication::IOResult;
 use crate::data::MicroBatch;
-use crate::data_plane::GeneralPush;
-use crate::event::emitter::EventEmitter;
 use crate::graph::Port;
 use crate::progress::EndSignal;
 use crate::{Data, Tag};
@@ -20,19 +18,10 @@ pub struct AggregateBatchPush<D: Data> {
 
 impl<D: Data> AggregateBatchPush<D> {
     pub fn new(
-        info: ChannelInfo, source_worker: u32, target: u32, has_cycles: Arc<AtomicBool>,
-        push: Vec<GeneralPush<MicroBatch<D>>>, emitter: EventEmitter,
+        target: u32, info: ChannelInfo, mut pushes: Vec<EventEmitPush<D>>, cyclic: &Arc<AtomicBool>,
     ) -> Self {
-        let mut event_push = Vec::with_capacity(push.len());
-        for (t, p) in push.into_iter().enumerate() {
-            let target_worker = t as u32;
-            let has_cycles = has_cycles.clone();
-            let p = EventEmitPush::new(info, source_worker, target_worker, has_cycles, p, emitter.clone());
-            event_push.push(p);
-        }
-
-        let data_push = event_push.swap_remove(target as usize);
-        AggregateBatchPush { ch_info: info, data_push, event_push, has_cycles }
+        let data_push = pushes.swap_remove(target as usize);
+        AggregateBatchPush { ch_info: info, data_push, event_push: pushes, has_cycles: cyclic.clone() }
     }
 }
 
@@ -56,7 +45,7 @@ impl<T: Data> ScopeStreamPush<MicroBatch<T>> for AggregateBatchPush<T> {
 
     fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
         if end.tag.is_root()
-            || end.tag.len() < self.ch_info.scope_level
+            || end.tag.len() < self.ch_info.scope_level as usize
             || self.has_cycles.load(Ordering::SeqCst)
         {
             for p in self.event_push.iter_mut() {

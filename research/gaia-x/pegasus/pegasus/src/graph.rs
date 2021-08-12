@@ -55,7 +55,7 @@ impl Edge {
             target: ch_info.target_port,
             source_peers: ch_info.source_peers,
             target_peers: ch_info.source_peers,
-            scope_level: ch_info.scope_level,
+            scope_level: ch_info.scope_level as usize,
         }
     }
 }

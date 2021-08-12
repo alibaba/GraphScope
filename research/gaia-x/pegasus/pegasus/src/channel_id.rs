@@ -34,7 +34,7 @@ impl ChannelId {
 #[derive(Copy, Clone, Default, Hash, Eq, PartialEq)]
 pub struct ChannelInfo {
     pub id: ChannelId,
-    pub scope_level: usize,
+    pub scope_level: u32,
     pub source_peers: usize,
     pub target_peers: usize,
     pub source_port: Port,
@@ -43,7 +43,7 @@ pub struct ChannelInfo {
 
 impl ChannelInfo {
     pub fn new(
-        id: ChannelId, scope_level: usize, source_peers: usize, target_peers: usize, source_port: Port,
+        id: ChannelId, scope_level: u32, source_peers: usize, target_peers: usize, source_port: Port,
         target_port: Port,
     ) -> Self {
         ChannelInfo { id, scope_level, source_peers, target_peers, source_port, target_port }

@@ -50,7 +50,7 @@ fn main() {
     let mut conf = JobConf::new("correlated_k_hop");
     conf.set_workers(config.partitions);
     conf.scope_capacity = config.concurrent;
-    conf.output_capacity = config.batch_width;
+    conf.batch_capacity = config.batch_width;
 
     if config.servers.is_some() {
         conf.reset_servers(ServerConf::All);

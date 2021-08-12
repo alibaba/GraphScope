@@ -59,7 +59,7 @@ impl<L: Data + HasKey, R: Data + HasKey> Default for Helper<L, R> {
 }
 
 impl<L: Data + HasKey, R: Data + HasKey> Helper<L, R> {
-    fn new(scope_level: usize) -> Self {
+    fn new(scope_level: u32) -> Self {
         Helper { left_map: TidyTagMap::new(scope_level), right_map: TidyTagMap::new(scope_level) }
     }
 
