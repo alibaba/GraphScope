@@ -23,6 +23,8 @@ import random
 import signal
 import subprocess
 import sys
+import threading
+from queue import Queue
 
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.hosts.utils import is_port_in_use
@@ -41,6 +43,41 @@ except ModuleNotFoundError:
     )
 
 logger = logging.getLogger("graphscope")
+
+
+class PipeWatcher(object):
+    def __init__(self, pipe, sink, queue=None, drop=True):
+        """Watch a pipe, and buffer its output if drop is False."""
+        self._pipe = pipe
+        self._sink = sink
+        self._drop = drop
+        if queue is None:
+            self._lines = Queue()
+        else:
+            self._lines = queue
+
+        def read_and_poll(self):
+            for line in self._pipe:
+                try:
+                    if gs_config.show_log:
+                        self._sink.write(line)
+                except:  # noqa: E722
+                    pass
+                try:
+                    if not self._drop:
+                        self._lines.put(line)
+                except:  # noqa: E722
+                    pass
+
+        self._polling_thread = threading.Thread(target=read_and_poll, args=(self,))
+        self._polling_thread.daemon = True
+        self._polling_thread.start()
+
+    def poll(self, block=True, timeout=None):
+        return self._lines.get(block=block, timeout=timeout)
+
+    def drop(self, drop=True):
+        self._drop = drop
 
 
 class HostsClusterLauncher(Launcher):
@@ -65,6 +102,7 @@ class HostsClusterLauncher(Launcher):
 
         self._instance_id = random_string(6)
         self._proc = None
+        self._proc_stdout_watcher_thread = None
         self._closed = True
 
     def _launch_coordinator(self):
@@ -112,18 +150,21 @@ class HostsClusterLauncher(Launcher):
         env["PYTHONUNBUFFERED"] = "TRUE"
         # Param `start_new_session=True` is for putting child process to a new process group
         # so it won't get the signals from parent.
-        self._proc = subprocess.Popen(
+        process = subprocess.Popen(
             cmd,
             start_new_session=True,
             cwd=COORDINATOR_HOME,
             universal_newlines=True,
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
-            stdout=sys.stdout if gs_config.show_log else subprocess.DEVNULL,
-            stderr=sys.stderr if gs_config.show_log else subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             bufsize=1,
             env=env,
         )
+        stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
+        setattr(process, "stdout_watcher", stdout_watcher)
+        self._proc = process
 
     def type(self):
         return "hosts"
