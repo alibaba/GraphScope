@@ -24,37 +24,51 @@ Author: Ning Xin
 namespace gs {
 enum class DegreeType { IN, OUT, INANDOUT };
 
-template <typename degree_t>
-double Variance(std::vector<double>& vec,
-                std::unordered_map<int, degree_t>& map) {
-  double sum1 = 0.0, sum2 = 0.0;
+/**
+ * @brief Compute the variance of matrix vec.
+ *
+ * @param vec
+ * @param map
+ *
+ * @tparam T data type(e.g., int, float, double)
+ */
+template <typename T>
+double Variance(std::vector<T>& vec, std::unordered_map<int, T>& map) {
+  T sum1 = 0, sum2 = 0;
   int n = vec.size();
   for (int i = 0; i < n; i++) {
     sum1 += map[i] * map[i] * vec[i];
     sum2 += map[i] * vec[i];
   }
-  return sqrt(sum1 - sum2 * sum2);
+  return sqrt(static_cast<double>(sum1 - sum2 * sum2));
 }
 
-template <typename degree_t>
-double ProcessMatrix(std::vector<std::vector<double>>& degree_mixing_matrix,
-                     std::unordered_map<int, degree_t>& map) {
+/**
+ * @brief Process matrix for degree assortativity and numeric assortativity app.
+ *
+ * @param degree_mixing_matrix n x n matrix
+ * @param map
+ *
+ * @tparam T data type(e.g., int, float, double)
+ */
+template <typename T>
+double ProcessMatrix(std::vector<std::vector<T>>& degree_mixing_matrix,
+                     std::unordered_map<int, T>& map) {
   int n = degree_mixing_matrix.size();
-  std::vector<double> a;
   // sum of column
-  for (auto& row : degree_mixing_matrix) {
-    a.emplace_back(accumulate(row.begin(), row.end(), 0.0));
-  }
-  std::vector<double> b;
+  std::vector<T> a;
   // sum of row
+  std::vector<T> b;
   for (int i = 0; i < n; i++) {
-    double sum = 0.0;
+    T sum_row = 0, sum_column = 0;
     for (int j = 0; j < n; j++) {
-      sum += degree_mixing_matrix[j][i];
+      sum_row += degree_mixing_matrix[j][i];
+      sum_column += degree_mixing_matrix[i][j];
     }
-    b.emplace_back(sum);
+    a.emplace_back(sum_column);
+    b.emplace_back(sum_row);
   }
-  double sum = 0.0;
+  T sum = 0;
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
       sum += map[i] * map[j] * (degree_mixing_matrix[i][j] - a[i] * b[j]);
@@ -62,7 +76,7 @@ double ProcessMatrix(std::vector<std::vector<double>>& degree_mixing_matrix,
   }
   double vara = Variance(a, map);
   double varb = Variance(b, map);
-  return sum / (vara * varb);
+  return static_cast<double>(sum) / (vara * varb);
 }
 
 }  // namespace gs

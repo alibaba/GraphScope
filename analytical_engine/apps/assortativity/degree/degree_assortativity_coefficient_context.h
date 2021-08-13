@@ -36,7 +36,7 @@ class DegreeAssortativityContext : public TensorContext<FRAG_T, double> {
  public:
   explicit DegreeAssortativityContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, double>(fragment) {}
-  typedef double degree_t;
+  using degree_t = double;
   void Init(grape::DefaultMessageManager& messages,
             std::string source_degree_type = "out",
             std::string target_degree_type = "in", bool directed = false,
