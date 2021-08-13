@@ -351,8 +351,8 @@ create_gremlin_instance_on_local() {
   declare gaia_gremlin_server_port_in_log gaia_gremlin_server_port_in_log gaia_gremlin_server_port_in_err
   while true
   do
-    # The fronted log may randomly outpt to log/out/err, this is a ad-hoc solution
-    # to get the gremlin server port, and the file may not exist, we add a || true to
+    # The fronted log may randomly output to log/out/err, this is an ad-hoc solution
+    # to find the gremlin server port, and the file may not exist, we add a || true to
     # ignore the error.
     # FIXME: the port should fetch from .log file, not .out or .err
     gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $6}') || true
