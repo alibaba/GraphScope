@@ -246,3 +246,7 @@ class TestBuiltInApp:
     def test_pagerank(self):
         ans = dict(nx.builtin.pagerank(self.p2p).values)
         self.assert_result_almost_equal(ans, self.p2p_pagerank_ans)
+
+    def test_degree_assortativity_confficient(self):
+        ans = nx.builtin.degree_assortativity_coefficient(self.p2p_undirected)
+        self.assert_result_almost_equal(ans, -0.0925578)

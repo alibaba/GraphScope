@@ -59,7 +59,7 @@ class DegreeAssortativity
              message_manager_t& messages) {
     auto inner_vertices = frag.InnerVertices();
     for (auto v : inner_vertices) {
-      ProcessVertex(v, frag, ctx, messages);
+      processVertex(v, frag, ctx, messages);
     }
     // if workers_num = 1, force continue
     messages.ForceContinue();
@@ -114,7 +114,7 @@ class DegreeAssortativity
   }
 
  private:
-  void ProcessVertex(const vertex_t& v, const fragment_t& frag, context_t& ctx,
+  void processVertex(const vertex_t& v, const fragment_t& frag, context_t& ctx,
                      message_manager_t& messages) {
     degree_t source_degree, target_degree;
     source_degree = GetDegreeByType(frag, v, ctx.source_degree_type_, ctx);
