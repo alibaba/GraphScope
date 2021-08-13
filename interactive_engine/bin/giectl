@@ -351,7 +351,7 @@ create_gremlin_instance_on_local() {
   declare gaia_gremlin_server_port_in_log gaia_gremlin_server_port_in_log gaia_gremlin_server_port_in_err
   while true
   do
-    # The fronted log may randomly outpt to log/out/err, this is a temporary solution
+    # The fronted log may randomly outpt to log/out/err, this is a ad-hoc solution
     # to get the gremlin server port, and the file may not exist, we add a || true to
     # ignore the error.
     # FIXME: the port should fetch from .log file, not .out or .err
