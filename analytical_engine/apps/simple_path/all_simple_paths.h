@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_H_
 #define ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_H_
 
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -41,89 +42,146 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
-    vid_t v;
-    if (!frag.Oid2Gid(ctx.source_id, v)) {
-      return;
-    }
-    if (ctx.visit.count(v)) {
-      return;
-    }
-    if (ctx.cutoff < 1) {
-      return;
-    }
     vertex_t source;
+    vid_t source_gid;
+
+    struct timeval t;
+    gettimeofday(&t, 0);
+    ctx.exec_time -= static_cast<double>(t.tv_sec) +
+                     static_cast<double>(t.tv_usec) / 1000000;
+
+    frag.Oid2Gid(ctx.source_id, source_gid);
+    ctx.soucre_fid = (fid_t) (source_gid >> ctx.fid_offset);
     bool native_source = frag.GetInnerVertex(ctx.source_id, source);
     if (native_source) {
-      vid_t gid = frag.Vertex2Gid(source);
-      std::vector<vid_t> n_stack;
-      n_stack.push_back(gid);
-      SourceInit(source, frag, ctx, messages, n_stack);
+      ctx.source_flag = true;
+      int total_vertex_num = (int) frag.GetTotalVerticesNum();
+      VLOG(0) << "before init map: " << std::endl;
+      ctx.edge_map.resize(total_vertex_num);
+      // for(long unsigned int i=0;i<ctx.edge_map.size();i++){
+      //   ctx.edge_map[i].resize(total_vertex_num,false);
+      // }
+      VLOG(0) << "after init map: " << std::endl;
+    } else {
+      vid_t in_num = frag.GetInnerVerticesNum();
+      fid_t fid = frag.fid();
+      std::tuple<std::pair<vid_t, vid_t>, bool, bool> msg =
+          std::make_tuple(std::make_pair((vid_t) fid, in_num), false, true);
+      messages.SendToFragment(ctx.soucre_fid, msg);
     }
+
+    gettimeofday(&t, 0);
+    ctx.exec_time += static_cast<double>(t.tv_sec) +
+                     static_cast<double>(t.tv_usec) / 1000000;
+
     messages.ForceContinue();
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
-    std::vector<vid_t> msg;
-    bool need_sync = false;
+    int init_counter = 0;
+    std::tuple<std::pair<vid_t, vid_t>, bool, bool> msg;
+
+    struct timeval t;
+    gettimeofday(&t, 0);
+    ctx.exec_time -= static_cast<double>(t.tv_sec) +
+                     static_cast<double>(t.tv_usec) / 1000000;
+
     while (messages.GetMessage(msg)) {
-      ctx.next_level_inner.push(msg);
+      vid_t gid = std::get<0>(msg).first;
+      vid_t msg2 = std::get<0>(msg).second;
+      if (std::get<2>(msg) == true) {
+        init_counter++;
+        ctx.frag_vertex_num[gid] = (int) msg2;
+        if (init_counter == (int) frag.fnum() - 1) {
+          vertex_t source;
+          frag.GetInnerVertex(ctx.source_id, source);
+          vertexProcess(source, frag, ctx, messages, 0);
+          vid_t s_gid;
+          frag.Oid2Gid(ctx.source_id, s_gid);
+          ctx.visit.insert(s_gid);
+          messages.ForceContinue();
+        }
+      } else if (std::get<1>(msg) == false) {
+        if (ctx.visit.count(gid) == 0) {
+          ctx.visit.insert(gid);
+          ctx.next_level_inner.push(std::make_pair(gid, (int) msg2));
+        }
+      } else if (ctx.source_flag == true && std::get<1>(msg) == true) {
+        int a = find_edge_map_index(ctx, gid);
+        int b = find_edge_map_index(ctx, msg2);
+        // ctx.edge_map[a][b] = true;
+        ctx.edge_map[a].push_back(b);
+      }
     }
     ctx.curr_level_inner.swap(ctx.next_level_inner);
     VLOG(0) << "frag id: " << frag.fid()
             << " curr_level_inner size: " << ctx.curr_level_inner.size()
             << std::endl;
     while (!ctx.curr_level_inner.empty()) {
-      std::vector<vid_t> msg = ctx.curr_level_inner.front();
+      vid_t gid = ctx.curr_level_inner.front().first;
+      int depth = ctx.curr_level_inner.front().second;
       ctx.curr_level_inner.pop();
       vertex_t v;
-      vid_t gid = msg.back();
       frag.Gid2Vertex(gid, v);
-      if (ctx.visit.count(gid)) {
-        ctx.result_queue.push(msg);
-      }
 
-      if (msg.size() <= (u_int64_t) ctx.cutoff) {
-        auto oes = frag.GetOutgoingAdjList(v);
-        for (auto& e : oes) {
-          vertex_t u = e.get_neighbor();
-          vid_t u_gid = frag.Vertex2Gid(u);
-          if (std::find(msg.begin(), msg.end(), u_gid) == msg.end()) {
-            msg.push_back(u_gid);
-            if (!frag.IsOuterVertex(u)) {
-              ctx.curr_level_inner.push(msg);
-            } else {
-              fid_t fid = frag.GetFragId(u);
-              messages.SendToFragment(fid, msg);
-              need_sync = true;
-            }
-            msg.pop_back();
-          }
-        }
+      if (depth <= ctx.cutoff) {
+        vertexProcess(v, frag, ctx, messages, depth);
       }
     }
-    if (need_sync == true)
+    if (!ctx.next_level_inner.empty())
       messages.ForceContinue();
+
+    gettimeofday(&t, 0);
+    ctx.exec_time += static_cast<double>(t.tv_sec) +
+                     static_cast<double>(t.tv_usec) / 1000000;
   }
 
  private:
-  void SourceInit(vertex_t v, const fragment_t& frag, context_t& ctx,
-                  message_manager_t& messages, std::vector<vid_t> n_stack) {
+  void vertexProcess(vertex_t v, const fragment_t& frag, context_t& ctx,
+                     message_manager_t& messages, int depth) {
+    std::set<vid_t> pvisit;
+    vid_t gid = frag.Vertex2Gid(v);
     auto oes = frag.GetOutgoingAdjList(v);
     for (auto& e : oes) {
       vertex_t u = e.get_neighbor();
-      vid_t gid = frag.Vertex2Gid(u);
-      if (std::find(n_stack.begin(), n_stack.end(), gid) == n_stack.end()) {
-        n_stack.push_back(gid);
+      vid_t u_gid = frag.Vertex2Gid(u);
+      if (pvisit.count(u_gid) == 0) {
+        pvisit.insert(u_gid);
+        if (ctx.source_flag == false) {
+          std::tuple<std::pair<vid_t, vid_t>, bool, bool> msg =
+              std::make_tuple(std::make_pair(gid, u_gid), true, false);
+          messages.SendToFragment(ctx.soucre_fid, msg);
+        } else {
+          int a = find_edge_map_index(ctx, gid);
+          int b = find_edge_map_index(ctx, u_gid);
+          // ctx.edge_map[a][b] = true;
+          ctx.edge_map[a].push_back(b);
+        }
+
         if (!frag.IsOuterVertex(u)) {
-          ctx.next_level_inner.push(n_stack);
+          if (ctx.visit.count(u_gid) == 0) {
+            ctx.visit.insert(u_gid);
+            ctx.next_level_inner.push(std::make_pair(u_gid, depth + 1));
+          }
         } else {
           fid_t fid = frag.GetFragId(u);
-          messages.SendToFragment(fid, n_stack);
+          std::tuple<std::pair<vid_t, vid_t>, bool, bool> msg = std::make_tuple(
+              std::make_pair(u_gid, (vid_t) (depth + 1)), false, false);
+          messages.SendToFragment(fid, msg);
         }
-        n_stack.pop_back();
       }
     }
+  }
+
+  int find_edge_map_index(context_t& ctx, vid_t gid) {
+    int fid = (int) (gid >> ctx.fid_offset);
+    int lid = (int) (gid & ctx.id_mask);
+    int ret = 0;
+    for (int i = 0; i < fid; i++) {
+      ret += ctx.frag_vertex_num[i];
+    }
+    return ret + lid;
   }
 };
 

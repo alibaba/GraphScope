@@ -16,6 +16,9 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_CONTEXT_H_
 #define ANALYTICAL_ENGINE_APPS_SIMPLE_PATH_ALL_SIMPLE_PATHS_CONTEXT_H_
 
+#include <sys/time.h>
+#include <time.h>
+#include <unistd.h>
 #include <limits>
 #include <queue>
 #include <set>
@@ -46,16 +49,17 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
             int cutoff = std::numeric_limits<int>::max()) {
     auto& frag = this->fragment();
     this->source_id = source_id;
+    this->id_mask = frag.id_mask();
+    this->fid_offset = frag.fid_offset();
 
     if (cutoff == std::numeric_limits<int>::max()) {
       this->cutoff = frag.GetTotalVerticesNum() - 1;
     } else {
       this->cutoff = cutoff;
     }
-    VLOG(0) << "frag id: " << frag.fid() << " vertex num: " << this->cutoff
-            << std::endl;
 
     // init targets.
+    std::set<vid_t> visit_p;
     vid_t v;
     folly::dynamic nodes_array = folly::parseJson(targets_json);
     for (const auto& val : nodes_array) {
@@ -64,31 +68,136 @@ class AllSimplePathsContext : public TensorContext<FRAG_T, bool> {
         LOG(ERROR) << "Input oid error" << std::endl;
         break;
       }
-      if (!visit.count(v)) {
-        visit.insert(v);
+      if (!visit_p.count(v)) {
+        visit_p.insert(v);
+        targets.push_back(v);
       }
+    }
+
+    if (!frag.Oid2Gid(source_id, v)) {
+      return;
+    }
+    if (visit_p.count(v) || this->cutoff < 1) {
+      return;
+    }
+
+    vertex_t source;
+    bool native_source = frag.GetInnerVertex(source_id, source);
+    if (native_source) {
+      int v_size = (int) frag.GetTotalVerticesNum();
+      VLOG(0) << "vsize: " << v_size << std::endl;
+      frag_vertex_num.resize(frag.fnum());
+      frag_vertex_num[frag.fid()] = frag.GetInnerVerticesNum();
     }
   }
 
   void Output(std::ostream& os) override {
+    double counter_time = 0;
+
     auto& frag = this->fragment();
-    os << "num of result" << result_queue.size() << std::endl;
-    while (!result_queue.empty()) {
-      std::vector<vid_t> s = result_queue.front();
-      result_queue.pop();
-      // os<<"size"<<s.size()<<std::endl;
-      for (auto e : s) {
-        os << frag.Gid2Oid(e) << " ";
+    vertex_t source;
+    bool native_source = frag.GetInnerVertex(source_id, source);
+    std::vector<vid_t> q;
+    if (native_source) {
+      std::set<vid_t> qvisit;
+      vid_t source_gid = frag.Vertex2Gid(source);
+      qvisit.insert(source_gid);
+      q.push_back(source_gid);
+      int index = find_edge_map_index(source_gid);
+
+      struct timeval t;
+      gettimeofday(&t, 0);
+      counter_time -= static_cast<double>(t.tv_sec) +
+                      static_cast<double>(t.tv_usec) / 1000000;
+      Pint_Result(index, 0, q, qvisit, os);
+      gettimeofday(&t, 0);
+      counter_time += static_cast<double>(t.tv_sec) +
+                      static_cast<double>(t.tv_usec) / 1000000;
+      VLOG(0) << "counter_time : " << counter_time << std::endl;
+    }
+    VLOG(0) << "exec_time : " << exec_time << std::endl;
+  }
+
+  void Pint_Result(int from, int depth, std::vector<vid_t>& q,
+                   std::set<vid_t>& qvisit, std::ostream& os) {
+    auto& frag = this->fragment();
+    if (depth == (this->cutoff - 1)) {
+      // VLOG(0) << "in last: " << std::endl;
+      for (auto t : targets) {
+        if (qvisit.count(t) == 1) {
+          continue;
+        }
+        int to = find_edge_map_index(t);
+        if (std::find(edge_map[from].begin(), edge_map[from].end(), to) !=
+            edge_map[from].end()) {
+          for (auto gid : q) {
+            os << frag.Gid2Oid(gid) << " ";
+          }
+          os << frag.Gid2Oid(t) << " " << std::endl;
+        }
       }
-      os << std::endl;
+      return;
+    }
+
+    for (long unsigned int t = 0; t < edge_map[from].size(); t++) {
+      int to = edge_map[from][t];
+      vid_t gid = index2gid(to);
+      if (qvisit.count(gid) == 1) {
+        continue;
+      }
+      qvisit.insert(gid);
+      if (std::find(targets.begin(), targets.end(), gid) != targets.end()) {
+        for (auto v : q) {
+          os << frag.Gid2Oid(v) << " ";
+        }
+        os << frag.Gid2Oid(gid) << " " << std::endl;
+      }
+      q.push_back(gid);
+      Pint_Result(to, depth + 1, q, qvisit, os);
+      q.pop_back();
+      qvisit.erase(gid);
+    }
+  }
+
+  int find_edge_map_index(vid_t gid) {
+    int fid = (int) (gid >> fid_offset);
+    int lid = (int) (gid & id_mask);
+    int ret = 0;
+    for (int i = 0; i < fid; i++) {
+      ret += frag_vertex_num[i];
+    }
+    return ret + lid;
+  }
+
+  vid_t index2gid(int index) {
+    int i = 0;
+    int sum = 0;
+    int sum_last = 0;
+    while (true) {
+      sum += frag_vertex_num[i];
+      if (sum > index) {
+        int lid = index - sum_last;
+        vid_t gid = (vid_t) ((i << fid_offset) | lid);
+        return gid;
+      }
+      i++;
+      sum_last = sum;
     }
   }
 
   oid_t source_id;
-  std::queue<std::vector<vid_t>> curr_level_inner, next_level_inner;
+  std::queue<std::pair<vid_t, int>> curr_level_inner, next_level_inner;
   std::set<vid_t> visit;
+  std::vector<vid_t> targets;
+  std::vector<int> frag_vertex_num;
   int cutoff;
-  std::queue<std::vector<vid_t>> result_queue;
+  bool source_flag = false;
+  fid_t soucre_fid;
+  vid_t id_mask;
+  int fid_offset;
+  std::vector<std::vector<int>> edge_map;
+
+  double exec_time = 0;
 };
 }  // namespace gs
 
