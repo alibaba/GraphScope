@@ -29,6 +29,7 @@ import com.alibaba.maxgraph.v2.store.executor.ExecutorEngine;
 import com.alibaba.maxgraph.v2.store.executor.ExecutorService;
 import com.alibaba.maxgraph.v2.store.executor.gaia.GaiaEngine;
 import com.alibaba.maxgraph.v2.store.executor.gaia.GaiaService;
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.NameResolver;
 
 import java.io.IOException;
@@ -107,5 +108,10 @@ public class Store extends NodeBase {
         Store store = new Store(conf);
         NodeLauncher nodeLauncher = new NodeLauncher(store);
         nodeLauncher.start();
+    }
+
+    @VisibleForTesting
+    public StoreService getStoreService() {
+        return storeService;
     }
 }

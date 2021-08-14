@@ -265,7 +265,7 @@ impl OperatorBuilder {
 }
 
 lazy_static! {
-    static ref EMPTY_TAG_SET: Arc<HashSet<Tag>> = { Arc::new(HashSet::new()) };
+    static ref EMPTY_TAG_SET: Arc<HashSet<Tag>> =  Arc::new(HashSet::new()) ;
 }
 
 pub struct OutputCapacity {

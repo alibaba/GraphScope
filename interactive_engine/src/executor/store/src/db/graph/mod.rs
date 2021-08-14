@@ -1,8 +1,8 @@
 mod codec;
 mod table_manager;
 mod version;
-mod types;
-mod bin;
+pub mod types;
+pub mod bin;
 mod property;
 mod meta;
 pub mod store;

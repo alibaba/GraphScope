@@ -20,7 +20,7 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 
 public interface GaiaLibrary extends Library {
-    GaiaLibrary INSTANCE = Native.load("maxgraph_jna", GaiaLibrary.class);
+    GaiaLibrary INSTANCE = Native.load("maxgraph_ffi", GaiaLibrary.class);
 
     Pointer initialize(byte[] config, int len);
 

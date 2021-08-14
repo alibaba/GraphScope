@@ -41,9 +41,10 @@ import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ComparatorHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
+import org.apache.tinkerpop.gremlin.structure.Element;
+import org.apache.tinkerpop.gremlin.server.GremlinServer;
+import org.apache.tinkerpop.gremlin.server.util.ServerGremlinExecutor;
 import org.apache.tinkerpop.gremlin.structure.T;
-import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceEdge;
-import org.apache.tinkerpop.gremlin.structure.util.reference.ReferenceVertex;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,10 +67,8 @@ public class PlanUtils {
         for (Object id : ids) {
             if (id instanceof Long || id instanceof Integer || id instanceof BigInteger) {
                 resultIds.add(String.valueOf(id));
-            } else if (id instanceof ReferenceVertex) {
-                resultIds.add(String.valueOf(((ReferenceVertex) id).id()));
-            } else if (id instanceof ReferenceEdge) {
-                resultIds.add(String.valueOf(((ReferenceEdge) id).id()));
+            } else if (id instanceof Element) {
+                resultIds.add(String.valueOf(((Element) id).id()));
             } else if (id instanceof String) {
                 resultIds.add((String) id);
             } else {
@@ -135,6 +134,15 @@ public class PlanUtils {
             return (Bindings) FieldUtils.readField(executor, field, true);
         } catch (Exception e) {
             throw new RuntimeException("field " + field + "not exist in step " + executor.getClass(), e);
+        }
+    }
+
+    public static ServerGremlinExecutor getServerGremlinExecutor(GremlinServer server) {
+        String field = "serverGremlinExecutor";
+        try {
+            return (ServerGremlinExecutor) FieldUtils.readField(server, field, true);
+        } catch (Exception e) {
+            throw new RuntimeException("field " + field + "not exist in step " + server.getClass(), e);
         }
     }
 

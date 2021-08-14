@@ -235,10 +235,11 @@ class LocalLauncher(Launcher):
 
     def _launch_graph_manager(self):
         port = self._get_free_port(self._hosts.split(",")[0])
-        gm_sh = os.path.join(self._graphscope_home, "bin", "start.sh")
+        gm_sh = os.path.join(self._graphscope_home, "bin", "giectl")
         cmd = [
             "bash",
             gm_sh,
+            "start_manager_service",
             "local",
             str(port),
             self._instance_id,
@@ -425,8 +426,8 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._graph_manager_process)
         self._graph_manager_endpoint = None
 
-        gm_stop_sh = os.path.join(self._graphscope_home, "bin", "stop.sh")
-        cmd = ["bash", gm_stop_sh, "local", self._instance_id]
+        gm_stop_sh = os.path.join(self._graphscope_home, "bin", "giectl")
+        cmd = ["bash", gm_stop_sh, "stop_manager_service", "local", self._instance_id]
 
         process = subprocess.Popen(  # noqa: F841
             cmd,

@@ -44,16 +44,16 @@ graphscope: submodule
 				 --network=host \
 				 -f $(WORKING_DIR)/graphscope.Dockerfile ..
 manager:
-	cd ../interactive_engine && docker build --target manager \
+	docker build --target manager \
 				 -t graphscope/maxgraph_standalone_manager:${SHORT_SHA} \
-				 -f ../k8s/manager.Dockerfile .
+				 -f $(WORKING_DIR)/manager.Dockerfile ..
 
 graphscope-store:
 	docker build --progress=$(BUILD_PROGRESS) \
-                                 --build-arg profile=${PROFILE} \
-                                 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-store:${VERSION} \
-                                 --network=host \
-                                 -f $(WORKING_DIR)/graphscope-store.Dockerfile ..
+                 --build-arg profile=${PROFILE} \
+                 -t graphscope/graphscope-store:${SHORT_SHA} \
+                 --network=host \
+                 -f $(WORKING_DIR)/graphscope-store.Dockerfile ..
 
 graphscope-manylinux2010:
 	docker build --progress=$(BUILD_PROGRESS) \

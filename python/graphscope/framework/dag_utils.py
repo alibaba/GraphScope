@@ -873,7 +873,7 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
     return op
 
 
-def create_interactive_query(graph, engine_params, cpu, mem):
+def create_interactive_query(graph, engine_params, cpu, mem, enable_gaia):
     """Create a interactive engine that query on the :code:`graph`
 
     Args:
@@ -895,6 +895,7 @@ def create_interactive_query(graph, engine_params, cpu, mem):
         config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS] = utils.s_to_attr(
             json.dumps(engine_params)
         )
+    config[types_pb2.GIE_ENABLE_GAIA] = utils.b_to_attr(enable_gaia)
     op = Operation(
         graph.session_id,
         types_pb2.CREATE_INTERACTIVE_QUERY,
@@ -919,12 +920,10 @@ def create_learning_instance(graph, nodes=None, edges=None, gen_labels=None):
         An op to create a learning engine based on a graph.
     """
     config = {}
-    if nodes is not None:
-        config[types_pb2.NODES] = utils.bytes_to_attr(pickle.dumps(nodes))
-    if edges is not None:
-        config[types_pb2.EDGES] = utils.bytes_to_attr(pickle.dumps(edges))
-    if gen_labels is not None:
-        config[types_pb2.GLE_GEN_LABELS] = utils.bytes_to_attr(pickle.dumps(gen_labels))
+    # pickle None is expected
+    config[types_pb2.NODES] = utils.bytes_to_attr(pickle.dumps(nodes))
+    config[types_pb2.EDGES] = utils.bytes_to_attr(pickle.dumps(edges))
+    config[types_pb2.GLE_GEN_LABELS] = utils.bytes_to_attr(pickle.dumps(gen_labels))
     op = Operation(
         graph.session_id,
         types_pb2.CREATE_LEARNING_INSTANCE,
@@ -975,7 +974,7 @@ def close_learning_instance(learning_instance):
     return op
 
 
-def gremlin_query(interactive_query, query, request_options=None):
+def gremlin_query(interactive_query, query, request_options=None, query_gaia=False):
     """Execute a gremlin query.
 
     Args:
@@ -997,6 +996,7 @@ def gremlin_query(interactive_query, query, request_options=None):
         config[types_pb2.GIE_GREMLIN_REQUEST_OPTIONS] = utils.s_to_attr(
             json.dumps(request_options)
         )
+    config[types_pb2.GIE_QUERY_GAIA] = utils.b_to_attr(query_gaia)
     op = Operation(
         interactive_query.session_id,
         types_pb2.GREMLIN_QUERY,

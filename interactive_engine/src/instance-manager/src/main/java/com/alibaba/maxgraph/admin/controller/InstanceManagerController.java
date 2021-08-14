@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -92,21 +92,29 @@ public class InstanceManagerController {
     public CreateInstanceEntity createLocalInstance(@RequestParam("graphName") String graphName,
                                                     @RequestParam("schemaPath") String schemaPath,
                                                     @RequestParam("vineyardIpcSocket") String vineyardIpcSocket,
-                                                    @RequestParam("zookeeperPort") String zookeeperPort) throws Exception{
+                                                    @RequestParam("zookeeperPort") String zookeeperPort,
+                                                    @RequestParam("enableGaia") String enableGaia) throws Exception{
         CreateInstanceEntity createInstanceEntity = new CreateInstanceEntity();
         int errorCode;
         String errorMessage = "";
-        int frontendPort = 0;
+        String stdoutMessage = "";
 
         try {
+            if (!isValidGraphName(graphName)) {
+                createInstanceEntity.setErrorCode(-1);
+                createInstanceEntity.setErrorMessage("Invalid graph name");
+                return createInstanceEntity;
+            }
             List<String> createCommandList = new ArrayList<>();
 
             createCommandList.add(instanceProperties.getCreateScript());
+            createCommandList.add("create_gremlin_instance_on_local");
             createCommandList.add(graphName);
             createCommandList.add(schemaPath);
             createCommandList.add("1"); // server id
             createCommandList.add(vineyardIpcSocket);
             createCommandList.add(zookeeperPort);
+            createCommandList.add(enableGaia);
             String command = StringUtils.join(createCommandList, " ");
             logger.info("start to create instance with command " + command);
             Process process = Runtime.getRuntime().exec(command);
@@ -114,33 +122,61 @@ public class InstanceManagerController {
             List<String> errorValueList = IOUtils.readLines(process.getErrorStream(), "UTF-8");
             List<String> infoValueList = IOUtils.readLines(process.getInputStream(), "UTF-8");
             infoValueList.addAll(errorValueList);
-            errorMessage = StringUtils.join(infoValueList, "\n");
+            stdoutMessage = StringUtils.join(infoValueList, "\n");
+            logger.info("Create instance command output: " + stdoutMessage);
             errorCode = process.waitFor();
             if (errorCode == 0) {
-              Pattern endpointPattern = Pattern.compile("FRONTEND_PORT:\\S+");
-              Matcher matcher = endpointPattern.matcher(errorMessage);
+              logger.info("Trying to find MAXGRAPH_FRONTEND_PORT");
+              Pattern endpointPattern = Pattern.compile("MAXGRAPH_FRONTEND_PORT:\\S+");
+              Matcher matcher = endpointPattern.matcher(stdoutMessage);
               if (matcher.find()) {
-                String frontendEndpoint = StringUtils.splitByWholeSeparator(StringUtils.removeStart(matcher.group(), "FRONTEND_PORT:"), " ")[0];
+                String frontendEndpoint = StringUtils.splitByWholeSeparator(StringUtils.removeStart(matcher.group(), "MAXGRAPH_FRONTEND_PORT:"), " ")[0];
                 InstanceEntity instanceEntity = new InstanceEntity(frontendEndpoint, "", "", this.instanceProperties.getCloseScript());
                 FrontendMemoryStorage.getFrontendStorage().addFrontendEndpoint(graphName, instanceEntity);
                 String[] endpointArray = StringUtils.split(frontendEndpoint, ":");
                 String ip = endpointArray[0];
-                frontendPort = Integer.parseInt(endpointArray[1]);
+                int frontendPort = Integer.parseInt(endpointArray[1]);
                 createInstanceEntity.setFrontHost(ip);
                 createInstanceEntity.setFrontPort(frontendPort);
-                logger.info("Found Frontend with ip: "+ ip + " and port:" + frontendEndpoint);
+                logger.info("Found Maxgraph Frontend with ip: "+ ip + " and port:" + frontendEndpoint);
                 if (!this.checkInstanceReady(ip, frontendPort)) {
                   errorCode = -1;
                   errorMessage = "Check instance ready timeout";
                 }
               } else {
                 errorCode = -1;
-                errorMessage = "FRONTEND_PORT match failed.";
+                errorMessage = "MAXGRAPH_FRONTEND_PORT match failed.";
+              }
+              if (errorCode != -1 && enableGaia.equals("True")) {
+                logger.info("Trying to find GAIA_FRONTEND_PORT");
+                endpointPattern = Pattern.compile("GAIA_FRONTEND_PORT:\\S+");
+                matcher = endpointPattern.matcher(stdoutMessage);
+                if (matcher.find()) {
+                    String frontendEndpoint = StringUtils.splitByWholeSeparator(StringUtils.removeStart(matcher.group(), "GAIA_FRONTEND_PORT:"), " ")[0];
+                    // InstanceEntity instanceEntity = new InstanceEntity(frontendEndpoint, "", "", this.instanceProperties.getCloseScript());
+                    // FrontendMemoryStorage.getFrontendStorage().addFrontendEndpoint(graphName, instanceEntity);
+                    String[] endpointArray = StringUtils.split(frontendEndpoint, ":");
+                    String ip = endpointArray[0];
+                    int frontendPort = Integer.parseInt(endpointArray[1]);
+                    createInstanceEntity.setGaiaFrontHost(ip);
+                    createInstanceEntity.setGaiaFrontPort(frontendPort);
+                    logger.info("Found Gaia Frontend with ip: "+ ip + " and port:" + frontendEndpoint);
+                    if (!this.checkInstanceReady(ip, frontendPort)) {
+                    errorCode = -1;
+                    errorMessage = "Check instance ready timeout";
+                    }
+                } else {
+                    errorCode = -1;
+                    errorMessage = "GAIA_FRONTEND_PORT match failed.";
+                }
               }
             }
         } catch (Exception e) {
             errorCode = -1;
             errorMessage = ExceptionUtils.getMessage(e);
+        }
+        if (errorCode == -1) {
+            this.closeInstance(graphName);
         }
 
         createInstanceEntity.setErrorCode(errorCode);
@@ -164,9 +200,9 @@ public class InstanceManagerController {
         int frontendPort = 0;
 
         String schemaPath = "/tmp/" + graphName + ".json";
-        if (StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
+        if (!isValidGraphName(graphName) || StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
             createInstanceEntity.setErrorCode(-1);
-            createInstanceEntity.setErrorMessage("Invalid graph name=>" + graphName);
+            createInstanceEntity.setErrorMessage("Invalid graph name");
             return createInstanceEntity;
         }
         try {
@@ -184,6 +220,7 @@ public class InstanceManagerController {
         try {
             List<String> createCommandList = new ArrayList<>();
             createCommandList.add(instanceProperties.getCreateScript());
+            createCommandList.add("create_gremlin_instance_on_k8s");
             createCommandList.add(graphName);
             createCommandList.add(schemaPath);
             createCommandList.add(podNameList);
@@ -280,9 +317,9 @@ public class InstanceManagerController {
         String errorMessage;
         int frontendPort = 0;
 
-        if (StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
+        if (!isValidGraphName(graphName) || StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
             createInstanceEntity.setErrorCode(-1);
-            createInstanceEntity.setErrorMessage("Invalid graph name=>" + graphName);
+            createInstanceEntity.setErrorMessage("Invalid graph name");
             return createInstanceEntity;
         }
         try {
@@ -345,8 +382,12 @@ public class InstanceManagerController {
         int errorCode;
         String errorMessage;
         try {
+            if (!isValidGraphName(graphName)) {
+                return new CloseInstanceEntity(-1, "Invalid graph name");
+            }
             List<String> closeCommandList = new ArrayList<>();
             closeCommandList.add(instanceProperties.getCloseScript());
+            closeCommandList.add("close_gremlin_instance_on_k8s");
             closeCommandList.add(graphName);
             closeCommandList.add(podNameList);
             closeCommandList.add(containerName);
@@ -367,14 +408,18 @@ public class InstanceManagerController {
         return new CloseInstanceEntity(errorCode, errorMessage);
     }
 
-		@RequestMapping("close_local")
+    @RequestMapping("close_local")
     public CloseInstanceEntity closeInstance(@RequestParam("graphName") String graphName) {
         int errorCode;
         String errorMessage;
 
         try{
+            if (!isValidGraphName(graphName)) {
+                return new CloseInstanceEntity(-1, "Invalid graph name");
+            }
             List<String> closeCommandList = new ArrayList<>();
             closeCommandList.add(instanceProperties.getCloseScript());
+            closeCommandList.add("close_gremlin_instance_on_local");
             closeCommandList.add(graphName);
             String command = StringUtils.join(closeCommandList, " ");
             logger.info("start to close instance with command " + command);
@@ -396,5 +441,10 @@ public class InstanceManagerController {
     @RequestMapping("frontend")
     public String queryFrontendEndpoint(@RequestParam("graphName") String graphName) {
         return FrontendMemoryStorage.getFrontendStorage().getFrontendEndpoint(graphName).getFrontEndpoint();
+    }
+
+    public boolean isValidGraphName(String graphName) {
+        String validPattern = "^\\w{1,128}$";
+        return graphName.matches(validPattern);
     }
 }

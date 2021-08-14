@@ -239,7 +239,7 @@ impl GraphTopology {
                     if let ErrorKind::UnexpectedEof = e.kind() {
                         break
                     } else {
-                        panic!(e);
+                        panic!("{}",e);
                     }
                 }
             };

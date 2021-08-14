@@ -4,7 +4,7 @@
 # the result image includes all runtime stuffs of graphscope, with analytical engine,
 # learning engine and interactive engine installed.
 
-ARG BASE_VERSION=v0.2.5
+ARG BASE_VERSION=v0.2.6
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 ARG CI=true
@@ -73,12 +73,13 @@ ARG profile=$profile
 RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
     curl -sf -L https://static.rust-lang.org/rustup.sh | \
-        sh -s -- -y --profile minimal --default-toolchain 1.48.0 && \
+        sh -s -- -y --profile minimal --default-toolchain 1.54.0 && \
     echo "source ~/.cargo/env" >> ~/.bashrc
 
 ENV PATH=${PATH}:/usr/local/go/bin
 
 RUN source ~/.bashrc \
+    && rustup component add rustfmt \
     && echo "build with profile: $profile" \
     && cd /root/gs/interactive_engine/src/executor \
     && export CMAKE_PREFIX_PATH=/opt/graphscope \
@@ -96,7 +97,7 @@ RUN source ~/.bashrc \
 
 # # # # # # # # # # # # # # # # # # # # # #
 # generate final runtime image
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:debug
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 
 ARG profile=release
 
@@ -106,10 +107,11 @@ COPY --from=builder /root/gs/k8s/precompile.py /tmp/precompile.py
 RUN python3 /tmp/precompile.py && rm /tmp/precompile.py
 
 RUN mkdir -p /home/maxgraph
+RUN mkdir -p /home/maxgraph/{bin,conf}
 ENV VINEYARD_IPC_SOCKET /home/maxgraph/data/vineyard/vineyard.sock
-COPY --from=builder /root/gs/interactive_engine/src/executor/target/$profile/executor /home/maxgraph/executor
+COPY --from=builder /root/gs/interactive_engine/src/executor/target/$profile/executor /home/maxgraph/bin/executor
+COPY --from=builder /root/gs/interactive_engine/bin/giectl /home/maxgraph/bin/giectl
 
-COPY --from=builder /root/gs/interactive_engine/src/executor/store/log4rs.yml /home/maxgraph/log4rs.yml
 RUN mkdir -p /home/maxgraph/native
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/home/maxgraph/native
 
@@ -120,10 +122,6 @@ RUN pip3 install git+https://github.com/mars-project/mars.git@35b44ed56e031c252e
 ENV RUST_BACKTRACE=1
 
 # copy start script from builder
-RUN mkdir -p /home/maxgraph/config
-COPY interactive_engine/deploy/docker/dockerfile/executor-entrypoint.sh /home/maxgraph/executor-entrypoint.sh
-COPY interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties /home/maxgraph/config/executor.application.properties
-
-RUN mkdir -p /root/maxgraph
-COPY interactive_engine/deploy/docker/dockerfile/set_config.sh /root/maxgraph/set_config.sh
-COPY interactive_engine/deploy/docker/dockerfile/kill_process.sh /root/maxgraph/kill_process.sh
+COPY interactive_engine/conf/* /home/maxgraph/conf/
+ENV GRAPHSCOPE_HOME=/home/maxgraph
+ENV GRAPHSCOPE_RUNTIME=/tmp/graphscope
