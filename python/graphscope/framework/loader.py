@@ -37,6 +37,15 @@ try:
 except ImportError:
     vineyard = None
 
+try:
+    import mars
+    from mars import dataframe as md
+    from mars import tensor as mt
+except ImportError:
+    mars = None
+    md = None
+    mt = None
+
 logger = logging.getLogger("graphscope")
 
 
@@ -178,7 +187,9 @@ class Loader(object):
         elif vineyard is not None and isinstance(
             source, (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
         ):
-            self.process_vy_object(source)
+            self.process_vineyard_object(source)
+        elif mars is not None and isinstance(source, (mt.Tensor, md.DataFrame)):
+            self.process_mars(source)
         elif isinstance(source, Sequence):
             # Assume a list of numpy array are passed as COO matrix, with length >= 2.
             # Formats: [src_id, dst_id, prop_1, ..., prop_n]
@@ -275,6 +286,18 @@ class Loader(object):
         self.source = source
         self.preprocessor = func
 
+    def process_mars(self, source):
+        def func(source, storage_options, read_options, sess):
+            vineyard_id = (
+                source.to_vineyard(sess.engine_config["vineyard_socket"])
+                .execute()
+                .fetch()
+            )
+            return "vineyard", vineyard_id
+
+        self.source = source
+        self.preprocessor = func
+
     def finish(self, session_id=None):
         if self.finished:
             return
@@ -299,7 +322,7 @@ class Loader(object):
             )
         self.finished = True
 
-    def process_vy_object(self, source):
+    def process_vineyard_object(self, source):
         self.protocol = "vineyard"
         # encoding: add a `o` prefix to object id, and a `s` prefix to object name.
         if isinstance(source, vineyard.Object):
