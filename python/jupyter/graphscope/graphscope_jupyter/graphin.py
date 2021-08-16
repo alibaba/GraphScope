@@ -331,6 +331,7 @@ def draw_graphscope_graph(graph, vertices, hop=1):
         A GraphModel.
     """
     from graphscope_jupyter import GraphModel
+
     interactive_query = graph._session.gremlin(graph)
     if not isinstance(vertices, list):
         id_list = []
@@ -340,7 +341,6 @@ def draw_graphscope_graph(graph, vertices, hop=1):
             id_list.extend(i["id"])
     else:
         id_list = vertices
-
 
     gm = GraphModel()
     gm.queryGraphData(id_list, hop, interactive_query)
