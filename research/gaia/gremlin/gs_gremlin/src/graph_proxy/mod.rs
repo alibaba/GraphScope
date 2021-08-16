@@ -108,6 +108,8 @@ where
             self.graph_partitioner.clone(),
             self.partition_worker_mapping.clone(),
             self.worker_partition_list_mapping.clone(),
+            self.num_servers,
+            self.server_index,
         );
         GremlinJobCompiler::new(partition, self.num_servers, self.server_index)
     }
