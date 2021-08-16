@@ -17,6 +17,7 @@
 #
 
 import json
+import pickle
 import sys
 
 import ipywidgets as widgets
@@ -171,7 +172,7 @@ class GraphModel(widgets.DOMWidget):
         self.value = data_str
 
     def _gremlin(self, query=""):
-        return self._interactive_query.execute(query).all().result()
+        return self._interactive_query.execute(query).all()
 
     def _process_vertices_1_hop(self, vertices):
         nodes = []
@@ -263,6 +264,8 @@ class GraphModel(widgets.DOMWidget):
         data_dict["graphVisId"] = "0"
         data_dict["nodes"] = nodes
         data_dict["edges"] = edges
+        with open("/tmp/data_dict", "wb") as f:
+            pickle.dump(data_dict, f)
 
         return data_dict
 
@@ -327,19 +330,33 @@ def draw_graphscope_graph(graph, vertices, hop=1):
     Returns:
         A GraphModel.
     """
-    graph._ensure_loaded()
+    from graphscope_jupyter import GraphModel
     interactive_query = graph._session.gremlin(graph)
+    if not isinstance(vertices, list):
+        id_list = []
+        # gremlin query
+        rlt = interactive_query.execute(vertices).all()
+        for i in rlt:
+            id_list.extend(i["id"])
+    else:
+        id_list = vertices
+
 
     gm = GraphModel()
+    gm.queryGraphData(id_list, hop, interactive_query)
 
+    gm2 = GraphModel()
+    with open("/tmp/data_dict", "rb") as f:
+        data = pickle.load(f)
+    gm2.addGraphFromData(data)
     # for debugging
     # gm.addGraphFromData()
 
-    gm.queryGraphData(vertices, hop, interactive_query)
+    # gm.queryGraphData(id_list, hop, interactive_query)
     # listen on the 1~2 hops operation of node
-    gm.on_msg(gm.queryNeighbor)
+    # gm.on_msg(gm.queryNeighbor)
 
-    return gm
+    return gm2
 
 
 def repr_graphscope_graph(graph, *args, **kwargs):
