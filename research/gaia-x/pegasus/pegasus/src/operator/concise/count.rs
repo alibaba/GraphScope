@@ -37,6 +37,7 @@ impl<D: Data> Count<D> for Stream<D> {
                             if dataset.is_last() {
                                 let mut session = output.new_session(&dataset.tag)?;
                                 let end = dataset.take_end().expect("unreachable");
+                                trace_worker!("emit global count = {} of {:?};", sum, end.tag);
                                 session.give_last(Single(sum), end)?;
                             } else {
                                 table.insert(dataset.tag.clone(), sum);
@@ -47,6 +48,7 @@ impl<D: Data> Count<D> for Stream<D> {
                             let mut session = output.new_session(&dataset.tag)?;
                             let end = dataset.take_end().expect("unreachable");
                             if let Some(sum) = table.remove(&end.tag) {
+                                trace_worker!("emit global count = {} of {:?};", sum, end.tag);
                                 session.give_last(Single(sum), end)?;
                             } else {
                                 session.notify_end(end)?;

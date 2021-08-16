@@ -52,7 +52,7 @@ impl Panel {
         self.current_weight.add_source(src);
         // debug_worker!("current weight {:?}", self.current_weight);
         if let Some(expect) = self.expect_weight.take() {
-            if self.current_weight == expect {
+            if self.current_weight >= expect {
                 self.is_exhaust = true;
                 let mut end = EndSignal::new(self.tag.clone(), expect);
                 if let Some(update) = self.update_weight.take() {
@@ -133,6 +133,7 @@ impl InboundStreamState {
                 trace_worker!("in port {:?} get end of {:?}", self.port, e.tag);
                 self.notify.notify(e)?;
             } else {
+                trace_worker!("in port {:?} partial end of {:?}, expect {:?}, current {:?};", self.port, p.tag, p.expect_weight, p.current_weight);
                 self.notify_guards[idx].insert(tag, p);
             }
         } else {

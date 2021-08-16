@@ -47,10 +47,9 @@ fn subtask_test_1() {
     assert_eq!(count, num * 2);
 }
 
-#[test]
-fn subtask_test_2() {
+fn subtask_test_2(workers: u32) {
     let mut conf = JobConf::new("subtask_test_2");
-    conf.set_workers(2);
+    conf.set_workers(workers);
     let num = 100u32;
     let mut result = pegasus::run(conf, move || {
         let index = pegasus::get_current_worker().index;
@@ -73,7 +72,42 @@ fn subtask_test_2() {
         assert_eq!(expected, cnt, "{} expected cnt = {}", p, expected);
         count += 1;
     }
-    assert_eq!(count, 200);
+    assert_eq!(count, num * workers);
+}
+
+#[test]
+fn subtask_test_2_2_workers() {
+    subtask_test_2(2)
+}
+
+#[test]
+fn subtask_test_2_3_workers() {
+    subtask_test_2(3)
+}
+
+#[test]
+fn subtask_test_2_4_workers() {
+    subtask_test_2(4)
+}
+
+#[test]
+fn subtask_test_2_5_workers() {
+    subtask_test_2(5)
+}
+
+#[test]
+fn subtask_test_2_6_workers() {
+    subtask_test_2(6)
+}
+
+#[test]
+fn subtask_test_2_7_workers() {
+    subtask_test_2(7)
+}
+
+#[test]
+fn subtask_test_2_8_workers() {
+    subtask_test_2(8)
 }
 
 #[test]

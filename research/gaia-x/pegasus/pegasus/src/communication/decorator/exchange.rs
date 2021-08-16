@@ -232,7 +232,8 @@ mod rob {
                 }
             } else {
                 // end is only send to aggregate target,
-                end.update_weight = Some(Weight::single());
+                let w = crate::worker_id::get_current_worker().index;
+                end.update_weight = Some(Weight::single(w));
             }
             self.pushes[offset].push_last(msg, end)
         }

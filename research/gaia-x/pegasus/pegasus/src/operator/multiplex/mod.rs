@@ -25,8 +25,9 @@ impl<D: Data> Tumbling<D> for Stream<D> {
         self.unary("tumbling", |info| {
             assert!(info.scope_level > 0);
             let id = crate::worker_id::get_current_worker();
+            let worker = id.index;
             let offset = id.total_peers();
-            let index = id.index + offset;
+            let index = worker + offset;
             let mut tumbling_scope = TidyTagMap::new(info.scope_level - 1);
             let mut count = 0;
             move |input, output| {
@@ -39,7 +40,7 @@ impl<D: Data> Tumbling<D> for Stream<D> {
                         cnt.0 += 1;
                         if cnt.0 == length {
                             cnt.0 = 0;
-                            let end = EndSignal::new(enter_tag.clone(), Weight::single());
+                            let end = EndSignal::new(enter_tag.clone(), Weight::single(worker));
                             cnt.1 += offset;
                             enter_tag = enter_tag.advance_to(cnt.1);
                             output.push_last(item, end)?;

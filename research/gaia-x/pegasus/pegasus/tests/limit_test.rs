@@ -125,7 +125,7 @@ fn limit_test_05() {
     let mut result = pegasus::run(conf, || {
         |input, output| {
             input
-                .input_from(1..1000u32)?
+                .input_from(1..500u32)?
                 .apply(|sub| {
                     sub.flat_map(|i| Ok(0..i))?
                         .repartition(|x: &u32| Ok(*x as u64))
@@ -140,11 +140,11 @@ fn limit_test_05() {
 
     let mut count = 0;
     while let Some(Ok(d)) = result.next() {
-        assert!(d.0 < 1000);
+        assert!(d.0 < 500);
         count += 1;
     }
 
-    assert_eq!(count, 1998);
+    assert_eq!(count, 998);
 }
 
 // early-stop with subtask in loop, triggered INSIDE subtask
