@@ -23,4 +23,4 @@ RUN source /home/jovyan/.cargo/env && \
   rustup install stable && rustup default stable && rustup component add rustfmt && \
   cd /tmp/GraphScope && make install && \
   echo "source ~/.cargo/env" >> ~/.bashrc && \
-  python3 /tmp/GraphScope/k8s/precompile.py
+  NETWORKX=OFF python3 /tmp/GraphScope/k8s/precompile.py
