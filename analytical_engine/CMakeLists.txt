@@ -22,8 +22,6 @@ option(BUILD_TESTS "Build unit test" ON)
 
 if (NETWORKX)
     add_definitions(-DNETWORKX)
-    # TODO: need by vineyard, remove when vineyard version update.
-    add_definitions(-DEXPERIMENTAL_ON)
 endif ()
 
 set(DEFAULT_BUILD_TYPE "Release")
