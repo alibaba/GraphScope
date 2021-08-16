@@ -315,14 +315,7 @@ jobs:
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
         export GS_TEST_DIR='/root/gstest'
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/classes
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/test_nx.py
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/test_ctx_builtin.py
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/algorithms/builtin \
-                          --ignore=python/graphscope/nx/tests/algorithms/builtin/test_shortest_paths.py
-        # a hack solution to avoid oom.
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/algorithms/builtin/test_shortest_paths.py
-        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests/test_utils.py
+        python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests
 
         pkill -TERM etcd || true
 

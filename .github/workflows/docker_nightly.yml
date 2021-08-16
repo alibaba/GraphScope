@@ -27,15 +27,14 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         sudo make graphscope-store
 
-    - name: Set short sha to outputs
-      id: set_sha
-      run: echo "::set-output name=short_sha::$(git rev-parse --short HEAD)"
+    - name: Add SHORT_SHA env with commit short sha
+      run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
     - name: Kubernetes test
       env:
         CHANGE_MINIKUBE_NONE_USER: true
-        GS_IMAGE: graphscope/graphscope:${{ steps.set_sha.outputs.short_sha }}
-        GIE_MANAGER_IMAGE: graphscope/maxgraph_standalone_manager:${{ steps.set_sha.outputs.short_sha }}
+        GS_IMAGE: graphscope/graphscope:${SHORT_SHA}
+        GIE_MANAGER_IMAGE: graphscope/maxgraph_standalone_manager${SHORT_SHA}
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         if [ ! -d "${GS_TEST_DIR}" ]; then
@@ -50,11 +49,11 @@ jobs:
     - name: Release Nightly Images
       run: |
         echo ${{ secrets.ALIYUN_TOKEN }} | sudo docker login --username=grape_dev registry.cn-hongkong.aliyuncs.com --password-stdin
-        sudo docker tag graphscope/graphscope:${{ steps.set_sha.outputs.short_sha }} \
+        sudo docker tag graphscope/graphscope:${${SHORT_SHA}} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly
-        sudo docker tag graphscope/maxgraph_standalone_manager:${{ steps.set_sha.outputs.short_sha }} \
+        sudo docker tag graphscope/maxgraph_standalone_manager:${${SHORT_SHA}} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:nightly
-        sudo docker tag graphscope/graphscope-store:${{ steps.set_sha.outputs.short_sha }} \
+        sudo docker tag graphscope/graphscope-store:${${SHORT_SHA}} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly
 
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly
@@ -64,9 +63,9 @@ jobs:
     - name: Clean
       if: always()
       run: |
-        sudo docker rmi -f graphscope/graphscope:${{ steps.set_sha.outputs.short_sha }} \
-            graphscope/maxgraph_standalone_manager:${{ steps.set_sha.outputs.short_sha }} \
-            graphscope/graphscope-store:${{ steps.set_sha.outputs.short_sha }} \
+        sudo docker rmi -f graphscope/graphscope:${${SHORT_SHA}} \
+            graphscope/maxgraph_standalone_manager:${${SHORT_SHA}} \
+            graphscope/graphscope-store:${${SHORT_SHA}} \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly \
             registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:nightly \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:nightly || true
