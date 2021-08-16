@@ -16,9 +16,12 @@ struct Config {
     #[structopt(short = "k", default_value = "3")]
     k: u32,
     #[structopt(short = "t", default_value = "100")]
-    times: u32,
+    starts: u32,
     #[structopt(short = "f")]
     use_loop: bool,
+    /// specify the ids of start vertices;
+    #[structopt(short = "i")]
+    id_from_std: bool,
     /// The path of the origin graph data ;
     #[structopt(long = "data", parse(from_os_str))]
     data_path: PathBuf,
@@ -50,8 +53,30 @@ fn main() {
         conf.reset_servers(ServerConf::All);
     }
 
-    let src = graph
-        .sample_vertices(config.times as usize)
+    let src =
+        if config.id_from_std {
+            let mut buf = String::new();
+            let mut ids = vec![];
+            loop {
+                let line = std::io::stdin().read_line(&mut buf).unwrap();
+                if line == 0 {
+                    break;
+                } else {
+                    buf.split(',')
+                        .map(|id_str| {
+                            let id = id_str.trim_end_matches(|c| c == '\n' || c == '\t' || c == ' ');
+                            id.parse::<u64>().unwrap()
+                        })
+                        .for_each(|x| ids.push(x));
+                }
+                buf.clear();
+            }
+            ids
+        } else {
+            graph.sample_vertices(config.starts as usize)
+        };
+
+    let src = src
         .into_iter()
         .enumerate()
         .map(|(i, id)| (i as u64, id))
@@ -60,6 +85,14 @@ fn main() {
     pegasus::wait_servers_ready(conf.servers());
 
     let k_hop = config.k;
+    let nums = src.len();
+    if nums == 0 {
+        return;
+    }
+
+    println!("start search {}-hop neighbors for {} vertices;", k_hop, nums);
+
+
     assert!(k_hop > 0);
     let use_loop = config.use_loop;
     let start = Instant::now();
@@ -188,7 +221,7 @@ fn main() {
 
     println!("==========================================================");
     let millis = elp.as_millis() as u64;
-    println!("total use {}ms, qps: {:.1}", millis, config.times as f64 * 1000f64 / millis as f64);
+    println!("total use {}ms, qps: {:.1}", millis, nums as f64 * 1000f64 / millis as f64);
 
     pegasus::shutdown_all();
 }
