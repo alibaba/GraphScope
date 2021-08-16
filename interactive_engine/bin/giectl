@@ -348,7 +348,7 @@ create_gremlin_instance_on_local() {
   declare wait_period_seconds=0
   declare gremlin_server_ready=False gaia_gremlin_server_ready=False
   declare gremlin_server_port_in_log gremlin_server_port_in_out gremlin_server_port_in_err
-  declare gaia_gremlin_server_port_in_log gaia_gremlin_server_port_in_log gaia_gremlin_server_port_in_err
+  declare gaia_gremlin_server_port_in_log gaia_gremlin_server_port_in_out gaia_gremlin_server_port_in_err
   while true
   do
     # The fronted log may randomly output to log/out/err, this is an ad-hoc solution
@@ -359,7 +359,7 @@ create_gremlin_instance_on_local() {
     gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $7}') || true
     gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $4}') || true
     if [ ! -z "${gremlin_server_port_in_log}" ]; then
-      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port}"
+      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port_in_log}"
       gremlin_server_ready=True
     elif [ ! -z "${gremlin_server_port_in_out}" ]; then
       log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port_in_out}"
@@ -372,7 +372,7 @@ create_gremlin_instance_on_local() {
     # fetch gaia frontend port
     if [ "${enable_gaia}" = True ]; then
       gaia_gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.log | awk -F: '{print $6}') || true
-      gaia_gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $7}') || true
+      gaia_gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $7}') || true
       gaia_gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.err | awk -F: '{print $4}') || true
       if [ ! -z "${gaia_gremlin_server_port_in_log}" ]; then
         log "GAIA_FRONTEND_PORT:127.0.0.1:${gaia_gremlin_server_port_in_log}"
