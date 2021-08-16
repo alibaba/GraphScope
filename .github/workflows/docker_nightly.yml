@@ -27,14 +27,16 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         sudo make graphscope-store
 
-    - name: Add SHORT_SHA env with commit short sha
-      run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+    - name: Add envs to GITHUB_ENV
+      run: |
+        short_sha=$(git rev-parse --short HEAD)
+        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+        echo "GS_IMAGE=graphscope/graphscope:${short_sha}" >> $GITHUB_ENV
+        echo "GIE_MANAGER_IMAGE=graphscope/maxgraph_standalone_manager:${short_sha}" >> $GITHUB_ENV
 
     - name: Kubernetes test
       env:
         CHANGE_MINIKUBE_NONE_USER: true
-        GS_IMAGE: graphscope/graphscope:${SHORT_SHA}
-        GIE_MANAGER_IMAGE: graphscope/maxgraph_standalone_manager${SHORT_SHA}
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         if [ ! -d "${GS_TEST_DIR}" ]; then
