@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.gaia;
 
+import com.alibaba.graphscope.gaia.broadcast.AsyncRpcBroadcastProcessor;
+import com.alibaba.graphscope.gaia.broadcast.channel.AsyncRpcChannelFetcher;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.v2.common.DefaultMetaService;
 import com.alibaba.maxgraph.v2.common.MetaService;

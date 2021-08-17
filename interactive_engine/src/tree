@@ -1,0 +1,2026 @@
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.alibaba.maxgraph:maxgraph-executor:jar:0.0.1-SNAPSHOT
+[WARNING] 'build.plugins.plugin.version' for org.codehaus.mojo:exec-maven-plugin is missing. @ com.alibaba.maxgraph:maxgraph-executor:[unknown-version], /Users/zhouxiaoli/Downloads/shirly/GraphScope/interactive_engine/src/executor/pom.xml, line 23, column 29
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.alibaba.graphscope:compiler-core:jar:1.0-SNAPSHOT
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-compiler-plugin is missing. @ com.alibaba.graphscope:compiler-core:[unknown-version], /Users/zhouxiaoli/Downloads/shirly/GraphScope/research/gaia/gremlin/compiler/compiler-core/pom.xml, line 100, column 21
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.alibaba.graphscope:pegasus-client:jar:1.0-SNAPSHOT
+[WARNING] 'dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique: org.slf4j:slf4j-api:jar -> duplicate declaration of version 1.7.30 @ com.alibaba.graphscope:pegasus-client:[unknown-version], /Users/zhouxiaoli/Downloads/shirly/GraphScope/research/gaia/pegasus/clients/java/client/pom.xml, line 41, column 21
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-compiler-plugin is missing. @ com.alibaba.graphscope:pegasus-client:[unknown-version], /Users/zhouxiaoli/Downloads/shirly/GraphScope/research/gaia/pegasus/clients/java/client/pom.xml, line 122, column 21
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-clean-plugin is missing. @ com.alibaba.graphscope:pegasus-client:[unknown-version], /Users/zhouxiaoli/Downloads/shirly/GraphScope/research/gaia/pegasus/clients/java/client/pom.xml, line 72, column 21
+[WARNING] 'build.plugins.plugin.version' for org.codehaus.mojo:build-helper-maven-plugin is missing. @ com.alibaba.graphscope:pegasus-client:[unknown-version], /Users/zhouxiaoli/Downloads/shirly/GraphScope/research/gaia/pegasus/clients/java/client/pom.xml, line 105, column 21
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.alibaba.maxgraph:maxgraph-common-rust:jar:0.0.1-SNAPSHOT
+[WARNING] 'build.plugins.plugin.version' for org.codehaus.mojo:exec-maven-plugin is missing. @ com.alibaba.maxgraph:maxgraph-common-rust:[unknown-version], /Users/zhouxiaoli/Downloads/shirly/GraphScope/interactive_engine/src/common/rust/pom.xml, line 17, column 21
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Detecting the operating system and CPU architecture
+[INFO] ------------------------------------------------------------------------
+[INFO] os.detected.name: osx
+[INFO] os.detected.arch: x86_64
+[INFO] os.detected.classifier: osx-x86_64
+[INFO] ------------------------------------------------------------------------
+[INFO] Detecting the operating system and CPU architecture
+[INFO] ------------------------------------------------------------------------
+[INFO] os.detected.name: osx
+[INFO] os.detected.arch: x86_64
+[INFO] os.detected.version: 10.14
+[INFO] os.detected.version.major: 10
+[INFO] os.detected.version.minor: 14
+[INFO] os.detected.classifier: osx-x86_64
+[INFO] ------------------------------------------------------------------------
+[INFO] Detecting the operating system and CPU architecture
+[INFO] ------------------------------------------------------------------------
+[INFO] os.detected.name: osx
+[INFO] os.detected.arch: x86_64
+[INFO] os.detected.version: 10.14
+[INFO] os.detected.version.major: 10
+[INFO] os.detected.version.minor: 14
+[INFO] os.detected.classifier: osx-x86_64
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] sdk-common                                                         [jar]
+[INFO] maxgraph-api                                                       [pom]
+[INFO] common                                                             [jar]
+[INFO] coordinator                                                        [jar]
+[INFO] compiler                                                           [jar]
+[INFO] maxgraph-frontendservice                                           [jar]
+[INFO] maxgraph-frontend                                                  [pom]
+[INFO] assembly                                                           [jar]
+[INFO] instance-manager                                                   [jar]
+[INFO] executor                                                           [jar]
+[INFO] maxgraph-src                                                       [pom]
+[INFO] v2                                                                 [jar]
+[INFO] data_load_tools                                                    [jar]
+[INFO] gremlin-compiler                                                   [pom]
+[INFO] compiler-core                                                      [jar]
+[INFO] gremlin-server-plugin                                              [jar]
+[INFO] benchmark-tool                                                     [jar]
+[INFO] pegasus-client                                                     [jar]
+[INFO] gremlin-test                                                       [jar]
+[INFO] gaia-adaptor                                                       [jar]
+[INFO] common-rust                                                        [jar]
+[INFO] 
+[INFO] --------------< com.alibaba.maxgraph:maxgraph-sdk-common >--------------
+[INFO] Building sdk-common 0.0.1-SNAPSHOT                                [1/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ maxgraph-sdk-common ---
+[INFO] com.alibaba.maxgraph:maxgraph-sdk-common:jar:0.0.1-SNAPSHOT
+[INFO] +- com.fasterxml.jackson.core:jackson-core:jar:2.11.1:compile
+[INFO] +- javax.annotation:javax.annotation-api:jar:1.2:compile
+[INFO] +- junit:junit:jar:4.12:compile
+[INFO] |  \- org.hamcrest:hamcrest-core:jar:1.3:compile
+[INFO] +- com.alibaba:fastjson:jar:1.2.75:compile
+[INFO] +- com.google.protobuf:protobuf-java:jar:3.12.2:compile
+[INFO] +- io.grpc:grpc-all:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-api:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[INFO] |  |  +- com.google.guava:guava:jar:30.1.1-jre:compile (version selected from constraint [24.1.1,))
+[INFO] |  |  |  +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO] |  |  |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO] |  |  |  +- org.checkerframework:checker-qual:jar:3.8.0:compile
+[INFO] |  |  |  \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO] |  |  +- com.google.errorprone:error_prone_annotations:jar:2.3.4:compile
+[INFO] |  |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:runtime
+[INFO] |  +- io.grpc:grpc-auth:jar:1.30.1:compile
+[INFO] |  |  \- com.google.auth:google-auth-library-credentials:jar:0.20.0:compile
+[INFO] |  +- io.grpc:grpc-context:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-core:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |  +- com.google.code.gson:gson:jar:2.8.6:compile
+[INFO] |  |  +- com.google.android:annotations:jar:4.1.1.4:runtime
+[INFO] |  |  \- io.perfmark:perfmark-api:jar:0.19.0:runtime
+[INFO] |  +- io.grpc:grpc-grpclb:jar:1.30.1:compile
+[INFO] |  |  \- com.google.protobuf:protobuf-java-util:jar:3.12.0:compile
+[INFO] |  +- io.grpc:grpc-netty:jar:1.30.1:compile
+[INFO] |  |  +- io.netty:netty-codec-http2:jar:4.1.48.Final:compile (version selected from constraint [4.1.48.Final,4.1.48.Final])
+[INFO] |  |  |  +- io.netty:netty-common:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-buffer:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-transport:jar:4.1.48.Final:compile
+[INFO] |  |  |  |  \- io.netty:netty-resolver:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-codec:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-handler:jar:4.1.48.Final:compile
+[INFO] |  |  |  \- io.netty:netty-codec-http:jar:4.1.48.Final:compile
+[INFO] |  |  \- io.netty:netty-handler-proxy:jar:4.1.48.Final:runtime
+[INFO] |  |     \- io.netty:netty-codec-socks:jar:4.1.48.Final:runtime
+[INFO] |  +- io.grpc:grpc-okhttp:jar:1.30.1:compile
+[INFO] |  |  +- com.squareup.okhttp:okhttp:jar:2.7.4:compile
+[INFO] |  |  \- com.squareup.okio:okio:jar:1.13.0:runtime
+[INFO] |  +- io.grpc:grpc-protobuf:jar:1.30.1:compile
+[INFO] |  |  +- com.google.api.grpc:proto-google-common-protos:jar:1.17.0:compile
+[INFO] |  |  \- io.grpc:grpc-protobuf-lite:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-services:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-stub:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-testing:jar:1.30.1:compile
+[INFO] |  |  \- io.opencensus:opencensus-api:jar:0.24.0:compile
+[INFO] |  \- io.grpc:grpc-xds:jar:1.30.1:compile
+[INFO] |     +- io.grpc:grpc-alts:jar:1.30.1:compile
+[INFO] |     |  +- org.conscrypt:conscrypt-openjdk-uber:jar:2.2.1:compile
+[INFO] |     |  \- com.google.auth:google-auth-library-oauth2-http:jar:0.20.0:compile
+[INFO] |     |     +- com.google.auto.value:auto-value-annotations:jar:1.7:compile
+[INFO] |     |     +- com.google.http-client:google-http-client:jar:1.34.0:compile
+[INFO] |     |     |  \- io.opencensus:opencensus-contrib-http-util:jar:0.24.0:compile
+[INFO] |     |     \- com.google.http-client:google-http-client-jackson2:jar:1.34.0:compile
+[INFO] |     +- com.google.re2j:re2j:jar:1.2:compile
+[INFO] |     +- io.opencensus:opencensus-proto:jar:0.2.0:compile
+[INFO] |     \- io.grpc:grpc-netty-shaded:jar:1.30.1:compile
+[INFO] +- org.apache.commons:commons-lang3:jar:3.4:compile
+[INFO] +- org.apache.commons:commons-collections4:jar:4.1:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-databind:jar:2.11.1:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-annotations:jar:2.11.1:compile
+[INFO] +- com.fasterxml.jackson.module:jackson-module-paranamer:jar:2.11.1:compile
+[INFO] |  \- com.thoughtworks.paranamer:paranamer:jar:2.8:compile
+[INFO] +- org.apache.httpcomponents:httpclient:jar:4.5.2:compile
+[INFO] |  +- org.apache.httpcomponents:httpcore:jar:4.4.4:compile
+[INFO] |  +- commons-logging:commons-logging:jar:1.2:compile
+[INFO] |  \- commons-codec:commons-codec:jar:1.11:compile
+[INFO] +- org.slf4j:slf4j-api:jar:1.7.21:compile
+[INFO] +- org.testng:testng:jar:6.9.9:test
+[INFO] |  +- com.beust:jcommander:jar:1.48:test
+[INFO] |  +- org.apache.ant:ant:jar:1.7.0:test
+[INFO] |  |  \- org.apache.ant:ant-launcher:jar:1.7.0:test
+[INFO] |  +- org.yaml:snakeyaml:jar:1.15:compile
+[INFO] |  \- org.beanshell:bsh:jar:2.0b4:test
+[INFO] +- org.apache.logging.log4j:log4j-api:jar:99.0-does-not-exist:compile
+[INFO] +- org.apache.logging.log4j:log4j-1.2-api:jar:2.14.1:compile
+[INFO] +- org.apache.logging.log4j:log4j-core:jar:999-not-exist:compile
+[INFO] +- org.apache.logging.log4j:log4j-slf4j-impl:jar:999-not-exist:compile
+[INFO] +- org.apache.tinkerpop:gremlin-driver:jar:3.4.2:compile
+[INFO] |  +- org.codehaus.groovy:groovy:jar:indy:2.5.6:compile
+[INFO] |  \- org.codehaus.groovy:groovy-json:jar:indy:2.5.6:compile
+[INFO] +- org.apache.tinkerpop:gremlin-core:jar:3.4.2:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.2:compile
+[INFO] |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO] |  |  \- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO] |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO] |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO] |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO] |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO] |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO] |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] \- net.jcip:jcip-annotations:jar:1.0:compile
+[INFO] 
+[INFO] -----------------< com.alibaba.maxgraph:maxgraph-api >------------------
+[INFO] Building maxgraph-api 0.0.1-SNAPSHOT                              [2/21]
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ maxgraph-api ---
+[INFO] com.alibaba.maxgraph:maxgraph-api:pom:0.0.1-SNAPSHOT
+[INFO] 
+[INFO] ----------------< com.alibaba.maxgraph:maxgraph-common >----------------
+[INFO] Building common 0.0.1-SNAPSHOT                                    [3/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ maxgraph-common ---
+[INFO] com.alibaba.maxgraph:maxgraph-common:jar:0.0.1-SNAPSHOT
+[INFO] +- junit:junit:jar:4.12:compile
+[INFO] |  \- org.hamcrest:hamcrest-core:jar:1.3:compile
+[INFO] +- com.google.guava:guava:jar:30.1.1-jre:compile
+[INFO] |  +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO] |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO] |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[INFO] |  +- org.checkerframework:checker-qual:jar:3.8.0:compile
+[INFO] |  +- com.google.errorprone:error_prone_annotations:jar:2.5.1:compile
+[INFO] |  \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-databind:jar:2.11.1:compile
+[INFO] |  +- com.fasterxml.jackson.core:jackson-annotations:jar:2.11.1:compile
+[INFO] |  \- com.fasterxml.jackson.core:jackson-core:jar:2.11.1:compile
+[INFO] +- com.fasterxml.jackson.module:jackson-module-paranamer:jar:2.11.1:compile
+[INFO] |  \- com.thoughtworks.paranamer:paranamer:jar:2.8:compile
+[INFO] +- org.testng:testng:jar:6.9.9:test
+[INFO] |  +- com.beust:jcommander:jar:1.48:test
+[INFO] |  +- org.apache.ant:ant:jar:1.7.0:test
+[INFO] |  |  \- org.apache.ant:ant-launcher:jar:1.7.0:test
+[INFO] |  +- org.yaml:snakeyaml:jar:1.15:compile
+[INFO] |  \- org.beanshell:bsh:jar:2.0b4:test
+[INFO] +- org.apache.hadoop:hadoop-common:jar:2.8.4:compile
+[INFO] |  +- org.apache.hadoop:hadoop-annotations:jar:2.8.4:compile
+[INFO] |  |  \- jdk.tools:jdk.tools:jar:1.8:system
+[INFO] |  +- commons-cli:commons-cli:jar:1.3:compile
+[INFO] |  +- org.apache.commons:commons-math3:jar:3.6.1:compile
+[INFO] |  +- xmlenc:xmlenc:jar:0.52:compile
+[INFO] |  +- org.apache.httpcomponents:httpclient:jar:4.5.2:compile
+[INFO] |  |  \- org.apache.httpcomponents:httpcore:jar:4.4.4:compile
+[INFO] |  +- commons-codec:commons-codec:jar:1.11:compile
+[INFO] |  +- commons-io:commons-io:jar:2.6:compile
+[INFO] |  +- commons-net:commons-net:jar:3.1:compile
+[INFO] |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] |  +- org.mortbay.jetty:jetty:jar:6.1.26:compile
+[INFO] |  +- org.mortbay.jetty:jetty-util:jar:6.1.26:compile
+[INFO] |  +- org.mortbay.jetty:jetty-sslengine:jar:6.1.26:compile
+[INFO] |  +- javax.servlet.jsp:jsp-api:jar:2.1:runtime
+[INFO] |  +- com.sun.jersey:jersey-core:jar:1.9:compile
+[INFO] |  +- com.sun.jersey:jersey-json:jar:1.9:compile
+[INFO] |  |  +- org.codehaus.jettison:jettison:jar:1.1:compile
+[INFO] |  |  +- com.sun.xml.bind:jaxb-impl:jar:2.2.3-1:compile
+[INFO] |  |  |  \- javax.xml.bind:jaxb-api:jar:2.2.2:compile
+[INFO] |  |  |     +- javax.xml.stream:stax-api:jar:1.0-2:compile
+[INFO] |  |  |     \- javax.activation:activation:jar:1.1:compile
+[INFO] |  |  +- org.codehaus.jackson:jackson-jaxrs:jar:1.8.3:compile
+[INFO] |  |  \- org.codehaus.jackson:jackson-xc:jar:1.8.3:compile
+[INFO] |  +- com.sun.jersey:jersey-server:jar:1.9:compile
+[INFO] |  |  \- asm:asm:jar:3.1:compile
+[INFO] |  +- commons-logging:commons-logging:jar:1.1.3:compile
+[INFO] |  +- net.java.dev.jets3t:jets3t:jar:0.9.0:compile
+[INFO] |  |  \- com.jamesmurty.utils:java-xmlbuilder:jar:0.4:compile
+[INFO] |  +- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO] |  +- org.slf4j:slf4j-api:jar:1.7.21:compile
+[INFO] |  +- org.codehaus.jackson:jackson-core-asl:jar:1.9.13:compile
+[INFO] |  +- org.codehaus.jackson:jackson-mapper-asl:jar:1.9.13:compile
+[INFO] |  +- org.apache.avro:avro:jar:1.7.4:compile
+[INFO] |  |  \- org.xerial.snappy:snappy-java:jar:1.0.4.1:compile
+[INFO] |  +- com.google.protobuf:protobuf-java:jar:3.12.2:compile
+[INFO] |  +- com.google.code.gson:gson:jar:2.2.4:compile
+[INFO] |  +- org.apache.hadoop:hadoop-auth:jar:2.8.4:compile
+[INFO] |  |  +- com.nimbusds:nimbus-jose-jwt:jar:4.41.1:compile
+[INFO] |  |  |  +- com.github.stephenc.jcip:jcip-annotations:jar:1.0-1:compile
+[INFO] |  |  |  \- net.minidev:json-smart:jar:2.3:compile (version selected from constraint [1.3.1,2.3])
+[INFO] |  |  |     \- net.minidev:accessors-smart:jar:1.2:compile
+[INFO] |  |  |        \- org.ow2.asm:asm:jar:5.0.4:compile
+[INFO] |  |  \- org.apache.directory.server:apacheds-kerberos-codec:jar:2.0.0-M15:compile
+[INFO] |  |     +- org.apache.directory.server:apacheds-i18n:jar:2.0.0-M15:compile
+[INFO] |  |     +- org.apache.directory.api:api-asn1-api:jar:1.0.0-M20:compile
+[INFO] |  |     \- org.apache.directory.api:api-util:jar:1.0.0-M20:compile
+[INFO] |  +- com.jcraft:jsch:jar:0.1.54:compile
+[INFO] |  +- org.apache.htrace:htrace-core4:jar:4.0.1-incubating:compile
+[INFO] |  \- org.apache.commons:commons-compress:jar:1.4.1:compile
+[INFO] |     \- org.tukaani:xz:jar:1.0:compile
+[INFO] +- org.apache.curator:curator-framework:jar:2.12.0:compile
+[INFO] +- org.apache.curator:curator-client:jar:2.12.0:compile
+[INFO] |  \- org.apache.zookeeper:zookeeper:jar:3.6.1:compile
+[INFO] |     +- org.apache.zookeeper:zookeeper-jute:jar:3.6.1:compile
+[INFO] |     +- org.apache.yetus:audience-annotations:jar:0.5.0:compile
+[INFO] |     +- io.netty:netty-handler:jar:4.1.48.Final:compile
+[INFO] |     |  +- io.netty:netty-common:jar:4.1.48.Final:compile
+[INFO] |     |  +- io.netty:netty-resolver:jar:4.1.48.Final:compile
+[INFO] |     |  +- io.netty:netty-buffer:jar:4.1.48.Final:compile
+[INFO] |     |  +- io.netty:netty-transport:jar:4.1.48.Final:compile
+[INFO] |     |  \- io.netty:netty-codec:jar:4.1.48.Final:compile
+[INFO] |     +- io.netty:netty-transport-native-epoll:jar:4.1.48.Final:compile
+[INFO] |     |  \- io.netty:netty-transport-native-unix-common:jar:4.1.48.Final:compile
+[INFO] |     \- log4j:log4j:jar:1.2.17:compile
+[INFO] +- org.apache.curator:curator-recipes:jar:2.12.0:compile
+[INFO] +- org.apache.curator:curator-test:jar:2.12.0:test
+[INFO] |  \- org.javassist:javassist:jar:3.18.1-GA:test
+[INFO] +- com.esotericsoftware:kryo-shaded:jar:4.0.0:compile
+[INFO] |  +- com.esotericsoftware:minlog:jar:1.3.0:compile
+[INFO] |  \- org.objenesis:objenesis:jar:2.2:compile
+[INFO] +- de.javakaffee:kryo-serializers:jar:0.38:compile
+[INFO] +- com.alibaba.maxgraph:maxgraph-sdk-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  +- javax.annotation:javax.annotation-api:jar:1.2:compile
+[INFO] |  +- com.alibaba:fastjson:jar:1.2.75:compile
+[INFO] |  +- io.grpc:grpc-all:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-api:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |  |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:runtime
+[INFO] |  |  +- io.grpc:grpc-auth:jar:1.30.1:compile
+[INFO] |  |  |  \- com.google.auth:google-auth-library-credentials:jar:0.20.0:compile
+[INFO] |  |  +- io.grpc:grpc-context:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-core:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |  |  +- com.google.android:annotations:jar:4.1.1.4:runtime
+[INFO] |  |  |  \- io.perfmark:perfmark-api:jar:0.19.0:runtime
+[INFO] |  |  +- io.grpc:grpc-grpclb:jar:1.30.1:compile
+[INFO] |  |  |  \- com.google.protobuf:protobuf-java-util:jar:3.12.0:compile
+[INFO] |  |  +- io.grpc:grpc-netty:jar:1.30.1:compile
+[INFO] |  |  |  +- io.netty:netty-codec-http2:jar:4.1.48.Final:compile (version selected from constraint [4.1.48.Final,4.1.48.Final])
+[INFO] |  |  |  |  \- io.netty:netty-codec-http:jar:4.1.48.Final:compile
+[INFO] |  |  |  \- io.netty:netty-handler-proxy:jar:4.1.48.Final:runtime
+[INFO] |  |  |     \- io.netty:netty-codec-socks:jar:4.1.48.Final:runtime
+[INFO] |  |  +- io.grpc:grpc-okhttp:jar:1.30.1:compile
+[INFO] |  |  |  +- com.squareup.okhttp:okhttp:jar:2.7.4:compile
+[INFO] |  |  |  \- com.squareup.okio:okio:jar:1.13.0:runtime
+[INFO] |  |  +- io.grpc:grpc-protobuf:jar:1.30.1:compile
+[INFO] |  |  |  +- com.google.api.grpc:proto-google-common-protos:jar:1.17.0:compile
+[INFO] |  |  |  \- io.grpc:grpc-protobuf-lite:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-services:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-stub:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-testing:jar:1.30.1:compile
+[INFO] |  |  |  \- io.opencensus:opencensus-api:jar:0.24.0:compile
+[INFO] |  |  \- io.grpc:grpc-xds:jar:1.30.1:compile
+[INFO] |  |     +- io.grpc:grpc-alts:jar:1.30.1:compile
+[INFO] |  |     |  +- org.conscrypt:conscrypt-openjdk-uber:jar:2.2.1:compile
+[INFO] |  |     |  \- com.google.auth:google-auth-library-oauth2-http:jar:0.20.0:compile
+[INFO] |  |     |     +- com.google.auto.value:auto-value-annotations:jar:1.7:compile
+[INFO] |  |     |     +- com.google.http-client:google-http-client:jar:1.34.0:compile
+[INFO] |  |     |     |  \- io.opencensus:opencensus-contrib-http-util:jar:0.24.0:compile
+[INFO] |  |     |     \- com.google.http-client:google-http-client-jackson2:jar:1.34.0:compile
+[INFO] |  |     +- com.google.re2j:re2j:jar:1.2:compile
+[INFO] |  |     +- io.opencensus:opencensus-proto:jar:0.2.0:compile
+[INFO] |  |     \- io.grpc:grpc-netty-shaded:jar:1.30.1:compile
+[INFO] |  +- org.apache.commons:commons-lang3:jar:3.4:compile
+[INFO] |  +- org.apache.commons:commons-collections4:jar:4.1:compile
+[INFO] |  +- org.apache.logging.log4j:log4j-api:jar:99.0-does-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- org.apache.logging.log4j:log4j-1.2-api:jar:2.14.1:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- org.apache.logging.log4j:log4j-core:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- org.apache.logging.log4j:log4j-slf4j-impl:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- org.apache.tinkerpop:gremlin-driver:jar:3.4.2:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy:jar:indy:2.5.6:compile
+[INFO] |  |  \- org.codehaus.groovy:groovy-json:jar:indy:2.5.6:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-core:jar:3.4.2:compile
+[INFO] |  |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.2:compile
+[INFO] |  |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO] |  |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO] |  |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO] |  |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO] |  |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO] |  |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO] |  |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] |  \- net.jcip:jcip-annotations:jar:1.0:compile
+[INFO] \- org.mockito:mockito-core:jar:3.4.4:test
+[INFO]    +- net.bytebuddy:byte-buddy:jar:1.10.13:test
+[INFO]    \- net.bytebuddy:byte-buddy-agent:jar:1.10.13:test
+[INFO] 
+[INFO] -------------< com.alibaba.maxgraph:maxgraph-coordinator >--------------
+[INFO] Building coordinator 0.0.1-SNAPSHOT                               [4/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ maxgraph-coordinator ---
+[INFO] com.alibaba.maxgraph:maxgraph-coordinator:jar:0.0.1-SNAPSHOT
+[INFO] +- com.alibaba.maxgraph:maxgraph-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  +- org.apache.hadoop:hadoop-common:jar:2.8.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-annotations:jar:2.8.4:compile
+[INFO] |  |  |  \- jdk.tools:jdk.tools:jar:1.8:system
+[INFO] |  |  +- commons-cli:commons-cli:jar:1.3:compile
+[INFO] |  |  +- org.apache.commons:commons-math3:jar:3.6.1:compile
+[INFO] |  |  +- xmlenc:xmlenc:jar:0.52:compile
+[INFO] |  |  +- org.apache.httpcomponents:httpclient:jar:4.5.2:compile
+[INFO] |  |  |  \- org.apache.httpcomponents:httpcore:jar:4.4.4:compile
+[INFO] |  |  +- commons-codec:commons-codec:jar:1.11:compile
+[INFO] |  |  +- commons-io:commons-io:jar:2.6:compile
+[INFO] |  |  +- commons-net:commons-net:jar:3.1:compile
+[INFO] |  |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty:jar:6.1.26:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty-util:jar:6.1.26:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty-sslengine:jar:6.1.26:compile
+[INFO] |  |  +- javax.servlet.jsp:jsp-api:jar:2.1:runtime
+[INFO] |  |  +- com.sun.jersey:jersey-core:jar:1.9:compile
+[INFO] |  |  +- com.sun.jersey:jersey-json:jar:1.9:compile
+[INFO] |  |  |  +- org.codehaus.jettison:jettison:jar:1.1:compile
+[INFO] |  |  |  +- com.sun.xml.bind:jaxb-impl:jar:2.2.3-1:compile
+[INFO] |  |  |  |  \- javax.xml.bind:jaxb-api:jar:2.2.2:compile
+[INFO] |  |  |  |     +- javax.xml.stream:stax-api:jar:1.0-2:compile
+[INFO] |  |  |  |     \- javax.activation:activation:jar:1.1:compile
+[INFO] |  |  |  +- org.codehaus.jackson:jackson-jaxrs:jar:1.8.3:compile
+[INFO] |  |  |  \- org.codehaus.jackson:jackson-xc:jar:1.8.3:compile
+[INFO] |  |  +- com.sun.jersey:jersey-server:jar:1.9:compile
+[INFO] |  |  |  \- asm:asm:jar:3.1:compile
+[INFO] |  |  +- commons-logging:commons-logging:jar:1.1.3:compile
+[INFO] |  |  +- net.java.dev.jets3t:jets3t:jar:0.9.0:compile
+[INFO] |  |  |  \- com.jamesmurty.utils:java-xmlbuilder:jar:0.4:compile
+[INFO] |  |  +- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO] |  |  +- org.codehaus.jackson:jackson-core-asl:jar:1.9.13:compile
+[INFO] |  |  +- org.codehaus.jackson:jackson-mapper-asl:jar:1.9.13:compile
+[INFO] |  |  +- org.apache.avro:avro:jar:1.7.4:compile
+[INFO] |  |  |  \- org.xerial.snappy:snappy-java:jar:1.0.4.1:compile
+[INFO] |  |  +- com.google.protobuf:protobuf-java:jar:3.12.2:compile
+[INFO] |  |  +- com.google.code.gson:gson:jar:2.2.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-auth:jar:2.8.4:compile
+[INFO] |  |  |  +- com.nimbusds:nimbus-jose-jwt:jar:4.41.1:compile
+[INFO] |  |  |  |  +- com.github.stephenc.jcip:jcip-annotations:jar:1.0-1:compile
+[INFO] |  |  |  |  \- net.minidev:json-smart:jar:2.3:compile (version selected from constraint [1.3.1,2.3])
+[INFO] |  |  |  |     \- net.minidev:accessors-smart:jar:1.2:compile
+[INFO] |  |  |  |        \- org.ow2.asm:asm:jar:5.0.4:compile
+[INFO] |  |  |  \- org.apache.directory.server:apacheds-kerberos-codec:jar:2.0.0-M15:compile
+[INFO] |  |  |     +- org.apache.directory.server:apacheds-i18n:jar:2.0.0-M15:compile
+[INFO] |  |  |     +- org.apache.directory.api:api-asn1-api:jar:1.0.0-M20:compile
+[INFO] |  |  |     \- org.apache.directory.api:api-util:jar:1.0.0-M20:compile
+[INFO] |  |  +- com.jcraft:jsch:jar:0.1.54:compile
+[INFO] |  |  +- org.apache.htrace:htrace-core4:jar:4.0.1-incubating:compile
+[INFO] |  |  \- org.apache.commons:commons-compress:jar:1.4.1:compile
+[INFO] |  |     \- org.tukaani:xz:jar:1.0:compile
+[INFO] |  +- org.apache.curator:curator-framework:jar:2.12.0:compile
+[INFO] |  +- org.apache.curator:curator-client:jar:2.12.0:compile
+[INFO] |  +- org.apache.curator:curator-recipes:jar:2.12.0:compile
+[INFO] |  +- com.esotericsoftware:kryo-shaded:jar:4.0.0:compile
+[INFO] |  |  \- com.esotericsoftware:minlog:jar:1.3.0:compile
+[INFO] |  +- de.javakaffee:kryo-serializers:jar:0.38:compile
+[INFO] |  \- com.alibaba.maxgraph:maxgraph-sdk-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |     +- javax.annotation:javax.annotation-api:jar:1.2:compile
+[INFO] |     +- com.alibaba:fastjson:jar:1.2.75:compile
+[INFO] |     +- org.apache.commons:commons-lang3:jar:3.4:compile
+[INFO] |     +- org.apache.commons:commons-collections4:jar:4.1:compile
+[INFO] |     +- org.apache.tinkerpop:gremlin-driver:jar:3.4.2:compile
+[INFO] |     |  +- org.codehaus.groovy:groovy:jar:indy:2.5.6:compile
+[INFO] |     |  \- org.codehaus.groovy:groovy-json:jar:indy:2.5.6:compile
+[INFO] |     +- org.apache.tinkerpop:gremlin-core:jar:3.4.2:compile
+[INFO] |     |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.2:compile
+[INFO] |     |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO] |     |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO] |     |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO] |     |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO] |     |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO] |     |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO] |     |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] |     \- net.jcip:jcip-annotations:jar:1.0:compile
+[INFO] +- io.grpc:grpc-all:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-api:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:runtime
+[INFO] |  +- io.grpc:grpc-auth:jar:1.30.1:compile
+[INFO] |  |  \- com.google.auth:google-auth-library-credentials:jar:0.20.0:compile
+[INFO] |  +- io.grpc:grpc-context:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-core:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |  +- com.google.android:annotations:jar:4.1.1.4:runtime
+[INFO] |  |  \- io.perfmark:perfmark-api:jar:0.19.0:runtime
+[INFO] |  +- io.grpc:grpc-grpclb:jar:1.30.1:compile
+[INFO] |  |  \- com.google.protobuf:protobuf-java-util:jar:3.12.0:compile
+[INFO] |  +- io.grpc:grpc-netty:jar:1.30.1:compile
+[INFO] |  |  +- io.netty:netty-codec-http2:jar:4.1.48.Final:compile (version selected from constraint [4.1.48.Final,4.1.48.Final])
+[INFO] |  |  |  +- io.netty:netty-common:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-buffer:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-transport:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-codec:jar:4.1.48.Final:compile
+[INFO] |  |  |  \- io.netty:netty-codec-http:jar:4.1.48.Final:compile
+[INFO] |  |  \- io.netty:netty-handler-proxy:jar:4.1.48.Final:runtime
+[INFO] |  |     \- io.netty:netty-codec-socks:jar:4.1.48.Final:runtime
+[INFO] |  +- io.grpc:grpc-okhttp:jar:1.30.1:compile
+[INFO] |  |  +- com.squareup.okhttp:okhttp:jar:2.7.4:compile
+[INFO] |  |  \- com.squareup.okio:okio:jar:1.13.0:runtime
+[INFO] |  +- io.grpc:grpc-protobuf:jar:1.30.1:compile
+[INFO] |  |  +- com.google.api.grpc:proto-google-common-protos:jar:1.17.0:compile
+[INFO] |  |  \- io.grpc:grpc-protobuf-lite:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-services:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-stub:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-testing:jar:1.30.1:compile
+[INFO] |  |  \- io.opencensus:opencensus-api:jar:0.24.0:compile
+[INFO] |  \- io.grpc:grpc-xds:jar:1.30.1:compile
+[INFO] |     +- io.grpc:grpc-alts:jar:1.30.1:compile
+[INFO] |     |  +- org.conscrypt:conscrypt-openjdk-uber:jar:2.2.1:compile
+[INFO] |     |  \- com.google.auth:google-auth-library-oauth2-http:jar:0.20.0:compile
+[INFO] |     |     +- com.google.auto.value:auto-value-annotations:jar:1.7:compile
+[INFO] |     |     +- com.google.http-client:google-http-client:jar:1.34.0:compile
+[INFO] |     |     |  \- io.opencensus:opencensus-contrib-http-util:jar:0.24.0:compile
+[INFO] |     |     \- com.google.http-client:google-http-client-jackson2:jar:1.34.0:compile
+[INFO] |     +- com.google.re2j:re2j:jar:1.2:compile
+[INFO] |     +- io.opencensus:opencensus-proto:jar:0.2.0:compile
+[INFO] |     \- io.grpc:grpc-netty-shaded:jar:1.30.1:compile
+[INFO] +- junit:junit:jar:4.12:compile
+[INFO] |  \- org.hamcrest:hamcrest-core:jar:1.3:compile
+[INFO] +- com.google.guava:guava:jar:30.1.1-jre:compile
+[INFO] |  +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO] |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO] |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[INFO] |  +- org.checkerframework:checker-qual:jar:3.8.0:compile
+[INFO] |  +- com.google.errorprone:error_prone_annotations:jar:2.5.1:compile
+[INFO] |  \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-databind:jar:2.11.1:compile
+[INFO] |  \- com.fasterxml.jackson.core:jackson-core:jar:2.11.1:compile
+[INFO] +- com.fasterxml.jackson.module:jackson-module-paranamer:jar:2.11.1:compile
+[INFO] |  \- com.thoughtworks.paranamer:paranamer:jar:2.8:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-annotations:jar:2.11.1:compile
+[INFO] +- org.slf4j:slf4j-api:jar:1.7.21:compile
+[INFO] +- org.apache.logging.log4j:log4j-api:jar:2.6.1:compile
+[INFO] +- org.apache.logging.log4j:log4j-core:jar:2.6.1:compile
+[INFO] +- org.apache.logging.log4j:log4j-slf4j-impl:jar:2.6.1:compile
+[INFO] +- org.apache.logging.log4j:log4j-1.2-api:jar:2.6.1:compile
+[INFO] +- org.mockito:mockito-core:jar:3.4.4:test
+[INFO] |  +- net.bytebuddy:byte-buddy:jar:1.10.13:test
+[INFO] |  +- net.bytebuddy:byte-buddy-agent:jar:1.10.13:test
+[INFO] |  \- org.objenesis:objenesis:jar:2.6:compile
+[INFO] +- org.testng:testng:jar:6.9.9:test
+[INFO] |  +- com.beust:jcommander:jar:1.48:test
+[INFO] |  +- org.apache.ant:ant:jar:1.7.0:test
+[INFO] |  |  \- org.apache.ant:ant-launcher:jar:1.7.0:test
+[INFO] |  +- org.yaml:snakeyaml:jar:1.15:compile
+[INFO] |  \- org.beanshell:bsh:jar:2.0b4:test
+[INFO] \- org.apache.curator:curator-test:jar:2.12.0:compile
+[INFO]    +- org.apache.zookeeper:zookeeper:jar:3.6.1:compile
+[INFO]    |  +- org.apache.zookeeper:zookeeper-jute:jar:3.6.1:compile
+[INFO]    |  +- org.apache.yetus:audience-annotations:jar:0.5.0:compile
+[INFO]    |  +- io.netty:netty-handler:jar:4.1.48.Final:compile
+[INFO]    |  |  \- io.netty:netty-resolver:jar:4.1.48.Final:compile
+[INFO]    |  \- io.netty:netty-transport-native-epoll:jar:4.1.48.Final:compile
+[INFO]    |     \- io.netty:netty-transport-native-unix-common:jar:4.1.48.Final:compile
+[INFO]    \- org.javassist:javassist:jar:3.18.1-GA:compile
+[INFO] 
+[INFO] ---------------< com.alibaba.maxgraph:maxgraph-compiler >---------------
+[INFO] Building compiler 0.0.1-SNAPSHOT                                  [5/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ maxgraph-compiler ---
+[INFO] com.alibaba.maxgraph:maxgraph-compiler:jar:0.0.1-SNAPSHOT
+[INFO] +- com.alibaba.maxgraph:maxgraph-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  +- com.fasterxml.jackson.core:jackson-databind:jar:2.11.1:compile
+[INFO] |  |  +- com.fasterxml.jackson.core:jackson-annotations:jar:2.11.1:compile
+[INFO] |  |  \- com.fasterxml.jackson.core:jackson-core:jar:2.11.1:compile
+[INFO] |  +- com.fasterxml.jackson.module:jackson-module-paranamer:jar:2.11.1:compile
+[INFO] |  |  \- com.thoughtworks.paranamer:paranamer:jar:2.8:compile
+[INFO] |  +- org.apache.hadoop:hadoop-common:jar:2.8.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-annotations:jar:2.8.4:compile
+[INFO] |  |  |  \- jdk.tools:jdk.tools:jar:1.8:system
+[INFO] |  |  +- commons-cli:commons-cli:jar:1.3:compile
+[INFO] |  |  +- org.apache.commons:commons-math3:jar:3.6.1:compile
+[INFO] |  |  +- xmlenc:xmlenc:jar:0.52:compile
+[INFO] |  |  +- org.apache.httpcomponents:httpclient:jar:4.5.2:compile
+[INFO] |  |  |  \- org.apache.httpcomponents:httpcore:jar:4.4.4:compile
+[INFO] |  |  +- commons-codec:commons-codec:jar:1.11:compile
+[INFO] |  |  +- commons-net:commons-net:jar:3.1:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty:jar:6.1.26:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty-util:jar:6.1.26:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty-sslengine:jar:6.1.26:compile
+[INFO] |  |  +- javax.servlet.jsp:jsp-api:jar:2.1:runtime
+[INFO] |  |  +- com.sun.jersey:jersey-core:jar:1.9:compile
+[INFO] |  |  +- com.sun.jersey:jersey-json:jar:1.9:compile
+[INFO] |  |  |  +- org.codehaus.jettison:jettison:jar:1.1:compile
+[INFO] |  |  |  +- com.sun.xml.bind:jaxb-impl:jar:2.2.3-1:compile
+[INFO] |  |  |  |  \- javax.xml.bind:jaxb-api:jar:2.2.2:compile
+[INFO] |  |  |  |     +- javax.xml.stream:stax-api:jar:1.0-2:compile
+[INFO] |  |  |  |     \- javax.activation:activation:jar:1.1:compile
+[INFO] |  |  |  +- org.codehaus.jackson:jackson-jaxrs:jar:1.8.3:compile
+[INFO] |  |  |  \- org.codehaus.jackson:jackson-xc:jar:1.8.3:compile
+[INFO] |  |  +- com.sun.jersey:jersey-server:jar:1.9:compile
+[INFO] |  |  |  \- asm:asm:jar:3.1:compile
+[INFO] |  |  +- commons-logging:commons-logging:jar:1.1.3:compile
+[INFO] |  |  +- net.java.dev.jets3t:jets3t:jar:0.9.0:compile
+[INFO] |  |  |  \- com.jamesmurty.utils:java-xmlbuilder:jar:0.4:compile
+[INFO] |  |  +- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO] |  |  +- org.codehaus.jackson:jackson-core-asl:jar:1.9.13:compile
+[INFO] |  |  +- org.codehaus.jackson:jackson-mapper-asl:jar:1.9.13:compile
+[INFO] |  |  +- org.apache.avro:avro:jar:1.7.4:compile
+[INFO] |  |  |  \- org.xerial.snappy:snappy-java:jar:1.0.4.1:compile
+[INFO] |  |  +- com.google.code.gson:gson:jar:2.2.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-auth:jar:2.8.4:compile
+[INFO] |  |  |  +- com.nimbusds:nimbus-jose-jwt:jar:4.41.1:compile
+[INFO] |  |  |  |  +- com.github.stephenc.jcip:jcip-annotations:jar:1.0-1:compile
+[INFO] |  |  |  |  \- net.minidev:json-smart:jar:2.3:compile (version selected from constraint [1.3.1,2.3])
+[INFO] |  |  |  |     \- net.minidev:accessors-smart:jar:1.2:compile
+[INFO] |  |  |  |        \- org.ow2.asm:asm:jar:5.0.4:compile
+[INFO] |  |  |  \- org.apache.directory.server:apacheds-kerberos-codec:jar:2.0.0-M15:compile
+[INFO] |  |  |     +- org.apache.directory.server:apacheds-i18n:jar:2.0.0-M15:compile
+[INFO] |  |  |     +- org.apache.directory.api:api-asn1-api:jar:1.0.0-M20:compile
+[INFO] |  |  |     \- org.apache.directory.api:api-util:jar:1.0.0-M20:compile
+[INFO] |  |  +- com.jcraft:jsch:jar:0.1.54:compile
+[INFO] |  |  +- org.apache.htrace:htrace-core4:jar:4.0.1-incubating:compile
+[INFO] |  |  \- org.apache.commons:commons-compress:jar:1.4.1:compile
+[INFO] |  |     \- org.tukaani:xz:jar:1.0:compile
+[INFO] |  +- org.apache.curator:curator-framework:jar:2.12.0:compile
+[INFO] |  +- org.apache.curator:curator-client:jar:2.12.0:compile
+[INFO] |  |  \- org.apache.zookeeper:zookeeper:jar:3.6.1:compile
+[INFO] |  |     +- org.apache.zookeeper:zookeeper-jute:jar:3.6.1:compile
+[INFO] |  |     +- org.apache.yetus:audience-annotations:jar:0.5.0:compile
+[INFO] |  |     +- io.netty:netty-handler:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-common:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-resolver:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-buffer:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-transport:jar:4.1.48.Final:compile
+[INFO] |  |     |  \- io.netty:netty-codec:jar:4.1.48.Final:compile
+[INFO] |  |     +- io.netty:netty-transport-native-epoll:jar:4.1.48.Final:compile
+[INFO] |  |     |  \- io.netty:netty-transport-native-unix-common:jar:4.1.48.Final:compile
+[INFO] |  |     \- log4j:log4j:jar:1.2.17:compile
+[INFO] |  +- org.apache.curator:curator-recipes:jar:2.12.0:compile
+[INFO] |  +- com.esotericsoftware:kryo-shaded:jar:4.0.0:compile
+[INFO] |  |  +- com.esotericsoftware:minlog:jar:1.3.0:compile
+[INFO] |  |  \- org.objenesis:objenesis:jar:2.2:compile
+[INFO] |  +- de.javakaffee:kryo-serializers:jar:0.38:compile
+[INFO] |  \- com.alibaba.maxgraph:maxgraph-sdk-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |     +- javax.annotation:javax.annotation-api:jar:1.2:compile
+[INFO] |     +- com.alibaba:fastjson:jar:1.2.75:compile
+[INFO] |     +- io.grpc:grpc-all:jar:1.30.1:compile
+[INFO] |     |  +- io.grpc:grpc-api:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |     |  |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:runtime
+[INFO] |     |  +- io.grpc:grpc-auth:jar:1.30.1:compile
+[INFO] |     |  |  \- com.google.auth:google-auth-library-credentials:jar:0.20.0:compile
+[INFO] |     |  +- io.grpc:grpc-context:jar:1.30.1:compile
+[INFO] |     |  +- io.grpc:grpc-core:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |     |  |  +- com.google.android:annotations:jar:4.1.1.4:runtime
+[INFO] |     |  |  \- io.perfmark:perfmark-api:jar:0.19.0:runtime
+[INFO] |     |  +- io.grpc:grpc-grpclb:jar:1.30.1:compile
+[INFO] |     |  |  \- com.google.protobuf:protobuf-java-util:jar:3.12.0:compile
+[INFO] |     |  +- io.grpc:grpc-netty:jar:1.30.1:compile
+[INFO] |     |  |  +- io.netty:netty-codec-http2:jar:4.1.48.Final:compile (version selected from constraint [4.1.48.Final,4.1.48.Final])
+[INFO] |     |  |  |  \- io.netty:netty-codec-http:jar:4.1.48.Final:compile
+[INFO] |     |  |  \- io.netty:netty-handler-proxy:jar:4.1.48.Final:runtime
+[INFO] |     |  |     \- io.netty:netty-codec-socks:jar:4.1.48.Final:runtime
+[INFO] |     |  +- io.grpc:grpc-okhttp:jar:1.30.1:compile
+[INFO] |     |  |  +- com.squareup.okhttp:okhttp:jar:2.7.4:compile
+[INFO] |     |  |  \- com.squareup.okio:okio:jar:1.13.0:runtime
+[INFO] |     |  +- io.grpc:grpc-protobuf:jar:1.30.1:compile
+[INFO] |     |  |  +- com.google.api.grpc:proto-google-common-protos:jar:1.17.0:compile
+[INFO] |     |  |  \- io.grpc:grpc-protobuf-lite:jar:1.30.1:compile
+[INFO] |     |  +- io.grpc:grpc-services:jar:1.30.1:compile
+[INFO] |     |  +- io.grpc:grpc-stub:jar:1.30.1:compile
+[INFO] |     |  +- io.grpc:grpc-testing:jar:1.30.1:compile
+[INFO] |     |  |  \- io.opencensus:opencensus-api:jar:0.24.0:compile
+[INFO] |     |  \- io.grpc:grpc-xds:jar:1.30.1:compile
+[INFO] |     |     +- io.grpc:grpc-alts:jar:1.30.1:compile
+[INFO] |     |     |  +- org.conscrypt:conscrypt-openjdk-uber:jar:2.2.1:compile
+[INFO] |     |     |  \- com.google.auth:google-auth-library-oauth2-http:jar:0.20.0:compile
+[INFO] |     |     |     +- com.google.auto.value:auto-value-annotations:jar:1.7:compile
+[INFO] |     |     |     +- com.google.http-client:google-http-client:jar:1.34.0:compile
+[INFO] |     |     |     |  \- io.opencensus:opencensus-contrib-http-util:jar:0.24.0:compile
+[INFO] |     |     |     \- com.google.http-client:google-http-client-jackson2:jar:1.34.0:compile
+[INFO] |     |     +- com.google.re2j:re2j:jar:1.2:compile
+[INFO] |     |     +- io.opencensus:opencensus-proto:jar:0.2.0:compile
+[INFO] |     |     \- io.grpc:grpc-netty-shaded:jar:1.30.1:compile
+[INFO] |     +- org.apache.commons:commons-lang3:jar:3.4:compile
+[INFO] |     +- org.apache.logging.log4j:log4j-api:jar:99.0-does-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |     +- org.apache.logging.log4j:log4j-1.2-api:jar:2.14.1:compile (version selected from constraint [2.6.1,))
+[INFO] |     +- org.apache.logging.log4j:log4j-core:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |     +- org.apache.logging.log4j:log4j-slf4j-impl:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |     \- net.jcip:jcip-annotations:jar:1.0:compile
+[INFO] +- org.apache.tinkerpop:gremlin-server:jar:3.4.2:compile
+[INFO] |  +- org.apache.tinkerpop:tinkergraph-gremlin:jar:3.4.2:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-driver:jar:3.4.2:compile
+[INFO] |  |  +- io.netty:netty-all:jar:4.1.32.Final:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy:jar:indy:2.5.6:compile
+[INFO] |  |  \- org.codehaus.groovy:groovy-json:jar:indy:2.5.6:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-groovy:jar:3.4.2:compile
+[INFO] |  |  +- org.apache.ivy:ivy:jar:2.3.0:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy-groovysh:jar:indy:2.5.6:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-cli-picocli:jar:2.5.6:compile
+[INFO] |  |  |  |  \- info.picocli:picocli:jar:3.9.2:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-console:jar:2.5.6:compile
+[INFO] |  |  |  |  +- org.codehaus.groovy:groovy-swing:jar:2.5.6:compile
+[INFO] |  |  |  |  \- org.codehaus.groovy:groovy-templates:jar:2.5.6:compile
+[INFO] |  |  |  |     \- org.codehaus.groovy:groovy-xml:jar:2.5.6:compile
+[INFO] |  |  |  \- jline:jline:jar:2.14.2:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy-jsr223:jar:indy:2.5.6:compile
+[INFO] |  |  +- org.mindrot:jbcrypt:jar:0.4:compile
+[INFO] |  |  \- com.github.ben-manes.caffeine:caffeine:jar:2.3.1:compile
+[INFO] |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] |  \- com.codahale.metrics:metrics-core:jar:3.0.2:compile
+[INFO] +- org.apache.tinkerpop:gremlin-python:jar:3.4.2:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-core:jar:3.4.2:compile
+[INFO] |  |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.2:compile
+[INFO] |  |  +- org.yaml:snakeyaml:jar:1.15:compile
+[INFO] |  |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO] |  |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO] |  |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO] |  |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO] |  |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO] |  |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO] |  |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] |  \- org.python:jython-standalone:jar:2.7.1:compile
+[INFO] +- org.codehaus.groovy:groovy:jar:2.5.6:compile
+[INFO] +- org.codehaus.groovy:groovy-jsr223:jar:2.5.6:compile
+[INFO] +- com.google.guava:guava:jar:30.1.1-jre:compile
+[INFO] |  +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO] |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO] |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[INFO] |  +- org.checkerframework:checker-qual:jar:3.8.0:compile
+[INFO] |  +- com.google.errorprone:error_prone_annotations:jar:2.5.1:compile
+[INFO] |  \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO] +- junit:junit:jar:4.12:test
+[INFO] |  \- org.hamcrest:hamcrest-core:jar:1.3:test
+[INFO] +- org.slf4j:slf4j-api:jar:1.7.21:compile
+[INFO] +- com.google.protobuf:protobuf-java:jar:3.12.2:compile
+[INFO] +- org.jgrapht:jgrapht-core:jar:1.1.0:compile
+[INFO] +- commons-io:commons-io:jar:2.6:compile
+[INFO] \- org.apache.commons:commons-collections4:jar:4.1:compile
+[INFO] 
+[INFO] -----------< com.alibaba.maxgraph:maxgraph-frontendservice >------------
+[INFO] Building maxgraph-frontendservice 0.0.1-SNAPSHOT                  [6/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ maxgraph-frontendservice ---
+[INFO] com.alibaba.maxgraph:maxgraph-frontendservice:jar:0.0.1-SNAPSHOT
+[INFO] +- com.alibaba.maxgraph:maxgraph-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  +- junit:junit:jar:4.12:compile
+[INFO] |  |  \- org.hamcrest:hamcrest-core:jar:1.3:compile
+[INFO] |  +- com.fasterxml.jackson.core:jackson-databind:jar:2.11.1:compile
+[INFO] |  |  \- com.fasterxml.jackson.core:jackson-core:jar:2.11.1:compile
+[INFO] |  +- com.fasterxml.jackson.module:jackson-module-paranamer:jar:2.11.1:compile
+[INFO] |  |  \- com.thoughtworks.paranamer:paranamer:jar:2.8:compile
+[INFO] |  +- org.apache.hadoop:hadoop-common:jar:2.8.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-annotations:jar:2.8.4:compile
+[INFO] |  |  |  \- jdk.tools:jdk.tools:jar:1.8:system
+[INFO] |  |  +- commons-cli:commons-cli:jar:1.3:compile
+[INFO] |  |  +- org.apache.commons:commons-math3:jar:3.6.1:compile
+[INFO] |  |  +- xmlenc:xmlenc:jar:0.52:compile
+[INFO] |  |  +- org.apache.httpcomponents:httpclient:jar:4.5.2:compile
+[INFO] |  |  |  \- org.apache.httpcomponents:httpcore:jar:4.4.4:compile
+[INFO] |  |  +- commons-codec:commons-codec:jar:1.11:compile
+[INFO] |  |  +- commons-net:commons-net:jar:3.1:compile
+[INFO] |  |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty:jar:6.1.26:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty-util:jar:6.1.26:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty-sslengine:jar:6.1.26:compile
+[INFO] |  |  +- javax.servlet.jsp:jsp-api:jar:2.1:runtime
+[INFO] |  |  +- com.sun.jersey:jersey-core:jar:1.9:compile
+[INFO] |  |  +- com.sun.jersey:jersey-json:jar:1.9:compile
+[INFO] |  |  |  +- org.codehaus.jettison:jettison:jar:1.1:compile
+[INFO] |  |  |  +- com.sun.xml.bind:jaxb-impl:jar:2.2.3-1:compile
+[INFO] |  |  |  |  \- javax.xml.bind:jaxb-api:jar:2.2.2:compile
+[INFO] |  |  |  |     +- javax.xml.stream:stax-api:jar:1.0-2:compile
+[INFO] |  |  |  |     \- javax.activation:activation:jar:1.1:compile
+[INFO] |  |  |  +- org.codehaus.jackson:jackson-jaxrs:jar:1.8.3:compile
+[INFO] |  |  |  \- org.codehaus.jackson:jackson-xc:jar:1.8.3:compile
+[INFO] |  |  +- com.sun.jersey:jersey-server:jar:1.9:compile
+[INFO] |  |  |  \- asm:asm:jar:3.1:compile
+[INFO] |  |  +- commons-logging:commons-logging:jar:1.1.3:compile
+[INFO] |  |  +- net.java.dev.jets3t:jets3t:jar:0.9.0:compile
+[INFO] |  |  |  \- com.jamesmurty.utils:java-xmlbuilder:jar:0.4:compile
+[INFO] |  |  +- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO] |  |  +- org.codehaus.jackson:jackson-core-asl:jar:1.9.13:compile
+[INFO] |  |  +- org.codehaus.jackson:jackson-mapper-asl:jar:1.9.13:compile
+[INFO] |  |  +- org.apache.avro:avro:jar:1.7.4:compile
+[INFO] |  |  |  \- org.xerial.snappy:snappy-java:jar:1.0.4.1:compile
+[INFO] |  |  +- com.google.code.gson:gson:jar:2.2.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-auth:jar:2.8.4:compile
+[INFO] |  |  |  +- com.nimbusds:nimbus-jose-jwt:jar:4.41.1:compile
+[INFO] |  |  |  |  +- com.github.stephenc.jcip:jcip-annotations:jar:1.0-1:compile
+[INFO] |  |  |  |  \- net.minidev:json-smart:jar:2.3:compile (version selected from constraint [1.3.1,2.3])
+[INFO] |  |  |  |     \- net.minidev:accessors-smart:jar:1.2:compile
+[INFO] |  |  |  |        \- org.ow2.asm:asm:jar:5.0.4:compile
+[INFO] |  |  |  \- org.apache.directory.server:apacheds-kerberos-codec:jar:2.0.0-M15:compile
+[INFO] |  |  |     +- org.apache.directory.server:apacheds-i18n:jar:2.0.0-M15:compile
+[INFO] |  |  |     +- org.apache.directory.api:api-asn1-api:jar:1.0.0-M20:compile
+[INFO] |  |  |     \- org.apache.directory.api:api-util:jar:1.0.0-M20:compile
+[INFO] |  |  +- com.jcraft:jsch:jar:0.1.54:compile
+[INFO] |  |  +- org.apache.htrace:htrace-core4:jar:4.0.1-incubating:compile
+[INFO] |  |  \- org.apache.commons:commons-compress:jar:1.4.1:compile
+[INFO] |  |     \- org.tukaani:xz:jar:1.0:compile
+[INFO] |  +- org.apache.curator:curator-framework:jar:2.12.0:compile
+[INFO] |  +- org.apache.curator:curator-client:jar:2.12.0:compile
+[INFO] |  |  \- org.apache.zookeeper:zookeeper:jar:3.6.1:compile
+[INFO] |  |     +- org.apache.zookeeper:zookeeper-jute:jar:3.6.1:compile
+[INFO] |  |     +- org.apache.yetus:audience-annotations:jar:0.5.0:compile
+[INFO] |  |     +- io.netty:netty-handler:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-common:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-resolver:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-buffer:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-transport:jar:4.1.48.Final:compile
+[INFO] |  |     |  \- io.netty:netty-codec:jar:4.1.48.Final:compile
+[INFO] |  |     +- io.netty:netty-transport-native-epoll:jar:4.1.48.Final:compile
+[INFO] |  |     |  \- io.netty:netty-transport-native-unix-common:jar:4.1.48.Final:compile
+[INFO] |  |     \- log4j:log4j:jar:1.2.17:compile
+[INFO] |  +- org.apache.curator:curator-recipes:jar:2.12.0:compile
+[INFO] |  +- com.esotericsoftware:kryo-shaded:jar:4.0.0:compile
+[INFO] |  |  +- com.esotericsoftware:minlog:jar:1.3.0:compile
+[INFO] |  |  \- org.objenesis:objenesis:jar:2.2:compile
+[INFO] |  +- de.javakaffee:kryo-serializers:jar:0.38:compile
+[INFO] |  \- com.alibaba.maxgraph:maxgraph-sdk-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |     +- javax.annotation:javax.annotation-api:jar:1.2:compile
+[INFO] |     +- org.apache.commons:commons-lang3:jar:3.4:compile
+[INFO] |     +- org.apache.tinkerpop:gremlin-driver:jar:3.4.2:compile
+[INFO] |     |  +- org.codehaus.groovy:groovy:jar:indy:2.5.6:compile
+[INFO] |     |  \- org.codehaus.groovy:groovy-json:jar:indy:2.5.6:compile
+[INFO] |     +- org.apache.tinkerpop:gremlin-core:jar:3.4.2:compile
+[INFO] |     |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.2:compile
+[INFO] |     |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO] |     |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO] |     |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO] |     |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO] |     |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO] |     |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO] |     |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] |     \- net.jcip:jcip-annotations:jar:1.0:compile
+[INFO] +- com.alibaba.maxgraph:maxgraph-compiler:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-server:jar:3.4.2:compile
+[INFO] |  |  +- org.apache.tinkerpop:tinkergraph-gremlin:jar:3.4.2:compile
+[INFO] |  |  +- org.apache.tinkerpop:gremlin-groovy:jar:3.4.2:compile
+[INFO] |  |  |  +- org.apache.ivy:ivy:jar:2.3.0:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-groovysh:jar:indy:2.5.6:compile
+[INFO] |  |  |  |  +- org.codehaus.groovy:groovy-cli-picocli:jar:2.5.6:compile
+[INFO] |  |  |  |  |  \- info.picocli:picocli:jar:3.9.2:compile
+[INFO] |  |  |  |  +- org.codehaus.groovy:groovy-console:jar:2.5.6:compile
+[INFO] |  |  |  |  |  +- org.codehaus.groovy:groovy-swing:jar:2.5.6:compile
+[INFO] |  |  |  |  |  \- org.codehaus.groovy:groovy-templates:jar:2.5.6:compile
+[INFO] |  |  |  |  |     \- org.codehaus.groovy:groovy-xml:jar:2.5.6:compile
+[INFO] |  |  |  |  \- jline:jline:jar:2.14.2:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-jsr223:jar:indy:2.5.6:compile
+[INFO] |  |  |  +- org.mindrot:jbcrypt:jar:0.4:compile
+[INFO] |  |  |  \- com.github.ben-manes.caffeine:caffeine:jar:2.3.1:compile
+[INFO] |  |  \- com.codahale.metrics:metrics-core:jar:3.0.2:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-python:jar:3.4.2:compile
+[INFO] |  |  \- org.python:jython-standalone:jar:2.7.1:compile
+[INFO] |  +- org.codehaus.groovy:groovy:jar:2.5.6:compile
+[INFO] |  +- org.codehaus.groovy:groovy-jsr223:jar:2.5.6:compile
+[INFO] |  +- com.google.protobuf:protobuf-java:jar:3.12.2:compile
+[INFO] |  +- org.jgrapht:jgrapht-core:jar:1.1.0:compile
+[INFO] |  +- commons-io:commons-io:jar:2.6:compile
+[INFO] |  \- org.apache.commons:commons-collections4:jar:4.1:compile
+[INFO] +- com.alibaba.maxgraph:maxgraph-coordinator:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  +- io.grpc:grpc-all:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-api:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |  |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:runtime
+[INFO] |  |  +- io.grpc:grpc-auth:jar:1.30.1:compile
+[INFO] |  |  |  \- com.google.auth:google-auth-library-credentials:jar:0.20.0:compile
+[INFO] |  |  +- io.grpc:grpc-context:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-core:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |  |  +- com.google.android:annotations:jar:4.1.1.4:runtime
+[INFO] |  |  |  \- io.perfmark:perfmark-api:jar:0.19.0:runtime
+[INFO] |  |  +- io.grpc:grpc-grpclb:jar:1.30.1:compile
+[INFO] |  |  |  \- com.google.protobuf:protobuf-java-util:jar:3.12.0:compile
+[INFO] |  |  +- io.grpc:grpc-netty:jar:1.30.1:compile
+[INFO] |  |  |  +- io.netty:netty-codec-http2:jar:4.1.48.Final:compile (version selected from constraint [4.1.48.Final,4.1.48.Final])
+[INFO] |  |  |  |  \- io.netty:netty-codec-http:jar:4.1.48.Final:compile
+[INFO] |  |  |  \- io.netty:netty-handler-proxy:jar:4.1.48.Final:runtime
+[INFO] |  |  |     \- io.netty:netty-codec-socks:jar:4.1.48.Final:runtime
+[INFO] |  |  +- io.grpc:grpc-okhttp:jar:1.30.1:compile
+[INFO] |  |  |  +- com.squareup.okhttp:okhttp:jar:2.7.4:compile
+[INFO] |  |  |  \- com.squareup.okio:okio:jar:1.13.0:runtime
+[INFO] |  |  +- io.grpc:grpc-protobuf:jar:1.30.1:compile
+[INFO] |  |  |  +- com.google.api.grpc:proto-google-common-protos:jar:1.17.0:compile
+[INFO] |  |  |  \- io.grpc:grpc-protobuf-lite:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-services:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-stub:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-testing:jar:1.30.1:compile
+[INFO] |  |  |  \- io.opencensus:opencensus-api:jar:0.24.0:compile
+[INFO] |  |  \- io.grpc:grpc-xds:jar:1.30.1:compile
+[INFO] |  |     +- io.grpc:grpc-alts:jar:1.30.1:compile
+[INFO] |  |     |  +- org.conscrypt:conscrypt-openjdk-uber:jar:2.2.1:compile
+[INFO] |  |     |  \- com.google.auth:google-auth-library-oauth2-http:jar:0.20.0:compile
+[INFO] |  |     |     +- com.google.auto.value:auto-value-annotations:jar:1.7:compile
+[INFO] |  |     |     +- com.google.http-client:google-http-client:jar:1.34.0:compile
+[INFO] |  |     |     |  \- io.opencensus:opencensus-contrib-http-util:jar:0.24.0:compile
+[INFO] |  |     |     \- com.google.http-client:google-http-client-jackson2:jar:1.34.0:compile
+[INFO] |  |     +- com.google.re2j:re2j:jar:1.2:compile
+[INFO] |  |     +- io.opencensus:opencensus-proto:jar:0.2.0:compile
+[INFO] |  |     \- io.grpc:grpc-netty-shaded:jar:1.30.1:compile
+[INFO] |  +- com.fasterxml.jackson.core:jackson-annotations:jar:2.11.1:compile
+[INFO] |  +- org.apache.logging.log4j:log4j-api:jar:99.0-does-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- org.apache.logging.log4j:log4j-core:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- org.apache.logging.log4j:log4j-slf4j-impl:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- org.apache.logging.log4j:log4j-1.2-api:jar:2.14.1:compile (version selected from constraint [2.6.1,))
+[INFO] |  \- org.apache.curator:curator-test:jar:2.12.0:compile
+[INFO] |     \- org.javassist:javassist:jar:3.18.1-GA:compile
+[INFO] +- org.slf4j:slf4j-api:jar:1.7.21:compile
+[INFO] +- com.google.guava:guava:jar:30.1.1-jre:compile
+[INFO] |  +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO] |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO] |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[INFO] |  +- org.checkerframework:checker-qual:jar:3.8.0:compile
+[INFO] |  +- com.google.errorprone:error_prone_annotations:jar:2.5.1:compile
+[INFO] |  \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO] +- com.alibaba:fastjson:jar:1.2.75:compile
+[INFO] \- org.testng:testng:jar:6.9.9:test
+[INFO]    +- com.beust:jcommander:jar:1.48:test
+[INFO]    +- org.apache.ant:ant:jar:1.7.0:test
+[INFO]    |  \- org.apache.ant:ant-launcher:jar:1.7.0:test
+[INFO]    +- org.yaml:snakeyaml:jar:1.15:compile
+[INFO]    \- org.beanshell:bsh:jar:2.0b4:test
+[INFO] 
+[INFO] ---------------< com.alibaba.maxgraph:maxgraph-frontend >---------------
+[INFO] Building maxgraph-frontend 0.0.1-SNAPSHOT                         [7/21]
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ maxgraph-frontend ---
+[INFO] com.alibaba.maxgraph:maxgraph-frontend:pom:0.0.1-SNAPSHOT
+[INFO] 
+[INFO] ---------------< com.alibaba.maxgraph:maxgraph-assembly >---------------
+[INFO] Building assembly 0.0.1-SNAPSHOT                                  [8/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ maxgraph-assembly ---
+[INFO] com.alibaba.maxgraph:maxgraph-assembly:jar:0.0.1-SNAPSHOT
+[INFO] +- com.alibaba.maxgraph:maxgraph-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  +- junit:junit:jar:4.12:compile
+[INFO] |  |  \- org.hamcrest:hamcrest-core:jar:1.3:compile
+[INFO] |  +- com.google.guava:guava:jar:30.1.1-jre:compile (version selected from constraint [24.1.1,))
+[INFO] |  |  +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO] |  |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO] |  |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[INFO] |  |  +- org.checkerframework:checker-qual:jar:3.8.0:compile
+[INFO] |  |  +- com.google.errorprone:error_prone_annotations:jar:2.5.1:compile
+[INFO] |  |  \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO] |  +- com.fasterxml.jackson.core:jackson-databind:jar:2.11.1:compile
+[INFO] |  |  \- com.fasterxml.jackson.core:jackson-core:jar:2.11.1:compile
+[INFO] |  +- com.fasterxml.jackson.module:jackson-module-paranamer:jar:2.11.1:compile
+[INFO] |  |  \- com.thoughtworks.paranamer:paranamer:jar:2.8:compile
+[INFO] |  +- org.apache.hadoop:hadoop-common:jar:2.8.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-annotations:jar:2.8.4:compile
+[INFO] |  |  |  \- jdk.tools:jdk.tools:jar:1.8:system
+[INFO] |  |  +- commons-cli:commons-cli:jar:1.3:compile
+[INFO] |  |  +- org.apache.commons:commons-math3:jar:3.6.1:compile
+[INFO] |  |  +- xmlenc:xmlenc:jar:0.52:compile
+[INFO] |  |  +- org.apache.httpcomponents:httpclient:jar:4.5.2:compile
+[INFO] |  |  |  \- org.apache.httpcomponents:httpcore:jar:4.4.4:compile
+[INFO] |  |  +- commons-codec:commons-codec:jar:1.11:compile
+[INFO] |  |  +- commons-io:commons-io:jar:2.6:compile
+[INFO] |  |  +- commons-net:commons-net:jar:3.1:compile
+[INFO] |  |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty:jar:6.1.26:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty-util:jar:6.1.26:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty-sslengine:jar:6.1.26:compile
+[INFO] |  |  +- javax.servlet.jsp:jsp-api:jar:2.1:runtime
+[INFO] |  |  +- com.sun.jersey:jersey-core:jar:1.9:compile
+[INFO] |  |  +- com.sun.jersey:jersey-json:jar:1.9:compile
+[INFO] |  |  |  +- org.codehaus.jettison:jettison:jar:1.1:compile
+[INFO] |  |  |  +- com.sun.xml.bind:jaxb-impl:jar:2.2.3-1:compile
+[INFO] |  |  |  |  \- javax.xml.bind:jaxb-api:jar:2.2.2:compile
+[INFO] |  |  |  |     +- javax.xml.stream:stax-api:jar:1.0-2:compile
+[INFO] |  |  |  |     \- javax.activation:activation:jar:1.1:compile
+[INFO] |  |  |  +- org.codehaus.jackson:jackson-jaxrs:jar:1.8.3:compile
+[INFO] |  |  |  \- org.codehaus.jackson:jackson-xc:jar:1.8.3:compile
+[INFO] |  |  +- com.sun.jersey:jersey-server:jar:1.9:compile
+[INFO] |  |  |  \- asm:asm:jar:3.1:compile
+[INFO] |  |  +- commons-logging:commons-logging:jar:1.1.3:compile
+[INFO] |  |  +- net.java.dev.jets3t:jets3t:jar:0.9.0:compile
+[INFO] |  |  |  \- com.jamesmurty.utils:java-xmlbuilder:jar:0.4:compile
+[INFO] |  |  +- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO] |  |  +- org.codehaus.jackson:jackson-core-asl:jar:1.9.13:compile
+[INFO] |  |  +- org.codehaus.jackson:jackson-mapper-asl:jar:1.9.13:compile
+[INFO] |  |  +- org.apache.avro:avro:jar:1.7.4:compile
+[INFO] |  |  |  \- org.xerial.snappy:snappy-java:jar:1.0.4.1:compile
+[INFO] |  |  +- com.google.protobuf:protobuf-java:jar:3.12.2:compile
+[INFO] |  |  +- com.google.code.gson:gson:jar:2.2.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-auth:jar:2.8.4:compile
+[INFO] |  |  |  +- com.nimbusds:nimbus-jose-jwt:jar:4.41.1:compile
+[INFO] |  |  |  |  +- com.github.stephenc.jcip:jcip-annotations:jar:1.0-1:compile
+[INFO] |  |  |  |  \- net.minidev:json-smart:jar:2.3:compile (version selected from constraint [1.3.1,2.3])
+[INFO] |  |  |  |     \- net.minidev:accessors-smart:jar:1.2:compile
+[INFO] |  |  |  |        \- org.ow2.asm:asm:jar:5.0.4:compile
+[INFO] |  |  |  \- org.apache.directory.server:apacheds-kerberos-codec:jar:2.0.0-M15:compile
+[INFO] |  |  |     +- org.apache.directory.server:apacheds-i18n:jar:2.0.0-M15:compile
+[INFO] |  |  |     +- org.apache.directory.api:api-asn1-api:jar:1.0.0-M20:compile
+[INFO] |  |  |     \- org.apache.directory.api:api-util:jar:1.0.0-M20:compile
+[INFO] |  |  +- com.jcraft:jsch:jar:0.1.54:compile
+[INFO] |  |  +- org.apache.htrace:htrace-core4:jar:4.0.1-incubating:compile
+[INFO] |  |  \- org.apache.commons:commons-compress:jar:1.4.1:compile
+[INFO] |  |     \- org.tukaani:xz:jar:1.0:compile
+[INFO] |  +- org.apache.curator:curator-framework:jar:2.12.0:compile
+[INFO] |  +- org.apache.curator:curator-client:jar:2.12.0:compile
+[INFO] |  |  \- org.apache.zookeeper:zookeeper:jar:3.6.1:compile
+[INFO] |  |     +- org.apache.zookeeper:zookeeper-jute:jar:3.6.1:compile
+[INFO] |  |     +- org.apache.yetus:audience-annotations:jar:0.5.0:compile
+[INFO] |  |     +- io.netty:netty-handler:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-common:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-resolver:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-buffer:jar:4.1.48.Final:compile
+[INFO] |  |     |  +- io.netty:netty-transport:jar:4.1.48.Final:compile
+[INFO] |  |     |  \- io.netty:netty-codec:jar:4.1.48.Final:compile
+[INFO] |  |     +- io.netty:netty-transport-native-epoll:jar:4.1.48.Final:compile
+[INFO] |  |     |  \- io.netty:netty-transport-native-unix-common:jar:4.1.48.Final:compile
+[INFO] |  |     \- log4j:log4j:jar:1.2.17:compile
+[INFO] |  +- org.apache.curator:curator-recipes:jar:2.12.0:compile
+[INFO] |  +- com.esotericsoftware:kryo-shaded:jar:4.0.0:compile
+[INFO] |  |  +- com.esotericsoftware:minlog:jar:1.3.0:compile
+[INFO] |  |  \- org.objenesis:objenesis:jar:2.2:compile
+[INFO] |  +- de.javakaffee:kryo-serializers:jar:0.38:compile
+[INFO] |  \- com.alibaba.maxgraph:maxgraph-sdk-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |     +- javax.annotation:javax.annotation-api:jar:1.2:compile
+[INFO] |     +- org.apache.commons:commons-lang3:jar:3.4:compile
+[INFO] |     +- org.apache.commons:commons-collections4:jar:4.1:compile
+[INFO] |     +- org.apache.tinkerpop:gremlin-driver:jar:3.4.2:compile
+[INFO] |     |  +- org.codehaus.groovy:groovy:jar:indy:2.5.6:compile
+[INFO] |     |  \- org.codehaus.groovy:groovy-json:jar:indy:2.5.6:compile
+[INFO] |     +- org.apache.tinkerpop:gremlin-core:jar:3.4.2:compile
+[INFO] |     |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.2:compile
+[INFO] |     |  +- org.yaml:snakeyaml:jar:1.15:compile
+[INFO] |     |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO] |     |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO] |     |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO] |     |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO] |     |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO] |     |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO] |     |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] |     \- net.jcip:jcip-annotations:jar:1.0:compile
+[INFO] +- com.alibaba.maxgraph:maxgraph-coordinator:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  +- io.grpc:grpc-all:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-api:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |  |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:runtime
+[INFO] |  |  +- io.grpc:grpc-auth:jar:1.30.1:compile
+[INFO] |  |  |  \- com.google.auth:google-auth-library-credentials:jar:0.20.0:compile
+[INFO] |  |  +- io.grpc:grpc-context:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-core:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |  |  +- com.google.android:annotations:jar:4.1.1.4:runtime
+[INFO] |  |  |  \- io.perfmark:perfmark-api:jar:0.19.0:runtime
+[INFO] |  |  +- io.grpc:grpc-grpclb:jar:1.30.1:compile
+[INFO] |  |  |  \- com.google.protobuf:protobuf-java-util:jar:3.12.0:compile
+[INFO] |  |  +- io.grpc:grpc-netty:jar:1.30.1:compile
+[INFO] |  |  |  +- io.netty:netty-codec-http2:jar:4.1.48.Final:compile (version selected from constraint [4.1.48.Final,4.1.48.Final])
+[INFO] |  |  |  |  \- io.netty:netty-codec-http:jar:4.1.48.Final:compile
+[INFO] |  |  |  \- io.netty:netty-handler-proxy:jar:4.1.48.Final:runtime
+[INFO] |  |  |     \- io.netty:netty-codec-socks:jar:4.1.48.Final:runtime
+[INFO] |  |  +- io.grpc:grpc-okhttp:jar:1.30.1:compile
+[INFO] |  |  |  +- com.squareup.okhttp:okhttp:jar:2.7.4:compile
+[INFO] |  |  |  \- com.squareup.okio:okio:jar:1.13.0:runtime
+[INFO] |  |  +- io.grpc:grpc-protobuf:jar:1.30.1:compile
+[INFO] |  |  |  +- com.google.api.grpc:proto-google-common-protos:jar:1.17.0:compile
+[INFO] |  |  |  \- io.grpc:grpc-protobuf-lite:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-services:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-stub:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-testing:jar:1.30.1:compile
+[INFO] |  |  |  \- io.opencensus:opencensus-api:jar:0.24.0:compile
+[INFO] |  |  \- io.grpc:grpc-xds:jar:1.30.1:compile
+[INFO] |  |     +- io.grpc:grpc-alts:jar:1.30.1:compile
+[INFO] |  |     |  +- org.conscrypt:conscrypt-openjdk-uber:jar:2.2.1:compile
+[INFO] |  |     |  \- com.google.auth:google-auth-library-oauth2-http:jar:0.20.0:compile
+[INFO] |  |     |     +- com.google.auto.value:auto-value-annotations:jar:1.7:compile
+[INFO] |  |     |     +- com.google.http-client:google-http-client:jar:1.34.0:compile
+[INFO] |  |     |     |  \- io.opencensus:opencensus-contrib-http-util:jar:0.24.0:compile
+[INFO] |  |     |     \- com.google.http-client:google-http-client-jackson2:jar:1.34.0:compile
+[INFO] |  |     +- com.google.re2j:re2j:jar:1.2:compile
+[INFO] |  |     +- io.opencensus:opencensus-proto:jar:0.2.0:compile
+[INFO] |  |     \- io.grpc:grpc-netty-shaded:jar:1.30.1:compile
+[INFO] |  +- com.fasterxml.jackson.core:jackson-annotations:jar:2.11.1:compile
+[INFO] |  +- org.slf4j:slf4j-api:jar:1.7.21:compile
+[INFO] |  +- org.apache.logging.log4j:log4j-api:jar:99.0-does-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- org.apache.logging.log4j:log4j-core:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- org.apache.logging.log4j:log4j-slf4j-impl:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- org.apache.logging.log4j:log4j-1.2-api:jar:2.14.1:compile (version selected from constraint [2.6.1,))
+[INFO] |  \- org.apache.curator:curator-test:jar:2.12.0:compile
+[INFO] |     \- org.javassist:javassist:jar:3.18.1-GA:compile
+[INFO] \- com.alibaba.maxgraph:maxgraph-frontendservice:jar:0.0.1-SNAPSHOT:compile
+[INFO]    +- com.alibaba.maxgraph:maxgraph-compiler:jar:0.0.1-SNAPSHOT:compile
+[INFO]    |  +- org.apache.tinkerpop:gremlin-server:jar:3.4.2:compile
+[INFO]    |  |  +- org.apache.tinkerpop:tinkergraph-gremlin:jar:3.4.2:compile
+[INFO]    |  |  +- org.apache.tinkerpop:gremlin-groovy:jar:3.4.2:compile
+[INFO]    |  |  |  +- org.apache.ivy:ivy:jar:2.3.0:compile
+[INFO]    |  |  |  +- org.codehaus.groovy:groovy-groovysh:jar:indy:2.5.6:compile
+[INFO]    |  |  |  |  +- org.codehaus.groovy:groovy-cli-picocli:jar:2.5.6:compile
+[INFO]    |  |  |  |  |  \- info.picocli:picocli:jar:3.9.2:compile
+[INFO]    |  |  |  |  +- org.codehaus.groovy:groovy-console:jar:2.5.6:compile
+[INFO]    |  |  |  |  |  +- org.codehaus.groovy:groovy-swing:jar:2.5.6:compile
+[INFO]    |  |  |  |  |  \- org.codehaus.groovy:groovy-templates:jar:2.5.6:compile
+[INFO]    |  |  |  |  |     \- org.codehaus.groovy:groovy-xml:jar:2.5.6:compile
+[INFO]    |  |  |  |  \- jline:jline:jar:2.14.2:compile
+[INFO]    |  |  |  +- org.codehaus.groovy:groovy-jsr223:jar:indy:2.5.6:compile
+[INFO]    |  |  |  +- org.mindrot:jbcrypt:jar:0.4:compile
+[INFO]    |  |  |  \- com.github.ben-manes.caffeine:caffeine:jar:2.3.1:compile
+[INFO]    |  |  \- com.codahale.metrics:metrics-core:jar:3.0.2:compile
+[INFO]    |  +- org.apache.tinkerpop:gremlin-python:jar:3.4.2:compile
+[INFO]    |  |  \- org.python:jython-standalone:jar:2.7.1:compile
+[INFO]    |  +- org.codehaus.groovy:groovy:jar:2.5.6:compile
+[INFO]    |  +- org.codehaus.groovy:groovy-jsr223:jar:2.5.6:compile
+[INFO]    |  \- org.jgrapht:jgrapht-core:jar:1.1.0:compile
+[INFO]    \- com.alibaba:fastjson:jar:1.2.75:compile
+[INFO] 
+[INFO] ---------------< com.alibaba.maxgraph:instance-manager >----------------
+[INFO] Building instance-manager 0.0.1-SNAPSHOT                          [9/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ instance-manager ---
+[INFO] com.alibaba.maxgraph:instance-manager:jar:0.0.1-SNAPSHOT
+[INFO] +- org.springframework.boot:spring-boot-starter-web:jar:2.3.1.RELEASE:compile
+[INFO] |  +- org.springframework.boot:spring-boot-starter:jar:2.3.1.RELEASE:compile
+[INFO] |  |  +- org.springframework.boot:spring-boot:jar:2.3.1.RELEASE:compile
+[INFO] |  |  +- org.springframework.boot:spring-boot-autoconfigure:jar:2.3.1.RELEASE:compile
+[INFO] |  |  +- org.springframework.boot:spring-boot-starter-logging:jar:2.3.1.RELEASE:compile
+[INFO] |  |  |  +- ch.qos.logback:logback-classic:jar:1.2.3:compile
+[INFO] |  |  |  |  \- ch.qos.logback:logback-core:jar:1.2.3:compile
+[INFO] |  |  |  +- org.apache.logging.log4j:log4j-to-slf4j:jar:2.13.3:compile
+[INFO] |  |  |  |  \- org.apache.logging.log4j:log4j-api:jar:99.0-does-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  |  |  \- org.slf4j:jul-to-slf4j:jar:1.7.30:compile
+[INFO] |  |  +- jakarta.annotation:jakarta.annotation-api:jar:1.3.5:compile
+[INFO] |  |  +- org.springframework:spring-core:jar:5.2.7.RELEASE:compile
+[INFO] |  |  |  \- org.springframework:spring-jcl:jar:5.2.7.RELEASE:compile
+[INFO] |  |  \- org.yaml:snakeyaml:jar:1.26:compile
+[INFO] |  +- org.springframework.boot:spring-boot-starter-json:jar:2.3.1.RELEASE:compile
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.11.0:compile
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.11.0:compile
+[INFO] |  |  \- com.fasterxml.jackson.module:jackson-module-parameter-names:jar:2.11.0:compile
+[INFO] |  +- org.springframework.boot:spring-boot-starter-tomcat:jar:2.3.1.RELEASE:compile
+[INFO] |  |  +- org.apache.tomcat.embed:tomcat-embed-core:jar:9.0.36:compile
+[INFO] |  |  +- org.glassfish:jakarta.el:jar:3.0.3:compile
+[INFO] |  |  \- org.apache.tomcat.embed:tomcat-embed-websocket:jar:9.0.36:compile
+[INFO] |  +- org.springframework:spring-web:jar:5.2.7.RELEASE:compile
+[INFO] |  |  \- org.springframework:spring-beans:jar:5.2.7.RELEASE:compile
+[INFO] |  \- org.springframework:spring-webmvc:jar:5.2.7.RELEASE:compile
+[INFO] |     +- org.springframework:spring-aop:jar:5.2.7.RELEASE:compile
+[INFO] |     +- org.springframework:spring-context:jar:5.2.7.RELEASE:compile
+[INFO] |     \- org.springframework:spring-expression:jar:5.2.7.RELEASE:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-core:jar:2.11.1:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-databind:jar:2.11.1:compile
+[INFO] |  \- com.fasterxml.jackson.core:jackson-annotations:jar:2.11.1:compile
+[INFO] +- commons-io:commons-io:jar:2.6:compile
+[INFO] +- org.apache.commons:commons-lang3:jar:3.4:compile
+[INFO] +- org.apache.curator:curator-framework:jar:2.12.0:compile
+[INFO] +- org.apache.curator:curator-client:jar:2.12.0:compile
+[INFO] |  +- org.apache.zookeeper:zookeeper:jar:3.6.1:compile
+[INFO] |  |  +- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  |  +- org.apache.zookeeper:zookeeper-jute:jar:3.6.1:compile
+[INFO] |  |  +- org.apache.yetus:audience-annotations:jar:0.5.0:compile
+[INFO] |  |  +- io.netty:netty-handler:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-common:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-resolver:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-buffer:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-transport:jar:4.1.48.Final:compile
+[INFO] |  |  |  \- io.netty:netty-codec:jar:4.1.48.Final:compile
+[INFO] |  |  +- io.netty:netty-transport-native-epoll:jar:4.1.48.Final:compile
+[INFO] |  |  |  \- io.netty:netty-transport-native-unix-common:jar:4.1.48.Final:compile
+[INFO] |  |  \- log4j:log4j:jar:1.2.17:compile
+[INFO] |  +- com.google.guava:guava:jar:30.1.1-jre:compile (version selected from constraint [24.1.1,))
+[INFO] |  |  +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO] |  |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO] |  |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[INFO] |  |  +- org.checkerframework:checker-qual:jar:3.8.0:compile
+[INFO] |  |  +- com.google.errorprone:error_prone_annotations:jar:2.5.1:compile
+[INFO] |  |  \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO] |  \- org.slf4j:slf4j-api:jar:1.7.21:compile
+[INFO] \- org.apache.tinkerpop:gremlin-driver:jar:3.4.2:compile
+[INFO]    +- org.apache.tinkerpop:gremlin-core:jar:3.4.2:compile
+[INFO]    |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.2:compile
+[INFO]    |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO]    |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO]    |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO]    |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO]    |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO]    |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO]    |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO]    |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO]    |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO]    +- io.netty:netty-all:jar:4.1.32.Final:compile
+[INFO]    +- org.codehaus.groovy:groovy:jar:indy:2.5.6:compile
+[INFO]    \- org.codehaus.groovy:groovy-json:jar:indy:2.5.6:compile
+[INFO] 
+[INFO] ---------------< com.alibaba.maxgraph:maxgraph-executor >---------------
+[INFO] Building executor 0.0.1-SNAPSHOT                                 [10/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ maxgraph-executor ---
+[INFO] com.alibaba.maxgraph:maxgraph-executor:jar:0.0.1-SNAPSHOT
+[INFO] 
+[INFO] -----------------< com.alibaba.maxgraph:maxgraph-src >------------------
+[INFO] Building maxgraph-src 0.0.1-SNAPSHOT                             [11/21]
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ maxgraph-src ---
+[INFO] com.alibaba.maxgraph:maxgraph-src:pom:0.0.1-SNAPSHOT
+[INFO] 
+[INFO] ----------------------< com.alibaba.maxgraph:v2 >-----------------------
+[INFO] Building v2 0.0.1-SNAPSHOT                                       [12/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ v2 ---
+[INFO] com.alibaba.maxgraph:v2:jar:0.0.1-SNAPSHOT
+[INFO] +- com.alibaba.maxgraph:maxgraph-frontendservice:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  +- com.alibaba.maxgraph:maxgraph-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |  +- com.esotericsoftware:kryo-shaded:jar:4.0.0:compile
+[INFO] |  |  |  \- com.esotericsoftware:minlog:jar:1.3.0:compile
+[INFO] |  |  +- de.javakaffee:kryo-serializers:jar:0.38:compile
+[INFO] |  |  \- com.alibaba.maxgraph:maxgraph-sdk-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |     +- javax.annotation:javax.annotation-api:jar:1.2:compile
+[INFO] |  |     \- net.jcip:jcip-annotations:jar:1.0:compile
+[INFO] |  +- com.alibaba.maxgraph:maxgraph-compiler:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |  +- org.apache.tinkerpop:gremlin-python:jar:3.4.2:compile
+[INFO] |  |  |  \- org.python:jython-standalone:jar:2.7.1:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy:jar:2.5.6:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy-jsr223:jar:2.5.6:compile
+[INFO] |  |  \- org.apache.commons:commons-collections4:jar:4.1:compile
+[INFO] |  +- com.alibaba.maxgraph:maxgraph-coordinator:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |  +- io.grpc:grpc-all:jar:1.30.1:compile
+[INFO] |  |  |  +- io.grpc:grpc-auth:jar:1.30.1:compile
+[INFO] |  |  |  |  \- com.google.auth:google-auth-library-credentials:jar:0.20.0:compile
+[INFO] |  |  |  +- io.grpc:grpc-grpclb:jar:1.30.1:compile
+[INFO] |  |  |  |  \- com.google.protobuf:protobuf-java-util:jar:3.12.0:compile
+[INFO] |  |  |  +- io.grpc:grpc-netty:jar:1.30.1:compile
+[INFO] |  |  |  |  +- io.netty:netty-codec-http2:jar:4.1.48.Final:compile (version selected from constraint [4.1.48.Final,4.1.48.Final])
+[INFO] |  |  |  |  |  \- io.netty:netty-codec-http:jar:4.1.48.Final:compile
+[INFO] |  |  |  |  \- io.netty:netty-handler-proxy:jar:4.1.48.Final:runtime
+[INFO] |  |  |  |     \- io.netty:netty-codec-socks:jar:4.1.48.Final:runtime
+[INFO] |  |  |  +- io.grpc:grpc-okhttp:jar:1.30.1:compile
+[INFO] |  |  |  +- io.grpc:grpc-services:jar:1.30.1:compile
+[INFO] |  |  |  +- io.grpc:grpc-testing:jar:1.30.1:compile
+[INFO] |  |  |  |  \- io.opencensus:opencensus-api:jar:0.24.0:compile
+[INFO] |  |  |  \- io.grpc:grpc-xds:jar:1.30.1:compile
+[INFO] |  |  |     +- io.grpc:grpc-alts:jar:1.30.1:compile
+[INFO] |  |  |     |  +- org.conscrypt:conscrypt-openjdk-uber:jar:2.2.1:compile
+[INFO] |  |  |     |  \- com.google.auth:google-auth-library-oauth2-http:jar:0.20.0:compile
+[INFO] |  |  |     |     +- com.google.auto.value:auto-value-annotations:jar:1.7:compile
+[INFO] |  |  |     |     +- com.google.http-client:google-http-client:jar:1.34.0:compile
+[INFO] |  |  |     |     |  \- io.opencensus:opencensus-contrib-http-util:jar:0.24.0:compile
+[INFO] |  |  |     |     \- com.google.http-client:google-http-client-jackson2:jar:1.34.0:compile
+[INFO] |  |  |     +- com.google.re2j:re2j:jar:1.2:compile
+[INFO] |  |  |     \- io.opencensus:opencensus-proto:jar:0.2.0:compile
+[INFO] |  |  +- org.apache.logging.log4j:log4j-api:jar:99.0-does-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  |  +- org.apache.logging.log4j:log4j-core:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  |  +- org.apache.logging.log4j:log4j-slf4j-impl:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  |  \- org.apache.logging.log4j:log4j-1.2-api:jar:2.14.1:compile (version selected from constraint [2.6.1,))
+[INFO] |  \- com.google.guava:guava:jar:30.1.1-jre:compile (version selected from constraint [24.1.1,))
+[INFO] |     +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO] |     +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO] |     +- org.checkerframework:checker-qual:jar:3.8.0:compile
+[INFO] |     \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO] +- org.slf4j:slf4j-api:jar:1.7.21:compile
+[INFO] +- ch.qos.logback:logback-classic:jar:1.2.3:compile
+[INFO] |  \- ch.qos.logback:logback-core:jar:1.2.3:compile
+[INFO] +- io.grpc:grpc-netty-shaded:jar:1.30.1:compile
+[INFO] |  \- io.grpc:grpc-core:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |     +- com.google.code.gson:gson:jar:2.8.6:compile
+[INFO] |     +- com.google.android:annotations:jar:4.1.1.4:runtime
+[INFO] |     \- io.perfmark:perfmark-api:jar:0.19.0:runtime
+[INFO] +- io.grpc:grpc-protobuf:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-api:jar:1.30.1:compile
+[INFO] |  |  \- io.grpc:grpc-context:jar:1.30.1:compile
+[INFO] |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[INFO] |  +- com.google.protobuf:protobuf-java:jar:3.12.2:compile
+[INFO] |  +- com.google.api.grpc:proto-google-common-protos:jar:1.17.0:compile
+[INFO] |  +- io.grpc:grpc-protobuf-lite:jar:1.30.1:compile
+[INFO] |  +- com.google.errorprone:error_prone_annotations:jar:2.3.4:compile
+[INFO] |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:runtime
+[INFO] +- io.grpc:grpc-stub:jar:1.30.1:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-databind:jar:2.11.1:compile
+[INFO] |  +- com.fasterxml.jackson.core:jackson-annotations:jar:2.11.1:compile
+[INFO] |  \- com.fasterxml.jackson.core:jackson-core:jar:2.11.1:compile
+[INFO] +- com.fasterxml.jackson.module:jackson-module-paranamer:jar:2.11.1:compile
+[INFO] |  \- com.thoughtworks.paranamer:paranamer:jar:2.8:compile
+[INFO] +- com.alibaba:fastjson:jar:1.2.75:compile
+[INFO] +- org.apache.curator:curator-framework:jar:5.1.0:compile
+[INFO] +- org.apache.curator:curator-recipes:jar:5.1.0:compile
+[INFO] +- org.apache.curator:curator-client:jar:5.1.0:compile
+[INFO] +- org.apache.curator:curator-x-discovery:jar:5.1.0:compile
+[INFO] +- org.apache.zookeeper:zookeeper:jar:3.6.1:compile
+[INFO] |  +- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  +- org.apache.zookeeper:zookeeper-jute:jar:3.6.1:compile
+[INFO] |  +- org.apache.yetus:audience-annotations:jar:0.5.0:compile
+[INFO] |  +- io.netty:netty-handler:jar:4.1.48.Final:compile
+[INFO] |  |  +- io.netty:netty-common:jar:4.1.48.Final:compile
+[INFO] |  |  +- io.netty:netty-resolver:jar:4.1.48.Final:compile
+[INFO] |  |  +- io.netty:netty-buffer:jar:4.1.48.Final:compile
+[INFO] |  |  +- io.netty:netty-transport:jar:4.1.48.Final:compile
+[INFO] |  |  \- io.netty:netty-codec:jar:4.1.48.Final:compile
+[INFO] |  +- io.netty:netty-transport-native-epoll:jar:4.1.48.Final:compile
+[INFO] |  |  \- io.netty:netty-transport-native-unix-common:jar:4.1.48.Final:compile
+[INFO] |  +- org.slf4j:slf4j-log4j12:jar:1.7.25:compile
+[INFO] |  \- log4j:log4j:jar:1.2.17:compile
+[INFO] +- org.apache.curator:curator-test:jar:5.1.0:test
+[INFO] |  \- org.xerial.snappy:snappy-java:jar:1.1.7:compile
+[INFO] +- org.apache.kafka:kafka-clients:jar:2.5.0:compile
+[INFO] |  +- com.github.luben:zstd-jni:jar:1.4.4-7:compile
+[INFO] |  \- org.lz4:lz4-java:jar:1.7.1:compile
+[INFO] +- net.java.dev.jna:jna:jar:5.5.0:compile
+[INFO] +- org.junit.jupiter:junit-jupiter:jar:5.6.2:test
+[INFO] |  +- org.junit.jupiter:junit-jupiter-api:jar:5.6.2:test
+[INFO] |  |  +- org.opentest4j:opentest4j:jar:1.2.0:test
+[INFO] |  |  \- org.junit.platform:junit-platform-commons:jar:1.6.2:test
+[INFO] |  +- org.junit.jupiter:junit-jupiter-params:jar:5.6.2:test
+[INFO] |  \- org.junit.jupiter:junit-jupiter-engine:jar:5.6.2:test
+[INFO] +- org.junit.vintage:junit-vintage-engine:jar:5.6.2:test
+[INFO] |  +- org.apiguardian:apiguardian-api:jar:1.1.0:test
+[INFO] |  \- org.junit.platform:junit-platform-engine:jar:1.6.2:test
+[INFO] +- org.mockito:mockito-core:jar:3.4.4:test
+[INFO] |  +- net.bytebuddy:byte-buddy:jar:1.10.13:test
+[INFO] |  +- net.bytebuddy:byte-buddy-agent:jar:1.10.13:test
+[INFO] |  \- org.objenesis:objenesis:jar:2.6:compile
+[INFO] +- com.salesforce.kafka.test:kafka-junit-core:jar:3.2.1:compile
+[INFO] +- com.salesforce.kafka.test:kafka-junit5:jar:3.2.1:test
+[INFO] +- org.apache.kafka:kafka_2.13:jar:2.5.0:compile
+[INFO] |  +- com.fasterxml.jackson.module:jackson-module-scala_2.13:jar:2.10.2:compile
+[INFO] |  +- com.fasterxml.jackson.dataformat:jackson-dataformat-csv:jar:2.10.2:compile
+[INFO] |  +- com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.10.2:compile
+[INFO] |  +- net.sf.jopt-simple:jopt-simple:jar:5.0.4:compile
+[INFO] |  +- com.yammer.metrics:metrics-core:jar:2.2.0:compile
+[INFO] |  +- org.scala-lang.modules:scala-collection-compat_2.13:jar:2.1.3:compile
+[INFO] |  +- org.scala-lang.modules:scala-java8-compat_2.13:jar:0.9.0:compile
+[INFO] |  +- org.scala-lang:scala-library:jar:2.13.1:compile
+[INFO] |  +- org.scala-lang:scala-reflect:jar:2.13.1:compile
+[INFO] |  +- com.typesafe.scala-logging:scala-logging_2.13:jar:3.9.2:compile
+[INFO] |  \- commons-cli:commons-cli:jar:1.3:compile
+[INFO] +- org.apache.commons:commons-lang3:jar:3.4:compile
+[INFO] +- org.apache.tinkerpop:gremlin-server:jar:3.4.2:compile
+[INFO] |  +- org.apache.tinkerpop:tinkergraph-gremlin:jar:3.4.2:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-driver:jar:3.4.2:compile
+[INFO] |  |  +- io.netty:netty-all:jar:4.1.32.Final:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy:jar:indy:2.5.6:compile
+[INFO] |  |  \- org.codehaus.groovy:groovy-json:jar:indy:2.5.6:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-groovy:jar:3.4.2:compile
+[INFO] |  |  +- org.apache.ivy:ivy:jar:2.3.0:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy-groovysh:jar:indy:2.5.6:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-cli-picocli:jar:2.5.6:compile
+[INFO] |  |  |  |  \- info.picocli:picocli:jar:3.9.2:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-console:jar:2.5.6:compile
+[INFO] |  |  |  |  +- org.codehaus.groovy:groovy-swing:jar:2.5.6:compile
+[INFO] |  |  |  |  \- org.codehaus.groovy:groovy-templates:jar:2.5.6:compile
+[INFO] |  |  |  |     \- org.codehaus.groovy:groovy-xml:jar:2.5.6:compile
+[INFO] |  |  |  \- jline:jline:jar:2.14.2:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy-jsr223:jar:indy:2.5.6:compile
+[INFO] |  |  +- org.mindrot:jbcrypt:jar:0.4:compile
+[INFO] |  |  \- com.github.ben-manes.caffeine:caffeine:jar:2.3.1:compile
+[INFO] |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] |  \- com.codahale.metrics:metrics-core:jar:3.0.2:compile
+[INFO] +- org.jgrapht:jgrapht-core:jar:1.1.0:compile
+[INFO] +- commons-io:commons-io:jar:2.6:compile
+[INFO] +- junit:junit:jar:4.12:test
+[INFO] |  \- org.hamcrest:hamcrest-core:jar:1.3:test
+[INFO] +- org.apache.tinkerpop:gremlin-test:jar:3.4.2:test
+[INFO] |  +- org.apache.tinkerpop:gremlin-core:jar:3.4.2:compile
+[INFO] |  |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.2:compile
+[INFO] |  |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO] |  |  +- org.yaml:snakeyaml:jar:1.15:compile
+[INFO] |  |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO] |  |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO] |  |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO] |  |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO] |  |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO] |  |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO] |  |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] |  \- org.hamcrest:hamcrest-all:jar:1.3:test
+[INFO] +- commons-codec:commons-codec:jar:1.11:compile
+[INFO] +- org.apache.hadoop:hadoop-client:jar:2.8.4:compile
+[INFO] |  +- org.apache.hadoop:hadoop-common:jar:2.8.4:compile
+[INFO] |  |  +- org.apache.commons:commons-math3:jar:3.6.1:compile
+[INFO] |  |  +- xmlenc:xmlenc:jar:0.52:compile
+[INFO] |  |  +- org.apache.httpcomponents:httpclient:jar:4.5.2:compile
+[INFO] |  |  |  \- org.apache.httpcomponents:httpcore:jar:4.4.4:compile
+[INFO] |  |  +- commons-net:commons-net:jar:3.1:compile
+[INFO] |  |  +- org.mortbay.jetty:jetty-sslengine:jar:6.1.26:compile
+[INFO] |  |  +- javax.servlet.jsp:jsp-api:jar:2.1:runtime
+[INFO] |  |  +- commons-logging:commons-logging:jar:1.1.3:compile
+[INFO] |  |  +- org.codehaus.jackson:jackson-core-asl:jar:1.9.13:compile
+[INFO] |  |  +- org.codehaus.jackson:jackson-mapper-asl:jar:1.9.13:compile
+[INFO] |  |  +- org.apache.avro:avro:jar:1.7.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-auth:jar:2.8.4:compile
+[INFO] |  |  |  +- com.nimbusds:nimbus-jose-jwt:jar:4.41.1:compile
+[INFO] |  |  |  |  +- com.github.stephenc.jcip:jcip-annotations:jar:1.0-1:compile
+[INFO] |  |  |  |  \- net.minidev:json-smart:jar:2.3:compile (version selected from constraint [1.3.1,2.3])
+[INFO] |  |  |  |     \- net.minidev:accessors-smart:jar:1.2:compile
+[INFO] |  |  |  |        \- org.ow2.asm:asm:jar:5.0.4:compile
+[INFO] |  |  |  \- org.apache.directory.server:apacheds-kerberos-codec:jar:2.0.0-M15:compile
+[INFO] |  |  |     +- org.apache.directory.server:apacheds-i18n:jar:2.0.0-M15:compile
+[INFO] |  |  |     +- org.apache.directory.api:api-asn1-api:jar:1.0.0-M20:compile
+[INFO] |  |  |     \- org.apache.directory.api:api-util:jar:1.0.0-M20:compile
+[INFO] |  |  +- org.apache.htrace:htrace-core4:jar:4.0.1-incubating:compile
+[INFO] |  |  \- org.apache.commons:commons-compress:jar:1.4.1:compile
+[INFO] |  |     \- org.tukaani:xz:jar:1.0:compile
+[INFO] |  +- org.apache.hadoop:hadoop-hdfs-client:jar:2.8.4:compile
+[INFO] |  |  \- com.squareup.okhttp:okhttp:jar:2.4.0:compile
+[INFO] |  |     \- com.squareup.okio:okio:jar:1.4.0:compile
+[INFO] |  +- org.apache.hadoop:hadoop-mapreduce-client-app:jar:2.8.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-mapreduce-client-common:jar:2.8.4:compile
+[INFO] |  |  |  +- org.apache.hadoop:hadoop-yarn-client:jar:2.8.4:compile
+[INFO] |  |  |  \- org.apache.hadoop:hadoop-yarn-server-common:jar:2.8.4:compile
+[INFO] |  |  \- org.apache.hadoop:hadoop-mapreduce-client-shuffle:jar:2.8.4:compile
+[INFO] |  |     \- org.fusesource.leveldbjni:leveldbjni-all:jar:1.8:compile
+[INFO] |  +- org.apache.hadoop:hadoop-yarn-api:jar:2.8.4:compile
+[INFO] |  +- org.apache.hadoop:hadoop-mapreduce-client-core:jar:2.8.4:compile
+[INFO] |  |  \- org.apache.hadoop:hadoop-yarn-common:jar:2.8.4:compile
+[INFO] |  |     +- javax.xml.bind:jaxb-api:jar:2.2.2:compile
+[INFO] |  |     |  +- javax.xml.stream:stax-api:jar:1.0-2:compile
+[INFO] |  |     |  \- javax.activation:activation:jar:1.1:compile
+[INFO] |  |     +- org.mortbay.jetty:jetty-util:jar:6.1.26:compile
+[INFO] |  |     +- com.sun.jersey:jersey-core:jar:1.9:compile
+[INFO] |  |     +- com.sun.jersey:jersey-client:jar:1.9:compile
+[INFO] |  |     +- org.codehaus.jackson:jackson-jaxrs:jar:1.9.13:compile
+[INFO] |  |     \- org.codehaus.jackson:jackson-xc:jar:1.9.13:compile
+[INFO] |  +- org.apache.hadoop:hadoop-mapreduce-client-jobclient:jar:2.8.4:compile
+[INFO] |  \- org.apache.hadoop:hadoop-annotations:jar:2.8.4:compile
+[INFO] \- io.dropwizard.metrics:metrics-core:jar:3.2.5:compile
+[INFO] 
+[INFO] ----------------< com.alibaba.maxgraph:data_load_tools >----------------
+[INFO] Building data_load_tools 0.0.1-SNAPSHOT                          [13/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ data_load_tools ---
+[INFO] com.alibaba.maxgraph:data_load_tools:jar:0.0.1-SNAPSHOT
+[INFO] +- com.alibaba.maxgraph:v2:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  +- com.alibaba.maxgraph:maxgraph-frontendservice:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |  +- com.alibaba.maxgraph:maxgraph-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |  |  +- junit:junit:jar:4.12:compile
+[INFO] |  |  |  |  \- org.hamcrest:hamcrest-core:jar:1.3:compile
+[INFO] |  |  |  +- com.esotericsoftware:kryo-shaded:jar:4.0.0:compile
+[INFO] |  |  |  |  +- com.esotericsoftware:minlog:jar:1.3.0:compile
+[INFO] |  |  |  |  \- org.objenesis:objenesis:jar:2.2:compile
+[INFO] |  |  |  +- de.javakaffee:kryo-serializers:jar:0.38:compile
+[INFO] |  |  |  \- com.alibaba.maxgraph:maxgraph-sdk-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |  |     +- javax.annotation:javax.annotation-api:jar:1.2:compile
+[INFO] |  |  |     \- net.jcip:jcip-annotations:jar:1.0:compile
+[INFO] |  |  +- com.alibaba.maxgraph:maxgraph-compiler:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |  |  +- org.apache.tinkerpop:gremlin-python:jar:3.4.2:compile
+[INFO] |  |  |  |  \- org.python:jython-standalone:jar:2.7.1:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy:jar:2.5.6:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-jsr223:jar:2.5.6:compile
+[INFO] |  |  |  \- org.apache.commons:commons-collections4:jar:4.1:compile
+[INFO] |  |  \- com.alibaba.maxgraph:maxgraph-coordinator:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |     +- io.grpc:grpc-all:jar:1.30.1:compile
+[INFO] |  |     |  +- io.grpc:grpc-auth:jar:1.30.1:compile
+[INFO] |  |     |  |  \- com.google.auth:google-auth-library-credentials:jar:0.20.0:compile
+[INFO] |  |     |  +- io.grpc:grpc-grpclb:jar:1.30.1:compile
+[INFO] |  |     |  |  \- com.google.protobuf:protobuf-java-util:jar:3.12.0:compile
+[INFO] |  |     |  +- io.grpc:grpc-netty:jar:1.30.1:compile
+[INFO] |  |     |  |  +- io.netty:netty-codec-http2:jar:4.1.48.Final:compile (version selected from constraint [4.1.48.Final,4.1.48.Final])
+[INFO] |  |     |  |  |  \- io.netty:netty-codec-http:jar:4.1.48.Final:compile
+[INFO] |  |     |  |  \- io.netty:netty-handler-proxy:jar:4.1.48.Final:runtime
+[INFO] |  |     |  |     \- io.netty:netty-codec-socks:jar:4.1.48.Final:runtime
+[INFO] |  |     |  +- io.grpc:grpc-okhttp:jar:1.30.1:compile
+[INFO] |  |     |  +- io.grpc:grpc-services:jar:1.30.1:compile
+[INFO] |  |     |  +- io.grpc:grpc-testing:jar:1.30.1:compile
+[INFO] |  |     |  |  \- io.opencensus:opencensus-api:jar:0.24.0:compile
+[INFO] |  |     |  \- io.grpc:grpc-xds:jar:1.30.1:compile
+[INFO] |  |     |     +- io.grpc:grpc-alts:jar:1.30.1:compile
+[INFO] |  |     |     |  +- org.conscrypt:conscrypt-openjdk-uber:jar:2.2.1:compile
+[INFO] |  |     |     |  \- com.google.auth:google-auth-library-oauth2-http:jar:0.20.0:compile
+[INFO] |  |     |     |     +- com.google.auto.value:auto-value-annotations:jar:1.7:compile
+[INFO] |  |     |     |     +- com.google.http-client:google-http-client:jar:1.34.0:compile
+[INFO] |  |     |     |     |  \- io.opencensus:opencensus-contrib-http-util:jar:0.24.0:compile
+[INFO] |  |     |     |     \- com.google.http-client:google-http-client-jackson2:jar:1.34.0:compile
+[INFO] |  |     |     +- com.google.re2j:re2j:jar:1.2:compile
+[INFO] |  |     |     \- io.opencensus:opencensus-proto:jar:0.2.0:compile
+[INFO] |  |     +- org.apache.logging.log4j:log4j-api:jar:99.0-does-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  |     +- org.apache.logging.log4j:log4j-core:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  |     +- org.apache.logging.log4j:log4j-slf4j-impl:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  |     \- org.apache.logging.log4j:log4j-1.2-api:jar:2.14.1:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- org.slf4j:slf4j-api:jar:1.7.21:compile
+[INFO] |  +- ch.qos.logback:logback-classic:jar:1.2.3:compile
+[INFO] |  |  \- ch.qos.logback:logback-core:jar:1.2.3:compile
+[INFO] |  +- io.grpc:grpc-netty-shaded:jar:1.30.1:compile
+[INFO] |  |  \- io.grpc:grpc-core:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |     +- com.google.android:annotations:jar:4.1.1.4:runtime
+[INFO] |  |     \- io.perfmark:perfmark-api:jar:0.19.0:runtime
+[INFO] |  +- io.grpc:grpc-protobuf:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-api:jar:1.30.1:compile
+[INFO] |  |  |  \- io.grpc:grpc-context:jar:1.30.1:compile
+[INFO] |  |  +- com.google.api.grpc:proto-google-common-protos:jar:1.17.0:compile
+[INFO] |  |  +- io.grpc:grpc-protobuf-lite:jar:1.30.1:compile
+[INFO] |  |  +- com.google.errorprone:error_prone_annotations:jar:2.3.4:compile
+[INFO] |  |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:runtime
+[INFO] |  +- io.grpc:grpc-stub:jar:1.30.1:compile
+[INFO] |  +- com.fasterxml.jackson.core:jackson-databind:jar:2.11.1:compile
+[INFO] |  |  +- com.fasterxml.jackson.core:jackson-annotations:jar:2.11.1:compile
+[INFO] |  |  \- com.fasterxml.jackson.core:jackson-core:jar:2.11.1:compile
+[INFO] |  +- com.fasterxml.jackson.module:jackson-module-paranamer:jar:2.11.1:compile
+[INFO] |  |  \- com.thoughtworks.paranamer:paranamer:jar:2.8:compile
+[INFO] |  +- com.alibaba:fastjson:jar:1.2.75:compile
+[INFO] |  +- org.apache.curator:curator-framework:jar:5.1.0:compile
+[INFO] |  +- org.apache.curator:curator-recipes:jar:5.1.0:compile
+[INFO] |  +- org.apache.curator:curator-client:jar:5.1.0:compile
+[INFO] |  +- org.apache.curator:curator-x-discovery:jar:5.1.0:compile
+[INFO] |  +- org.apache.zookeeper:zookeeper:jar:3.6.1:compile
+[INFO] |  |  +- org.apache.zookeeper:zookeeper-jute:jar:3.6.1:compile
+[INFO] |  |  +- org.apache.yetus:audience-annotations:jar:0.5.0:compile
+[INFO] |  |  +- io.netty:netty-handler:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-common:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-resolver:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-buffer:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-transport:jar:4.1.48.Final:compile
+[INFO] |  |  |  \- io.netty:netty-codec:jar:4.1.48.Final:compile
+[INFO] |  |  +- io.netty:netty-transport-native-epoll:jar:4.1.48.Final:compile
+[INFO] |  |  |  \- io.netty:netty-transport-native-unix-common:jar:4.1.48.Final:compile
+[INFO] |  |  +- org.slf4j:slf4j-log4j12:jar:1.7.25:compile
+[INFO] |  |  \- log4j:log4j:jar:1.2.17:compile
+[INFO] |  +- org.apache.kafka:kafka-clients:jar:2.5.0:compile
+[INFO] |  |  +- com.github.luben:zstd-jni:jar:1.4.4-7:compile
+[INFO] |  |  +- org.lz4:lz4-java:jar:1.7.1:compile
+[INFO] |  |  \- org.xerial.snappy:snappy-java:jar:1.1.7.3:compile
+[INFO] |  +- net.java.dev.jna:jna:jar:5.5.0:compile
+[INFO] |  +- com.salesforce.kafka.test:kafka-junit-core:jar:3.2.1:compile
+[INFO] |  |  \- org.apache.curator:curator-test:jar:2.12.0:compile
+[INFO] |  |     \- org.javassist:javassist:jar:3.18.1-GA:compile
+[INFO] |  +- org.apache.kafka:kafka_2.13:jar:2.5.0:compile
+[INFO] |  |  +- com.fasterxml.jackson.module:jackson-module-scala_2.13:jar:2.10.2:compile
+[INFO] |  |  +- com.fasterxml.jackson.dataformat:jackson-dataformat-csv:jar:2.10.2:compile
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.10.2:compile
+[INFO] |  |  +- net.sf.jopt-simple:jopt-simple:jar:5.0.4:compile
+[INFO] |  |  +- com.yammer.metrics:metrics-core:jar:2.2.0:compile
+[INFO] |  |  +- org.scala-lang.modules:scala-collection-compat_2.13:jar:2.1.3:compile
+[INFO] |  |  +- org.scala-lang.modules:scala-java8-compat_2.13:jar:0.9.0:compile
+[INFO] |  |  +- org.scala-lang:scala-library:jar:2.13.1:compile
+[INFO] |  |  +- org.scala-lang:scala-reflect:jar:2.13.1:compile
+[INFO] |  |  \- com.typesafe.scala-logging:scala-logging_2.13:jar:3.9.2:compile
+[INFO] |  +- org.apache.commons:commons-lang3:jar:3.4:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-server:jar:3.4.2:compile
+[INFO] |  |  +- org.apache.tinkerpop:tinkergraph-gremlin:jar:3.4.2:compile
+[INFO] |  |  |  \- org.apache.tinkerpop:gremlin-core:jar:3.4.2:compile
+[INFO] |  |  |     +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.2:compile
+[INFO] |  |  |     +- org.yaml:snakeyaml:jar:1.15:compile
+[INFO] |  |  |     +- org.javatuples:javatuples:jar:1.2:compile
+[INFO] |  |  |     +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO] |  |  |     +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO] |  |  |     |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO] |  |  |     +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO] |  |  |     +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO] |  |  |     \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] |  |  +- org.apache.tinkerpop:gremlin-driver:jar:3.4.2:compile
+[INFO] |  |  |  +- io.netty:netty-all:jar:4.1.32.Final:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy:jar:indy:2.5.6:compile
+[INFO] |  |  |  \- org.codehaus.groovy:groovy-json:jar:indy:2.5.6:compile
+[INFO] |  |  +- org.apache.tinkerpop:gremlin-groovy:jar:3.4.2:compile
+[INFO] |  |  |  +- org.apache.ivy:ivy:jar:2.3.0:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-groovysh:jar:indy:2.5.6:compile
+[INFO] |  |  |  |  +- org.codehaus.groovy:groovy-cli-picocli:jar:2.5.6:compile
+[INFO] |  |  |  |  |  \- info.picocli:picocli:jar:3.9.2:compile
+[INFO] |  |  |  |  +- org.codehaus.groovy:groovy-console:jar:2.5.6:compile
+[INFO] |  |  |  |  |  +- org.codehaus.groovy:groovy-swing:jar:2.5.6:compile
+[INFO] |  |  |  |  |  \- org.codehaus.groovy:groovy-templates:jar:2.5.6:compile
+[INFO] |  |  |  |  |     \- org.codehaus.groovy:groovy-xml:jar:2.5.6:compile
+[INFO] |  |  |  |  \- jline:jline:jar:2.14.2:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-jsr223:jar:indy:2.5.6:compile
+[INFO] |  |  |  +- org.mindrot:jbcrypt:jar:0.4:compile
+[INFO] |  |  |  \- com.github.ben-manes.caffeine:caffeine:jar:2.3.1:compile
+[INFO] |  |  \- com.codahale.metrics:metrics-core:jar:3.0.2:compile
+[INFO] |  +- org.jgrapht:jgrapht-core:jar:1.1.0:compile
+[INFO] |  +- commons-io:commons-io:jar:2.6:compile
+[INFO] |  +- commons-codec:commons-codec:jar:1.11:compile
+[INFO] |  \- io.dropwizard.metrics:metrics-core:jar:3.2.5:compile
+[INFO] +- org.apache.hadoop:hadoop-client:jar:2.8.4:provided
+[INFO] |  +- org.apache.hadoop:hadoop-hdfs-client:jar:2.8.4:provided
+[INFO] |  |  \- com.squareup.okhttp:okhttp:jar:2.4.0:compile
+[INFO] |  |     \- com.squareup.okio:okio:jar:1.4.0:compile
+[INFO] |  +- org.apache.hadoop:hadoop-mapreduce-client-app:jar:2.8.4:provided
+[INFO] |  |  +- org.apache.hadoop:hadoop-mapreduce-client-common:jar:2.8.4:provided
+[INFO] |  |  |  +- org.apache.hadoop:hadoop-yarn-client:jar:2.8.4:provided
+[INFO] |  |  |  \- org.apache.hadoop:hadoop-yarn-server-common:jar:2.8.4:provided
+[INFO] |  |  \- org.apache.hadoop:hadoop-mapreduce-client-shuffle:jar:2.8.4:provided
+[INFO] |  |     \- org.fusesource.leveldbjni:leveldbjni-all:jar:1.8:provided
+[INFO] |  +- org.apache.hadoop:hadoop-yarn-api:jar:2.8.4:provided
+[INFO] |  +- org.apache.hadoop:hadoop-mapreduce-client-core:jar:2.8.4:provided
+[INFO] |  |  \- org.apache.hadoop:hadoop-yarn-common:jar:2.8.4:provided
+[INFO] |  |     +- javax.xml.bind:jaxb-api:jar:2.2.2:provided
+[INFO] |  |     |  +- javax.xml.stream:stax-api:jar:1.0-2:provided
+[INFO] |  |     |  \- javax.activation:activation:jar:1.1:provided
+[INFO] |  |     \- com.sun.jersey:jersey-client:jar:1.9:provided
+[INFO] |  \- org.apache.hadoop:hadoop-mapreduce-client-jobclient:jar:2.8.4:provided
+[INFO] +- org.apache.hadoop:hadoop-common:jar:2.8.4:provided
+[INFO] |  +- org.apache.hadoop:hadoop-annotations:jar:2.8.4:provided
+[INFO] |  |  \- jdk.tools:jdk.tools:jar:1.8:system
+[INFO] |  +- com.google.guava:guava:jar:30.1.1-jre:compile (version selected from constraint [24.1.1,))
+[INFO] |  |  +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO] |  |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO] |  |  +- org.checkerframework:checker-qual:jar:3.8.0:compile
+[INFO] |  |  \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO] |  +- org.apache.commons:commons-math3:jar:3.6.1:provided
+[INFO] |  +- xmlenc:xmlenc:jar:0.52:provided
+[INFO] |  +- org.apache.httpcomponents:httpclient:jar:4.5.2:compile
+[INFO] |  |  \- org.apache.httpcomponents:httpcore:jar:4.4.4:compile
+[INFO] |  +- commons-net:commons-net:jar:3.1:provided
+[INFO] |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] |  +- org.mortbay.jetty:jetty:jar:6.1.26:provided
+[INFO] |  +- org.mortbay.jetty:jetty-util:jar:6.1.26:provided
+[INFO] |  +- org.mortbay.jetty:jetty-sslengine:jar:6.1.26:provided
+[INFO] |  +- javax.servlet.jsp:jsp-api:jar:2.1:provided
+[INFO] |  +- com.sun.jersey:jersey-core:jar:1.9:provided
+[INFO] |  +- com.sun.jersey:jersey-json:jar:1.9:provided
+[INFO] |  |  +- org.codehaus.jettison:jettison:jar:1.1:provided
+[INFO] |  |  +- com.sun.xml.bind:jaxb-impl:jar:2.2.3-1:provided
+[INFO] |  |  +- org.codehaus.jackson:jackson-jaxrs:jar:1.8.3:provided
+[INFO] |  |  \- org.codehaus.jackson:jackson-xc:jar:1.8.3:provided
+[INFO] |  +- com.sun.jersey:jersey-server:jar:1.9:provided
+[INFO] |  |  \- asm:asm:jar:3.1:provided
+[INFO] |  +- commons-logging:commons-logging:jar:1.1.3:compile
+[INFO] |  +- net.java.dev.jets3t:jets3t:jar:0.9.0:provided
+[INFO] |  |  \- com.jamesmurty.utils:java-xmlbuilder:jar:0.4:provided
+[INFO] |  +- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO] |  +- org.codehaus.jackson:jackson-core-asl:jar:1.9.13:provided
+[INFO] |  +- org.codehaus.jackson:jackson-mapper-asl:jar:1.9.13:provided
+[INFO] |  +- org.apache.avro:avro:jar:1.7.4:provided
+[INFO] |  +- com.google.protobuf:protobuf-java:jar:3.12.2:compile
+[INFO] |  +- com.google.code.gson:gson:jar:2.2.4:compile
+[INFO] |  +- org.apache.hadoop:hadoop-auth:jar:2.8.4:provided
+[INFO] |  |  +- com.nimbusds:nimbus-jose-jwt:jar:4.41.1:provided
+[INFO] |  |  |  +- com.github.stephenc.jcip:jcip-annotations:jar:1.0-1:provided
+[INFO] |  |  |  \- net.minidev:json-smart:jar:2.3:provided (version selected from constraint [1.3.1,2.3])
+[INFO] |  |  |     \- net.minidev:accessors-smart:jar:1.2:provided
+[INFO] |  |  |        \- org.ow2.asm:asm:jar:5.0.4:provided
+[INFO] |  |  \- org.apache.directory.server:apacheds-kerberos-codec:jar:2.0.0-M15:provided
+[INFO] |  |     +- org.apache.directory.server:apacheds-i18n:jar:2.0.0-M15:provided
+[INFO] |  |     +- org.apache.directory.api:api-asn1-api:jar:1.0.0-M20:provided
+[INFO] |  |     \- org.apache.directory.api:api-util:jar:1.0.0-M20:provided
+[INFO] |  +- com.jcraft:jsch:jar:0.1.54:provided
+[INFO] |  +- com.google.code.findbugs:jsr305:jar:3.0.0:compile
+[INFO] |  +- org.apache.htrace:htrace-core4:jar:4.0.1-incubating:provided
+[INFO] |  \- org.apache.commons:commons-compress:jar:1.4.1:provided
+[INFO] |     \- org.tukaani:xz:jar:1.0:provided
+[INFO] +- org.rocksdb:rocksdbjni:jar:5.15.10:compile
+[INFO] \- commons-cli:commons-cli:jar:1.3:compile
+[INFO] 
+[INFO] --------------< com.alibaba.graphscope:gremlin-compiler >---------------
+[INFO] Building gremlin-compiler 1.0-SNAPSHOT                           [14/21]
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ gremlin-compiler ---
+[INFO] com.alibaba.graphscope:gremlin-compiler:pom:1.0-SNAPSHOT
+[INFO] 
+[INFO] ----------------< com.alibaba.graphscope:compiler-core >----------------
+[INFO] Building compiler-core 1.0-SNAPSHOT                              [15/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ compiler-core ---
+[INFO] com.alibaba.graphscope:compiler-core:jar:1.0-SNAPSHOT
+[INFO] +- com.google.protobuf:protobuf-java:jar:3.12.2:compile
+[INFO] \- org.apache.tinkerpop:gremlin-core:jar:3.4.9:compile
+[INFO]    +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.9:compile
+[INFO]    +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO]    |  \- commons-lang:commons-lang:jar:2.6:compile
+[INFO]    +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO]    +- org.apache.commons:commons-lang3:jar:3.11:compile
+[INFO]    +- org.yaml:snakeyaml:jar:1.27:compile
+[INFO]    +- org.javatuples:javatuples:jar:1.2:compile
+[INFO]    +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO]    +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO]    |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO]    +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO]    +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO]    +- org.slf4j:slf4j-api:jar:1.7.30:compile
+[INFO]    \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] 
+[INFO] ------------< com.alibaba.graphscope:gremlin-server-plugin >------------
+[INFO] Building gremlin-server-plugin 1.0-SNAPSHOT                      [16/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ gremlin-server-plugin ---
+[INFO] com.alibaba.graphscope:gremlin-server-plugin:jar:1.0-SNAPSHOT
+[INFO] +- org.slf4j:slf4j-api:jar:1.7.30:compile
+[INFO] +- org.slf4j:slf4j-simple:jar:1.7.30:compile
+[INFO] +- org.apache.tinkerpop:gremlin-core:jar:3.4.9:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.9:compile
+[INFO] |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO] |  |  \- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] |  +- org.apache.commons:commons-lang3:jar:3.11:compile
+[INFO] |  +- org.yaml:snakeyaml:jar:1.27:compile
+[INFO] |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO] |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO] |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO] |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO] |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO] |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO] |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] +- org.apache.tinkerpop:tinkergraph-gremlin:jar:3.4.9:compile
+[INFO] +- org.apache.tinkerpop:gremlin-server:jar:3.4.9:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-driver:jar:3.4.9:compile
+[INFO] |  |  +- io.netty:netty-all:jar:4.1.52.Final:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy:jar:indy:2.5.11:compile
+[INFO] |  |  \- org.codehaus.groovy:groovy-json:jar:indy:2.5.11:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-groovy:jar:3.4.9:compile
+[INFO] |  |  +- org.apache.ivy:ivy:jar:2.3.0:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy-groovysh:jar:indy:2.5.11:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-cli-picocli:jar:2.5.11:compile
+[INFO] |  |  |  |  \- info.picocli:picocli:jar:4.0.1:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-console:jar:2.5.11:compile
+[INFO] |  |  |  |  +- org.codehaus.groovy:groovy-templates:jar:2.5.11:compile
+[INFO] |  |  |  |  |  \- org.codehaus.groovy:groovy-xml:jar:2.5.11:compile
+[INFO] |  |  |  |  \- org.codehaus.groovy:groovy-swing:jar:2.5.11:compile
+[INFO] |  |  |  \- jline:jline:jar:2.14.6:compile
+[INFO] |  |  +- org.codehaus.groovy:groovy-jsr223:jar:indy:2.5.11:compile
+[INFO] |  |  +- org.mindrot:jbcrypt:jar:0.4:compile
+[INFO] |  |  \- com.github.ben-manes.caffeine:caffeine:jar:2.3.1:compile
+[INFO] |  \- com.codahale.metrics:metrics-core:jar:3.0.2:compile
+[INFO] +- com.fasterxml.jackson.module:jackson-module-paranamer:jar:2.12.1:compile
+[INFO] |  \- com.thoughtworks.paranamer:paranamer:jar:2.8:compile
+[INFO] +- com.fasterxml.jackson.core:jackson-databind:jar:2.12.1:compile
+[INFO] |  +- com.fasterxml.jackson.core:jackson-annotations:jar:2.12.1:compile
+[INFO] |  \- com.fasterxml.jackson.core:jackson-core:jar:2.12.1:compile
+[INFO] +- org.apache.httpcomponents:httpclient:jar:4.5.6:compile
+[INFO] |  +- org.apache.httpcomponents:httpcore:jar:4.4.10:compile
+[INFO] |  +- commons-logging:commons-logging:jar:1.2:compile
+[INFO] |  \- commons-codec:commons-codec:jar:1.10:compile
+[INFO] +- commons-io:commons-io:jar:2.6:compile
+[INFO] +- junit:junit:jar:4.13.1:test
+[INFO] |  \- org.hamcrest:hamcrest-core:jar:1.3:test
+[INFO] +- com.alibaba.graphscope:compiler-core:jar:1.0-SNAPSHOT:compile
+[INFO] |  \- com.google.protobuf:protobuf-java:jar:3.12.2:compile
+[INFO] +- com.alibaba.pegasus:pegasus-client:jar:1.0-SNAPSHOT:compile
+[INFO] |  +- io.grpc:grpc-netty-shaded:jar:1.30.1:compile
+[INFO] |  |  \- io.grpc:grpc-core:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |     +- com.google.android:annotations:jar:4.1.1.4:runtime
+[INFO] |  |     \- io.perfmark:perfmark-api:jar:0.19.0:runtime
+[INFO] |  +- io.grpc:grpc-protobuf:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-api:jar:1.30.1:compile
+[INFO] |  |  |  \- io.grpc:grpc-context:jar:1.30.1:compile
+[INFO] |  |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[INFO] |  |  +- com.google.api.grpc:proto-google-common-protos:jar:1.17.0:compile
+[INFO] |  |  +- io.grpc:grpc-protobuf-lite:jar:1.30.1:compile
+[INFO] |  |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:runtime
+[INFO] |  \- io.grpc:grpc-stub:jar:1.30.1:compile
+[INFO] \- com.google.protobuf:protobuf-java-util:jar:3.12.2:compile
+[INFO]    +- com.google.guava:guava:jar:29.0-android:compile
+[INFO]    |  +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO]    |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO]    |  +- org.checkerframework:checker-compat-qual:jar:2.5.5:compile
+[INFO]    |  \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO]    +- com.google.errorprone:error_prone_annotations:jar:2.3.4:compile
+[INFO]    \- com.google.code.gson:gson:jar:2.8.6:compile
+[INFO] 
+[INFO] ---------------< com.alibaba.graphscope:benchmark-tool >----------------
+[INFO] Building benchmark-tool 1.0-SNAPSHOT                             [17/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ benchmark-tool ---
+[INFO] com.alibaba.graphscope:benchmark-tool:jar:1.0-SNAPSHOT
+[INFO] +- commons-io:commons-io:jar:2.6:compile
+[INFO] \- org.apache.tinkerpop:gremlin-driver:jar:3.4.9:compile
+[INFO]    +- org.apache.tinkerpop:gremlin-core:jar:3.4.9:compile
+[INFO]    |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.9:compile
+[INFO]    |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO]    |  |  \- commons-lang:commons-lang:jar:2.6:compile
+[INFO]    |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO]    |  +- org.yaml:snakeyaml:jar:1.27:compile
+[INFO]    |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO]    |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO]    |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO]    |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO]    |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO]    |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO]    |  +- org.slf4j:slf4j-api:jar:1.7.30:compile
+[INFO]    |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO]    +- io.netty:netty-all:jar:4.1.52.Final:compile
+[INFO]    +- org.codehaus.groovy:groovy:jar:indy:2.5.11:compile
+[INFO]    +- org.codehaus.groovy:groovy-json:jar:indy:2.5.11:compile
+[INFO]    \- org.apache.commons:commons-lang3:jar:3.11:compile
+[INFO] 
+[INFO] ---------------< com.alibaba.graphscope:pegasus-client >----------------
+[INFO] Building pegasus-client 1.0-SNAPSHOT                             [18/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ pegasus-client ---
+[INFO] com.alibaba.graphscope:pegasus-client:jar:1.0-SNAPSHOT
+[INFO] +- io.grpc:grpc-netty-shaded:jar:1.30.1:compile
+[INFO] |  \- io.grpc:grpc-core:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |     +- com.google.code.gson:gson:jar:2.8.6:runtime
+[INFO] |     +- com.google.android:annotations:jar:4.1.1.4:runtime
+[INFO] |     \- io.perfmark:perfmark-api:jar:0.19.0:runtime
+[INFO] +- io.grpc:grpc-protobuf:jar:1.30.1:compile
+[INFO] |  +- io.grpc:grpc-api:jar:1.30.1:compile
+[INFO] |  |  \- io.grpc:grpc-context:jar:1.30.1:compile
+[INFO] |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[INFO] |  +- com.google.protobuf:protobuf-java:jar:3.12.0:compile
+[INFO] |  +- com.google.api.grpc:proto-google-common-protos:jar:1.17.0:compile
+[INFO] |  +- io.grpc:grpc-protobuf-lite:jar:1.30.1:compile
+[INFO] |  +- com.google.guava:guava:jar:28.2-android:compile
+[INFO] |  |  +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO] |  |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO] |  |  +- org.checkerframework:checker-compat-qual:jar:2.5.5:compile
+[INFO] |  |  \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO] |  +- com.google.errorprone:error_prone_annotations:jar:2.3.4:compile
+[INFO] |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:runtime
+[INFO] +- io.grpc:grpc-stub:jar:1.30.1:compile
+[INFO] +- org.slf4j:slf4j-api:jar:1.7.30:compile
+[INFO] \- org.slf4j:slf4j-simple:jar:1.7.30:compile
+[INFO] 
+[INFO] ----------------< com.alibaba.graphscope:gremlin-test >-----------------
+[INFO] Building gremlin-test 1.0-SNAPSHOT                               [19/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ gremlin-test ---
+[INFO] com.alibaba.graphscope:gremlin-test:jar:1.0-SNAPSHOT
+[INFO] +- org.apache.tinkerpop:gremlin-test:jar:3.4.9:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-core:jar:3.4.9:compile
+[INFO] |  |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.9:compile
+[INFO] |  |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO] |  |  |  \- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] |  |  +- org.yaml:snakeyaml:jar:1.27:compile
+[INFO] |  |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO] |  |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO] |  |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO] |  |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO] |  |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO] |  |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO] |  |  +- org.slf4j:slf4j-api:jar:1.7.30:compile
+[INFO] |  |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] |  +- commons-io:commons-io:jar:2.6:compile
+[INFO] |  +- junit:junit:jar:4.13.1:compile
+[INFO] |  +- org.mockito:mockito-core:jar:1.10.19:compile
+[INFO] |  |  \- org.objenesis:objenesis:jar:2.1:runtime
+[INFO] |  \- org.hamcrest:hamcrest-all:jar:1.3:compile
+[INFO] \- org.apache.tinkerpop:gremlin-driver:jar:3.4.9:compile
+[INFO]    +- io.netty:netty-all:jar:4.1.52.Final:compile
+[INFO]    +- org.codehaus.groovy:groovy:jar:indy:2.5.11:compile
+[INFO]    +- org.codehaus.groovy:groovy-json:jar:indy:2.5.11:compile
+[INFO]    \- org.apache.commons:commons-lang3:jar:3.11:compile
+[INFO] 
+[INFO] -----------------< com.alibaba.maxgraph:gaia-adaptor >------------------
+[INFO] Building gaia-adaptor 0.0.1-SNAPSHOT                             [20/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ gaia-adaptor ---
+[INFO] com.alibaba.maxgraph:gaia-adaptor:jar:0.0.1-SNAPSHOT
+[INFO] +- com.alibaba.graphscope:gremlin-server-plugin:jar:1.0-SNAPSHOT:compile
+[INFO] |  +- org.slf4j:slf4j-api:jar:1.7.21:compile
+[INFO] |  +- org.slf4j:slf4j-simple:jar:1.6.4:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-core:jar:3.4.2:compile
+[INFO] |  |  +- org.apache.tinkerpop:gremlin-shaded:jar:3.4.2:compile
+[INFO] |  |  +- commons-configuration:commons-configuration:jar:1.10:compile
+[INFO] |  |  +- commons-collections:commons-collections:jar:3.2.2:compile
+[INFO] |  |  +- org.yaml:snakeyaml:jar:1.15:compile
+[INFO] |  |  +- org.javatuples:javatuples:jar:1.2:compile
+[INFO] |  |  +- com.carrotsearch:hppc:jar:0.7.1:compile
+[INFO] |  |  +- com.jcabi:jcabi-manifests:jar:1.1:compile
+[INFO] |  |  |  \- com.jcabi:jcabi-log:jar:0.14:compile
+[INFO] |  |  +- com.squareup:javapoet:jar:1.8.0:compile
+[INFO] |  |  +- net.objecthunter:exp4j:jar:0.4.8:compile
+[INFO] |  |  \- org.slf4j:jcl-over-slf4j:jar:1.7.25:compile
+[INFO] |  +- org.apache.tinkerpop:tinkergraph-gremlin:jar:3.4.2:compile
+[INFO] |  +- org.apache.tinkerpop:gremlin-server:jar:3.4.2:compile
+[INFO] |  |  +- org.apache.tinkerpop:gremlin-groovy:jar:3.4.2:compile
+[INFO] |  |  |  +- org.apache.ivy:ivy:jar:2.3.0:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-groovysh:jar:indy:2.5.6:compile
+[INFO] |  |  |  |  +- org.codehaus.groovy:groovy-cli-picocli:jar:2.5.6:compile
+[INFO] |  |  |  |  |  \- info.picocli:picocli:jar:3.9.2:compile
+[INFO] |  |  |  |  +- org.codehaus.groovy:groovy-console:jar:2.5.6:compile
+[INFO] |  |  |  |  |  +- org.codehaus.groovy:groovy-swing:jar:2.5.6:compile
+[INFO] |  |  |  |  |  \- org.codehaus.groovy:groovy-templates:jar:2.5.6:compile
+[INFO] |  |  |  |  |     \- org.codehaus.groovy:groovy-xml:jar:2.5.6:compile
+[INFO] |  |  |  |  \- jline:jline:jar:2.14.2:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-jsr223:jar:indy:2.5.6:compile
+[INFO] |  |  |  +- org.mindrot:jbcrypt:jar:0.4:compile
+[INFO] |  |  |  \- com.github.ben-manes.caffeine:caffeine:jar:2.3.1:compile
+[INFO] |  |  \- com.codahale.metrics:metrics-core:jar:3.0.2:compile
+[INFO] |  +- com.fasterxml.jackson.module:jackson-module-paranamer:jar:2.11.1:compile
+[INFO] |  |  \- com.thoughtworks.paranamer:paranamer:jar:2.8:compile
+[INFO] |  +- com.fasterxml.jackson.core:jackson-databind:jar:2.11.1:compile
+[INFO] |  |  +- com.fasterxml.jackson.core:jackson-annotations:jar:2.11.1:compile
+[INFO] |  |  \- com.fasterxml.jackson.core:jackson-core:jar:2.11.1:compile
+[INFO] |  +- org.apache.httpcomponents:httpclient:jar:4.5.2:compile
+[INFO] |  |  +- org.apache.httpcomponents:httpcore:jar:4.4.4:compile
+[INFO] |  |  \- commons-logging:commons-logging:jar:1.2:compile
+[INFO] |  +- commons-io:commons-io:jar:2.6:compile
+[INFO] |  +- com.alibaba.graphscope:compiler-core:jar:1.0-SNAPSHOT:compile
+[INFO] |  |  \- com.google.protobuf:protobuf-java:jar:3.12.2:compile
+[INFO] |  +- com.alibaba.pegasus:pegasus-client:jar:1.0-SNAPSHOT:compile
+[INFO] |  \- com.google.protobuf:protobuf-java-util:jar:3.12.2:compile
+[INFO] |     +- com.google.guava:guava:jar:30.1.1-jre:compile (version selected from constraint [24.1.1,))
+[INFO] |     |  +- com.google.guava:failureaccess:jar:1.0.1:compile
+[INFO] |     |  +- com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile
+[INFO] |     |  +- org.checkerframework:checker-qual:jar:3.8.0:compile
+[INFO] |     |  \- com.google.j2objc:j2objc-annotations:jar:1.3:compile
+[INFO] |     +- com.google.errorprone:error_prone_annotations:jar:2.3.4:compile
+[INFO] |     \- com.google.code.gson:gson:jar:2.8.6:compile
+[INFO] +- com.alibaba.maxgraph:v2:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  +- com.alibaba.maxgraph:maxgraph-frontendservice:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |  +- com.alibaba.maxgraph:maxgraph-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |  |  +- com.esotericsoftware:kryo-shaded:jar:4.0.0:compile
+[INFO] |  |  |  |  \- com.esotericsoftware:minlog:jar:1.3.0:compile
+[INFO] |  |  |  +- de.javakaffee:kryo-serializers:jar:0.38:compile
+[INFO] |  |  |  \- com.alibaba.maxgraph:maxgraph-sdk-common:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |  |     +- javax.annotation:javax.annotation-api:jar:1.2:compile
+[INFO] |  |  |     \- net.jcip:jcip-annotations:jar:1.0:compile
+[INFO] |  |  +- com.alibaba.maxgraph:maxgraph-compiler:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |  |  +- org.apache.tinkerpop:gremlin-python:jar:3.4.2:compile
+[INFO] |  |  |  |  \- org.python:jython-standalone:jar:2.7.1:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy:jar:2.5.6:compile
+[INFO] |  |  |  +- org.codehaus.groovy:groovy-jsr223:jar:2.5.6:compile
+[INFO] |  |  |  \- org.apache.commons:commons-collections4:jar:4.1:compile
+[INFO] |  |  \- com.alibaba.maxgraph:maxgraph-coordinator:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  |     +- io.grpc:grpc-all:jar:1.30.1:compile
+[INFO] |  |     |  +- io.grpc:grpc-auth:jar:1.30.1:compile
+[INFO] |  |     |  |  \- com.google.auth:google-auth-library-credentials:jar:0.20.0:compile
+[INFO] |  |     |  +- io.grpc:grpc-grpclb:jar:1.30.1:compile
+[INFO] |  |     |  +- io.grpc:grpc-netty:jar:1.30.1:compile
+[INFO] |  |     |  |  +- io.netty:netty-codec-http2:jar:4.1.48.Final:compile (version selected from constraint [4.1.48.Final,4.1.48.Final])
+[INFO] |  |     |  |  |  \- io.netty:netty-codec-http:jar:4.1.48.Final:compile
+[INFO] |  |     |  |  \- io.netty:netty-handler-proxy:jar:4.1.48.Final:runtime
+[INFO] |  |     |  |     \- io.netty:netty-codec-socks:jar:4.1.48.Final:runtime
+[INFO] |  |     |  +- io.grpc:grpc-okhttp:jar:1.30.1:compile
+[INFO] |  |     |  +- io.grpc:grpc-services:jar:1.30.1:compile
+[INFO] |  |     |  +- io.grpc:grpc-testing:jar:1.30.1:compile
+[INFO] |  |     |  |  \- io.opencensus:opencensus-api:jar:0.24.0:compile
+[INFO] |  |     |  \- io.grpc:grpc-xds:jar:1.30.1:compile
+[INFO] |  |     |     +- io.grpc:grpc-alts:jar:1.30.1:compile
+[INFO] |  |     |     |  +- org.conscrypt:conscrypt-openjdk-uber:jar:2.2.1:compile
+[INFO] |  |     |     |  \- com.google.auth:google-auth-library-oauth2-http:jar:0.20.0:compile
+[INFO] |  |     |     |     +- com.google.auto.value:auto-value-annotations:jar:1.7:compile
+[INFO] |  |     |     |     +- com.google.http-client:google-http-client:jar:1.34.0:compile
+[INFO] |  |     |     |     |  \- io.opencensus:opencensus-contrib-http-util:jar:0.24.0:compile
+[INFO] |  |     |     |     \- com.google.http-client:google-http-client-jackson2:jar:1.34.0:compile
+[INFO] |  |     |     +- com.google.re2j:re2j:jar:1.2:compile
+[INFO] |  |     |     \- io.opencensus:opencensus-proto:jar:0.2.0:compile
+[INFO] |  |     +- org.apache.logging.log4j:log4j-api:jar:99.0-does-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  |     +- org.apache.logging.log4j:log4j-core:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  |     +- org.apache.logging.log4j:log4j-slf4j-impl:jar:999-not-exist:compile (version selected from constraint [2.6.1,))
+[INFO] |  |     \- org.apache.logging.log4j:log4j-1.2-api:jar:2.14.1:compile (version selected from constraint [2.6.1,))
+[INFO] |  +- ch.qos.logback:logback-classic:jar:1.2.3:compile
+[INFO] |  |  \- ch.qos.logback:logback-core:jar:1.2.3:compile
+[INFO] |  +- io.grpc:grpc-netty-shaded:jar:1.30.1:compile
+[INFO] |  |  \- io.grpc:grpc-core:jar:1.30.1:compile (version selected from constraint [1.30.1,1.30.1])
+[INFO] |  |     +- com.google.android:annotations:jar:4.1.1.4:runtime
+[INFO] |  |     \- io.perfmark:perfmark-api:jar:0.19.0:runtime
+[INFO] |  +- io.grpc:grpc-protobuf:jar:1.30.1:compile
+[INFO] |  |  +- io.grpc:grpc-api:jar:1.30.1:compile
+[INFO] |  |  |  \- io.grpc:grpc-context:jar:1.30.1:compile
+[INFO] |  |  +- com.google.code.findbugs:jsr305:jar:3.0.2:compile
+[INFO] |  |  +- com.google.api.grpc:proto-google-common-protos:jar:1.17.0:compile
+[INFO] |  |  +- io.grpc:grpc-protobuf-lite:jar:1.30.1:compile
+[INFO] |  |  \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:runtime
+[INFO] |  +- io.grpc:grpc-stub:jar:1.30.1:compile
+[INFO] |  +- com.alibaba:fastjson:jar:1.2.75:compile
+[INFO] |  +- org.apache.curator:curator-framework:jar:5.1.0:compile
+[INFO] |  +- org.apache.curator:curator-recipes:jar:5.1.0:compile
+[INFO] |  +- org.apache.curator:curator-client:jar:5.1.0:compile
+[INFO] |  +- org.apache.curator:curator-x-discovery:jar:5.1.0:compile
+[INFO] |  +- org.apache.zookeeper:zookeeper:jar:3.6.1:compile
+[INFO] |  |  +- commons-lang:commons-lang:jar:2.6:compile
+[INFO] |  |  +- org.apache.zookeeper:zookeeper-jute:jar:3.6.1:compile
+[INFO] |  |  +- org.apache.yetus:audience-annotations:jar:0.5.0:compile
+[INFO] |  |  +- io.netty:netty-handler:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-common:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-resolver:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-buffer:jar:4.1.48.Final:compile
+[INFO] |  |  |  +- io.netty:netty-transport:jar:4.1.48.Final:compile
+[INFO] |  |  |  \- io.netty:netty-codec:jar:4.1.48.Final:compile
+[INFO] |  |  +- io.netty:netty-transport-native-epoll:jar:4.1.48.Final:compile
+[INFO] |  |  |  \- io.netty:netty-transport-native-unix-common:jar:4.1.48.Final:compile
+[INFO] |  |  +- org.slf4j:slf4j-log4j12:jar:1.7.25:compile
+[INFO] |  |  \- log4j:log4j:jar:1.2.17:compile
+[INFO] |  +- org.apache.kafka:kafka-clients:jar:2.5.0:compile
+[INFO] |  |  +- com.github.luben:zstd-jni:jar:1.4.4-7:compile
+[INFO] |  |  +- org.lz4:lz4-java:jar:1.7.1:compile
+[INFO] |  |  \- org.xerial.snappy:snappy-java:jar:1.1.7.3:compile
+[INFO] |  +- net.java.dev.jna:jna:jar:5.5.0:compile
+[INFO] |  +- com.salesforce.kafka.test:kafka-junit-core:jar:3.2.1:compile
+[INFO] |  |  \- org.apache.curator:curator-test:jar:2.12.0:compile
+[INFO] |  |     \- org.javassist:javassist:jar:3.18.1-GA:compile
+[INFO] |  +- org.apache.kafka:kafka_2.13:jar:2.5.0:compile
+[INFO] |  |  +- com.fasterxml.jackson.module:jackson-module-scala_2.13:jar:2.10.2:compile
+[INFO] |  |  +- com.fasterxml.jackson.dataformat:jackson-dataformat-csv:jar:2.10.2:compile
+[INFO] |  |  +- com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.10.2:compile
+[INFO] |  |  +- net.sf.jopt-simple:jopt-simple:jar:5.0.4:compile
+[INFO] |  |  +- com.yammer.metrics:metrics-core:jar:2.2.0:compile
+[INFO] |  |  +- org.scala-lang.modules:scala-collection-compat_2.13:jar:2.1.3:compile
+[INFO] |  |  +- org.scala-lang.modules:scala-java8-compat_2.13:jar:0.9.0:compile
+[INFO] |  |  +- org.scala-lang:scala-library:jar:2.13.1:compile
+[INFO] |  |  +- org.scala-lang:scala-reflect:jar:2.13.1:compile
+[INFO] |  |  +- com.typesafe.scala-logging:scala-logging_2.13:jar:3.9.2:compile
+[INFO] |  |  \- commons-cli:commons-cli:jar:1.3:compile
+[INFO] |  +- org.apache.commons:commons-lang3:jar:3.4:compile
+[INFO] |  +- org.jgrapht:jgrapht-core:jar:1.1.0:compile
+[INFO] |  +- commons-codec:commons-codec:jar:1.11:compile
+[INFO] |  +- org.apache.hadoop:hadoop-client:jar:2.8.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-common:jar:2.8.4:compile
+[INFO] |  |  |  +- org.apache.commons:commons-math3:jar:3.6.1:compile
+[INFO] |  |  |  +- xmlenc:xmlenc:jar:0.52:compile
+[INFO] |  |  |  +- commons-net:commons-net:jar:3.1:compile
+[INFO] |  |  |  +- org.mortbay.jetty:jetty-sslengine:jar:6.1.26:compile
+[INFO] |  |  |  +- javax.servlet.jsp:jsp-api:jar:2.1:runtime
+[INFO] |  |  |  +- org.codehaus.jackson:jackson-core-asl:jar:1.9.13:compile
+[INFO] |  |  |  +- org.codehaus.jackson:jackson-mapper-asl:jar:1.9.13:compile
+[INFO] |  |  |  +- org.apache.avro:avro:jar:1.7.4:compile
+[INFO] |  |  |  +- org.apache.hadoop:hadoop-auth:jar:2.8.4:compile
+[INFO] |  |  |  |  +- com.nimbusds:nimbus-jose-jwt:jar:4.41.1:compile
+[INFO] |  |  |  |  |  +- com.github.stephenc.jcip:jcip-annotations:jar:1.0-1:compile
+[INFO] |  |  |  |  |  \- net.minidev:json-smart:jar:2.3:compile (version selected from constraint [1.3.1,2.3])
+[INFO] |  |  |  |  |     \- net.minidev:accessors-smart:jar:1.2:compile
+[INFO] |  |  |  |  |        \- org.ow2.asm:asm:jar:5.0.4:compile
+[INFO] |  |  |  |  \- org.apache.directory.server:apacheds-kerberos-codec:jar:2.0.0-M15:compile
+[INFO] |  |  |  |     +- org.apache.directory.server:apacheds-i18n:jar:2.0.0-M15:compile
+[INFO] |  |  |  |     +- org.apache.directory.api:api-asn1-api:jar:1.0.0-M20:compile
+[INFO] |  |  |  |     \- org.apache.directory.api:api-util:jar:1.0.0-M20:compile
+[INFO] |  |  |  +- org.apache.htrace:htrace-core4:jar:4.0.1-incubating:compile
+[INFO] |  |  |  \- org.apache.commons:commons-compress:jar:1.4.1:compile
+[INFO] |  |  |     \- org.tukaani:xz:jar:1.0:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-hdfs-client:jar:2.8.4:compile
+[INFO] |  |  |  \- com.squareup.okhttp:okhttp:jar:2.4.0:compile
+[INFO] |  |  |     \- com.squareup.okio:okio:jar:1.4.0:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-mapreduce-client-app:jar:2.8.4:compile
+[INFO] |  |  |  +- org.apache.hadoop:hadoop-mapreduce-client-common:jar:2.8.4:compile
+[INFO] |  |  |  |  +- org.apache.hadoop:hadoop-yarn-client:jar:2.8.4:compile
+[INFO] |  |  |  |  \- org.apache.hadoop:hadoop-yarn-server-common:jar:2.8.4:compile
+[INFO] |  |  |  \- org.apache.hadoop:hadoop-mapreduce-client-shuffle:jar:2.8.4:compile
+[INFO] |  |  |     \- org.fusesource.leveldbjni:leveldbjni-all:jar:1.8:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-yarn-api:jar:2.8.4:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-mapreduce-client-core:jar:2.8.4:compile
+[INFO] |  |  |  \- org.apache.hadoop:hadoop-yarn-common:jar:2.8.4:compile
+[INFO] |  |  |     +- javax.xml.bind:jaxb-api:jar:2.2.2:compile
+[INFO] |  |  |     |  +- javax.xml.stream:stax-api:jar:1.0-2:compile
+[INFO] |  |  |     |  \- javax.activation:activation:jar:1.1:compile
+[INFO] |  |  |     +- org.mortbay.jetty:jetty-util:jar:6.1.26:compile
+[INFO] |  |  |     +- com.sun.jersey:jersey-core:jar:1.9:compile
+[INFO] |  |  |     +- com.sun.jersey:jersey-client:jar:1.9:compile
+[INFO] |  |  |     +- org.codehaus.jackson:jackson-jaxrs:jar:1.9.13:compile
+[INFO] |  |  |     \- org.codehaus.jackson:jackson-xc:jar:1.9.13:compile
+[INFO] |  |  +- org.apache.hadoop:hadoop-mapreduce-client-jobclient:jar:2.8.4:compile
+[INFO] |  |  \- org.apache.hadoop:hadoop-annotations:jar:2.8.4:compile
+[INFO] |  \- io.dropwizard.metrics:metrics-core:jar:3.2.5:compile
+[INFO] \- com.alibaba.graphscope:gremlin-test:jar:1.0-SNAPSHOT:compile
+[INFO]    +- org.apache.tinkerpop:gremlin-test:jar:3.4.2:compile
+[INFO]    |  +- junit:junit:jar:4.12:compile
+[INFO]    |  +- org.mockito:mockito-core:jar:3.4.4:test
+[INFO]    |  |  +- net.bytebuddy:byte-buddy:jar:1.10.13:test
+[INFO]    |  |  +- net.bytebuddy:byte-buddy-agent:jar:1.10.13:test
+[INFO]    |  |  \- org.objenesis:objenesis:jar:2.6:compile
+[INFO]    |  \- org.hamcrest:hamcrest-all:jar:1.3:compile
+[INFO]    \- org.apache.tinkerpop:gremlin-driver:jar:3.4.2:compile
+[INFO]       +- io.netty:netty-all:jar:4.1.32.Final:compile
+[INFO]       +- org.codehaus.groovy:groovy:jar:indy:2.5.6:compile
+[INFO]       \- org.codehaus.groovy:groovy-json:jar:indy:2.5.6:compile
+[INFO] 
+[INFO] -------------< com.alibaba.maxgraph:maxgraph-common-rust >--------------
+[INFO] Building common-rust 0.0.1-SNAPSHOT                              [21/21]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ maxgraph-common-rust ---
+[INFO] com.alibaba.maxgraph:maxgraph-common-rust:jar:0.0.1-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary:
+[INFO] 
+[INFO] sdk-common 0.0.1-SNAPSHOT .......................... SUCCESS [  1.557 s]
+[INFO] maxgraph-api 0.0.1-SNAPSHOT ........................ SUCCESS [  0.148 s]
+[INFO] common 0.0.1-SNAPSHOT .............................. SUCCESS [  0.477 s]
+[INFO] coordinator 0.0.1-SNAPSHOT ......................... SUCCESS [  0.221 s]
+[INFO] compiler 0.0.1-SNAPSHOT ............................ SUCCESS [  0.774 s]
+[INFO] maxgraph-frontendservice 0.0.1-SNAPSHOT ............ SUCCESS [  0.338 s]
+[INFO] maxgraph-frontend 0.0.1-SNAPSHOT ................... SUCCESS [  0.004 s]
+[INFO] assembly 0.0.1-SNAPSHOT ............................ SUCCESS [  0.256 s]
+[INFO] instance-manager 0.0.1-SNAPSHOT .................... SUCCESS [  0.177 s]
+[INFO] executor 0.0.1-SNAPSHOT ............................ SUCCESS [  0.023 s]
+[INFO] maxgraph-src 0.0.1-SNAPSHOT ........................ SUCCESS [  0.005 s]
+[INFO] v2 0.0.1-SNAPSHOT .................................. SUCCESS [  0.712 s]
+[INFO] data_load_tools 0.0.1-SNAPSHOT ..................... SUCCESS [  0.431 s]
+[INFO] gremlin-compiler 1.0-SNAPSHOT ...................... SUCCESS [  0.021 s]
+[INFO] compiler-core 1.0-SNAPSHOT ......................... SUCCESS [  0.051 s]
+[INFO] gremlin-server-plugin 1.0-SNAPSHOT ................. SUCCESS [  0.134 s]
+[INFO] benchmark-tool 1.0-SNAPSHOT ........................ SUCCESS [  0.018 s]
+[INFO] pegasus-client 1.0-SNAPSHOT ........................ SUCCESS [  0.039 s]
+[INFO] gremlin-test 1.0-SNAPSHOT .......................... SUCCESS [  0.038 s]
+[INFO] gaia-adaptor 0.0.1-SNAPSHOT ........................ SUCCESS [  0.476 s]
+[INFO] common-rust 0.0.1-SNAPSHOT ......................... SUCCESS [  0.005 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.615 s
+[INFO] Finished at: 2021-07-21T14:36:16+08:00
+[INFO] ------------------------------------------------------------------------

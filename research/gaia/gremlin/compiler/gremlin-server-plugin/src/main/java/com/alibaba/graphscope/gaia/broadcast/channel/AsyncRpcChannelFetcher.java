@@ -1,6 +1,5 @@
-package com.alibaba.graphscope.gaia;
+package com.alibaba.graphscope.gaia.broadcast.channel;
 
-import com.alibaba.graphscope.gaia.broadcast.channel.RpcChannelFetcher;
 import com.alibaba.pegasus.RpcChannel;
 
 import java.util.Collections;
