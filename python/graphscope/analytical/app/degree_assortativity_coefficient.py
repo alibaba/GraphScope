@@ -86,7 +86,6 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
         G,
         source_degree_type=x,
         target_degree_type=y,
-        directed=G.is_directed(),
         weighted=weighted,
     )
     return ctx.to_numpy("r", axis=0)[0]

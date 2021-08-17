@@ -39,10 +39,9 @@ class DegreeAssortativityContext : public TensorContext<FRAG_T, double> {
   using degree_t = double;
   void Init(grape::DefaultMessageManager& messages,
             std::string source_degree_type = "out",
-            std::string target_degree_type = "in", bool directed = false,
-            bool weighted = false) {
+            std::string target_degree_type = "in", bool weighted = false) {
     merge_stage = false;
-    this->directed = directed;
+    this->directed = this->fragment().directed();
     this->weighted = weighted;
     if (source_degree_type == "in") {
       source_degree_type_ = DegreeType::IN;
