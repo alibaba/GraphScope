@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.gaia;
+package com.alibaba.maxgraph.tests.sdk;
 
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema;
 import com.alibaba.maxgraph.v2.common.schema.GraphDef;

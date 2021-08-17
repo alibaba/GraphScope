@@ -920,12 +920,10 @@ def create_learning_instance(graph, nodes=None, edges=None, gen_labels=None):
         An op to create a learning engine based on a graph.
     """
     config = {}
-    if nodes is not None:
-        config[types_pb2.NODES] = utils.bytes_to_attr(pickle.dumps(nodes))
-    if edges is not None:
-        config[types_pb2.EDGES] = utils.bytes_to_attr(pickle.dumps(edges))
-    if gen_labels is not None:
-        config[types_pb2.GLE_GEN_LABELS] = utils.bytes_to_attr(pickle.dumps(gen_labels))
+    # pickle None is expected
+    config[types_pb2.NODES] = utils.bytes_to_attr(pickle.dumps(nodes))
+    config[types_pb2.EDGES] = utils.bytes_to_attr(pickle.dumps(edges))
+    config[types_pb2.GLE_GEN_LABELS] = utils.bytes_to_attr(pickle.dumps(gen_labels))
     op = Operation(
         graph.session_id,
         types_pb2.CREATE_LEARNING_INSTANCE,
