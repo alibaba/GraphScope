@@ -22,17 +22,19 @@ mod rob {
     use crate::graph::Port;
     use crate::{Data, Tag};
 
-    use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
+    use crate::communication::decorator::{ScopeStreamPush};
     use crate::config::CANCEL_DESC;
     use crate::data::MicroBatch;
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use std::cell::RefMut;
     use std::collections::{HashSet, VecDeque};
+    use crate::communication::output::builder::OutputMeta;
 
     pub struct OutputHandle<D: Data> {
         pub port: Port,
         pub scope_level: u32,
+        pub src: u32,
         tee: Tee<D>,
         in_block: TidyTagMap<Box<dyn Iterator<Item = D> + Send + 'static>>,
         blocks: VecDeque<Tag>,
@@ -41,10 +43,14 @@ mod rob {
     }
 
     impl<D: Data> OutputHandle<D> {
-        pub(crate) fn new(port: Port, scope_level: u32, output: Tee<D>) -> Self {
+        pub(crate) fn new(meta: OutputMeta, output: Tee<D>) -> Self {
+            let scope_level = meta.scope_level;
+            let port = meta.port;
+            let src = crate::worker_id::get_current_worker().index;
             OutputHandle {
                 port,
                 scope_level,
+                src,
                 tee: output,
                 in_block: TidyTagMap::new(scope_level),
                 blocks: VecDeque::new(),
@@ -53,11 +59,25 @@ mod rob {
             }
         }
 
-        pub fn forward(&mut self, dataset: MicroBatch<D>) -> IOResult<()> {
-            self.tee.forward(dataset)
+        pub fn push_batch(&mut self, dataset: MicroBatch<D>) -> IOResult<()> {
+            if self.skips.is_empty() || !self.skips.contains(&dataset.tag) {
+                self.tee.forward(dataset)
+            } else {
+                Ok(())
+            }
         }
 
-        pub fn push_entire_iter<I: Iterator<Item = D> + Send + 'static>(
+        pub fn push_batch_mut(&mut self, batch: &mut MicroBatch<D>) -> IOResult<()> {
+            if self.skips.is_empty() || !self.skips.contains(&batch.tag) {
+                let seq = batch.seq;
+                let data = MicroBatch::new(batch.tag.clone(), self.src, seq, batch.take_batch());
+                self.push_batch(data)
+            } else {
+                Ok(())
+            }
+        }
+
+        pub fn push_into_iter<I: Iterator<Item = D> + Send + 'static>(
             &mut self, tag: &Tag, mut iter: I,
         ) -> IOResult<()> {
             match self.push_iter(tag, &mut iter) {
@@ -73,7 +93,7 @@ mod rob {
             }
         }
 
-        pub fn try_unblock(&mut self, unblocked: &mut Vec<Tag>) -> IOResult<()> {
+        pub(crate) fn try_unblock(&mut self, unblocked: &mut Vec<Tag>) -> IOResult<()> {
             let len = self.blocks.len();
             if len > 0 {
                 for _ in 0..len {
@@ -151,21 +171,6 @@ mod rob {
         }
     }
 
-    impl<D: Data> ScopeStreamBuffer for OutputHandle<D> {
-        fn scope_size(&self) -> usize {
-            self.tee.scope_size()
-        }
-
-        #[inline]
-        fn ensure_capacity(&mut self, tag: &Tag) -> IOResult<usize> {
-            self.tee.ensure_capacity(tag)
-        }
-
-        fn flush_scope(&mut self, tag: &Tag) -> IOResult<()> {
-            self.tee.flush_scope(tag)
-        }
-    }
-
     impl<D: Data> ScopeStreamPush<D> for OutputHandle<D> {
         #[inline]
         fn port(&self) -> Port {
@@ -234,17 +239,11 @@ mod rob {
             self.output.push_last(msg, end)
         }
 
-        pub(crate) fn forward_batch(&mut self, dataset: &mut MicroBatch<D>) -> IOResult<()> {
-            let seq = dataset.seq;
-            let data = MicroBatch::new(self.tag.clone(), dataset.src, seq, dataset.take_batch());
-            self.output.forward(data)
-        }
-
         pub fn give_iterator<I>(&mut self, iter: I) -> IOResult<()>
         where
             I: Iterator<Item = D> + Send + 'static,
         {
-            self.output.push_entire_iter(&self.tag, iter)
+            self.output.push_into_iter(&self.tag, iter)
         }
 
         pub fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
@@ -262,7 +261,7 @@ mod rob {
 #[cfg(feature = "rob")]
 mod rob {
     use crate::communication::buffer::ScopeBufferPool;
-    use crate::communication::decorator::ScopeStreamPush;
+    use crate::communication::decorator::{ScopeStreamPush, BlockPush};
     use crate::communication::output::tee::Tee;
     use crate::communication::IOResult;
     use crate::data::MicroBatch;
@@ -274,6 +273,7 @@ mod rob {
     use crate::{Data, Tag};
     use pegasus_common::buffer::BufferReader;
     use std::collections::{HashSet, VecDeque};
+    use crate::communication::output::builder::OutputMeta;
 
     enum BlockEntry<D: Data> {
         Single(D),
@@ -283,7 +283,7 @@ mod rob {
 
     pub struct OutputHandle<D: Data> {
         pub port: Port,
-        pub scope_level: usize,
+        pub scope_level: u32,
         pub src: u32,
         tee: Tee<D>,
         buf_pool: ScopeBufferPool<D>,
@@ -294,18 +294,120 @@ mod rob {
     }
 
     impl<D: Data> OutputHandle<D> {
-        pub(crate) fn new(port: Port, scope_level: usize, output: Tee<D>) -> Self {
+        pub(crate) fn new(meta: OutputMeta, output: Tee<D>) -> Self {
+            let batch_capacity = meta.batch_capacity as usize;
+            let scope_capacity = meta.scope_capacity as usize;
+            let scope_level = meta.scope_level;
+            let buf_pool = ScopeBufferPool::new(meta.batch_size, batch_capacity, scope_capacity, scope_level);
+            let src = crate::worker_id::get_current_worker().index;
             OutputHandle {
                 port,
                 scope_level,
+                src,
                 tee: output,
-                buf_pool: in_block: TidyTagMap::new(scope_level),
+                buf_pool,
+                in_block: TidyTagMap::new(scope_level),
                 blocks: VecDeque::new(),
                 is_closed: false,
                 skips: HashSet::new(),
             }
         }
 
+        pub fn new_session(&mut self, tag: &Tag) -> OutputSession<D> {
+            self.buf_pool.pin(tag);
+            OutputSession { tag: tag.clone(), output: self }
+        }
+
+        pub fn push_into_iter<I: Iterator<Item = D> + Send + 'static> (
+            &mut self, tag: &Tag, mut iter: I,
+        ) -> IOResult<()> {
+           if let Err(e) = self.push_iter(tag, &mut iter)  {
+               if e.is_would_block() {
+                   self.blocks.push_back(tag.clone());
+                   self.in_block.insert(tag.clone(), BlockEntry::DynIter(Box::new(iter)));
+               }
+               Err(e)
+           } else {
+               Ok(())
+           }
+        }
+
+        pub fn push_batch(&mut self, batch: MicroBatch<D>) -> IOResult<()> {
+            self.tee.push(batch)
+        }
+
+        pub fn push_batch_mut(&mut self, batch: &mut MicroBatch<D>) -> IOResult<()> {
+            let mut new_batch = MicroBatch::new(batch.tag.clone(),  self.src,  batch.take_data());
+            new_batch.seq = batch.seq;
+            self.push_batch(new_batch)
+        }
+
+        pub fn is_closed(&self) -> bool {
+            self.is_closed
+        }
+
+        pub(crate) fn try_unblock(&mut self, unblocked: &mut Vec<Tag>) -> IOResult<()> {
+            let len = self.blocks.len();
+            if len > 0 {
+                for _ in 0..len {
+                    if let Some(tag) = self.blocks.pop_front() {
+                        if self.tee.try_unblock(&tag)? {
+                            if let Some(mut iter) = self.in_block.remove(&tag) {
+                                match iter {
+                                    BlockEntry::Single(x) => {
+                                        self.push(&tag, x)?;
+                                    }
+                                    BlockEntry::LastSingle(x, e) => {
+                                        self.push_last(x, e)?;
+                                    }
+                                    BlockEntry::DynIter(iter) => {
+                                        self.push_box_iter(iter)?;
+                                    }
+                                }
+                                trace_worker!("data in scope {:?} unblocked", tag);
+                                unblocked.push(tag);
+                            } else {
+                                unblocked.push(tag);
+                            }
+                        } else {
+                            self.blocks.push_back(tag);
+                        }
+                    }
+                }
+            }
+            Ok(())
+        }
+
+        pub(crate) fn get_blocks(&self) -> &VecDeque<Tag> {
+            &self.blocks
+        }
+
+
+        #[inline]
+        pub(crate) fn skip(&mut self, tag: &Tag) {
+            todo!()
+        }
+
+
+        #[inline]
+        fn is_skipped(&self, tag: &Tag) -> bool {
+            todo!()
+        }
+
+        #[inline]
+        fn push_box_iter(&mut self, mut iter: Box<dyn Iterator<Item = D> + Send + 'static>) -> IOResult<()> {
+            if let Err(e) = self.push_iter(tag, &mut iter)  {
+                if e.is_would_block() {
+                    self.blocks.push_back(tag.clone());
+                    self.in_block.insert(tag.clone(), BlockEntry::DynIter(iter));
+                }
+                Err(e)
+            } else {
+                Ok(())
+            }
+        }
+
+        #[inline]
         fn flush_batch(&mut self, batch: MicroBatch<D>) -> IOResult<()> {
             match self.tee.push(batch) {
                 Err(e) => {
@@ -316,6 +418,38 @@ mod rob {
                 }
                 _ => Ok(()),
             }
+        }
+    }
+
+    pub struct OutputSession<'a, D: Data> {
+        pub tag: Tag,
+        output: &'a mut OutputHandle<D>,
+    }
+
+    impl<'a, D: Data> OutputSession<'a, D> {
+        pub fn give(&mut self, msg: D) -> IOResult<()> {
+            self.output.push(&self.tag, msg)
+        }
+
+        pub fn give_last(&mut self, msg: D, end: EndSignal) -> IOResult<()> {
+            assert_eq!(self.tag, end.tag);
+            self.output.push_last(msg, end)
+        }
+
+        pub fn give_iterator<I>(&mut self, iter: I) -> IOResult<()>
+            where
+                I: Iterator<Item = D> + Send + 'static,
+        {
+            self.output.push_into_iter(&self.tag, iter)
+        }
+
+        pub fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
+            assert_eq!(self.tag, end.tag);
+            self.output.notify_end(end)
+        }
+
+        pub fn flush(&mut self) -> IOResult<()> {
+            self.output.flush()
         }
     }
 

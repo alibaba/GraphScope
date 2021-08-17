@@ -8,17 +8,13 @@ impl<D: Data> Merge<D> for Stream<D> {
             |left, right, output| {
                 left.for_each_batch(|dataset| {
                     if !dataset.is_empty() {
-                        output
-                            .new_session(&dataset.tag)?
-                            .forward_batch(dataset)?;
+                        output.push_batch_mut(dataset)?;
                     }
                     Ok(())
                 })?;
                 right.for_each_batch(|dataset| {
                     if !dataset.is_empty() {
-                        output
-                            .new_session(&dataset.tag)?
-                            .forward_batch(dataset)?;
+                        output.push_batch_mut(dataset)?;
                     }
                     Ok(())
                 })

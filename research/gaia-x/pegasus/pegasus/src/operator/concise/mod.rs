@@ -34,6 +34,7 @@ mod map;
 mod merge;
 mod order;
 mod reduce;
+mod correlate;
 
 #[inline]
 fn never_clone<T>(raw: T) -> NeverClone<T> {

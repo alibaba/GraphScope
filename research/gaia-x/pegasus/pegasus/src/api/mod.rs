@@ -13,8 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub use concise::correlate::subtask::*;
-pub use concise::correlate::Tumbling;
 pub use concise::*;
 pub use iteration::{IterCondition, Iteration};
 pub use primitive::binary::Binary;

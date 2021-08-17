@@ -511,6 +511,4 @@ impl<'a> Drop for Finally<'a> {
 
 mod concise;
 mod iteration;
-mod multiplex;
 mod primitives;
-mod scope;

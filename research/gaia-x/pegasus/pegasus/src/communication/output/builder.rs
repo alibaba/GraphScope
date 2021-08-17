@@ -23,6 +23,7 @@ use pegasus_common::downcast::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+#[derive(Copy, Clone, Debug)]
 pub struct OutputMeta {
     pub port: Port,
     /// This is the the scope level of operator with this output port belongs to.
@@ -129,7 +130,7 @@ impl<D: Data> OutputBuilder for OutputBuilderImpl<D> {
                 }
             }
 
-            let output = OutputHandle::new(meta.port, meta.scope_level, tee);
+            let output = OutputHandle::new(*meta, tee);
             Some(Box::new(RefWrapOutput::wrap(output)) as Box<dyn OutputProxy>)
         } else {
             None

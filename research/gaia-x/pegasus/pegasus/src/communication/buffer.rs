@@ -138,7 +138,7 @@ mod rob {
     #[allow(dead_code)]
     impl<D: Data> ScopeBufferPool<D> {
         pub(crate) fn new(
-            batch_size: usize, batch_capacity: usize, scope_capacity: usize, scope_level: usize,
+            batch_size: usize, batch_capacity: usize, scope_capacity: usize, scope_level: u32,
         ) -> Self {
             let global_batch_capacity = scope_capacity * batch_capacity;
             let pool = BufferPool::new(batch_size, global_batch_capacity, MemBufAlloc::new());

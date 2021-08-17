@@ -40,6 +40,7 @@ pub enum IOErrorKind {
     Channel(ChannelError),
     // block by flow control;
     WouldBlock,
+    CannotBlock,
     Interrupt,
     Unknown,
 }
@@ -79,6 +80,10 @@ impl IOError {
     pub fn would_block_with<A: Send + 'static>(res: A) -> Self {
         let resource = Some(Box::new(res) as Box<dyn Any + Send>);
         IOError { ch_id: None, kind: IOErrorKind::WouldBlock, cause: None, origin: None, resource }
+    }
+
+    pub fn cannot_block() -> Self {
+        IOError::new(IOErrorKind::CannotBlock)
     }
 
     pub fn interrupted() -> Self {

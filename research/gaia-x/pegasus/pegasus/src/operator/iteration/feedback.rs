@@ -35,8 +35,7 @@ impl<D: Data> OperatorCore for IterSyncOperator<D> {
                 let mut count = self.observer.remove(&dataset.tag).unwrap_or(0);
                 if !dataset.is_empty() {
                     count += 1;
-                    let mut session = output.new_session(&dataset.tag)?;
-                    session.forward_batch(dataset)?;
+                    output.push_batch_mut(dataset)?;
                 }
 
                 if let Some(end) = dataset.take_end() {
@@ -54,8 +53,7 @@ impl<D: Data> OperatorCore for IterSyncOperator<D> {
                         .observer
                         .get_mut_or_else(&dataset.tag, || 0);
                     *cnt += 1;
-                    let mut session = output.new_session(&dataset.tag)?;
-                    session.forward_batch(dataset)?;
+                    output.push_batch_mut(dataset)?;
                 }
             }
             Ok(())

@@ -14,20 +14,74 @@
 //! limitations under the License.
 //
 
-use crate::api::{Binary, CorrelatedSubTask, Tumbling};
+use crate::api::{Binary, CorrelatedSubTask, Unary};
 use crate::stream::{SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data, Tag};
+use crate::progress::{EndSignal, Weight};
+use crate::data::MicroBatch;
+use crate::errors::IOError;
+use pegasus_common::buffer::{BufferPool, MemBufAlloc};
 
 impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
     fn apply<T, F>(self, func: F) -> Result<Stream<(D, T)>, BuildJobError>
-    where
-        T: Data,
-        F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>,
+        where
+            T: Data,
+            F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>,
     {
         let entered = self.enter()?;
         let (main, to_sub) = entered.copied()?;
-        let sub = to_sub.tumble_by(1)?;
+        let scope_capacity = to_sub.get_scope_capacity();
+        let sub = to_sub.unary("fork_subtask", move |info| {
+            assert!(info.scope_level > 0);
+            let id = crate::worker_id::get_current_worker();
+            let worker = id.index;
+            let offset = id.total_peers();
+            let index = worker + offset;
+            let mut tumbling_scope = TidyTagMap::new(info.scope_level - 1);
+            let mut buf_pool = BufferPool::new(1, scope_capacity as usize, MemBufAlloc::new());
+            move |input, output| {
+                input.for_each_batch(|dataset| {
+                    let len = dataset.len();
+                    let p = dataset.tag.to_parent_uncheck();
+                    if len > 0 {
+                        let seq = tumbling_scope.get_mut_or_else(&p, || index);
+                        for _ in 0..len {
+                            if let Some(mut buf) = buf_pool.fetch() {
+                                if let Some(next) = dataset.next() {
+                                    buf.push(next);
+                                    let cur = *seq;
+                                    let tag = Tag::inherit(&p, cur);
+                                    *seq += offset;
+                                    let i = (cur - worker) / offset;
+                                    trace_worker!("fork {}th scope {:?} from {:?};", i, tag, p);
+                                    let mut batch = MicroBatch::new(tag.clone(), worker, 0, buf);
+                                    let end = EndSignal::new(tag, Weight::single(worker));
+                                    batch.set_end(end);
+                                    output.push_batch(batch)?;
+                                } else {
+                                    //
+                                    break
+                                }
+                            } else {
+                                let i = (*seq - worker) / offset - 1;
+                                trace_worker!("suspend fork new scope as capacity blocked, already forked {} scopes;", i);
+                                would_block!("no buffer available for new scope;")?
+                            }
+                        }
+                    }
+
+                    if dataset.is_last() {
+                        let idx = tumbling_scope.remove(&p).unwrap_or(index);
+                        let cnt = (idx - worker) / offset;
+                        trace_worker!("totally fork {} scope for {:?}", cnt - 1, p);
+                    }
+
+                    Ok(())
+                })
+            }
+        })?;
+
         let SingleItem { inner } = func(sub)?;
         main.binary("zip_subtask", inner, |info| {
             let mut parent_data = TidyTagMap::new(info.scope_level - 1);
@@ -77,6 +131,6 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                 })
             }
         })?
-        .leave()
+            .leave()
     }
 }

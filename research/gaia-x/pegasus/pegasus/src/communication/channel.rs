@@ -119,14 +119,26 @@ impl<T: Data> Channel<T> {
         self
     }
 
+    pub fn get_batch_size(&self) -> usize {
+        self.batch_size
+    }
+
     pub fn set_batch_capacity(&mut self, capacity: u32) -> &mut Self {
         self.batch_capacity = capacity;
         self
     }
 
+    pub fn get_batch_capacity(&self) -> u32 {
+        self.batch_capacity
+    }
+
     pub fn set_scope_capacity(&mut self, capacity: u32) -> &mut Self {
         self.scope_capacity = capacity;
         self
+    }
+
+    pub fn get_scope_capacity(&self) -> u32 {
+        self.scope_capacity
     }
 
     pub fn set_channel_kind(&mut self, kind: ChannelKind<T>) -> &mut Self {

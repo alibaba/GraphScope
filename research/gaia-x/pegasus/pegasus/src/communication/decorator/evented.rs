@@ -207,6 +207,15 @@ mod rob {
 ////////////////////////////////////////////////////////
 #[cfg(feature = "rob")]
 mod rob {
+    use crate::Data;
+    use crate::channel_id::ChannelInfo;
+    use crate::data::MicroBatch;
+    use crate::data_plane::{GeneralPush, Push};
+    use crate::event::emitter::EventEmitter;
+    use crate::tag::tools::map::TidyTagMap;
+    use std::sync::{Arc, atomic::AtomicBool};
+    use crate::communication::IOResult;
+
     #[allow(dead_code)]
     pub struct EventEmitPush<T: Data> {
         pub ch_info: ChannelInfo,

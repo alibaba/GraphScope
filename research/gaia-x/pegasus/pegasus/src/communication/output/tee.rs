@@ -288,12 +288,12 @@ mod rob {
 
         pub fn forward(&mut self, data: MicroBatch<D>) -> IOResult<()> {
             if self.pushes.len() == 0 {
-                self.main_push.push.forward(data)
+                self.main_push.push.push_batch(data)
             } else {
                 for i in 0..self.pushes.len() {
-                    self.pushes[i].push.forward(data.clone())?;
+                    self.pushes[i].push.push_batch(data.clone())?;
                 }
-                self.main_push.push.forward(data)
+                self.main_push.push.push_batch(data)
             }
         }
     }
@@ -567,7 +567,7 @@ mod rob {
     #[allow(dead_code)]
     pub(crate) struct ChannelPush<D: Data> {
         pub ch_info: ChannelInfo,
-        delta: MergedScopeDelta,
+        pub(crate) delta: MergedScopeDelta,
         push: MicroBatchPush<D>,
     }
 

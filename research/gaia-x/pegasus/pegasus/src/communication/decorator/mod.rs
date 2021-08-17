@@ -53,6 +53,11 @@ pub trait ScopeStreamBuffer {
     fn flush_scope(&mut self, tag: &Tag) -> IOResult<()>;
 }
 
+pub trait BlockPush {
+    // try to unblock data on scope, return true if the data is unblocked;
+    fn try_unblock(&mut self, tag: &Tag) -> IOResult<bool>;
+}
+
 pub use rob::*;
 
 #[cfg(not(feature = "rob"))]
@@ -187,16 +192,10 @@ mod rob {
     }
 
     impl<T: Data> MicroBatchPush<T> {
-        pub fn forward(&mut self, mut data: MicroBatch<T>) -> IOResult<()> {
+        pub fn push_batch(&mut self, data: MicroBatch<T>) -> IOResult<()> {
             match self {
                 MicroBatchPush::Pipeline(p) => p.forward_buffer(data),
-                MicroBatchPush::Shuffle(p) => {
-                    let tag = data.tag.clone();
-                    for d in data.drain() {
-                        p.push(&tag, d)?;
-                    }
-                    Ok(())
-                }
+                MicroBatchPush::Shuffle(p) => p.push_batch(data),
                 MicroBatchPush::ScopeShuffle(p) => p.forward_buffer(data),
                 MicroBatchPush::Broadcast(p) => p.forward_buffer(data),
                 MicroBatchPush::Aggregate(p) => p.forward_buffer(data),
@@ -320,6 +319,17 @@ mod rob {
 
 #[cfg(feature = "rob")]
 mod rob {
+    use super::*;
+    use crate::Data;
+    use crate::channel_id::ChannelInfo;
+    use crate::data::MicroBatch;
+    use crate::data_plane::intra_thread::ThreadPush;
+    use crate::tag::tools::map::TidyTagMap;
+    use crate::data_plane::Push;
+    use crate::communication::IOResult;
+    use crate::communication::decorator::exchange::ExchangeMicroBatchPush;
+    use crate::errors::IOError;
+
     #[allow(dead_code)]
     pub struct LocalMicroBatchPush<T: Data> {
         pub ch_info: ChannelInfo,
@@ -384,11 +394,6 @@ mod rob {
         fn close(&mut self) -> Result<(), IOError> {
             todo!()
         }
-    }
-
-    pub trait BlockPush {
-        // try to unblock data on scope, return true if the data is unblocked;
-        fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError>;
     }
 
     impl<T: Data> BlockPush for MicroBatchPush<T> {

@@ -40,7 +40,7 @@ mod rob {
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
     use crate::data::MicroBatch;
-    use crate::errors::IOResult;
+    use crate::errors::{IOResult, IOError};
     use crate::graph::Port;
     use crate::progress::{EndSignal, Weight};
     use crate::{Data, Tag};
@@ -63,6 +63,63 @@ mod rob {
             let magic =
                 if len & (len - 1) == 0 { Magic::And(len as u64 - 1) } else { Magic::Modulo(len as u64) };
             ExchangeMicroBatchPush { ch_info, pushes, routing, magic }
+        }
+
+        pub(crate) fn push_batch(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
+            let len = batch.len();
+            if len > 1 {
+                let tag = batch.tag.clone();
+                let mut iter = batch.drain();
+                if let Err(err) = self.push_iter(&tag, &mut iter) {
+                    if err.is_would_block() {
+                        Err(IOError::cannot_block())
+                    } else {
+                        Err(err)
+                    }
+                } else {
+                    std::mem::drop(iter);
+                    if let Some(mut end) = batch.take_end() {
+                        self.update_weight(&mut end, None);
+                        self.notify_end(end)?;
+                    }
+                    Ok(())
+                }
+            } else if len > 0 {
+                assert_eq!(len, 1);
+                let target =  {
+                    let mut x = batch.iter().expect("expect iter but none;");
+                    let last = x.next().expect("expect at least one;");
+                    self.magic.exec(self.routing.route(last)?) as usize
+                };
+                if let Some(mut end) = batch.take_end() {
+                    if batch.seq > 0 {
+                        self.update_weight(&mut end, Some(target));
+                    }
+
+                    for i in 0..self.pushes.len() {
+                        if i != target {
+                            self.pushes[i].notify_end(end.clone())?;
+                        }
+                    }
+                    batch.set_end(end);
+                }
+                self.pushes[target].forward_buffer(batch)
+            } else {
+                assert_eq!(len, 0);
+                if let Some(mut end) = batch.take_end() {
+                    if batch.seq > 0 {
+                        self.update_weight(&mut end, None);
+                    }
+                    if self.pushes.len() > 1 {
+                        for i in 1..self.pushes.len() {
+                            self.pushes[i].notify_end(end.clone())?;
+                        }
+                    }
+                    self.pushes[0].notify_end(end)
+                } else {
+                    Ok(())
+                }
+            }
         }
 
         fn update_weight(&self, end: &mut EndSignal, target: Option<usize>) {
@@ -270,6 +327,17 @@ mod rob {
 #[cfg(feature = "rob")]
 mod rob {
     use super::*;
+    use crate::api::function::{RouteFunction, FnResult};
+    use crate::{Data, Tag};
+    use crate::communication::buffer::ScopeBufferPool;
+    use crate::communication::decorator::evented::EventEmitPush;
+    use crate::progress::EndSignal;
+    use crate::errors::IOError;
+    use crate::data::MicroBatch;
+    use pegasus_common::buffer::{BufferReader, MemBufAlloc, BufferPool, Buffer};
+    use crate::data_plane::Push;
+    use crate::communication::decorator::BlockPush;
+    use crate::tag::tools::map::TidyTagMap;
 
     #[allow(dead_code)]
     struct Exchange<D> {

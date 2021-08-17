@@ -48,12 +48,13 @@ pub trait OutputBuilder: AsAny {
 mod builder;
 mod output;
 mod tee;
-use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
+use crate::communication::decorator::{ScopeStreamPush};
 use crate::communication::output::output::OutputHandle;
 use crate::progress::EndSignal;
 pub(crate) use builder::OutputBuilderImpl;
 pub use output::OutputSession;
 pub(crate) use tee::ChannelPush;
+use crate::data::MicroBatch;
 
 pub struct RefWrapOutput<D: Data> {
     pub(crate) output: RefCell<OutputHandle<D>>,
@@ -83,35 +84,22 @@ impl<D: Data> RefWrapOutput<D> {
     }
 
     pub fn new_session(&self, tag: &Tag) -> IOResult<OutputSession<D>> {
-        let mut output = self.output.borrow_mut();
-        let cap = output.ensure_capacity(tag)?;
-        assert!(cap > 0);
+        let output = self.output.borrow_mut();
         Ok(OutputSession::new(output, tag.clone()))
     }
 
-    #[inline]
-    pub fn push(&self, tag: &Tag, msg: D) -> IOResult<()> {
-        self.output.borrow_mut().push(tag, msg)
+    pub fn push_batch(&self, dataset: MicroBatch<D>) -> IOResult<()> {
+        self.output.borrow_mut().push_batch(dataset)
     }
 
-    #[inline]
-    pub fn push_last(&self, msg: D, end: EndSignal) -> IOResult<()> {
-        let mut borrow = self.output.borrow_mut();
-        borrow.push_last(msg, end)
-    }
-}
-
-impl<D: Data> ScopeStreamBuffer for RefWrapOutput<D> {
-    fn scope_size(&self) -> usize {
-        self.output.borrow().scope_size()
+    pub fn push_batch_mut(&self, batch: &mut MicroBatch<D>) -> IOResult<()> {
+        self.output.borrow_mut().push_batch_mut(batch)
     }
 
-    fn ensure_capacity(&mut self, tag: &Tag) -> IOResult<usize> {
-        self.output.borrow_mut().ensure_capacity(tag)
-    }
-
-    fn flush_scope(&mut self, tag: &Tag) -> IOResult<()> {
-        self.output.borrow_mut().flush_scope(tag)
+    pub fn push_into_iter<I: Iterator<Item = D> + Send + 'static>(
+        &self, tag: &Tag, iter: I,
+    ) -> IOResult<()> {
+        self.output.borrow_mut().push_into_iter(tag, iter)
     }
 }
 

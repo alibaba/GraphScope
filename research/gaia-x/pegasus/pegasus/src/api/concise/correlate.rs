@@ -13,5 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod enter;
-mod leave;
+use crate::errors::BuildJobError;
+use crate::stream::{SingleItem, Stream};
+use crate::Data;
+
+pub trait CorrelatedSubTask<D: Data> {
+    fn apply<T, F>(self, func: F) -> Result<Stream<(D, T)>, BuildJobError>
+        where
+            T: Data,
+            F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>;
+}
+

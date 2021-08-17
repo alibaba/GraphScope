@@ -14,6 +14,7 @@
 //! limitations under the License.
 
 pub use collect::*;
+pub use correlate::*;
 pub use count::*;
 pub use filter::*;
 pub use fold::*;
@@ -26,7 +27,7 @@ pub use order::*;
 pub use reduce::*;
 
 mod collect;
-pub(crate) mod correlate;
+mod correlate;
 mod count;
 mod filter;
 mod fold;

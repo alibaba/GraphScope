@@ -292,6 +292,7 @@ mod rob {
 #[cfg(feature = "rob")]
 mod rob {
     use super::*;
+    use pegasus_common::buffer::BufferReader;
 
     pub struct MicroBatch<T> {
         /// the tag of scope this data set belongs to;
@@ -338,6 +339,10 @@ mod rob {
 
         pub fn take_end(&mut self) -> Option<EndSignal> {
             self.end.take()
+        }
+
+        pub fn take_data(&mut self) -> BufferReader<D> {
+            std::mem::replace(&mut self.data, BufferReader::new())
         }
 
         pub fn share(&mut self) -> Self {

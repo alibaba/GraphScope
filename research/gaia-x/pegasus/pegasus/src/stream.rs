@@ -30,6 +30,7 @@ use pegasus_common::codec::ShadeCodec;
 use std::fmt::{Debug, Formatter};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::ops::{Deref, DerefMut};
 
 #[must_use = "this `Stream` may be consumed"]
 pub struct Stream<D: Data> {
@@ -37,6 +38,20 @@ pub struct Stream<D: Data> {
     port: OutputBuilderImpl<D>,
     ch: Channel<D>,
     dfb: DataflowBuilder,
+}
+
+impl<D: Data> Deref for Stream<D> {
+    type Target = Channel<D>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.ch
+    }
+}
+
+impl<D: Data> DerefMut for Stream<D> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.ch
+    }
 }
 
 impl<D: Data> Stream<D> {
@@ -53,10 +68,6 @@ impl<D: Data> Stream<D> {
         self.port.get_port()
     }
 
-    pub fn get_scope_level(&self) -> u32 {
-        self.ch.get_scope_level()
-    }
-
     pub fn copied(self) -> Result<(Stream<D>, Stream<D>), BuildJobError> {
         if self.ch.is_local() {
             let copy = Stream {
@@ -70,9 +81,7 @@ impl<D: Data> Stream<D> {
             let shuffled = self.unary("shuffle_clone", |_| {
                 |input, output| {
                     input.for_each_batch(|dataset| {
-                        output
-                            .new_session(&dataset.tag)?
-                            .forward_batch(dataset)?;
+                        output.push_batch_mut(dataset)?;
                         Ok(())
                     })
                 }
