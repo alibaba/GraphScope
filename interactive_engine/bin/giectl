@@ -346,29 +346,53 @@ create_gremlin_instance_on_local() {
   # expose gremlin server (NB: must before start executor)
   declare -r timeout_seconds=60
   declare wait_period_seconds=0
+  declare gremlin_server_ready=False gaia_gremlin_server_ready=False
+  declare gremlin_server_port_in_log gremlin_server_port_in_out gremlin_server_port_in_err
+  declare gaia_gremlin_server_port_in_log gaia_gremlin_server_port_in_out gaia_gremlin_server_port_in_err
   while true
   do
+    # The fronted log may randomly output to log/out/err, this is an ad-hoc solution
+    # to find the gremlin server port, and the file may not exist, we add a || true to
+    # ignore the error.
     # FIXME: the port should fetch from .log file, not .out or .err
-    declare gremlin_server_port=`awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $7}'`
-    if [ -n "${gremlin_server_port}" ]; then
-      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port}"
+    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $6}') || true
+    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $7}') || true
+    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $4}') || true
+    if [ ! -z "${gremlin_server_port_in_log}" ]; then
+      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port_in_log}"
+      gremlin_server_ready=True
+    elif [ ! -z "${gremlin_server_port_in_out}" ]; then
+      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port_in_out}"
+      gremlin_server_ready=True
+    elif [ ! -z "${gremlin_server_port_in_err}" ]; then
+      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port_in_err}"
+      gremlin_server_ready=True
     fi
 
     # fetch gaia frontend port
     if [ "${enable_gaia}" = True ]; then
-      declare gaia_gremlin_server_port=`awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $7}'`
-      if [ -n "${gaia_gremlin_server_port}" ]; then
-        log "GAIA_FRONTEND_PORT:127.0.0.1:${gaia_gremlin_server_port}"
+      gaia_gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.log | awk -F: '{print $6}') || true
+      gaia_gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $7}') || true
+      gaia_gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.err | awk -F: '{print $4}') || true
+      if [ ! -z "${gaia_gremlin_server_port_in_log}" ]; then
+        log "GAIA_FRONTEND_PORT:127.0.0.1:${gaia_gremlin_server_port_in_log}"
+        gaia_gremlin_server_ready=True
+      elif [ ! -z "${gaia_gremlin_server_port_in_out}" ]; then
+        log "GAIA_FRONTEND_PORT:127.0.0.1:${gaia_gremlin_server_port_in_out}"
+        gaia_gremlin_server_ready=True
+      elif [ ! -z "${gaia_gremlin_server_port_in_err}" ]; then
+        log "GAIA_FRONTEND_PORT:127.0.0.1:${gaia_gremlin_server_port_in_err}"
+        gaia_gremlin_server_ready=True
       fi
     fi
 
     if [ "${enable_gaia}" = True ]; then
       # both port fetch success, then we break the loop.
-      if [ -n "${gremlin_server_port}" ] && [ -n "${gaia_gremlin_server_port}" ]; then
+      if [ "${gremlin_server_ready}" = True ] && [ "${gaia_gremlin_server_ready}" = True ]; then
         break
       fi
     else
-      if [ -n "${gremlin_server_port}" ]; then
+      if [ "${gremlin_server_ready}" = True ]; then
         break
       fi
     fi

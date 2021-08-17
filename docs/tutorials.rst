@@ -23,4 +23,5 @@ All tutorials are listed as follows:
    Interactive Query with Gremlin <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/6_interactive_query_with_gremlin.ipynb>
    Unsupervised Learning with GraphSage <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/7_unsupervised_learning_with_graphsage.ipynb>
    Supervised Learning with GCN <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/8_supervised_learning_with_gcn.ipynb>
-   A Complex Workflow: Node Classification on Citation Network <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/9_node_classification_on_citation_network.ipynb>
+   Unsupervised Learning with BipartiteGraphSage <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/9_unsupervised_learning_with_bipartite_graphsage.ipynb>
+   A Complex Workflow: Node Classification on Citation Network <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/10_node_classification_on_citation_network.ipynb>

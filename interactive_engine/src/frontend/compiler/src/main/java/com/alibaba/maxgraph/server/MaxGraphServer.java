@@ -70,7 +70,7 @@ public class MaxGraphServer {
     }
 
 
-    private void initSettings() {
+    protected void initSettings() {
         try {
             InputStream input = this.getClass().getClassLoader().getResourceAsStream("conf/server.yaml");
             InputStream groovy = this.getClass().getClassLoader().getResourceAsStream("conf/generate-classic.groovy");

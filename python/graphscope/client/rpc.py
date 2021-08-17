@@ -145,6 +145,13 @@ class GRPCClient(object):
             self._logs_fetching_thread.daemon = True
             self._logs_fetching_thread.start()
 
+    def close(self):
+        if self._session_id:
+            self._close_session_impl()
+            self._session_id = None
+        if self._logs_fetching_thread:
+            self._logs_fetching_thread.join(timeout=5)
+
     @catch_grpc_error
     def send_heartbeat(self):
         request = message_pb2.HeartBeatRequest()

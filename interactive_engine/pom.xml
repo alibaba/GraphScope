@@ -55,7 +55,7 @@
         <kafka.version>2.5.0</kafka.version>
         <kafka.junit.version>3.2.1</kafka.junit.version>
         <jna.version>5.5.0</jna.version>
-        <junit.jupiter.version>5.6.2</junit.jupiter.version>
+        <junit.jupiter.version>5.6.3</junit.jupiter.version>
         <mockito.version>3.4.4</mockito.version>
         <rocksdb.version>5.15.10</rocksdb.version>
         <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
@@ -124,7 +124,7 @@
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.12</version>
+                <version>4.13.2</version>
             </dependency>
             <!-- google -->
             <dependency>
@@ -501,7 +501,7 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.6</version>
+                <version>2.7</version>
             </dependency>
             <dependency>
                 <groupId>org.ini4j</groupId>
@@ -554,7 +554,7 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
-                <version>4.5.2</version>
+                <version>[4.5.13,)</version>
             </dependency>
             <dependency>
                 <groupId>org.kamranzafar</groupId>
