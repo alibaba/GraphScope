@@ -39,8 +39,10 @@ public class GaiaAdaptorTestGraphProvider extends AbstractGraphProvider {
 
     public String getModernGraphEndpoint() {
         try {
-            InputStream inputStream = GaiaAdaptorTestGraphProvider.class.getClassLoader().getResourceAsStream("graph.endpoint");
-            return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+	    InputStream inputStream = GaiaAdaptorTestGraphProvider.class.getClassLoader().getResourceAsStream("graph.endpoint");
+            String endpoint = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+            // remove invalid char
+            return endpoint.replaceAll("[^A-Za-z0-9:]", "");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

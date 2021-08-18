@@ -23,6 +23,8 @@ from graphscope.dataset.modern_graph import load_modern_graph
 graphscope.set_option(show_log=True)
 graphscope.set_option(initializing_interactive_engine=False)
 
+sys.stdout = open('/tmp/test_modern.log', 'w')
+
 @pytest.fixture(scope="function")
 def sess():
     s = graphscope.session(cluster_type="hosts", num_workers=2, enable_gaia=True)

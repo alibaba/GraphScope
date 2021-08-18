@@ -24,8 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public class MaxGraphStore extends GraphStoreService {
     private static final Logger logger = LoggerFactory.getLogger(MaxGraphStore.class);
-    // public static final String MAXGRAPH_MODERN_PROPERTY_RESOURCE = "maxgraph.modern.properties.json";
-    public static final String MAXGRAPH_MODERN_PROPERTY_RESOURCE = "vineyard.modern.properties.json";
+    public static final String MAXGRAPH_MODERN_PROPERTY_RESOURCE = "maxgraph.modern.properties.json";
     private CachedMaxGraphMeta cachedGraphSchemaPair;
 
     public MaxGraphStore(SchemaFetcher schemaFetcher) {
