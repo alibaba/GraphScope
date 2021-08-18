@@ -11,14 +11,15 @@ curl -XPOST http://localhost:${_port} -d 'from graphscope.framework.loader impor
 curl -XPOST http://localhost:${_port} -d 'from graphscope.dataset.modern_graph import load_modern_graph'
 curl -XPOST http://localhost:${_port} -d 'session=graphscope.session(cluster_type="hosts", num_workers=2, enable_gaia=True)'
 curl -XPOST http://localhost:${_port} -d 'graph = load_modern_graph(session, "/home/GraphScope/interactive_engine/tests/src/main/resources/modern_graph")'
-curl -XPOST http://localhost:${_port} -d 'interactive = session.gremlin(graph)' 1>/tmp/test_modern.log 2>&1
-GAIA_ENDPOINT=`grep "build gaia frontend" /tmp/test_modern.log`
-GAIA_ENDPOINT=`echo $GAIA_ENDPOINT | awk -F"frontend " '{print $2}' | awk -F" " '{print $1}'`
-echo $GAIA_ENDPOINT > ${base_dir}/src/test/resources/graph.endpoint
+curl -XPOST http://localhost:${_port} -d 'interactive = session.gremlin(graph)' --output /tmp/test_modern.log
+curl -XPOST http://localhost:${_port} -d 'interactive._graph_url[1]' --output /tmp/test_modern.log
+GAIA_PORT=`cat /tmp/test_modern.log | awk -F'\/|:' '{print $5}'`
+echo "localhost:$GAIA_PORT" > ${base_dir}/src/test/resources/graph.endpoint
+cd ${base_dir}/../.. &&  mvn clean install -DskipTests -Pjava-release
 cd ${base_dir} && mvn test
 exit_code=$?
 curl -XPOST http://localhost:${_port} -d 'session.close()'
-kill -INT `lsof -i:${_port} -t`
+ps -ef | grep "python3 maxgraph_test_server.py ${_port}" | grep -v grep | awk '{print $2}' | xargs kill -9
 if [ $exit_code -ne 0 ]; then
     echo "gaia_on_vineyard_store gremlin test fail"
     exit 1
