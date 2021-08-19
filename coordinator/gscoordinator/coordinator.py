@@ -48,8 +48,11 @@ from gscoordinator.io_utils import StdoutWrapper
 # capture system stdout
 sys.stdout = StdoutWrapper(sys.stdout)
 
+import vineyard
+import vineyard.io
+from graphscope.framework import utils
 from graphscope.framework.dag_utils import create_graph
-from graphscope.framework.graph_utils import assemble_op_config
+from graphscope.framework.dag_utils import create_loader
 from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
@@ -400,8 +403,6 @@ class CoordinatorServiceServicer(
             if op.op not in (
                 types_pb2.CONTEXT_TO_NUMPY,
                 types_pb2.CONTEXT_TO_DATAFRAME,
-                types_pb2.TO_VINEYARD_TENSOR,
-                types_pb2.TO_VINEYARD_DATAFRAME,
                 types_pb2.REPORT_GRAPH,
             ):
                 self._op_result_pool[r.key] = r
@@ -528,6 +529,8 @@ class CoordinatorServiceServicer(
                 ret = self.run_on_learning_engine(
                     request.session_id, dag_def, op_results
                 )
+            if run_dag_on == GSEngine.coordinator:
+                ret = self.run_on_coordinator(request.session_id, dag_def, op_results)
             if ret.status.code != error_codes_pb2.OK:
                 return ret
         return self._make_response(
@@ -569,6 +572,50 @@ class CoordinatorServiceServicer(
                 op_result = self._create_learning_instance(op)
             elif op.op == types_pb2.CLOSE_LEARNING_INSTANCE:
                 op_result = self._close_learning_instance(op)
+            else:
+                logger.error("Unsupport op type: %s", str(op.op))
+            op_results.append(op_result)
+            if op_result.code == error_codes_pb2.OK:
+                self._op_result_pool[op.key] = op_result
+        return self._make_response(
+            message_pb2.RunStepResponse, error_codes_pb2.OK, results=op_results
+        )
+
+    def run_on_coordinator(
+        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
+    ):
+        for op in dag_def.op:
+            self._key_to_op[op.key] = op
+            try:
+                if self._launcher_type == types_pb2.K8S:
+                    engine_hosts = ",".join(self._pods_list)
+                else:
+                    engine_hosts = self._launcher.hosts
+                op_pre_process(
+                    op,
+                    self._op_result_pool,
+                    self._key_to_op,
+                    engine_hosts=engine_hosts,
+                    engine_config=self._get_engine_config(),
+                )
+            except Exception as e:
+                error_msg = (
+                    "Failed to pre process op {0} with error message {1}".format(
+                        op, str(e)
+                    )
+                )
+                logger.error(error_msg)
+                return self._make_response(
+                    message_pb2.RunStepResponse,
+                    error_codes_pb2.COORDINATOR_INTERNAL_ERROR,
+                    error_msg,
+                    full_exception=pickle.dumps(e),
+                    results=op_results,
+                )
+            if op.op == types_pb2.DATA_SOURCE:
+                op_result = self._process_data_source(op)
+            elif op.op == types_pb2.OUTPUT:
+                op_result = self._output(op)
             else:
                 logger.error("Unsupport op type: %s", str(op.op))
             op_results.append(op_result)
@@ -819,6 +866,101 @@ class CoordinatorServiceServicer(
                 code=error_codes_pb2.OK, key=op.key, result=pickle.dumps(rlt)
             )
 
+    def _output(self, op: op_def_pb2.OpDef):
+        storage_options = pickle.loads(op.attr[types_pb2.STORAGE_OPTIONS].s)
+        fd = op.attr[types_pb2.FD].s.decode()
+        df = op.attr[types_pb2.VINEYARD_ID].s.decode()
+        engine_config = self._get_engine_config()
+        vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
+        vineyard_ipc_socket = engine_config["vineyard_socket"]
+        if self._launcher_type == types_pb2.K8S:
+            deployment = "kubernetes"
+            hosts = ["%s:%s" % (self._k8s_namespace, host) for host in self._pods_list]
+        else:
+            deployment = "ssh"
+            hosts = self._launcher.hosts.split(",")
+        dfstream = vineyard.io.open(
+            "vineyard://" + str(df),
+            mode="r",
+            vineyard_ipc_socket=vineyard_ipc_socket,
+            vineyard_endpoint=vineyard_endpoint,
+            deployment=deployment,
+            hosts=hosts,
+        )
+        vineyard.io.open(
+            fd,
+            dfstream,
+            mode="w",
+            vineyard_ipc_socket=vineyard_ipc_socket,
+            vineyard_endpoint=vineyard_endpoint,
+            storage_options=storage_options,
+            deployment=deployment,
+            hosts=hosts,
+        )
+        return op_def_pb2.OpResult(code=error_codes_pb2.OK, key=op.key)
+
+    def _process_data_source(self, op: op_def_pb2.OpDef):
+        def _spawn_vineyard_io_stream(source, storage_options, read_options):
+            engine_config = self._get_engine_config()
+            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
+            vineyard_ipc_socket = engine_config["vineyard_socket"]
+            if self._launcher_type == types_pb2.K8S:
+                deployment = "kubernetes"
+                hosts = [
+                    "%s:%s" % (self._k8s_namespace, host) for host in self._pods_list
+                ]
+            else:
+                deployment = "ssh"
+                hosts = self._launcher.hosts.split(",")
+            num_workers = self._launcher.num_workers
+            stream_id = repr(
+                vineyard.io.open(
+                    source,
+                    mode="r",
+                    vineyard_endpoint=vineyard_endpoint,
+                    vineyard_ipc_socket=vineyard_ipc_socket,
+                    hosts=hosts,
+                    num_workers=num_workers,
+                    deployment=deployment,
+                    read_options=read_options,
+                    storage_options=storage_options,
+                )
+            )
+            return "vineyard", stream_id
+
+        def _process_loader_func(func):
+            protocol = func.attr[types_pb2.PROTOCOL].s.decode()
+            if protocol in ("hdfs", "hive", "oss", "s3", "vineyard"):
+                is_vy_stream = func.attr[types_pb2.IS_VY_STREAM].b
+                if not is_vy_stream:
+                    source = func.attr[types_pb2.VALUES].s.decode()
+                    storage_options = pickle.loads(
+                        func.attr[types_pb2.STORAGE_OPTIONS].s
+                    )
+                    read_options = pickle.loads(func.attr[types_pb2.READ_OPTIONS].s)
+                    new_protocol, new_source = _spawn_vineyard_io_stream(
+                        source, storage_options, read_options
+                    )
+                    func.attr[types_pb2.PROTOCOL].CopyFrom(
+                        utils.s_to_attr(new_protocol)
+                    )
+                    func.attr[types_pb2.VALUES].CopyFrom(utils.s_to_attr(new_source))
+
+        for label in op.attr[types_pb2.ARROW_PROPERTY_DEFINITION].list.func:
+            # vertex label or edge label
+            if types_pb2.LOADER in label.attr:
+                loader_func = label.attr[types_pb2.LOADER].func
+                if loader_func.name == "loader":
+                    _process_loader_func(loader_func)
+            if types_pb2.SUB_LABEL in label.attr:
+                for func in label.attr[types_pb2.SUB_LABEL].list.func:
+                    if types_pb2.LOADER in func.attr:
+                        loader_func = func.attr[types_pb2.LOADER].func
+                        if loader_func.name == "loader":
+                            _process_loader_func(loader_func)
+
+        return op_def_pb2.OpResult(code=error_codes_pb2.OK, key=op.key)
+
     def _close_interactive_instance(self, op: op_def_pb2.OpDef):
         try:
             key_of_parent_op = op.parents[0]
@@ -873,27 +1015,38 @@ class CoordinatorServiceServicer(
         gremlin_client = self._object_manager.get(key_of_parent_op)
 
         def load_subgraph(oid_type, name):
-            import vineyard
-
             vertices = [Loader(vineyard.ObjectName("__%s_vertex_stream" % name))]
             edges = [Loader(vineyard.ObjectName("__%s_edge_stream" % name))]
             oid_type = normalize_data_type_str(oid_type)
-            v_labels = normalize_parameter_vertices(vertices)
-            e_labels = normalize_parameter_edges(edges)
-            config = assemble_op_config(
-                v_labels, e_labels, oid_type, directed=True, generate_eid=False
-            )
+            v_labels = normalize_parameter_vertices(vertices, oid_type)
+            e_labels = normalize_parameter_edges(edges, oid_type)
+            loader_op = create_loader(v_labels + e_labels)
+            config = {
+                types_pb2.DIRECTED: utils.b_to_attr(True),
+                types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
+                types_pb2.GENERATE_EID: utils.b_to_attr(False),
+                types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
+                types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+            }
             new_op = create_graph(
-                self._session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
+                self._session_id,
+                graph_def_pb2.ARROW_PROPERTY,
+                inputs=[loader_op],
+                attrs=config,
             )
+            # spawn a vineyard stream loader on coordinator
+            loader_op_def = loader_op.as_op_def()
+            coordinator_dag = op_def_pb2.DagDef()
+            coordinator_dag.op.extend([loader_op_def])
             # set the same key from subgraph to new op
             new_op_def = new_op.as_op_def()
             new_op_def.key = op.key
             dag = op_def_pb2.DagDef()
             dag.op.extend([new_op_def])
+            self.run_on_coordinator(self._session_id, coordinator_dag, [])
             resp = self.run_on_analytical_engine(self._session_id, dag, [])
             logger.info("subgraph has been loaded")
-            return resp.results[0]
+            return resp.results[-1]
 
         # generate a random graph name
         now_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
