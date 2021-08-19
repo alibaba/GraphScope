@@ -27,7 +27,7 @@
 #include "arrow/util/config.h"
 
 #include "grape/grape.h"
-#include "vineyard/common/util/config.h"
+#include "vineyard/common/util/version.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/vertex_map/arrow_vertex_map.h"
 

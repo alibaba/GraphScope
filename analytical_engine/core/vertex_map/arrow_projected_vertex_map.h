@@ -19,7 +19,7 @@
 #include <memory>
 #include <vector>
 
-#include "vineyard/common/util/config.h"
+#include "vineyard/common/util/version.h"
 #include "vineyard/graph/fragment/property_graph_types.h"
 #include "vineyard/graph/vertex_map/arrow_vertex_map.h"
 

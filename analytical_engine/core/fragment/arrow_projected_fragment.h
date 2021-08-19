@@ -26,7 +26,7 @@
 #include "boost/lexical_cast.hpp"
 
 #include "vineyard/basic/ds/arrow_utils.h"
-#include "vineyard/common/util/config.h"
+#include "vineyard/common/util/version.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/vertex_map/arrow_vertex_map.h"
 
