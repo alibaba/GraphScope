@@ -40,13 +40,14 @@ class ArrowProjectedVertexMap
   using oid_array_t = typename vineyard::ConvertToArrowType<oid_t>::ArrayType;
 
  public:
-#if defined(VINEYARD_VERSION) && defined(VINEYARD_VERSION_MAJOR) && \
-    VINEYARD_VERSION >= 2007
+#if defined(VINEYARD_VERSION) && defined(VINEYARD_VERSION_MAJOR)
+#if VINEYARD_VERSION >= 2007
   static std::unique_ptr<vineyard::Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<vineyard::Object>(
         std::unique_ptr<ArrowProjectedVertexMap<oid_t, vid_t>>{
             new ArrowProjectedVertexMap<oid_t, vid_t>()});
   }
+#endif
 #else
   static std::shared_ptr<vineyard::Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<vineyard::Object>(
@@ -159,13 +160,14 @@ class ArrowProjectedVertexMap<arrow::util::string_view, VID_T>
   using oid_array_t = arrow::LargeStringArray;
 
  public:
-#if defined(VINEYARD_VERSION) && defined(VINEYARD_VERSION_MAJOR) && \
-    VINEYARD_VERSION >= 2007
+#if defined(VINEYARD_VERSION) && defined(VINEYARD_VERSION_MAJOR)
+#if VINEYARD_VERSION >= 2007
   static std::unique_ptr<vineyard::Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<vineyard::Object>(
         std::unique_ptr<ArrowProjectedVertexMap<oid_t, vid_t>>{
             new ArrowProjectedVertexMap<oid_t, vid_t>()});
   }
+#endif
 #else
   static std::shared_ptr<vineyard::Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<vineyard::Object>(

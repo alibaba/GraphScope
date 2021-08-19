@@ -294,13 +294,14 @@ class AppendOnlyArrowFragment
   template <typename DATA_T>
   using vertex_array_t = grape::VertexArray<DATA_T, vid_t>;
 
-#if defined(VINEYARD_VERSION) && defined(VINEYARD_VERSION_MAJOR) && \
-    VINEYARD_VERSION >= 2007
+#if defined(VINEYARD_VERSION) && defined(VINEYARD_VERSION_MAJOR)
+#if VINEYARD_VERSION >= 2007
   static std::unique_ptr<vineyard::Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<vineyard::Object>(
         std::unique_ptr<AppendOnlyArrowFragment<oid_t, vid_t>>{
             new AppendOnlyArrowFragment<oid_t, vid_t>()});
   }
+#endif
 #else
   static std::shared_ptr<vineyard::Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<vineyard::Object>(
