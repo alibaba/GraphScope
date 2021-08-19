@@ -280,6 +280,7 @@ def load_ldbc(sess, prefix, directed=True):
     Returns:
         :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
     """
+    prefix = os.path.expandvars(prefix)
     vertices = {
         "comment": (
             Loader(

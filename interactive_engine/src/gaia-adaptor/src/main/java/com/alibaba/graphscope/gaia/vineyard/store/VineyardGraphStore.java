@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public class VineyardGraphStore extends GraphStoreService {
     private static final Logger logger = LoggerFactory.getLogger(VineyardGraphStore.class);
-    public static final String VINEYARD_MODERN_PROPERTY_RESOURCE = "maxgraph.modern.properties.json";
+    public static final String VINEYARD_MODERN_PROPERTY_RESOURCE = "vineyard.modern.properties.json";
     private SchemaFetcher schemaFetcher;
 
     public VineyardGraphStore(SchemaFetcher schemaFetcher) {
