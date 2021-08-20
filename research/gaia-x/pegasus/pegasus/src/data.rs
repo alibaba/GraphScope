@@ -292,7 +292,7 @@ mod rob {
 #[cfg(feature = "rob")]
 mod rob {
     use super::*;
-    use pegasus_common::buffer::BufferReader;
+    use pegasus_common::buffer::ReadBuffer;
 
     pub struct MicroBatch<T> {
         /// the tag of scope this data set belongs to;
@@ -300,21 +300,21 @@ mod rob {
         /// the index of worker who created this dataset;
         pub src: u32,
         /// sequence of the data batch;
-        pub seq: u64,
+        seq: u64,
         /// if this is the last batch of a scope;
         end: Option<EndSignal>,
         /// read only data details;
-        data: BufferReader<T>,
+        data: ReadBuffer<T>,
     }
 
     #[allow(dead_code)]
     impl<D> MicroBatch<D> {
         #[inline]
         pub fn empty() -> Self {
-            MicroBatch { tag: Tag::Root, seq: 0, src: 0, end: None, data: BufferReader::new() }
+            MicroBatch { tag: Tag::Root, seq: 0, src: 0, end: None, data: ReadBuffer::new() }
         }
 
-        pub fn new(tag: Tag, src: u32, data: BufferReader<D>) -> Self {
+        pub fn new(tag: Tag, src: u32, data: ReadBuffer<D>) -> Self {
             MicroBatch { tag, src, seq: 0, end: None, data }
         }
 
@@ -329,6 +329,17 @@ mod rob {
             self.tag = tag;
         }
 
+        pub fn set_seq(&mut self, seq: u64) {
+            self.seq = seq;
+            if let Some(ref mut end) = self.end {
+                end.seq = seq;
+            }
+        }
+
+        pub fn get_seq(&self) -> u64 {
+            self.seq
+        }
+
         pub fn is_last(&self) -> bool {
             self.end.is_some()
         }
@@ -341,8 +352,8 @@ mod rob {
             self.end.take()
         }
 
-        pub fn take_data(&mut self) -> BufferReader<D> {
-            std::mem::replace(&mut self.data, BufferReader::new())
+        pub fn take_data(&mut self) -> ReadBuffer<D> {
+            std::mem::replace(&mut self.data, ReadBuffer::new())
         }
 
         pub fn share(&mut self) -> Self {
@@ -377,7 +388,7 @@ mod rob {
     }
 
     impl<D> std::ops::Deref for MicroBatch<D> {
-        type Target = BufferReader<D>;
+        type Target = ReadBuffer<D>;
 
         fn deref(&self) -> &Self::Target {
             &self.data

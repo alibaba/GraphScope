@@ -44,28 +44,27 @@ fn main() {
         conf.reset_servers(ServerConf::All);
     }
 
-    let src =
-        if config.id_from_std {
-            let mut buf = String::new();
-            let mut ids = vec![];
-            loop {
-                let line = std::io::stdin().read_line(&mut buf).unwrap();
-                if line == 0 {
-                    break;
-                } else {
-                    buf.split(',')
-                        .map(|id_str| {
-                            let id = id_str.trim_end_matches(|c| c == '\n' || c == '\t' || c == ' ');
-                            id.parse::<u64>().unwrap()
-                        })
-                        .for_each(|x| ids.push(x));
-                }
-                buf.clear();
+    let src = if config.id_from_std {
+        let mut buf = String::new();
+        let mut ids = vec![];
+        loop {
+            let line = std::io::stdin().read_line(&mut buf).unwrap();
+            if line == 0 {
+                break;
+            } else {
+                buf.split(',')
+                    .map(|id_str| {
+                        let id = id_str.trim_end_matches(|c| c == '\n' || c == '\t' || c == ' ');
+                        id.parse::<u64>().unwrap()
+                    })
+                    .for_each(|x| ids.push(x));
             }
-            ids
-        } else {
-            graph.sample_vertices(config.starts as usize)
-        };
+            buf.clear();
+        }
+        ids
+    } else {
+        graph.sample_vertices(config.starts as usize)
+    };
 
     pegasus::wait_servers_ready(conf.servers());
 

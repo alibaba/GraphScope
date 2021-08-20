@@ -571,6 +571,12 @@ mod rob {
         push: MicroBatchPush<D>,
     }
 
+    impl<D: Data> ChannelPush<D> {
+        pub(crate) fn new(ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>) -> Self {
+            ChannelPush { ch_info, delta, push }
+        }
+    }
+
     impl<D: Data> Push<MicroBatch<D>> for ChannelPush<D> {
         fn push(&mut self, mut msg: MicroBatch<D>) -> Result<(), IOError> {
             assert_eq!(msg.tag.len(), self.delta.origin_scope_level);
@@ -595,29 +601,26 @@ mod rob {
     }
 
     pub(crate) struct Tee<D: Data> {
-        main_sender: ChannelPush<D>,
-        other_senders: Vec<ChannelPush<D>>,
+        main_push: ChannelPush<D>,
+        other_pushes: Vec<ChannelPush<D>>,
     }
 
     impl<D: Data> Push<MicroBatch<D>> for Tee<D> {
         fn push(&mut self, mut msg: MicroBatch<D>) -> Result<(), IOError> {
             let mut would_block = false;
-            if !self.other_senders.is_empty() {
-                for tx in self.other_senders.iter_mut() {
+            if !self.other_pushes.is_empty() {
+                for tx in self.other_pushes.iter_mut() {
                     let msg_cp = msg.share();
-                    match tx.push(msg_cp) {
-                        Ok(_) => (),
-                        Err(err) => {
-                            if err.is_would_block() {
-                                would_block = true;
-                            } else {
-                                return Err(err);
-                            }
+                    if let Err(err) = tx.push(msg_cp) {
+                        if err.is_would_block() {
+                            would_block = true;
+                        } else {
+                            return Err(err);
                         }
                     }
                 }
             }
-            match self.main_sender.push(msg) {
+            match self.main_push.push(msg) {
                 Ok(_) => {
                     if would_block {
                         would_block!("underlying channel push blocked")
@@ -630,16 +633,16 @@ mod rob {
         }
 
         fn flush(&mut self) -> Result<(), IOError> {
-            self.main_sender.flush()?;
-            for o in self.other_senders.iter_mut() {
+            self.main_push.flush()?;
+            for o in self.other_pushes.iter_mut() {
                 o.flush()?;
             }
             Ok(())
         }
 
         fn close(&mut self) -> Result<(), IOError> {
-            self.main_sender.close()?;
-            for o in self.other_senders.iter_mut() {
+            self.main_push.close()?;
+            for o in self.other_pushes.iter_mut() {
                 o.close()?;
             }
             Ok(())
@@ -648,8 +651,8 @@ mod rob {
 
     impl<D: Data> BlockPush for Tee<D> {
         fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
-            let mut would_block = self.main_sender.try_unblock(tag)?;
-            for o in self.other_senders.iter_mut() {
+            let mut would_block = self.main_push.try_unblock(tag)?;
+            for o in self.other_pushes.iter_mut() {
                 would_block |= o.try_unblock(tag)?;
             }
             Ok(would_block)

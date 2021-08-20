@@ -19,8 +19,7 @@ use crate::Data;
 
 pub trait CorrelatedSubTask<D: Data> {
     fn apply<T, F>(self, func: F) -> Result<Stream<(D, T)>, BuildJobError>
-        where
-            T: Data,
-            F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>;
+    where
+        T: Data,
+        F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>;
 }
-

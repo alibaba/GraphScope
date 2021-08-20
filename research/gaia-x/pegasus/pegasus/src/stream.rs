@@ -28,9 +28,9 @@ use crate::operator::{NotifiableOperator, OperatorCore};
 use crate::{Data, JobConf};
 use pegasus_common::codec::ShadeCodec;
 use std::fmt::{Debug, Formatter};
+use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::ops::{Deref, DerefMut};
 
 #[must_use = "this `Stream` may be consumed"]
 pub struct Stream<D: Data> {

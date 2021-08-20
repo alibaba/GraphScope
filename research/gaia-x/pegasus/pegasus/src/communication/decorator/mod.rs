@@ -320,15 +320,17 @@ mod rob {
 #[cfg(feature = "rob")]
 mod rob {
     use super::*;
-    use crate::Data;
     use crate::channel_id::ChannelInfo;
+    use crate::communication::decorator::aggregate::AggregateBatchPush;
+    use crate::communication::decorator::broadcast::BroadcastBatchPush;
+    use crate::communication::decorator::exchange::{ExchangeByScopePush, ExchangeMicroBatchPush};
+    use crate::communication::IOResult;
     use crate::data::MicroBatch;
     use crate::data_plane::intra_thread::ThreadPush;
-    use crate::tag::tools::map::TidyTagMap;
     use crate::data_plane::Push;
-    use crate::communication::IOResult;
-    use crate::communication::decorator::exchange::ExchangeMicroBatchPush;
     use crate::errors::IOError;
+    use crate::tag::tools::map::TidyTagMap;
+    use crate::Data;
 
     #[allow(dead_code)]
     pub struct LocalMicroBatchPush<T: Data> {
@@ -380,6 +382,9 @@ mod rob {
     pub(crate) enum MicroBatchPush<T: Data> {
         Local(LocalMicroBatchPush<T>),
         Exchange(ExchangeMicroBatchPush<T>),
+        Broadcast(BroadcastBatchPush<T>),
+        Global(AggregateBatchPush<T>),
+        ScopeGlobal(ExchangeByScopePush<T>),
     }
 
     impl<T: Data> Push<MicroBatch<T>> for MicroBatchPush<T> {

@@ -48,13 +48,13 @@ pub trait OutputBuilder: AsAny {
 mod builder;
 mod output;
 mod tee;
-use crate::communication::decorator::{ScopeStreamPush};
+use crate::communication::decorator::ScopeStreamPush;
 use crate::communication::output::output::OutputHandle;
+use crate::data::MicroBatch;
 use crate::progress::EndSignal;
 pub(crate) use builder::OutputBuilderImpl;
 pub use output::OutputSession;
 pub(crate) use tee::ChannelPush;
-use crate::data::MicroBatch;
 
 pub struct RefWrapOutput<D: Data> {
     pub(crate) output: RefCell<OutputHandle<D>>,
@@ -85,7 +85,7 @@ impl<D: Data> RefWrapOutput<D> {
 
     pub fn new_session(&self, tag: &Tag) -> IOResult<OutputSession<D>> {
         let output = self.output.borrow_mut();
-        Ok(OutputSession::new(output, tag.clone()))
+        Ok(OutputSession::new(tag.clone(), output))
     }
 
     pub fn push_batch(&self, dataset: MicroBatch<D>) -> IOResult<()> {
@@ -99,7 +99,9 @@ impl<D: Data> RefWrapOutput<D> {
     pub fn push_into_iter<I: Iterator<Item = D> + Send + 'static>(
         &self, tag: &Tag, iter: I,
     ) -> IOResult<()> {
-        self.output.borrow_mut().push_into_iter(tag, iter)
+        self.output
+            .borrow_mut()
+            .push_into_iter(tag, iter)
     }
 }
 

@@ -54,8 +54,7 @@ fn main() {
         conf.reset_servers(ServerConf::All);
     }
 
-    let src =
-    if config.id_from_std {
+    let src = if config.id_from_std {
         let mut buf = String::new();
         let mut ids = vec![];
         loop {

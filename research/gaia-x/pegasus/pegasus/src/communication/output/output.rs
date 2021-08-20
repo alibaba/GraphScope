@@ -22,14 +22,14 @@ mod rob {
     use crate::graph::Port;
     use crate::{Data, Tag};
 
-    use crate::communication::decorator::{ScopeStreamPush};
+    use crate::communication::decorator::ScopeStreamPush;
+    use crate::communication::output::builder::OutputMeta;
     use crate::config::CANCEL_DESC;
     use crate::data::MicroBatch;
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use std::cell::RefMut;
     use std::collections::{HashSet, VecDeque};
-    use crate::communication::output::builder::OutputMeta;
 
     pub struct OutputHandle<D: Data> {
         pub port: Port,
@@ -226,7 +226,7 @@ mod rob {
     }
 
     impl<'a, D: Data> OutputSession<'a, D> {
-        pub(crate) fn new(output: RefMut<'a, OutputHandle<D>>, tag: Tag) -> Self {
+        pub(crate) fn new(tag: Tag, output: RefMut<'a, OutputHandle<D>>) -> Self {
             OutputSession { tag, output }
         }
 
@@ -261,7 +261,8 @@ mod rob {
 #[cfg(feature = "rob")]
 mod rob {
     use crate::communication::buffer::ScopeBufferPool;
-    use crate::communication::decorator::{ScopeStreamPush, BlockPush};
+    use crate::communication::decorator::{BlockPush, ScopeStreamPush};
+    use crate::communication::output::builder::OutputMeta;
     use crate::communication::output::tee::Tee;
     use crate::communication::IOResult;
     use crate::data::MicroBatch;
@@ -271,14 +272,14 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use pegasus_common::buffer::BufferReader;
+    use pegasus_common::buffer::ReadBuffer;
+    use std::cell::RefMut;
     use std::collections::{HashSet, VecDeque};
-    use crate::communication::output::builder::OutputMeta;
 
     enum BlockEntry<D: Data> {
         Single(D),
         LastSingle(D, EndSignal),
-        DynIter(Box<dyn Iterator<Item = D> + Send + 'static>),
+        DynIter(Option<D>, Box<dyn Iterator<Item = D> + Send + 'static>),
     }
 
     pub struct OutputHandle<D: Data> {
@@ -289,6 +290,7 @@ mod rob {
         buf_pool: ScopeBufferPool<D>,
         in_block: TidyTagMap<BlockEntry<D>>,
         blocks: VecDeque<Tag>,
+        seq_emit: TidyTagMap<u64>,
         is_closed: bool,
         skips: HashSet<Tag>,
     }
@@ -298,7 +300,8 @@ mod rob {
             let batch_capacity = meta.batch_capacity as usize;
             let scope_capacity = meta.scope_capacity as usize;
             let scope_level = meta.scope_level;
-            let buf_pool = ScopeBufferPool::new(meta.batch_size, batch_capacity, scope_capacity, scope_level);
+            let buf_pool =
+                ScopeBufferPool::new(meta.batch_size, batch_capacity, scope_capacity, scope_level);
             let src = crate::worker_id::get_current_worker().index;
             OutputHandle {
                 port,
@@ -308,28 +311,40 @@ mod rob {
                 buf_pool,
                 in_block: TidyTagMap::new(scope_level),
                 blocks: VecDeque::new(),
+                seq_emit: TidyTagMap::new(scope_level),
                 is_closed: false,
                 skips: HashSet::new(),
             }
         }
 
-        pub fn new_session(&mut self, tag: &Tag) -> OutputSession<D> {
-            self.buf_pool.pin(tag);
-            OutputSession { tag: tag.clone(), output: self }
-        }
-
-        pub fn push_into_iter<I: Iterator<Item = D> + Send + 'static> (
+        pub fn push_into_iter<I: Iterator<Item = D> + Send + 'static>(
             &mut self, tag: &Tag, mut iter: I,
         ) -> IOResult<()> {
-           if let Err(e) = self.push_iter(tag, &mut iter)  {
-               if e.is_would_block() {
-                   self.blocks.push_back(tag.clone());
-                   self.in_block.insert(tag.clone(), BlockEntry::DynIter(Box::new(iter)));
-               }
-               Err(e)
-           } else {
-               Ok(())
-           }
+            if let Err(e) = self.push_iter(tag, &mut iter) {
+                if e.is_would_block() {
+                    if let Some(b) = self.in_block.remove(tag) {
+                        match b {
+                            BlockEntry::Single(x) => {
+                                self.in_block
+                                    .insert(tag.clone(), BlockEntry::DynIter(Some(x), Box::new(iter)));
+                            }
+                            BlockEntry::LastSingle(_, _) => {
+                                unreachable!("unexpected blocking: LastSingle;");
+                            }
+                            BlockEntry::DynIter(_, _) => {
+                                unreachable!("unexpected blocking: DynIter")
+                            }
+                        }
+                    } else {
+                        self.blocks.push_back(tag.clone());
+                        self.in_block
+                            .insert(tag.clone(), BlockEntry::DynIter(None, Box::new(iter)));
+                    }
+                }
+                Err(e)
+            } else {
+                Ok(())
+            }
         }
 
         pub fn push_batch(&mut self, batch: MicroBatch<D>) -> IOResult<()> {
@@ -337,8 +352,8 @@ mod rob {
         }
 
         pub fn push_batch_mut(&mut self, batch: &mut MicroBatch<D>) -> IOResult<()> {
-            let mut new_batch = MicroBatch::new(batch.tag.clone(),  self.src,  batch.take_data());
-            new_batch.seq = batch.seq;
+            let mut new_batch = MicroBatch::new(batch.tag.clone(), self.src, batch.take_data());
+            new_batch.set_seq(batch.get_seq());
             self.push_batch(new_batch)
         }
 
@@ -360,8 +375,33 @@ mod rob {
                                     BlockEntry::LastSingle(x, e) => {
                                         self.push_last(x, e)?;
                                     }
-                                    BlockEntry::DynIter(iter) => {
-                                        self.push_box_iter(iter)?;
+                                    BlockEntry::DynIter(head, iter) => {
+                                        if let Some(x) = head {
+                                            if let Err(e) = self.push(&tag, x) {
+                                                if e.is_would_block() {
+                                                    if let Some(blocked) = self.in_block.remove(&tag) {
+                                                        match blocked {
+                                                            BlockEntry::Single(x) => {
+                                                                self.in_block.insert(
+                                                                    tag.clone(),
+                                                                    BlockEntry::DynIter(Some(x), iter),
+                                                                );
+                                                            }
+                                                            _ => unreachable!("unexpected blocking;"),
+                                                        }
+                                                    } else {
+                                                        self.in_block.insert(
+                                                            tag.clone(),
+                                                            BlockEntry::DynIter(None, iter),
+                                                        );
+                                                        self.blocks.push_back(tag.clone());
+                                                    }
+                                                }
+                                                return Err(e);
+                                            }
+                                        }
+
+                                        self.push_box_iter(&tag, iter)?;
                                     }
                                 }
                                 trace_worker!("data in scope {:?} unblocked", tag);
@@ -382,12 +422,10 @@ mod rob {
             &self.blocks
         }
 
-
         #[inline]
         pub(crate) fn skip(&mut self, tag: &Tag) {
             todo!()
         }
-
 
         #[inline]
         fn is_skipped(&self, tag: &Tag) -> bool {
@@ -395,11 +433,24 @@ mod rob {
         }
 
         #[inline]
-        fn push_box_iter(&mut self, mut iter: Box<dyn Iterator<Item = D> + Send + 'static>) -> IOResult<()> {
-            if let Err(e) = self.push_iter(tag, &mut iter)  {
+        fn push_box_iter(
+            &mut self, tag: &Tag, mut iter: Box<dyn Iterator<Item = D> + Send + 'static>,
+        ) -> IOResult<()> {
+            if let Err(e) = self.push_iter(tag, &mut iter) {
                 if e.is_would_block() {
-                    self.blocks.push_back(tag.clone());
-                    self.in_block.insert(tag.clone(), BlockEntry::DynIter(iter));
+                    if let Some(e) = self.in_block.remove(&tag) {
+                        match e {
+                            BlockEntry::Single(x) => {
+                                self.in_block
+                                    .insert(tag.clone(), BlockEntry::DynIter(Some(x), iter));
+                            }
+                            _ => unreachable!("unexpected blocking"),
+                        }
+                    } else {
+                        self.blocks.push_back(tag.clone());
+                        self.in_block
+                            .insert(tag.clone(), BlockEntry::DynIter(None, iter));
+                    }
                 }
                 Err(e)
             } else {
@@ -408,7 +459,11 @@ mod rob {
         }
 
         #[inline]
-        fn flush_batch(&mut self, batch: MicroBatch<D>) -> IOResult<()> {
+        fn flush_batch(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
+            let seq = self.seq_emit.get_mut_or_insert(&batch.tag);
+            batch.set_seq(*seq);
+            *seq += 1;
+
             match self.tee.push(batch) {
                 Err(e) => {
                     if e.is_would_block() {
@@ -423,10 +478,15 @@ mod rob {
 
     pub struct OutputSession<'a, D: Data> {
         pub tag: Tag,
-        output: &'a mut OutputHandle<D>,
+        output: RefMut<'a, OutputHandle<D>>,
     }
 
     impl<'a, D: Data> OutputSession<'a, D> {
+        pub(crate) fn new(tag: Tag, mut output: RefMut<'a, OutputHandle<D>>) -> Self {
+            output.buf_pool.pin(&tag);
+            OutputSession { tag, output }
+        }
+
         pub fn give(&mut self, msg: D) -> IOResult<()> {
             self.output.push(&self.tag, msg)
         }
@@ -437,8 +497,8 @@ mod rob {
         }
 
         pub fn give_iterator<I>(&mut self, iter: I) -> IOResult<()>
-            where
-                I: Iterator<Item = D> + Send + 'static,
+        where
+            I: Iterator<Item = D> + Send + 'static,
         {
             self.output.push_into_iter(&self.tag, iter)
         }
@@ -535,7 +595,7 @@ mod rob {
             let mut batch = if let Some(buf) = self.buf_pool.take_buf(&end.tag, true) {
                 MicroBatch::new(end.tag.clone(), self.src, buf.into_read_only())
             } else {
-                MicroBatch::new(end.tag.clone(), self.src, BufferReader::new())
+                MicroBatch::new(end.tag.clone(), self.src, ReadBuffer::new())
             };
             batch.set_end(end);
             self.flush_batch(batch)

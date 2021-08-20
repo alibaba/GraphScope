@@ -15,19 +15,19 @@
 //
 
 use crate::api::{Binary, CorrelatedSubTask, Unary};
+use crate::data::MicroBatch;
+use crate::errors::IOError;
+use crate::progress::{EndSignal, Weight};
 use crate::stream::{SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data, Tag};
-use crate::progress::{EndSignal, Weight};
-use crate::data::MicroBatch;
-use crate::errors::IOError;
 use pegasus_common::buffer::{BufferPool, MemBufAlloc};
 
 impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
     fn apply<T, F>(self, func: F) -> Result<Stream<(D, T)>, BuildJobError>
-        where
-            T: Data,
-            F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>,
+    where
+        T: Data,
+        F: FnOnce(Stream<D>) -> Result<SingleItem<T>, BuildJobError>,
     {
         let entered = self.enter()?;
         let (main, to_sub) = entered.copied()?;
@@ -61,11 +61,14 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                                     output.push_batch(batch)?;
                                 } else {
                                     //
-                                    break
+                                    break;
                                 }
                             } else {
                                 let i = (*seq - worker) / offset - 1;
-                                trace_worker!("suspend fork new scope as capacity blocked, already forked {} scopes;", i);
+                                trace_worker!(
+                                    "suspend fork new scope as capacity blocked, already forked {} scopes;",
+                                    i
+                                );
                                 would_block!("no buffer available for new scope;")?
                             }
                         }
@@ -131,6 +134,6 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                 })
             }
         })?
-            .leave()
+        .leave()
     }
 }

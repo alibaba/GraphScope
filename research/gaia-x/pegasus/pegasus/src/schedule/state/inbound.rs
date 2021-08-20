@@ -133,7 +133,13 @@ impl InboundStreamState {
                 trace_worker!("in port {:?} get end of {:?}", self.port, e.tag);
                 self.notify.notify(e)?;
             } else {
-                trace_worker!("in port {:?} partial end of {:?}, expect {:?}, current {:?};", self.port, p.tag, p.expect_weight, p.current_weight);
+                trace_worker!(
+                    "in port {:?} partial end of {:?}, expect {:?}, current {:?};",
+                    self.port,
+                    p.tag,
+                    p.expect_weight,
+                    p.current_weight
+                );
                 self.notify_guards[idx].insert(tag, p);
             }
         } else {

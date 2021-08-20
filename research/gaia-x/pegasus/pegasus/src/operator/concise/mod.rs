@@ -23,6 +23,7 @@ use pegasus_common::io::{ReadExt, WriteExt};
 use crate::codec::{Decode, Encode};
 
 mod collect;
+mod correlate;
 mod count;
 mod dedup;
 mod filter;
@@ -34,7 +35,6 @@ mod map;
 mod merge;
 mod order;
 mod reduce;
-mod correlate;
 
 #[inline]
 fn never_clone<T>(raw: T) -> NeverClone<T> {

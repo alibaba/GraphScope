@@ -1,9 +1,9 @@
 use crate::codec::{Decode, ReadExt, WriteExt};
 use crate::Tag;
 use pegasus_common::codec::Encode;
+use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
-use std::cmp::Ordering;
 
 #[derive(Clone, Debug)]
 enum Mask {
@@ -15,19 +15,11 @@ enum Mask {
 impl PartialEq for Mask {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Mask::Single(a), Mask::Single(b)) => {
-                a == b
-            }
-            (Mask::Single(a), Mask::Partial(b)) => {
-                b.len() == 1 && b.contains(a)
-            }
-            (Mask::Single(a), Mask::All(b)) =>  *a == 0 && *b == 1,
-            (Mask::Partial(a), Mask::Single(b)) => {
-                a.len() == 1 && a.contains(b)
-            },
-            (Mask::Partial(a), Mask::Partial(b)) => {
-                a == b
-            },
+            (Mask::Single(a), Mask::Single(b)) => a == b,
+            (Mask::Single(a), Mask::Partial(b)) => b.len() == 1 && b.contains(a),
+            (Mask::Single(a), Mask::All(b)) => *a == 0 && *b == 1,
+            (Mask::Partial(a), Mask::Single(b)) => a.len() == 1 && a.contains(b),
+            (Mask::Partial(a), Mask::Partial(b)) => a == b,
             (Mask::Partial(a), Mask::All(b)) => {
                 if a.len() as u32 == *b {
                     for i in 0..*b {
@@ -39,20 +31,20 @@ impl PartialEq for Mask {
                 } else {
                     false
                 }
-            },
+            }
             (Mask::All(a), Mask::Single(b)) => *a == 1 && *b == 0,
             (Mask::All(a), Mask::Partial(b)) => {
-               if b.len() == *a as usize {
-                   for i in 0..*a {
-                       if !b.contains(&i) {
-                           return false;
-                       }
-                   }
-                   true
-               } else {
-                   false
-               }
-            },
+                if b.len() == *a as usize {
+                    for i in 0..*a {
+                        if !b.contains(&i) {
+                            return false;
+                        }
+                    }
+                    true
+                } else {
+                    false
+                }
+            }
             (Mask::All(a), Mask::All(b)) => *a == *b,
         }
     }
@@ -78,7 +70,7 @@ impl PartialOrd for Mask {
                 } else {
                     None
                 }
-            },
+            }
             (Mask::Single(_), Mask::All(_)) => Some(Ordering::Less),
             (Mask::Partial(a), Mask::Single(b)) => {
                 if a.contains(b) {
@@ -90,7 +82,7 @@ impl PartialOrd for Mask {
                 } else {
                     None
                 }
-            },
+            }
             (Mask::Partial(a), Mask::Partial(b)) => {
                 if a == b {
                     return Some(Ordering::Equal);
@@ -103,7 +95,7 @@ impl PartialOrd for Mask {
                 } else {
                     None
                 }
-            },
+            }
             (Mask::Partial(a), Mask::All(b)) => {
                 if a.len() as u32 == *b {
                     for i in 0..*b {
@@ -117,7 +109,7 @@ impl PartialOrd for Mask {
                 } else {
                     None
                 }
-            },
+            }
             (Mask::All(_), Mask::Single(_)) => Some(Ordering::Greater),
             (Mask::All(a), Mask::Partial(b)) => {
                 if *a == b.len() as u32 {
@@ -130,7 +122,7 @@ impl PartialOrd for Mask {
                 } else {
                     None
                 }
-            },
+            }
             (Mask::All(a), Mask::All(b)) => {
                 if *a == *b {
                     Some(Ordering::Equal)
@@ -193,23 +185,23 @@ impl Weight {
         match (&mut self.mask, other.mask) {
             (Mask::Single(a), Mask::Single(b)) => {
                 *a = b;
-            },
+            }
             (Mask::Single(_), Mask::Partial(b)) => {
                 self.mask = Mask::Partial(b);
-            },
+            }
             (Mask::Single(_), Mask::All(b)) => {
                 self.mask = Mask::All(b);
-            },
+            }
             (Mask::Partial(a), Mask::Single(b)) => {
                 a.insert(b);
             }
             (Mask::Partial(a), Mask::Partial(b)) => {
                 a.extend(b);
-            },
+            }
             (Mask::Partial(_), Mask::All(b)) => {
                 self.mask = Mask::All(b);
-            },
-            _ => ()
+            }
+            _ => (),
         }
     }
 }
@@ -230,7 +222,7 @@ impl Encode for Weight {
             Mask::Single(x) => {
                 writer.write_u32(0)?;
                 writer.write_u32(*x)
-            },
+            }
             Mask::Partial(s) => {
                 writer.write_u32(1)?;
                 writer.write_u32(s.len() as u32)?;
@@ -348,7 +340,6 @@ mod test {
         assert_eq!(Mask::Single(0), Mask::All(1));
         assert_ne!(Mask::Single(1), Mask::All(1));
 
-
         let mut set = HashSet::new();
         set.insert(1);
         assert_eq!(Mask::Partial(set), Mask::Single(1));
@@ -366,7 +357,6 @@ mod test {
         set.insert(1);
         set.insert(2);
         assert_eq!(Mask::Partial(set), Mask::All(3));
-
 
         let mut set1 = HashSet::new();
         set1.insert(0);
@@ -427,6 +417,5 @@ mod test {
         set2.insert(2);
 
         assert!(!(Mask::Partial(set1) <= Mask::Partial(set2)));
-
     }
 }

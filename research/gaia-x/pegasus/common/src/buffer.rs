@@ -85,6 +85,10 @@ mod rob {
             self.tail.checked_sub(self.head).unwrap_or(0)
         }
 
+        pub fn is_empty(&self) -> bool {
+            self.len() == 0
+        }
+
         pub fn capacity(&self) -> usize {
             self.inner.capacity()
         }
@@ -175,37 +179,37 @@ mod rob {
     }
 
     #[derive(Clone)]
-    pub enum BufferReader<D> {
+    pub enum ReadBuffer<D> {
         Exclusive(Buffer<D>),
         Shared(SharedReadBuffer<D>),
     }
 
-    impl<D: Clone> BufferReader<D> {
+    impl<D: Clone> ReadBuffer<D> {
         pub fn pop(&mut self) -> Option<D> {
             match self {
-                BufferReader::Exclusive(b) => b.pop(),
-                BufferReader::Shared(b) => b.pop(),
+                ReadBuffer::Exclusive(b) => b.pop(),
+                ReadBuffer::Shared(b) => b.pop(),
             }
         }
     }
 
-    impl<D> BufferReader<D> {
+    impl<D> ReadBuffer<D> {
         pub fn new() -> Self {
             let buf = Buffer::new();
-            BufferReader::Exclusive(buf)
+            ReadBuffer::Exclusive(buf)
         }
 
         pub fn get(&self, offset: usize) -> Option<&D> {
             match self {
-                BufferReader::Exclusive(b) => b.get(offset),
-                BufferReader::Shared(b) => b.get(offset),
+                ReadBuffer::Exclusive(b) => b.get(offset),
+                ReadBuffer::Shared(b) => b.get(offset),
             }
         }
 
         pub fn len(&self) -> usize {
             match self {
-                BufferReader::Exclusive(b) => b.len(),
-                BufferReader::Shared(b) => b.len(),
+                ReadBuffer::Exclusive(b) => b.len(),
+                ReadBuffer::Shared(b) => b.len(),
             }
         }
 
@@ -213,34 +217,34 @@ mod rob {
             BufferIter { inner: self, cursor: 0 }
         }
 
-        pub fn make_share(&mut self) -> BufferReader<D> {
+        pub fn make_share(&mut self) -> ReadBuffer<D> {
             let shared = match self {
-                BufferReader::Exclusive(b) => {
+                ReadBuffer::Exclusive(b) => {
                     let buf = std::mem::replace(b, Buffer::new());
                     SharedReadBuffer::new(buf)
                 }
-                BufferReader::Shared(b) => b.clone(),
+                ReadBuffer::Shared(b) => b.clone(),
             };
 
             match self {
-                BufferReader::Exclusive(_) => {
+                ReadBuffer::Exclusive(_) => {
                     let clone = shared.clone();
-                    *self = BufferReader::Shared(shared);
-                    BufferReader::Shared(clone)
+                    *self = ReadBuffer::Shared(shared);
+                    ReadBuffer::Shared(clone)
                 }
-                BufferReader::Shared(_) => BufferReader::Shared(shared),
+                ReadBuffer::Shared(_) => ReadBuffer::Shared(shared),
             }
         }
     }
 
     impl<D> Buffer<D> {
-        pub fn into_read_only(self) -> BufferReader<D> {
-            BufferReader::Exclusive(self)
+        pub fn into_read_only(self) -> ReadBuffer<D> {
+            ReadBuffer::Exclusive(self)
         }
     }
 
     pub struct BufferIter<'a, D> {
-        inner: &'a BufferReader<D>,
+        inner: &'a ReadBuffer<D>,
         cursor: usize,
     }
 
@@ -254,7 +258,7 @@ mod rob {
         }
     }
 
-    impl<D: Clone> Iterator for BufferReader<D> {
+    impl<D: Clone> Iterator for ReadBuffer<D> {
         type Item = D;
 
         fn next(&mut self) -> Option<Self::Item> {

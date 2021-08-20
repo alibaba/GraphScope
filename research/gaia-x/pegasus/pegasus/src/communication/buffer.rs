@@ -7,7 +7,7 @@ mod rob {}
 mod rob {
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use pegasus_common::buffer::{Buffer, BufferFactory, BufferPool, BufferReader, MemBufAlloc};
+    use pegasus_common::buffer::{Buffer, BufferFactory, BufferPool, MemBufAlloc, ReadBuffer};
     use std::ops::{Deref, DerefMut};
     use std::ptr::NonNull;
 
@@ -59,7 +59,7 @@ mod rob {
             BufSlot { batch_size, end: false, buf, pool }
         }
 
-        pub(crate) fn push(&mut self, entry: D) -> Result<Option<BufferReader<D>>, WouldBlock<D>> {
+        pub(crate) fn push(&mut self, entry: D) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
             if self.batch_size == 1 {
                 return if let Some(mut b) = self.pool.fetch() {
                     b.push(entry);
@@ -171,7 +171,7 @@ mod rob {
             }
         }
 
-        pub fn push(&mut self, tag: &Tag, item: D) -> Result<Option<BufferReader<D>>, WouldBlock<D>> {
+        pub fn push(&mut self, tag: &Tag, item: D) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
             if let Some((p, buf)) = self.pinned.as_mut() {
                 if p == tag {
                     return buf.push(item);
@@ -187,7 +187,7 @@ mod rob {
 
         pub fn push_iter(
             &mut self, tag: &Tag, iter: &mut impl Iterator<Item = D>,
-        ) -> Result<Option<BufferReader<D>>, WouldBlock<D>> {
+        ) -> Result<Option<ReadBuffer<D>>, WouldBlock<D>> {
             if let Some((p, buf)) = self.pinned.as_mut() {
                 if p == tag {
                     while let Some(next) = iter.next() {
