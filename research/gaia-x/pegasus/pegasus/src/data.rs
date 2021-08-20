@@ -15,7 +15,6 @@
 
 use crate::progress::EndSignal;
 use crate::tag::Tag;
-use pegasus_common::buffer::{Batch, BatchPool, BufferFactory};
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
 use std::fmt::Debug;
@@ -23,10 +22,16 @@ use std::fmt::Debug;
 pub trait Data: Clone + Send + Sync + Debug + Encode + Decode + 'static {}
 impl<T: Clone + Send + Sync + Debug + Encode + Decode + 'static> Data for T {}
 
+pub enum MarkedData<D> {
+    Data(D),
+    Marked(Option<D>, EndSignal),
+}
+
 pub use rob::*;
 
 #[cfg(not(feature = "rob"))]
 mod rob {
+    use pegasus_common::buffer::{Batch, BatchPool, BufferFactory};
     use super::*;
 
     pub struct MicroBatch<T> {
@@ -142,10 +147,7 @@ mod rob {
         }
     }
 
-    pub enum MarkedData<D> {
-        Data(D),
-        Marked(Option<D>, EndSignal),
-    }
+
 
     impl<D> Debug for MicroBatch<D> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -302,20 +304,22 @@ mod rob {
         /// sequence of the data batch;
         seq: u64,
         /// if this is the last batch of a scope;
-        end: Option<EndSignal>,
+        pub(crate) end: Option<EndSignal>,
         /// read only data details;
         data: ReadBuffer<T>,
+
+        is_discarded: bool,
     }
 
     #[allow(dead_code)]
     impl<D> MicroBatch<D> {
         #[inline]
         pub fn empty() -> Self {
-            MicroBatch { tag: Tag::Root, seq: 0, src: 0, end: None, data: ReadBuffer::new() }
+            MicroBatch { tag: Tag::Root, seq: 0, src: 0, end: None, data: ReadBuffer::new(), is_discarded: false }
         }
 
         pub fn new(tag: Tag, src: u32, data: ReadBuffer<D>) -> Self {
-            MicroBatch { tag, src, seq: 0, end: None, data }
+            MicroBatch { tag, src, seq: 0, end: None, data, is_discarded: false }
         }
 
         pub fn set_end(&mut self, end: EndSignal) {
@@ -356,6 +360,10 @@ mod rob {
             std::mem::replace(&mut self.data, ReadBuffer::new())
         }
 
+        pub fn clear(&mut self) {
+            self.take_data();
+        }
+
         pub fn share(&mut self) -> Self {
             let shared = self.data.make_share();
             MicroBatch {
@@ -364,12 +372,26 @@ mod rob {
                 seq: self.seq,
                 end: self.end.clone(),
                 data: shared,
+                is_discarded: false,
             }
         }
 
         #[inline]
         pub fn tag(&self) -> Tag {
             self.tag.clone()
+        }
+
+        #[inline]
+        pub fn drain_to_end(&mut self) -> impl Iterator<Item = MarkedData<D>> + '_ {
+            std::iter::empty()
+        }
+
+        pub fn discard(&mut self) {
+            self.is_discarded = true;
+        }
+
+        pub fn is_discarded(&self) -> bool {
+            self.is_discarded
         }
     }
 
@@ -395,11 +417,11 @@ mod rob {
         }
     }
 
-    // impl<D> std::ops::DerefMut for MicroBatch<D> {
-    //     fn deref_mut(&mut self) -> &mut Self::Target {
-    //         &mut self.data
-    //     }
-    // }
+    impl<D> std::ops::DerefMut for MicroBatch<D> {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.data
+        }
+    }
 
     impl<D: Data> Clone for MicroBatch<D> {
         fn clone(&self) -> Self {
@@ -409,6 +431,7 @@ mod rob {
                 src: self.src,
                 end: self.end.clone(),
                 data: self.data.clone(),
+                is_discarded: false,
             }
         }
     }

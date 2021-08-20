@@ -36,7 +36,7 @@ mod rob {
     use super::*;
     use crate::api::function::RouteFunction;
     use crate::channel_id::ChannelInfo;
-    use crate::communication::decorator::buffered::BufferedPush;
+    use crate::communication::buffer::BufferedPush;
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
     use crate::data::MicroBatch;
@@ -340,7 +340,7 @@ mod rob {
     use crate::progress::{EndSignal, Weight};
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use pegasus_common::buffer::{Buffer, BufferPool, MemBufAlloc, ReadBuffer};
+    use pegasus_common::buffer::{ReadBuffer};
     use std::collections::VecDeque;
     use std::sync::{atomic::AtomicBool, atomic::Ordering, Arc};
 
@@ -387,13 +387,13 @@ mod rob {
             buffers: Vec<ScopeBufferPool<D>>, pushes: Vec<EventEmitPush<D>>,
         ) -> Self {
             let src = crate::worker_id::get_current_worker().index;
-
+            let len = pushes.len();
             ExchangeMicroBatchPush {
                 src,
                 port: info.source_port,
                 buffers,
                 pushes,
-                route: Exchange::new(pushes.len(), router),
+                route: Exchange::new(len, router),
                 cyclic,
                 blocks: TidyTagMap::new(info.scope_level),
             }
@@ -408,6 +408,18 @@ mod rob {
                 if let Some(last) = self.buffers[index].take_buf(tag, true) {
                     if !last.is_empty() {
                         self.push_to(index, tag.clone(), last.into_read_only())?;
+                    }
+                }
+            }
+            Ok(())
+        }
+
+        fn flush_inner(&mut self, buffers: &mut Vec<ScopeBufferPool<D>>) -> IOResult<()> {
+            for i in 0..self.pushes.len() {
+                let iter = buffers[i].buffers();
+                for (tag, buf) in iter {
+                    if buf.len() > 0 {
+                        self.push_to(i, tag, buf.into_read_only())?;
                     }
                 }
             }
@@ -445,6 +457,7 @@ mod rob {
 
         fn push_inner(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
             let mut has_block = false;
+            let tag = batch.tag();
             for item in batch.drain() {
                 let target = self.route.route(&item)? as usize;
                 match self.buffers[target].push(&tag, item) {
@@ -535,7 +548,7 @@ mod rob {
                 }
 
                 self.pushes[target].push(batch)
-            } else if len > 1 {
+            } else {
                 let tag = batch.tag.clone();
                 for p in self.buffers.iter_mut() {
                     p.pin(&tag);
@@ -545,14 +558,10 @@ mod rob {
         }
 
         fn flush(&mut self) -> Result<(), IOError> {
-            for i in 0..self.pushes.len() {
-                for (tag, buf) in self.buffers[i].buffers() {
-                    if buf.len() > 0 {
-                        self.push_to(i, tag, buf.into_read_only())?;
-                    }
-                }
-            }
-            Ok(())
+            let mut buffers = std::mem::replace(&mut self.buffers, vec![]);
+            let result = self.flush_inner(&mut buffers);
+            self.buffers = buffers;
+            result
         }
 
         fn close(&mut self) -> Result<(), IOError> {
@@ -590,7 +599,7 @@ mod rob {
                             }
                         }
                         BlockEntry::Batch(b) => {
-                            if let Err(err) = self.push_inner(batch) {
+                            if let Err(err) = self.push_inner(b) {
                                 return if err.is_would_block() {
                                     if !blocks.is_empty() {
                                         let b = self

@@ -20,7 +20,6 @@ use crate::{Data, Tag};
 
 pub mod aggregate;
 pub mod broadcast;
-pub mod buffered;
 pub mod evented;
 pub mod exchange;
 
@@ -65,9 +64,9 @@ mod rob {
     use super::*;
 
     use crate::channel_id::ChannelInfo;
+    use crate::communication::buffer::BufferedPush;
     use crate::communication::decorator::aggregate::AggregateBatchPush;
     use crate::communication::decorator::broadcast::BroadcastBatchPush;
-    use crate::communication::decorator::buffered::BufferedPush;
     use crate::communication::decorator::exchange::{ExchangeByScopePush, ExchangeMicroBatchPush};
     use crate::communication::IOResult;
     use crate::data::{Data, MicroBatch};

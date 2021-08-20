@@ -21,7 +21,7 @@ use crate::progress::{EndSignal, Weight};
 use crate::stream::{SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data, Tag};
-use pegasus_common::buffer::{BufferPool, MemBufAlloc};
+use pegasus_common::buffer::{BufferPool, MemBufAlloc, Buffer};
 
 impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
     fn apply<T, F>(self, func: F) -> Result<Stream<(D, T)>, BuildJobError>
@@ -55,7 +55,7 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
                                     *seq += offset;
                                     let i = (cur - worker) / offset;
                                     trace_worker!("fork {}th scope {:?} from {:?};", i, tag, p);
-                                    let mut batch = MicroBatch::new(tag.clone(), worker, 0, buf);
+                                    let mut batch = new_batch(tag.clone(), worker, buf);
                                     let end = EndSignal::new(tag, Weight::single(worker));
                                     batch.set_end(end);
                                     output.push_batch(batch)?;
@@ -137,3 +137,15 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
         .leave()
     }
 }
+
+#[cfg(not(feature = "rob"))]
+fn new_batch<D>(tag: Tag, worker:  u32, buf:  Buffer<D>) -> MicroBatch<D> {
+    MicroBatch::new(tag.clone(), worker, 0, buf)
+}
+
+#[cfg(feature = "rob")]
+fn new_batch<D>(tag: Tag, worker:  u32, buf:  Buffer<D>) -> MicroBatch<D> {
+    MicroBatch::new(tag.clone(), worker, buf.into_read_only())
+}
+
+

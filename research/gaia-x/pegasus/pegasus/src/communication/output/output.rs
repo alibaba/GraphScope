@@ -304,7 +304,7 @@ mod rob {
                 ScopeBufferPool::new(meta.batch_size, batch_capacity, scope_capacity, scope_level);
             let src = crate::worker_id::get_current_worker().index;
             OutputHandle {
-                port,
+                port: meta.port,
                 scope_level,
                 src,
                 tee: output,
@@ -463,16 +463,24 @@ mod rob {
             let seq = self.seq_emit.get_mut_or_insert(&batch.tag);
             batch.set_seq(*seq);
             *seq += 1;
-
+            let tag = batch.tag();
             match self.tee.push(batch) {
                 Err(e) => {
                     if e.is_would_block() {
-                        self.blocks.push_back(tag.clone());
+                        self.blocks.push_back(tag);
                     }
                     Err(e)
                 }
                 _ => Ok(()),
             }
+        }
+
+        fn flush_inner(&mut self, buffers: &mut ScopeBufferPool<D>) -> IOResult<()> {
+            for (tag, buf) in buffers.buffers() {
+                let batch = MicroBatch::new(tag, self.src, buf.into_read_only());
+                self.flush_batch(batch)?;
+            }
+            self.tee.flush()
         }
     }
 
@@ -556,7 +564,7 @@ mod rob {
                     if let Some(item) = e.0 {
                         self.blocks.push_back(end.tag.clone());
                         self.in_block
-                            .insert(tag.clone(), BlockEntry::LastSingle(item, end));
+                            .insert(end.tag.clone(), BlockEntry::LastSingle(item, end));
                     } else {
                         unreachable!("data may lost;")
                     }
@@ -602,11 +610,10 @@ mod rob {
         }
 
         fn flush(&mut self) -> IOResult<()> {
-            for (tag, buf) in self.buf_pool.buffers() {
-                let batch = MicroBatch::new(tag, self.src, buf.into_read_only());
-                self.flush_batch(batch)?;
-            }
-            self.tee.flush()
+            let mut buffers = std::mem::replace(&mut self.buf_pool, Default::default());
+            let result = self.flush_inner(&mut buffers);
+            self.buf_pool = buffers;
+            result
         }
 
         fn close(&mut self) -> IOResult<()> {

@@ -212,10 +212,10 @@ mod rob {
     use crate::data::MicroBatch;
     use crate::data_plane::{GeneralPush, Push};
     use crate::event::emitter::EventEmitter;
+    use crate::event::{Event, Signal};
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use std::sync::{atomic::AtomicBool, Arc};
 
     #[allow(dead_code)]
     pub struct EventEmitPush<T: Data> {
@@ -224,7 +224,7 @@ mod rob {
         pub target_worker: u32,
         inner: GeneralPush<MicroBatch<T>>,
         event_emitter: EventEmitter,
-        push_counts: TidyTagMap<(usize)>,
+        push_counts: TidyTagMap<usize>,
     }
 
     #[allow(dead_code)]
@@ -249,21 +249,58 @@ mod rob {
         }
 
         pub fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
-            todo!()
+            if end.tag.len() == self.push_counts.scope_level as usize {
+                let size = self.push_counts.remove(&end.tag).unwrap_or(0);
+                trace_worker!(
+                    "output[{:?}]:  pushed {} records of {:?} to {} totally, notify end;",
+                    self.ch_info.source_port,
+                    size,
+                    end.tag,
+                    self.target_worker
+                );
+            } else {
+                trace_worker!("output[{:?}] notify end of {:?}", self.ch_info.source_port, end.tag);
+            }
+
+            trace_worker!(
+                "send end event of {:?} on to [worker {}]: port: {:?} ;",
+                end.tag,
+                self.target_worker,
+                self.ch_info.target_port
+            );
+            let event = Event::new(self.source_worker, self.ch_info.target_port, Signal::EndSignal(end));
+            self.event_emitter
+                .send(self.target_worker, event)
         }
     }
 
     impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
-        fn push(&mut self, _msg: MicroBatch<D>) -> IOResult<()> {
-            todo!()
+        fn push(&mut self, batch: MicroBatch<D>) -> IOResult<()> {
+            let len = batch.len();
+            assert!(len > 0, "push batch size = 0;");
+            if batch.is_last() {
+                let mut cnt = self.push_counts.remove(&batch.tag).unwrap_or(0);
+                cnt += len;
+                trace_worker!(
+                    "output[{:?}] pushed {} records of {:?} to {} totally, notify end;",
+                    self.ch_info.source_port,
+                    cnt,
+                    batch.tag,
+                    self.target_worker
+                );
+            } else {
+                let cnt = self.push_counts.get_mut_or_insert(&batch.tag);
+                *cnt += len;
+            }
+            self.inner.push(batch)
         }
 
         fn flush(&mut self) -> IOResult<()> {
-            todo!()
+            self.inner.flush()
         }
 
         fn close(&mut self) -> IOResult<()> {
-            todo!()
+            self.inner.close()
         }
     }
 }

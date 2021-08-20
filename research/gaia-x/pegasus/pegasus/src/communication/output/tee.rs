@@ -563,6 +563,7 @@ mod rob {
     use crate::data_plane::Push;
     use crate::errors::IOError;
     use crate::{Data, Tag};
+    use crate::graph::Port;
 
     #[allow(dead_code)]
     pub(crate) struct ChannelPush<D: Data> {
@@ -603,6 +604,19 @@ mod rob {
     pub(crate) struct Tee<D: Data> {
         main_push: ChannelPush<D>,
         other_pushes: Vec<ChannelPush<D>>,
+    }
+
+    impl<D: Data> Tee<D> {
+        pub fn new(_port: Port, scope_level: u32, push: ChannelPush<D>) -> Self {
+            Tee {
+                main_push: push,
+                other_pushes: Vec::new(),
+            }
+        }
+
+        pub fn add_push(&mut self, push: ChannelPush<D>) {
+            self.other_pushes.push(push);
+        }
     }
 
     impl<D: Data> Push<MicroBatch<D>> for Tee<D> {

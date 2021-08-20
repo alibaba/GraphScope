@@ -15,23 +15,11 @@
 
 use crate::api::function::RouteFunction;
 use crate::api::scope::{MergedScopeDelta, ScopeDelta};
-use crate::channel_id::{ChannelId, ChannelInfo};
-use crate::communication::decorator::aggregate::AggregateBatchPush;
-use crate::communication::decorator::broadcast::BroadcastBatchPush;
-use crate::communication::decorator::buffered::BufferedPush;
-use crate::communication::decorator::exchange::ExchangeByScopePush;
-use crate::communication::decorator::{
-    evented::EventEmitPush, exchange::ExchangeMicroBatchPush, LocalMiniBatchPush, MicroBatchPush,
-};
 use crate::communication::output::{ChannelPush, OutputBuilderImpl};
-use crate::data::{Data, MicroBatch};
+use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPull, GeneralPush};
-use crate::dataflow::DataflowBuilder;
-use crate::errors::BuildJobError;
 use crate::graph::Port;
-use pegasus_common::buffer::Batch;
-use std::sync::atomic::AtomicBool;
-use std::sync::Arc;
+use crate::Data;
 
 pub enum ChannelKind<T: Data> {
     Pipeline,
@@ -162,6 +150,23 @@ impl<T: Data> Channel<T> {
 #[cfg(not(feature = "rob"))]
 mod rob {
     use super::*;
+    use crate::channel_id::{ChannelId, ChannelInfo};
+    use crate::communication::buffer::BufferedPush;
+    use crate::communication::decorator::aggregate::AggregateBatchPush;
+    use crate::communication::decorator::broadcast::BroadcastBatchPush;
+    use crate::communication::decorator::exchange::ExchangeByScopePush;
+    use crate::communication::decorator::{
+        evented::EventEmitPush, exchange::ExchangeMicroBatchPush, LocalMiniBatchPush, MicroBatchPush,
+    };
+    use crate::communication::output::ChannelPush;
+    use crate::data::{Data, MicroBatch};
+    use crate::data_plane::{GeneralPull, GeneralPush};
+    use crate::dataflow::DataflowBuilder;
+    use crate::errors::BuildJobError;
+    use crate::graph::Port;
+    use pegasus_common::buffer::Batch;
+    use std::sync::atomic::AtomicBool;
+    use std::sync::Arc;
 
     impl<T: Data> Channel<T> {
         fn build_pipeline(self, target: Port, id: ChannelId) -> MaterializedChannel<T> {
@@ -294,7 +299,16 @@ mod rob {
 mod rob {
     use super::*;
     use crate::communication::buffer::ScopeBufferPool;
-    use crate::communication::decorator::LocalMicroBatchPush;
+    use crate::communication::decorator::{LocalMicroBatchPush, MicroBatchPush};
+    use crate::channel_id::{ChannelId, ChannelInfo};
+    use crate::dataflow::DataflowBuilder;
+    use crate::communication::decorator::evented::EventEmitPush;
+    use crate::BuildJobError;
+    use std::sync::atomic::AtomicBool;
+    use std::sync::Arc;
+    use crate::communication::decorator::exchange::{ExchangeMicroBatchPush, ExchangeByScopePush};
+    use crate::communication::decorator::broadcast::BroadcastBatchPush;
+    use crate::communication::decorator::aggregate::AggregateBatchPush;
 
     impl<T: Data> Channel<T> {
         fn build_pipeline(self, target: Port, id: ChannelId) -> MaterializedChannel<T> {
@@ -320,7 +334,6 @@ mod rob {
             let mut pushes = Vec::with_capacity(raw.len());
             let source = dfb.worker_id.index;
             for (idx, p) in raw.into_iter().enumerate() {
-                let has_cycles = cyclic.clone();
                 let push = EventEmitPush::new(ch_info, source, idx as u32, p, dfb.event_emitter.clone());
                 pushes.push(push);
             }
@@ -373,7 +386,7 @@ mod rob {
                     let push = ChannelPush::new(info, self.scope_delta, MicroBatchPush::Broadcast(push));
                     Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
                 }
-                ChannelKind::Aggregate(x) => {
+                ChannelKind::Aggregate(worker) => {
                     let (mut ch_info, pushes, pull, notify) =
                         self.build_remote(scope_level, target, id, dfb)?;
                     ch_info.target_peers = 1;
