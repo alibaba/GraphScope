@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
@@ -26,108 +24,110 @@ from gremlin_python.driver.driver_remote_connection import DriverRemoteConnectio
 from gremlin_python.process.anonymous_traversal import traversal
 
 from graphscope.framework.graph_schema import GraphSchema
-from graphscope.framework.record import VertexRecordKey
 from graphscope.framework.record import EdgeRecordKey
+from graphscope.framework.record import VertexRecordKey
+from graphscope.framework.record import to_write_requests_pb
 from graphscope.proto import ddl_service_pb2
+from graphscope.proto import ddl_service_pb2_grpc
 from graphscope.proto import write_service_pb2
 from graphscope.proto import write_service_pb2_grpc
-from graphscope.proto import ddl_service_pb2_grpc
 
-
-def to_vertex_record_key_pb(vertex_record_key: VertexRecordKey):
-  pb = write_service_pb2.VertexRecordKeyPb()
-  pb.label = vertex_record_key.label
-  for key, value in vertex_record_key.primary_key.items():
-    pb.pk_properties[key] = str(value)
-  return pb
-
-def to_edge_record_key_pb(edge_record_key: EdgeRecordKey):
-  pb = write_service_pb2.EdgeRecordKeyPb()
-  pb.label = edge_record_key.label
-  pb.src_vertex_key.CopyFrom(to_vertex_record_key_pb(edge_record_key.src_vertex_key))
-  pb.dst_vertex_key.CopyFrom(to_vertex_record_key_pb(edge_record_key.dst_vertex_key))
-  if edge_record_key.eid is not None:
-    pb.inner_id = edge_record_key.eid
-  return pb
-
-def to_data_record_pb(kind, key, properties):
-  pb = write_service_pb2.DataRecordPb()
-  if kind == "VERTEX":
-    pb.vertex_record_key.CopyFrom(to_vertex_record_key_pb(key))
-  elif kind == "EDGE":
-    pb.edge_record_key.CopyFrom(to_edge_record_key_pb(key))
-  else:
-    raise TypeError(f"Not supported kind: {kind}")
-  for key, value in properties.items():
-    pb.properties[key] = str(value)
-  return pb
 
 class Graph:
-  def __init__(self, graph_def, conn=None) -> None:
-    self._schema = GraphSchema()
-    self._schema.from_graph_def(graph_def)
-    self._conn = conn
-    self._schema._conn = conn
-    
-  def schema(self):
-    return self._schema
-  
-  def insert_vertex(self, vertex: VertexRecordKey, properties: dict):
-    return self.insert_vertices([vertex, properties])
-  
-  def insert_vertices(self, vertices: list):
-    for vertex, properties in vertices:
-      pb = to_vertex_record_key_pb(vertex)
-    pass
-    
-  def update_vertex_properties(self, vertex: VertexRecordKey, properties: dict): 
-    pass
-    
-  def delete_vertex(self, vertex_pk: VertexRecordKey):
-    return self.delete_vertices([vertex_pk])
-  
-  def delete_vertices(self, vertex_pks: list):
-    pass
-    
-  def insert_edge(self,  edge: EdgeRecordKey, properties: dict):
-    return self.insert_edges([edge, properties])
-  
-  def insert_edges(self, edges=list):
-    pass
-    
-  def update_edge_properties(self, edge: EdgeRecordKey, properties: dict):
-    pass
-    
-  def delete_edge(self, edge: EdgeRecordKey):
-    return self.delete_edges([edge])
-  
-  def delete_edges(self, edges: list):
-    pass
+    def __init__(self, graph_def, conn=None) -> None:
+        self._schema = GraphSchema()
+        self._schema.from_graph_def(graph_def)
+        self._conn: Connection = conn
+        self._schema._conn = conn
+
+    def schema(self):
+        return self._schema
+
+    def insert_vertex(self, vertex: VertexRecordKey, properties: dict):
+        return self.insert_vertices([vertex, properties])
+
+    def insert_vertices(self, vertices: list):
+        request = to_write_requests_pb("VERTEX", vertices, write_service_pb2.INSERT)
+        return self._conn.batch_write(request)
+
+    def update_vertex_properties(self, vertex: VertexRecordKey, properties: dict):
+        request = to_write_requests_pb(
+            "VERTEX", [vertex, properties], write_service_pb2.UPDATE
+        )
+        return self._conn.batch_write(request)
+
+    def delete_vertex(self, vertex_pk: VertexRecordKey):
+        return self.delete_vertices([vertex_pk])
+
+    def delete_vertices(self, vertex_pks: list):
+        request = to_write_requests_pb(
+            "VERTEX", [[pk, {}] for pk in vertex_pks], write_service_pb2.DELETE
+        )
+        return self._conn.batch_write(request)
+
+    def insert_edge(self, edge: EdgeRecordKey, properties: dict):
+        return self.insert_edges([edge, properties])
+
+    def insert_edges(self, edges=list):
+        request = to_write_requests_pb("EDGE", edges, write_service_pb2.INSERT)
+        return self._conn.batch_write(request)
+
+    def update_edge_properties(self, edge: EdgeRecordKey, properties: dict):
+        request = to_write_requests_pb(
+            "EDGE", [edge, properties], write_service_pb2.UPDATE
+        )
+        return self._conn.batch_write(request)
+
+    def delete_edge(self, edge: EdgeRecordKey):
+        return self.delete_edges([edge])
+
+    def delete_edges(self, edge_pks: list):
+        request = to_write_requests_pb(
+            "EDGE", [[pk, {}] for pk in edge_pks], write_service_pb2.DELETE
+        )
+        return self._conn.batch_write(request)
 
 
 class Connection:
-  def __init__(self, addr, gremlin_endpoint=None) -> None:
-    self._addr = addr
-    self._gremlin_endpoint = gremlin_endpoint
-    channel = grpc.insecure_channel(addr)
-    self._stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
-    
-  def submit(self, requests):
-    return self._stub.batchSubmit(requests)
-  
-  def get_graph_def(self, requests):
-    return self._stub.getGraphDef(requests)
-  
-  def g(self):
-    request = ddl_service_pb2.GetGraphDefRequest()
-    graph_def = self.get_graph_def(request).graph_def
-    graph = Graph(graph_def, self)
-    return graph
-  
-  def gremlin(self):
-    graph_url = "ws://%s/gremlin" % self._gremlin_endpoint
-    return traversal().withRemote(DriverRemoteConnection(graph_url, "g"))
-  
-  
+    def __init__(self, addr, gremlin_endpoint=None) -> None:
+        self._addr = addr
+        self._gremlin_endpoint = gremlin_endpoint
+        channel = grpc.insecure_channel(addr)
+        self._ddl_service_stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
+        self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel)
+
+    def submit(self, requests):
+        return self._ddl_service_stub.batchSubmit(requests)
+
+    def get_graph_def(self, requests):
+        return self._ddl_service_stub.getGraphDef(requests)
+
+    def g(self):
+        request = ddl_service_pb2.GetGraphDefRequest()
+        graph_def = self.get_graph_def(request).graph_def
+        graph = Graph(graph_def, self)
+        return graph
+
+    def gremlin(self):
+        graph_url = "ws://%s/gremlin" % self._gremlin_endpoint
+        return traversal().withRemote(DriverRemoteConnection(graph_url, "g"))
+
+    def _get_client_id(self):
+        request = write_service_pb2.GetClientIdRequest()
+        response = self._write_service_stub.getClientId(request)
+        return response.client_id
+
+    def batch_write(self, request):
+        request.client_id = self._get_client_id()
+        response = self._write_service_stub.batchWrite(request)
+        return response.snapshot_id
+
+    def remote_flush(self, snapshot_id):
+        request = write_service_pb2.RemoteFlushRequest()
+        request.snapshot_id = snapshot_id
+        response = self._write_service_stub.remoteFlush(request)
+        return response.success
+
+
 def conn(addr, gremlin_endpoint=None):
-  return Connection(addr, gremlin_endpoint)
+    return Connection(addr, gremlin_endpoint)
