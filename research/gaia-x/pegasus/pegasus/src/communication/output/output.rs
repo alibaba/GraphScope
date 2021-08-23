@@ -17,19 +17,19 @@ pub use rob::{OutputHandle, OutputSession};
 
 #[cfg(not(feature = "rob"))]
 mod rob {
-    use crate::communication::output::tee::Tee;
-    use crate::errors::IOResult;
-    use crate::graph::Port;
-    use crate::{Data, Tag};
+    use std::cell::RefMut;
+    use std::collections::{HashSet, VecDeque};
 
     use crate::communication::decorator::ScopeStreamPush;
     use crate::communication::output::builder::OutputMeta;
+    use crate::communication::output::tee::Tee;
     use crate::config::CANCEL_DESC;
     use crate::data::MicroBatch;
+    use crate::errors::IOResult;
+    use crate::graph::Port;
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
-    use std::cell::RefMut;
-    use std::collections::{HashSet, VecDeque};
+    use crate::{Data, Tag};
 
     pub struct OutputHandle<D: Data> {
         pub port: Port,
@@ -77,10 +77,10 @@ mod rob {
             }
         }
 
-        pub fn push_into_iter<I: Iterator<Item = D> + Send + 'static>(
+        pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(
             &mut self, tag: &Tag, mut iter: I,
         ) -> IOResult<()> {
-            match self.push_iter(tag, &mut iter) {
+            match self.try_push_iter(tag, &mut iter) {
                 Err(e) => {
                     let iter = Box::new(iter);
                     if e.is_would_block() || e.is_interrupted() {
@@ -99,7 +99,7 @@ mod rob {
                 for _ in 0..len {
                     if let Some(tag) = self.blocks.pop_front() {
                         if let Some(mut iter) = self.in_block.remove(&tag) {
-                            match self.push_iter(&tag, &mut iter) {
+                            match self.try_push_iter(&tag, &mut iter) {
                                 Err(e) => {
                                     if e.is_would_block() || e.is_interrupted() {
                                         self.in_block.insert(tag.clone(), iter);
@@ -191,9 +191,9 @@ mod rob {
         }
 
         #[inline]
-        fn push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
+        fn try_push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
             if !self.is_skipped(tag) {
-                self.tee.push_iter(tag, iter)?;
+                self.tee.try_push_iter(tag, iter)?;
             }
             Ok(())
         }
@@ -243,7 +243,7 @@ mod rob {
         where
             I: Iterator<Item = D> + Send + 'static,
         {
-            self.output.push_into_iter(&self.tag, iter)
+            self.output.push_iter(&self.tag, iter)
         }
 
         pub fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
@@ -260,6 +260,11 @@ mod rob {
 ///////////////////////////////////////////////////
 #[cfg(feature = "rob")]
 mod rob {
+    use std::cell::RefMut;
+    use std::collections::{HashSet, VecDeque};
+
+    use pegasus_common::buffer::ReadBuffer;
+
     use crate::communication::buffer::ScopeBufferPool;
     use crate::communication::decorator::{BlockPush, ScopeStreamPush};
     use crate::communication::output::builder::OutputMeta;
@@ -272,9 +277,6 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use pegasus_common::buffer::ReadBuffer;
-    use std::cell::RefMut;
-    use std::collections::{HashSet, VecDeque};
 
     enum BlockEntry<D: Data> {
         Single(D),
@@ -317,10 +319,10 @@ mod rob {
             }
         }
 
-        pub fn push_into_iter<I: Iterator<Item = D> + Send + 'static>(
+        pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(
             &mut self, tag: &Tag, mut iter: I,
         ) -> IOResult<()> {
-            if let Err(e) = self.push_iter(tag, &mut iter) {
+            if let Err(e) = self.try_push_iter(tag, &mut iter) {
                 if e.is_would_block() {
                     if let Some(b) = self.in_block.remove(tag) {
                         match b {
@@ -436,7 +438,7 @@ mod rob {
         fn push_box_iter(
             &mut self, tag: &Tag, mut iter: Box<dyn Iterator<Item = D> + Send + 'static>,
         ) -> IOResult<()> {
-            if let Err(e) = self.push_iter(tag, &mut iter) {
+            if let Err(e) = self.try_push_iter(tag, &mut iter) {
                 if e.is_would_block() {
                     if let Some(e) = self.in_block.remove(&tag) {
                         match e {
@@ -508,7 +510,7 @@ mod rob {
         where
             I: Iterator<Item = D> + Send + 'static,
         {
-            self.output.push_into_iter(&self.tag, iter)
+            self.output.push_iter(&self.tag, iter)
         }
 
         pub fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
@@ -573,7 +575,7 @@ mod rob {
             }
         }
 
-        fn push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
+        fn try_push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
             self.buf_pool.pin(tag);
             loop {
                 match self.buf_pool.push_iter(tag, iter) {

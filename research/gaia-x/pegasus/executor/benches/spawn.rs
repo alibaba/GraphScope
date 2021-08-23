@@ -15,12 +15,12 @@
 
 #![feature(test)]
 extern crate test;
-use test::Bencher;
-
-use pegasus_executor::{Error, Executor, Task, TaskState};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+
+use pegasus_executor::{Error, Executor, Task, TaskState};
+use test::Bencher;
 
 #[inline]
 fn fib(n: usize) -> usize {

@@ -13,13 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::io;
+
+use pegasus_common::channel::*;
+
 use crate::channel_id::ChannelId;
 use crate::data::Data;
 use crate::data_plane::intra_thread::ThreadPull;
 use crate::data_plane::{Pull, Push};
 use crate::errors::{IOError, IOErrorKind};
-use pegasus_common::channel::*;
-use std::io;
 
 pub struct IntraProcessPush<T: Send> {
     pub ch_id: ChannelId,

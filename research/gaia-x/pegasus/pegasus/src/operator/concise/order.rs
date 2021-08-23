@@ -13,11 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cmp::Ordering;
+
 use crate::api::{Sort, SortBy, Unary};
 use crate::stream::Stream;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data};
-use std::cmp::Ordering;
 
 impl<D: Data + Ord> Sort<D> for Stream<D> {
     fn sort(self) -> Result<Stream<D>, BuildJobError> {

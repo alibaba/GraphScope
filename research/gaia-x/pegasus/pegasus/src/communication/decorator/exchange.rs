@@ -33,6 +33,9 @@ pub use rob::*;
 
 #[cfg(not(feature = "rob"))]
 mod rob {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+
     use super::*;
     use crate::api::function::RouteFunction;
     use crate::channel_id::ChannelInfo;
@@ -44,8 +47,6 @@ mod rob {
     use crate::graph::Port;
     use crate::progress::{EndSignal, Weight};
     use crate::{Data, Tag};
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::Arc;
 
     pub struct ExchangeMicroBatchPush<D: Data> {
         pub ch_info: ChannelInfo,
@@ -70,7 +71,7 @@ mod rob {
             if len > 1 {
                 let tag = batch.tag.clone();
                 let mut iter = batch.drain();
-                if let Err(err) = self.push_iter(&tag, &mut iter) {
+                if let Err(err) = self.try_push_iter(&tag, &mut iter) {
                     if err.is_would_block() {
                         Err(IOError::cannot_block())
                     } else {
@@ -204,9 +205,9 @@ mod rob {
             self.pushes[target].push_last(msg, end)
         }
 
-        fn push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
+        fn try_push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
             if self.pushes.len() == 1 {
-                self.pushes[0].push_iter(tag, iter)
+                self.pushes[0].try_push_iter(tag, iter)
             } else {
                 match self.magic {
                     Magic::Modulo(x) => {
@@ -326,6 +327,11 @@ mod rob {
 ////////////////////////////////////////////////////
 #[cfg(feature = "rob")]
 mod rob {
+    use std::collections::VecDeque;
+    use std::sync::{atomic::AtomicBool, atomic::Ordering, Arc};
+
+    use pegasus_common::buffer::ReadBuffer;
+
     use super::*;
     use crate::api::function::{FnResult, RouteFunction};
     use crate::channel_id::ChannelInfo;
@@ -340,9 +346,6 @@ mod rob {
     use crate::progress::{EndSignal, Weight};
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use pegasus_common::buffer::{ReadBuffer};
-    use std::collections::VecDeque;
-    use std::sync::{atomic::AtomicBool, atomic::Ordering, Arc};
 
     #[allow(dead_code)]
     struct Exchange<D> {

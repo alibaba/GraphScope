@@ -13,9 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::net::{SocketAddr, ToSocketAddrs};
+
 use crate::config::ConnectionParams;
 use crate::{NetError, Server};
-use std::net::{SocketAddr, ToSocketAddrs};
 
 pub trait ServerDetect: Send {
     fn fetch(&mut self) -> &[Server];

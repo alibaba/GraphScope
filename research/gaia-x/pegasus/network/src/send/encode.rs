@@ -13,11 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::message::{MessageHeader, Payload, MESSAGE_HEAD_SIZE};
-use pegasus_common::bytes::BytesSlab;
-use pegasus_common::codec::{AsBytes, Encode};
 use std::io;
 use std::io::Write;
+
+use pegasus_common::bytes::BytesSlab;
+use pegasus_common::codec::{AsBytes, Encode};
+
+use crate::message::{MessageHeader, Payload, MESSAGE_HEAD_SIZE};
 
 #[enum_dispatch]
 pub trait MessageEncoder<T: Encode>: Send {
@@ -121,8 +123,9 @@ impl<T: Encode> Clone for GeneralEncoder<T> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use pegasus_common::io::WriteExt;
+
+    use super::*;
 
     struct Array;
 

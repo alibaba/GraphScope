@@ -13,13 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::errors::StartupError;
-use crate::{get_servers, get_servers_len};
+use std::hash::Hasher;
+use std::path::Path;
+
 use ahash::AHasher;
 use pegasus_network::config::NetworkConfig;
 use serde::Deserialize;
-use std::hash::Hasher;
-use std::path::Path;
+
+use crate::errors::StartupError;
+use crate::{get_servers, get_servers_len};
 
 #[macro_export]
 macro_rules! configure_with_default {

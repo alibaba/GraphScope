@@ -17,6 +17,9 @@ pub use rob::*;
 
 #[cfg(not(feature = "rob"))]
 mod rob {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+
     use crate::channel_id::ChannelInfo;
     use crate::communication::decorator::ScopeStreamPush;
     use crate::data::MicroBatch;
@@ -28,8 +31,6 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::Arc;
 
     pub struct EventEmitPush<T: Data> {
         pub ch_info: ChannelInfo,

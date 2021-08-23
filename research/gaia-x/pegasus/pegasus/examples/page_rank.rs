@@ -1,12 +1,13 @@
+use std::io::Write;
+use std::path::PathBuf;
+use std::sync::Arc;
+
 use crossbeam_queue::ArrayQueue;
 use nohash_hasher::IntMap;
 use pegasus::api::{Fold, IterCondition, Iteration, Map, Reduce, Sink};
 use pegasus::resource::PartitionedResource;
 use pegasus::{Configuration, JobConf, ServerConf};
 use pegasus_graph::{Graph, Neighbors};
-use std::io::Write;
-use std::path::PathBuf;
-use std::sync::Arc;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]

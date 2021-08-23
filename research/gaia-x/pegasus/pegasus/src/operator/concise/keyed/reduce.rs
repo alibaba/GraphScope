@@ -1,10 +1,12 @@
+use std::collections::HashMap;
+
+use ahash::AHashMap;
+
 use crate::api::function::FnResult;
 use crate::api::{Fold, Key, Map, Pair, PartitionByKey, ReduceByKey, Unary};
 use crate::stream::{Single, SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data};
-use ahash::AHashMap;
-use std::collections::HashMap;
 
 impl<K: Data + Key, V: Data> ReduceByKey<K, V> for Stream<Pair<K, V>> {
     fn reduce_by_key<B, F>(self, builder: B) -> Result<SingleItem<HashMap<K, V>>, BuildJobError>

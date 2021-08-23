@@ -13,10 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::channel_id::ChannelInfo;
+use std::borrow::Cow;
+
 use dot::LabelText::LabelStr;
 use dot::{Edges, Id, LabelText, Nodes};
-use std::borrow::Cow;
+
+use crate::channel_id::ChannelInfo;
 
 #[derive(Copy, Clone, Hash, Eq, PartialEq, Default)]
 pub struct Port {

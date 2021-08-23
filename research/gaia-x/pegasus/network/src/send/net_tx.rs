@@ -13,13 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::message::{Payload, DEFAULT_MESSAGE_HEADER_BYTES};
-use crossbeam_channel::{Receiver, RecvTimeoutError, Sender, TryRecvError};
 use std::io;
 use std::io::Write;
 use std::net::SocketAddr;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
+
+use crossbeam_channel::{Receiver, RecvTimeoutError, Sender, TryRecvError};
+
+use crate::message::{Payload, DEFAULT_MESSAGE_HEADER_BYTES};
 
 pub enum NetData {
     AppData(u128, Payload),

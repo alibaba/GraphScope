@@ -13,12 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::LinkedList;
+
+use pegasus_common::channel::MPMCSender;
+use pegasus_network::{IPCReceiver, IPCSender};
+
 use crate::channel_id::ChannelId;
 use crate::data::Data;
 use crate::errors::{BuildJobError, IOError};
-use pegasus_common::channel::MPMCSender;
-use pegasus_network::{IPCReceiver, IPCSender};
-use std::collections::LinkedList;
 
 /// Sending part of a message communication_old which always push message of type `T` into the underlying channel;
 #[enum_dispatch]
@@ -99,10 +101,11 @@ mod inter_processes;
 mod intra_process;
 pub(crate) mod intra_thread;
 
-use crate::config::ServerConf;
 use inter_processes::{CombinationPull, RemotePush};
 use intra_process::{IntraProcessPull, IntraProcessPush};
 use intra_thread::{ThreadPull, ThreadPush};
+
+use crate::config::ServerConf;
 
 #[enum_dispatch(Push<T>)]
 pub enum GeneralPush<T: Data> {
@@ -299,9 +302,10 @@ fn encode_channel_id(id: ChannelId, worker_index: u32) -> u128 {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use pegasus_network::config::ConnectionParams;
     use pegasus_network::Server;
+
+    use super::*;
 
     fn push_pull_ch(index: usize, workers: usize, ch_res: ChannelResource<u64>) {
         let (mut pushes, mut pull) = ch_res.take();

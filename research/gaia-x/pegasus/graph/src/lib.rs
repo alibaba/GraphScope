@@ -1,7 +1,3 @@
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use memmap::Mmap;
-use nohash_hasher::{BuildNoHashHasher, IntMap};
-use rand::Rng;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::{File, OpenOptions};
@@ -10,6 +6,11 @@ use std::ops::{Deref, DerefMut};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Instant;
+
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use memmap::Mmap;
+use nohash_hasher::{BuildNoHashHasher, IntMap};
+use rand::Rng;
 
 pub struct Graph {
     topology: IntMap<u64, Arc<Vec<u64>>>,

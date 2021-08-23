@@ -13,6 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::time::Instant;
+
 use crate::data_plane::GeneralPull;
 use crate::dataflow::Dataflow;
 use crate::errors::{IOResult, JobExecError};
@@ -20,7 +22,6 @@ use crate::event::emitter::{EventCollector, EventEmitter};
 use crate::event::Event;
 use crate::schedule::operator::OperatorScheduler;
 use crate::schedule::state::inbound::InputEndNotify;
-use std::time::Instant;
 
 pub(crate) mod operator;
 pub(crate) mod state;

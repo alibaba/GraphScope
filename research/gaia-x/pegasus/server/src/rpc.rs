@@ -13,22 +13,24 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::generated::protocol as pb;
-use crate::service::{JobParser, Service};
-use pegasus::api::function::FnResult;
-use pegasus::api::FromStream;
-use pegasus::result::{FromStreamExt, ResultSink};
-use pegasus::{Data, JobConf};
-use prost::Message;
 use std::error::Error;
 use std::fmt::Debug;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
+
+use pegasus::api::function::FnResult;
+use pegasus::api::FromStream;
+use pegasus::result::{FromStreamExt, ResultSink};
+use pegasus::{Data, JobConf};
+use prost::Message;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use tonic::transport::Server;
 use tonic::{Code, Request, Response, Status};
+
+use crate::generated::protocol as pb;
+use crate::service::{JobParser, Service};
 
 pub struct RpcSink {
     pub job_id: u64,

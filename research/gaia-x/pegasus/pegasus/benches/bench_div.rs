@@ -1,8 +1,9 @@
 #![feature(test)]
 extern crate test;
-use rand::prelude::*;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
+
+use rand::prelude::*;
 
 #[bench]
 fn bench_add(b: &mut test::Bencher) {

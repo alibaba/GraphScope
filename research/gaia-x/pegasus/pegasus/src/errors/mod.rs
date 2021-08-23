@@ -13,15 +13,17 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus_network::NetError;
 use std::error::Error;
 use std::fmt::{self, Debug, Display};
 use std::io;
 
+use pegasus_network::NetError;
+
 mod io_error;
-use crate::Tag;
 pub use io_error::IOError;
 pub use io_error::IOErrorKind;
+
+use crate::Tag;
 
 pub type IOResult<D> = Result<D, IOError>;
 

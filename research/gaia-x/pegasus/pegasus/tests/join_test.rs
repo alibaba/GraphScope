@@ -1,13 +1,14 @@
 //
 //! author: wangzhibin.wzb@alibaba-inc.com
 //!
+use std::io;
+
 use pegasus::api::{Collect, CorrelatedSubTask, Count, Join, KeyBy, Map, PartitionByKey, Sink, Source};
 use pegasus::stream::Stream;
 use pegasus::BuildJobError;
 use pegasus::JobConf;
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
-use std::io;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct I32 {

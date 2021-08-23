@@ -13,6 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::fmt::{Debug, Formatter};
+use std::ops::{Deref, DerefMut};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+
+use pegasus_common::codec::ShadeCodec;
+
 use crate::api::function::FnResult;
 use crate::api::meta::OperatorInfo;
 use crate::api::scope::ScopeDelta;
@@ -26,11 +33,6 @@ use crate::graph::{Edge, Port};
 use crate::macros::route::*;
 use crate::operator::{NotifiableOperator, OperatorCore};
 use crate::{Data, JobConf};
-use pegasus_common::codec::ShadeCodec;
-use std::fmt::{Debug, Formatter};
-use std::ops::{Deref, DerefMut};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 
 #[must_use = "this `Stream` may be consumed"]
 pub struct Stream<D: Data> {

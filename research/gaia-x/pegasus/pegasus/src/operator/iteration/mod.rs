@@ -5,9 +5,10 @@ use crate::{BuildJobError, Data};
 
 mod feedback;
 mod switch;
-use crate::macros::map::FnResult;
 use feedback::{FeedbackOperator, IterSyncOperator};
 use switch::SwitchOperator;
+
+use crate::macros::map::FnResult;
 
 impl<D: Data> Iteration<D> for Stream<D> {
     fn iterate<F>(self, max_iters: u32, func: F) -> Result<Stream<D>, BuildJobError>

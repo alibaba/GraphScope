@@ -1,8 +1,9 @@
-use pegasus::api::{CorrelatedSubTask, Count, Map, Sink};
-use pegasus::{Configuration, JobConf, ServerConf};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
+
+use pegasus::api::{CorrelatedSubTask, Count, Map, Sink};
+use pegasus::{Configuration, JobConf, ServerConf};
 use structopt::StructOpt;
 
 /// This query begin from a set of sampling vertices (number specified by `source`)

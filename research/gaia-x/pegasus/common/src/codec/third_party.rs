@@ -18,14 +18,16 @@ use crate::io::{ReadExt, WriteExt};
 
 #[cfg(feature = "serde")]
 pub mod serde_bin {
-    use super::*;
-    use crate::codec::{Decode, Encode};
-    use serde::de::{DeserializeSeed, IntoDeserializer, Visitor};
-    use serde::Deserializer;
     use std::fmt::{Debug, Display};
     use std::io;
     use std::io::Error;
     use std::ops::{Deref, DerefMut};
+
+    use serde::de::{DeserializeSeed, IntoDeserializer, Visitor};
+    use serde::Deserializer;
+
+    use super::*;
+    use crate::codec::{Decode, Encode};
 
     pub fn ser_into<T: ?Sized, W>(writer: &mut W, obj: &T) -> io::Result<()>
     where

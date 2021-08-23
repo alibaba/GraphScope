@@ -19,11 +19,12 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use super::*;
 use crossbeam_channel::{Receiver, RecvTimeoutError, Sender};
 use crossbeam_queue::SegQueue;
 use pegasus_common::queue::*;
 use pending::PendingPool;
+
+use super::*;
 
 struct SelectTask {
     pub last: Instant,

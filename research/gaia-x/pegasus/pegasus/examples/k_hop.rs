@@ -1,8 +1,9 @@
-use pegasus::api::{Count, Iteration, Map, Sink};
-use pegasus::{Configuration, JobConf, ServerConf};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
+
+use pegasus::api::{Count, Iteration, Map, Sink};
+use pegasus::{Configuration, JobConf, ServerConf};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]

@@ -13,11 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::HashMap;
+
 use crate::api::function::FnResult;
 use crate::api::Key;
 use crate::stream::SingleItem;
 use crate::{BuildJobError, Data};
-use std::collections::HashMap;
 
 pub trait ReduceByKey<K: Key + Data, V: Data> {
     /// Analogous to [`reduce()`] but reducing the data according to the key part of the input data.

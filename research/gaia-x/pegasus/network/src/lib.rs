@@ -20,15 +20,17 @@ extern crate lazy_static;
 #[macro_use]
 extern crate enum_dispatch;
 
-use crate::config::ConnectionParams;
-use crossbeam_utils::sync::ShardedLock;
-use pegasus_common::codec::*;
 use std::collections::HashMap;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::Duration;
+
+use crossbeam_utils::sync::ShardedLock;
+use pegasus_common::codec::*;
+
+use crate::config::ConnectionParams;
 
 lazy_static! {
     static ref SHUTDOWN_HOOK: ShardedLock<HashMap<u64, Arc<AtomicBool>>> = ShardedLock::new(HashMap::new());
@@ -136,16 +138,15 @@ mod transport;
 
 pub use error::NetError;
 pub use manager::ServerDetect;
-pub use receive::IPCReceiver;
-pub use send::{check_has_network_error, IPCSender};
-pub use state::check_connect;
-
 #[cfg(feature = "benchmark")]
 pub use message::{MessageHeader, MESSAGE_HEAD_SIZE};
+pub use receive::IPCReceiver;
 #[cfg(feature = "benchmark")]
 pub use receive::{MessageDecoder, ReentrantDecoder, ReentrantSlabDecoder, SimpleBlockDecoder};
+pub use send::{check_has_network_error, IPCSender};
 #[cfg(feature = "benchmark")]
 pub use send::{MessageEncoder, SimpleEncoder, SlabEncoder};
+pub use state::check_connect;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Server {

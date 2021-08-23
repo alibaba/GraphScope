@@ -2,6 +2,12 @@ pub use rob::*;
 
 #[cfg(not(feature = "rob"))]
 mod rob {
+    use std::cell::RefCell;
+
+    use pegasus_common::buffer::{Batch, BatchPool, MemBatchPool, MemBufAlloc};
+    use pegasus_common::rc::RcPointer;
+    use pegasus_common::utils::ExecuteTimeMetric;
+
     use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
     use crate::communication::IOResult;
     use crate::data::{DataSetPool, MicroBatch};
@@ -10,10 +16,6 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use pegasus_common::buffer::{Batch, BatchPool, MemBatchPool, MemBufAlloc};
-    use pegasus_common::rc::RcPointer;
-    use pegasus_common::utils::ExecuteTimeMetric;
-    use std::cell::RefCell;
 
     type MemBatchPoolRef<D> = RcPointer<RefCell<MemBatchPool<D>>>;
 
@@ -266,7 +268,7 @@ mod rob {
             }
         }
 
-        fn push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
+        fn try_push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
             if let Some(pool) = self.pool.get_pool_mut(tag) {
                 'a: loop {
                     if let Some(batch) = pool.get_batch_mut() {
@@ -335,11 +337,13 @@ mod rob {
 
 #[cfg(feature = "rob")]
 mod rob {
-    use crate::tag::tools::map::TidyTagMap;
-    use crate::{Data, Tag};
-    use pegasus_common::buffer::{Buffer, BufferFactory, BufferPool, MemBufAlloc, ReadBuffer};
     use std::ops::{Deref, DerefMut};
     use std::ptr::NonNull;
+
+    use pegasus_common::buffer::{Buffer, BufferFactory, BufferPool, MemBufAlloc, ReadBuffer};
+
+    use crate::tag::tools::map::TidyTagMap;
+    use crate::{Data, Tag};
 
     struct MemoryBufferPool<D> {
         pool: NonNull<BufferPool<D, MemBufAlloc<D>>>,

@@ -13,11 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::{NetError, Server};
-use serde::Deserialize;
 use std::net::SocketAddr;
 use std::path::Path;
 use std::time::Duration;
+
+use serde::Deserialize;
+
+use crate::{NetError, Server};
 
 pub const DEFAULT_HEARTBEAT_INTERVAL_SEC: usize = 5;
 pub const DEFAULT_SEND_BUFFER_SIZE: usize = 1440;

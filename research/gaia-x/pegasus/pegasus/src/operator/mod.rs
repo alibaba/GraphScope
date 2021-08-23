@@ -13,6 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cell::Cell;
+use std::collections::HashSet;
+use std::time::Instant;
+
 use crate::api::meta::OperatorInfo;
 use crate::api::scope::MergedScopeDelta;
 use crate::api::Notification;
@@ -30,9 +34,6 @@ use crate::progress::EndSignal;
 use crate::schedule::state::inbound::InputEndNotify;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
-use std::cell::Cell;
-use std::collections::HashSet;
-use std::time::Instant;
 
 pub trait Notifiable: Send + 'static {
     fn on_notify(&mut self, n: Notification, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError>;

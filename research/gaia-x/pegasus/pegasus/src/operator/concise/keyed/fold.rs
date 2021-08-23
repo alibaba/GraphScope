@@ -1,10 +1,12 @@
+use std::collections::HashMap;
+
+use ahash::AHashMap;
+
 use crate::api::function::FnResult;
 use crate::api::{Fold, FoldByKey, Key, Map, Pair, PartitionByKey, Unary};
 use crate::stream::{Single, SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data};
-use ahash::AHashMap;
-use std::collections::HashMap;
 
 impl<K: Data + Key, V: Data> FoldByKey<K, V> for Stream<Pair<K, V>> {
     fn fold_by_key<I, B, F>(self, init: I, builder: B) -> Result<SingleItem<HashMap<K, I>>, BuildJobError>

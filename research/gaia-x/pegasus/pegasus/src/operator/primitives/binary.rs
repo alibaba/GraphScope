@@ -13,6 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::marker::PhantomData;
+
 use crate::api::meta::OperatorInfo;
 use crate::api::Binary;
 use crate::communication::input::{new_input_session, InputProxy};
@@ -22,7 +24,6 @@ use crate::errors::{BuildJobError, JobExecError};
 use crate::operator::OperatorCore;
 use crate::stream::Stream;
 use crate::Data;
-use std::marker::PhantomData;
 
 struct BinaryOperator<L, R, O, F> {
     func: F,

@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use pegasus_common::codec::*;
+
 use crate::graph::Port;
 use crate::progress::EndSignal;
 use crate::Tag;
-use pegasus_common::codec::*;
 
 #[derive(Debug, Clone)]
 pub struct Event {

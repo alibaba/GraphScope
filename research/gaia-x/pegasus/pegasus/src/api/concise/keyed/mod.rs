@@ -14,6 +14,7 @@
 //! limitations under the License.
 //!
 
+use std::fmt::{Debug, Formatter};
 use std::hash::Hash;
 
 pub use apply::*;
@@ -25,7 +26,6 @@ use crate::api::function::FnResult;
 use crate::codec::{Decode, Encode, ReadExt, WriteExt};
 use crate::stream::Stream;
 use crate::{BuildJobError, Data};
-use std::fmt::{Debug, Formatter};
 
 pub trait Key: Hash + Eq + Send + Clone + 'static {}
 

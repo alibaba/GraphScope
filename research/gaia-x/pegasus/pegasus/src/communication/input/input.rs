@@ -13,6 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cell::RefCell;
+use std::collections::{HashSet, VecDeque};
+use std::ops::{Deref, DerefMut};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
+
+use pegasus_common::downcast::*;
+
 use crate::api::scope::MergedScopeDelta;
 use crate::channel_id::ChannelInfo;
 use crate::communication::input::{InputProxy, InputSession};
@@ -25,12 +33,6 @@ use crate::event::{Event, Signal};
 use crate::progress::EndSignal;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
-use pegasus_common::downcast::*;
-use std::cell::RefCell;
-use std::collections::{HashSet, VecDeque};
-use std::ops::{Deref, DerefMut};
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
 
 pub struct InputBlockGuard {
     pub tag: Tag,

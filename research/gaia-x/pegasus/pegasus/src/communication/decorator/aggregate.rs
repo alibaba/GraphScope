@@ -2,6 +2,9 @@ pub(crate) use rob::*;
 
 #[cfg(not(feature = "rob"))]
 mod rob {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+
     use crate::channel_id::ChannelInfo;
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::communication::decorator::ScopeStreamPush;
@@ -10,8 +13,6 @@ mod rob {
     use crate::graph::Port;
     use crate::progress::EndSignal;
     use crate::{Data, Tag};
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::Arc;
 
     pub struct AggregateBatchPush<D: Data> {
         pub ch_info: ChannelInfo,
@@ -76,6 +77,9 @@ mod rob {
 
 #[cfg(feature = "rob")]
 mod rob {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+
     use crate::channel_id::ChannelInfo;
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::communication::IOResult;
@@ -84,8 +88,6 @@ mod rob {
     use crate::errors::IOError;
     use crate::progress::EndSignal;
     use crate::Data;
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::Arc;
 
     pub struct AggregateBatchPush<D: Data> {
         pub ch_info: ChannelInfo,

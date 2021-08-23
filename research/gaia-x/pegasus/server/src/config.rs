@@ -16,11 +16,12 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 #![allow(unused_variables)]
+use std::fmt::Debug;
+use std::path::Path;
+
 use pegasus::{Configuration, StartupError};
 use pegasus_network::config::{NetworkConfig, PeerConfig};
 use serde::Deserialize;
-use std::fmt::Debug;
-use std::path::Path;
 
 #[derive(Debug, Deserialize)]
 pub struct HostsConfig {

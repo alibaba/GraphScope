@@ -1,8 +1,9 @@
-use pegasus::api::{CorrelatedSubTask, Count, Iteration, Map, Sink};
-use pegasus::{Configuration, JobConf, ServerConf};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
+
+use pegasus::api::{CorrelatedSubTask, Count, Iteration, Map, Sink};
+use pegasus::{Configuration, JobConf, ServerConf};
 use structopt::StructOpt;
 
 /// Search and count k-hop neighbors for each vertex in a vertices list use only one job;

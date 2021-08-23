@@ -1,8 +1,9 @@
+use ahash::AHashSet;
+
 use crate::api::{Dedup, HasKey, PartitionByKey, Unary};
 use crate::stream::Stream;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data};
-use ahash::AHashSet;
 
 impl<D: Data + HasKey> Dedup<D> for Stream<D> {
     fn dedup(self) -> Result<Stream<D>, BuildJobError> {

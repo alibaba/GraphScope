@@ -13,12 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::config::{BlockMode, ConnectionParams, DEFAULT_SLAB_SIZE};
-use crate::message::MessageHeader;
-use crate::{NetError, Server};
-use crossbeam_channel::Sender;
-use crossbeam_utils::sync::ShardedLock;
-use pegasus_common::codec::Encode;
 use std::collections::HashMap;
 use std::io;
 use std::io::Write;
@@ -27,6 +21,14 @@ use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 use std::time::Duration;
+
+use crossbeam_channel::Sender;
+use crossbeam_utils::sync::ShardedLock;
+use pegasus_common::codec::Encode;
+
+use crate::config::{BlockMode, ConnectionParams, DEFAULT_SLAB_SIZE};
+use crate::message::MessageHeader;
+use crate::{NetError, Server};
 
 mod encode;
 pub use encode::{GeneralEncoder, MessageEncoder, SimpleEncoder, SlabEncoder};

@@ -1,9 +1,11 @@
-use crate::codec::{Decode, ReadExt, WriteExt};
-use crate::Tag;
-use pegasus_common::codec::Encode;
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
+
+use pegasus_common::codec::Encode;
+
+use crate::codec::{Decode, ReadExt, WriteExt};
+use crate::Tag;
 
 #[derive(Clone, Debug)]
 enum Mask {

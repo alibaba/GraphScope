@@ -17,6 +17,7 @@
 extern crate test;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
+
 use test::Bencher;
 
 fn fib(n: usize) -> usize {

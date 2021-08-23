@@ -13,11 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crossbeam_utils::sync::ShardedLock;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+
+use crossbeam_utils::sync::ShardedLock;
 
 #[allow(dead_code)]
 struct ConnectionState {

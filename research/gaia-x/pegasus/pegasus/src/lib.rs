@@ -51,21 +51,23 @@ pub mod stream;
 pub mod utils;
 mod worker;
 
-use crate::api::Source;
-pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
-use crate::resource::PartitionedResource;
-use crate::result::{ResultSink, ResultStream};
-use crate::worker_id::WorkerIdIter;
+use std::collections::HashSet;
+use std::fmt::Debug;
+
 pub use config::{read_from, Configuration, JobConf, ServerConf};
 pub use data::Data;
 pub use pegasus_common::codec;
 pub use pegasus_memory::alloc::check_current_task_memory;
 pub use pegasus_network::ServerDetect;
-use std::collections::HashSet;
-use std::fmt::Debug;
 pub use tag::Tag;
 pub use worker::Worker;
 pub use worker_id::{get_current_worker, WorkerId};
+
+use crate::api::Source;
+pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
+use crate::resource::PartitionedResource;
+use crate::result::{ResultSink, ResultStream};
+use crate::worker_id::WorkerIdIter;
 
 lazy_static! {
     static ref SERVER_ID: Mutex<Option<u64>> = Mutex::new(None);

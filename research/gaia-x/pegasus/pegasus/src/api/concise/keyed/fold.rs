@@ -1,8 +1,9 @@
+use std::collections::HashMap;
+
 use crate::api::function::FnResult;
 use crate::api::Key;
 use crate::stream::SingleItem;
 use crate::{BuildJobError, Data};
-use std::collections::HashMap;
 
 pub trait FoldByKey<K: Data + Key, V: Data> {
     /// Analogous to [`fold()`] but folding the data according to the key part of the input data.

@@ -149,6 +149,11 @@ impl<T: Data> Channel<T> {
 
 #[cfg(not(feature = "rob"))]
 mod rob {
+    use std::sync::atomic::AtomicBool;
+    use std::sync::Arc;
+
+    use pegasus_common::buffer::Batch;
+
     use super::*;
     use crate::channel_id::{ChannelId, ChannelInfo};
     use crate::communication::buffer::BufferedPush;
@@ -164,9 +169,6 @@ mod rob {
     use crate::dataflow::DataflowBuilder;
     use crate::errors::BuildJobError;
     use crate::graph::Port;
-    use pegasus_common::buffer::Batch;
-    use std::sync::atomic::AtomicBool;
-    use std::sync::Arc;
 
     impl<T: Data> Channel<T> {
         fn build_pipeline(self, target: Port, id: ChannelId) -> MaterializedChannel<T> {
@@ -297,18 +299,19 @@ mod rob {
 
 #[cfg(feature = "rob")]
 mod rob {
-    use super::*;
-    use crate::communication::buffer::ScopeBufferPool;
-    use crate::communication::decorator::{LocalMicroBatchPush, MicroBatchPush};
-    use crate::channel_id::{ChannelId, ChannelInfo};
-    use crate::dataflow::DataflowBuilder;
-    use crate::communication::decorator::evented::EventEmitPush;
-    use crate::BuildJobError;
     use std::sync::atomic::AtomicBool;
     use std::sync::Arc;
-    use crate::communication::decorator::exchange::{ExchangeMicroBatchPush, ExchangeByScopePush};
-    use crate::communication::decorator::broadcast::BroadcastBatchPush;
+
+    use super::*;
+    use crate::channel_id::{ChannelId, ChannelInfo};
+    use crate::communication::buffer::ScopeBufferPool;
     use crate::communication::decorator::aggregate::AggregateBatchPush;
+    use crate::communication::decorator::broadcast::BroadcastBatchPush;
+    use crate::communication::decorator::evented::EventEmitPush;
+    use crate::communication::decorator::exchange::{ExchangeByScopePush, ExchangeMicroBatchPush};
+    use crate::communication::decorator::{LocalMicroBatchPush, MicroBatchPush};
+    use crate::dataflow::DataflowBuilder;
+    use crate::BuildJobError;
 
     impl<T: Data> Channel<T> {
         fn build_pipeline(self, target: Port, id: ChannelId) -> MaterializedChannel<T> {

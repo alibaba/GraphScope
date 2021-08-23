@@ -1,7 +1,8 @@
+use std::fmt::Debug;
+
 use crate::api::function::FnResult;
 use crate::stream::SingleItem;
 use crate::{BuildJobError, Data};
-use std::fmt::Debug;
 
 /// Fold every data in the input stream into one single value in the first worker.
 pub trait Fold<D: Data> {

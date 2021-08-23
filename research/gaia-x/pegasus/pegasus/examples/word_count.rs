@@ -1,8 +1,9 @@
-use pegasus::api::{KeyBy, Map, ReduceByKey, Sink};
-use pegasus::{Configuration, JobConf};
 use std::collections::HashMap;
 use std::io::BufRead;
 use std::path::{Path, PathBuf};
+
+use pegasus::api::{KeyBy, Map, ReduceByKey, Sink};
+use pegasus::{Configuration, JobConf};
 use structopt::StructOpt;
 
 #[derive(Debug, Clone, StructOpt, Default)]

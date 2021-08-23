@@ -1,9 +1,11 @@
-use crate::JobConf;
-use crossbeam_utils::sync::ShardedLock;
 use std::any::{Any, TypeId};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
+
+use crossbeam_utils::sync::ShardedLock;
+
+use crate::JobConf;
 
 pub type ResourceMap = HashMap<TypeId, Box<dyn Any + Send + Sync>>;
 pub type KeyedResources = HashMap<String, Box<dyn Any + Send + Sync>>;
@@ -178,8 +180,9 @@ fn add_resource_with_key<T: Any + Send + Sync>(key: String, res: T) {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use std::collections::HashSet;
+
+    use super::*;
 
     #[test]
     fn resource_test() {

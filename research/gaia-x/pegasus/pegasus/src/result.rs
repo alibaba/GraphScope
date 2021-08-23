@@ -1,11 +1,13 @@
-use crate::api::function::FnResult;
-use crate::api::FromStream;
-use crossbeam_channel::{Receiver, Sender, TryRecvError};
-use dyn_clonable::*;
 use std::error::Error;
 use std::fmt::Debug;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+
+use crossbeam_channel::{Receiver, Sender, TryRecvError};
+use dyn_clonable::*;
+
+use crate::api::function::FnResult;
+use crate::api::FromStream;
 
 #[clonable]
 pub trait FromStreamExt<T>: FromStream<T> + Clone {

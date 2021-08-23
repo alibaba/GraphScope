@@ -13,6 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::any::TypeId;
+use std::fmt::Debug;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
+use std::time::Instant;
+
+use pegasus_executor::{Task, TaskState};
+
 use crate::api::primitive::source::Source;
 use crate::channel_id::ChannelId;
 use crate::communication::output::{OutputBuilder, OutputBuilderImpl};
@@ -26,12 +34,6 @@ use crate::resource::{KeyedResources, ResourceMap};
 use crate::result::ResultSink;
 use crate::schedule::Schedule;
 use crate::{Data, JobConf, Tag, WorkerId};
-use pegasus_executor::{Task, TaskState};
-use std::any::TypeId;
-use std::fmt::Debug;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
-use std::time::Instant;
 
 pub struct Worker<D: Data, T: Debug + Send + 'static> {
     pub conf: Arc<JobConf>,

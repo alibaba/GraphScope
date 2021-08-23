@@ -13,12 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::message::{Message, Payload};
-use crate::receive::MessageDecoder;
-use crate::NetError;
-use crossbeam_queue::SegQueue;
-use crossbeam_utils::sync::ShardedLock;
-use pegasus_common::channel::{MPMCSender, MessageSender};
 use std::collections::HashMap;
 use std::io;
 use std::io::Read;
@@ -26,6 +20,14 @@ use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
+
+use crossbeam_queue::SegQueue;
+use crossbeam_utils::sync::ShardedLock;
+use pegasus_common::channel::{MPMCSender, MessageSender};
+
+use crate::message::{Message, Payload};
+use crate::receive::MessageDecoder;
+use crate::NetError;
 
 /// Inbound mailbox of a data receiver;
 struct Inbox {
@@ -280,16 +282,18 @@ impl InboxRegister {
 
 #[cfg(test)]
 mod test {
+    use std::io::Read;
+    use std::time::Duration;
+
+    use pegasus_common::channel::MPMCReceiver;
+    use pegasus_common::codec::{AsBytes, Encode};
+    use pegasus_common::io::WriteExt;
+
     use super::*;
     use crate::message::{MessageHeader, DEFAULT_MESSAGE_HEADER_BYTES};
     use crate::receive::decode::*;
     use crate::send::MessageEncoder;
     use crate::send::SimpleEncoder;
-    use pegasus_common::channel::MPMCReceiver;
-    use pegasus_common::codec::{AsBytes, Encode};
-    use pegasus_common::io::WriteExt;
-    use std::io::Read;
-    use std::time::Duration;
 
     #[test]
     fn inbox_test() {

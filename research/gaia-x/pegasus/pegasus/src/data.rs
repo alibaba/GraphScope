@@ -13,11 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::progress::EndSignal;
-use crate::tag::Tag;
+use std::fmt::Debug;
+
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
-use std::fmt::Debug;
+
+use crate::progress::EndSignal;
+use crate::tag::Tag;
 
 pub trait Data: Clone + Send + Sync + Debug + Encode + Decode + 'static {}
 impl<T: Clone + Send + Sync + Debug + Encode + Decode + 'static> Data for T {}
@@ -32,6 +34,7 @@ pub use rob::*;
 #[cfg(not(feature = "rob"))]
 mod rob {
     use pegasus_common::buffer::{Batch, BatchPool, BufferFactory};
+
     use super::*;
 
     pub struct MicroBatch<T> {
@@ -146,8 +149,6 @@ mod rob {
             }
         }
     }
-
-
 
     impl<D> Debug for MicroBatch<D> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -293,8 +294,9 @@ mod rob {
 
 #[cfg(feature = "rob")]
 mod rob {
-    use super::*;
     use pegasus_common::buffer::ReadBuffer;
+
+    use super::*;
 
     pub struct MicroBatch<T> {
         /// the tag of scope this data set belongs to;
@@ -315,7 +317,14 @@ mod rob {
     impl<D> MicroBatch<D> {
         #[inline]
         pub fn empty() -> Self {
-            MicroBatch { tag: Tag::Root, seq: 0, src: 0, end: None, data: ReadBuffer::new(), is_discarded: false }
+            MicroBatch {
+                tag: Tag::Root,
+                seq: 0,
+                src: 0,
+                end: None,
+                data: ReadBuffer::new(),
+                is_discarded: false,
+            }
         }
 
         pub fn new(tag: Tag, src: u32, data: ReadBuffer<D>) -> Self {

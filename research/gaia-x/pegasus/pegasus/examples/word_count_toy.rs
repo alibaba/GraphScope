@@ -1,8 +1,9 @@
 extern crate pegasus;
 
+use std::path::PathBuf;
+
 use pegasus::api::*;
 use pegasus::{Configuration, JobConf};
-use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(Debug, Clone, StructOpt, Default)]

@@ -1,5 +1,6 @@
-use crate::api::function::DynError;
 use std::error::Error;
+
+use crate::api::function::DynError;
 
 pub trait ToDynError {
     fn into_error(self) -> DynError;

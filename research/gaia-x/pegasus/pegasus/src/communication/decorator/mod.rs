@@ -30,7 +30,7 @@ pub trait ScopeStreamPush<T: Data> {
 
     fn push_last(&mut self, msg: T, end: EndSignal) -> IOResult<()>;
 
-    fn push_iter<I: Iterator<Item = T>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
+    fn try_push_iter<I: Iterator<Item = T>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
         for x in iter {
             self.push(tag, x)?;
         }
@@ -61,8 +61,9 @@ pub use rob::*;
 
 #[cfg(not(feature = "rob"))]
 mod rob {
-    use super::*;
+    use pegasus_common::buffer::Batch;
 
+    use super::*;
     use crate::channel_id::ChannelInfo;
     use crate::communication::buffer::BufferedPush;
     use crate::communication::decorator::aggregate::AggregateBatchPush;
@@ -76,7 +77,6 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::Tag;
-    use pegasus_common::buffer::Batch;
 
     pub struct LocalMiniBatchPush<T: Data> {
         pub ch_info: ChannelInfo,
@@ -269,13 +269,13 @@ mod rob {
             }
         }
 
-        fn push_iter<I: Iterator<Item = T>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
+        fn try_push_iter<I: Iterator<Item = T>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
             match self {
-                MicroBatchPush::Pipeline(p) => p.push_iter(tag, iter),
-                MicroBatchPush::Shuffle(p) => p.push_iter(tag, iter),
-                MicroBatchPush::Aggregate(p) => p.push_iter(tag, iter),
-                MicroBatchPush::Broadcast(p) => p.push_iter(tag, iter),
-                MicroBatchPush::ScopeShuffle(p) => p.push_iter(tag, iter),
+                MicroBatchPush::Pipeline(p) => p.try_push_iter(tag, iter),
+                MicroBatchPush::Shuffle(p) => p.try_push_iter(tag, iter),
+                MicroBatchPush::Aggregate(p) => p.try_push_iter(tag, iter),
+                MicroBatchPush::Broadcast(p) => p.try_push_iter(tag, iter),
+                MicroBatchPush::ScopeShuffle(p) => p.try_push_iter(tag, iter),
             }
         }
 

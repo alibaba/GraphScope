@@ -13,13 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::io;
+use std::net::{SocketAddr, TcpListener, TcpStream, ToSocketAddrs};
+use std::time::Duration;
+
 use crate::receive::start_net_receiver;
 use crate::send::start_net_sender;
 use crate::transport::ConnectionParams;
 use crate::{NetError, Server};
-use std::io;
-use std::net::{SocketAddr, TcpListener, TcpStream, ToSocketAddrs};
-use std::time::Duration;
 
 pub fn listen_on<A: ToSocketAddrs>(
     server_id: u64, params: ConnectionParams, addr: A,

@@ -21,7 +21,6 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use pegasus_common::queue::*;
-
 use test::Bencher;
 
 #[allow(dead_code)]

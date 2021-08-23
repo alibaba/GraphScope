@@ -1,8 +1,9 @@
+use std::io::{BufRead, BufReader};
+use std::path::{Path, PathBuf};
+
 use pegasus::api::{Iteration, Map, Reduce, Sink};
 use pegasus::resource::PartitionedResource;
 use pegasus::{Configuration, JobConf, ServerConf};
-use std::io::{BufRead, BufReader};
-use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]

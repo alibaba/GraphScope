@@ -81,9 +81,10 @@ mod log_4_rs {
 
 #[cfg(feature = "env_logger")]
 mod log_env {
+    use std::io::Write;
+
     use env_logger::fmt::Color;
     use log::Level;
-    use std::io::Write;
 
     pub fn init_log() {
         env_logger::Builder::from_default_env()

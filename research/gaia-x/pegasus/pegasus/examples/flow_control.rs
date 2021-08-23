@@ -1,6 +1,7 @@
+use std::time::Instant;
+
 use pegasus::api::{Filter, Map, Sink};
 use pegasus::{Configuration, JobConf};
-use std::time::Instant;
 use structopt::StructOpt;
 
 #[derive(Debug, Clone, StructOpt, Default)]

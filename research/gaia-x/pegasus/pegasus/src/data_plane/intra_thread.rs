@@ -13,15 +13,17 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::channel_id::ChannelId;
-use crate::data_plane::{Pull, Push};
-use crate::errors::{IOError, IOErrorKind};
-use pegasus_common::rc::RcPointer;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+
+use pegasus_common::rc::RcPointer;
+
+use crate::channel_id::ChannelId;
+use crate::data_plane::{Pull, Push};
+use crate::errors::{IOError, IOErrorKind};
 
 pub struct ThreadPush<T> {
     pub id: ChannelId,

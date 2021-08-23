@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::api::{IterCondition, Notification};
 use crate::communication::input::{new_input_session, InputProxy};
 use crate::communication::output::{new_output, OutputProxy};
@@ -10,7 +12,6 @@ use crate::operator::{Notifiable, OperatorCore};
 use crate::progress::EndSignal;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
-use std::rc::Rc;
 
 pub(crate) struct SwitchOperator<D> {
     scope_level: u32,

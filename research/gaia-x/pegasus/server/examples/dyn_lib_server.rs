@@ -1,6 +1,13 @@
 #[macro_use]
 extern crate log;
 
+use std::collections::HashMap;
+use std::fmt::Debug;
+use std::io::Write;
+use std::ops::{Deref, DerefMut};
+use std::path::PathBuf;
+use std::sync::{Arc, RwLock};
+
 use libloading::os::unix::Symbol;
 use libloading::Library;
 use pegasus::api::{Iteration, Map, Reduce, Sink, Source};
@@ -15,12 +22,6 @@ use pegasus_server::pb::{
 };
 use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
-use std::collections::HashMap;
-use std::fmt::Debug;
-use std::io::Write;
-use std::ops::{Deref, DerefMut};
-use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
 
 fn main() {}
 

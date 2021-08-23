@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus_common::codec::{AsBytes, Decode, Encode};
-use pegasus_common::io::{ReadExt, WriteExt};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
+
+use pegasus_common::codec::{AsBytes, Decode, Encode};
+use pegasus_common::io::{ReadExt, WriteExt};
 use structopt::StructOpt;
 
 pub const CONTENT_LENGTH: usize = 256;

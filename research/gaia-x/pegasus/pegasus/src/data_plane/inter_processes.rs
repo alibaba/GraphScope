@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use pegasus_network::{IPCReceiver, IPCSender};
+
 use crate::channel_id::ChannelId;
 use crate::data_plane::intra_process::IntraProcessPull;
 use crate::data_plane::{Pull, Push};
 use crate::errors::IOError;
 use crate::Data;
-use pegasus_network::{IPCReceiver, IPCSender};
 
 pub struct RemotePush<T: Data> {
     pub id: ChannelId,

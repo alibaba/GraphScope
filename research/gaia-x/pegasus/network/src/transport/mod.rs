@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::config::*;
 use pegasus_common::io::{ReadExt, WriteExt};
+
+use crate::config::*;
 
 pub(crate) mod block;
 mod nonblock;

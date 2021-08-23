@@ -16,10 +16,12 @@
 //! The `Serialize` and `Deserialize` traits is paired contract which defines how objects of various
 //! structures be encoded into network, and decoded from network;
 
-pub use crate::io::{ReadExt, WriteExt};
-pub use bytes::Buf;
 use std::io;
 use std::mem;
+
+pub use bytes::Buf;
+
+pub use crate::io::{ReadExt, WriteExt};
 
 /// The encode interface used for serializing data structures into binary output stream;
 ///

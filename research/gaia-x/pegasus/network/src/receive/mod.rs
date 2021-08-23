@@ -13,22 +13,25 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::message::Payload;
-use crate::{NetError, Server};
-use crossbeam_utils::sync::ShardedLock;
-use pegasus_common::channel::{MPMCReceiver, MPMCSender, MessageReceiver};
-use pegasus_common::codec::Decode;
 use std::collections::HashMap;
 use std::io;
 use std::net::TcpStream;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
+use crossbeam_utils::sync::ShardedLock;
+use pegasus_common::channel::{MPMCReceiver, MPMCSender, MessageReceiver};
+use pegasus_common::codec::Decode;
+
+use crate::message::Payload;
+use crate::{NetError, Server};
+
 mod decode;
 mod net_rx;
-use crate::config::{BlockMode::Blocking, ConnectionParams};
 pub use decode::{MessageDecoder, ReentrantDecoder, ReentrantSlabDecoder, SimpleBlockDecoder};
 use net_rx::{InboxRegister, NetReceiver};
+
+use crate::config::{BlockMode::Blocking, ConnectionParams};
 
 /// The receiver for network's applications to receive data from all remote peers;
 pub struct IPCReceiver<T> {

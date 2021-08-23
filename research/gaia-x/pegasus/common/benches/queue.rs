@@ -1,8 +1,9 @@
 #![feature(test)]
 extern crate test;
-use crossbeam_queue::ArrayQueue;
 use std::collections::{LinkedList, VecDeque};
 use std::time::Duration;
+
+use crossbeam_queue::ArrayQueue;
 use test::Bencher;
 
 #[derive(Copy, Clone)]

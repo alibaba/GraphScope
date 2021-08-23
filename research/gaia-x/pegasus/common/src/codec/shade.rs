@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::codec::{Decode, Encode};
-use crate::io::{ReadExt, WriteExt};
 use std::error::Error;
 use std::fmt::{Debug, Display};
+
+use crate::codec::{Decode, Encode};
+use crate::io::{ReadExt, WriteExt};
 
 pub trait ShadeCodec {}
 

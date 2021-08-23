@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
+
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]

@@ -1,8 +1,10 @@
+use std::fmt::{Debug, Formatter};
+
+use bitflags::_core::cmp::Ordering;
+
 use crate::codec::{Decode, Encode, ReadExt, WriteExt};
 use crate::stream::Stream;
 use crate::{BuildJobError, Data};
-use bitflags::_core::cmp::Ordering;
-use std::fmt::{Debug, Formatter};
 
 /// `Merge` is a [`Binary`] operator that merge the data of the two input streams into one
 /// output stream.

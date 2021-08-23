@@ -13,9 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crossbeam_deque::{Steal, Stealer, Worker};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+
+use crossbeam_deque::{Steal, Stealer, Worker};
 
 pub struct WorkStealFactory<T: Send> {
     pub size: usize,
@@ -105,8 +106,9 @@ impl<T: Send> WorkStealFactory<T> {
 
 #[cfg(test)]
 mod test {
-    use crate::queue::WorkStealFactory;
     use std::option::Option::Some;
+
+    use crate::queue::WorkStealFactory;
 
     #[test]
     fn test_steal_queue() {

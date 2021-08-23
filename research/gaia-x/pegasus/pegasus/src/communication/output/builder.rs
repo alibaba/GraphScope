@@ -13,15 +13,17 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use pegasus_common::downcast::*;
+
 use crate::api::scope::ScopeDelta;
 use crate::communication::output::output::OutputHandle;
 use crate::communication::output::tee::{ChannelPush, Tee};
 use crate::communication::output::{OutputBuilder, OutputProxy, RefWrapOutput};
 use crate::graph::Port;
 use crate::Data;
-use pegasus_common::downcast::*;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(Copy, Clone, Debug)]
 pub struct OutputMeta {

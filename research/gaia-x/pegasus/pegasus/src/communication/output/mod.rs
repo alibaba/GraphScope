@@ -13,12 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::errors::IOResult;
-use crate::{Data, Tag};
-use pegasus_common::downcast::AsAny;
 use std::any::Any;
 use std::cell::{Ref, RefCell};
 use std::collections::VecDeque;
+
+use pegasus_common::downcast::AsAny;
+
+use crate::errors::IOResult;
+use crate::{Data, Tag};
 
 pub trait OutputProxy: AsAny + Send {
     fn flush(&self) -> IOResult<()>;
@@ -48,13 +50,14 @@ pub trait OutputBuilder: AsAny {
 mod builder;
 mod output;
 mod tee;
+pub(crate) use builder::OutputBuilderImpl;
+pub use output::OutputSession;
+pub(crate) use tee::ChannelPush;
+
 use crate::communication::decorator::ScopeStreamPush;
 use crate::communication::output::output::OutputHandle;
 use crate::data::MicroBatch;
 use crate::progress::EndSignal;
-pub(crate) use builder::OutputBuilderImpl;
-pub use output::OutputSession;
-pub(crate) use tee::ChannelPush;
 
 pub struct RefWrapOutput<D: Data> {
     pub(crate) output: RefCell<OutputHandle<D>>,
@@ -99,9 +102,7 @@ impl<D: Data> RefWrapOutput<D> {
     pub fn push_into_iter<I: Iterator<Item = D> + Send + 'static>(
         &self, tag: &Tag, iter: I,
     ) -> IOResult<()> {
-        self.output
-            .borrow_mut()
-            .push_into_iter(tag, iter)
+        self.output.borrow_mut().push_iter(tag, iter)
     }
 }
 

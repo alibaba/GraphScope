@@ -16,10 +16,11 @@
 #![feature(test)]
 extern crate test;
 
+use std::collections::HashMap;
+
 use ahash::AHashMap;
 use nohash_hasher::IntMap;
 use pegasus::Tag;
-use std::collections::HashMap;
 
 #[bench]
 fn tag_root_hash_w_r_hit(b: &mut test::Bencher) {

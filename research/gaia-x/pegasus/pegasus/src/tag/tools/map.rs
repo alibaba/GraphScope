@@ -1,7 +1,9 @@
-use crate::Tag;
+use std::borrow::Cow;
+
 use ahash::AHashMap;
 use nohash_hasher::IntMap;
-use std::borrow::Cow;
+
+use crate::Tag;
 
 pub struct TidyTagMap<V> {
     pub scope_level: u32,

@@ -1,8 +1,9 @@
-use crate::queue::BoundLinkQueue;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 pub use rob::*;
+
+use crate::queue::BoundLinkQueue;
 
 #[cfg(feature = "rob")]
 mod rob {
@@ -410,10 +411,11 @@ mod rob {
 
 #[cfg(not(feature = "rob"))]
 mod rob {
-    use super::*;
-    use crate::rc::RcPointer;
     use std::cell::RefCell;
     use std::collections::VecDeque;
+
+    use super::*;
+    use crate::rc::RcPointer;
 
     type Buf<D> = VecDeque<D>;
     pub type BufferReader<D> = Batch<D>;

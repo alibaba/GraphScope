@@ -15,9 +15,10 @@
 
 #[macro_use]
 extern crate log;
+use std::time::Duration;
+
 use pegasus_common::codec::*;
 use pegasus_network::{config::ConnectionParams, Server, ServerDetect};
-use std::time::Duration;
 
 struct MockServerDetect {
     servers: Vec<Server>,

@@ -13,11 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crossbeam_utils::sync::ShardedLock;
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::cell::Cell;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
+
+use crossbeam_utils::sync::ShardedLock;
 
 thread_local! {
     /// The id of task this thread is currently focus on;

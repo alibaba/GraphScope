@@ -13,11 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::message::{Message, MessageHeader};
-use pegasus_common::bytes::BytesSlab;
-use pegasus_common::codec::AsBytes;
 use std::io;
 use std::io::Read;
+
+use pegasus_common::bytes::BytesSlab;
+use pegasus_common::codec::AsBytes;
+
+use crate::message::{Message, MessageHeader};
 
 #[enum_dispatch]
 pub trait MessageDecoder {
@@ -198,12 +200,13 @@ pub fn get_reentrant_decoder(slab_size: usize) -> GeneralDecoder {
 
 #[cfg(test)]
 mod test {
+    use pegasus_common::codec::Encode;
+    use pegasus_common::io::WriteExt;
+
     use super::*;
     use crate::message::DEFAULT_MESSAGE_HEADER_BYTES;
     use crate::send::MessageEncoder;
     use crate::send::SimpleEncoder;
-    use pegasus_common::codec::Encode;
-    use pegasus_common::io::WriteExt;
 
     struct Array(u8);
 

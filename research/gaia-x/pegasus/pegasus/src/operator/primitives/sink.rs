@@ -13,6 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::fmt::Debug;
+
 use crate::api::primitive::sink::Sink;
 use crate::api::FromStream;
 use crate::communication::input::{new_input_session, InputProxy};
@@ -21,7 +23,6 @@ use crate::errors::{BuildJobError, JobExecError};
 use crate::operator::OperatorCore;
 use crate::stream::{Single, SingleItem, Stream};
 use crate::Data;
-use std::fmt::Debug;
 
 struct SinkOperator<D, C> {
     collector: C,

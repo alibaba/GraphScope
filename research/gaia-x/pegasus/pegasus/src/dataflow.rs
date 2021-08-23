@@ -13,6 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cell::RefCell;
+use std::fmt::Write;
+use std::fs::File;
+use std::rc::Rc;
+use std::sync::Arc;
+
 use crate::api::meta::OperatorInfo;
 use crate::api::scope::MergedScopeDelta;
 use crate::channel_id::ChannelInfo;
@@ -25,11 +31,6 @@ use crate::graph::{Dependency, DotGraph, Edge, Port};
 use crate::operator::{GeneralOperator, NotifiableOperator, Operator, OperatorBuilder, OperatorCore};
 use crate::schedule::Schedule;
 use crate::{Data, JobConf, Tag, WorkerId};
-use std::cell::RefCell;
-use std::fmt::Write;
-use std::fs::File;
-use std::rc::Rc;
-use std::sync::Arc;
 
 pub struct DataflowBuilder {
     pub worker_id: WorkerId,

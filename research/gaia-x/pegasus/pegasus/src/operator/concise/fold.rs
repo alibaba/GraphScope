@@ -1,9 +1,10 @@
+use std::fmt::Debug;
+
 use crate::api::function::FnResult;
 use crate::api::{Fold, Unary};
 use crate::stream::{Single, SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data};
-use std::fmt::Debug;
 
 impl<D: Data> Fold<D> for Stream<D> {
     fn fold_partition<B, F, C>(self, init: B, factory: C) -> Result<SingleItem<B>, BuildJobError>

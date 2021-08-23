@@ -13,6 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use ahash::AHashMap;
+
 use crate::api::{Binary, HasKey, Join};
 use crate::communication::output::OutputSession;
 use crate::communication::Output;
@@ -20,7 +22,6 @@ use crate::errors::{BuildJobError, JobExecError};
 use crate::operator::TidyTagMap;
 use crate::stream::Stream;
 use crate::{Data, Tag};
-use ahash::AHashMap;
 
 /// A type alias for the maps to process join, which has the join key as the key and
 /// a vector of data `T` as value to store all items that share the same key.

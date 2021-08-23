@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::graph::Port;
 use std::fmt::Debug;
+
+use crate::graph::Port;
 
 ///计算逻辑图中的channel的id;
 #[derive(Copy, Clone, Default, Hash, Eq, PartialEq, Debug)]

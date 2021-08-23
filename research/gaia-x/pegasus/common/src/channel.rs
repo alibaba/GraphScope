@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crossbeam_channel::{Receiver, RecvTimeoutError, SendError, Sender, TryRecvError};
 use std::cell::Cell;
 use std::io;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+
+use crossbeam_channel::{Receiver, RecvTimeoutError, SendError, Sender, TryRecvError};
 
 /// The send abstraction of a communication_old used for intra-process communication_old;
 pub trait MPMCSender<T>: Send + Clone {

@@ -15,9 +15,10 @@
 
 //! Tags implementation.
 
-use pegasus_common::codec::*;
 use std::hash::{Hash, Hasher};
 use std::io;
+
+use pegasus_common::codec::*;
 /// Hierarchical tag which identify the data in stream;
 ///
 /// The hierarchy of tag is like a tree, each tag instance has a parent(except the ROOT),
@@ -417,8 +418,9 @@ pub mod tools;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::collections::HashSet;
+
+    use super::*;
 
     #[test]
     fn tag_test() {

@@ -13,11 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::hash::{BuildHasher, Hash, Hasher};
+
 use crate::api::function::{FnResult, RouteFunction};
 use crate::api::{HasKey, Key, KeyBy, Map, Pair, PartitionByKey};
 use crate::stream::Stream;
 use crate::{BuildJobError, Data};
-use std::hash::{BuildHasher, Hash, Hasher};
 
 impl<D: Data> KeyBy<D> for Stream<D> {
     fn key_by<K, V, F>(self, selector: F) -> Result<Stream<Pair<K, V>>, BuildJobError>

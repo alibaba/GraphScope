@@ -17,6 +17,7 @@
 extern crate test;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+
 use test::Bencher;
 
 pub const LEN: usize = 8096;

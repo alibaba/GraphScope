@@ -14,6 +14,8 @@
 //! limitations under the License.
 //
 
+use pegasus_common::buffer::{Buffer, BufferPool, MemBufAlloc};
+
 use crate::api::{Binary, CorrelatedSubTask, Unary};
 use crate::data::MicroBatch;
 use crate::errors::IOError;
@@ -21,7 +23,6 @@ use crate::progress::{EndSignal, Weight};
 use crate::stream::{SingleItem, Stream};
 use crate::tag::tools::map::TidyTagMap;
 use crate::{BuildJobError, Data, Tag};
-use pegasus_common::buffer::{BufferPool, MemBufAlloc, Buffer};
 
 impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
     fn apply<T, F>(self, func: F) -> Result<Stream<(D, T)>, BuildJobError>
@@ -139,13 +140,11 @@ impl<D: Data> CorrelatedSubTask<D> for Stream<D> {
 }
 
 #[cfg(not(feature = "rob"))]
-fn new_batch<D>(tag: Tag, worker:  u32, buf:  Buffer<D>) -> MicroBatch<D> {
+fn new_batch<D>(tag: Tag, worker: u32, buf: Buffer<D>) -> MicroBatch<D> {
     MicroBatch::new(tag.clone(), worker, 0, buf)
 }
 
 #[cfg(feature = "rob")]
-fn new_batch<D>(tag: Tag, worker:  u32, buf:  Buffer<D>) -> MicroBatch<D> {
+fn new_batch<D>(tag: Tag, worker: u32, buf: Buffer<D>) -> MicroBatch<D> {
     MicroBatch::new(tag.clone(), worker, buf.into_read_only())
 }
-
-

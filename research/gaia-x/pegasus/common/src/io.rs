@@ -13,11 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::bytes::BytesSlab;
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use bytes::{Buf, BufMut, Bytes};
 use std::io::{self, Read, Write};
 use std::ops::Deref;
+
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use bytes::{Buf, BufMut, Bytes};
+
+use crate::bytes::BytesSlab;
 
 pub trait WriteExt: Write {
     fn write_u8(&mut self, v: u8) -> io::Result<()> {

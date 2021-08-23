@@ -1,10 +1,11 @@
-use pegasus::api::{Binary, Fold, Iteration, Map, Sink};
-use pegasus::tag::tools::map::TidyTagMap;
-use pegasus::{Configuration, JobConf, ServerConf};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
+
+use pegasus::api::{Binary, Fold, Iteration, Map, Sink};
+use pegasus::tag::tools::map::TidyTagMap;
+use pegasus::{Configuration, JobConf, ServerConf};
 use structopt::StructOpt;
 
 /// Search and count k-hop neighbors for each vertex in a vertices list use only one job;

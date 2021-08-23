@@ -17,6 +17,9 @@ pub(crate) use rob::*;
 
 #[cfg(not(feature = "rob"))]
 mod rob {
+    use pegasus_common::buffer::{Batch, BatchPool, MemBatchPool, MemBufAlloc};
+    use smallvec::SmallVec;
+
     use crate::api::scope::MergedScopeDelta;
     use crate::channel_id::ChannelInfo;
     use crate::communication::decorator::{MicroBatchPush, ScopeStreamBuffer, ScopeStreamPush};
@@ -26,8 +29,6 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use pegasus_common::buffer::{Batch, BatchPool, MemBatchPool, MemBufAlloc};
-    use smallvec::SmallVec;
 
     struct Buffer<D> {
         pin: Tag,
@@ -72,7 +73,7 @@ mod rob {
                             {
                                 let mut iter = buf.drain(..);
                                 // as capacity is ensured in advance, there should no block errors;
-                                self.push.push_iter(&tag, &mut iter)?;
+                                self.push.try_push_iter(&tag, &mut iter)?;
                             }
                             assert!(buf.is_empty());
                             b.buf = buf;
@@ -87,7 +88,7 @@ mod rob {
                     let mut buf = std::mem::replace(&mut b.buf, vec![]);
                     // as capacity is ensured in advance, there should no block errors;
                     self.push
-                        .push_iter(&b.pin, &mut buf.drain(..))?;
+                        .try_push_iter(&b.pin, &mut buf.drain(..))?;
                     b.buf = buf;
                 }
             }
@@ -151,7 +152,8 @@ mod rob {
                     if b.pin == tag {
                         if !b.buf.is_empty() {
                             let mut buf = std::mem::replace(&mut b.buf, vec![]);
-                            self.push.push_iter(&tag, &mut buf.drain(..))?;
+                            self.push
+                                .try_push_iter(&tag, &mut buf.drain(..))?;
                             b.buf = buf;
                         }
                     }
@@ -170,14 +172,15 @@ mod rob {
             }
         }
 
-        fn push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
+        fn try_push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
             assert_eq!(tag.len(), self.delta.origin_scope_level);
             let tag = self.delta.evolve(tag);
             if let Some(b) = self.buffer.as_mut() {
                 if b.pin == tag {
                     if !b.buf.is_empty() {
                         let mut buf = std::mem::replace(&mut b.buf, vec![]);
-                        self.push.push_iter(&tag, &mut buf.drain(..))?;
+                        self.push
+                            .try_push_iter(&tag, &mut buf.drain(..))?;
                         assert!(buf.is_empty());
                         b.buf = buf;
                         b.cap = 0;
@@ -185,7 +188,7 @@ mod rob {
                     }
                 }
             }
-            self.push.push_iter(&tag, iter)
+            self.push.try_push_iter(&tag, iter)
         }
 
         #[inline]
@@ -212,7 +215,7 @@ mod rob {
                                 return Ok(());
                             } else {
                                 self.push
-                                    .push_iter(&end.tag, &mut buf.drain(..))?;
+                                    .try_push_iter(&end.tag, &mut buf.drain(..))?;
                                 b.buf = buf;
                                 b.cap = 0;
                             }
@@ -248,7 +251,7 @@ mod rob {
                 if !b.buf.is_empty() {
                     let mut buf = std::mem::replace(&mut b.buf, vec![]);
                     self.push
-                        .push_iter(&b.pin, &mut buf.drain(..))?;
+                        .try_push_iter(&b.pin, &mut buf.drain(..))?;
                     assert!(buf.is_empty());
                     b.buf = buf;
                     b.cap = 0;
@@ -391,10 +394,10 @@ mod rob {
             }
         }
 
-        fn push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
+        fn try_push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
             let len = self.pushes.len();
             if len == 0 {
-                self.main_push.push_iter(tag, iter)
+                self.main_push.try_push_iter(tag, iter)
             } else {
                 let mut buffer_map = std::mem::replace(&mut self.buffers, Default::default());
                 let buffers = buffer_map.get_mut_or_insert(tag);
@@ -407,7 +410,7 @@ mod rob {
                 }
                 let mut cor = Iter::new(iter, buffers);
                 let mut error = None;
-                if let Err(e) = self.main_push.push_iter(tag, &mut cor) {
+                if let Err(e) = self.main_push.try_push_iter(tag, &mut cor) {
                     if !e.is_interrupted() && !e.is_would_block() {
                         return Err(e);
                     } else {
@@ -418,7 +421,7 @@ mod rob {
                 let mut errors = Vec::new();
                 for (i, buf) in buffers.iter_mut().enumerate() {
                     if !buf.is_empty() {
-                        if let Err(e) = self.pushes[i].push_iter(tag, buf) {
+                        if let Err(e) = self.pushes[i].try_push_iter(tag, buf) {
                             if e.is_interrupted() {
                                 errors.push(0);
                             } else if e.is_would_block() {
@@ -562,8 +565,8 @@ mod rob {
     use crate::data::MicroBatch;
     use crate::data_plane::Push;
     use crate::errors::IOError;
-    use crate::{Data, Tag};
     use crate::graph::Port;
+    use crate::{Data, Tag};
 
     #[allow(dead_code)]
     pub(crate) struct ChannelPush<D: Data> {
@@ -608,10 +611,7 @@ mod rob {
 
     impl<D: Data> Tee<D> {
         pub fn new(_port: Port, scope_level: u32, push: ChannelPush<D>) -> Self {
-            Tee {
-                main_push: push,
-                other_pushes: Vec::new(),
-            }
+            Tee { main_push: push, other_pushes: Vec::new() }
         }
 
         pub fn add_push(&mut self, push: ChannelPush<D>) {

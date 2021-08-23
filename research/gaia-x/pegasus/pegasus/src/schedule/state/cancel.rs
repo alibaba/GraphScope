@@ -13,9 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::HashSet;
+
 use crate::tag::tools::map::TidyTagMap;
 use crate::Tag;
-use std::collections::HashSet;
 
 pub struct CancelPolicy {
     scope_level: u32,

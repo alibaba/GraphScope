@@ -13,11 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::channel_id::ChannelId;
 use std::any::Any;
 use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::io;
+
+use crate::channel_id::ChannelId;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ChannelErrorKind {

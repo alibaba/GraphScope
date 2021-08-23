@@ -1,10 +1,12 @@
+use std::cell::RefCell;
+use std::collections::VecDeque;
+
+use pegasus_common::rc::RcPointer;
+
 use crate::communication::IOResult;
 use crate::data_plane::{GeneralPull, GeneralPush, Pull, Push};
 use crate::errors::IOError;
 use crate::event::Event;
-use pegasus_common::rc::RcPointer;
-use std::cell::RefCell;
-use std::collections::VecDeque;
 
 #[derive(Clone)]
 pub struct EventEmitter {

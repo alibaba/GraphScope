@@ -16,13 +16,15 @@
 
 #![allow(dead_code)]
 
-use crate::generated::protocol as pb;
+use std::fmt::Debug;
+use std::sync::Arc;
+
 use pegasus::api::Source;
 use pegasus::result::ResultSink;
 use pegasus::{BuildJobError, Data};
 use prost::Message;
-use std::fmt::Debug;
-use std::sync::Arc;
+
+use crate::generated::protocol as pb;
 
 pub trait JobParser<I: Data, O: Send + Debug + 'static>: Send + Sync + 'static {
     fn parse(

@@ -13,9 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use lazy_static::lazy_static;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
+
+use lazy_static::lazy_static;
 pub use structopt::StructOpt;
 
 #[macro_export]

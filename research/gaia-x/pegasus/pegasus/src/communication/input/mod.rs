@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use pegasus_common::downcast::*;
+
 use crate::channel_id::ChannelInfo;
 use crate::data::MicroBatch;
 use crate::data_plane::GeneralPull;
 use crate::progress::EndSignal;
 use crate::{Data, Tag};
-use pegasus_common::downcast::*;
 
 /// Input abstraction without data type;
 pub trait InputProxy: AsAny + Send {
@@ -40,12 +41,13 @@ pub trait InputProxy: AsAny + Send {
 mod input;
 mod session;
 
-use crate::api::scope::MergedScopeDelta;
-use crate::errors::IOResult;
-use crate::event::emitter::EventEmitter;
 pub use input::InputBlockGuard;
 use input::{InputHandle, RefWrapInput};
 pub use session::InputSession;
+
+use crate::api::scope::MergedScopeDelta;
+use crate::errors::IOResult;
+use crate::event::emitter::EventEmitter;
 
 #[inline]
 pub(crate) fn new_input<D: Data>(

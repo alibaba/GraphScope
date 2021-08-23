@@ -14,8 +14,9 @@
 //! limitations under the License.
 
 mod steal;
-use crossbeam_queue::{PopError, PushError, SegQueue};
 use std::sync::atomic::{AtomicUsize, Ordering};
+
+use crossbeam_queue::{PopError, PushError, SegQueue};
 pub use steal::{WorkStealFactory, WorkStealQueue};
 
 pub struct BoundLinkQueue<T> {

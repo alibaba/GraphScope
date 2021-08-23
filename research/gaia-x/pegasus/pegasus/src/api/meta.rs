@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::Tag;
 use std::sync::Arc;
+
+use crate::Tag;
 
 pub trait Priority: Send + Sync {
     fn compare(&self, a: &Tag, b: &Tag) -> std::cmp::Ordering;

@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crossbeam_queue::SegQueue;
-use crossbeam_utils::CachePadded;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+
+use crossbeam_queue::SegQueue;
+use crossbeam_utils::CachePadded;
 
 pub const PENDING_BOUND_SIZE: &'static str = "PEGASUS_EXECUTOR_SELECT_BOUND";
 lazy_static! {

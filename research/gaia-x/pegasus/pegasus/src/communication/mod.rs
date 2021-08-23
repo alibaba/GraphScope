@@ -13,20 +13,22 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::data_plane::ChannelResource;
-use crate::errors::{BuildJobError, IOError};
-use crate::{Data, JobConf};
 use std::any::Any;
 use std::cell::RefCell;
 use std::collections::{HashMap, LinkedList};
+
+use crate::data_plane::ChannelResource;
+use crate::errors::{BuildJobError, IOError};
+use crate::{Data, JobConf};
 
 mod buffer;
 pub(crate) mod channel;
 pub(crate) mod decorator;
 pub(crate) mod input;
 pub(crate) mod output;
-use crate::channel_id::ChannelId;
 pub use channel::Channel;
+
+use crate::channel_id::ChannelId;
 
 pub type IOResult<D> = Result<D, IOError>;
 pub type Input<'a, D> = input::InputSession<'a, D>;

@@ -18,6 +18,7 @@ extern crate test;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
+
 use test::Bencher;
 
 #[bench]

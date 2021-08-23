@@ -1,13 +1,14 @@
 extern crate pegasus;
 
+use std::io;
+use std::ops::Add;
+
 use pegasus::api::{Collect, IterCondition, Iteration, Map, Merge, Reduce, Sink};
 use pegasus::stream::Stream;
 use pegasus::{BuildJobError, Configuration, JobConf};
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
 use rand::{thread_rng, Rng};
-use std::io;
-use std::ops::Add;
 
 const LOSS: u32 = 0;
 

@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cell::RefMut;
+
 use crate::communication::input::input::InputBlockGuard;
 use crate::communication::input::InputHandle;
 use crate::data::MicroBatch;
 use crate::errors::{ErrorKind, IOResult, JobExecError};
 use crate::{Data, Tag};
-use std::cell::RefMut;
 
 pub struct InputSession<'a, D: Data> {
     scope_level: u32,
