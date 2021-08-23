@@ -119,9 +119,11 @@ public class GraphWriter {
             SchemaElement srcVertexDef = schema.getSchemaElement(srcVertexRecordKey.getLabel());
             SchemaElement dstVertexDef = schema.getSchemaElement(dstVertexRecordKey.getLabel());
             int labelId = edgeDef.getLabelId();
-            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(edgeDef, srcVertexRecordKey.getProperties());
+            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(srcVertexDef,
+                    srcVertexRecordKey.getProperties());
             long srcVertexHashId = getHashId(labelId, srcVertexPkVals, srcVertexDef);
-            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(edgeDef, dstVertexRecordKey.getProperties());
+            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(dstVertexDef,
+                    dstVertexRecordKey.getProperties());
             long dstVertexHashId = getHashId(labelId, dstVertexPkVals, dstVertexDef);
             long edgeInnerId = edgeRecordKey.getEdgeInnerId();
             edgeId = new EdgeId(new VertexId(srcVertexHashId), new VertexId(dstVertexHashId), edgeInnerId);
@@ -155,10 +157,10 @@ public class GraphWriter {
             SchemaElement srcVertexDef = schema.getSchemaElement(srcVertexRecordKey.getLabel());
             SchemaElement dstVertexDef = schema.getSchemaElement(dstVertexRecordKey.getLabel());
             int labelId = edgeDef.getLabelId();
-            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(edgeDef,
+            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(srcVertexDef,
                     srcVertexRecordKey.getProperties());
             long srcVertexHashId = getHashId(labelId, srcVertexPkVals, srcVertexDef);
-            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(edgeDef,
+            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(dstVertexDef,
                     dstVertexRecordKey.getProperties());
             long dstVertexHashId = getHashId(labelId, dstVertexPkVals, dstVertexDef);
             long edgeInnerId = edgeRecordKey.getEdgeInnerId();
@@ -194,9 +196,11 @@ public class GraphWriter {
             SchemaElement srcVertexDef = schema.getSchemaElement(srcVertexRecordKey.getLabel());
             SchemaElement dstVertexDef = schema.getSchemaElement(dstVertexRecordKey.getLabel());
             int labelId = edgeDef.getLabelId();
-            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(edgeDef, srcVertexRecordKey.getProperties());
+            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(srcVertexDef,
+                    srcVertexRecordKey.getProperties());
             long srcVertexHashId = getHashId(labelId, srcVertexPkVals, srcVertexDef);
-            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(edgeDef, dstVertexRecordKey.getProperties());
+            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(dstVertexDef,
+                    dstVertexRecordKey.getProperties());
             long dstVertexHashId = getHashId(labelId, dstVertexPkVals, dstVertexDef);
             long edgeInnerId = this.edgeIdGenerator.getNextId();
             edgeId = new EdgeId(new VertexId(srcVertexHashId), new VertexId(dstVertexHashId), edgeInnerId);
