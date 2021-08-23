@@ -131,4 +131,3 @@ cdef extern from "apps/python_pie/export.h" namespace "python_grape":
         kSumAggregate
         kProductAggregate
         kOverwriteAggregate
-        kTextAppendAggregate
