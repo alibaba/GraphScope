@@ -823,7 +823,7 @@ def output(result, fd, **kwargs):
         An op to dump result to `fd`.
     """
     config = {
-        types_pb2.STORAGE_OPTIONS: utils.bytes_to_attr(pickle.dumps(kwargs)),
+        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
         types_pb2.FD: utils.s_to_attr(str(fd)),
     }
     op = Operation(

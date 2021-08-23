@@ -851,7 +851,7 @@ class CoordinatorServiceServicer(
         import vineyard
         import vineyard.io
 
-        storage_options = pickle.loads(op.attr[types_pb2.STORAGE_OPTIONS].s)
+        storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
         fd = op.attr[types_pb2.FD].s.decode()
         df = op.attr[types_pb2.VINEYARD_ID].s.decode()
         engine_config = self._get_engine_config()
