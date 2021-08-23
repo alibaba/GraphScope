@@ -1188,8 +1188,7 @@ class GSGraphManagerBuilder(DeploymentBuilder):
             )
         )
 
-    def add_zetcd_container(self, name, image, cpu, mem, preemptive,
-                            etcde_endpoint, **kwargs):
+    def add_zetcd_container(self, name, image, cpu, mem, preemptive, **kwargs):
         cmd = kwargs.pop("cmd", None)
         args = kwargs.pop("args", None)
 
