@@ -34,7 +34,6 @@ extern crate dyn_type;
 use crate::process::traversal::traverser::{ShadeSync, Traverser};
 pub use crate::structure::{get_graph, register_graph};
 pub use crate::structure::{Element, GraphProxy, ID};
-use pegasus::api::accum::{Count, ToList};
 use pegasus::api::function::*;
 use prost::Message;
 
@@ -148,21 +147,23 @@ impl Partitioner for Partition {
     }
 }
 
-pub struct TraverserSinkEncoder;
-
-impl EncodeFunction<Traverser> for TraverserSinkEncoder {
-    fn encode(&self, data: Vec<Traverser>) -> Vec<u8> {
-        let result_pb = result_to_pb(data);
-        let mut bytes = vec![];
-        result_pb.encode_raw(&mut bytes);
-        bytes
-    }
-}
+// TODO(bingqing): result encoding
+// pub struct TraverserSinkEncoder;
+//
+// impl EncodeFunction<Traverser> for TraverserSinkEncoder {
+//     fn encode(&self, data: Vec<Traverser>) -> Vec<u8> {
+//         let result_pb = result_to_pb(data);
+//         let mut bytes = vec![];
+//         result_pb.encode_raw(&mut bytes);
+//         bytes
+//     }
+// }
 
 pub fn register_gremlin_types() -> io::Result<()> {
     dyn_type::register_type::<ShadeSync<(Traverser, Traverser)>>()?;
-    dyn_type::register_type::<ShadeSync<Count<Traverser>>>()?;
-    dyn_type::register_type::<ShadeSync<ToList<Traverser>>>()?;
+    // TODO(bingqing): consider how to register Count/ToList
+    //  dyn_type::register_type::<ShadeSync<Count<Traverser>>>()?;
+    //  dyn_type::register_type::<ShadeSync<ToList<Traverser>>>()?;
     dyn_type::register_type::<ResultPath>()?;
     Ok(())
 }

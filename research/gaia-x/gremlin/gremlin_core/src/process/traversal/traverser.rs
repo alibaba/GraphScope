@@ -22,7 +22,8 @@ use crate::structure::{GraphElement, Tag};
 use crate::{DynIter, Element, FromPb};
 use bit_set::BitSet;
 use dyn_type::Object;
-use pegasus::api::function::{FnResult, Partition};
+use pegasus::api::function::FnResult;
+// use pegasus::api::function::Partition;
 use pegasus::codec::*;
 use pegasus::Data;
 use pegasus_server::AnyData;
@@ -516,15 +517,17 @@ impl Hash for Traverser {
     }
 }
 
-impl Partition for Traverser {
-    fn get_partition(&self) -> FnResult<u64> {
-        let mut state = DefaultHasher::new();
-        self.hash(&mut state);
-        Ok(state.finish())
-    }
-}
+// impl Partition for Traverser {
+//     fn get_partition(&self) -> FnResult<u64> {
+//         let mut state = DefaultHasher::new();
+//         self.hash(&mut state);
+//         Ok(state.finish())
+//     }
+// }
 
 impl AnyData for Traverser {}
+unsafe impl Sync for Traverser {}
+
 impl Traverser {
     pub fn with<T: Data + Eq>(raw: T) -> Self {
         let v = ShadeSync { inner: raw };

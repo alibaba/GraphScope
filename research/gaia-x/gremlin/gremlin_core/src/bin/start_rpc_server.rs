@@ -20,7 +20,7 @@ use gremlin_core::{create_demo_graph, register_gremlin_types, Partition};
 use log::info;
 use pegasus::Configuration;
 use pegasus_server::config::combine_config;
-use pegasus_server::rpc::start_debug_rpc_server;
+use pegasus_server::rpc::{start_rpc_server, RpcService};
 use pegasus_server::service::Service;
 use pegasus_server::{CommonConfig, HostsConfig};
 use structopt::StructOpt;
@@ -89,9 +89,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("try to start rpc server;");
     let partition = Partition { num_servers: num_servers.clone() };
-    let factory = GremlinJobCompiler::new(partition, num_servers, server_config.server_id);
-    let service = Service::new(factory);
-    start_debug_rpc_server(addr.parse().unwrap(), service, server_config.report).await?;
+    let _factory = GremlinJobCompiler::new(partition, num_servers, server_config.server_id);
+    //  let service = Service::new(factory);
+    //   start_debug_rpc_server(addr.parse().unwrap(), service, server_config.report).await?;
 
     Ok(())
 }

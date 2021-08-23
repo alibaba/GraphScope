@@ -29,7 +29,7 @@ struct WhereStep {
 }
 
 impl FilterFunction<Traverser> for WhereStep {
-    fn exec(&self, input: &Traverser) -> FnResult<bool> {
+    fn test(&self, input: &Traverser) -> FnResult<bool> {
         let start = if let Some(ref start) = self.start_key {
             if let Some(t) = input.select(start) {
                 t.as_element().ok_or(str_to_dyn_error("invalid input for where predicate"))?

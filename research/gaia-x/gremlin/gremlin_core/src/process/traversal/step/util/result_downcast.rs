@@ -1,6 +1,6 @@
 use crate::process::traversal::traverser::{ShadeSync, Traverser};
 use dyn_type::Object;
-use pegasus::api::accum::{Count, ToList};
+// use pegasus::api::accum::{Count, ToList};
 
 // TODO: more result type downcast
 
@@ -23,28 +23,30 @@ pub fn try_downcast_pair(obj: &Object) -> Option<&(Traverser, Traverser)> {
 
 /// downcast count value, i.e., Traverser::Unknown(Object::DynOwned(ShadeSync<Count<Traverser>>))
 pub fn try_downcast_count(obj: &Object) -> Option<u64> {
-    if let Object::DynOwned(object) = obj {
-        if let Some(count) = object.try_downcast_ref::<ShadeSync<Count<Traverser>>>() {
-            Some(count.inner.value)
-        } else {
-            None
-        }
-    } else {
-        None
-    }
+    // if let Object::DynOwned(object) = obj {
+    //     if let Some(count) = object.try_downcast_ref::<ShadeSync<Count<Traverser>>>() {
+    //         Some(count.inner.value)
+    //     } else {
+    //         None
+    //     }
+    // } else {
+    //     None
+    // }
+    todo!()
 }
 
 /// downcast list value, i.e., Traverser::Unknown(Object::DynOwned(ShadeSync<ToList<Traverser>>))
 pub fn try_downcast_list(obj: &Object) -> Option<Vec<Traverser>> {
-    if let Object::DynOwned(object) = obj {
-        if let Some(list) = object.try_downcast_ref::<ShadeSync<ToList<Traverser>>>() {
-            Some(list.clone().inner.inner)
-        } else {
-            None
-        }
-    } else {
-        None
-    }
+    // if let Object::DynOwned(object) = obj {
+    //     if let Some(list) = object.try_downcast_ref::<ShadeSync<ToList<Traverser>>>() {
+    //         Some(list.clone().inner.inner)
+    //     } else {
+    //         None
+    //     }
+    // } else {
+    //     None
+    // }
+    todo!()
 }
 
 /// downcast result of group().by() and get key where key is a Traverser
