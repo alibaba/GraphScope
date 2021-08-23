@@ -143,7 +143,7 @@ class KubernetesClusterLauncher(Launcher):
     _etcd_container_name = "etcd"
     _engine_container_name = "engine"  # fixed
     _gie_manager_container_name = "manager"
-    _gie_zookeeper_container_name = "zookeeper"
+    _gie_zetcd_container_name = "zetcd"
 
     _mars_scheduler_container_name = "marsscheduler"  # fixed
     _mars_worker_container_name = "marsworker"  # fixed
@@ -168,7 +168,7 @@ class KubernetesClusterLauncher(Launcher):
         service_type=None,
         gs_image=None,
         etcd_image=None,
-        zookeeper_image=None,
+        zetcd_image=None,
         gie_graph_manager_image=None,
         coordinator_name=None,
         coordinator_service_name=None,
@@ -751,10 +751,16 @@ class KubernetesClusterLauncher(Launcher):
             ports=self._interactive_engine_manager_port,
         )
 
-        # add zookeeper container
-        graph_manager_builder.add_zookeeper_container(
-            name=self._gie_zookeeper_container_name,
-            image=self._saved_locals["zookeeper_image"],
+        # add zetcd container
+        graph_manager_builder.add_zetcd_container(
+            cmd=["/bin/bash", "-c", "--"],
+            args=[
+                "/usr/local/bin/zetcd -zkaddr 0.0.0.0:{} -endpoints {}".format(
+                    self._zookeeper_port, self._etcd_endpoint
+                )
+            ],
+            name=self._gie_zetcd_container_name,
+            image=self._saved_locals["zetcd_image"],
             cpu=self._saved_locals["zookeeper_cpu"],
             mem=self._saved_locals["zookeeper_mem"],
             preemptive=self._saved_locals["preemptive"],
@@ -821,14 +827,14 @@ class KubernetesClusterLauncher(Launcher):
         logger.info("GIE graph manager service is ready.")
 
     def _create_services(self):
-        # create interactive engine service
-        self._create_interactive_engine_service()
-        self._waiting_interactive_engine_service_ready()
-
-        # etcd used by vineyard
+        # etcd used by vineyard and gie
         self._create_etcd()
         self._etcd_endpoint = self._get_etcd_service_endpoint()
         logger.info("Etcd is ready, endpoint is {}".format(self._etcd_endpoint))
+
+        # create interactive engine service
+        self._create_interactive_engine_service()
+        self._waiting_interactive_engine_service_ready()
 
         if self._saved_locals["with_mars"]:
             # scheduler used by mars

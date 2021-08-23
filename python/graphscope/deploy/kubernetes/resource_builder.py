@@ -1188,7 +1188,8 @@ class GSGraphManagerBuilder(DeploymentBuilder):
             )
         )
 
-    def add_zookeeper_container(self, name, image, cpu, mem, preemptive, **kwargs):
+    def add_zetcd_container(self, name, image, cpu, mem, preemptive,
+                            etcde_endpoint, **kwargs):
         cmd = kwargs.pop("cmd", None)
         args = kwargs.pop("args", None)
 

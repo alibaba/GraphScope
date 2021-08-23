@@ -1315,10 +1315,10 @@ def parse_sys_args():
         help="Graph Manager image of graph interactive engine.",
     )
     parser.add_argument(
-        "--k8s_zookeeper_image",
+        "--k8s_zetcd_image",
         type=str,
-        default="registry.cn-hongkong.aliyuncs.com/graphscope/zookeeper:3.4.10",
-        help="Docker image of zookeeper, used by graph interactive engine.",
+        default="quay.io/coreos/zetcd:v0.0.5",
+        help="Docker image of zetcd, used by graph interactive engine.",
     )
     parser.add_argument(
         "--k8s_image_pull_policy",
@@ -1390,13 +1390,13 @@ def parse_sys_args():
         "--k8s_zookeeper_cpu",
         type=float,
         default=1.0,
-        help="Cpu cores of zookeeper container, default: 1.0",
+        help="Cpu cores of zetcd container, default: 1.0",
     )
     parser.add_argument(
         "--k8s_zookeeper_mem",
         type=str,
         default="256Mi",
-        help="Memory of zookeeper container, suffix with ['Mi', 'Gi', 'Ti'].",
+        help="Memory of zetcd container, suffix with ['Mi', 'Gi', 'Ti'].",
     )
     parser.add_argument(
         "--k8s_gie_graph_manager_cpu",
@@ -1489,7 +1489,7 @@ def launch_graphscope():
             service_type=args.k8s_service_type,
             gs_image=args.k8s_gs_image,
             etcd_image=args.k8s_etcd_image,
-            zookeeper_image=args.k8s_zookeeper_image,
+            zetcd_image=args.k8s_zetcd_image,
             gie_graph_manager_image=args.k8s_gie_graph_manager_image,
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,

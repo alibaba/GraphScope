@@ -309,7 +309,7 @@ class Session(object):
         k8s_gs_image=gs_config.k8s_gs_image,
         k8s_etcd_image=gs_config.k8s_etcd_image,
         k8s_gie_graph_manager_image=gs_config.k8s_gie_graph_manager_image,
-        k8s_zookeeper_image=gs_config.k8s_zookeeper_image,
+        k8s_zetcd_image=gs_config.k8s_zetcd_image,
         k8s_image_pull_policy=gs_config.k8s_image_pull_policy,
         k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
         k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
@@ -386,7 +386,7 @@ class Session(object):
 
             k8s_gie_graph_manager_image (str, optional): The GraphScope interactive engine's graph manager image.
 
-            k8s_zookeeper_image (str, optional): The image of zookeeper, which used by GIE graph manager.
+            k8s_zetcd_image (str, optional): The image of zetcd, which used by GIE graph manager.
 
             k8s_vineyard_daemonset (str, optional): The name of vineyard Helm deployment to use. GraphScope will try to
                 discovery the daemonset from kubernetes cluster, then use it if exists, and fallback to launching
@@ -541,7 +541,7 @@ class Session(object):
             "k8s_image_pull_policy",
             "k8s_image_pull_secrets",
             "k8s_gie_graph_manager_image",
-            "k8s_zookeeper_image",
+            "k8s_etcd_image",
             "k8s_coordinator_cpu",
             "k8s_coordinator_mem",
             "k8s_etcd_num_pods",
@@ -1189,7 +1189,7 @@ def set_option(**kwargs):
         - k8s_gs_image
         - k8s_etcd_image
         - k8s_gie_graph_manager_image
-        - k8s_zookeeper_image
+        - k8s_zetcd_image
         - k8s_image_pull_policy
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu
@@ -1252,7 +1252,7 @@ def get_option(key):
         - k8s_gs_image
         - k8s_etcd_image
         - k8s_gie_graph_manager_image
-        - k8s_zookeeper_image
+        - k8s_zetcd_image
         - k8s_image_pull_policy
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu
