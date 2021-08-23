@@ -559,9 +559,12 @@ mod rob {
 
 #[cfg(feature = "rob")]
 mod rob {
+    use pegasus_common::buffer::ReadBuffer;
+
     use crate::api::scope::MergedScopeDelta;
     use crate::channel_id::ChannelInfo;
     use crate::communication::decorator::{BlockPush, MicroBatchPush};
+    use crate::communication::IOResult;
     use crate::data::MicroBatch;
     use crate::data_plane::Push;
     use crate::errors::IOError;
@@ -571,22 +574,59 @@ mod rob {
     #[allow(dead_code)]
     pub(crate) struct ChannelPush<D: Data> {
         pub ch_info: ChannelInfo,
+        pub src: u32,
         pub(crate) delta: MergedScopeDelta,
         push: MicroBatchPush<D>,
     }
 
     impl<D: Data> ChannelPush<D> {
         pub(crate) fn new(ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>) -> Self {
-            ChannelPush { ch_info, delta, push }
+            let src = crate::worker_id::get_current_worker().index;
+            ChannelPush { ch_info, src, delta, push }
+        }
+
+        pub(crate) fn skip(&mut self, tag: &Tag) -> IOResult<()> {
+            self.push.skip(tag)
         }
     }
 
     impl<D: Data> Push<MicroBatch<D>> for ChannelPush<D> {
-        fn push(&mut self, mut msg: MicroBatch<D>) -> Result<(), IOError> {
-            assert_eq!(msg.tag.len(), self.delta.origin_scope_level);
-            let tag = self.delta.evolve(&msg.tag);
-            msg.tag = tag;
-            self.push.push(msg)
+        fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
+            if batch.tag.len() == self.delta.origin_scope_level {
+                let tag = self.delta.evolve(&batch.tag);
+                if let Some(end) = batch.take_end() {
+                    if self.delta.scope_level_delta > 0 {
+                        // enter
+                        let end_cp = end.clone();
+                        batch.set_end(end);
+                        batch.set_tag(tag);
+                        self.push(batch)?;
+                        let mut p = MicroBatch::new(end_cp.tag.clone(), self.src, ReadBuffer::new());
+                        p.set_end(end_cp);
+                        self.push(p)
+                    } else if self.delta.scope_level_delta == 0 {
+                        batch.set_end(end);
+                        batch.set_tag(tag);
+                        self.push(batch)
+                    } else {
+                        // leave:
+                        batch.set_tag(tag);
+                        self.push(batch)
+                    }
+                } else if !batch.is_empty() {
+                    batch.set_tag(tag);
+                    self.push.push(batch)
+                } else {
+                    //ignore;
+                    Ok(())
+                }
+            } else if batch.tag.len() < self.delta.origin_scope_level {
+                assert!(batch.is_empty(), "batch from parent is not empty;");
+                assert!(batch.is_last(), "batch from parent is not last;");
+                self.push.push(batch)
+            } else {
+                unreachable!("unrecognized batch from child scope {:?}", batch.tag);
+            }
         }
 
         fn flush(&mut self) -> Result<(), IOError> {
@@ -604,18 +644,29 @@ mod rob {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) struct Tee<D: Data> {
+        port: Port,
+        scope_level: u32,
         main_push: ChannelPush<D>,
         other_pushes: Vec<ChannelPush<D>>,
     }
 
     impl<D: Data> Tee<D> {
-        pub fn new(_port: Port, scope_level: u32, push: ChannelPush<D>) -> Self {
-            Tee { main_push: push, other_pushes: Vec::new() }
+        pub fn new(port: Port, scope_level: u32, push: ChannelPush<D>) -> Self {
+            Tee { port, scope_level, main_push: push, other_pushes: Vec::new() }
         }
 
         pub fn add_push(&mut self, push: ChannelPush<D>) {
             self.other_pushes.push(push);
+        }
+
+        pub fn skip(&mut self, tag: &Tag) -> IOResult<()> {
+            self.main_push.skip(tag)?;
+            for p in self.other_pushes.iter_mut() {
+                p.skip(tag)?;
+            }
+            Ok(())
         }
     }
 

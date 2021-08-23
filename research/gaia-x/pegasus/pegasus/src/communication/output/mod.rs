@@ -34,7 +34,7 @@ pub trait OutputProxy: AsAny + Send {
     fn notify_end(&self, end: EndSignal) -> IOResult<()>;
 
     /// Stop to output data of scope with this tag in output port from now on;
-    fn skip(&self, tag: &Tag);
+    fn skip(&self, tag: &Tag) -> IOResult<()>;
 
     /// Close all output ports, all the channels connected on this output would be notified;
     fn close(&self) -> IOResult<()>;
@@ -128,8 +128,8 @@ impl<D: Data> OutputProxy for RefWrapOutput<D> {
     }
 
     #[inline]
-    fn skip(&self, tag: &Tag) {
-        self.output.borrow_mut().skip(tag);
+    fn skip(&self, tag: &Tag) -> IOResult<()> {
+        self.output.borrow_mut().skip(tag)
     }
 
     #[inline]

@@ -553,6 +553,22 @@ mod rob {
             b.buf.take()
         }
 
+        pub fn skip_buf(&mut self, tag: &Tag) {
+            let level = tag.len() as u32;
+            if level == self.buf_slots.scope_level {
+                self.take_buf(tag, true);
+            } else if level < self.buf_slots.scope_level {
+                for (k, v) in self.buf_slots.iter_mut() {
+                    if tag.is_parent_of(&k) {
+                        v.end = true;
+                        v.buf.take();
+                    }
+                }
+            } else {
+                // ignore;
+            }
+        }
+
         pub fn buffers(&mut self) -> impl Iterator<Item = (Tag, Buffer<D>)> + '_ {
             self.buf_slots
                 .iter_mut()

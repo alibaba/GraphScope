@@ -21,7 +21,6 @@ pub use primitive::sink::{FromStream, Sink};
 pub use primitive::source::{IntoDataflow, Source};
 pub use primitive::unary::Unary;
 
-use crate::data::MicroBatch;
 use crate::progress::EndSignal;
 use crate::Tag;
 
@@ -35,10 +34,6 @@ pub enum BranchEnum {
     Right,
 }
 
-pub enum ResultSet<'a, D> {
-    Data(&'a mut MicroBatch<D>),
-    End,
-}
 
 /// Represents a notification which always indicates that data of a scope in the input stream
 /// has exhaust;

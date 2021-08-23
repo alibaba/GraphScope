@@ -402,6 +402,56 @@ mod rob {
             }
         }
 
+        pub(crate) fn skip(&mut self, tag: &Tag) -> IOResult<()> {
+            for buf in self.buffers.iter_mut() {
+                buf.skip_buf(tag);
+            }
+
+            let level = tag.len() as u32;
+            if level == self.blocks.scope_level {
+                if let Some(mut b) = self.blocks.remove(tag) {
+                    while let Some(b) = b.pop_front() {
+                        match b {
+                            BlockEntry::Single(_) => {
+                                // ignore
+                            }
+                            BlockEntry::Batch(mut batch) => {
+                                batch.clear();
+                                if batch.is_last() {
+                                    self.push(batch)?;
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if level < self.blocks.scope_level {
+                let mut blocks = std::mem::replace(&mut self.blocks, Default::default());
+                for (k, v) in blocks.iter_mut() {
+                    if tag.is_parent_of(&*k) {
+                        while let Some(b) = v.pop_front() {
+                            match b {
+                                BlockEntry::Single(_) => {
+                                    // ignore
+                                }
+                                BlockEntry::Batch(mut batch) => {
+                                    batch.clear();
+                                    if batch.is_last() {
+                                        if let Err(err) = self.push(batch) {
+                                            self.blocks = blocks;
+                                            return Err(err);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                // ignore
+            }
+            Ok(())
+        }
+
         fn flush_last_buffer(&mut self, tag: &Tag) -> IOResult<()> {
             if let Some(block) = self.blocks.remove(tag) {
                 assert!(block.is_empty(), "has block outstanding");
@@ -439,7 +489,12 @@ mod rob {
                     }
                 }
                 if weight.value() >= src_weight {
-                    trace_worker!("try to update eos weight to {:?} of scope {:?}", weight, end.tag);
+                    trace_worker!(
+                        "output[{:?}]: try to update eos weight to {:?} of scope {:?}",
+                        self.port,
+                        weight,
+                        end.tag
+                    );
                     end.update_to(weight);
                 }
             }
@@ -523,7 +578,7 @@ mod rob {
                         self.pushes[i].notify_end(end.clone())?;
                     }
                 } else {
-                    warn_worker!("empty batch of {:?} in exchange;", batch.tag);
+                    warn_worker!("output[{:?}]: empty batch of {:?} in exchange;", self.port, batch.tag);
                 }
                 Ok(())
             } else if len == 1 {

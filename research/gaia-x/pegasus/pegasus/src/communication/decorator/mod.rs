@@ -386,23 +386,53 @@ mod rob {
         ScopeGlobal(ExchangeByScopePush<T>),
     }
 
+    impl<T: Data> MicroBatchPush<T> {
+        pub(crate) fn skip(&mut self, tag: &Tag) -> IOResult<()> {
+            match self {
+                MicroBatchPush::Exchange(p) => p.skip(tag),
+                _ => Ok(()),
+            }
+        }
+    }
+
     impl<T: Data> Push<MicroBatch<T>> for MicroBatchPush<T> {
-        fn push(&mut self, _msg: MicroBatch<T>) -> Result<(), IOError> {
-            todo!()
+        fn push(&mut self, batch: MicroBatch<T>) -> Result<(), IOError> {
+            match self {
+                MicroBatchPush::Local(p) => p.push(batch),
+                MicroBatchPush::Exchange(p) => p.push(batch),
+                MicroBatchPush::Broadcast(p) => p.push(batch),
+                MicroBatchPush::Global(p) => p.push(batch),
+                MicroBatchPush::ScopeGlobal(p) => p.push(batch),
+            }
         }
 
         fn flush(&mut self) -> Result<(), IOError> {
-            todo!()
+            match self {
+                MicroBatchPush::Local(p) => p.flush(),
+                MicroBatchPush::Exchange(p) => p.flush(),
+                MicroBatchPush::Broadcast(p) => p.flush(),
+                MicroBatchPush::Global(p) => p.flush(),
+                MicroBatchPush::ScopeGlobal(p) => p.flush(),
+            }
         }
 
         fn close(&mut self) -> Result<(), IOError> {
-            todo!()
+            match self {
+                MicroBatchPush::Local(p) => p.close(),
+                MicroBatchPush::Exchange(p) => p.close(),
+                MicroBatchPush::Broadcast(p) => p.close(),
+                MicroBatchPush::Global(p) => p.close(),
+                MicroBatchPush::ScopeGlobal(p) => p.close(),
+            }
         }
     }
 
     impl<T: Data> BlockPush for MicroBatchPush<T> {
-        fn try_unblock(&mut self, _tag: &Tag) -> Result<bool, IOError> {
-            todo!()
+        fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
+            match self {
+                MicroBatchPush::Exchange(p) => p.try_unblock(tag),
+                _ => Ok(true),
+            }
         }
     }
 }

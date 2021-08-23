@@ -470,4 +470,42 @@ mod rob {
             todo!("buffer reuse")
         }
     }
+
+    struct DrainEndIter<'a, D: Clone> {
+        len: usize,
+        data: &'a mut ReadBuffer<D>,
+        end: &'a mut Option<EndSignal>,
+        cur: usize,
+    }
+
+    impl<'a, D: Clone> Iterator for DrainEndIter<'a, D> {
+        type Item = MarkedData<D>;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.len == 0 {
+                if let Some(end) = self.end.take() {
+                    Some(MarkedData::Marked(None, end))
+                } else {
+                    None
+                }
+            } else {
+                if let Some(data) = self.data.next() {
+                    self.cur += 1;
+                    if self.cur == self.len {
+                        // this maybe the last;
+                        if let Some(end) = self.end.take() {
+                            Some(MarkedData::Marked(Some(data), end))
+                        } else {
+                            Some(MarkedData::Data(data))
+                        }
+                    } else {
+                        Some(MarkedData::Data(data))
+                    }
+                } else {
+                    None
+                }
+            }
+        }
+    }
+
 }

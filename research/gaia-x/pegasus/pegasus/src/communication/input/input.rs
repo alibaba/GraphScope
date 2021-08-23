@@ -24,7 +24,6 @@ use pegasus_common::downcast::*;
 use crate::api::scope::MergedScopeDelta;
 use crate::channel_id::ChannelInfo;
 use crate::communication::input::{InputProxy, InputSession};
-use crate::config::CANCEL_DESC;
 use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPull, Pull};
 use crate::errors::IOResult;
@@ -301,7 +300,7 @@ impl<D: Data> InputHandle<D> {
 
     pub fn cancel_scope(&mut self, tag: &Tag) {
         self.skips.insert(tag.clone());
-        if *CANCEL_DESC && self.ch_info.scope_level as usize > tag.len() {
+        if *crate::config::ENABLE_CANCEL_CHILD && self.ch_info.scope_level as usize > tag.len() {
             self.stash_index.retain(|t, stash| {
                 if tag.is_parent_of(t) {
                     InputHandle::clear_stash(stash);
@@ -337,7 +336,7 @@ impl<D: Data> InputHandle<D> {
 
     #[inline]
     fn is_skipped(&self, tag: &Tag) -> bool {
-        if *CANCEL_DESC && self.ch_info.scope_level as usize > tag.len() {
+        if *crate::config::ENABLE_CANCEL_CHILD && self.ch_info.scope_level as usize > tag.len() {
             for skip_tag in self.skips.iter() {
                 if skip_tag.is_parent_of(tag) {
                     return true;

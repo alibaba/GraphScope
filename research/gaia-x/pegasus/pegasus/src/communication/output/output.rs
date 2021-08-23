@@ -23,7 +23,6 @@ mod rob {
     use crate::communication::decorator::ScopeStreamPush;
     use crate::communication::output::builder::OutputMeta;
     use crate::communication::output::tee::Tee;
-    use crate::config::CANCEL_DESC;
     use crate::data::MicroBatch;
     use crate::errors::IOResult;
     use crate::graph::Port;
@@ -127,12 +126,12 @@ mod rob {
         }
 
         #[inline]
-        pub fn skip(&mut self, tag: &Tag) {
+        pub fn skip(&mut self, tag: &Tag) -> IOResult<()> {
             self.skips.insert(tag.clone());
             let len = self.blocks.len();
             for _ in 0..len {
                 if let Some(t) = self.blocks.pop_front() {
-                    if *CANCEL_DESC {
+                    if *crate::config::ENABLE_CANCEL_CHILD {
                         if !t.eq(tag) && !tag.is_parent_of(&t) {
                             self.blocks.push_back(t);
                         }
@@ -143,17 +142,18 @@ mod rob {
                     }
                 }
             }
-            if *CANCEL_DESC && self.scope_level as usize > tag.len() {
+            if *crate::config::ENABLE_CANCEL_CHILD && self.scope_level as usize > tag.len() {
                 self.in_block
                     .retain(|t, _| !tag.is_parent_of(t));
             } else {
                 self.in_block.remove(tag);
             }
+            Ok(())
         }
 
         #[inline]
         fn is_skipped(&self, tag: &Tag) -> bool {
-            if *CANCEL_DESC && self.scope_level as usize > tag.len() {
+            if *crate::config::ENABLE_CANCEL_CHILD && self.scope_level as usize > tag.len() {
                 for skip_tag in self.skips.iter() {
                     if skip_tag.is_parent_of(tag) {
                         return true;
@@ -261,7 +261,7 @@ mod rob {
 #[cfg(feature = "rob")]
 mod rob {
     use std::cell::RefMut;
-    use std::collections::{HashSet, VecDeque};
+    use std::collections::VecDeque;
 
     use pegasus_common::buffer::ReadBuffer;
 
@@ -294,7 +294,8 @@ mod rob {
         blocks: VecDeque<Tag>,
         seq_emit: TidyTagMap<u64>,
         is_closed: bool,
-        skips: HashSet<Tag>,
+        current_skips: TidyTagMap<()>,
+        parent_skips: TidyTagMap<()>,
     }
 
     impl<D: Data> OutputHandle<D> {
@@ -315,13 +316,18 @@ mod rob {
                 blocks: VecDeque::new(),
                 seq_emit: TidyTagMap::new(scope_level),
                 is_closed: false,
-                skips: HashSet::new(),
+                current_skips: TidyTagMap::new(scope_level - 1),
+                parent_skips: TidyTagMap::new(scope_level),
             }
         }
 
         pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(
             &mut self, tag: &Tag, mut iter: I,
         ) -> IOResult<()> {
+            if self.is_skipped(tag) {
+                return Ok(());
+            }
+
             if let Err(e) = self.try_push_iter(tag, &mut iter) {
                 if e.is_would_block() {
                     if let Some(b) = self.in_block.remove(tag) {
@@ -350,13 +356,21 @@ mod rob {
         }
 
         pub fn push_batch(&mut self, batch: MicroBatch<D>) -> IOResult<()> {
-            self.tee.push(batch)
+            if self.is_skipped(&batch.tag) {
+                Ok(())
+            } else {
+                self.tee.push(batch)
+            }
         }
 
         pub fn push_batch_mut(&mut self, batch: &mut MicroBatch<D>) -> IOResult<()> {
-            let mut new_batch = MicroBatch::new(batch.tag.clone(), self.src, batch.take_data());
-            new_batch.set_seq(batch.get_seq());
-            self.push_batch(new_batch)
+            if self.is_skipped(&batch.tag) {
+                Ok(())
+            } else {
+                let mut new_batch = MicroBatch::new(batch.tag.clone(), self.src, batch.take_data());
+                new_batch.set_seq(batch.get_seq());
+                self.push_batch(new_batch)
+            }
         }
 
         pub fn is_closed(&self) -> bool {
@@ -369,7 +383,7 @@ mod rob {
                 for _ in 0..len {
                     if let Some(tag) = self.blocks.pop_front() {
                         if self.tee.try_unblock(&tag)? {
-                            if let Some(mut iter) = self.in_block.remove(&tag) {
+                            if let Some(iter) = self.in_block.remove(&tag) {
                                 match iter {
                                     BlockEntry::Single(x) => {
                                         self.push(&tag, x)?;
@@ -424,14 +438,79 @@ mod rob {
             &self.blocks
         }
 
-        #[inline]
-        pub(crate) fn skip(&mut self, tag: &Tag) {
-            todo!()
+        pub(crate) fn skip(&mut self, tag: &Tag) -> IOResult<()> {
+            let level = tag.len() as u32;
+            if level < self.scope_level {
+                assert_eq!(level + 1, self.scope_level);
+                self.parent_skips.insert(tag.clone(), ());
+                // skip from parent scope;
+                if *crate::config::ENABLE_CANCEL_CHILD {
+                    self.buf_pool.skip_buf(tag);
+                    let block_len = self.blocks.len();
+                    for _ in 0..block_len {
+                        if let Some(t) = self.blocks.pop_front() {
+                            if tag.is_parent_of(&t) {
+                                if let Some(b) = self.in_block.remove(&t) {
+                                    match b {
+                                        BlockEntry::LastSingle(_, end) => {
+                                            self.notify_end(end)?;
+                                        }
+                                        _ => (),
+                                    }
+                                }
+                            } else {
+                                self.blocks.push_back(t);
+                            }
+                        }
+                    }
+                    self.tee.skip(tag)?;
+                }
+            } else if level == self.scope_level {
+                // skip current scope level;
+                self.current_skips.insert(tag.clone(), ());
+                self.buf_pool.skip_buf(tag);
+                let block_len = self.blocks.len();
+                for _ in 0..block_len {
+                    if let Some(t) = self.blocks.pop_front() {
+                        if tag == &t {
+                            if let Some(b) = self.in_block.remove(&t) {
+                                match b {
+                                    BlockEntry::LastSingle(_, end) => {
+                                        self.notify_end(end)?;
+                                    }
+                                    _ => (),
+                                }
+                            }
+                        } else {
+                            self.blocks.push_back(t);
+                        }
+                    }
+                }
+                self.tee.skip(tag)?;
+            } else {
+                // skip from child scopes;
+                // ignore;
+            }
+            Ok(())
         }
 
         #[inline]
         fn is_skipped(&self, tag: &Tag) -> bool {
-            todo!()
+            let level = tag.len() as u32;
+            if level == self.scope_level {
+                (!self.current_skips.is_empty() && self.current_skips.contains_key(tag))
+                    || (level >= 1
+                        && !self.parent_skips.is_empty()
+                        && self
+                            .parent_skips
+                            .contains_key(&tag.to_parent_uncheck()))
+            } else if level < self.scope_level {
+                *crate::config::ENABLE_CANCEL_CHILD
+                    && !self.parent_skips.is_empty()
+                    && self.parent_skips.contains_key(tag)
+            } else {
+                false
+            }
         }
 
         #[inline]
@@ -488,29 +567,46 @@ mod rob {
 
     pub struct OutputSession<'a, D: Data> {
         pub tag: Tag,
+        pub skip: bool,
         output: RefMut<'a, OutputHandle<D>>,
     }
 
     impl<'a, D: Data> OutputSession<'a, D> {
         pub(crate) fn new(tag: Tag, mut output: RefMut<'a, OutputHandle<D>>) -> Self {
-            output.buf_pool.pin(&tag);
-            OutputSession { tag, output }
+            if output.is_skipped(&tag) {
+                OutputSession { tag, skip: true, output }
+            } else {
+                output.buf_pool.pin(&tag);
+                OutputSession { tag, skip: false, output }
+            }
         }
 
         pub fn give(&mut self, msg: D) -> IOResult<()> {
-            self.output.push(&self.tag, msg)
+            if self.skip {
+                Ok(())
+            } else {
+                self.output.push(&self.tag, msg)
+            }
         }
 
         pub fn give_last(&mut self, msg: D, end: EndSignal) -> IOResult<()> {
-            assert_eq!(self.tag, end.tag);
-            self.output.push_last(msg, end)
+            if self.skip {
+                self.output.notify_end(end)
+            } else {
+                assert_eq!(self.tag, end.tag);
+                self.output.push_last(msg, end)
+            }
         }
 
         pub fn give_iterator<I>(&mut self, iter: I) -> IOResult<()>
         where
             I: Iterator<Item = D> + Send + 'static,
         {
-            self.output.push_iter(&self.tag, iter)
+            if self.skip {
+                Ok(())
+            } else {
+                self.output.push_iter(&self.tag, iter)
+            }
         }
 
         pub fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
@@ -523,6 +619,7 @@ mod rob {
         }
     }
 
+    /// don't check skip as it would be checked in [`OutputSession`] ;
     impl<D: Data> ScopeStreamPush<D> for OutputHandle<D> {
         fn port(&self) -> Port {
             self.port

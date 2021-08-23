@@ -212,7 +212,7 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
                 input.propagate_cancel(&tag)?;
             }
             for output in outputs.iter() {
-                output.skip(&tag);
+                output.skip(&tag)?;
             }
         } else {
             assert_eq!(port.port, 1);
@@ -222,14 +222,14 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
                     if nth != 0 {
                         inputs[1].cancel_scope(&tag);
                         inputs[1].propagate_cancel(&tag)?;
-                        outputs[1].skip(&tag);
+                        outputs[1].skip(&tag)?;
                     } else {
                         inputs[0].cancel_scope(&tag);
                         if *LOOP_OPT {
                             // enable propagation to parent scope optimization
                             inputs[0].propagate_cancel_uncheck(&tag)?;
                         }
-                        outputs[1].skip(&tag);
+                        outputs[1].skip(&tag)?;
                     }
                 } else {
                     // tag is ROOT, impossible!

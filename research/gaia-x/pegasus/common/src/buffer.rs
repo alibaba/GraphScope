@@ -418,7 +418,7 @@ mod rob {
     use crate::rc::RcPointer;
 
     type Buf<D> = VecDeque<D>;
-    pub type BufferReader<D> = Batch<D>;
+    pub type ReadBuffer<D> = Batch<D>;
     pub type Buffer<D> = Batch<D>;
     pub type BufferPool<D, F> = BatchPool<D, F>;
 

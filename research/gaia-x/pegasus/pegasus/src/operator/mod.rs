@@ -24,7 +24,6 @@ use crate::channel_id::ChannelInfo;
 use crate::communication::input::{new_input, InputBlockGuard, InputProxy};
 use crate::communication::output::{OutputBuilder, OutputBuilderImpl, OutputProxy};
 use crate::config::BRANCH_OPT;
-use crate::config::CANCEL_DESC;
 use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPull, GeneralPush};
 use crate::errors::{IOResult, JobExecError};
@@ -170,12 +169,12 @@ impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
                 input.cancel_scope(&tag);
                 input.propagate_cancel(&tag)?;
             }
-            outputs[0].skip(&tag);
+            outputs[0].skip(&tag)?;
             Ok(true)
         } else {
             let idx = tag.len();
             if *BRANCH_OPT {
-                outputs[port.port].skip(&tag);
+                outputs[port.port].skip(&tag)?;
             }
             if let Some(mut port_set) = self.cancels_received[idx].remove(&tag) {
                 port_set.insert(port.port);
@@ -187,7 +186,7 @@ impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
                     }
                     if !*BRANCH_OPT {
                         for output in outputs.iter() {
-                            output.skip(&tag);
+                            output.skip(&tag)?;
                         }
                     }
                     Ok(true)
@@ -368,7 +367,7 @@ impl Operator {
             self.info
         );
         if *BRANCH_OPT {
-            if *CANCEL_DESC {
+            if *crate::config::ENABLE_CANCEL_CHILD {
                 self.block_guards[port.port].retain(|t, _| !tag.is_parent_of(t) && !tag.eq(t));
             } else {
                 self.block_guards[port.port].remove(&tag);
@@ -385,7 +384,7 @@ impl Operator {
             self.info
         );
             if !*BRANCH_OPT {
-                if *CANCEL_DESC {
+                if *crate::config::ENABLE_CANCEL_CHILD {
                     for block_guard in self.block_guards.iter_mut() {
                         block_guard.retain(|t, _| !tag_clone.is_parent_of(t) && !tag_clone.eq(t));
                     }
