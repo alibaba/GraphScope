@@ -173,17 +173,9 @@ message JobRequest {
   Sink sink = 4;
 }
 
-message JobError {
-  int32 err_code  = 1;
-  string err_msg  = 2;
-}
-
 message JobResponse {
   uint64 job_id           = 1;
-  oneof result {
-    bytes data            = 2;
-    JobError err          = 3;
-  }
+  bytes data = 2;
 }
 
 service JobService {
