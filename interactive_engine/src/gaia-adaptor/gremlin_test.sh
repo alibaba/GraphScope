@@ -6,6 +6,9 @@ cd ./distribution/target/ && sudo tar xvzf maxgraph.tar.gz -C ${GRAPHSCOPE_HOME}
 # start server
 LOG_NAME=maxnode ${GRAPHSCOPE_HOME}/bin/giectl max_node_gaia
 sleep 20
+# load data
+cd ${base_dir}/../v2 && mvn -Dtest=com.alibaba.maxgraph.tests.sdk.DataLoadingTest test
+echo "localhost:12312" > ${base_dir}/src/test/resources/graph.endpoint
 cd ${base_dir} && mvn test
 exit_code=$?
 ps -ef | grep "com.alibaba.graphscope.gaia.MaxNode" | grep -v grep | awk '{print $2}' | xargs kill -9

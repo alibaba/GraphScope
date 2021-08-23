@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.gaia;
+package com.alibaba.graphscope.gaia.vineyard.store;
 
+import com.alibaba.graphscope.gaia.TraversalSourceGraph;
 import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
@@ -22,9 +23,9 @@ import com.alibaba.graphscope.gaia.processor.GaiaGraphOpProcessor;
 import com.alibaba.graphscope.gaia.processor.LogicPlanProcessor;
 import com.alibaba.graphscope.gaia.processor.TraversalOpProcessor;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
-import com.alibaba.maxgraph.v2.common.config.Configs;
-import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
-import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
+import com.alibaba.maxgraph.common.cluster.InstanceConfig;
+import com.alibaba.maxgraph.server.MaxGraphServer;
+import com.alibaba.maxgraph.server.ProcessorLoader;
 import io.netty.channel.Channel;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
@@ -45,39 +46,36 @@ import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GaiaGraphServer implements MaxGraphServer {
+public class GaiaGraphServer extends MaxGraphServer {
     private static final Logger logger = LoggerFactory.getLogger(GaiaGraphServer.class);
-    private Configs configs;
     private GraphStoreService storeService;
+    private InstanceConfig instanceConfig;
 
     private Settings settings;
     private GremlinServer server;
     private GaiaConfig gaiaConfig;
     private AbstractBroadcastProcessor broadcastProcessor;
 
-    public GaiaGraphServer(Configs configs, GraphStoreService storeService, AbstractBroadcastProcessor broadcastProcessor, GaiaConfig gaiaConfig) {
-        this.configs = configs;
+    public GaiaGraphServer(Graph graph, InstanceConfig instanceConfig, GraphStoreService storeService,
+                           AbstractBroadcastProcessor broadcastProcessor, GaiaConfig gaiaConfig) {
+        super(graph);
+        this.instanceConfig = instanceConfig;
         this.broadcastProcessor = broadcastProcessor;
         this.storeService = storeService;
         this.gaiaConfig = gaiaConfig;
     }
 
     @Override
-    public void start() {
-        this.loadSettings();
-
+    public void start(int port, ProcessorLoader processorLoader, boolean hasAuth) {
         logger.info(GremlinServer.getHeader());
-        this.settings.port = FrontendConfig.GREMLIN_PORT.get(this.configs);
+        this.settings.port = instanceConfig.getGremlinServerPort();
         this.settings.host = "0.0.0.0";
         if (settings.gremlinPool == 0) {
             settings.gremlinPool = Runtime.getRuntime().availableProcessors();
         }
-        settings.writeBufferHighWaterMark = FrontendConfig.SERVER_WRITE_BUFFER_HIGH_WATER.get(this.configs);
-        settings.writeBufferLowWaterMark = FrontendConfig.SERVER_WRITE_BUFFER_LOW_WATER.get(this.configs);
         this.server = new GremlinServer(settings);
 
         loadProcessor(gaiaConfig, broadcastProcessor, storeService);
-
         // bind g to traversal source
         Graph traversalGraph = TraversalSourceGraph.open(new BaseConfiguration());
         ServerGremlinExecutor serverGremlinExecutor = PlanUtils.getServerGremlinExecutor(this.server);
@@ -100,6 +98,10 @@ public class GaiaGraphServer implements MaxGraphServer {
         logger.info("Gremlin Server started....");
     }
 
+    public GremlinExecutor getGremlinExecutor() {
+        return this.server.getServerGremlinExecutor().getGremlinExecutor();
+    }
+
     @Override
     public int getGremlinServerPort() throws Exception {
         Field ch = this.server.getClass().getDeclaredField("ch");
@@ -110,14 +112,7 @@ public class GaiaGraphServer implements MaxGraphServer {
     }
 
     @Override
-    public void stop() {
-        if (this.server != null) {
-            this.server.stop();
-            this.server = null;
-        }
-    }
-
-    private void loadSettings() {
+    protected void initSettings() {
         InputStream input = GaiaGraphServer.class.getClassLoader().getResourceAsStream("conf/server.gaia.yaml");
         this.settings = Settings.read(input);
     }
