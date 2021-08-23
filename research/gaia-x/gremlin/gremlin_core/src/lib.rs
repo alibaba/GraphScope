@@ -44,6 +44,7 @@ pub mod compiler;
 mod result_process;
 #[macro_use]
 pub mod graph_proxy;
+mod functions;
 
 use crate::process::traversal::path::ResultPath;
 use crate::result_process::result_to_pb;
