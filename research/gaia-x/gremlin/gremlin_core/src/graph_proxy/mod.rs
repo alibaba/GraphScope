@@ -51,17 +51,3 @@ macro_rules! filter_limit {
         }
     };
 }
-
-#[macro_export]
-macro_rules! filter_limit_ok {
-    ($iter: expr, $f: expr, $n: expr) => {
-        if let Some(ref f) = $f {
-            let f = f.clone();
-            let r = $iter.filter(move |v| f.test(v).unwrap_or(false)).map(|v| Ok(v));
-            limit_n!(r, $n)
-        } else {
-            let r = $iter.map(|v| Ok(v));
-            limit_n!(r, $n)
-        }
-    };
-}

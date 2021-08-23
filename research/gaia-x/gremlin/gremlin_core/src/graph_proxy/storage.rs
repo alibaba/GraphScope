@@ -18,7 +18,7 @@ use crate::structure::{
     DefaultDetails, Details, Direction, DynDetails, Edge, Label, LabelId, PropKey, QueryParams,
     Statement, Vertex, ID_BITS,
 };
-use crate::{filter_limit, filter_limit_ok, limit_n};
+use crate::{filter_limit, limit_n};
 use crate::{register_graph, DynResult, GraphProxy, ID};
 use dyn_type::BorrowObject;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
@@ -274,7 +274,7 @@ impl GraphProxy for DemoGraph {
             }
             // TODO: change to to_runtime_vertex_with_property
             .map(move |v| to_runtime_vertex(v, graph));
-            Ok(filter_limit_ok!(iter, filter, limit))
+            Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
     }
@@ -293,7 +293,7 @@ impl GraphProxy for DemoGraph {
                 Direction::Both => graph.get_both_edges(v as DefaultId, edge_label_ids.as_ref()),
             }
             .map(move |e| to_runtime_edge(e, graph));
-            Ok(filter_limit_ok!(iter, filter, limit))
+            Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
     }

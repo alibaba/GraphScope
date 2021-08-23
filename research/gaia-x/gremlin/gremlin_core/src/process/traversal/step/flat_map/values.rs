@@ -40,7 +40,7 @@ impl FlatMapFunction<Traverser, Traverser> for PropertiesStep {
                             .ok_or(str_to_dyn_error("Can't get owned property value"))?,
                         &self.tags,
                     );
-                    result.push(Ok(traverser));
+                    result.push(traverser);
                 }
             }
 

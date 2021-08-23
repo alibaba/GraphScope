@@ -34,7 +34,7 @@ impl FlatMapFunction<Traverser, Traverser> for pb::UnfoldStep {
         )
         .ok_or(str_to_dyn_error("Try downcast object for unfold failed"))?
         .into_iter()
-        .map(|trav| Ok(trav));
+        .map(|trav| trav);
         Ok(Box::new(list_traverser))
     }
 }

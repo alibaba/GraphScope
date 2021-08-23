@@ -482,16 +482,15 @@ impl<E> TraverserSplitIter<E> {
 }
 
 impl<E: Into<GraphElement>> Iterator for TraverserSplitIter<E> {
-    type Item = Result<Traverser, Box<dyn std::error::Error + Send>>;
+    type Item = Traverser;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut traverser = self.origin.clone();
         match self.children.next() {
-            Some(Ok(elem)) => {
+            Some(elem) => {
                 traverser.split(elem, &self.tags);
-                Some(Ok(traverser))
+                Some(traverser)
             }
-            Some(Err(e)) => Some(Err(e)),
             None => None,
         }
     }

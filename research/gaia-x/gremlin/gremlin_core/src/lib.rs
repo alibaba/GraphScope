@@ -80,7 +80,7 @@ mod generated {
 
 pub type DynError = Box<dyn std::error::Error + Send>;
 pub type DynResult<T> = Result<T, Box<dyn std::error::Error + Send>>;
-pub type DynIter<T> = Box<dyn Iterator<Item = DynResult<T>> + Send>;
+pub type DynIter<T> = Box<dyn Iterator<Item = T> + Send>;
 
 impl From<ParseError> for DynError {
     fn from(e: ParseError) -> Self {
