@@ -1177,6 +1177,8 @@ session = Session
 def set_option(**kwargs):
     """Set the value of specified options.
 
+    Find params detail in :class:`graphscope.Session`
+
     Available options:
         - num_workers
         - log_level
@@ -1201,8 +1203,15 @@ def set_option(**kwargs):
         - k8s_mars_worker_mem
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
+        - k8s_gie_graph_manager_cpu
+        - k8s_gie_graph_manager_mem
+        - k8s_gie_gremlin_server_cpu
+            Minimum number of CPU cores request for gremlin pod. Defaults to 0.5.
+        - k8s_gie_gremlin_server_mem
+            Minimum number of memory request for gremlin pod. Defaults to '512Mi'.
         - with_mars
         - enable_gaia
+        - k8s_volumes
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
@@ -1231,6 +1240,8 @@ def set_option(**kwargs):
 def get_option(key):
     """Get the value of specified option.
 
+    Find params detail in :class:`graphscope.Session`
+
     Available options:
         - num_workers
         - log_level
@@ -1255,8 +1266,15 @@ def get_option(key):
         - k8s_mars_worker_mem
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
+        - k8s_gie_graph_manager_cpu
+        - k8s_gie_graph_manager_mem
+        - k8s_gie_gremlin_server_cpu
+            Minimum number of CPU cores request for gremlin pod. Defaults to 0.5.
+        - k8s_gie_gremlin_server_mem
+            Minimum number of memory request for gremlin pod. Defaults to '512Mi'.
         - with_mars
         - enable_gaia
+        - k8s_volumes
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
