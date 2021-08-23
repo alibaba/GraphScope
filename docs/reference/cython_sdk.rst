@@ -842,6 +842,11 @@ PIE
          Note that, in case multiple vertices write to this aggregator, the behavior is
          non-deterministic.
 
+   .. py:data:: kTextAppendAggregate
+      :noindex:
+
+         Aggregator with string as its value which keeps appending text to it.
+
 GraphScope types
 ----------------
 .. autosummary::
