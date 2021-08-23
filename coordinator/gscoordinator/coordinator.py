@@ -247,7 +247,7 @@ class CoordinatorServiceServicer(
             cluster_type=self._launcher.type(),
             num_workers=self._launcher.num_workers,
             engine_config=json.dumps(self._analytical_engine_config),
-            pod_name_list=self._pods_list,
+            pod_name_list=self._engine_hosts.split(","),
             namespace=self._k8s_namespace,
         )
 
@@ -729,7 +729,7 @@ class CoordinatorServiceServicer(
             params.update(
                 {
                     "schemaJson": schema_json,
-                    "podNameList": ",".join(self._pods_list),
+                    "podNameList": self._engine_hosts,
                     "containerName": ENGINE_CONTAINER,
                     "preemptive": str(self._launcher.preemptive),
                     "gremlinServerCpu": str(gremlin_server_cpu),
@@ -939,11 +939,10 @@ class CoordinatorServiceServicer(
             object_id = gremlin_client.object_id
             if self._launcher_type == types_pb2.K8S:
                 manager_host = self._launcher.get_manager_host()
-                pod_name_list = ",".join(self._pods_list)
                 close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
                     manager_host,
                     object_id,
-                    pod_name_list,
+                    self._engine_hosts,
                     ENGINE_CONTAINER,
                     str(self._launcher.waiting_for_delete()),
                 )
