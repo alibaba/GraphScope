@@ -484,7 +484,6 @@ jobs:
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
             registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
 
-
   build-gss:
     runs-on: self-hosted
     defaults:
