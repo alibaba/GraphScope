@@ -149,7 +149,7 @@ class CoordinatorServiceServicer(
         self._engine_hosts = self._launcher.hosts
         self._k8s_namespace = ""
         if self._launcher_type == types_pb2.K8S:
-            self._k8s_namespace = self._launcher_type.get_namespace()
+            self._k8s_namespace = self._launcher.get_namespace()
 
         # analytical engine
         self._analytical_engine_stub = self._create_grpc_stub()
