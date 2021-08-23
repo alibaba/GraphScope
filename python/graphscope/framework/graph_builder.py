@@ -34,7 +34,6 @@ from graphscope.framework import utils
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
-from graphscope.framework.graph_utils import assemble_op_config
 from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
@@ -181,11 +180,21 @@ def load_from(
     oid_type = utils.normalize_data_type_str(oid_type)
     if oid_type not in ("int64_t", "std::string"):
         raise ValueError("oid_type can only be int64_t or string.")
-    v_labels = normalize_parameter_vertices(vertices)
-    e_labels = normalize_parameter_edges(edges)
-    config = assemble_op_config(v_labels, e_labels, oid_type, directed, generate_eid)
+    v_labels = normalize_parameter_vertices(vertices, oid_type)
+    e_labels = normalize_parameter_edges(edges, oid_type)
+    # generate and add a loader op to dag
+    loader_op = dag_utils.create_loader(v_labels + e_labels)
+    sess.dag.add_op(loader_op)
+    # construct create graph op
+    config = {
+        types_pb2.DIRECTED: utils.b_to_attr(directed),
+        types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
+        types_pb2.GENERATE_EID: utils.b_to_attr(generate_eid),
+        types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
+        types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+    }
     op = dag_utils.create_graph(
-        sess.session_id, graph_def_pb2.ARROW_PROPERTY, attrs=config
+        sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[loader_op], attrs=config
     )
     graph = sess.g(op)
     return graph
