@@ -236,7 +236,6 @@ enum ParamKey {
   STORAGE_OPTIONS = 321;
   READ_OPTIONS = 322;
   FD = 323;  // file descriptor
-  IS_VY_STREAM = 324;
 
   GRAPH_LIBRARY_PATH = 400;
 }

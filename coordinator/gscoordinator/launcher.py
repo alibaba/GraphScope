@@ -185,6 +185,16 @@ class LocalLauncher(Launcher):
     def zookeeper_port(self):
         return self._zookeeper_port
 
+    def get_engine_config(self):
+        config = {
+            "engine_hosts": self.hosts,
+            "mars_endpoint": None,
+        }
+        return config
+
+    def get_vineyard_stream_info(self):
+        return "ssh", self._hosts.split(",")
+
     def _get_free_port(self, host):
         port = random.randint(60001, 65535)
         while is_port_in_use(host, port):

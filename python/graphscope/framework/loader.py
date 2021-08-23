@@ -16,9 +16,9 @@
 # limitations under the License.
 #
 
+import json
 import logging
 import pathlib
-import pickle
 from typing import Dict
 from typing import Sequence
 from typing import Tuple
@@ -129,8 +129,6 @@ class Loader(object):
         """
         self.protocol = ""
         self.source = ""
-        # coordinator will spawn an io stream if is_vy_stream is false
-        self.is_vy_stream = False
         # options for data source is csv
         self.options = CSVOptions()
         check_argument(
@@ -235,7 +233,6 @@ class Loader(object):
 
     def process_vy_object(self, source):
         self.protocol = "vineyard"
-        self.is_vy_stream = True
         # encoding: add a `o` prefix to object id, and a `s` prefix to object name.
         if isinstance(source, vineyard.Object):
             self.source = "o%s" % repr(source.id)
@@ -280,14 +277,12 @@ class Loader(object):
             attr.func.attr[types_pb2.VALUES].CopyFrom(
                 utils.bytes_to_attr(self.source.encode("utf-8"))
             )
-            attr.func.attr[types_pb2.IS_VY_STREAM].CopyFrom(
-                utils.b_to_attr(self.is_vy_stream)
-            )
-            if not self.is_vy_stream:
+            if self.protocol != "vineyard":
+                # need spawn an io stream in coordinator
                 attr.func.attr[types_pb2.STORAGE_OPTIONS].CopyFrom(
-                    utils.bytes_to_attr(pickle.dumps(self.storage_options))
+                    utils.s_to_attr(json.dumps(self.storage_options))
                 )
                 attr.func.attr[types_pb2.READ_OPTIONS].CopyFrom(
-                    utils.bytes_to_attr(pickle.dumps(self.options.to_dict()))
+                    utils.s_to_attr(json.dumps(self.options.to_dict()))
                 )
         return attr

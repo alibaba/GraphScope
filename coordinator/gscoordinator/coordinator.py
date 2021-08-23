@@ -48,8 +48,6 @@ from gscoordinator.io_utils import StdoutWrapper
 # capture system stdout
 sys.stdout = StdoutWrapper(sys.stdout)
 
-import vineyard
-import vineyard.io
 from graphscope.framework import utils
 from graphscope.framework.dag_utils import create_graph
 from graphscope.framework.dag_utils import create_loader
@@ -147,12 +145,11 @@ class CoordinatorServiceServicer(
                 raise RuntimeError("Coordinator Launching failed.")
 
         self._launcher_type = self._launcher.type()
+        # string of a list of hosts, comma separated
+        self._engine_hosts = self._launcher.hosts
+        self._k8s_namespace = ""
         if self._launcher_type == types_pb2.K8S:
-            self._pods_list = self._launcher.get_pods_list()
-            self._k8s_namespace = self._launcher.get_namespace()
-        else:
-            self._pods_list = []  # locally launched
-            self._k8s_namespace = ""
+            self._k8s_namespace = self._launcher_type.get_namespace()
 
         # analytical engine
         self._analytical_engine_stub = self._create_grpc_stub()
@@ -291,15 +288,11 @@ class CoordinatorServiceServicer(
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             try:
-                if self._launcher_type == types_pb2.K8S:
-                    engine_hosts = ",".join(self._pods_list)
-                else:
-                    engine_hosts = self._launcher.hosts
                 op_pre_process(
                     op,
                     self._op_result_pool,
                     self._key_to_op,
-                    engine_hosts=engine_hosts,
+                    engine_hosts=self._engine_hosts,
                     engine_config=self._get_engine_config(),
                 )
             except Exception as e:
@@ -455,15 +448,11 @@ class CoordinatorServiceServicer(
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             try:
-                if self._launcher_type == types_pb2.K8S:
-                    engine_hosts = ",".join(self._pods_list)
-                else:
-                    engine_hosts = self._launcher.hosts
                 op_pre_process(
                     op,
                     self._op_result_pool,
                     self._key_to_op,
-                    engine_hosts=engine_hosts,
+                    engine_hosts=self._engine_hosts,
                     engine_config=self._get_engine_config(),
                 )
             except Exception as e:
@@ -543,15 +532,11 @@ class CoordinatorServiceServicer(
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             try:
-                if self._launcher_type == types_pb2.K8S:
-                    engine_hosts = ",".join(self._pods_list)
-                else:
-                    engine_hosts = self._launcher.hosts
                 op_pre_process(
                     op,
                     self._op_result_pool,
                     self._key_to_op,
-                    engine_hosts=engine_hosts,
+                    engine_hosts=self._engine_hosts,
                     engine_config=self._get_engine_config(),
                 )
             except Exception as e:
@@ -587,15 +572,11 @@ class CoordinatorServiceServicer(
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             try:
-                if self._launcher_type == types_pb2.K8S:
-                    engine_hosts = ",".join(self._pods_list)
-                else:
-                    engine_hosts = self._launcher.hosts
                 op_pre_process(
                     op,
                     self._op_result_pool,
                     self._key_to_op,
-                    engine_hosts=engine_hosts,
+                    engine_hosts=self._engine_hosts,
                     engine_config=self._get_engine_config(),
                 )
             except Exception as e:
@@ -867,18 +848,16 @@ class CoordinatorServiceServicer(
             )
 
     def _output(self, op: op_def_pb2.OpDef):
+        import vineyard
+        import vineyard.io
+
         storage_options = pickle.loads(op.attr[types_pb2.STORAGE_OPTIONS].s)
         fd = op.attr[types_pb2.FD].s.decode()
         df = op.attr[types_pb2.VINEYARD_ID].s.decode()
         engine_config = self._get_engine_config()
         vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
         vineyard_ipc_socket = engine_config["vineyard_socket"]
-        if self._launcher_type == types_pb2.K8S:
-            deployment = "kubernetes"
-            hosts = ["%s:%s" % (self._k8s_namespace, host) for host in self._pods_list]
-        else:
-            deployment = "ssh"
-            hosts = self._launcher.hosts.split(",")
+        deployment, hosts = self._launcher.get_vineyard_stream_info()
         dfstream = vineyard.io.open(
             "vineyard://" + str(df),
             mode="r",
@@ -901,17 +880,13 @@ class CoordinatorServiceServicer(
 
     def _process_data_source(self, op: op_def_pb2.OpDef):
         def _spawn_vineyard_io_stream(source, storage_options, read_options):
+            import vineyard
+            import vineyard.io
+
             engine_config = self._get_engine_config()
             vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
             vineyard_ipc_socket = engine_config["vineyard_socket"]
-            if self._launcher_type == types_pb2.K8S:
-                deployment = "kubernetes"
-                hosts = [
-                    "%s:%s" % (self._k8s_namespace, host) for host in self._pods_list
-                ]
-            else:
-                deployment = "ssh"
-                hosts = self._launcher.hosts.split(",")
+            deployment, hosts = self._launcher.get_vineyard_stream_info()
             num_workers = self._launcher.num_workers
             stream_id = repr(
                 vineyard.io.open(
@@ -930,21 +905,17 @@ class CoordinatorServiceServicer(
 
         def _process_loader_func(func):
             protocol = func.attr[types_pb2.PROTOCOL].s.decode()
-            if protocol in ("hdfs", "hive", "oss", "s3", "vineyard"):
-                is_vy_stream = func.attr[types_pb2.IS_VY_STREAM].b
-                if not is_vy_stream:
-                    source = func.attr[types_pb2.VALUES].s.decode()
-                    storage_options = pickle.loads(
-                        func.attr[types_pb2.STORAGE_OPTIONS].s
-                    )
-                    read_options = pickle.loads(func.attr[types_pb2.READ_OPTIONS].s)
-                    new_protocol, new_source = _spawn_vineyard_io_stream(
-                        source, storage_options, read_options
-                    )
-                    func.attr[types_pb2.PROTOCOL].CopyFrom(
-                        utils.s_to_attr(new_protocol)
-                    )
-                    func.attr[types_pb2.VALUES].CopyFrom(utils.s_to_attr(new_source))
+            if protocol in ("hdfs", "hive", "oss", "s3"):
+                source = func.attr[types_pb2.VALUES].s.decode()
+                storage_options = json.loads(
+                    func.attr[types_pb2.STORAGE_OPTIONS].s.decode()
+                )
+                read_options = json.loads(func.attr[types_pb2.READ_OPTIONS].s.decode())
+                new_protocol, new_source = _spawn_vineyard_io_stream(
+                    source, storage_options, read_options
+                )
+                func.attr[types_pb2.PROTOCOL].CopyFrom(utils.s_to_attr(new_protocol))
+                func.attr[types_pb2.VALUES].CopyFrom(utils.s_to_attr(new_source))
 
         for label in op.attr[types_pb2.ARROW_PROPERTY_DEFINITION].list.func:
             # vertex label or edge label
@@ -1015,6 +986,8 @@ class CoordinatorServiceServicer(
         gremlin_client = self._object_manager.get(key_of_parent_op)
 
         def load_subgraph(oid_type, name):
+            import vineyard
+
             vertices = [Loader(vineyard.ObjectName("__%s_vertex_stream" % name))]
             edges = [Loader(vineyard.ObjectName("__%s_edge_stream" % name))]
             oid_type = normalize_data_type_str(oid_type)
@@ -1225,13 +1198,7 @@ class CoordinatorServiceServicer(
         fetch_response = self._analytical_engine_stub.RunStep(fetch_request)
 
         config = json.loads(fetch_response.results[0].result.decode("utf-8"))
-        if self._launcher_type == types_pb2.K8S:
-            config["vineyard_service_name"] = self._launcher.get_vineyard_service_name()
-            config["vineyard_rpc_endpoint"] = self._launcher.get_vineyard_rpc_endpoint()
-            config["mars_endpoint"] = self._launcher.get_mars_scheduler_endpoint()
-        else:
-            config["engine_hosts"] = self._launcher.hosts
-            config["mars_endpoint"] = None
+        config.update(self._launcher.get_engine_config())
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
