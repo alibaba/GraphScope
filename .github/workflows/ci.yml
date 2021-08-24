@@ -485,7 +485,7 @@ jobs:
             registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
 
   build-gss:
-    runs-on: ubuntu-20.04
+    runs-on: self-hosted
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
