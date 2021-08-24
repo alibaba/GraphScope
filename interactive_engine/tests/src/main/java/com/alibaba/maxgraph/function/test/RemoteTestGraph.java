@@ -328,6 +328,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesTest",
         method = "g_injectXg_VX1X_propertiesXnameX_nextX_value",
         reason = "Not support inject operator")
+
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ConstantTest",
         method = "g_V_chooseXhasLabelXpersonX_valuesXnameX_constantXinhumanXX",
         reason = "Not support inject operator")
