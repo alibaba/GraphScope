@@ -528,6 +528,7 @@ mod rob {
                                 .get_mut_or_insert(&tag)
                                 .push_back(BlockEntry::Single((target, x)));
                             has_block = true;
+                            trace_worker!("output[{:?}] blocked when push data of {:?} ;", self.port, tag);
                             break;
                         }
                     }
@@ -536,9 +537,17 @@ mod rob {
             }
 
             if has_block {
-                self.blocks
-                    .get_mut_or_insert(&batch.tag)
-                    .push_back(BlockEntry::Batch(batch));
+                if !batch.is_empty() {
+                    trace_worker!(
+                        "output[{:?}] blocking on push batch(len={}) of {:?} ;",
+                        self.port,
+                        batch.len(),
+                        batch.tag
+                    );
+                    self.blocks
+                        .get_mut_or_insert(&batch.tag)
+                        .push_back(BlockEntry::Batch(batch));
+                }
                 would_block!("no buffer available in exchange;")
             } else {
                 if let Some(mut end) = batch.take_end() {
@@ -557,6 +566,7 @@ mod rob {
         fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
             if !self.blocks.is_empty() {
                 if let Some(b) = self.blocks.get_mut(&batch.tag) {
+                    warn_worker!("output[{:?}] block pushing batch of {:?} ;", self.port, batch.tag);
                     b.push_back(BlockEntry::Batch(batch));
                     return would_block!("no buffer available in exchange;");
                 }
@@ -604,7 +614,6 @@ mod rob {
                     }
                     batch.set_end(end);
                 }
-
                 self.pushes[target].push(batch)
             } else {
                 let tag = batch.tag.clone();

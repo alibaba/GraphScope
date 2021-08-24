@@ -600,18 +600,18 @@ mod rob {
                         let end_cp = end.clone();
                         batch.set_end(end);
                         batch.set_tag(tag);
-                        self.push(batch)?;
+                        self.push.push(batch)?;
                         let mut p = MicroBatch::new(end_cp.tag.clone(), self.src, ReadBuffer::new());
                         p.set_end(end_cp);
-                        self.push(p)
+                        self.push.push(p)
                     } else if self.delta.scope_level_delta == 0 {
                         batch.set_end(end);
                         batch.set_tag(tag);
-                        self.push(batch)
+                        self.push.push(batch)
                     } else {
                         // leave:
                         batch.set_tag(tag);
-                        self.push(batch)
+                        self.push.push(batch)
                     }
                 } else if !batch.is_empty() {
                     batch.set_tag(tag);
@@ -678,6 +678,11 @@ mod rob {
                     let msg_cp = msg.share();
                     if let Err(err) = tx.push(msg_cp) {
                         if err.is_would_block() {
+                            trace_worker!(
+                                "tee[{:?}] other push blocked on push batch of {:?} ;",
+                                self.port,
+                                msg.tag
+                            );
                             would_block = true;
                         } else {
                             return Err(err);
@@ -693,7 +698,12 @@ mod rob {
                         Ok(())
                     }
                 }
-                Err(err) => Err(err),
+                Err(err) => {
+                    if err.is_would_block() {
+                        trace_worker!("tee[{:?}] main push blocked on push batch of;", self.port);
+                    }
+                    Err(err)
+                }
             }
         }
 

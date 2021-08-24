@@ -108,7 +108,7 @@ impl InboundStreamState {
 
     pub fn on_end(&mut self, src: u32, end: EndSignal) -> IOResult<()> {
         //debug_worker!("accept eos {:?} from {}", end, src);
-        assert!(end.source_weight.value() > 1);
+        assert!(end.source_weight.value() > 1, "source weight = 1 should be passed with data;");
         let idx = end.tag.len();
         assert!(idx <= self.scope_level as usize);
         let tag = end.tag.clone();

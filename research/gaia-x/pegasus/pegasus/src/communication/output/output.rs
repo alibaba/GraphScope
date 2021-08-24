@@ -306,6 +306,7 @@ mod rob {
             let buf_pool =
                 ScopeBufferPool::new(meta.batch_size, batch_capacity, scope_capacity, scope_level);
             let src = crate::worker_id::get_current_worker().index;
+            let parent_level = if scope_level == 0 { 0 } else { scope_level - 1 };
             OutputHandle {
                 port: meta.port,
                 scope_level,
@@ -316,8 +317,8 @@ mod rob {
                 blocks: VecDeque::new(),
                 seq_emit: TidyTagMap::new(scope_level),
                 is_closed: false,
-                current_skips: TidyTagMap::new(scope_level - 1),
-                parent_skips: TidyTagMap::new(scope_level),
+                current_skips: TidyTagMap::new(scope_level),
+                parent_skips: TidyTagMap::new(parent_level),
             }
         }
 
@@ -330,6 +331,7 @@ mod rob {
 
             if let Err(e) = self.try_push_iter(tag, &mut iter) {
                 if e.is_would_block() {
+                    trace_worker!("output[{:?}] blocked on push iterator of {:?} ;", self.port, tag);
                     if let Some(b) = self.in_block.remove(tag) {
                         match b {
                             BlockEntry::Single(x) => {
@@ -377,11 +379,16 @@ mod rob {
             self.is_closed
         }
 
+        pub(crate) fn pin(&mut self, tag: &Tag) -> bool {
+            self.buf_pool.pin(tag)
+        }
+
         pub(crate) fn try_unblock(&mut self, unblocked: &mut Vec<Tag>) -> IOResult<()> {
             let len = self.blocks.len();
             if len > 0 {
                 for _ in 0..len {
                     if let Some(tag) = self.blocks.pop_front() {
+                        trace_worker!("output[{:?}] try to unblock data of {:?};", self.port, tag);
                         if self.tee.try_unblock(&tag)? {
                             if let Some(iter) = self.in_block.remove(&tag) {
                                 match iter {
@@ -420,9 +427,10 @@ mod rob {
                                         self.push_box_iter(&tag, iter)?;
                                     }
                                 }
-                                trace_worker!("data in scope {:?} unblocked", tag);
+                                trace_worker!("output[{:?}]: data in scope {:?} unblocked", self.port, tag);
                                 unblocked.push(tag);
                             } else {
+                                trace_worker!("output[{:?}]: data in scope {:?} unblocked", self.port, tag);
                                 unblocked.push(tag);
                             }
                         } else {
@@ -545,6 +553,13 @@ mod rob {
             batch.set_seq(*seq);
             *seq += 1;
             let tag = batch.tag();
+            trace_worker!(
+                "output[{:?}] push {}th batch(len={}) of {:?} ;",
+                self.port,
+                seq,
+                batch.len(),
+                tag
+            );
             match self.tee.push(batch) {
                 Err(e) => {
                     if e.is_would_block() {
@@ -576,6 +591,7 @@ mod rob {
             if output.is_skipped(&tag) {
                 OutputSession { tag, skip: true, output }
             } else {
+                trace_worker!("output[{:?}] try to pin {:?} to create output session; ", output.port, tag);
                 output.buf_pool.pin(&tag);
                 OutputSession { tag, skip: false, output }
             }
@@ -673,7 +689,7 @@ mod rob {
         }
 
         fn try_push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
-            self.buf_pool.pin(tag);
+            //self.buf_pool.pin(tag);
             loop {
                 match self.buf_pool.push_iter(tag, iter) {
                     Ok(Some(buf)) => {
@@ -705,10 +721,12 @@ mod rob {
                 MicroBatch::new(end.tag.clone(), self.src, ReadBuffer::new())
             };
             batch.set_end(end);
+            trace_worker!("output[{:?}] notify end of {:?}", self.port, batch.tag);
             self.flush_batch(batch)
         }
 
         fn flush(&mut self) -> IOResult<()> {
+            trace_worker!("output[{:?}] force flush all buffers;", self.port);
             let mut buffers = std::mem::replace(&mut self.buf_pool, Default::default());
             let result = self.flush_inner(&mut buffers);
             self.buf_pool = buffers;
@@ -718,6 +736,7 @@ mod rob {
         fn close(&mut self) -> IOResult<()> {
             self.flush()?;
             self.is_closed = true;
+            trace_worker!("output[{:?}] closing ...;", self.port);
             self.tee.close()
         }
     }

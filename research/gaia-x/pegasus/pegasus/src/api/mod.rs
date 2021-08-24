@@ -34,7 +34,6 @@ pub enum BranchEnum {
     Right,
 }
 
-
 /// Represents a notification which always indicates that data of a scope in the input stream
 /// has exhaust;
 #[derive(Clone)]

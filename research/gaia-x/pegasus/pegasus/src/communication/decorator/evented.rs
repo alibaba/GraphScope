@@ -225,7 +225,8 @@ mod rob {
         pub target_worker: u32,
         inner: GeneralPush<MicroBatch<T>>,
         event_emitter: EventEmitter,
-        push_counts: TidyTagMap<usize>,
+        // scope -> (sequence, counts)
+        push_monitor: TidyTagMap<(usize, usize)>,
     }
 
     #[allow(dead_code)]
@@ -241,31 +242,35 @@ mod rob {
                 target_worker,
                 inner: push,
                 event_emitter: emitter,
-                push_counts,
+                push_monitor: push_counts,
             }
         }
 
         pub fn get_push_count(&self, tag: &Tag) -> Option<usize> {
-            self.push_counts.get(tag).copied()
+            self.push_monitor.get(tag).map(|(_, x)| *x)
         }
 
         pub fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
-            if end.tag.len() == self.push_counts.scope_level as usize {
-                let size = self.push_counts.remove(&end.tag).unwrap_or(0);
+            if end.tag.len() == self.push_monitor.scope_level as usize {
+                let size = self
+                    .push_monitor
+                    .remove(&end.tag)
+                    .unwrap_or((0, 0));
                 trace_worker!(
-                    "output[{:?}]:  pushed {} records of {:?} to {} totally, notify end;",
+                    "output[{:?}]: stop push data of {:?} to ch {}  to worker {}, total pushed {} ;",
                     self.ch_info.source_port,
-                    size,
                     end.tag,
-                    self.target_worker
+                    self.ch_info.id.index,
+                    self.target_worker,
+                    size.1
                 );
-            } else {
-                trace_worker!("output[{:?}] notify end of {:?}", self.ch_info.source_port, end.tag);
             }
 
             trace_worker!(
-                "send end event of {:?} on to [worker {}]: port: {:?} ;",
+                "output[{:?}]: send end event of {:?} to ch {} to worker {} to port {:?};",
+                self.ch_info.source_port,
                 end.tag,
+                self.ch_info.id.index,
                 self.target_worker,
                 self.ch_info.target_port
             );
@@ -276,22 +281,39 @@ mod rob {
     }
 
     impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
-        fn push(&mut self, batch: MicroBatch<D>) -> IOResult<()> {
+        fn push(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
             let len = batch.len();
             assert!(len > 0, "push batch size = 0;");
             if batch.is_last() {
-                let mut cnt = self.push_counts.remove(&batch.tag).unwrap_or(0);
+                let (seq, mut cnt) = self
+                    .push_monitor
+                    .remove(&batch.tag)
+                    .unwrap_or((0, 0));
+                batch.set_seq(seq as u64);
                 cnt += len;
                 trace_worker!(
-                    "output[{:?}] pushed {} records of {:?} to {} totally, notify end;",
+                    "output[{:?}] push last batch(len={}) of {:?} to ch {} to worker {}, total pushed {} ;",
                     self.ch_info.source_port,
-                    cnt,
+                    len,
                     batch.tag,
-                    self.target_worker
+                    self.ch_info.id.index,
+                    self.target_worker,
+                    cnt
                 );
             } else {
-                let cnt = self.push_counts.get_mut_or_insert(&batch.tag);
+                let (seq, cnt) = self.push_monitor.get_mut_or_insert(&batch.tag);
                 *cnt += len;
+                batch.set_seq(*seq as u64);
+                *seq += 1;
+                trace_worker!(
+                    "output[{:?}] push {}th batch(len={}) of {:?} to ch {} to worker {} ;",
+                    self.ch_info.source_port,
+                    *seq,
+                    len,
+                    batch.tag,
+                    self.ch_info.id.index,
+                    self.target_worker
+                );
             }
             self.inner.push(batch)
         }

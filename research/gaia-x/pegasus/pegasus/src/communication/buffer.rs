@@ -491,16 +491,30 @@ mod rob {
             }
         }
 
-        pub fn pin(&mut self, tag: &Tag) {
+        pub fn pin(&mut self, tag: &Tag) -> bool {
             if let Some((p, buf)) = self.pinned.take() {
                 if &p == tag {
                     self.pinned = Some((p, buf));
-                    return;
+                    true
                 } else {
                     self.buf_slots.insert(p, buf);
                     if let Some(buf) = self.buf_slots.get(tag) {
+                        trace_worker!("update pinned buffers to scope {:?};", tag);
                         self.pinned = Some((tag.clone(), buf.clone()));
+                        true
+                    } else {
+                        trace_worker!("can't pin buffer for scope {:?} as slot not created;", tag);
+                        false
                     }
+                }
+            } else {
+                if let Some(buf) = self.buf_slots.get(tag) {
+                    trace_worker!("pinned buffers to scope {:?};", tag);
+                    self.pinned = Some((tag.clone(), buf.clone()));
+                    true
+                } else {
+                    trace_worker!("can't pin buffer for scope {:?} as slot not created;", tag);
+                    false
                 }
             }
         }
@@ -585,6 +599,7 @@ mod rob {
                         BufferPool::new(self.batch_size, self.batch_capacity, self.global_pool.clone());
                     let buf = BufSlot::new(self.batch_size, None, pool);
                     let buf_slot = NonNullBufSlotPtr::new(buf);
+                    trace_worker!("create new buffer slot for scope {:?};", tag);
                     self.buf_slots
                         .insert(tag.clone(), buf_slot.clone());
                     Some(buf_slot)
@@ -598,10 +613,12 @@ mod rob {
                     }
 
                     if let Some(f) = find {
+                        trace_worker!("reuse idle buffer slot for scope {:?};", tag);
                         let slot = self.buf_slots.remove(&f).expect("find lost");
                         self.buf_slots.insert(tag.clone(), slot.clone());
                         Some(slot)
                     } else {
+                        trace_worker!("no buffer slot available for scope {:?};", tag);
                         None
                     }
                 }

@@ -335,7 +335,7 @@ mod rob {
     pub struct LocalMicroBatchPush<T: Data> {
         pub ch_info: ChannelInfo,
         inner: ThreadPush<MicroBatch<T>>,
-        push_counts: TidyTagMap<(usize, usize)>,
+        push_counts: TidyTagMap<usize>,
     }
 
     #[allow(dead_code)]
@@ -347,26 +347,36 @@ mod rob {
     }
 
     impl<T: Data> Push<MicroBatch<T>> for LocalMicroBatchPush<T> {
-        fn push(&mut self, msg: MicroBatch<T>) -> IOResult<()> {
+        fn push(&mut self, batch: MicroBatch<T>) -> IOResult<()> {
             if log_enabled!(log::Level::Trace) {
-                let c = self.push_counts.get_mut_or_insert(&msg.tag);
-                c.0 += msg.len();
+                if batch.is_last() {
+                    let mut c = self.push_counts.remove(&batch.tag).unwrap_or(0);
+                    c += batch.len();
+                    trace_worker!(
+                        "output[{:?}] push last batch(len={}) of {:?} to local ch {}, total pushed {};",
+                        self.ch_info.source_port,
+                        batch.len(),
+                        batch.tag,
+                        self.ch_info.id.index,
+                        c
+                    );
+                } else {
+                    let c = self.push_counts.get_mut_or_insert(&batch.tag);
+                    *c += batch.len();
+                    trace_worker!(
+                        "output[{:?}] push {}th batch(len={}) of {:?} to local ch {};",
+                        self.ch_info.source_port,
+                        batch.get_seq() + 1,
+                        batch.len(),
+                        batch.tag,
+                        self.ch_info.id.index
+                    );
+                }
             }
-            self.inner.push(msg)
+            self.inner.push(batch)
         }
 
         fn flush(&mut self) -> IOResult<()> {
-            if log_enabled!(log::Level::Trace) {
-                let port = self.ch_info.source_port;
-                for (a, b) in self.push_counts.iter_mut() {
-                    let cnt = b.0;
-                    if cnt > 0 {
-                        b.1 += cnt;
-                        b.0 = 0;
-                        trace_worker!("output[{:?}] flush {} data of {:?} to self;", port, cnt, a);
-                    }
-                }
-            }
             self.inner.flush()?;
             Ok(())
         }

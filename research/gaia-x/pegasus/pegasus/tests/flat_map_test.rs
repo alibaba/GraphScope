@@ -25,7 +25,7 @@ fn flat_map_test_1() {
 
 #[test]
 fn flat_map_test_2() {
-    let conf = JobConf::new("flat_map_test_1");
+    let conf = JobConf::new("flat_map_test_2");
     let num = 1000u32;
     let mut result = pegasus::run(conf, move || {
         move |input, output| {
@@ -44,7 +44,7 @@ fn flat_map_test_2() {
 
 #[test]
 fn flat_map_test_3() {
-    let mut conf = JobConf::new("flat_map_test_2");
+    let mut conf = JobConf::new("flat_map_test_3");
     conf.set_workers(2);
     let num = 100u32;
     let mut result = pegasus::run(conf, move || {
@@ -71,7 +71,7 @@ fn flat_map_test_3() {
 
 #[test]
 fn flat_map_test_4() {
-    let mut conf = JobConf::new("flat_map_test_3");
+    let mut conf = JobConf::new("flat_map_test_4");
     conf.set_workers(2);
     let mut result = pegasus::run(conf, move || {
         let src = if pegasus::get_current_worker().index == 0 { vec![100, 100] } else { vec![] };

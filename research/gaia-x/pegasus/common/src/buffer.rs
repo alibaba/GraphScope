@@ -17,12 +17,17 @@ mod rob {
 
     impl<D> BufferRecycleHook<D> {
         pub fn recycle(&self, mut buf: Buffer<D>) -> Option<Buffer<D>> {
-            if buf.capacity() > 0 {
-                assert!(buf.capacity() >= self.batch_size);
+            let cap = buf.capacity();
+            if cap > 0 {
+                //assert!(cap >= self.batch_size);
                 if !self.dropped.load(Ordering::SeqCst) {
-                    //debug!("try to recycle batch;");
                     buf.clear();
-                    return if let Err(e) = self.proxy.push(buf) { Some(e.0) } else { None };
+                    return if let Err(e) = self.proxy.push(buf) {
+                        Some(e.0)
+                    } else {
+                        trace!("try to recycle buf with capacity={}", cap);
+                        None
+                    };
                 }
             }
             Some(buf)
@@ -103,8 +108,9 @@ mod rob {
 
         fn recycle(&mut self) {
             if !self.recycle_hooks.is_empty() {
+                // trace!("try to recycle buf with {} hooks;", self.recycle_hooks.len());
                 let mut batch = std::mem::replace(self, Buffer::new());
-                while let Some(hook) = self.recycle_hooks.pop() {
+                while let Some(hook) = batch.recycle_hooks.pop() {
                     if let Some(b) = hook.recycle(batch) {
                         batch = b;
                     } else {
@@ -112,6 +118,8 @@ mod rob {
                     }
                 }
                 batch.inner = vec![];
+            } else {
+                // trace!("no recycle hook found;")
             }
         }
     }
@@ -327,6 +335,7 @@ mod rob {
                 // self reuse;
                 buf.clear();
                 buf.insert_recycle_hook(self.get_hook());
+                trace!("reuse idle buf;");
                 return Some(buf);
             } else if self.alloc < self.capacity {
                 // create new and use;
