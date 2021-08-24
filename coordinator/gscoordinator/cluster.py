@@ -757,15 +757,17 @@ class KubernetesClusterLauncher(Launcher):
 
         # launch zetcd proxy
         logger.info("Launching zetcd proxy service ...")
-        zetcd_sh = shutil.which("zetcd")
-        if not zetcd_sh:
+        zetcd_cmd = shutil.which("zetcd")
+        if not zetcd_cmd:
             raise RuntimeError("zetcd command not found.")
+        port = self._random_etcd_listen_client_service_port
+        etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
+        for i in range(self._etcd_num_pods):
+            etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
         cmd = [
-            zetcd_sh,
-            "--zkaddr",
-            "0.0.0.0:{}".format(self._zookeeper_port),
-            "--endpoints",
-            self._etcd_endpoint,
+            zetcd_cmd,
+            "--zkaddr 0.0.0.0:{}".format(self._zookeeper_port),
+            '--endpoints "%s"' % (";".join(etcd_endpoints),),
         ]
 
         process = subprocess.Popen(
