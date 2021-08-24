@@ -54,7 +54,7 @@ class GSConfig(object):
     # etcd resource configuration
     k8s_etcd_num_pods = 1
     k8s_etcd_cpu = 1.0
-    k8s_etcd_mem = "512Mi"
+    k8s_etcd_mem = "1Gi"
 
     # GIE graph manager resource configuration
     k8s_gie_graph_manager_cpu = 0.2
