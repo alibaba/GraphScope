@@ -12,15 +12,10 @@
     <artifactId>gaia-adaptor</artifactId>
 
     <dependencies>
-        <!--<dependency>-->
-            <!--<groupId>com.alibaba.graphscope</groupId>-->
-            <!--<artifactId>gremlin-server-plugin</artifactId>-->
-            <!--<version>1.0-SNAPSHOT</version>-->
-        <!--</dependency>-->
         <dependency>
-            <groupId>com.alibaba.maxgraph</groupId>
-            <artifactId>v2</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <groupId>com.alibaba.graphscope</groupId>
+            <artifactId>gremlin-server-plugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba.graphscope</groupId>
@@ -36,45 +31,6 @@
 
     <build>
         <plugins>
-            <!--<plugin>-->
-                <!--<groupId>org.apache.maven.plugins</groupId>-->
-                <!--<artifactId>maven-shade-plugin</artifactId>-->
-                <!--<version>3.2.1</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<phase>package</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>shade</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<filters>-->
-                                <!--<filter>-->
-                                    <!--<artifact>*:*</artifact>-->
-                                    <!--<excludes>-->
-                                        <!--<exclude>META-INF/*.SF</exclude>-->
-                                        <!--<exclude>META-INF/*.DSA</exclude>-->
-                                        <!--<exclude>META-INF/*.RSA</exclude>-->
-                                    <!--</excludes>-->
-                                <!--</filter>-->
-                            <!--</filters>-->
-                            <!--<transformers>-->
-                                <!--<transformer-->
-                                        <!--implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>-->
-                            <!--</transformers>-->
-                            <!--<relocations>-->
-                                <!--<relocation>-->
-                                    <!--<pattern>com.google.common</pattern>-->
-                                    <!--<shadedPattern>shaded.com.google.common</shadedPattern>-->
-                                <!--</relocation>-->
-                                <!--<relocation>-->
-                                    <!--<pattern>com.google.protobuf</pattern>-->
-                                    <!--<shadedPattern>shaded.com.google.protobuf</shadedPattern>-->
-                                <!--</relocation>-->
-                            <!--</relocations>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>

@@ -16,7 +16,7 @@ To run GraphScope on your local computer, the following dependencies or tools ar
 On Windows and macOS, you can follow the official guides to install them and enable Kubernetes in Docker.
 For Ubuntu/CentOS Linux distributions, we provide a script to install the above
 dependencies and prepare the environment.
-Alternatively, you may want to install `WSL2 <https://docs.microsoft.com/zh-cn/windows/wsl/install-win10>`_ on Windows to use the script.
+Alternatively, you may want to install `WSL2 <https://docs.microsoft.com/en-us/windows/wsl/install-win10>`_ on Windows to use the script.
 
 .. code:: bash
 

@@ -138,13 +138,39 @@ def create_graph(session_id, graph_type, inputs=None, **kwargs):
     return op
 
 
-def add_labels_to_graph(graph, **kwargs):
+def create_loader(vertex_or_edge_label_list):
+    """Create a loader operation.
+    Args:
+        vertex_or_edge_label_list: List of
+            (:class:`graphscope.framework.graph_utils.VertexLabel`) or
+            (:class:`graphscope.framework.graph_utils.EdgeLabel`)
+    Returns:
+        An op to take various data sources as a loader.
+    """
+    if not isinstance(vertex_or_edge_label_list, list):
+        vertex_or_edge_label_list = [vertex_or_edge_label_list]
+    attr = attr_value_pb2.AttrValue()
+    attr.list.func.extend([label.attr() for label in vertex_or_edge_label_list])
+    config = {}
+    config[types_pb2.ARROW_PROPERTY_DEFINITION] = attr
+    op = Operation(
+        vertex_or_edge_label_list[0]._session_id,
+        types_pb2.DATA_SOURCE,
+        config=config,
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def add_labels_to_graph(graph, loader_op):
     """Add new labels to existed graph.
 
     Args:
         graph (:class:`Graph`): A graph instance.
             May not be fully loaded. i.e. it's in a building
             procedure.
+        loader_op (:class:`graphscope.framework.operation.Operation`):
+            Operation of loader.
 
     Raises:
         NotImplementedError: When encountered not supported graph type.
@@ -159,19 +185,19 @@ def add_labels_to_graph(graph, **kwargs):
     from graphscope.framework.graph import GraphDAGNode
 
     assert isinstance(graph, GraphDAGNode)
-    inputs = [graph.op]
+    inputs = [graph.op, loader_op]
+    # vid_type is fixed
     config = {
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph._graph_type),
+        types_pb2.DIRECTED: utils.b_to_attr(graph._directed),
+        types_pb2.OID_TYPE: utils.s_to_attr(graph._oid_type),
+        types_pb2.GENERATE_EID: utils.b_to_attr(graph._generate_eid),
+        types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
+        types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
     }
     # inferred from the context of the dag.
     config.update({types_pb2.GRAPH_NAME: utils.place_holder_to_attr()})
-    if graph._graph_type == graph_def_pb2.ARROW_PROPERTY:
-        attrs = kwargs.pop("attrs", None)
-        if attrs:
-            for k, v in attrs.items():
-                if isinstance(v, attr_value_pb2.AttrValue):
-                    config[k] = v
-    else:
+    if graph._graph_type != graph_def_pb2.ARROW_PROPERTY:
         raise NotImplementedError(
             f"Add vertices or edges is not supported yet on graph type {graph._graph_type}"
         )
@@ -780,6 +806,32 @@ def to_vineyard_dataframe(context, selector=None, vertex_range=None):
         config=config,
         inputs=[context.op],
         output_types=types_pb2.VINEYARD_DATAFRAME,
+    )
+    return op
+
+
+def output(result, fd, **kwargs):
+    """Dump result to `fd`
+
+    Parameters:
+        result (:class:`graphscope.framework.context.ResultDAGNode`):
+            Dataframe or numpy or result hold the object id of vineyard dataframe.
+        fd (str): Such as `file:///tmp/result_path`
+        kwargs (dict, optional): Storage options with respect to output storage type
+
+    Returns:
+        An op to dump result to `fd`.
+    """
+    config = {
+        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
+        types_pb2.FD: utils.s_to_attr(str(fd)),
+    }
+    op = Operation(
+        result.session_id,
+        types_pb2.OUTPUT,
+        config=config,
+        inputs=[result.op],
+        output_types=types_pb2.NULL_OUTPUT,
     )
     return op
 

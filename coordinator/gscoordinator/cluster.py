@@ -306,9 +306,21 @@ class KubernetesClusterLauncher(Launcher):
     def get_manager_host(self):
         return "http://{0}".format(self._get_graph_manager_service_endpoint())
 
+    def get_vineyard_stream_info(self):
+        hosts = [
+            "%s:%s" % (self._saved_locals["namespace"], host)
+            for host in self._pod_name_list
+        ]
+        return "kubernetes", hosts
+
     @property
     def preemptive(self):
         return self._saved_locals["preemptive"]
+
+    @property
+    def hosts(self):
+        """String of a list of pod name, comma separated."""
+        return ",".join(self._pod_name_list)
 
     def distribute_file(self, path):
         dir = os.path.dirname(path)
@@ -679,6 +691,14 @@ class KubernetesClusterLauncher(Launcher):
             )
             return endpoints
         raise RuntimeError("Get graphlearn service endpoint failed.")
+
+    def get_engine_config(self):
+        config = {
+            "vineyard_service_name": self.get_vineyard_service_name(),
+            "vineyard_rpc_endpoint": self.get_vineyard_rpc_endpoint(),
+            "mars_endpoint": self.get_mars_scheduler_endpoint(),
+        }
+        return config
 
     def _create_interactive_engine_service(self):
         logger.info("Launching GIE graph manager ...")

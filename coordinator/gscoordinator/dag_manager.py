@@ -28,10 +28,12 @@ class GSEngine(Enum):
     analytical_engine = 0
     interactive_engine = 1
     learning_engine = 2
+    coordinator = 11
 
 
 class DAGManager(object):
     _analytical_engine_split_op = [
+        types_pb2.CREATE_GRAPH,  # spawn an io stream to read/write data from/to vineyard
         types_pb2.BIND_APP,  # need loaded graph to compile
         types_pb2.ADD_LABELS,  # need loaded graph
         types_pb2.RUN_APP,  # need loaded app
@@ -61,6 +63,11 @@ class DAGManager(object):
         types_pb2.CLOSE_LEARNING_INSTANCE,
     ]
 
+    _coordinator_split_op = [
+        types_pb2.DATA_SOURCE,  # spawn an io stream to read/write data from/to vineyard
+        types_pb2.OUTPUT,  # spawn an io stream to read/write data from/to vineyard
+    ]
+
     def __init__(self, dag_def: op_def_pb2.DagDef):
         self._dag_def = dag_def
         self._split_dag_def_queue = queue.Queue()
@@ -84,6 +91,11 @@ class DAGManager(object):
                     self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
                 split_dag_def = op_def_pb2.DagDef()
                 split_dag_def_for = GSEngine.learning_engine
+            if op.op in self._coordinator_split_op:
+                if split_dag_def.op:
+                    self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
+                split_dag_def = op_def_pb2.DagDef()
+                split_dag_def_for = GSEngine.coordinator
             split_dag_def.op.extend([copy.deepcopy(op)])
         if len(split_dag_def.op) > 0:
             self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))

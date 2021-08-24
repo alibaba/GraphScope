@@ -135,6 +135,13 @@ def test_add_column(arrow_property_graph, property_context):
     assert "result_1" in [p.name for p in g2.schema.get_vertex_properties("v1")]
 
 
+def test_context_output(simple_context):
+    simple_context.output(
+        fd="file:///tmp/rlt.csv",
+        selector={"id": "v.id", "data": "v.data", "result": "r"},
+    )
+
+
 def test_add_column_after_computation(arrow_property_graph):
     sg = arrow_property_graph.project(vertices={"v0": ["id"]}, edges={"e0": ["weight"]})
     ret = sssp(sg, 20)

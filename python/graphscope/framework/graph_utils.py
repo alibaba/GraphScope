@@ -59,40 +59,42 @@ class VertexLabel(object):
         properties: Sequence = None,
         vid_field: Union[str, int] = 0,
         session_id=None,
+        id_type: str = "int64_t",
     ):
         self.label = label
+        # loader to take various data source
         if isinstance(loader, Loader):
             self.loader = loader
         else:
             self.loader = Loader(loader)
-
+        # raw properties passed by user parameters
         self.raw_properties = properties
+        # finally properties for constructing graph
         self.properties = []
+        # column index or property name used as id field
         self.vid_field = vid_field
+        # type of vertex original id
+        # should be consistent with the original graph
+        self.id_type = id_type
         self._session_id = session_id
-        self._finished = False
-
-    def finish(self, id_type: str = "int64_t"):
-        # Normalize properties
-        # Add vid to property list
-        if self._finished:
-            return
-        self.add_property(str(self.vid_field), id_type)
+        # normalize properties
+        # add vid to property list
+        self.add_property(str(self.vid_field), self.id_type)
         if self.raw_properties:
             self.add_properties(self.raw_properties)
         elif self.loader.deduced_properties:
             self.add_properties(self.loader.deduced_properties)
+        # set selected columns to loader
         self.loader.select_columns(
             self.properties, include_all=bool(self.raw_properties is None)
         )
-        self.loader.finish(self._session_id)
-        self._finished = True
 
     def __str__(self) -> str:
         s = "\ntype: VertexLabel"
         s += "\nlabel: " + self.label
         s += "\nproperties: " + str(self.properties)
         s += "\nvid: " + str(self.vid_field)
+        s += "\nid_type: " + self.id_type
         s += "\nloader: " + repr(self.loader)
         return s
 
@@ -110,6 +112,21 @@ class VertexLabel(object):
             else:
                 self.add_property(prop[0], prop[1])
 
+    def attr(self) -> attr_value_pb2.NameAttrList:
+        attr_list = attr_value_pb2.NameAttrList()
+        attr_list.name = "vertex"
+        attr_list.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
+        attr_list.attr[types_pb2.VID].CopyFrom(utils.s_to_attr(str(self.vid_field)))
+        props = []
+        for prop in self.properties[1:]:
+            prop_attr = attr_value_pb2.NameAttrList()
+            prop_attr.name = prop[0]
+            prop_attr.attr[0].CopyFrom(utils.type_to_attr(prop[1]))
+            props.append(prop_attr)
+        attr_list.attr[types_pb2.PROPERTIES].list.func.extend(props)
+        attr_list.attr[types_pb2.LOADER].CopyFrom(self.loader.get_attr())
+        return attr_list
+
 
 class EdgeSubLabel(object):
     """Hold meta informations of a single relationship.
@@ -125,27 +142,29 @@ class EdgeSubLabel(object):
         src_field: Union[str, int] = 0,
         dst_field: Union[str, int] = 1,
         load_strategy="both_out_in",
+        id_type: str = "int64_t",
     ):
         if isinstance(loader, Loader):
             self.loader = loader
         else:
             self.loader = Loader(loader)
-
+        # raw properties passed by user parameters
         self.raw_properties = properties
+        # finally properties for constructing graph
         self.properties = []
+        # type of vertex original id
+        # should be consistent with the original graph
+        self.id_type = id_type
         self.src_label = src_label
         self.dst_label = dst_label
         self.src_field = src_field
         self.dst_field = dst_field
-
-        self._finished = False
-
+        # check avaiable
         check_argument(
             load_strategy in ("only_out", "only_in", "both_out_in"),
             "invalid load strategy: " + load_strategy,
         )
         self.load_strategy = load_strategy
-
         if (isinstance(self.src_field, int) and isinstance(self.dst_field, str)) or (
             isinstance(self.src_field, str) and isinstance(self.dst_field, int)
         ):
@@ -153,21 +172,18 @@ class EdgeSubLabel(object):
             raise SyntaxError(
                 "Source vid and destination vid must have same formats, both use name or both use index"
             )
-
-    def finish(self, id_type: str = "int64_t", session_id=None):
-        if self._finished:
-            return
-        self.add_property(str(self.src_field), id_type)
-        self.add_property(str(self.dst_field), id_type)
+        # normalize properties
+        # add src/dst to property list
+        self.add_property(str(self.src_field), self.id_type)
+        self.add_property(str(self.dst_field), self.id_type)
         if self.raw_properties:
             self.add_properties(self.raw_properties)
         elif self.loader.deduced_properties:
             self.add_properties(self.loader.deduced_properties)
+        # set selected columns to loader
         self.loader.select_columns(
             self.properties, include_all=bool(self.raw_properties is None)
         )
-        self.loader.finish(session_id)
-        self._finished = True
 
     def __str__(self) -> str:
         s = "\ntype: EdgeSubLabel"
@@ -222,10 +238,12 @@ class EdgeLabel(object):
          src_label3 -> edge_label -> dst_label3
     """
 
-    def __init__(self, label: str, session_id=None):
+    def __init__(self, label: str, id_type: str, session_id=None):
         self.label = label
+        # type of vertex original id
+        # should be consistent with the original graph
+        self.id_type = id_type
         self.sub_labels = {}
-
         self._session_id = session_id
 
     def __str__(self):
@@ -249,66 +267,15 @@ class EdgeLabel(object):
             )
         self.sub_labels[(src, dst)] = sub_label
 
-    def finish(self, id_type: str = "int64_t"):
-        for sub_label in self.sub_labels.values():
-            sub_label.finish(id_type, self._session_id)
-
-
-def process_vertex(vertex: VertexLabel) -> attr_value_pb2.NameAttrList:
-    attr_list = attr_value_pb2.NameAttrList()
-    attr_list.name = "vertex"
-
-    attr_list.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(vertex.label))
-
-    attr_list.attr[types_pb2.VID].CopyFrom(utils.s_to_attr(str(vertex.vid_field)))
-
-    props = []
-    for prop in vertex.properties[1:]:
-        prop_attr = attr_value_pb2.NameAttrList()
-        prop_attr.name = prop[0]
-        prop_attr.attr[0].CopyFrom(utils.type_to_attr(prop[1]))
-        props.append(prop_attr)
-    attr_list.attr[types_pb2.PROPERTIES].list.func.extend(props)
-
-    attr_list.attr[types_pb2.LOADER].CopyFrom(vertex.loader.get_attr())
-    return attr_list
-
-
-def process_edge(edge: EdgeLabel) -> attr_value_pb2.NameAttrList:
-    attr_list = attr_value_pb2.NameAttrList()
-    attr_list.name = "edge"
-
-    attr_list.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(edge.label))
-
-    sub_label_attr = [sub_label.get_attr() for sub_label in edge.sub_labels.values()]
-    attr_list.attr[types_pb2.SUB_LABEL].list.func.extend(sub_label_attr)
-    return attr_list
-
-
-def assemble_op_config(
-    vertices: Iterable[VertexLabel],
-    edges: Iterable[EdgeLabel],
-    oid_type: str,
-    directed: bool,
-    generate_eid: bool,
-) -> Dict:
-    attr = attr_value_pb2.AttrValue()
-
-    for label in chain(vertices, edges):
-        label.finish(oid_type)
-
-    attr.list.func.extend([process_vertex(vertex) for vertex in vertices])
-    attr.list.func.extend([process_edge(edge) for edge in edges])
-
-    config = {}
-    config[types_pb2.ARROW_PROPERTY_DEFINITION] = attr
-    config[types_pb2.DIRECTED] = utils.b_to_attr(directed)
-    config[types_pb2.OID_TYPE] = utils.s_to_attr(oid_type)
-    config[types_pb2.GENERATE_EID] = utils.b_to_attr(generate_eid)
-    # vid_type is fixed
-    config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
-    config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(False)
-    return config
+    def attr(self) -> attr_value_pb2.NameAttrList:
+        attr_list = attr_value_pb2.NameAttrList()
+        attr_list.name = "edge"
+        attr_list.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
+        sub_label_attr = [
+            sub_label.get_attr() for sub_label in self.sub_labels.values()
+        ]
+        attr_list.attr[types_pb2.SUB_LABEL].list.func.extend(sub_label_attr)
+        return attr_list
 
 
 def _convert_array_to_deprecated_form(items):
@@ -362,7 +329,8 @@ def _convert_dict_to_compat_form(items):
 def normalize_parameter_edges(
     edges: Union[
         Mapping[str, Union[Sequence, LoaderVariants, Mapping]], Tuple, LoaderVariants
-    ]
+    ],
+    id_type: str,
 ):
     """Normalize parameters user passed in. Since parameters are very flexible, we need to be
     careful about it.
@@ -370,26 +338,27 @@ def normalize_parameter_edges(
     Args:
         edges (Union[ Mapping[str, Union[Sequence, LoaderVariants, Mapping]], Tuple, LoaderVariants ]):
             Edges definition.
+        id_type (str): Type of vertex original id.
     """
 
     def process_sub_label(items):
         if isinstance(items, (Loader, str, pd.DataFrame, *VineyardObjectTypes)):
-            return EdgeSubLabel(items, None, "_", "_", 0, 1)
+            return EdgeSubLabel(items, None, "_", "_", 0, 1, id_type=id_type)
         elif isinstance(items, Sequence):
             if all([isinstance(item, np.ndarray) for item in items]):
-                return EdgeSubLabel(items, None, "_", "_", 0, 1)
+                return EdgeSubLabel(items, None, "_", "_", 0, 1, id_type=id_type)
             else:
                 check_argument(len(items) < 6, "Too many arguments for a edge label")
                 compat_items = _convert_array_to_deprecated_form(items)
-                return EdgeSubLabel(*compat_items)
+                return EdgeSubLabel(*compat_items, id_type=id_type)
         elif isinstance(items, Mapping):
             items = _convert_dict_to_compat_form(items)
-            return EdgeSubLabel(**items)
+            return EdgeSubLabel(**items, id_type=id_type)
         else:
             raise SyntaxError("Wrong format of e sub label: " + str(items))
 
     def process_label(label, items):
-        e_label = EdgeLabel(label)
+        e_label = EdgeLabel(label, id_type)
         if isinstance(items, (Loader, str, pd.DataFrame, *VineyardObjectTypes)):
             e_label.add_sub_label(process_sub_label(items))
         elif isinstance(items, Sequence):
@@ -423,7 +392,8 @@ def normalize_parameter_vertices(
         Tuple,
         LoaderVariants,
         None,
-    ]
+    ],
+    id_type: str,
 ):
     """Normalize parameters user passed in. Since parameters are very flexible, we need to be
     careful about it.
@@ -431,22 +401,23 @@ def normalize_parameter_vertices(
     Args:
         vertices (Union[ Mapping[str, Union[Sequence, LoaderVariants, Mapping]], Tuple, LoaderVariants, None, ]):
             Vertices definition.
+        id_type (str): Type of vertex original id.
     """
 
     def process_label(label, items):
         if isinstance(items, (Loader, str, pd.DataFrame, *VineyardObjectTypes)):
-            return VertexLabel(label=label, loader=items)
+            return VertexLabel(label=label, id_type=id_type, loader=items)
         elif isinstance(items, Sequence):
             if all([isinstance(item, np.ndarray) for item in items]):
-                return VertexLabel(label=label, loader=items)
+                return VertexLabel(label=label, id_type=id_type, loader=items)
             else:
                 check_argument(len(items) < 4, "Too many arguments for a vertex label")
-                return VertexLabel(label, *items)
+                return VertexLabel(label, *items, id_type=id_type)
         elif isinstance(items, Mapping):
             if "vid" in items:
                 items["vid_field"] = items["vid"]
                 items.pop("vid")
-            return VertexLabel(label, **items)
+            return VertexLabel(label, id_type=id_type, **items)
         else:
             raise RuntimeError("Wrong format of v label: " + str(items))
 

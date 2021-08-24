@@ -206,6 +206,38 @@ class BaseContextDAGNode(DAGNode):
         op = dag_utils.to_vineyard_dataframe(self, selector, vertex_range)
         return ResultDAGNode(self, op)
 
+    def output(self, fd, selector, vertex_range=None, **kwargs):
+        """Dump results to `fd`.
+        Support dumps data to local (respect to pod) files, hdfs or oss.
+        It first write results to a vineyard dataframe, and let vineyard
+        do the data dumping job.
+        `fd` must meet specific formats, with auth information if needed. As follows:
+
+            - local
+                `file:///tmp/result_path`
+            - oss
+                `oss:///bucket/object`
+            - hdfs
+                `hdfs:///tmp/result_path`
+
+        Args:
+            fd (str): Output location.
+            selector (dict): Similar to `to_dataframe`.
+            vertex_range (dict, optional): Similar to `to_dataframe`. Defaults to None.
+            kwargs (dict, optional): Storage options with respect to output storage type.
+                    for example:
+                    key, secret, endpoint for oss,
+                    key, secret, client_kwargs for s3,
+                    host, port for hdfs,
+                    None for local.
+
+        Returns:
+            :class:`graphscope.framework.context.ResultDAGNode`, evaluated in eager mode.
+        """
+        df = self.to_vineyard_dataframe(selector, vertex_range)
+        op = dag_utils.output(df, fd, **kwargs)
+        return ResultDAGNode(self, op)
+
 
 class TensorContextDAGNode(BaseContextDAGNode):
     """Tensor context DAG node holds a tensor.
@@ -507,70 +539,16 @@ class Context(object):
         )
 
     def output(self, fd, selector, vertex_range=None, **kwargs):
-        """Dump results to `fd`.
-        Support dumps data to local (respect to pod) files, hdfs or oss.
-        It first write results to a vineyard dataframe, and let vineyard
-        do the data dumping job.
-        `fd` must meet specific formats, with auth information if needed. As follows:
-
-            - local
-                `file:///tmp/result_path`
-            - oss
-                `oss:///bucket/object`
-            - hdfs
-                `hdfs:///tmp/result_path`
-
-        Args:
-            fd (str): Output location.
-            selector (dict): Similar to `to_dataframe`.
-            vertex_range (dict, optional): Similar to `to_dataframe`. Defaults to None.
-            kwargs (dict, optional): Storage options with respect to output storage type.
-                    for example:
-                    key, secret, endpoint for oss,
-                    key, secret, client_kwargs for s3,
-                    host, port for hdfs,
-                    None for local.
-
+        """
         Examples:
             context.output('s3://test-bucket/res.csv', selector={'id': 'v.id', 'rank': 'r'},
                            key='access-key', secret='access-secret', client_kwargs={})
             context.output('hdfs:///output/res.csv', selector={'id': 'v.id', 'rank': 'r'},
                            host='localhost', port=9000)
         """
-        import vineyard
-        import vineyard.io
-
-        df = self.to_vineyard_dataframe(selector, vertex_range)
-        sess = self._session
-        deployment = "kubernetes" if sess.info["type"] == "k8s" else "ssh"
-        conf = sess.info["engine_config"]
-        vineyard_endpoint = conf["vineyard_rpc_endpoint"]
-        vineyard_ipc_socket = conf["vineyard_socket"]
-        if sess.info["type"] == "k8s":
-            hosts = [
-                "{}:{}".format(sess.info["namespace"], s)
-                for s in sess.info["engine_hosts"].split(",")
-            ]
-        else:  # type == "hosts"
-            hosts = sess.info["engine_hosts"].split(",")
-        # Write vineyard dataframe as a readable stream
-        dfstream = vineyard.io.open(
-            "vineyard://" + str(df),
-            mode="r",
-            vineyard_ipc_socket=vineyard_ipc_socket,
-            vineyard_endpoint=vineyard_endpoint,
-            deployment=deployment,
-            hosts=hosts,
-        )
-        vineyard.io.open(
-            fd,
-            dfstream,
-            mode="w",
-            vineyard_ipc_socket=vineyard_ipc_socket,
-            vineyard_endpoint=vineyard_endpoint,
-            storage_options=kwargs,
-            deployment=deployment,
-            hosts=hosts,
+        self._check_unmodified()
+        return self._session._wrapper(
+            self._context_node.output(fd, selector, vertex_range, **kwargs)
         )
 
     def output_to_client(self, fd, selector, vertex_range=None):

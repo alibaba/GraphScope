@@ -109,6 +109,8 @@ enum OperationType {
   CREATE_LEARNING_INSTANCE = 41;  // learning graph
   CLOSE_LEARNING_INSTANCE = 42;
 
+  DATA_SOURCE = 46;  // loader
+
   // data
   CONTEXT_TO_NUMPY = 50;
   CONTEXT_TO_DATAFRAME = 51;
@@ -122,6 +124,7 @@ enum OperationType {
   REGISTER_GRAPH_TYPE = 58;
 
   GET_CONTEXT_DATA = 59;
+  OUTPUT = 60;  // dump result to fd
 
   FROM_NUMPY = 80;
   FROM_DATAFRAME = 81;
@@ -229,6 +232,10 @@ enum ParamKey {
   COLUMN_NUM = 313;
   SUB_LABEL = 315;
   GENERATE_EID = 316;
+
+  STORAGE_OPTIONS = 321;
+  READ_OPTIONS = 322;
+  FD = 323;  // file descriptor
 
   GRAPH_LIBRARY_PATH = 400;
 }
