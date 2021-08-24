@@ -70,8 +70,6 @@ def gs_session():
         k8s_engine_mem="4Gi",
         k8s_etcd_cpu=2,
         k8s_etcd_num_pods=3,
-        k8s_zookeeper_cpu=0.5,
-        k8s_zookeeper_mem="256Mi",
         k8s_gie_graph_manager_cpu=1,
         k8s_gie_graph_manager_mem="4Gi",
         k8s_etcd_mem="256Mi",

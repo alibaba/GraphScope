@@ -151,6 +151,10 @@ jobs:
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
         source ~/.bashrc
 
+        # install zetcd
+        go get github.com/etcd-io/zetcd/cmd/zetcd
+        cp $(go env GOPATH)/bin/zetcd interactive_engine/bin/
+
         cd interactive_engine/src/executor
         ./exec.sh cargo build --all --release
         cd ${GITHUB_WORKSPACE}

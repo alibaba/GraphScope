@@ -309,7 +309,6 @@ class Session(object):
         k8s_gs_image=gs_config.k8s_gs_image,
         k8s_etcd_image=gs_config.k8s_etcd_image,
         k8s_gie_graph_manager_image=gs_config.k8s_gie_graph_manager_image,
-        k8s_zetcd_image=gs_config.k8s_zetcd_image,
         k8s_image_pull_policy=gs_config.k8s_image_pull_policy,
         k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
         k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
@@ -317,8 +316,6 @@ class Session(object):
         k8s_etcd_num_pods=gs_config.k8s_etcd_num_pods,
         k8s_etcd_cpu=gs_config.k8s_etcd_cpu,
         k8s_etcd_mem=gs_config.k8s_etcd_mem,
-        k8s_zookeeper_cpu=gs_config.k8s_zookeeper_cpu,
-        k8s_zookeeper_mem=gs_config.k8s_zookeeper_mem,
         k8s_gie_graph_manager_cpu=gs_config.k8s_gie_graph_manager_cpu,
         k8s_gie_graph_manager_mem=gs_config.k8s_gie_graph_manager_mem,
         k8s_vineyard_daemonset=gs_config.k8s_vineyard_daemonset,
@@ -386,8 +383,6 @@ class Session(object):
 
             k8s_gie_graph_manager_image (str, optional): The GraphScope interactive engine's graph manager image.
 
-            k8s_zetcd_image (str, optional): The image of zetcd, which used by GIE graph manager.
-
             k8s_vineyard_daemonset (str, optional): The name of vineyard Helm deployment to use. GraphScope will try to
                 discovery the daemonset from kubernetes cluster, then use it if exists, and fallback to launching
                 a bundled vineyard container otherwise.
@@ -411,12 +406,6 @@ class Session(object):
             k8s_etcd_cpu (float, optional): Minimum number of CPU cores request for etcd pod. Defaults to 0.5.
 
             k8s_etcd_mem (str, optional): Minimum number of memory request for etcd pod. Defaults to '128Mi'.
-
-            k8s_zookeeper_cpu (float, optional):
-                Minimum number of CPU cores request for zookeeper container. Defaults to 0.5.
-
-            k8s_zookeeper_mem (str, optional):
-                Minimum number of memory request for zookeeper container. Defaults to '256Mi'.
 
             k8s_gie_graph_manager_cpu (float, optional):
                 Minimum number of CPU cores request for graphmanager container. Defaults to 1.0.
@@ -541,14 +530,11 @@ class Session(object):
             "k8s_image_pull_policy",
             "k8s_image_pull_secrets",
             "k8s_gie_graph_manager_image",
-            "k8s_zetcd_image",
             "k8s_coordinator_cpu",
             "k8s_coordinator_mem",
             "k8s_etcd_num_pods",
             "k8s_etcd_cpu",
             "k8s_etcd_mem",
-            "k8s_zookeeper_cpu",
-            "k8s_zookeeper_mem",
             "k8s_gie_graph_manager_cpu",
             "k8s_gie_graph_manager_mem",
             "k8s_vineyard_daemonset",
@@ -1189,7 +1175,6 @@ def set_option(**kwargs):
         - k8s_gs_image
         - k8s_etcd_image
         - k8s_gie_graph_manager_image
-        - k8s_zetcd_image
         - k8s_image_pull_policy
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu
@@ -1252,7 +1237,6 @@ def get_option(key):
         - k8s_gs_image
         - k8s_etcd_image
         - k8s_gie_graph_manager_image
-        - k8s_zetcd_image
         - k8s_image_pull_policy
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu

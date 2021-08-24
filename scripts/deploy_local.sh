@@ -420,13 +420,13 @@ write_envs_config() {
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
       echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64"
-      echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/go/bin:\$HOME/.cargo/bin:\$PATH"
+      echo "export PATH=\${JAVA_HOME}/bin:\$(go env GOPATH)/bin:\$HOME/.cargo/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   else
     {
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
       echo "export JAVA_HOME=/usr/lib/jvm/java"
-      echo "export PATH=\${JAVA_HOME}/bin:/usr/local/go/bin:\$HOME/go/bin:\$HOME/.cargo/bin:/usr/local/bin:\$PATH"
+      echo "export PATH=\${JAVA_HOME}/bin:\$(go env GOPATH)/bin:\$HOME/.cargo/bin:/usr/local/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   fi
 }

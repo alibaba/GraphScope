@@ -144,7 +144,6 @@ class KubernetesClusterLauncher(Launcher):
     _etcd_container_name = "etcd"
     _engine_container_name = "engine"  # fixed
     _gie_manager_container_name = "manager"
-    _gie_zetcd_container_name = "zetcd"
 
     _mars_scheduler_container_name = "marsscheduler"  # fixed
     _mars_worker_container_name = "marsworker"  # fixed
@@ -169,15 +168,12 @@ class KubernetesClusterLauncher(Launcher):
         service_type=None,
         gs_image=None,
         etcd_image=None,
-        zetcd_image=None,
         gie_graph_manager_image=None,
         coordinator_name=None,
         coordinator_service_name=None,
         etcd_num_pods=None,
         etcd_cpu=None,
         etcd_mem=None,
-        zookeeper_cpu=None,
-        zookeeper_mem=None,
         gie_graph_manager_cpu=None,
         gie_graph_manager_mem=None,
         engine_cpu=None,
@@ -254,6 +250,7 @@ class KubernetesClusterLauncher(Launcher):
         self._glog_level = parse_as_glog_level(log_level)
 
         self._analytical_engine_process = None
+        self._zetcd_process = None
 
         # 8000 ~ 9000 is exposed
         self._learning_engine_ports_usage = 8000

@@ -122,7 +122,7 @@ class LocalLauncher(Launcher):
 
         # zookeeper
         self._zookeeper_port = None
-        self._zk_process = None
+        self._zetcd_process = None
         # graph manager
         self._graph_manager_endpoint = None
         self._graph_manager_process = None
@@ -203,11 +203,11 @@ class LocalLauncher(Launcher):
     def _launch_zetcd(self):
         self._zookeeper_port = self._get_free_port(self._hosts.split(",")[0])
 
-        zk_sh = shutil.which("zetcd")
-        if not zk_sh:
+        zetcd_sh = shutil.which("zetcd")
+        if not zetcd_sh:
             raise RuntimeError("zetcd command not found.")
         cmd = [
-            zk_sh,
+            zetcd_sh,
             "--zkaddr",
             "0.0.0.0:{}".format(self._zookeeper_port),
             "--endpoints",
@@ -228,7 +228,7 @@ class LocalLauncher(Launcher):
         )
 
         logger.info("Server is initializing zetcd.")
-        self._zk_process = process
+        self._zetcd_process = process
 
         start_time = time.time()
         while not is_port_in_use(self._hosts.split(",")[0], self._zookeeper_port):
@@ -427,7 +427,7 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._vineyardd_process)
 
     def _stop_interactive_engine_service(self):
-        self._stop_subprocess(self._zk_process)
+        self._stop_subprocess(self._zetcd_process)
         # stop shell process
         self._stop_subprocess(self._graph_manager_process)
         self._graph_manager_endpoint = None

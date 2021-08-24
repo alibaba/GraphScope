@@ -612,7 +612,6 @@ start_manager_service() {
   sed -e "s@SERVER_PORT@${server_port}@g" \
       -e "s@CREATE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
       -e "s@CLOSE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
-      -e "s@ZOOKEEPER_PORT@${zookeeper_port}@g" \
       ${WORKSPACE}/conf/application.properties > ${service_dir}/application.properties
   if [[ "${cluster_type}" == "local" ]]; then
     java -cp ${libpath} -Dspring.config.location=${service_dir}/application.properties \
