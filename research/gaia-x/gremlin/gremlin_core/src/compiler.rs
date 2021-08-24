@@ -32,9 +32,8 @@ use pegasus_common::collections::{Collection, Set};
 use crate::functions::CompareFunction;
 use pegasus::stream::Stream;
 use pegasus_server::pb as server_pb;
-use pegasus_server::pb::channel_def::ChKind;
 use pegasus_server::pb::operator_def::OpKind;
-use pegasus_server::pb::{AccumKind, ChannelDef, OperatorDef};
+use pegasus_server::pb::{AccumKind, OperatorDef};
 use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
 use prost::Message;
@@ -126,50 +125,28 @@ impl GremlinJobCompiler {
         &self, mut stream: Stream<Traverser>, plan: &[OperatorDef],
     ) -> Result<Stream<Traverser>, BuildJobError> {
         for op in &plan[..] {
-            match &op.ch {
-                Some(ch) => match &ch.ch_kind {
-                    None => {}
-                    Some(server_pb::channel_def::ChKind::ToAnother(_)) => {
-                        let p = self.partitioner.clone();
-                        let worker_id = pegasus::get_current_worker();
-                        let num_workers = worker_id.local_peers as usize / self.num_servers;
-                        stream = stream.repartition(move |t| {
-                            if let Some(e) = t.get_element() {
-                                p.get_partition(&e.id(), num_workers)
-                            } else {
-                                Ok(0)
-                            }
-                        });
-                    }
-                    Some(server_pb::channel_def::ChKind::ToOne(_)) => {
-                        stream = stream.aggregate();
-                    }
-                    Some(server_pb::channel_def::ChKind::ToLocal(_)) => {}
-                    Some(server_pb::channel_def::ChKind::ToOthers(_)) => {
-                        stream = stream.broadcast()
-                    }
-                },
-                _ => {}
-            }
             if let Some(ref op_kind) = op.op_kind {
                 match op_kind {
-                    server_pb::operator_def::OpKind::Shuffle(_) => match &op.ch {
-                        Some(ch) => match &ch.ch_kind {
-                            Some(server_pb::channel_def::ChKind::ToAnother(_)) => {
-                                let p = self.partitioner.clone();
-                                let worker_id = pegasus::get_current_worker();
-                                let num_workers = worker_id.local_peers as usize / self.num_servers;
-                                stream = stream.repartition(move |t| {
-                                    if let Some(e) = t.get_element() {
-                                        p.get_partition(&e.id(), num_workers)
-                                    } else {
-                                        Ok(0)
-                                    }
-                                });
-                            }
-                            _ => Err("invalid channel before exchange")?,
-                        },
-                        None => Err("invalid channel before exchange")?,
+                    server_pb::operator_def::OpKind::Comm(comm) => match &comm.ch_kind {
+                        Some(server_pb::communicate::ChKind::ToAnother(_)) => {
+                            let p = self.partitioner.clone();
+                            let worker_id = pegasus::get_current_worker();
+                            let num_workers = worker_id.local_peers as usize / self.num_servers;
+                            stream = stream.repartition(move |t| {
+                                if let Some(e) = t.get_element() {
+                                    p.get_partition(&e.id(), num_workers)
+                                } else {
+                                    Ok(0)
+                                }
+                            });
+                        }
+                        Some(server_pb::communicate::ChKind::ToOne(_)) => {
+                            stream = stream.aggregate();
+                        }
+                        Some(server_pb::communicate::ChKind::ToOthers(_)) => {
+                            stream = stream.broadcast()
+                        }
+                        None => {}
                     },
                     server_pb::operator_def::OpKind::Map(map) => {
                         let func = self.udf_gen.gen_map(&map.resource)?;

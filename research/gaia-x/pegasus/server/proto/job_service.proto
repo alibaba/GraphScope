@@ -19,7 +19,6 @@ option java_package = "com.alibaba.pegasus.service.protocol";
 option java_outer_classname = "PegasusClient";
 
 
-message Pipeline {}
 
 message Exchange {
   bytes resource  = 1;
@@ -34,12 +33,11 @@ message Aggregate {
   uint32 target = 1;
 }
 
-message ChannelDef {
+message Communicate {
   oneof ch_kind {
-    Pipeline to_local    = 1;
-    Exchange to_another  = 2;
-    Broadcast to_others  = 3;
-    Aggregate to_one     = 4;
+    Exchange to_another  = 1;
+    Broadcast to_others  = 2;
+    Aggregate to_one     = 3;
   }
 }
 
@@ -134,9 +132,8 @@ message Subtask {
 }
 
 message OperatorDef {
-  ChannelDef ch                       = 1;
   oneof op_kind {
-    Shuffle shuffle = 2;
+    Communicate comm = 1;
     Map map = 3;
     FlatMap flat_map = 4;
     Filter filter = 5;
