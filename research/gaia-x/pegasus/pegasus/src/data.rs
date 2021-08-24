@@ -390,11 +390,6 @@ mod rob {
             self.tag.clone()
         }
 
-        #[inline]
-        pub fn drain_to_end(&mut self) -> impl Iterator<Item = MarkedData<D>> + '_ {
-            std::iter::empty()
-        }
-
         pub fn discard(&mut self) {
             self.is_discarded = true;
         }
@@ -409,6 +404,12 @@ mod rob {
         #[inline]
         pub fn drain(&mut self) -> impl Iterator<Item = D> + '_ {
             &mut self.data
+        }
+
+        #[inline]
+        pub fn drain_to_end(&mut self) -> impl Iterator<Item = MarkedData<D>> + '_ {
+            let len = self.data.len();
+            DrainEndIter { len, data: &mut self.data, end: &mut self.end, cur: 0 }
         }
     }
 

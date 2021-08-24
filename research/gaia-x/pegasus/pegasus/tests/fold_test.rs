@@ -119,6 +119,7 @@ fn collect_in_apply_test() {
 fn collect_in_apply_2_test() {
     let mut conf = JobConf::new("collect_in_apply_2");
     conf.set_workers(2);
+    //conf.plan_print = true;
     let mut result = pegasus::run(conf, || {
         move |input, output| {
             input

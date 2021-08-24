@@ -602,6 +602,10 @@ mod rob {
                         self.flush_last_buffer(&end.tag)?;
                         self.update_end_weight(&mut end);
                     } else if end.source_weight.value() == 1 && !self.cyclic.load(Ordering::SeqCst) {
+                        // 1. seq = 0 indicates this is the first batch;
+                        // 2. len = 1, exchange to one target;
+                        // 3. source_weight = 1, only current worker produce data of the scope;
+                        // 4. no cyclic,
                         // circuit for apply subtasks;
                         batch.set_end(end);
                         return self.pushes[target].push(batch);
@@ -717,7 +721,7 @@ mod rob {
                 self.pushes[target].push(batch)?;
             }
 
-            if let Some(end) = end {
+            if let Some(mut end) = end {
                 if end.tag.len() < self.ch_info.scope_level as usize
                     || self.has_cycles.load(Ordering::SeqCst)
                 {
@@ -730,6 +734,8 @@ mod rob {
                 } else {
                     let idx = end.tag.current_uncheck() as u64;
                     let offset = self.magic.exec(idx) as usize;
+                    let w = crate::worker_id::get_current_worker().index;
+                    end.update_weight = Some(Weight::single(w));
                     self.pushes[offset].notify_end(end)
                 }
             } else {

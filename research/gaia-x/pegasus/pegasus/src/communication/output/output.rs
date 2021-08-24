@@ -578,6 +578,22 @@ mod rob {
             }
             self.tee.flush()
         }
+
+        fn clean_lost_end_child(&mut self, tag: &Tag, buf_pool: &mut ScopeBufferPool<D>) -> IOResult<()> {
+            for (tag, buf) in buf_pool.buffers_of(tag, true) {
+                // 正常情况不应进入这段逻辑，除非用户算子hold了end 信号， 通常这类情况需要用户定义on_notify算子；
+                warn_worker!("output[{:?}] the end signal of scope {:?} lost;", self.port, tag);
+                let batch = MicroBatch::new(tag, self.src, buf.into_read_only());
+                if let Err(err) = self.flush_batch(batch) {
+                    return if err.is_would_block() {
+                        Err(IOError::cannot_block())
+                    } else {
+                        Err(err)
+                    };
+                }
+            }
+            Ok(())
+        }
     }
 
     pub struct OutputSession<'a, D: Data> {
@@ -715,14 +731,32 @@ mod rob {
         }
 
         fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
-            let mut batch = if let Some(buf) = self.buf_pool.take_buf(&end.tag, true) {
-                MicroBatch::new(end.tag.clone(), self.src, buf.into_read_only())
+            let level = end.tag.len() as u32;
+            if level == self.scope_level {
+                let mut batch = if let Some(buf) = self.buf_pool.take_buf(&end.tag, true) {
+                    MicroBatch::new(end.tag.clone(), self.src, buf.into_read_only())
+                } else {
+                    MicroBatch::new(end.tag.clone(), self.src, ReadBuffer::new())
+                };
+                batch.set_end(end);
+                trace_worker!("output[{:?}] notify end of {:?}", self.port, batch.tag);
+                self.flush_batch(batch)
+            } else if level < self.scope_level {
+                trace_worker!("output[{:?}] notify end of parent scope {:?}", self.port, end.tag);
+                let mut buf_pool = std::mem::replace(&mut self.buf_pool, Default::default());
+                let result = self.clean_lost_end_child(&end.tag, &mut buf_pool);
+                self.buf_pool = buf_pool;
+                if let Err(err) = result {
+                    return Err(err);
+                }
+                let mut batch = MicroBatch::new(end.tag.clone(), self.src, ReadBuffer::new());
+                batch.set_end(end);
+                self.flush_batch(batch)
             } else {
-                MicroBatch::new(end.tag.clone(), self.src, ReadBuffer::new())
-            };
-            batch.set_end(end);
-            trace_worker!("output[{:?}] notify end of {:?}", self.port, batch.tag);
-            self.flush_batch(batch)
+                warn_worker!("end signal from child scope {:?};", end.tag);
+                // ignore;
+                Ok(())
+            }
         }
 
         fn flush(&mut self) -> IOResult<()> {
@@ -740,4 +774,6 @@ mod rob {
             self.tee.close()
         }
     }
+
 }
+

@@ -208,6 +208,8 @@ mod rob {
 ////////////////////////////////////////////////////////
 #[cfg(feature = "rob")]
 mod rob {
+    use pegasus_common::buffer::ReadBuffer;
+
     use crate::channel_id::ChannelInfo;
     use crate::communication::IOResult;
     use crate::data::MicroBatch;
@@ -250,12 +252,13 @@ mod rob {
             self.push_monitor.get(tag).map(|(_, x)| *x)
         }
 
-        pub fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
+        pub fn notify_end(&mut self, mut end: EndSignal) -> IOResult<()> {
             if end.tag.len() == self.push_monitor.scope_level as usize {
                 let size = self
                     .push_monitor
                     .remove(&end.tag)
                     .unwrap_or((0, 0));
+                end.seq = size.0 as u64;
                 trace_worker!(
                     "output[{:?}]: stop push data of {:?} to ch {}  to worker {}, total pushed {} ;",
                     self.ch_info.source_port,
@@ -266,24 +269,32 @@ mod rob {
                 );
             }
 
-            trace_worker!(
-                "output[{:?}]: send end event of {:?} to ch {} to worker {} to port {:?};",
-                self.ch_info.source_port,
-                end.tag,
-                self.ch_info.id.index,
-                self.target_worker,
-                self.ch_info.target_port
-            );
-            let event = Event::new(self.source_worker, self.ch_info.target_port, Signal::EndSignal(end));
-            self.event_emitter
-                .send(self.target_worker, event)
+            if end.source_weight.value() == 1 {
+                let mut last = MicroBatch::new(end.tag.clone(), self.source_worker, ReadBuffer::new());
+                let seq = end.seq;
+                last.set_end(end);
+                last.set_seq(seq);
+                self.inner.push(last)
+            } else {
+                trace_worker!(
+                    "output[{:?}]: send end event of {:?} to ch {} to worker {} to port {:?};",
+                    self.ch_info.source_port,
+                    end.tag,
+                    self.ch_info.id.index,
+                    self.target_worker,
+                    self.ch_info.target_port
+                );
+                let event =
+                    Event::new(self.source_worker, self.ch_info.target_port, Signal::EndSignal(end));
+                self.event_emitter
+                    .send(self.target_worker, event)
+            }
         }
     }
 
     impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
         fn push(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
             let len = batch.len();
-            assert!(len > 0, "push batch size = 0;");
             if batch.is_last() {
                 let (seq, mut cnt) = self
                     .push_monitor
@@ -301,6 +312,7 @@ mod rob {
                     cnt
                 );
             } else {
+                assert!(len > 0, "push batch size = 0;");
                 let (seq, cnt) = self.push_monitor.get_mut_or_insert(&batch.tag);
                 *cnt += len;
                 batch.set_seq(*seq as u64);

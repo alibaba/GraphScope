@@ -339,7 +339,6 @@ mod rob {
 mod rob {
     use std::ops::{Deref, DerefMut};
     use std::ptr::NonNull;
-
     use pegasus_common::buffer::{Buffer, BufferFactory, BufferPool, MemBufAlloc, ReadBuffer};
 
     use crate::tag::tools::map::TidyTagMap;
@@ -561,9 +560,7 @@ mod rob {
 
         pub fn take_buf(&mut self, tag: &Tag, is_last: bool) -> Option<Buffer<D>> {
             let b = self.buf_slots.get_mut(tag)?;
-            if is_last {
-                b.end = true;
-            }
+            b.end = is_last;
             b.buf.take()
         }
 
@@ -588,6 +585,22 @@ mod rob {
                 .iter_mut()
                 .filter(|(_t, b)| b.buf.is_some())
                 .map(|(tag, b)| ((&*tag).clone(), b.buf.take().unwrap()))
+        }
+
+        pub fn buffers_of(
+            &mut self, parent: &Tag, is_last: bool,
+        ) -> impl Iterator<Item = (Tag, Buffer<D>)> + '_ {
+            let p = parent.clone();
+            self.buf_slots
+                .iter_mut()
+                .filter_map(move |(t, b)| {
+                    if p.is_parent_of(&*t) {
+                        b.end = is_last;
+                        b.buf.take().map(|b| ((&*t).clone(), b))
+                    } else {
+                        None
+                    }
+                })
         }
 
         fn get_slot_mut(&mut self, tag: &Tag) -> Option<NonNullBufSlotPtr<D>> {
