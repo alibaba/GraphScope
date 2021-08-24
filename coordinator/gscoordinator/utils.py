@@ -54,6 +54,13 @@ from gscoordinator.io_utils import PipeWatcher
 
 logger = logging.getLogger("graphscope")
 
+
+# runtime workspace
+WORKSPACE = "/tmp/gs"
+
+# COORDINATOR_HOME
+#   1) get from gscoordinator python module, if failed,
+#   2) infer from current directory
 try:
     import gscoordinator
 
@@ -61,20 +68,34 @@ try:
 except ModuleNotFoundError:
     COORDINATOR_HOME = os.path.abspath(os.path.join(__file__, "..", ".."))
 
-GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
-
-WORKSPACE = "/tmp/gs"
-DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
-ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
-ANALYTICAL_ENGINE_PATH = os.path.join(ANALYTICAL_ENGINE_HOME, "build", "grape_engine")
-
-if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
-    ANALYTICAL_ENGINE_HOME = "/usr/local/bin"
-    ANALYTICAL_ENGINE_PATH = "/usr/local/bin/grape_engine"
+# template directory for codegen
 TEMPLATE_DIR = os.path.join(COORDINATOR_HOME, "gscoordinator", "template")
+
+# builtin app resource
 BUILTIN_APP_RESOURCE_PATH = os.path.join(
     COORDINATOR_HOME, "gscoordinator", "builtin/app/builtin_app.gar"
 )
+# default config file in gar resource
+DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
+
+# GRAPHSCOPE_HOME
+#   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,
+#   2) infer from COORDINATOR_HOME
+try:
+    GRAPHSCOPE_HOME = os.environ["GRAPHSCOPE_HOME"]
+except:  # noqa: E722
+    GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
+
+# ANALYTICAL_ENGINE_HOME
+#   1) infer from GRAPHSCOPE_HOME
+ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME)
+ANALYTICAL_ENGINE_PATH = os.path.join(ANALYTICAL_ENGINE_HOME, "bin", "grape_engine")
+if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
+    # try get analytical engine from build dir
+    ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
+    ANALYTICAL_ENGINE_PATH = os.path.join(
+        ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
+    )
 
 
 def is_port_in_use(host, port):
@@ -179,7 +200,8 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     cmake_commands = [
         "cmake",
         ".",
-        "-DNETWORKX=" + engine_config["networkx"],
+        "-DNETWORKX={0}".format(engine_config["networkx"]),
+        "-DCMAKE_PREFIX_PATH={0}".format(GRAPHSCOPE_HOME),
     ]
     if app_type != "cpp_pie":
         if app_type == "cython_pregel":
@@ -283,6 +305,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         "cmake",
         ".",
         "-DNETWORKX=" + engine_config["networkx"],
+        "-DCMAKE_PREFIX_PATH={0}".format(GRAPHSCOPE_HOME),
     ]
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]

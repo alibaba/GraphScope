@@ -70,6 +70,9 @@ from gscoordinator.object_manager import InteractiveQueryManager
 from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import LibMeta
 from gscoordinator.object_manager import ObjectManager
+from gscoordinator.utils import COORDINATOR_HOME
+from gscoordinator.utils import GRAPHSCOPE_HOME
+from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import compile_app
 from gscoordinator.utils import compile_graph_frame
 from gscoordinator.utils import create_single_op_dag
@@ -82,21 +85,8 @@ from gscoordinator.utils import str2bool
 from gscoordinator.utils import to_maxgraph_schema
 from gscoordinator.version import __version__
 
-COORDINATOR_HOME = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
-
-WORKSPACE = "/tmp/gs"
-DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
-ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
-ANALYTICAL_ENGINE_PATH = os.path.join(ANALYTICAL_ENGINE_HOME, "build", "grape_engine")
-TEMPLATE_DIR = os.path.join(COORDINATOR_HOME, "gscoordinator", "template")
-BUILTIN_APP_RESOURCE_PATH = os.path.join(
-    COORDINATOR_HOME, "gscoordinator", "builtin/app/builtin_app.gar"
-)
+# endpoint of prelaunch analytical engine
 GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
-
-ENGINE_CONTAINER = "engine"
-VINEYARD_CONTAINER = "vineyard"
 
 # 2 GB
 GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
@@ -739,7 +729,7 @@ class CoordinatorServiceServicer(
                 {
                     "schemaJson": schema_json,
                     "podNameList": self._engine_hosts,
-                    "containerName": ENGINE_CONTAINER,
+                    "containerName": "engine",
                     "preemptive": str(self._launcher.preemptive),
                     "gremlinServerCpu": str(gremlin_server_cpu),
                     "gremlinServerMem": gremlin_server_mem,
@@ -952,7 +942,7 @@ class CoordinatorServiceServicer(
                     manager_host,
                     object_id,
                     self._engine_hosts,
-                    ENGINE_CONTAINER,
+                    "engine",
                     str(self._launcher.waiting_for_delete()),
                 )
             else:
