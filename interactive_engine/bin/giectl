@@ -434,7 +434,7 @@ create_gremlin_instance_on_k8s() {
   gremlin_server_cpu=$6
   gremlin_server_mem=$7
   engine_params=$8
-  zookeeper_ip=$(hostname -i)
+  zookeeper_ip=$9
   zookeeper_port="2181"
   requests_cpu=0.5
   requests_mem="512Mi"

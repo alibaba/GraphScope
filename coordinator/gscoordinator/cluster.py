@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import random
+import shutil
 import subprocess
 import sys
 import time
@@ -751,27 +752,38 @@ class KubernetesClusterLauncher(Launcher):
             ports=self._interactive_engine_manager_port,
         )
 
-        # add zetcd container
-        graph_manager_builder.add_zetcd_container(
-            cmd=["/bin/bash", "-c", "--"],
-            args=[
-                "/usr/local/bin/zetcd -zkaddr 0.0.0.0:{} -endpoints {}".format(
-                    self._zookeeper_port, self._etcd_endpoint
-                )
-            ],
-            name=self._gie_zetcd_container_name,
-            image=self._saved_locals["zetcd_image"],
-            cpu=self._saved_locals["zookeeper_cpu"],
-            mem=self._saved_locals["zookeeper_mem"],
-            preemptive=self._saved_locals["preemptive"],
-            ports=self._zookeeper_port,
-        )
-
         self._resource_object.append(
             self._app_api.create_namespaced_deployment(
                 self._saved_locals["namespace"], graph_manager_builder.build()
             )
         )
+
+        # launch zetcd proxy
+        logger.info("Launching zetcd proxy service ...")
+        zetcd_sh = shutil.which("zetcd")
+        if not zetcd_sh:
+            raise RuntimeError("zetcd command not found.")
+        cmd = [
+            zetcd_sh,
+            "--zkaddr",
+            "0.0.0.0:{}".format(self._zookeeper_port),
+            "--endpoints",
+            self._etcd_endpoint,
+        ]
+
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=os.environ.copy(),
+            universal_newlines=True,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=sys.stderr,
+            bufsize=1,
+        )
+        self._zetcd_process = process
 
     def _waiting_interactive_engine_service_ready(self):
         start_time = time.time()

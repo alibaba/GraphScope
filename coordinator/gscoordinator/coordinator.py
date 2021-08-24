@@ -30,6 +30,7 @@ import pickle
 import queue
 import random
 import signal
+import socket
 import string
 import sys
 import threading
@@ -722,6 +723,7 @@ class CoordinatorServiceServicer(
 
         params = {
             "graphName": "%s" % object_id,
+            "zookeeperIp": socket.gethostbyname(socket.gethostname()),
         }
 
         if self._launcher_type == types_pb2.K8S:

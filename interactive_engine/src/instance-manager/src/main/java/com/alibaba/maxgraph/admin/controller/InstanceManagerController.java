@@ -193,7 +193,8 @@ public class InstanceManagerController {
                                                @RequestParam("preemptive") String preemptive,
                                                @RequestParam("gremlinServerCpu") String gremlinServerCpu,
                                                @RequestParam("gremlinServerMem") String gremlinServerMem,
-                                               @RequestParam("engineParams") String engineParams) throws Exception {
+                                               @RequestParam("engineParams") String engineParams,
+                                               @RequestParam("zookeeperIp") String zookeeperIp) throws Exception {
         CreateInstanceEntity createInstanceEntity = new CreateInstanceEntity();
         int errorCode;
         String errorMessage;
@@ -229,6 +230,7 @@ public class InstanceManagerController {
             createCommandList.add(gremlinServerCpu);
             createCommandList.add(gremlinServerMem);
             createCommandList.add(engineParams);
+            createCommandList.add(zookeeperIp);
             String command = StringUtils.join(createCommandList, " ");
             logger.info("start to create instance with command " + command);
             Process process = Runtime.getRuntime().exec(command);

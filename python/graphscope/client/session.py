@@ -541,7 +541,7 @@ class Session(object):
             "k8s_image_pull_policy",
             "k8s_image_pull_secrets",
             "k8s_gie_graph_manager_image",
-            "k8s_etcd_image",
+            "k8s_zetcd_image",
             "k8s_coordinator_cpu",
             "k8s_coordinator_mem",
             "k8s_etcd_num_pods",
