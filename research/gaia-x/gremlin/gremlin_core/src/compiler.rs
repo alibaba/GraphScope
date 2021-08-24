@@ -16,13 +16,16 @@
 use crate::process::traversal::step::*;
 // use crate::process::traversal::step::{BySubJoin, HasAnyJoin};
 use crate::process::traversal::traverser::Traverser;
-use crate::Partitioner;
 use crate::{generated as pb, Element};
+use crate::{str_to_dyn_error, Partitioner};
 // use crate::TraverserSinkEncoder;
 use pegasus::api::function::*;
-use pegasus::api::{Filter, IterCondition, Iteration, Limit, Map, Sort, SortBy, Source};
+use pegasus::api::{
+    Collect, Count, Filter, Fold, FoldByKey, HasKey, IterCondition, Iteration, KeyBy, Limit, Map,
+    PartitionByKey, Reduce, ReduceByKey, Sink, Sort, SortBy, Source,
+};
 use pegasus::result::ResultSink;
-use pegasus::BuildJobError;
+use pegasus::{BuildJobError, Data};
 // use pegasus_common::collections::CollectionFactory;
 use pegasus_common::collections::{Collection, Set};
 // use pegasus_server::factory::{CompileResult, FoldFunction, GroupFunction, JobCompiler};
@@ -31,11 +34,12 @@ use pegasus::stream::Stream;
 use pegasus_server::pb as server_pb;
 use pegasus_server::pb::channel_def::ChKind;
 use pegasus_server::pb::operator_def::OpKind;
-use pegasus_server::pb::{ChannelDef, OperatorDef};
+use pegasus_server::pb::{AccumKind, ChannelDef, OperatorDef};
 use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
 use prost::Message;
 use std::cmp::Ordering;
+use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
 type TraverserMap = Box<dyn MapFunction<Traverser, Traverser>>;
@@ -183,6 +187,7 @@ impl GremlinJobCompiler {
                         stream = stream.limit(n.limit)?.aggregate().limit(n.limit)?;
                     }
                     server_pb::operator_def::OpKind::Order(order) => {
+                        // TODO(bingqing): should set order_key for traverser, and then directly compare traverser
                         let cmp = self.udf_gen.gen_cmp(&order.compare)?;
                         if order.limit > 0 {
                             // TODO(bingqing): top-k
@@ -195,40 +200,58 @@ impl GremlinJobCompiler {
                             unsafe { std::mem::transmute(fold.accum) };
                         match accum_kind {
                             server_pb::AccumKind::Cnt => {
-                                todo!()
-                                // stream = stream
-                                //     .count()?
-                                //     .aggregate_to(0)
-                                //     .sum(0)?
-                                //     .map_fn(|v| Ok(Traverser::count(v)))?;
+                                stream = stream
+                                    .count()?
+                                    .into_stream()?
+                                    // TODO(bingqing): consider traverser type?
+                                    .map(|v| Ok(Traverser::with(v)))?;
                             }
                             server_pb::AccumKind::Sum => {
-                                todo!()
-                                // stream = stream
-                                //     .sum(Traverser::sum(0))?
-                                //     .aggregate_to(0)
-                                //     .sum(Traverser::sum(0))?
+                                stream = stream
+                                    .reduce(|| {
+                                        |mut sum, trav| {
+                                            sum = sum + trav;
+                                            Ok(sum)
+                                        }
+                                    })?
+                                    .into_stream()?;
                             }
                             server_pb::AccumKind::Max => {
-                                todo!()
-                                // stream = stream
-                                //     .max()?
-                                //     .filter_map_fn(|v| Ok(v))?
-                                //     .aggregate_to(0)
-                                //     .max()?
-                                //     .filter_map_fn(|v| Ok(v))?;
+                                stream = stream
+                                    .reduce(|| {
+                                        move |max, curr| {
+                                            let ord = max.cmp(&curr);
+                                            match ord {
+                                                Ordering::Less => Ok(curr),
+                                                _ => Ok(max),
+                                            }
+                                        }
+                                    })?
+                                    .into_stream()?;
                             }
                             server_pb::AccumKind::Min => {
-                                todo!()
-                                // stream = stream
-                                //     .min()?
-                                //     .filter_map_fn(|v| Ok(v))?
-                                //     .aggregate_to(0)
-                                //     .min()?
-                                //     .filter_map_fn(|v| Ok(v))?;
+                                stream = stream
+                                    .reduce(|| {
+                                        move |min, curr| {
+                                            let ord = min.cmp(&curr);
+                                            match ord {
+                                                Ordering::Greater => Ok(curr),
+                                                _ => Ok(min),
+                                            }
+                                        }
+                                    })?
+                                    .into_stream()?;
                             }
                             server_pb::AccumKind::ToList => {
-                                todo!()
+                                stream = stream
+                                    .fold(Vec::new(), || {
+                                        |mut list, trav| {
+                                            list.push(trav);
+                                            Ok(list)
+                                        }
+                                    })?
+                                    .into_stream()?
+                                    .map(|vec| Ok(Traverser::with(vec)))?;
                             }
                             server_pb::AccumKind::ToSet => {
                                 todo!()
@@ -239,8 +262,45 @@ impl GremlinJobCompiler {
                         }
                     }
 
-                    server_pb::operator_def::OpKind::Group(_group) => {
-                        todo!()
+                    server_pb::operator_def::OpKind::Group(group) => {
+                        // 1. set group_key for traverser with group.map
+                        // 2. selector of (traverser.group_key,traverser)
+                        // TODO(bingqing): set group_key
+                        let selector =
+                            |trav: Traverser| (trav.get_object().unwrap().as_i64().unwrap(), trav);
+                        let accum_kind: server_pb::AccumKind =
+                            unsafe { std::mem::transmute(group.accum) };
+                        match accum_kind {
+                            AccumKind::Cnt => {
+                                // TODO(bingqing): We unfold by default; consider the case of sink after groupCount()
+                                stream = stream
+                                    .key_by(move |trav| Ok(selector(trav)))?
+                                    .fold_by_key(0, || |mut cnt, _| Ok(cnt + 1))?
+                                    // unfold by default for now
+                                    .unfold(|map| Ok(map.into_iter()))?
+                                    // TODO(bingqing): consider traverser type
+                                    .map(|pair| Ok(Traverser::with(pair)))?;
+                            }
+                            AccumKind::Sum => {}
+                            AccumKind::Max => {}
+                            AccumKind::Min => {}
+                            AccumKind::ToList => {
+                                // TODO(bingqing): We unfold by default; consider the case of sink after group()
+                                stream = stream
+                                    .key_by(move |trav| Ok(selector(trav)))?
+                                    .fold_by_key(Vec::new(), || {
+                                        |mut list, trav| {
+                                            list.push(trav);
+                                            Ok(list)
+                                        }
+                                    })?
+                                    .unfold(|map| Ok(map.into_iter()))?
+                                    .map(|pair| Ok(Traverser::with(pair)))?;
+                            }
+                            AccumKind::ToSet => {}
+                            AccumKind::Custom => {}
+                        }
+
                         // if let Some(kind) = group.fold.as_ref().and_then(|f| f.kind.as_ref()) {
                         //     match kind {
                         //         Kind::Cnt(_) => {

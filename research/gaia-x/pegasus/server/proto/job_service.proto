@@ -113,8 +113,9 @@ message Fold {
 
 message GroupBy {
   Range range     = 1;
-  bytes map       = 2;
-  FlatMap unfold  = 3;
+  AccumKind accum = 2;
+  bytes map       = 3;
+  FlatMap unfold  = 4;
 }
 
 message Union {

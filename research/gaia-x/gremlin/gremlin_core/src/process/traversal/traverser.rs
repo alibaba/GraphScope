@@ -27,10 +27,12 @@ use pegasus::api::function::FnResult;
 use pegasus::codec::*;
 use pegasus::Data;
 use pegasus_server::AnyData;
+use std::cmp::Ordering;
 use std::collections::hash_map::DefaultHasher;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::io;
+use std::ops::Add;
 use std::sync::Arc;
 
 bitflags! {
@@ -531,5 +533,25 @@ impl Traverser {
     pub fn with<T: Data + Eq>(raw: T) -> Self {
         let v = ShadeSync { inner: raw };
         Traverser::Object(Object::DynOwned(Box::new(v)))
+    }
+}
+
+impl PartialOrd for Traverser {
+    fn partial_cmp(&self, _other: &Self) -> Option<Ordering> {
+        todo!()
+    }
+}
+
+impl Ord for Traverser {
+    fn cmp(&self, _other: &Self) -> Ordering {
+        todo!()
+    }
+}
+
+impl Add for Traverser {
+    type Output = Traverser;
+
+    fn add(self, _rhs: Self) -> Self::Output {
+        todo!()
     }
 }
