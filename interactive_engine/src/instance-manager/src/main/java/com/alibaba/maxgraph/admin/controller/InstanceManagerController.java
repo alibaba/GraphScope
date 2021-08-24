@@ -286,12 +286,13 @@ public class InstanceManagerController {
                 .port(port)
                 .serializer(serializer)
                 .create();
-        Client client = cluster.connect();
+	Client client = null;
         long start = System.currentTimeMillis();
         long end = start + LAUNCH_MAX_TIME_LILL;
         while (start < end) {
             try {
                 Thread.sleep(10000);
+                client = cluster.connect();
                 client.submit("g.V().limit(1)").all().get();
                 client.close();
                 cluster.close();
@@ -301,7 +302,9 @@ public class InstanceManagerController {
             }
             start = System.currentTimeMillis();
         }
-        client.close();
+        if (client != null) {
+            client.close();
+        }
         cluster.close();
         return false;
     }
