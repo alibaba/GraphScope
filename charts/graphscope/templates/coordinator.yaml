@@ -83,7 +83,6 @@ spec:
         {{- else }}
         - "{{ .Values.engines.gie.graph_manager.image.name}}:{{ .Chart.AppVersion }}"
         {{- end }}
-        {{- end }}
         - "--k8s_image_pull_policy"
         - {{ .Values.imagePullPolicy | quote }}
         - "--k8s_image_pull_secrets"
