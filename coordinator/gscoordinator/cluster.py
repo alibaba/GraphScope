@@ -766,9 +766,12 @@ class KubernetesClusterLauncher(Launcher):
             etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
         cmd = [
             zetcd_cmd,
-            "--zkaddr 0.0.0.0:{}".format(self._zookeeper_port),
-            '--endpoints "%s"' % (";".join(etcd_endpoints),),
+            "--zkaddr",
+            "0.0.0.0:{}".format(self._zookeeper_port),
+            "--endpoints",
+            "{}".format(";".join(etcd_endpoints)),
         ]
+        logger.info("zetcd cmd {}".format(" ".join(cmd)))
 
         process = subprocess.Popen(
             cmd,
