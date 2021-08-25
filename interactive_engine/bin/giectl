@@ -560,6 +560,9 @@ create_gremlin_instance_on_k8s() {
 ##########################
 close_gremlin_instance_on_local() {
   declare -r object_id=$1
+  if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
+    export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
+  fi
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
 
   declare -r coordinator_id=$(cat ${pid_dir}/coordinator.pid)

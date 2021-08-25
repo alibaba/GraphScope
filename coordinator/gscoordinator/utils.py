@@ -97,6 +97,14 @@ if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
         ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
     )
 
+# INTERACTIVE_ENGINE_SCRIPT
+INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS = 120  # 2 mins
+INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
+if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
+    INTERACTIVE_ENGINE_SCRIPT = os.path.join(
+        GRAPHSCOPE_HOME, "interactive_engine", "bin", "giectl"
+    )
+
 
 def is_port_in_use(host, port):
     """Check whether a port is in use.
@@ -1472,3 +1480,28 @@ def check_argument(condition, message=None):
         if message is None:
             message = "in '%s'" % inspect.stack()[1].code_context[0]
         raise ValueError("Check failed: %s" % message)
+
+
+def check_gremlin_server_ready(endpoint):
+    from gremlin_python.driver.client import Client
+
+    if "MY_POD_NAME" in os.environ:
+        # inner kubernetes env
+        if endpoint == "localhost" or endpoint == "127.0.0.1":
+            # now, used in mac os with docker-desktop kubernetes cluster,
+            # which external ip is 'localhost' when service type is 'LoadBalancer'
+            return True
+
+    client = Client("ws://{0}/gremlin".format(endpoint), "g")
+    error_message = ""
+    begin_time = time.time()
+    while True:
+        try:
+            client.submit("g.V().limit(1)").all().result()
+        except Exception as e:
+            error_message = str(e)
+        else:
+            return True
+        time.sleep(3)
+        if time.time() - begin_time > INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS:
+            raise TimeoutError("Grelmin check query failed: {0}".format(error_message))
