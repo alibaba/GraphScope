@@ -770,9 +770,11 @@ class KubernetesClusterLauncher(Launcher):
             "0.0.0.0:{}".format(self._zookeeper_port),
             "--endpoints",
             "{}".format(",".join(etcd_endpoints)),
+            "-v",
+            "2",
             "-log_dir",
             "/root",
-            "-alsologtostderr"
+            "-alsologtostderr",
         ]
         logger.info("zetcd cmd {}".format(" ".join(cmd)))
 
@@ -782,9 +784,7 @@ class KubernetesClusterLauncher(Launcher):
             stderr=subprocess.STDOUT,
             encoding="utf-8",
         )
-        stdout_watcher = PipeWatcher(
-            self._zetcd_process.stdout, sys.stdout, drop=True
-        )
+        stdout_watcher = PipeWatcher(self._zetcd_process.stdout, sys.stdout, drop=True)
         setattr(self._zetcd_process, "stdout_watcher", stdout_watcher)
 
     def _waiting_interactive_engine_service_ready(self):
