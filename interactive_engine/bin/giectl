@@ -518,8 +518,10 @@ create_gremlin_instance_on_k8s() {
     kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${frontend_port} \
       --target-port=${frontend_port} --type=NodePort 1>/dev/null 2>&1
     [ $? -eq 0 ] || exit 1
+    sleep 5
     external_port=$(kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]")
     [ $? -eq 0 ] || exit 1
+    sleep 5
     external_ip=$(kubectl describe pods pod-${object_id} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
   fi
   log "FRONTEND_PORT:${external_ip}:${external_port}"
