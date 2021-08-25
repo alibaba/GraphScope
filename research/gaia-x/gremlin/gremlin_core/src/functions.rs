@@ -18,3 +18,7 @@ use std::cmp::Ordering;
 pub trait CompareFunction<D>: Send + 'static {
     fn compare(&self, left: &D, right: &D) -> Ordering;
 }
+
+pub trait LeftJoinFunction<D>: Send + 'static {
+    fn exec(&self, left: D, right: Vec<D>) -> Option<D>;
+}

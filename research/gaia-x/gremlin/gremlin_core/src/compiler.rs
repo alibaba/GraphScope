@@ -21,15 +21,15 @@ use crate::{str_to_dyn_error, Partitioner};
 // use crate::TraverserSinkEncoder;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, Count, Filter, Fold, FoldByKey, HasKey, IterCondition, Iteration, KeyBy, Limit, Map,
-    PartitionByKey, Reduce, ReduceByKey, Sink, Sort, SortBy, Source,
+    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, HasKey, IterCondition,
+    Iteration, KeyBy, Limit, Map, PartitionByKey, Reduce, ReduceByKey, Sink, Sort, SortBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::{BuildJobError, Data};
 // use pegasus_common::collections::CollectionFactory;
 use pegasus_common::collections::{Collection, Set};
 // use pegasus_server::factory::{CompileResult, FoldFunction, GroupFunction, JobCompiler};
-use crate::functions::CompareFunction;
+use crate::functions::{CompareFunction, LeftJoinFunction};
 use pegasus::stream::Stream;
 use pegasus_server::pb as server_pb;
 use pegasus_server::pb::operator_def::OpKind;
@@ -45,6 +45,7 @@ type TraverserMap = Box<dyn MapFunction<Traverser, Traverser>>;
 type TraverserFlatMap = Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>;
 type TraverserFilter = Box<dyn FilterFunction<Traverser>>;
 type TraverserCompare = Box<dyn CompareFunction<Traverser>>;
+type TraverserLeftJoin = Box<dyn LeftJoinFunction<Traverser>>;
 type BinaryResource = Vec<u8>;
 
 pub struct GremlinJobCompiler {
@@ -89,6 +90,10 @@ impl FnGenerator {
     fn gen_filter(&self, res: &BinaryResource) -> Result<TraverserFilter, BuildJobError> {
         // let step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
         // Ok(step.gen_filter()?)
+        todo!()
+    }
+
+    fn gen_subtask(&self, res: &BinaryResource) -> Result<TraverserLeftJoin, BuildJobError> {
         todo!()
     }
 
@@ -277,46 +282,17 @@ impl GremlinJobCompiler {
                             AccumKind::ToSet => {}
                             AccumKind::Custom => {}
                         }
-
-                        // if let Some(kind) = group.fold.as_ref().and_then(|f| f.kind.as_ref()) {
-                        //     match kind {
-                        //         Kind::Cnt(_) => {
-                        //             stream = stream
-                        //                 .reduce_by_with(TraverserGroupKey, Counter::default)?
-                        //                 .map_fn(|(k, v)| Ok(Traverser::group_count(k, v)))?;
-                        //         }
-                        //         Kind::Sum(_) => {
-                        //             todo!()
-                        //         }
-                        //         Kind::Max(_) => {
-                        //             todo!()
-                        //         }
-                        //         Kind::Min(_) => {
-                        //             todo!()
-                        //         }
-                        //         Kind::List(_) => {
-                        //             stream = stream
-                        //                 .reduce_by(TraverserGroupKey)?
-                        //                 .map_fn(|(k, v)| Ok(Traverser::group_by(k, v)))?;
-                        //         }
-                        //         Kind::Set(_) => {
-                        //             todo!()
-                        //         }
-                        //         Kind::Custom(_) => {
-                        //             todo!()
-                        //         }
-                        //     }
-                        // } else {
-                        //     Err("group function not found;")?;
-                        // }
                     }
-                    // OpKind::Unfold(_) => {
-                    //     stream = stream.flat_map_fn(|t| Ok(t.unfold()))?;
-                    // }
+
                     server_pb::operator_def::OpKind::Dedup(_) => {
                         // 1. set dedup key if needed;
                         // 2. dedup by dedup key;
-                        todo!()
+                        // TODO(bingqing): dedup by itself for now
+                        let selector = |trav: Traverser| (trav.clone(), trav);
+                        stream = stream
+                            .key_by(move |trav| Ok(selector(trav)))?
+                            .dedup()?
+                            .map(|pair| Ok(pair.value))?;
                     }
                     server_pb::operator_def::OpKind::Union(_) => {
                         todo!()
@@ -342,75 +318,26 @@ impl GremlinJobCompiler {
                         }
                     }
                     server_pb::operator_def::OpKind::Subtask(sub) => {
-                        todo!()
-                        // if let Some(ref body) = sub.task {
-                        //     let sub_start = stream.clone();
-                        //     let sub_end = sub_start
-                        //         .fork_subtask(|start| self.install(start, &body.plan[..]))?;
-                        //     match self
-                        //         .udf_gen
-                        //         .get_subtask_kind(sub.join.as_ref().expect("join notfound"))?
-                        //     {
-                        //         SubTraversalKind::GetGroupKey => {
-                        //             stream = stream.join_subtask_fn(sub_end, |_info| {
-                        //                 |parent, sub| {
-                        //                     let mut p =
-                        //                         std::mem::replace(parent, Default::default());
-                        //                     p.set_group_key(sub);
-                        //                     Ok(Some(p))
-                        //                 }
-                        //             })?;
-                        //         }
-                        //         SubTraversalKind::GetOrderKey => {
-                        //             stream = stream.join_subtask_fn(sub_end, |_info| {
-                        //                 |parent, sub| {
-                        //                     let mut p =
-                        //                         std::mem::replace(parent, Default::default());
-                        //                     p.add_order_key(sub);
-                        //                     Ok(Some(p))
-                        //                 }
-                        //             })?;
-                        //         }
-                        //         SubTraversalKind::GetDedupKey => {
-                        //             stream = stream.join_subtask_fn(sub_end, |_info| {
-                        //                 |parent, sub| {
-                        //                     let mut p =
-                        //                         std::mem::replace(parent, Default::default());
-                        //                     p.set_dedup_key(sub);
-                        //                     Ok(Some(p))
-                        //                 }
-                        //             })?;
-                        //         }
-                        //         SubTraversalKind::PrepareSelect(tag) => {
-                        //             stream = stream.join_subtask_fn(sub_end, |_info| {
-                        //                 move |parent, sub| {
-                        //                     let mut p =
-                        //                         std::mem::replace(parent, Default::default());
-                        //                     p.add_select_result(tag, sub);
-                        //                     Ok(Some(p))
-                        //                 }
-                        //             })?;
-                        //         }
-                        //         SubTraversalKind::WherePredicate => {
-                        //             stream = stream.join_subtask_fn(sub_end, |_info| {
-                        //                 |parent, _sub| {
-                        //                     let p = std::mem::replace(parent, Default::default());
-                        //                     Ok(Some(p))
-                        //                 }
-                        //             })?;
-                        //         }
-                        //         SubTraversalKind::GetGroupValue => {
-                        //             stream = stream.join_subtask_fn(sub_end, |_info| {
-                        //                 |parent, sub| {
-                        //                     let mut p =
-                        //                         std::mem::replace(parent, Default::default());
-                        //                     p.update_group_value(sub);
-                        //                     Ok(Some(p))
-                        //                 }
-                        //             })?;
-                        //         }
-                        //     }
-                        // }
+                        let join_func = self.udf_gen.gen_subtask(
+                            sub.join.as_ref().expect("should have subtask_kind").resource.as_ref(),
+                        )?;
+
+                        if let Some(ref body) = sub.task {
+                            stream = stream
+                                .apply(|sub_start| {
+                                    let sub_end = self
+                                        .install(sub_start, &body.plan[..])?
+                                        .collect::<Vec<Traverser>>()?;
+                                    Ok(sub_end)
+                                })?
+                                .map(move |(mut parent, sub)| {
+                                    if let Some(trav) = join_func.exec(parent, sub) {
+                                        Ok(trav)
+                                    } else {
+                                        Err(str_to_dyn_error("join failed"))
+                                    }
+                                })?;
+                        }
                     }
                 }
             } else {
