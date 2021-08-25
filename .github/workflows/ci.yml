@@ -153,7 +153,6 @@ jobs:
 
         # install zetcd
         go get github.com/etcd-io/zetcd/cmd/zetcd
-        cp $(go env GOPATH)/bin/zetcd interactive_engine/bin/
 
         cd interactive_engine/src/executor
         ./exec.sh cargo build --all --release
@@ -161,7 +160,8 @@ jobs:
         tar -cf gie.tar interactive_engine/src/executor/target/release/executor \
                         interactive_engine/src/executor/store/log4rs.yml \
                         interactive_engine/bin \
-                        interactive_engine/conf
+                        interactive_engine/conf \
+                        $(go env GOPATH)/bin/zetcd
 
     - uses: actions/upload-artifact@v2
       with:
@@ -461,6 +461,7 @@ jobs:
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
+        ls -al .
         sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \

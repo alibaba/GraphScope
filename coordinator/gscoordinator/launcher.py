@@ -237,7 +237,7 @@ class LocalLauncher(Launcher):
                 self._timeout_seconds
                 and self._timeout_seconds + start_time < time.time()
             ):
-                raise RuntimeError("Launch zetcde proxy service failed.")
+                raise RuntimeError("Launch zetcd proxy service failed.")
 
     def _launch_graph_manager(self):
         port = self._get_free_port(self._hosts.split(",")[0])

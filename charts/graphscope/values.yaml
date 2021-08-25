@@ -118,17 +118,3 @@ etcd:
     limits:
       cpu: 0.5
       memory: 128Mi
-
-
-zetcd:
-  image:
-    name: quay.io/coreos/zetcd
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: v0.0.5
-  resources:
-    requests:
-      cpu: 0.5
-      memory: 256Mi
-    limits:
-      cpu: 0.5
-      memory: 256Mi
