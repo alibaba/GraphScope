@@ -179,6 +179,7 @@ impl<V, VI, E, EI> AsyncMaxGraphServiceImpl<V, VI, E, EI>
                 continue;
             }
         }
+        let task_partition_manager = initialized_task_partition_manager;
 
         for worker in workers.iter_mut() {
             worker.set_schedule_strategy(DefaultStrategy::new(10240, 9216, Some(1024)));

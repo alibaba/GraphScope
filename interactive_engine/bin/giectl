@@ -506,13 +506,13 @@ create_gremlin_instance_on_k8s() {
       external_ip=$(kubectl describe service gremlin-${object_id} | grep "LoadBalancer Ingress" | awk -F'[ :]+' '{print $3}')
       if [ -n "${external_ip}" ]; then
         break
-        fi
-        wait_period_seconds=$(($wait_period_seconds+5))
-        if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-          echo "Get external ip of ${GREMLIN_EXPOSE} failed."
-          break
-        fi
-        sleep 5
+      fi
+      wait_period_seconds=$(($wait_period_seconds+5))
+      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+        echo "Get external ip of ${GREMLIN_EXPOSE} failed."
+        break
+      fi
+      sleep 5
     done
   else
     kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${frontend_port} \
