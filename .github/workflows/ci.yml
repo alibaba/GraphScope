@@ -153,6 +153,7 @@ jobs:
 
         # install zetcd
         go get github.com/etcd-io/zetcd/cmd/zetcd
+        cp $(go env GOPATH)/bin/zetcd interactive_engine/bin/
 
         cd interactive_engine/src/executor
         ./exec.sh cargo build --all --release
@@ -161,7 +162,6 @@ jobs:
                         interactive_engine/src/executor/store/log4rs.yml \
                         interactive_engine/bin \
                         interactive_engine/conf \
-                        $(go env GOPATH)/bin/zetcd
 
     - uses: actions/upload-artifact@v2
       with:
