@@ -90,4 +90,5 @@ def to_write_requests_pb(kind: str, inputs: list, write_type):
         write_request_pb = request.write_requests.add()
         write_request_pb.write_type = write_type
         write_request_pb.data_record.CopyFrom(to_data_record_pb(kind, pk, properties))
+    print('[DEBUG] request:', request)
     return request

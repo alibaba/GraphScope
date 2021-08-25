@@ -44,7 +44,7 @@ class Graph:
         return self._schema
 
     def insert_vertex(self, vertex: VertexRecordKey, properties: dict):
-        return self.insert_vertices([vertex, properties])
+        return self.insert_vertices([[vertex, properties]])
 
     def insert_vertices(self, vertices: list):
         request = to_write_requests_pb("VERTEX", vertices, write_service_pb2.INSERT)
@@ -52,7 +52,7 @@ class Graph:
 
     def update_vertex_properties(self, vertex: VertexRecordKey, properties: dict):
         request = to_write_requests_pb(
-            "VERTEX", [vertex, properties], write_service_pb2.UPDATE
+            "VERTEX", [[vertex, properties]], write_service_pb2.UPDATE
         )
         return self._conn.batch_write(request)
 
@@ -66,7 +66,7 @@ class Graph:
         return self._conn.batch_write(request)
 
     def insert_edge(self, edge: EdgeRecordKey, properties: dict):
-        return self.insert_edges([edge, properties])
+        return self.insert_edges([[edge, properties]])
 
     def insert_edges(self, edges=list):
         request = to_write_requests_pb("EDGE", edges, write_service_pb2.INSERT)
@@ -74,7 +74,7 @@ class Graph:
 
     def update_edge_properties(self, edge: EdgeRecordKey, properties: dict):
         request = to_write_requests_pb(
-            "EDGE", [edge, properties], write_service_pb2.UPDATE
+            "EDGE", [[edge, properties]], write_service_pb2.UPDATE
         )
         return self._conn.batch_write(request)
 
