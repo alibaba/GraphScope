@@ -13,12 +13,34 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use pegasus::api::function::FnResult;
+use pegasus::api::Key;
+use pegasus::Data;
 use std::cmp::Ordering;
 
 pub trait CompareFunction<D>: Send + 'static {
     fn compare(&self, left: &D, right: &D) -> Ordering;
 }
 
-pub trait LeftJoinFunction<D>: Send + 'static {
-    fn exec(&self, left: D, right: Vec<D>) -> Option<D>;
+pub trait KeyFunction<D, K, V>: Send + 'static {
+    fn select_key(&self, item: D) -> FnResult<(K, V)>;
+}
+
+///
+/// Function impls for Box<T>, Box<dyn T> if T impls some function;
+///
+mod box_impl {
+    use super::*;
+
+    impl<D, F: CompareFunction<D> + ?Sized> CompareFunction<D> for Box<F> {
+        fn compare(&self, left: &D, right: &D) -> Ordering {
+            (**self).compare(left, right)
+        }
+    }
+
+    impl<D, K, V, F: KeyFunction<D, K, V> + ?Sized> KeyFunction<D, K, V> for Box<F> {
+        fn select_key(&self, item: D) -> FnResult<(K, V)> {
+            (**self).select_key(item)
+        }
+    }
 }

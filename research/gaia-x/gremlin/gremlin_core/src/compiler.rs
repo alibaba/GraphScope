@@ -29,7 +29,7 @@ use pegasus::{BuildJobError, Data};
 // use pegasus_common::collections::CollectionFactory;
 use pegasus_common::collections::{Collection, Set};
 // use pegasus_server::factory::{CompileResult, FoldFunction, GroupFunction, JobCompiler};
-use crate::functions::{CompareFunction, LeftJoinFunction};
+use crate::functions::{CompareFunction, KeyFunction};
 use pegasus::stream::Stream;
 use pegasus_server::pb as server_pb;
 use pegasus_server::pb::operator_def::OpKind;
@@ -45,7 +45,8 @@ type TraverserMap = Box<dyn MapFunction<Traverser, Traverser>>;
 type TraverserFlatMap = Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>;
 type TraverserFilter = Box<dyn FilterFunction<Traverser>>;
 type TraverserCompare = Box<dyn CompareFunction<Traverser>>;
-type TraverserLeftJoin = Box<dyn LeftJoinFunction<Traverser>>;
+type TraverserLeftJoin = Box<dyn BinaryFunction<Traverser, Vec<Traverser>, Traverser>>;
+type TraverserKey = Box<dyn KeyFunction<Traverser, Traverser, Traverser>>;
 type BinaryResource = Vec<u8>;
 
 pub struct GremlinJobCompiler {
@@ -100,6 +101,10 @@ impl FnGenerator {
     fn gen_cmp(&self, res: &BinaryResource) -> Result<TraverserCompare, BuildJobError> {
         // let step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
         // Ok(step.gen_filter()?)
+        todo!()
+    }
+
+    fn gen_key(&self, res: &BinaryResource) -> Result<TraverserKey, BuildJobError> {
         todo!()
     }
 }
@@ -245,18 +250,14 @@ impl GremlinJobCompiler {
                     }
 
                     server_pb::operator_def::OpKind::Group(group) => {
-                        // 1. set group_key for traverser with group.map
-                        // 2. selector of (traverser.group_key,traverser)
-                        // TODO(bingqing): set group_key
-                        let selector =
-                            |trav: Traverser| (trav.get_object().unwrap().as_i64().unwrap(), trav);
+                        let selector = self.udf_gen.gen_key(group.map.as_ref())?;
                         let accum_kind: server_pb::AccumKind =
                             unsafe { std::mem::transmute(group.accum) };
                         match accum_kind {
                             AccumKind::Cnt => {
                                 // TODO(bingqing): We unfold by default; consider the case of sink after groupCount()
                                 stream = stream
-                                    .key_by(move |trav| Ok(selector(trav)))?
+                                    .key_by(move |trav| selector.select_key(trav))?
                                     .fold_by_key(0, || |mut cnt, _| Ok(cnt + 1))?
                                     // unfold by default for now
                                     .unfold(|map| Ok(map.into_iter()))?
@@ -269,7 +270,7 @@ impl GremlinJobCompiler {
                             AccumKind::ToList => {
                                 // TODO(bingqing): We unfold by default; consider the case of sink after group()
                                 stream = stream
-                                    .key_by(move |trav| Ok(selector(trav)))?
+                                    .key_by(move |trav| selector.select_key(trav))?
                                     .fold_by_key(Vec::new(), || {
                                         |mut list, trav| {
                                             list.push(trav);
@@ -330,13 +331,7 @@ impl GremlinJobCompiler {
                                         .collect::<Vec<Traverser>>()?;
                                     Ok(sub_end)
                                 })?
-                                .map(move |(mut parent, sub)| {
-                                    if let Some(trav) = join_func.exec(parent, sub) {
-                                        Ok(trav)
-                                    } else {
-                                        Err(str_to_dyn_error("join failed"))
-                                    }
-                                })?;
+                                .map(move |(mut parent, sub)| join_func.exec(parent, sub))?;
                         }
                     }
                 }
