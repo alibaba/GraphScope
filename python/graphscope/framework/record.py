@@ -27,7 +27,7 @@ class VertexRecordKey:
     and the value is the data.
     """
 
-    __slots__ = ()
+    __slots__ = ["label", "primary_key"]
 
     def __init__(self, label, primary_key):
         self.label: str = label
@@ -41,7 +41,7 @@ class EdgeRecordKey:
     by other means such as gremlin query.
     """
 
-    __slots__ = ()
+    __slots__ = ["label", "src_vertex_key", "dst_vertex_key", "eid"]
 
     def __init__(self, label, src_vertex_key, dst_vertex_key, eid=None):
         self.label: str = label
