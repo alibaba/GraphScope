@@ -34,8 +34,8 @@ extern crate dyn_type;
 use crate::process::traversal::traverser::{ShadeSync, Traverser};
 pub use crate::structure::{get_graph, register_graph};
 pub use crate::structure::{Element, GraphProxy, ID};
-use pegasus::api::function::*;
-use prost::Message;
+
+
 
 pub mod process;
 pub mod structure;
@@ -47,7 +47,7 @@ pub mod graph_proxy;
 mod functions;
 
 use crate::process::traversal::path::ResultPath;
-use crate::result_process::result_to_pb;
+
 use crate::structure::filter::codec::ParseError;
 pub use generated::gremlin::GremlinStep as GremlinStepPb;
 pub use graph_proxy::{create_demo_graph, ID_MASK};

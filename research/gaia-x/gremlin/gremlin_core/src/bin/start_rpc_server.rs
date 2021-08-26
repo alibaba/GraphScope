@@ -20,8 +20,8 @@ use gremlin_core::{create_demo_graph, register_gremlin_types, Partition};
 use log::info;
 use pegasus::Configuration;
 use pegasus_server::config::combine_config;
-use pegasus_server::rpc::{start_rpc_server, RpcService};
-use pegasus_server::service::Service;
+
+
 use pegasus_server::{CommonConfig, HostsConfig};
 use structopt::StructOpt;
 
@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let num_servers = if let Some(h) = &host_config { h.peers.len() } else { 1 };
     let config = combine_config(server_config.server_id, host_config, common_config);
-    let addr = format!("{}:{}", "0.0.0.0", server_config.rpc_port);
+    let _addr = format!("{}:{}", "0.0.0.0", server_config.rpc_port);
 
     create_demo_graph();
     register_gremlin_types().expect("register gremlin types failed");

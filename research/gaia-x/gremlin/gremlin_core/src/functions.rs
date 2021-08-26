@@ -14,8 +14,8 @@
 //! limitations under the License.
 
 use pegasus::api::function::FnResult;
-use pegasus::api::Key;
-use pegasus::Data;
+
+
 use std::cmp::Ordering;
 
 pub trait CompareFunction<D>: Send + 'static {

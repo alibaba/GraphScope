@@ -16,8 +16,8 @@
 use crate::process::traversal::step::*;
 // use crate::process::traversal::step::{BySubJoin, HasAnyJoin};
 use crate::process::traversal::traverser::Traverser;
-use crate::{generated as pb, Element};
-use crate::{str_to_dyn_error, Partitioner};
+use crate::{Element};
+use crate::{Partitioner};
 // use crate::TraverserSinkEncoder;
 use pegasus::api::function::*;
 use pegasus::api::{
@@ -26,21 +26,21 @@ use pegasus::api::{
     SortBy, Source,
 };
 use pegasus::result::ResultSink;
-use pegasus::{BuildJobError, Data};
+use pegasus::{BuildJobError};
 // use pegasus_common::collections::CollectionFactory;
-use pegasus_common::collections::{Collection, Set};
+
 // use pegasus_server::factory::{CompileResult, FoldFunction, GroupFunction, JobCompiler};
 use crate::functions::{CompareFunction, EncodeFunction, KeyFunction};
 use pegasus::stream::Stream;
 use pegasus_server::pb as server_pb;
-use pegasus_server::pb::operator_def::OpKind;
-use pegasus_server::pb::sink::Sinker;
+
+
 use pegasus_server::pb::{AccumKind, OperatorDef};
 use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
 use prost::Message;
 use std::cmp::Ordering;
-use std::fmt::{Debug, Formatter};
+
 use std::sync::Arc;
 
 type TraverserMap = Box<dyn MapFunction<Traverser, Traverser>>;
@@ -67,7 +67,7 @@ impl FnGenerator {
     }
 
     fn gen_source(
-        &self, res: &BinaryResource, num_servers: usize, server_index: u64,
+        &self, _res: &BinaryResource, _num_servers: usize, _server_index: u64,
     ) -> Result<DynIter<Traverser>, BuildJobError> {
         // let mut step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
         // let worker_id = pegasus::get_current_worker().expect("unreachable");
@@ -79,35 +79,35 @@ impl FnGenerator {
         todo!()
     }
 
-    fn gen_map(&self, res: &BinaryResource) -> Result<TraverserMap, BuildJobError> {
+    fn gen_map(&self, _res: &BinaryResource) -> Result<TraverserMap, BuildJobError> {
         // let step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
         // Ok(step.gen_map()?)
         todo!()
     }
 
-    fn gen_flat_map(&self, res: &BinaryResource) -> Result<TraverserFlatMap, BuildJobError> {
+    fn gen_flat_map(&self, _res: &BinaryResource) -> Result<TraverserFlatMap, BuildJobError> {
         // let step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
         // Ok(step.gen_flat_map()?)
         todo!()
     }
 
-    fn gen_filter(&self, res: &BinaryResource) -> Result<TraverserFilter, BuildJobError> {
+    fn gen_filter(&self, _res: &BinaryResource) -> Result<TraverserFilter, BuildJobError> {
         // let step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
         // Ok(step.gen_filter()?)
         todo!()
     }
 
-    fn gen_subtask(&self, res: &BinaryResource) -> Result<TraverserLeftJoin, BuildJobError> {
+    fn gen_subtask(&self, _res: &BinaryResource) -> Result<TraverserLeftJoin, BuildJobError> {
         todo!()
     }
 
-    fn gen_cmp(&self, res: &BinaryResource) -> Result<TraverserCompare, BuildJobError> {
+    fn gen_cmp(&self, _res: &BinaryResource) -> Result<TraverserCompare, BuildJobError> {
         // let step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
         // Ok(step.gen_filter()?)
         todo!()
     }
 
-    fn gen_key(&self, res: &BinaryResource) -> Result<TraverserKey, BuildJobError> {
+    fn gen_key(&self, _res: &BinaryResource) -> Result<TraverserKey, BuildJobError> {
         todo!()
     }
 
@@ -265,7 +265,7 @@ impl GremlinJobCompiler {
                                 // TODO(bingqing): We unfold by default; consider the case of sink after groupCount()
                                 stream = stream
                                     .key_by(move |trav| selector.select_key(trav))?
-                                    .fold_by_key(0, || |mut cnt, _| Ok(cnt + 1))?
+                                    .fold_by_key(0, || |cnt, _| Ok(cnt + 1))?
                                     // unfold by default for now
                                     .unfold(|map| Ok(map.into_iter()))?
                                     // TODO(bingqing): consider traverser type
@@ -338,7 +338,7 @@ impl GremlinJobCompiler {
                                         .collect::<Vec<Traverser>>()?;
                                     Ok(sub_end)
                                 })?
-                                .map(move |(mut parent, sub)| join_func.exec(parent, sub))?;
+                                .map(move |(parent, sub)| join_func.exec(parent, sub))?;
                         }
                     }
                 }
