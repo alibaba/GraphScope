@@ -26,6 +26,10 @@ pub trait KeyFunction<D, K, V>: Send + 'static {
     fn select_key(&self, item: D) -> FnResult<(K, V)>;
 }
 
+pub trait EncodeFunction<D>: Send + 'static {
+    fn encode(&self, data: D) -> FnResult<Vec<u8>>;
+}
+
 ///
 /// Function impls for Box<T>, Box<dyn T> if T impls some function;
 ///

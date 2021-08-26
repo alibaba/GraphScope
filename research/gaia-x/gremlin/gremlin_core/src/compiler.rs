@@ -21,18 +21,20 @@ use crate::{str_to_dyn_error, Partitioner};
 // use crate::TraverserSinkEncoder;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, HasKey, IterCondition,
-    Iteration, KeyBy, Limit, Map, PartitionByKey, Reduce, ReduceByKey, Sink, Sort, SortBy, Source,
+    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, FromStream, HasKey,
+    IterCondition, Iteration, KeyBy, Limit, Map, PartitionByKey, Reduce, ReduceByKey, Sink, Sort,
+    SortBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::{BuildJobError, Data};
 // use pegasus_common::collections::CollectionFactory;
 use pegasus_common::collections::{Collection, Set};
 // use pegasus_server::factory::{CompileResult, FoldFunction, GroupFunction, JobCompiler};
-use crate::functions::{CompareFunction, KeyFunction};
+use crate::functions::{CompareFunction, EncodeFunction, KeyFunction};
 use pegasus::stream::Stream;
 use pegasus_server::pb as server_pb;
 use pegasus_server::pb::operator_def::OpKind;
+use pegasus_server::pb::sink::Sinker;
 use pegasus_server::pb::{AccumKind, OperatorDef};
 use pegasus_server::service::JobParser;
 use pegasus_server::JobRequest;
@@ -47,6 +49,7 @@ type TraverserFilter = Box<dyn FilterFunction<Traverser>>;
 type TraverserCompare = Box<dyn CompareFunction<Traverser>>;
 type TraverserLeftJoin = Box<dyn BinaryFunction<Traverser, Vec<Traverser>, Traverser>>;
 type TraverserKey = Box<dyn KeyFunction<Traverser, Traverser, Traverser>>;
+type TraverserEncode = Box<dyn EncodeFunction<Traverser>>;
 type BinaryResource = Vec<u8>;
 
 pub struct GremlinJobCompiler {
@@ -105,6 +108,10 @@ impl FnGenerator {
     }
 
     fn gen_key(&self, res: &BinaryResource) -> Result<TraverserKey, BuildJobError> {
+        todo!()
+    }
+
+    fn gen_sink(&self) -> Result<TraverserEncode, BuildJobError> {
         todo!()
     }
 }
@@ -343,10 +350,40 @@ impl GremlinJobCompiler {
     }
 }
 
-impl JobParser<Traverser, Traverser> for GremlinJobCompiler {
+impl JobParser<Traverser, Vec<u8>> for GremlinJobCompiler {
     fn parse(
-        &self, _plan: &JobRequest, _input: &mut Source<Traverser>, _output: ResultSink<Traverser>,
+        &self, plan: &JobRequest, input: &mut Source<Traverser>, output: ResultSink<Vec<u8>>,
     ) -> Result<(), BuildJobError> {
-        unimplemented!()
+        if let Some(source) = plan.source.as_ref() {
+            let source = input.input_from(self.udf_gen.gen_source(
+                source.resource.as_ref(),
+                self.num_servers,
+                self.server_index,
+            )?)?;
+            let stream = if let Some(task) = plan.plan.as_ref() {
+                self.install(source, &task.plan)?
+            } else {
+                source
+            };
+
+            let ec = self.udf_gen.gen_sink()?;
+            if let Some(sink) = plan.sink.as_ref() {
+                match sink.sinker.as_ref() {
+                    Some(server_pb::sink::Sinker::Fold(_fold)) => {
+                        // need to first fold and then sink
+                        todo!()
+                    }
+                    Some(server_pb::sink::Sinker::Group(_group)) => {
+                        // need to first group and then sink
+                        todo!()
+                    }
+                    _ => stream.map(move |trav| ec.encode(trav))?.sink_into(output),
+                }
+            } else {
+                stream.map(move |trav| ec.encode(trav))?.sink_into(output)
+            }
+        } else {
+            Err("source of job not found".into())
+        }
     }
 }
