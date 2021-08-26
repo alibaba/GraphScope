@@ -166,7 +166,7 @@ impl GremlinJobCompiler {
                         stream = stream.filter(move |input| func.test(input))?;
                     }
                     server_pb::operator_def::OpKind::Limit(n) => {
-                        stream = stream.limit(n.limit)?.aggregate().limit(n.limit)?;
+                        stream = stream.limit(n.limit)?;
                     }
                     server_pb::operator_def::OpKind::Order(order) => {
                         // TODO(bingqing): should set order_key for traverser, and then directly compare traverser
