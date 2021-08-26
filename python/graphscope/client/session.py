@@ -337,6 +337,7 @@ class Session(object):
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         with_mars=gs_config.with_mars,
         enable_gaia=gs_config.enable_gaia,
+        reconnect=False,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -523,6 +524,17 @@ class Session(object):
                 - k8s_vineyard_shared_mem: Deprecated.
                     Please use vineyard_shared_mem instead.
 
+            reconnect (bool, optional): When connecting to a pre-launched GraphScope cluster with :code:`addr`,
+                the connect request would be rejected with there is still an existing session connected. There
+                are cases where the session still exists and user's client has lost connection with the backend,
+                e.g., in a jupyter notebook. We have a :code:`dangling_timeout_seconds` for it, but a more
+                deterministic behavior would be better.
+
+                If :code:`reconnect` is True, the existing session will be reused. It is the user's responsibility
+                to ensure there's no such an active client actually.
+
+                Defaults to :code:`False`.
+
         Raises:
             TypeError: If the given argument combination is invalid and cannot be used to create
                 a GraphScope session.
@@ -563,6 +575,7 @@ class Session(object):
             "k8s_mars_scheduler_mem",
             "with_mars",
             "enable_gaia",
+            "reconnect",
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
@@ -969,7 +982,9 @@ class Session(object):
             self._coordinator_endpoint = self._launcher.coordinator_endpoint
 
         # waiting service ready
-        self._grpc_client = GRPCClient(self._coordinator_endpoint)
+        self._grpc_client = GRPCClient(
+            self._coordinator_endpoint, self._config_params["reconnect"]
+        )
         self._grpc_client.waiting_service_ready(
             timeout_seconds=self._config_params["timeout_seconds"],
         )
