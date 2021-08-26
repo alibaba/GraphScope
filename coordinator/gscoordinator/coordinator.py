@@ -29,6 +29,7 @@ import os
 import pickle
 import queue
 import random
+import re
 import signal
 import string
 import sys
@@ -209,11 +210,23 @@ class CoordinatorServiceServicer(
     def ConnectSession(self, request, context):
         # A session is already connected.
         if self._request:
-            return self._make_response(
-                message_pb2.ConnectSessionResponse,
-                code=error_codes_pb2.CONNECTION_ERROR,
-                error_msg="Cannot setup more than one connection at the same time.",
-            )
+            if getattr(request, 'reconnect', False):
+                self._make_response(
+                    message_pb2.ConnectSessionResponse,
+                    code=error_codes_pb2.OK,
+                    session_id=self._session_id,
+                    cluster_type=self._launcher.type(),
+                    num_workers=self._launcher.num_workers,
+                    engine_config=json.dumps(self._analytical_engine_config),
+                    pod_name_list=self._engine_hosts.split(","),
+                    namespace=self._k8s_namespace,
+                )
+            else:
+                return self._make_response(
+                    message_pb2.ConnectSessionResponse,
+                    code=error_codes_pb2.CONNECTION_ERROR,
+                    error_msg="Cannot setup more than one connection at the same time.",
+                )
 
         # Connect to serving coordinator.
         self._request = request

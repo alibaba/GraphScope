@@ -45,6 +45,14 @@ message ConnectSessionRequest {
   int32 dangling_timeout_seconds = 2;
   // check version compatibility
   string version = 3;
+
+  // Allow reusing existing session. Reusing would be useful for users when the
+  // client, e.g., jupyter-notebook losses the connection with the backend, but
+  // still want to reuse the _cluster_ resources, we should allow users to
+  // establish the RPC connection to reuse, without waiting for dangling timeout.
+  //
+  // See also #287 for more discussion about session persistence and restore.
+  bool reconnect = 4;
 }
 
 message ConnectSessionResponse {
