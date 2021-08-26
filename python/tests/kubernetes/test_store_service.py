@@ -80,11 +80,11 @@ def test_demo(gs_conn):
     graph.insert_vertex(*v_src)
     graph.insert_vertex(*v_dst)
     graph.insert_vertices(v_srcs)
-    graph.insert_vertices(v_dsts)
-    gs_conn.remote_flush(0)
+    snapshot_id = graph.insert_vertices(v_dsts)
+    gs_conn.remote_flush(snapshot_id)
     assert interactive.V().count().toList()[0] == 925
-    graph.update_vertex_properties(*v_update)
-    gs_conn.remote_flush(0)
+    snapshot_id = graph.update_vertex_properties(*v_update)
+    gs_conn.remote_flush(snapshot_id)
     assert (
         interactive.V()
         .has("id", v_src[0].primary_key["id"])
@@ -99,8 +99,8 @@ def test_demo(gs_conn):
         for src, dst in zip(v_srcs, v_dsts)
     ]
     edge_update = [edge[0], {"date": "ci_edge_4000"}]
-    graph.insert_edge(*edge)
-    gs_conn.remote_flush(0)
+    snapshot_id = graph.insert_edge(*edge)
+    gs_conn.remote_flush(snapshot_id)
     edge[0].eid = (
         interactive.V()
         .has("id", edge[0].src_vertex_key.primary_key["id"])
@@ -109,8 +109,8 @@ def test_demo(gs_conn):
         .id
     )
 
-    graph.insert_edges(edges)
-    gs_conn.remote_flush(0)
+    snapshot_id = graph.insert_edges(edges)
+    gs_conn.remote_flush(snapshot_id)
     assert interactive.E().count().toList()[0] == 6637
 
     for e in edges:
@@ -138,7 +138,7 @@ def test_demo(gs_conn):
     graph.delete_vertex(v_src[0])
     graph.delete_vertex(v_dst[0])
     graph.delete_vertices([key[0] for key in v_srcs])
-    graph.delete_vertices([key[0] for key in v_dsts])
-    gs_conn.remote_flush(0)
+    snapshot_id = graph.delete_vertices([key[0] for key in v_dsts])
+    gs_conn.remote_flush(snapshot_id)
     assert interactive.V().count().toList()[0] == 903
     assert interactive.E().count().toList()[0] == 6626
