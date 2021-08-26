@@ -1,0 +1,257 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+package graph_relation;
+option java_package = "com.alibaba.graphscope.gaia.proto";
+option java_outer_classname = "GraphAlgebra";
+
+import "common.proto";
+import "expr.proto";
+
+// To project a relation on certain attributes or further their properties
+message Project {
+  message ExprAlias {
+    // The expression to be aliased
+    common.ExprNode expr = 1;
+    // The name/name identifier of the aliased attribute
+    common.NameOrId alias = 2;
+  }
+  // A list of [expression -> alias] to be projected from the graph relation.
+  // e.g., project_{a.birthday / 100 % 100 > 11 }
+  repeated ExprAlias attributes = 1;
+}
+
+
+// To filter a relation based on a given predicate
+message Select {
+  // A predicate formulated as an expression tree
+  common.ExprNode predicate = 1;
+}
+
+// Join two relations based on whether the given keys of both relations are equal. In general, a join operator
+// can join on any arbitrary predicate regarding certain attributes of left and right participants, while
+// the engine only supports the equivalence of two keys.
+message Join {
+  enum JoinKind {
+    INNER = 0;
+    LEFT_OUTER = 1;
+    RIGHT_OUTER = 2;
+    FULL_OUTER = 3;
+    // By default left semi-join
+    SEMI = 4;
+    // By default left anti-join
+    ANTI = 5;
+    // aka. Cartesian product
+    TIMES = 6;
+  }
+  common.Variable left_key = 1;
+  common.Variable right_key = 2;
+  JoinKind kind = 3;
+}
+
+// Union two relations
+message Union {}
+
+// To define the function to be applied on each group after performing grouping. For example,
+// GROUPBY({a, b}, COUNT_DISTINCT(c, d) as e), one shall count distinct present of the pairs
+// (c, d), and alias the count as e.
+message GroupFunc {
+  enum Aggregate {
+    SUM = 0;
+    MIN = 1;
+    MAX = 2;
+    COUNT = 3;
+    COUNT_DISTINCT = 4;
+    TO_LIST = 5;
+    TO_SET = 6;
+    AVG = 7;
+  }
+
+  // Point to the values upon which the aggregation is applied
+  repeated common.Variable values = 1;
+  // The aggregate function
+  Aggregate aggregate = 2;
+  // The alias for the aggregated value
+  common.NameOrId alias = 3;
+}
+
+message GroupBy {
+  // The keys to perform grouping
+  repeated common.Variable keys = 1;
+  // The grouping functions
+  repeated GroupFunc functions = 2;
+}
+
+message OrderingPair {
+  enum Order {
+    // random
+    SHUFFLE = 0;
+    // ascending
+    ASC = 1;
+    // descending
+    DESC = 2;
+  }
+  common.Variable key = 1;
+  Order order = 2;
+}
+
+message OrderBy {
+  repeated OrderingPair pairs = 2;
+}
+
+message Dedup {}
+
+message Unwind {
+  // The tag of a graph relation that **must** have a type of collection
+  common.NameOrId tag = 1;
+  // The alias tag for the elements that are unwinded from the collection
+  common.NameOrId alias = 2;
+}
+
+// The operation of getting vertices from the graph
+message GetV {
+  // The predicate that defines conditions these vertices shall satisfy
+  common.ExprNode predicate = 1;
+  // The alias for the vertices
+  common.NameOrId alias = 2;
+}
+
+// To expand satisfied edges from a tag of the graph relation that refers to a vertex attribute
+message ExpandBase {
+  enum Direction {
+    OUT = 0;
+    IN = 1;
+    BOTH = 2;
+  }
+  // The tag that refers to the starting vertex
+  common.NameOrId start_v_tag = 1;
+  // The direction of the expanded edge
+  Direction dir = 2;
+  // The optional predicate for the edge
+  common.ExprNode edge_predicate = 5;
+  // The optional predicate for the vertex
+  common.ExprNode vertex_predicate = 6;
+}
+
+message Edge {
+  // The base expansion
+  ExpandBase base = 1;
+  // An optional alias for the expanded edge
+  common.NameOrId edge_alias = 2;
+  // An optional alias for the other end vertex of the edge.
+  common.NameOrId end_v_alias = 3;
+}
+
+message Path {
+  message Range {
+    // The lower bound of the range, inclusive
+    int32 lower = 2;
+    // The upper bound of the range, exclusive
+    int32 upper = 1;
+  }
+  // A path expansion has a base of edge expansion
+  ExpandBase edge_expansion = 1;
+  // An optional alias for the expanded path
+  common.NameOrId path_alias = 2;
+  // An optional alias for the other end vertex of the path.
+  common.NameOrId end_v_alias = 3;
+  // The range that defines the minimum and maximum number of hops of the path expansion.
+  // This is optional, if not set, the minimum number is 1, and the maximum is INT_MAX
+  Range range = 4;
+}
+
+message ShortestPath {
+  message WeightCal {
+    enum Aggregate {
+      SUM = 0;
+      MAX = 1;
+      MIN = 2;
+      AVG = 3;
+      MUL = 4;
+    }
+    // This optional expression that defines how to calculate the weight on each edge. In the expression,
+    // one can directly write start, end to indicate the start/edge vertices of the edge.
+    // e.g. the expression: "start.value + end.value * weight" defines that the weight of each edge
+    // is calculated by multiplying the edge vertex's value with the edge's weight and then summing
+    // it with the start vertex's value.
+    common.ExprNode weight_each = 1;
+    // Define how to aggregate the calculated weight of each edge as the path weight
+    Aggregate aggregate = 2;
+  }
+  // A shortest path expansion has a base of path expansion
+  Path path = 1;
+  // An optional weight calculation function for shortest path. If not specified, the weight is
+  // by default the length of the path.
+  WeightCal weight_cal = 2;
+}
+
+// Apply is a relational operation where it first performs a inner correlated subtask for each tuple
+// of input relations, and then the result of the subtask will be joined back to each input tuple.
+message Apply {
+  // Define how to join the result of the subtask back to the original relation
+  Join.JoinKind join_kind = 1;
+  // The subtask will be perform on certain tags as keys of the input relation
+  repeated common.NameOrId tags = 2;
+  // A logical plan that defines the subtask
+  LogicalPlan subtask = 3;
+  // An alias fro the result of the subtask. In order for Apply to be semantically intact,
+  // the subtask must return a scalar value.
+  common.NameOrId alias = 4;
+}
+
+message SegmentApply {
+  // The keys to perform grouping, or segmenting. For simplicity, we only allows grouping by the
+  // existed tags of the graph relation, which is unlike GroupBy that we further allows digging
+  // into the properties of a vertex/edge that the tag refers to.
+  repeated common.NameOrId keys = 1;
+  // A base of apply operation that is conducted on each group of the relations instead of tuple
+  Apply apply_subtask = 2;
+}
+
+// A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
+// edge indicates the execution flow.
+message LogicalPlan {
+  message Operator {
+    oneof opr {
+      Project project =  1;
+      Select select = 2;
+      Join join = 3 ;
+      Union union = 4;
+      GroupBy group_by = 5;
+      OrderBy order_by = 6;
+      Dedup dedup = 7;
+      Unwind unwind = 8;
+      Apply apply = 9;
+      SegmentApply seg_apply = 10;
+      // Saving the room for relational operators
+      GetV get_v = 20;
+      Edge edge = 21;
+      Path path = 22;
+      ShortestPath shortest_path = 23;
+    }
+  }
+  message Node {
+    // The current node's operator identifier
+    int32 opr_id = 1;
+    // The children operators' identifiers
+    repeated int32 children = 2;
+  }
+  // A array of operators, where the index stands for the operator's identifier
+  repeated Operator operators = 1;
+  // The root node of the logical plan
+  Node root = 2;
+}
