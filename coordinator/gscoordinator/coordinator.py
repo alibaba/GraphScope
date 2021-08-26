@@ -204,7 +204,7 @@ class CoordinatorServiceServicer(
     def ConnectSession(self, request, context):
         # A session is already connected.
         if self._request:
-            if getattr(request, 'reconnect', False):
+            if getattr(request, "reconnect", False):
                 self._make_response(
                     message_pb2.ConnectSessionResponse,
                     code=error_codes_pb2.OK,
