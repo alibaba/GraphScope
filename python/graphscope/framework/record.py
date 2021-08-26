@@ -16,8 +16,8 @@
 # limitations under the License.
 #
 
+from collections import namedtuple
 
-from graphscope.proto import ddl_service_pb2
 from graphscope.proto import write_service_pb2
 
 
@@ -26,6 +26,8 @@ class VertexRecordKey:
     The primary key may be a dict, the key is the property name,
     and the value is the data.
     """
+
+    __slots__ = ()
 
     def __init__(self, label, primary_key):
         self.label: str = label
@@ -38,6 +40,8 @@ class EdgeRecordKey:
     system generated unsigned integer. User need to get that eid
     by other means such as gremlin query.
     """
+
+    __slots__ = ()
 
     def __init__(self, label, src_vertex_key, dst_vertex_key, eid=None):
         self.label: str = label
@@ -90,5 +94,5 @@ def to_write_requests_pb(kind: str, inputs: list, write_type):
         write_request_pb = request.write_requests.add()
         write_request_pb.write_type = write_type
         write_request_pb.data_record.CopyFrom(to_data_record_pb(kind, pk, properties))
-    print('[DEBUG] request:', request)
+    print("[DEBUG] request:", request)
     return request

@@ -42,6 +42,7 @@ def gs_conn():
 
 def test_demo(gs_conn):
     graph = gs_conn.g()
+    # Create schema
     schema = graph.schema()
     schema.add_vertex_label("person").add_primary_key("id", "long").add_property(
         "name", "str"
@@ -50,6 +51,7 @@ def test_demo(gs_conn):
         "date", "str"
     )
     schema.update()
+    # Bulk load data
     load_script = os.environ["LOAD_DATA_SCRIPT"]
     os.system(load_script)
 
@@ -57,50 +59,86 @@ def test_demo(gs_conn):
     assert interactive.V().count().toList()[0] == 903
     assert interactive.E().count().toList()[0] == 6626
 
-    graph: Graph = gs_conn.g()
+    # Realtime write
     v_src = [VertexRecordKey("person", {"id": 99999}), {"name": "ci_person_99999"}]
     v_dst = [VertexRecordKey("person", {"id": 199999}), {"name": "ci_person_199999"}]
-    v_srcs = [[VertexRecordKey("person", {"id": 100000 + i}), {"name": f"ci_person_{100000 + i}"}] for i in range(10)]
-    v_dsts = [[VertexRecordKey("person", {"id": 200000 + i}),{"name": f"ci_person_{200000 + i}"},]for i in range(10)]
+    v_srcs = [
+        [
+            VertexRecordKey("person", {"id": 100000 + i}),
+            {"name": f"ci_person_{100000 + i}"},
+        ]
+        for i in range(10)
+    ]
+    v_dsts = [
+        [
+            VertexRecordKey("person", {"id": 200000 + i}),
+            {"name": f"ci_person_{200000 + i}"},
+        ]
+        for i in range(10)
+    ]
     v_update = [v_src[0], {"name": "ci_person_99999_updated"}]
     graph.insert_vertex(*v_src)
     graph.insert_vertex(*v_dst)
     graph.insert_vertices(v_srcs)
     graph.insert_vertices(v_dsts)
-    conn.remote_flush(0)
+    gs_conn.remote_flush(0)
     assert interactive.V().count().toList()[0] == 925
     graph.update_vertex_properties(*v_update)
-    conn.remote_flush(0)
-    assert interactive.V().has("id", v_src[0].primary_key["id"]).valueMap().toList()[0]["name"][0] == "ci_person_99999_updated"
-    
+    gs_conn.remote_flush(0)
+    assert (
+        interactive.V()
+        .has("id", v_src[0].primary_key["id"])
+        .valueMap()
+        .toList()[0]["name"][0]
+        == "ci_person_99999_updated"
+    )
+
     edge = [EdgeRecordKey("knows", v_src[0], v_dst[0]), {"date": "ci_edge_2000"}]
     edges = [
-      [EdgeRecordKey("knows", src[0], dst[0]), {"date": "ci_edge_3000"}]
-      for src, dst in zip(v_srcs, v_dsts)
+        [EdgeRecordKey("knows", src[0], dst[0]), {"date": "ci_edge_3000"}]
+        for src, dst in zip(v_srcs, v_dsts)
     ]
     edge_update = [edge[0], {"date": "ci_edge_4000"}]
     graph.insert_edge(*edge)
-    conn.remote_flush(0)
-    edge[0].eid = interactive.V().has("id", edge[0].src_vertex_key.primary_key["id"]).outE().toList()[0].id
-    
+    gs_conn.remote_flush(0)
+    edge[0].eid = (
+        interactive.V()
+        .has("id", edge[0].src_vertex_key.primary_key["id"])
+        .outE()
+        .toList()[0]
+        .id
+    )
+
     graph.insert_edges(edges)
-    conn.remote_flush(0)
+    gs_conn.remote_flush(0)
     assert interactive.E().count().toList()[0] == 6637
 
     for e in edges:
-      e[0].eid = interactive.V().has("id", e[0].src_vertex_key.primary_key["id"]).outE().toList()[0].id
-    
+        e[0].eid = (
+            interactive.V()
+            .has("id", e[0].src_vertex_key.primary_key["id"])
+            .outE()
+            .toList()[0]
+            .id
+        )
+
     graph.update_edge_properties(*edge_update)
-    assert interactive.V().has("id", edge[0].src_vertex_key.primary_key["id"]).outE().valueMap().toList()[0]["date"][0] == "ci_edge_4000"
-    
+    assert (
+        interactive.V()
+        .has("id", edge[0].src_vertex_key.primary_key["id"])
+        .outE()
+        .valueMap()
+        .toList()[0]["date"][0]
+        == "ci_edge_4000"
+    )
+
     graph.delete_edge(edge[0])
     graph.delete_edges([e[0] for e in edges])
-    
+
     graph.delete_vertex(v_src[0])
     graph.delete_vertex(v_dst[0])
     graph.delete_vertices([key[0] for key in v_srcs])
     graph.delete_vertices([key[0] for key in v_dsts])
-    conn.remote_flush(0)
+    gs_conn.remote_flush(0)
     assert interactive.V().count().toList()[0] == 903
     assert interactive.E().count().toList()[0] == 6626
-

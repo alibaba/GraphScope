@@ -95,6 +95,7 @@ class Connection:
         channel = grpc.insecure_channel(addr)
         self._ddl_service_stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
         self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel)
+        self._client_id = None
 
     def submit(self, requests):
         return self._ddl_service_stub.batchSubmit(requests)
@@ -113,9 +114,11 @@ class Connection:
         return traversal().withRemote(DriverRemoteConnection(graph_url, "g"))
 
     def _get_client_id(self):
-        request = write_service_pb2.GetClientIdRequest()
-        response = self._write_service_stub.getClientId(request)
-        return response.client_id
+        if self._client_id is None:
+            request = write_service_pb2.GetClientIdRequest()
+            response = self._write_service_stub.getClientId(request)
+            self._client_id = response.client_id
+        return self._client_id
 
     def batch_write(self, request):
         request.client_id = self._get_client_id()
