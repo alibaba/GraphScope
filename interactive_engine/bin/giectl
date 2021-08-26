@@ -434,7 +434,7 @@ create_gremlin_instance_on_k8s() {
   gremlin_server_cpu=$6
   gremlin_server_mem=$7
   engine_params=$8
-  zookeeper_ip=$(hostname -i)
+  zookeeper_ip=$9
   zookeeper_port="2181"
   requests_cpu=0.5
   requests_mem="512Mi"
@@ -494,6 +494,7 @@ create_gremlin_instance_on_k8s() {
   log "Expose gremlin server."
   gremlin_pod=$(kubectl get pods -l "graph=pod-${object_id}" | grep -v NAME | awk '{print $1}')
   frontend_port="8182"  # frontend port always be 8182 on k8s
+  timeout_seconds=60
   if [ "${GREMLIN_EXPOSE}" = "LoadBalancer" ]; then
     # random from range [50001, 53000)
     external_port=$(( ((RANDOM<<15)|RANDOM) % 50001 + 53000 ))
@@ -506,21 +507,46 @@ create_gremlin_instance_on_k8s() {
       external_ip=$(kubectl describe service gremlin-${object_id} | grep "LoadBalancer Ingress" | awk -F'[ :]+' '{print $3}')
       if [ -n "${external_ip}" ]; then
         break
-        fi
-        wait_period_seconds=$(($wait_period_seconds+5))
-        if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-          echo "Get external ip of ${GREMLIN_EXPOSE} failed."
-          break
-        fi
-        sleep 5
+      fi
+      wait_period_seconds=$(($wait_period_seconds+5))
+      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+        echo "Get external ip of ${GREMLIN_EXPOSE} failed."
+        break
+      fi
+      sleep 5
     done
   else
     kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${frontend_port} \
       --target-port=${frontend_port} --type=NodePort 1>/dev/null 2>&1
     [ $? -eq 0 ] || exit 1
-    external_port=$(kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]")
-    [ $? -eq 0 ] || exit 1
-    external_ip=$(kubectl describe pods pod-${object_id} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
+    wait_period_seconds=0
+    while true
+    do
+      external_port=$(kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]")
+      if [ -n "${external_port}" ]; then
+        break
+      fi
+      wait_period_seconds=$(($wait_period_seconds+5))
+      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+        log "Get external port of ${GREMLIN_EXPOSE} failed."
+        break
+      fi
+      sleep 5
+    done
+    wait_period_seconds=0
+    while true
+    do
+      external_ip=$(kubectl describe pods pod-${object_id} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
+      if [ -n "${external_ip}" ]; then
+        break
+      fi
+      wait_period_seconds=$(($wait_period_seconds+5))
+      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+        log "Get external ip of ${GREMLIN_EXPOSE} failed."
+        break
+      fi
+      sleep 5
+    done
   fi
   log "FRONTEND_PORT:${external_ip}:${external_port}"
 }
@@ -612,7 +638,6 @@ start_manager_service() {
   sed -e "s@SERVER_PORT@${server_port}@g" \
       -e "s@CREATE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
       -e "s@CLOSE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
-      -e "s@ZOOKEEPER_PORT@${zookeeper_port}@g" \
       ${WORKSPACE}/conf/application.properties > ${service_dir}/application.properties
   if [[ "${cluster_type}" == "local" ]]; then
     java -cp ${libpath} -Dspring.config.location=${service_dir}/application.properties \

@@ -28,6 +28,7 @@ import pickle
 import queue
 import random
 import signal
+import socket
 import string
 import sys
 import threading
@@ -729,6 +730,7 @@ class CoordinatorServiceServicer(
 
         params = {
             "graphName": "%s" % object_id,
+            "zookeeperIp": socket.gethostbyname(socket.gethostname()),
         }
 
         if self._launcher_type == types_pb2.K8S:
@@ -1322,12 +1324,6 @@ def parse_sys_args():
         help="Graph Manager image of graph interactive engine.",
     )
     parser.add_argument(
-        "--k8s_zookeeper_image",
-        type=str,
-        default="registry.cn-hongkong.aliyuncs.com/graphscope/zookeeper:3.4.10",
-        help="Docker image of zookeeper, used by graph interactive engine.",
-    )
-    parser.add_argument(
         "--k8s_image_pull_policy",
         type=str,
         default="IfNotPresent",
@@ -1392,18 +1388,6 @@ def parse_sys_args():
         type=str,
         default="256Mi",
         help="Memory of etcd pod, suffix with ['Mi', 'Gi', 'Ti'].",
-    )
-    parser.add_argument(
-        "--k8s_zookeeper_cpu",
-        type=float,
-        default=1.0,
-        help="Cpu cores of zookeeper container, default: 1.0",
-    )
-    parser.add_argument(
-        "--k8s_zookeeper_mem",
-        type=str,
-        default="256Mi",
-        help="Memory of zookeeper container, suffix with ['Mi', 'Gi', 'Ti'].",
     )
     parser.add_argument(
         "--k8s_gie_graph_manager_cpu",
@@ -1496,15 +1480,12 @@ def launch_graphscope():
             service_type=args.k8s_service_type,
             gs_image=args.k8s_gs_image,
             etcd_image=args.k8s_etcd_image,
-            zookeeper_image=args.k8s_zookeeper_image,
             gie_graph_manager_image=args.k8s_gie_graph_manager_image,
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,
             etcd_num_pods=args.k8s_etcd_num_pods,
             etcd_cpu=args.k8s_etcd_cpu,
             etcd_mem=args.k8s_etcd_mem,
-            zookeeper_cpu=args.k8s_zookeeper_cpu,
-            zookeeper_mem=args.k8s_zookeeper_mem,
             gie_graph_manager_cpu=args.k8s_gie_graph_manager_cpu,
             gie_graph_manager_mem=args.k8s_gie_graph_manager_mem,
             engine_cpu=args.k8s_engine_cpu,

@@ -151,13 +151,17 @@ jobs:
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
         source ~/.bashrc
 
+        # install zetcd
+        go get github.com/etcd-io/zetcd/cmd/zetcd
+        cp $(go env GOPATH)/bin/zetcd interactive_engine/bin/
+
         cd interactive_engine/src/executor
         ./exec.sh cargo build --all --release
         cd ${GITHUB_WORKSPACE}
         tar -cf gie.tar interactive_engine/src/executor/target/release/executor \
                         interactive_engine/src/executor/store/log4rs.yml \
                         interactive_engine/bin \
-                        interactive_engine/conf
+                        interactive_engine/conf \
 
     - uses: actions/upload-artifact@v2
       with:

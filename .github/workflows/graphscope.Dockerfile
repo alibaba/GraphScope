@@ -9,6 +9,7 @@ RUN mkdir -p /home/maxgraph/{bin,conf}
 ENV VINEYARD_IPC_SOCKET /home/maxgraph/data/vineyard/vineyard.sock
 COPY ./interactive_engine/src/executor/target/release/executor /home/maxgraph/bin/executor
 COPY ./interactive_engine/bin/giectl /home/maxgraph/bin/giectl
+COPY ./interactive_engine/bin/zetcd /usr/local/bin/zetcd
 
 RUN mkdir -p /home/maxgraph/native
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/home/maxgraph/native

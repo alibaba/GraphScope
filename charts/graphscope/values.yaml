@@ -24,7 +24,7 @@ volumes:
       mounts:
       - mountPath: /tmp/testingdata
 preemptive: true
-  
+
 
 coordinator:
   service:
@@ -82,7 +82,7 @@ engines:
         limits:
           cpu: 1.0
           memory: 4Gi
-        
+
 
 vineyard:
   # When `vineyard.daemonset` is set to the Helm release name, the coordinator will
@@ -118,17 +118,3 @@ etcd:
     limits:
       cpu: 0.5
       memory: 128Mi
-  
-
-zookeeper:
-  image:
-    name: zookeeper
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: 3.4.14
-  resources:
-    requests:
-      cpu: 0.5
-      memory: 256Mi
-    limits:
-      cpu: 0.5
-      memory: 256Mi

@@ -5,7 +5,7 @@ metadata:
   labels:
      {{- include "graphscope.coordinator.labels" . | nindent 4 }}
 spec:
-  {{- include "graphscope.imagePullSecrets" . | indent 2 }}    
+  {{- include "graphscope.imagePullSecrets" . | indent 2 }}
   restartPolicy: Never
   containers:
     - name: coordinator-container
@@ -83,12 +83,6 @@ spec:
         {{- else }}
         - "{{ .Values.engines.gie.graph_manager.image.name}}:{{ .Chart.AppVersion }}"
         {{- end }}
-        - "--k8s_zookeeper_image"
-        {{- if .Values.zookeeper.image.tag }}
-        - "{{ .Values.zookeeper.image.name }}:{{ .Values.zookeeper.image.tag }}"
-        {{- else }}
-        - "{{ .Values.zookeeper.image.name }}:{{ .Chart.AppVersion }}"
-        {{- end }}
         - "--k8s_image_pull_policy"
         - {{ .Values.imagePullPolicy | quote }}
         - "--k8s_image_pull_secrets"
@@ -102,10 +96,6 @@ spec:
         - {{ .Values.etcd.resources.requests.cpu | quote }}
         - "--k8s_etcd_mem"
         - {{ .Values.etcd.resources.requests.memory }}
-        - "--k8s_zookeeper_cpu"
-        - {{ .Values.zookeeper.resources.requests.cpu | quote }}
-        - "--k8s_zookeeper_mem"
-        - {{ .Values.zookeeper.resources.requests.memory }}
         - "--k8s_gie_graph_manager_cpu"
         - {{ .Values.engines.gie.graph_manager.resources.requests.cpu | quote }}
         - "--k8s_gie_graph_manager_mem"
