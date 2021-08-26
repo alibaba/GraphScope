@@ -170,12 +170,15 @@ impl<V, VI, E, EI> AsyncMaxGraphServiceImpl<V, VI, E, EI>
 
         let initialized_task_partition_manager;
         loop {
-            let task_partition_manager_guard = task_partition_manager.try_read().unwrap();
-            if task_partition_manager_guard.is_some() {
-                initialized_task_partition_manager = task_partition_manager_guard.clone().unwrap();
-                break;
-            } else {
-                continue;
+            match task_partition_manager.try_read() {
+                Ok(n) => { if n.is_some() {
+                    initialized_task_partition_manager = n.clone().unwrap();
+                    break;
+                } else {
+                    continue;
+                }
+            },
+                Err(_) => continue,
             }
         }
         let task_partition_manager = initialized_task_partition_manager;
