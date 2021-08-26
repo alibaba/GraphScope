@@ -711,20 +711,21 @@ def create_context_node(context_type, bound_app, graph, *args, **kwargs):
 
 def _get_property_v_context_schema_str(schema):
     ret = []
-    ret.append(textwrap.indent("id", "  "))
     for label in schema.vertex_labels:
         ret.append(textwrap.indent(f"{label}.", "  "))
+        ret.append(textwrap.indent("id", "    "))
         for prop in schema.get_vertex_properties(label):
-            ret.append(textwrap.indent(prop.name, "    "))
+            if prop.name != "id":  # avoid property name duplicate
+                ret.append(textwrap.indent(prop.name, "    "))
     return ret
 
 
 def _get_property_e_context_schema_str(schema):
     ret = []
-    ret.append(textwrap.indent("src", "  "))
-    ret.append(textwrap.indent("dst", "  "))
     for label in schema.edge_labels:
         ret.append(textwrap.indent(f"{label}.", "  "))
+        ret.append(textwrap.indent("src", "    "))
+        ret.append(textwrap.indent("dst", "    "))
         for prop in schema.get_edge_properties(label):
             ret.append(textwrap.indent(prop.name, "    "))
     return ret
