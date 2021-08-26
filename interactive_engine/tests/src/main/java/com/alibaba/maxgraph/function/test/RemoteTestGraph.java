@@ -329,21 +329,12 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method = "g_injectXg_VX1X_propertiesXnameX_nextX_value",
         reason = "Not support inject operator")
 
-// @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ConstantTest",
-//        method = "g_V_chooseXhasLabelXpersonX_valuesXnameX_constantXinhumanXX",
-//        reason = "Not support inject operator")
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_hasXperson_name_markoX_elementMapXnameX_asXaX_unionXidentity_identityX_selectXaX_selectXnameX",
         reason = "Not support inject operator")
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
         method = "g_VX1X_elementMap_orderXlocalX_byXkeys_descXunfold",
         reason = "Not support inject operator")
-// @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
-//        method = "g_V_chooseXlabel_is_person__unionX__out_lang__out_nameX__in_labelX",
-//        reason = "Not support inject operator")
-// @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
-//        method = "g_V_chooseXlabel_is_person__unionX__out_lang__out_nameX__in_labelX_groupCount",
-//        reason = "Not support inject operator")
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
         method = "g_V_valueMapXname_ageX_withXtokens_idsX_byXunfoldX",
         reason = "Not support inject operator")
@@ -356,6 +347,12 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
         method = "g_V_both_hasLabelXpersonX_order_byXage_descX_name",
         reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_hasXperson_name_markoX_path_asXaX_unionXidentity_identityX_selectXaX_unfold",
+        reason = "Not support select traversal")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_hasXperson_name_markoX_count_asXaX_unionXidentity_identityX_selectXaX",
+        reason = "Not support select traversal")
 public class RemoteTestGraph extends DummyGraph {
     public static final String GRAPH_NAME = "test.graph.name";
     private RemoteGremlinConnection remoteGremlinConnection;

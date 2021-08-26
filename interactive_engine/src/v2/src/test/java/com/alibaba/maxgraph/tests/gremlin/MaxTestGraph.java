@@ -352,21 +352,12 @@ import java.util.Properties;
         method = "g_injectXg_VX1X_propertiesXnameX_nextX_value",
         reason = "Not support inject operator")
 
-// @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ConstantTest",
-//         method = "g_V_chooseXhasLabelXpersonX_valuesXnameX_constantXinhumanXX",
-//         reason = "Not support inject operator")
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_hasXperson_name_markoX_elementMapXnameX_asXaX_unionXidentity_identityX_selectXaX_selectXnameX",
         reason = "Not support inject operator")
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
         method = "g_VX1X_elementMap_orderXlocalX_byXkeys_descXunfold",
         reason = "Not support inject operator")
-// @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
-//         method = "g_V_chooseXlabel_is_person__unionX__out_lang__out_nameX__in_labelX",
-//         reason = "Not support inject operator")
-// @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
-//         method = "g_V_chooseXlabel_is_person__unionX__out_lang__out_nameX__in_labelX_groupCount",
-//         reason = "Not support inject operator")
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
         method = "g_V_valueMapXname_ageX_withXtokens_idsX_byXunfoldX",
         reason = "Not support inject operator")
