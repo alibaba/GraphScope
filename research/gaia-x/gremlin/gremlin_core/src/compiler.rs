@@ -16,24 +16,23 @@
 use crate::process::traversal::step::*;
 // use crate::process::traversal::step::{BySubJoin, HasAnyJoin};
 use crate::process::traversal::traverser::Traverser;
-use crate::{Element};
-use crate::{Partitioner};
+use crate::Element;
+use crate::Partitioner;
 // use crate::TraverserSinkEncoder;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, FromStream, HasKey,
-    IterCondition, Iteration, KeyBy, Limit, Map, PartitionByKey, Reduce, ReduceByKey, Sink, Sort,
-    SortBy, Source,
+    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration,
+    KeyBy, Limit, Map, Reduce, Sink, SortBy, Source,
 };
 use pegasus::result::ResultSink;
-use pegasus::{BuildJobError};
+use pegasus::BuildJobError;
 // use pegasus_common::collections::CollectionFactory;
 
 // use pegasus_server::factory::{CompileResult, FoldFunction, GroupFunction, JobCompiler};
 use crate::functions::{CompareFunction, EncodeFunction, KeyFunction};
+use crate::generated as pb;
 use pegasus::stream::Stream;
 use pegasus_server::pb as server_pb;
-
 
 use pegasus_server::pb::{AccumKind, OperatorDef};
 use pegasus_server::service::JobParser;
@@ -59,24 +58,25 @@ pub struct GremlinJobCompiler {
     server_index: u64,
 }
 
-struct FnGenerator {}
+struct FnGenerator {
+    partitioner: Arc<dyn Partitioner>,
+}
 
 impl FnGenerator {
-    fn new() -> Self {
-        FnGenerator {}
+    fn new(partitioner: Arc<dyn Partitioner>) -> Self {
+        FnGenerator { partitioner }
     }
 
-    fn gen_source(
-        &self, _res: &BinaryResource, _num_servers: usize, _server_index: u64,
-    ) -> Result<DynIter<Traverser>, BuildJobError> {
-        // let mut step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
-        // let worker_id = pegasus::get_current_worker().expect("unreachable");
-        // let num_workers = worker_id.peers as usize / num_servers;
-        // let mut step = graph_step_from(&mut step, num_servers)?;
-        // step.set_num_workers(num_workers);
-        // step.set_server_index(server_index);
-        // Ok(step.gen_source(Some(worker_id.index as usize)))
-        todo!()
+    fn gen_source(&self, res: &BinaryResource) -> Result<DynIter<Traverser>, BuildJobError> {
+        let mut step = decode::<pb::gremlin::GremlinStep>(res)?;
+        let worker_id = pegasus::get_current_worker();
+        let step = graph_step_from(
+            &mut step,
+            worker_id.local_peers as usize,
+            worker_id.index,
+            self.partitioner.clone(),
+        )?;
+        Ok(step.gen_source(worker_id.index as usize))
     }
 
     fn gen_map(&self, _res: &BinaryResource) -> Result<TraverserMap, BuildJobError> {
@@ -118,9 +118,10 @@ impl FnGenerator {
 
 impl GremlinJobCompiler {
     pub fn new<D: Partitioner>(partitioner: D, num_servers: usize, server_index: u64) -> Self {
+        let partitioner = Arc::new(partitioner);
         GremlinJobCompiler {
-            partitioner: Arc::new(partitioner),
-            udf_gen: FnGenerator::new(),
+            partitioner: partitioner.clone(),
+            udf_gen: FnGenerator::new(partitioner.clone()),
             num_servers,
             server_index,
         }
@@ -355,11 +356,7 @@ impl JobParser<Traverser, Vec<u8>> for GremlinJobCompiler {
         &self, plan: &JobRequest, input: &mut Source<Traverser>, output: ResultSink<Vec<u8>>,
     ) -> Result<(), BuildJobError> {
         if let Some(source) = plan.source.as_ref() {
-            let source = input.input_from(self.udf_gen.gen_source(
-                source.resource.as_ref(),
-                self.num_servers,
-                self.server_index,
-            )?)?;
+            let source = input.input_from(self.udf_gen.gen_source(source.resource.as_ref())?)?;
             let stream = if let Some(task) = plan.plan.as_ref() {
                 self.install(source, &task.plan)?
             } else {
@@ -386,4 +383,9 @@ impl JobParser<Traverser, Vec<u8>> for GremlinJobCompiler {
             Err("source of job not found".into())
         }
     }
+}
+
+#[inline]
+fn decode<T: Message + Default>(binary: &[u8]) -> Result<T, BuildJobError> {
+    Ok(T::decode(binary).map_err(|e| format!("protobuf decode failure: {}", e))?)
 }

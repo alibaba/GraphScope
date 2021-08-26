@@ -185,46 +185,47 @@ pub fn pair_element_to_pb(t: &Traverser) -> result_pb::PairElement {
     }
 }
 
-pub fn result_to_pb(data: Vec<Traverser>) -> result_pb::Result {
+pub fn result_to_pb(t: Traverser) -> result_pb::Result {
+    // TODO(bingqing): return each encoded traverser instead of collection
     let mut paths_encode = vec![];
     let mut elements_encode = vec![];
     let mut properties_encode = vec![];
     let mut pairs_encode = vec![];
     let mut values_encode = vec![];
-    for t in data {
-        if let Some(e) = t.get_element() {
-            debug!("result_process element result: {:?}", e);
-            elements_encode.push(element_to_pb(e));
-        } else if let Some(o) = t.get_object() {
-            match o {
-                Object::Primitive(_) | Object::String(_) | Object::Blob(_) => {
-                    debug!("result_process object result {:?}", o);
-                    values_encode.push(object_to_pb_value(o));
-                }
-                Object::DynOwned(x) => {
-                    if let Some(p) = x.try_downcast_ref::<ResultPath>() {
-                        debug!("result_process path result: {:?}", p);
-                        paths_encode.push(path_to_pb(p));
-                    } else if let Some(result_prop) = x.try_downcast_ref::<ResultProperty>() {
-                        debug!("result_process property result: {:?}", result_prop);
-                        properties_encode.push(property_to_pb(result_prop));
-                    } else if let Some(result_pair) = try_downcast_pair(o) {
-                        debug!("result_process group result {:?}", result_pair);
-                        let (k, v) = result_pair;
-                        let key_pb = pair_element_to_pb(&k);
-                        let value_pb = pair_element_to_pb(&v);
-                        let map_pair_pb =
-                            result_pb::MapPair { first: Some(key_pb), second: Some(value_pb) };
-                        pairs_encode.push(map_pair_pb);
-                    } else {
-                        debug!("result_process other object result {:?}", x);
-                    }
+
+    if let Some(e) = t.get_element() {
+        debug!("result_process element result: {:?}", e);
+        elements_encode.push(element_to_pb(e));
+    } else if let Some(o) = t.get_object() {
+        match o {
+            Object::Primitive(_) | Object::String(_) | Object::Blob(_) => {
+                debug!("result_process object result {:?}", o);
+                values_encode.push(object_to_pb_value(o));
+            }
+            Object::DynOwned(x) => {
+                if let Some(p) = x.try_downcast_ref::<ResultPath>() {
+                    debug!("result_process path result: {:?}", p);
+                    paths_encode.push(path_to_pb(p));
+                } else if let Some(result_prop) = x.try_downcast_ref::<ResultProperty>() {
+                    debug!("result_process property result: {:?}", result_prop);
+                    properties_encode.push(property_to_pb(result_prop));
+                } else if let Some(result_pair) = try_downcast_pair(o) {
+                    debug!("result_process group result {:?}", result_pair);
+                    let (k, v) = result_pair;
+                    let key_pb = pair_element_to_pb(&k);
+                    let value_pb = pair_element_to_pb(&v);
+                    let map_pair_pb =
+                        result_pb::MapPair { first: Some(key_pb), second: Some(value_pb) };
+                    pairs_encode.push(map_pair_pb);
+                } else {
+                    debug!("result_process other object result {:?}", x);
                 }
             }
-        } else {
-            debug!("result_process object result is none!");
-        };
-    }
+        }
+    } else {
+        debug!("result_process object result is none!");
+    };
+
     if !elements_encode.is_empty() {
         let elements = result_pb::GraphElementArray { item: elements_encode };
         result_pb::Result { inner: Some(result_pb::result::Inner::Elements(elements)) }
