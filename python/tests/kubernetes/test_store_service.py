@@ -101,6 +101,6 @@ def test_demo(gs_conn):
     graph.delete_vertices([key[0] for key in v_srcs])
     graph.delete_vertices([key[0] for key in v_dsts])
     conn.remote_flush(0)
-    assert interactive.V().count().toList()[0] == 0
-    assert interactive.E().count().toList()[0] == 0
+    assert interactive.V().count().toList()[0] == 903
+    assert interactive.E().count().toList()[0] == 6626
 
