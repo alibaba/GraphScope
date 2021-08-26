@@ -203,11 +203,11 @@ class LocalLauncher(Launcher):
     def _launch_zetcd(self):
         self._zookeeper_port = self._get_free_port(self._hosts.split(",")[0])
 
-        zetcd_sh = shutil.which("zetcd")
-        if not zetcd_sh:
+        zetcd_cmd = shutil.which("zetcd")
+        if not zetcd_cmd:
             raise RuntimeError("zetcd command not found.")
         cmd = [
-            zetcd_sh,
+            zetcd_cmd,
             "--zkaddr",
             "0.0.0.0:{}".format(self._zookeeper_port),
             "--endpoints",

@@ -770,11 +770,6 @@ class KubernetesClusterLauncher(Launcher):
             "0.0.0.0:{}".format(self._zookeeper_port),
             "--endpoints",
             "{}".format(",".join(etcd_endpoints)),
-            "-v",
-            "2",
-            "-log_dir",
-            "/root",
-            "-alsologtostderr",
         ]
         logger.info("zetcd cmd {}".format(" ".join(cmd)))
 
