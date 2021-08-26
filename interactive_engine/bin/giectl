@@ -519,11 +519,34 @@ create_gremlin_instance_on_k8s() {
     kubectl expose pod ${gremlin_pod} --name=gremlin-${object_id} --port=${frontend_port} \
       --target-port=${frontend_port} --type=NodePort 1>/dev/null 2>&1
     [ $? -eq 0 ] || exit 1
-    sleep 5
-    external_port=$(kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]")
-    [ $? -eq 0 ] || exit 1
-    sleep 5
-    external_ip=$(kubectl describe pods pod-${object_id} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
+    wait_period_seconds=0
+    while true
+    do
+      external_port=$(kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]")
+      if [ -n "${external_port}" ]; then
+        break
+      fi
+      wait_period_seconds=$(($wait_period_seconds+5))
+      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+        log "Get external port of ${GREMLIN_EXPOSE} failed."
+        break
+      fi
+      sleep 5
+    done
+    wait_period_seconds=0
+    while true
+    do
+      external_ip=$(kubectl describe pods pod-${object_id} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
+      if [ -n "${external_ip}" ]; then
+        break
+      fi
+      wait_period_seconds=$(($wait_period_seconds+5))
+      if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
+        log "Get external ip of ${GREMLIN_EXPOSE} failed."
+        break
+      fi
+      sleep 5
+    done
   fi
   log "FRONTEND_PORT:${external_ip}:${external_port}"
 }
