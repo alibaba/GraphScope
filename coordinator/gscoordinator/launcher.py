@@ -33,6 +33,7 @@ from graphscope.proto import types_pb2
 from gscoordinator.io_utils import PipeWatcher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
+from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
 from gscoordinator.utils import get_timestamp
 from gscoordinator.utils import is_port_in_use
@@ -43,6 +44,7 @@ logger = logging.getLogger("graphscope")
 
 class Launcher(metaclass=ABCMeta):
     def __init__(self):
+        self._instance_id = None
         self._num_workers = None
         self._analytical_engine_endpoint = None
 
@@ -57,6 +59,12 @@ class Launcher(metaclass=ABCMeta):
         if self._num_workers is None:
             raise RuntimeError("Get None value of workers number.")
         return int(self._num_workers)
+
+    @property
+    def instance_id(self):
+        if self._instance_id is None:
+            raise RuntimeError("Get None value of instance id.")
+        return self._instance_id
 
     @abstractmethod
     def type(self):
@@ -82,8 +90,6 @@ class LocalLauncher(Launcher):
 
     _vineyard_socket_prefix = "/tmp/vineyard.sock."
 
-    _default_graphscope_runtime_workspace = "/tmp/graphscope/runtime"
-
     def __init__(
         self,
         num_workers,
@@ -103,15 +109,11 @@ class LocalLauncher(Launcher):
         self._instance_id = instance_id
         self._timeout_seconds = timeout_seconds
 
-        if "GRAPHSCOPE_RUNTIME" not in os.environ:
-            self._graphscope_runtime_workspace = os.path.join(
-                self._default_graphscope_runtime_workspace, self._instance_id
-            )
-        else:
-            self._graphscope_runtime_workspace = os.path.join(
-                os.environ["GRAPHSCOPE_RUNTIME"], self._instance_id
-            )
-        os.makedirs(self._graphscope_runtime_workspace, exist_ok=True)
+        # A graphsope instance may has multiple session by reconnecting to coordinator
+        self._instance_workspace = os.path.join(WORKSPACE, self._instance_id)
+        os.makedirs(self._instance_workspace, exist_ok=True)
+        # setting during client connect to coordinator
+        self._session_workspace = None
 
         # zookeeper
         self._zookeeper_port = None
@@ -144,6 +146,10 @@ class LocalLauncher(Launcher):
             self._stop_vineyard()
             self._stop_analytical_engine()
             self._closed = True
+
+    def set_session_workspace(self, session_id):
+        self._session_workspace = os.path.join(self._instance_workspace, session_id)
+        os.makedirs(self._session_workspace, exist_ok=True)
 
     def distribute_file(self, path):
         dir = os.path.dirname(path)
@@ -192,15 +198,27 @@ class LocalLauncher(Launcher):
         """
         object_id = config[types_pb2.VINEYARD_ID].i
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
+        # engine params format:
+        #   k1:v1;k2:v2;k3:v3
+        engine_params = {}
+        if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
+            engine_params = json.loads(
+                config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
+            )
+        engine_params = [
+            "{}:{}".format(key, value) for key, value in engine_params.items()
+        ]
         enable_gaia = config[types_pb2.GIE_ENABLE_GAIA].b
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "create_gremlin_instance_on_local",
+            self._session_workspace,
             str(object_id),
             schema_path,
             "1",  # server id
             self.vineyard_socket,
             str(self.zookeeper_port),
+            "'{}'".format(";".join(engine_params)),
             str(enable_gaia),
         ]
         logger.info("Create GIE instance with command: {0}".format(" ".join(cmd)))
@@ -222,6 +240,7 @@ class LocalLauncher(Launcher):
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "close_gremlin_instance_on_local",
+            self._session_workspace,
             str(object_id),
         ]
         logger.info("Close GIE instance with command: {0}".format(" ".join(cmd)))

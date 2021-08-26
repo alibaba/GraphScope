@@ -132,6 +132,7 @@ class CoordinatorServiceServicer(
                 raise RuntimeError("Coordinator Launching failed.")
 
         self._launcher_type = self._launcher.type()
+        self._instance_id = self._launcher.instance_id
         # string of a list of hosts, comma separated
         self._engine_hosts = self._launcher.hosts
         self._k8s_namespace = ""
@@ -223,7 +224,11 @@ class CoordinatorServiceServicer(
         self._key_to_op = dict()
         # dict of op_def_pb2.OpResult
         self._op_result_pool = dict()
-        self._udf_app_workspace = os.path.join(WORKSPACE, self._session_id)
+
+        self._udf_app_workspace = os.path.join(
+            WORKSPACE, self._instance_id, self._session_id
+        )
+        self._launcher.set_session_workspace(self._session_id)
 
         # Session connected, fetch logs via gRPC.
         self._streaming_logs = True
@@ -1265,14 +1270,6 @@ def parse_sys_args():
         help="Docker image of etcd, used by vineyard.",
     )
     parser.add_argument(
-        "--k8s_gie_graph_manager_image",
-        type=str,
-        default="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:{}".format(
-            __version__
-        ),
-        help="Graph Manager image of graph interactive engine.",
-    )
-    parser.add_argument(
         "--k8s_image_pull_policy",
         type=str,
         default="IfNotPresent",
@@ -1337,18 +1334,6 @@ def parse_sys_args():
         type=str,
         default="256Mi",
         help="Memory of etcd pod, suffix with ['Mi', 'Gi', 'Ti'].",
-    )
-    parser.add_argument(
-        "--k8s_gie_graph_manager_cpu",
-        type=float,
-        default=1.0,
-        help="Cpu cores of graph manager container, default: 1.0",
-    )
-    parser.add_argument(
-        "--k8s_gie_graph_manager_mem",
-        type=str,
-        default="256Mi",
-        help="Memory of graph manager container, suffix with ['Mi', 'Gi', 'Ti'].",
     )
     parser.add_argument(
         "--k8s_with_mars",
@@ -1429,14 +1414,11 @@ def launch_graphscope():
             service_type=args.k8s_service_type,
             gs_image=args.k8s_gs_image,
             etcd_image=args.k8s_etcd_image,
-            gie_graph_manager_image=args.k8s_gie_graph_manager_image,
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,
             etcd_num_pods=args.k8s_etcd_num_pods,
             etcd_cpu=args.k8s_etcd_cpu,
             etcd_mem=args.k8s_etcd_mem,
-            gie_graph_manager_cpu=args.k8s_gie_graph_manager_cpu,
-            gie_graph_manager_mem=args.k8s_gie_graph_manager_mem,
             engine_cpu=args.k8s_engine_cpu,
             engine_mem=args.k8s_engine_mem,
             vineyard_daemonset=args.k8s_vineyard_daemonset,

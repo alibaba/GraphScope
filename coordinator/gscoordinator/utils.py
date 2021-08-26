@@ -56,7 +56,10 @@ logger = logging.getLogger("graphscope")
 
 
 # runtime workspace
-WORKSPACE = "/tmp/gs"
+try:
+    WORKSPACE = os.environ["GRAPHSCOPE_RUNTIME"]
+except:  # noqa: E722
+    WORKSPACE = "/tmp/gs"
 
 # COORDINATOR_HOME
 #   1) get from gscoordinator python module, if failed,
@@ -98,7 +101,7 @@ if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
     )
 
 # INTERACTIVE_ENGINE_SCRIPT
-INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS = 120  # 2 mins
+INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS = 600  # 10 mins
 INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
 if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
     INTERACTIVE_ENGINE_SCRIPT = os.path.join(
@@ -1504,4 +1507,4 @@ def check_gremlin_server_ready(endpoint):
             return True
         time.sleep(3)
         if time.time() - begin_time > INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS:
-            raise TimeoutError("Grelmin check query failed: {0}".format(error_message))
+            raise TimeoutError("Gremlin check query failed: {0}".format(error_message))
