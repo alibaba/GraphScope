@@ -170,8 +170,7 @@ impl<V, VI, E, EI> AsyncMaxGraphServiceImpl<V, VI, E, EI>
 
         let initialized_task_partition_manager;
         loop {
-            thread::sleep(time::Duration::from_millis(store_config.hb_interval_ms));
-            let task_partition_manager_guard = task_partition_manager.read().unwrap();
+            let task_partition_manager_guard = task_partition_manager.try_read().unwrap();
             if task_partition_manager_guard.is_some() {
                 initialized_task_partition_manager = task_partition_manager_guard.clone().unwrap();
                 break;
