@@ -57,9 +57,7 @@ class IContextWrapper : public GSObject {
   // For simplicity, only return those parts that cannot be known
   // from client.
   // Those context who need it may override this method.
-  virtual std::string schema() {
-      return "";
-  }
+  virtual std::string schema() { return ""; }
 
   virtual std::shared_ptr<IFragmentWrapper> fragment_wrapper() = 0;
 };

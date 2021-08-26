@@ -149,10 +149,10 @@ class VertexPropertyContextWrapper : public IVertexPropertyContextWrapper {
 
   std::string schema() override {
     std::ostringstream os;
-      auto property_map = ctx_->properties_map();
-      for (auto& pair : property_map) {
-        os << pair.first + ",";
-      }
+    auto property_map = ctx_->properties_map();
+    for (auto& pair : property_map) {
+      os << pair.first + ",";
+    }
     return os.str();
   }
 
