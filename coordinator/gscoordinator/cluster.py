@@ -528,7 +528,6 @@ class KubernetesClusterLauncher(Launcher):
                 field=vineyard_socket_volume_fields,
                 mounts_list=[
                     {"mountPath": "/tmp/vineyard_workspace"},
-                    {"mountPath": "/home/maxgraph/data/vineyard"},
                 ],
             )
         )

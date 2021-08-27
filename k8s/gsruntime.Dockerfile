@@ -23,7 +23,7 @@ RUN yum install -y https://packages.endpoint.com/rhel/7/os/x86_64/endpoint-repo-
 # yum install dependencies
 RUN yum install -y autoconf automake double-conversion-devel git \
         libcurl-devel libevent-devel libgsasl-devel librdkafka-devel libunwind-devel.x86_64 \
-        libuuid-devel libxml2-devel libzip libzip-devel m4 minizip minizip-devel \
+        libuuid-devel libxml2-devel libzip libzip-devel m4 minizip minizip-devel sudo \
         make net-tools openssl-devel python3-devel rsync telnet tools unzip vim wget which zip bind-utils && \
     yum clean all && \
     rm -fr /var/cache/yum
@@ -45,6 +45,18 @@ ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64
 ENV PATH=${PATH}:/usr/local/bin
 ENV CC=/opt/rh/devtoolset-7/root/usr/bin/gcc
 ENV CXX=/opt/rh/devtoolset-7/root/usr/bin/g++
+
+# rust & cargo registry
+RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
+    curl -sf -L https://static.rust-lang.org/rustup.sh | \
+        sh -s -- -y --profile minimal --default-toolchain 1.54.0 && \
+    echo "source ~/.cargo/env" >> ~/.bashrc
+
+# zetcd
+RUN export PATH=/usr/local/go/bin:${PATH} && \
+  go get github.com/etcd-io/zetcd/cmd/zetcd && \
+  cp /root/go/bin/zetcd /usr/local/bin/zetcd
 
 # apache arrow v1.0.1
 RUN cd /tmp && \
@@ -284,8 +296,7 @@ ENV PATH $PATH:$HADOOP_HOME/bin
 RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /etc/bashrc'
 
 # Prepare and set workspace
-RUN mkdir -p /root/maxgraph \
-    && mkdir -p /tmp/maven /usr/share/maven/ref \
+RUN mkdir -p /tmp/maven /usr/share/maven/ref \
     && curl -fsSL -o /tmp/apache-maven.tar.gz https://apache.osuosl.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz \
     && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
     && rm -f /tmp/apache-maven.tar.gz \
@@ -319,4 +330,3 @@ ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 ENV PATH=${PATH}:/usr/local/go/bin
 ENV RUST_BACKTRACE=1
-
