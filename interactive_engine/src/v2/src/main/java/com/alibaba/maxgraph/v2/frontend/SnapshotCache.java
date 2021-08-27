@@ -94,7 +94,7 @@ public class SnapshotCache implements SchemaFetcher {
             logger.info("schema updated. schema version [" + graphDef.getVersion() + "]");
         }
         this.snapshotWithSchemaRef.set(newSnapshotInfoBuilder.build());
-        logger.info("snapshotId update to [" + snapshotId + "]");
+        logger.debug("snapshotId update to [" + snapshotId + "]");
         synchronized (this.snapshotToListeners) {
             NavigableMap<Long, List<SnapshotListener>> listenersToTrigger =
                     this.snapshotToListeners.headMap(snapshotId, true);

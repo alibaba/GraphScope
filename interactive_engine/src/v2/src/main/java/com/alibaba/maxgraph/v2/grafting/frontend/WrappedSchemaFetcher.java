@@ -49,7 +49,7 @@ public class WrappedSchemaFetcher implements SchemaFetcher {
         SnapshotSchema snapshotSchema = this.v2Fetcher.fetchSchema();
         long snapshotId = snapshotSchema.getSnapshotId();
         com.alibaba.maxgraph.v2.common.frontend.api.schema.GraphSchema schema = snapshotSchema.getSchema();
-        logger.info("fetch schema of snapshot id [" + snapshotId + "]");
+        logger.debug("fetch schema of snapshot id [" + snapshotId + "]");
         return Pair.of(new WrappedSchema(schema), snapshotId);
     }
 

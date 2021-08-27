@@ -81,9 +81,7 @@ def test_demo(gs_conn):
     graph.insert_vertex(*v_dst)
     graph.insert_vertices(v_srcs)
     snapshot_id = graph.insert_vertices(v_dsts)
-    logger.info("snapshot id: " + str(snapshot_id))
     gs_conn.remote_flush(snapshot_id)
-    logger.info("flushed")
     assert interactive.V().count().toList()[0] == 925
     snapshot_id = graph.update_vertex_properties(*v_update)
     gs_conn.remote_flush(snapshot_id)
