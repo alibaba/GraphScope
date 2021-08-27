@@ -90,13 +90,13 @@ public class JobBuilder extends AbstractBuilder {
         return this;
     }
 
-    public JobBuilder limit(boolean isGlobal, int n) {
-        this.plan.limit(isGlobal, n);
+    public JobBuilder limit(int n) {
+        this.plan.limit(n);
         return this;
     }
 
-    public JobBuilder dedup(boolean isGlobal, ByteString set) {
-        this.plan.dedup(isGlobal, set);
+    public JobBuilder dedup() {
+        this.plan.dedup();
         return this;
     }
 
@@ -147,37 +147,37 @@ public class JobBuilder extends AbstractBuilder {
         return this;
     }
 
-    public JobBuilder sortBy(boolean isGlobal, ByteString cmp) {
-        this.plan.sortBy(isGlobal, cmp);
+    public JobBuilder sortBy(ByteString cmp) {
+        this.plan.sortBy(cmp);
         return this;
     }
 
-    public JobBuilder topBy(boolean isGlobal, int n, ByteString cmp) {
-        this.plan.topBy(isGlobal, n, cmp);
+    public JobBuilder topBy(int n, ByteString cmp) {
+        this.plan.topBy(n, cmp);
         return this;
     }
 
     // reduce api
-    public ReduceBuilder count(boolean isGlobal) {
-        this.plan.count(isGlobal);
+    public ReduceBuilder count() {
+        this.plan.count();
         return new ReduceBuilder(this.conf, this.source, this.plan, this.sink);
     }
 
     // reduce api
-    public ReduceBuilder fold(boolean isGlobal, AccumKind accumKind) {
-        this.plan.fold(isGlobal, accumKind);
+    public ReduceBuilder fold(AccumKind accumKind) {
+        this.plan.fold(accumKind);
         return new ReduceBuilder(this.conf, this.source, this.plan, this.sink);
     }
 
     // reduce api
-    public ReduceBuilder foldCustom(boolean isGlobal, AccumKind accumKind, ByteString accumFunc) {
-        this.plan.foldCustom(isGlobal, accumKind, accumFunc);
+    public ReduceBuilder foldCustom(AccumKind accumKind, ByteString accumFunc) {
+        this.plan.foldCustom(accumKind, accumFunc);
         return new ReduceBuilder(this.conf, this.source, this.plan, this.sink);
     }
 
     // reduce api
-    public ReduceBuilder groupBy(boolean isGlobal, ByteString map) {
-        this.plan.groupBy(isGlobal, map);
+    public ReduceBuilder groupBy(AccumKind accumKind) {
+        this.plan.groupBy(accumKind);
         return new ReduceBuilder(this.conf, this.source, this.plan, this.sink);
     }
 
@@ -198,9 +198,9 @@ public class JobBuilder extends AbstractBuilder {
                 .repeat(3, plan
                         .flatMap(opBody)
                         .flatMap(opBody))
-                .count(true)
+                .count()
                 .unfold(opBody)
-                .count(true)
+                .count()
                 .build();
         logger.info("send job req: {}", jobReq.toString());
     }

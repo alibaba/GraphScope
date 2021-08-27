@@ -29,7 +29,6 @@ message Broadcast {
 }
 
 message Aggregate {
-
   uint32 target = 1;
 }
 
@@ -44,8 +43,6 @@ message Communicate {
 message Source {
   bytes resource = 1;
 }
-
-message Shuffle { }
 
 message Map {
   bytes resource = 1;
@@ -71,25 +68,16 @@ message LeftJoin {
   bytes resource = 1;
 }
 
-enum Range {
-  LOCAL = 0;
-  GLOBAL = 1;
-}
-
 message Limit {
-  Range range = 1;
   uint32 limit = 2;
 }
 
 message Dedup {
-  Range range = 1;
-  bytes set = 2;
 }
 
 message OrderBy {
-  Range range = 1;
-  int64 limit = 2;
-  bytes compare = 3;
+  int64 limit = 1;
+  bytes compare = 2;
 }
 
 enum AccumKind {
@@ -103,17 +91,14 @@ enum AccumKind {
 }
 
 message Fold {
-  Range range     = 1;
-  AccumKind accum = 2;
-  bytes resource  = 3;
-  FlatMap unfold  = 4;
+  AccumKind accum = 1;
+  bytes resource  = 2;
+  FlatMap unfold  = 3;
 }
 
 message GroupBy {
-  Range range     = 1;
-  AccumKind accum = 2;
-  bytes map       = 3;
-  FlatMap unfold  = 4;
+  AccumKind accum = 1;
+  FlatMap unfold  = 2;
 }
 
 message Union {
