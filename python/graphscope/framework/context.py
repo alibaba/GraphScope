@@ -19,7 +19,6 @@
 import collections
 import hashlib
 import json
-import textwrap
 from copy import deepcopy
 from typing import Mapping
 
@@ -283,15 +282,8 @@ class VertexDataContextDAGNode(BaseContextDAGNode):
         return "vertex_data"
 
     def _build_schema(self, result_properties):
-        ret = ["v."]
-        ret.append(textwrap.indent("id", "  "))
-        ret.append(textwrap.indent("data", "  "))
-        ret.append("e.")
-        ret.append(textwrap.indent("src", "  "))
-        ret.append(textwrap.indent("dst", "  "))
-        ret.append(textwrap.indent("data", "  "))
-        ret.append("r")
-        return "\n".join(ret)
+        ret = {"v": ["id", "data"], "e": ["src", "dst", "data"], "r": []}
+        return json.dumps(ret, indent=4)
 
     def _check_selector(self, selector):
         """
@@ -351,15 +343,13 @@ class LabeledVertexDataContextDAGNode(BaseContextDAGNode):
         return "labeled_vertex_data"
 
     def _build_schema(self, result_properties):
-        ret = ["v:"]
         schema = self._graph.schema
-        ret.extend(_get_property_v_context_schema_str(schema))
-        ret.append("e:")
-        ret.extend(_get_property_e_context_schema_str(schema))
-        ret.append("r:")
-        for label in schema.vertex_labels:
-            ret.append(textwrap.indent(label, "  "))
-        return "\n".join(ret)
+        ret = {
+            "v": _get_property_v_context_schema_str(schema),
+            "e": _get_property_e_context_schema_str(schema),
+            "r": schema.vertex_labels,
+        }
+        return json.dumps(ret, indent=4)
 
     def _check_selector(self, selector):
         """
@@ -422,18 +412,9 @@ class VertexPropertyContextDAGNode(BaseContextDAGNode):
         Returns:
             str: return schema as human readable string
         """
-        ret = ["v."]
-        ret.append(textwrap.indent("id", "  "))
-        ret.append(textwrap.indent("data", "  "))
-        ret.append("e.")
-        ret.append(textwrap.indent("src", "  "))
-        ret.append(textwrap.indent("dst", "  "))
-        ret.append(textwrap.indent("data", "  "))
-        ret.append("r.")
         result_properties = [i for i in result_properties.split(",") if i]
-        for prop in result_properties:
-            ret.append(textwrap.indent(prop, "  "))
-        return "\n".join(ret)
+        ret = {"v": ["id", "data"], "e": ["src", "dst", "data"], "r": result_properties}
+        return json.dumps(ret, indent=4)
 
     def _check_selector(self, selector):
         """
@@ -506,26 +487,22 @@ class LabeledVertexPropertyContextDAGNode(BaseContextDAGNode):
         Returns:
             str: return schema as human readable string
         """
-        ret = ["v:"]
-        from graphscope.framework.graph_schema import GraphSchema
-
-        schema: GraphSchema = self._graph.schema
-        ret.extend(_get_property_v_context_schema_str(schema))
-        ret.append("e:")
-        ret.extend(_get_property_e_context_schema_str(schema))
-        ret.append("r:")
+        schema = self._graph.schema
+        ret = {
+            "v": _get_property_v_context_schema_str(schema),
+            "e": _get_property_e_context_schema_str(schema),
+            "r": {},
+        }
         result_properties = [i for i in result_properties.split("\n") if i]
         label_property_dict = {}
         for r_props in result_properties:
             label_id, props = r_props.split(":")
             label_property_dict[label_id] = [i for i in props.split(",") if i]
         for label in schema.vertex_labels:
-            ret.append(textwrap.indent(f"{label}.", "  "))
             label_id = schema.get_vertex_label_id(label)
             props = label_property_dict.get(label_id, [])
-            for prop in props:
-                ret.append(textwrap.indent(prop, "    "))
-        return "\n".join(ret)
+            ret["r"][label] = props
+        return json.dumps(ret, indent=4)
 
     def _check_selector(self, selector):
         if selector is None:
@@ -710,22 +687,20 @@ def create_context_node(context_type, bound_app, graph, *args, **kwargs):
 
 
 def _get_property_v_context_schema_str(schema):
-    ret = []
+    ret = {}
     for label in schema.vertex_labels:
-        ret.append(textwrap.indent(f"{label}.", "  "))
-        ret.append(textwrap.indent("id", "    "))
+        ret[label] = ["id"]
         for prop in schema.get_vertex_properties(label):
             if prop.name != "id":  # avoid property name duplicate
-                ret.append(textwrap.indent(prop.name, "    "))
+                ret[label].append(prop.name)
     return ret
 
 
 def _get_property_e_context_schema_str(schema):
-    ret = []
+    ret = {}
     for label in schema.edge_labels:
-        ret.append(textwrap.indent(f"{label}.", "  "))
-        ret.append(textwrap.indent("src", "    "))
-        ret.append(textwrap.indent("dst", "    "))
+        ret[label] = ["src", "dst"]
         for prop in schema.get_edge_properties(label):
-            ret.append(textwrap.indent(prop.name, "    "))
+            if prop.name not in ("src", "dst"):
+                ret[label].append(prop.name)
     return ret
