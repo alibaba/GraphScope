@@ -235,11 +235,6 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
                  {"context_schema", context_schema}});
 }
 
-bl::result<void> GrapeInstance::unloadContext(const rpc::GSParams& params) {
-  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
-  return object_manager_.RemoveObject(context_key);
-}
-
 bl::result<std::string> GrapeInstance::reportGraph(
     const rpc::GSParams& params) {
 #ifdef NETWORKX

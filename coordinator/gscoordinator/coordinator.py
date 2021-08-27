@@ -348,10 +348,25 @@ class CoordinatorServiceServicer(
         try:
             response = self._analytical_engine_stub.RunStep(request)
         except grpc.RpcError as e:
-            logger.error(
-                "Engine RunStep failed, code: %s, details: %s",
-                e.code().name,
-                e.details(),
+            logger.error("self._launcher.poll() = %s", self._launcher.poll())
+            if self._launcher.poll() is not None:
+                message = "Analytical engine exited with %s" % self._launcher.poll()
+            else:
+                message = str(e)
+            # op_results.extend(response.results)
+            return self._make_response(
+                message_pb2.RunStepResponse,
+                error_codes_pb2.FATAL_ERROR,
+                message,
+                results=op_results,
+            )
+        except Exception as e:
+            # op_results.extend(response.results)
+            return self._make_response(
+                message_pb2.RunStepResponse,
+                error_codes_pb2.UNKNOWN,
+                str(e),
+                results=op_results,
             )
             if e.code() == grpc.StatusCode.INTERNAL:
                 # TODO: make the stacktrace seperated from normal error messages
