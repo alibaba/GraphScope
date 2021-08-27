@@ -14,7 +14,7 @@ interactive_engine/src/api/sdk-common/src/main/java/com/alibaba/maxgraph/sdkcomm
 interactive_engine/src/api/sdk-common/src/main/java/com/alibaba/maxgraph/sdkcommon/Copyable.java
 
 
-Odps related:
+Odps/Fuxi/Nuwa related:
 
 interactive_engine/src/api/sdk-common/src/main/java/com/alibaba/maxgraph/sdkcommon/compiler/custom/dim/*
 interactive_engine/src/api/sdk-common/src/main/java/com/alibaba/maxgraph/sdkcommon/compiler/custom/graph/*
@@ -24,10 +24,6 @@ interactive_engine/src/api/sdk-common/src/main/java/com/alibaba/maxgraph/sdkcomm
 Not sure:
 
 interactive_engine/src/api/sdk-common/src/main/resources/serializer.custom.config
-
-
-
-
 
 
 2. common
@@ -53,13 +49,36 @@ interactive_engine/src/common/java/src/main/java/com/alibaba/maxgraph/common/uti
 interactive_engine/src/common/java/src/main/java/com/alibaba/maxgraph/common/util/WebAPIUtils.java
 interactive_engine/src/common/java/src/main/java/com/alibaba/maxgraph/common/zookeeper/CoordinatorListener.java
 interactive_engine/src/common/java/src/main/java/com/alibaba/maxgraph/common/MetricReporter.java
-
 interactive_engine/src/common/java/src/main/java/com/alibaba/maxgraph/common/util/WebAPIUtils.java
-
+interactive_engine/src/common/java/src/main/java/com/alibaba/maxgraph/util/ZipUtil.java
 
 Odps/Fuxi/Nuwa related:
 
 interactive_engine/src/common/java/src/main/java/com/alibaba/maxgraph/common/cluster/FuxiClusterConfig.java
 interactive_engine/src/common/java/src/main/java/com/alibaba/maxgraph/common/cluster/PlatformKind.java
+interactive_engine/src/common/java/src/main/java/com/alibaba/maxgraph/common/SchedulerEnvs.java
+
+
+3. coordinator
+
+Unused:
+
+interactive_engine/src/coordinator/src/main/java/com/alibaba/maxgraph/coordinator/manager/runtime/RuntimeManagerCommon.java
+interactive_engine/src/coordinator/src/main/java/com/alibaba/maxgraph/coordinator/manager/runtime/RuntimeZKStoreInfo.java
+interactive_engine/src/coordinator/src/main/java/com/alibaba/maxgraph/coordinator/manager/IServerDataManager.java
+interactive_engine/src/coordinator/src/main/java/com/alibaba/maxgraph/coordinator/utils/*
+interactive_engine/src/coordinator/src/main/java/com/alibaba/maxgraph/coordinator/TestingCluster.java
+interactive_engine/src/coordinator/src/main/java/com/alibaba/maxgraph/coordinator/FakeStoreServer.java
+
+
+4. frontend/frontend-service
+
+Unused:
+
+interactive_engine/src/frontend/frontendservice/src/main/java/com/alibaba/maxgraph/frontendservice/server/CompilerInstanceConfig.java
+interactive_engine/src/frontend/frontendservice/src/main/java/com/alibaba/maxgraph/frontendservice/server/GremlinClientMain.java
+
+
+
 
 
