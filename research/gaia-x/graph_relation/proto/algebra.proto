@@ -15,7 +15,7 @@
  */
 
 syntax = "proto3";
-package graph_relation;
+package algebra;
 option java_package = "com.alibaba.graphscope.gaia.proto";
 option java_outer_classname = "GraphAlgebra";
 
@@ -47,13 +47,17 @@ message Select {
 // the engine only supports the equivalence of two keys.
 message Join {
   enum JoinKind {
+    // Inner join
     INNER = 0;
+    // Left outer join
     LEFT_OUTER = 1;
+    // Right outer join
     RIGHT_OUTER = 2;
+    // Full outer join
     FULL_OUTER = 3;
-    // By default left semi-join
+    // Left semi-join, right alternative can be naturally adapted
     SEMI = 4;
-    // By default left anti-join
+    // Left anti-join, right alternative can be naturally adapted
     ANTI = 5;
     // aka. Cartesian product
     TIMES = 6;
@@ -113,7 +117,9 @@ message OrderBy {
   repeated OrderingPair pairs = 2;
 }
 
-message Dedup {}
+message Dedup {
+  repeated common.Variable keys = 1;
+}
 
 message Unwind {
   // The tag of a graph relation that **must** have a type of collection
@@ -140,14 +146,14 @@ message ExpandBase {
   // The tag that refers to the starting vertex
   common.NameOrId start_v_tag = 1;
   // The direction of the expanded edge
-  Direction dir = 2;
+  Direction direction = 2;
   // The optional predicate for the edge
   common.ExprNode edge_predicate = 5;
   // The optional predicate for the vertex
   common.ExprNode vertex_predicate = 6;
 }
 
-message Edge {
+message EdgeExpand {
   // The base expansion
   ExpandBase base = 1;
   // An optional alias for the expanded edge
@@ -156,7 +162,7 @@ message Edge {
   common.NameOrId end_v_alias = 3;
 }
 
-message Path {
+message PathExpand {
   message Range {
     // The lower bound of the range, inclusive
     int32 lower = 2;
@@ -174,7 +180,7 @@ message Path {
   Range range = 4;
 }
 
-message ShortestPath {
+message ShortestPathExpand {
   message WeightCal {
     enum Aggregate {
       SUM = 0;
@@ -183,7 +189,7 @@ message ShortestPath {
       AVG = 3;
       MUL = 4;
     }
-    // This optional expression that defines how to calculate the weight on each edge. In the expression,
+    // This optional expression defines how to calculate the weight on each edge. In the expression,
     // one can directly write start, end to indicate the start/edge vertices of the edge.
     // e.g. the expression: "start.value + end.value * weight" defines that the weight of each edge
     // is calculated by multiplying the edge vertex's value with the edge's weight and then summing
@@ -193,7 +199,7 @@ message ShortestPath {
     Aggregate aggregate = 2;
   }
   // A shortest path expansion has a base of path expansion
-  Path path = 1;
+  PathExpand path_expand = 1;
   // An optional weight calculation function for shortest path. If not specified, the weight is
   // by default the length of the path.
   WeightCal weight_cal = 2;
@@ -206,8 +212,8 @@ message Apply {
   Join.JoinKind join_kind = 1;
   // The subtask will be perform on certain tags as keys of the input relation
   repeated common.NameOrId tags = 2;
-  // A logical plan that defines the subtask
-  LogicalPlan subtask = 3;
+  // The root node of the subtask
+  repeated LogicalPlan.Node subtask = 3;
   // An alias fro the result of the subtask. In order for Apply to be semantically intact,
   // the subtask must return a scalar value.
   common.NameOrId alias = 4;
@@ -239,9 +245,9 @@ message LogicalPlan {
       SegmentApply seg_apply = 10;
       // Saving the room for relational operators
       GetV get_v = 20;
-      Edge edge = 21;
-      Path path = 22;
-      ShortestPath shortest_path = 23;
+      EdgeExpand edge = 21;
+      PathExpand path = 22;
+      ShortestPathExpand shortest_path = 23;
     }
   }
   message Node {
