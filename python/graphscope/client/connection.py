@@ -125,9 +125,10 @@ class Connection:
         response = self._write_service_stub.batchWrite(request)
         return response.snapshot_id
 
-    def remote_flush(self, snapshot_id):
+    def remote_flush(self, snapshot_id, timeout_ms=3000):
         request = write_service_pb2.RemoteFlushRequest()
         request.snapshot_id = snapshot_id
+        request.wait_time_ms = timeout_ms
         response = self._write_service_stub.remoteFlush(request)
         return response.success
 
