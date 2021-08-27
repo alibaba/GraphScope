@@ -176,8 +176,8 @@ public class JobBuilder extends AbstractBuilder {
     }
 
     // reduce api
-    public ReduceBuilder groupBy(AccumKind accumKind) {
-        this.plan.groupBy(accumKind);
+    public ReduceBuilder groupBy(AccumKind accumKind, ByteString keySelector) {
+        this.plan.groupBy(accumKind, keySelector);
         return new ReduceBuilder(this.conf, this.source, this.plan, this.sink);
     }
 

@@ -98,7 +98,8 @@ message Fold {
 
 message GroupBy {
   AccumKind accum = 1;
-  FlatMap unfold  = 2;
+  bytes resource = 2;
+  FlatMap unfold  = 3;
 }
 
 message Union {

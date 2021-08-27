@@ -423,7 +423,7 @@ public class Plan {
         this.plan.add(operatorDef);
     }
 
-    public void groupBy(AccumKind accumKind) {
+    public void groupBy(AccumKind accumKind, ByteString keySelector) {
         GroupBy groupBy = GroupBy
                 .newBuilder()
                 .setAccum(accumKind)
