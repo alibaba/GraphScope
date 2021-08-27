@@ -84,32 +84,28 @@ impl FnGenerator {
         Ok(Box::new(Router { p, num_workers }))
     }
 
-    fn gen_map(&self, _res: &BinaryResource) -> Result<TraverserMap, BuildJobError> {
-        // let step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
-        // Ok(step.gen_map()?)
-        todo!()
+    fn gen_map(&self, res: &BinaryResource) -> Result<TraverserMap, BuildJobError> {
+        let step = decode::<pb::gremlin::GremlinStep>(res)?;
+        Ok(step.gen_map()?)
     }
 
-    fn gen_flat_map(&self, _res: &BinaryResource) -> Result<TraverserFlatMap, BuildJobError> {
-        // let step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
-        // Ok(step.gen_flat_map()?)
-        todo!()
+    fn gen_flat_map(&self, res: &BinaryResource) -> Result<TraverserFlatMap, BuildJobError> {
+        let step = decode::<pb::gremlin::GremlinStep>(res)?;
+        Ok(step.gen_flat_map()?)
     }
 
-    fn gen_filter(&self, _res: &BinaryResource) -> Result<TraverserFilter, BuildJobError> {
-        // let step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
-        // Ok(step.gen_filter()?)
-        todo!()
+    fn gen_filter(&self, res: &BinaryResource) -> Result<TraverserFilter, BuildJobError> {
+        let step = decode::<pb::gremlin::GremlinStep>(res)?;
+        Ok(step.gen_filter()?)
     }
 
     fn gen_subtask(&self, _res: &BinaryResource) -> Result<TraverserLeftJoin, BuildJobError> {
         todo!()
     }
 
-    fn gen_cmp(&self, _res: &BinaryResource) -> Result<TraverserCompare, BuildJobError> {
-        // let step = decode::<pb::gremlin::GremlinStep>(&res.resource)?;
-        // Ok(step.gen_filter()?)
-        todo!()
+    fn gen_cmp(&self, res: &BinaryResource) -> Result<TraverserCompare, BuildJobError> {
+        let step = decode::<pb::gremlin::GremlinStep>(res)?;
+        Ok(step.gen_cmp()?)
     }
 
     fn gen_key(&self, _res: &BinaryResource) -> Result<TraverserKey, BuildJobError> {
@@ -117,7 +113,7 @@ impl FnGenerator {
     }
 
     fn gen_sink(&self) -> Result<TraverserEncode, BuildJobError> {
-        todo!()
+        Ok(Box::new(TraverserSinkEncoder))
     }
 }
 
