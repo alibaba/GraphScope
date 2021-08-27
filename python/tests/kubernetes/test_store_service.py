@@ -130,7 +130,7 @@ def test_demo(gs_conn):
     snapshot_id = graph.update_edge_properties(*edge_update)
 
     assert gs_conn.remote_flush(snapshot_id)
-    
+
     assert (
         interactive.V()
         .has("id", edge[0].src_vertex_key.primary_key["id"])
