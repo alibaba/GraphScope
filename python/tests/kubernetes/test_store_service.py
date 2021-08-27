@@ -90,10 +90,7 @@ def test_demo(gs_conn):
     assert gs_conn.remote_flush(snapshot_id)
 
     assert (
-        interactive.V()
-        .has("id", v_src[0].primary_key["id"])
-        .values("name")
-        .toList()[0]
+        interactive.V().has("id", v_src[0].primary_key["id"]).values("name").toList()[0]
         == "ci_person_99999_updated"
     )
 
