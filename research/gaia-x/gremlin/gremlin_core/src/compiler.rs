@@ -16,7 +16,6 @@
 use crate::process::traversal::step::*;
 // use crate::process::traversal::step::{BySubJoin, HasAnyJoin};
 use crate::process::traversal::traverser::Traverser;
-use crate::Element;
 use crate::Partitioner;
 // use crate::TraverserSinkEncoder;
 use pegasus::api::function::*;
@@ -49,10 +48,10 @@ type TraverserCompare = Box<dyn CompareFunction<Traverser>>;
 type TraverserLeftJoin = Box<dyn BinaryFunction<Traverser, Vec<Traverser>, Traverser>>;
 type TraverserKey = Box<dyn KeyFunction<Traverser, Traverser, Traverser>>;
 type TraverserEncode = Box<dyn EncodeFunction<Traverser>>;
+type TraverserShuffle = Box<dyn RouteFunction<Traverser>>;
 type BinaryResource = Vec<u8>;
 
 pub struct GremlinJobCompiler {
-    partitioner: Arc<dyn Partitioner>,
     udf_gen: FnGenerator,
     num_servers: usize,
     server_index: u64,
@@ -77,6 +76,12 @@ impl FnGenerator {
             self.partitioner.clone(),
         )?;
         Ok(step.gen_source(worker_id.index as usize))
+    }
+
+    fn gen_shuffle(&self) -> Result<TraverserShuffle, BuildJobError> {
+        let p = self.partitioner.clone();
+        let num_workers = pegasus::get_current_worker().local_peers as usize;
+        Ok(Box::new(Router { p, num_workers }))
     }
 
     fn gen_map(&self, _res: &BinaryResource) -> Result<TraverserMap, BuildJobError> {
@@ -118,10 +123,8 @@ impl FnGenerator {
 
 impl GremlinJobCompiler {
     pub fn new<D: Partitioner>(partitioner: D, num_servers: usize, server_index: u64) -> Self {
-        let partitioner = Arc::new(partitioner);
         GremlinJobCompiler {
-            partitioner: partitioner.clone(),
-            udf_gen: FnGenerator::new(partitioner.clone()),
+            udf_gen: FnGenerator::new(Arc::new(partitioner)),
             num_servers,
             server_index,
         }
@@ -136,7 +139,7 @@ impl GremlinJobCompiler {
     }
 
     pub fn get_partitioner(&self) -> Arc<dyn Partitioner> {
-        self.partitioner.clone()
+        self.udf_gen.partitioner.clone()
     }
 
     fn install(
@@ -147,16 +150,8 @@ impl GremlinJobCompiler {
                 match op_kind {
                     server_pb::operator_def::OpKind::Comm(comm) => match &comm.ch_kind {
                         Some(server_pb::communicate::ChKind::ToAnother(_)) => {
-                            let p = self.partitioner.clone();
-                            let worker_id = pegasus::get_current_worker();
-                            let num_workers = worker_id.local_peers as usize / self.num_servers;
-                            stream = stream.repartition(move |t| {
-                                if let Some(e) = t.get_element() {
-                                    p.get_partition(&e.id(), num_workers)
-                                } else {
-                                    Ok(0)
-                                }
-                            });
+                            let router = self.udf_gen.gen_shuffle()?;
+                            stream = stream.repartition(move |t| router.route(t));
                         }
                         Some(server_pb::communicate::ChKind::ToOne(_)) => {
                             stream = stream.aggregate();
