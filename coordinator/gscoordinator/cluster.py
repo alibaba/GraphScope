@@ -23,6 +23,7 @@ import logging
 import os
 import random
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -777,9 +778,15 @@ class KubernetesClusterLauncher(Launcher):
 
         self._zetcd_process = subprocess.Popen(
             cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=os.environ.copy(),
+            universal_newlines=True,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            encoding="utf-8",
+            bufsize=1,
         )
         stdout_watcher = PipeWatcher(self._zetcd_process.stdout, sys.stdout, drop=True)
         setattr(self._zetcd_process, "stdout_watcher", stdout_watcher)
@@ -792,6 +799,11 @@ class KubernetesClusterLauncher(Launcher):
                 and self._timeout_seconds + start_time < time.time()
             ):
                 raise RuntimeError("Launch zetcd service failed.")
+        logger.info(
+            "ZEtcd is ready, endpoint is {0}:{1}".format(
+                socket.gethostbyname(socket.gethostname()), self._zookeeper_port
+            )
+        )
 
     def _create_services(self):
         self._create_etcd()

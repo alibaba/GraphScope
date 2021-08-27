@@ -296,6 +296,9 @@ class LocalLauncher(Launcher):
                 and self._timeout_seconds + start_time < time.time()
             ):
                 raise RuntimeError("Launch zetcd proxy service failed.")
+        logger.info(
+            "ZEtcd is ready, endpoint is localhost:{0}".format(self._zookeeper_port)
+        )
 
     def _find_vineyardd(self):
         vineyardd = ""
