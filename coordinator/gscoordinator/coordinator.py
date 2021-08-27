@@ -382,7 +382,7 @@ class CoordinatorServiceServicer(
                 message = "Analytical engine exited with %s" % self._launcher.poll()
             else:
                 message = str(e)
-            op_results.extend(response.results)
+            # op_results.extend(response.results)
             return self._make_response(
                 message_pb2.RunStepResponse,
                 error_codes_pb2.FATAL_ERROR,
@@ -390,7 +390,7 @@ class CoordinatorServiceServicer(
                 results=op_results,
             )
         except Exception as e:
-            op_results.extend(response.results)
+            # op_results.extend(response.results)
             return self._make_response(
                 message_pb2.RunStepResponse,
                 error_codes_pb2.UNKNOWN,

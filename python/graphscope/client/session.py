@@ -175,7 +175,7 @@ class _FetchHandler(object):
             # for nx
             return DynamicVertexDataContext(context_dag_node, ret["context_key"])
         else:
-            return Context(context_dag_node, ret["context_key"])
+            return Context(context_dag_node, ret["context_key"], ret["context_schema"])
 
     def _rebuild_gremlin_results(
         self, seq, op: Operation, op_result: op_def_pb2.OpResult
