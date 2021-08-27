@@ -92,8 +92,8 @@ def test_demo(gs_conn):
     assert (
         interactive.V()
         .has("id", v_src[0].primary_key["id"])
-        .valueMap()
-        .toList()[0]["name"][0]
+        .values("name")
+        .toList()[0]
         == "ci_person_99999_updated"
     )
 
@@ -135,8 +135,8 @@ def test_demo(gs_conn):
         interactive.V()
         .has("id", edge[0].src_vertex_key.primary_key["id"])
         .outE()
-        .valueMap()
-        .toList()[0]["date"][0]
+        .values("date")
+        .toList()[0]
         == "ci_edge_4000"
     )
 
