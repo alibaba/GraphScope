@@ -94,15 +94,17 @@ public class SnapshotCache implements SchemaFetcher {
             logger.info("schema updated. schema version [" + graphDef.getVersion() + "]");
         }
         this.snapshotWithSchemaRef.set(newSnapshotInfoBuilder.build());
-        logger.debug("snapshotId update to [" + snapshotId + "]");
+        logger.info("snapshotId update to [" + snapshotId + "]");
         synchronized (this.snapshotToListeners) {
             NavigableMap<Long, List<SnapshotListener>> listenersToTrigger =
                     this.snapshotToListeners.headMap(snapshotId, true);
             for (Map.Entry<Long, List<SnapshotListener>> listenerEntry : listenersToTrigger.entrySet()) {
                 List<SnapshotListener> listeners = listenerEntry.getValue();
+                long listenSnapshotId = listenerEntry.getKey();
                 for (SnapshotListener listener : listeners) {
                     try {
                         listener.onSnapshotAvailable();
+                        logger.info("notify listener for snapshot id [" + listenSnapshotId + "]");
                     } catch (Exception e) {
                         logger.warn("trigger snapshotListener failed. snapshotId [" + snapshotId + "]");
                     }
