@@ -1,3 +1,4 @@
+tomli
 black==20.8b1
 breathe==4.24.0
 flake8==3.8.4

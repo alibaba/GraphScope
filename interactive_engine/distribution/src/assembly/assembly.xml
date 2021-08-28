@@ -20,6 +20,11 @@
             </includes>
             <outputDirectory>native</outputDirectory>
         </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <fileMode>0755</fileMode>
+        </fileSet>
     </fileSets>
     <dependencySets>
         <dependencySet>

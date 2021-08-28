@@ -119,10 +119,12 @@ public class GraphWriter {
             SchemaElement srcVertexDef = schema.getSchemaElement(srcVertexRecordKey.getLabel());
             SchemaElement dstVertexDef = schema.getSchemaElement(dstVertexRecordKey.getLabel());
             int labelId = edgeDef.getLabelId();
-            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(edgeDef, srcVertexRecordKey.getProperties());
-            long srcVertexHashId = getHashId(labelId, srcVertexPkVals, srcVertexDef);
-            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(edgeDef, dstVertexRecordKey.getProperties());
-            long dstVertexHashId = getHashId(labelId, dstVertexPkVals, dstVertexDef);
+            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(srcVertexDef,
+                    srcVertexRecordKey.getProperties());
+            long srcVertexHashId = getHashId(srcVertexDef.getLabelId(), srcVertexPkVals, srcVertexDef);
+            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(dstVertexDef,
+                    dstVertexRecordKey.getProperties());
+            long dstVertexHashId = getHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
             long edgeInnerId = edgeRecordKey.getEdgeInnerId();
             edgeId = new EdgeId(new VertexId(srcVertexHashId), new VertexId(dstVertexHashId), edgeInnerId);
             edgeKind = EdgeKind.newBuilder()
@@ -155,12 +157,12 @@ public class GraphWriter {
             SchemaElement srcVertexDef = schema.getSchemaElement(srcVertexRecordKey.getLabel());
             SchemaElement dstVertexDef = schema.getSchemaElement(dstVertexRecordKey.getLabel());
             int labelId = edgeDef.getLabelId();
-            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(edgeDef,
+            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(srcVertexDef,
                     srcVertexRecordKey.getProperties());
-            long srcVertexHashId = getHashId(labelId, srcVertexPkVals, srcVertexDef);
-            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(edgeDef,
+            long srcVertexHashId = getHashId(srcVertexDef.getLabelId(), srcVertexPkVals, srcVertexDef);
+            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(dstVertexDef,
                     dstVertexRecordKey.getProperties());
-            long dstVertexHashId = getHashId(labelId, dstVertexPkVals, dstVertexDef);
+            long dstVertexHashId = getHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
             long edgeInnerId = edgeRecordKey.getEdgeInnerId();
             edgeId = new EdgeId(new VertexId(srcVertexHashId), new VertexId(dstVertexHashId), edgeInnerId);
             edgeKind = EdgeKind.newBuilder()
@@ -194,10 +196,12 @@ public class GraphWriter {
             SchemaElement srcVertexDef = schema.getSchemaElement(srcVertexRecordKey.getLabel());
             SchemaElement dstVertexDef = schema.getSchemaElement(dstVertexRecordKey.getLabel());
             int labelId = edgeDef.getLabelId();
-            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(edgeDef, srcVertexRecordKey.getProperties());
-            long srcVertexHashId = getHashId(labelId, srcVertexPkVals, srcVertexDef);
-            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(edgeDef, dstVertexRecordKey.getProperties());
-            long dstVertexHashId = getHashId(labelId, dstVertexPkVals, dstVertexDef);
+            Map<Integer, PropertyValue> srcVertexPkVals = parseRawProperties(srcVertexDef,
+                    srcVertexRecordKey.getProperties());
+            long srcVertexHashId = getHashId(srcVertexDef.getLabelId(), srcVertexPkVals, srcVertexDef);
+            Map<Integer, PropertyValue> dstVertexPkVals = parseRawProperties(dstVertexDef,
+                    dstVertexRecordKey.getProperties());
+            long dstVertexHashId = getHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
             long edgeInnerId = this.edgeIdGenerator.getNextId();
             edgeId = new EdgeId(new VertexId(srcVertexHashId), new VertexId(dstVertexHashId), edgeInnerId);
             edgeKind = EdgeKind.newBuilder()
