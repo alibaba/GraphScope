@@ -40,6 +40,9 @@ import com.alibaba.maxgraph.v2.common.util.CuratorUtils;
 import com.alibaba.maxgraph.v2.frontend.*;
 import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
 
+import com.alibaba.maxgraph.v2.frontend.write.DefaultEdgeIdGenerator;
+import com.alibaba.maxgraph.v2.frontend.write.EdgeIdGenerator;
+import com.alibaba.maxgraph.v2.frontend.write.GraphWriter;
 import com.alibaba.maxgraph.v2.grafting.frontend.WrappedSchemaFetcher;
 import io.grpc.NameResolver;
 import org.apache.curator.framework.CuratorFramework;
@@ -91,9 +94,13 @@ public class Frontend extends NodeBase {
                 storeIngestClients, this.metaService, batchDdlClient);
         ClientDdlService clientDdlService = new ClientDdlService(snapshotCache, batchDdlClient);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
-
+        WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
+        EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);
+        GraphWriter graphWriter = new GraphWriter(snapshotCache, edgeIdGenerator, this.metaService,
+                ingestorWriteClients);
+        ClientWriteService clientWriteService = new ClientWriteService(writeSessionGenerator, graphWriter);
         this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
-                metricsCollectService, clientDdlService);
+                metricsCollectService, clientDdlService, clientWriteService);
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         WrappedSchemaFetcher wrappedSchemaFetcher = new WrappedSchemaFetcher(snapshotCache, metaService);
 
