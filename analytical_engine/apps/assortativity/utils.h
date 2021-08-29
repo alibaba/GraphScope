@@ -24,7 +24,6 @@ Author: Ning Xin
 namespace gs {
 enum class DegreeType { IN, OUT, INANDOUT };
 
-
 /**
  * @brief Compute the variance of matrix vec.
  *

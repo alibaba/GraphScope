@@ -38,9 +38,6 @@ def attribute_assortativity_coefficient(G):
     ----------
     G : NetworkX graph
 
-    attribute : string
-        Node attribute key
-
     Returns
     -------
     r: float

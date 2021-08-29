@@ -55,7 +55,7 @@ class AttributeAssortativity
              message_manager_t& messages) {
     auto inner_vertices = frag.InnerVertices();
     for (auto v : inner_vertices) {
-      ProcessVertex(v, frag, ctx, messages);
+      processVertex(v, frag, ctx, messages);
     }
     messages.ForceContinue();
   }
@@ -67,7 +67,7 @@ class AttributeAssortativity
       vertex_t u;
       while (messages.GetMessage(frag, u, source_data)) {
         vdata_t target_data = frag.GetData(u);
-        AttributeMixingCount(source_data, target_data, ctx);
+        attributeMixingCount(source_data, target_data, ctx);
       }
       ctx.merge_stage = true;
       // send message to work 0
@@ -96,8 +96,9 @@ class AttributeAssortativity
           }
         }
         std::vector<std::vector<double>> attribute_mixing_matrix;
-        GetAttributeMixingMatrix(ctx, attribute_mixing_matrix);
-        ctx.attribute_assortativity = ProcessMatrix(attribute_mixing_matrix);
+        getAttributeMixingMatrix(ctx, attribute_mixing_matrix);
+        ctx.attribute_assortativity =
+            processAttributeMatrix(attribute_mixing_matrix);
         // write result to ctx
         std::vector<size_t> shape{1};
         ctx.set_shape(shape);
@@ -108,7 +109,17 @@ class AttributeAssortativity
     }
   }
 
-  void ProcessVertex(const vertex_t& v, const fragment_t& frag, context_t& ctx,
+ private:
+  /**
+   * @brief traverse the outgoing neighbors of vertex v and update the
+   * attribute-attribute pairs.
+   *
+   * @param v
+   * @param frag
+   * @param ctx
+   * @param messages
+   */
+  void processVertex(const vertex_t& v, const fragment_t& frag, context_t& ctx,
                      message_manager_t& messages) {
     vdata_t source_data = frag.GetData(v);
     // get all neighbors of vertex v
@@ -119,11 +130,18 @@ class AttributeAssortativity
         messages.SyncStateOnOuterVertex(frag, neighbor, source_data);
       } else {
         vdata_t target_data = frag.GetData(neighbor);
-        AttributeMixingCount(source_data, target_data, ctx);
+        attributeMixingCount(source_data, target_data, ctx);
       }
     }
   }
-  double ProcessMatrix(
+
+  /**
+   * @brief Compute assortativity for attribute matrix attribute_mixing_matrix
+   *
+   * @param attribute_mixing_matrix n x n matrix
+   * @return attribute assortativity
+   */
+  double processAttributeMatrix(
       std::vector<std::vector<double>>& attribute_mixing_matrix) {
     int n = attribute_mixing_matrix.size();
     std::vector<double> a;
@@ -148,8 +166,15 @@ class AttributeAssortativity
     return (sum_eii - sum_ai_bi) / (1 - sum_ai_bi);
   }
 
-  void AttributeMixingCount(vdata_t source_data, vdata_t target_data,
-                            context_t& ctx) {
+  /**
+   * @brief count the attribute-attribute pairs
+   *
+   * @param source_data the data of source node
+   * @param target_data the data of target node
+   * @param ctx
+   */
+  inline void attributeMixingCount(vdata_t source_data, vdata_t target_data,
+                                   context_t& ctx) {
     if (ctx.attribute_mixing_map.count(source_data) == 0 ||
         ctx.attribute_mixing_map[source_data].count(target_data) == 0) {
       ctx.attribute_mixing_map[source_data][target_data] = 1;
@@ -157,11 +182,18 @@ class AttributeAssortativity
       ctx.attribute_mixing_map[source_data][target_data] += 1;
     }
   }
-  void GetAttributeMixingMatrix(
+
+  /**
+   * @brief get attribute mixing matrix by attribute mixing map
+   *
+   * @param ctx
+   * @param[out] attribute_mixing_matrix
+   */
+  void getAttributeMixingMatrix(
       context_t& ctx,
       std::vector<std::vector<double>>& attribute_mixing_matrix) {
     int total_edge_num = 0;
-    // <data, index> pair, index:{0, 1, ..., n}
+    // data-index map, index:{0, 1, ..., n}
     std::unordered_map<vdata_t, int> property_map;
     int count = 0;
     for (auto& pair1 : ctx.attribute_mixing_map) {
@@ -179,7 +211,7 @@ class AttributeAssortativity
     }
     int n = property_map.size();
     std::vector<std::vector<double>> tmp(n, std::vector<double>(n, 0.0));
-    attribute_mixing_matrix = move(tmp);
+    attribute_mixing_matrix.swap(tmp);
     for (auto& pair1 : ctx.attribute_mixing_map) {
       for (auto& pair2 : pair1.second) {
         int row = property_map[pair1.first];
