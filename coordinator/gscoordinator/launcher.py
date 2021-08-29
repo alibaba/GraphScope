@@ -22,7 +22,6 @@ import logging
 import os
 import random
 import shutil
-import signal
 import subprocess
 import sys
 import time
@@ -123,7 +122,7 @@ class LocalLauncher(Launcher):
 
         # zookeeper
         self._zookeeper_port = None
-        self._zk_process = None
+        self._zetcd_process = None
         # graph manager
         self._graph_manager_endpoint = None
         self._graph_manager_process = None
@@ -185,28 +184,35 @@ class LocalLauncher(Launcher):
     def zookeeper_port(self):
         return self._zookeeper_port
 
+    def get_engine_config(self):
+        config = {
+            "engine_hosts": self.hosts,
+            "mars_endpoint": None,
+        }
+        return config
+
+    def get_vineyard_stream_info(self):
+        return "ssh", self._hosts.split(",")
+
     def _get_free_port(self, host):
         port = random.randint(60001, 65535)
         while is_port_in_use(host, port):
             port = random.randint(60001, 65535)
         return port
 
-    def _launch_zookeeper(self):
-        zoo_cfg = os.path.join(self._graphscope_runtime_workspace, "zoo.cfg")
-        zoo_data_dir = os.path.join(self._graphscope_runtime_workspace, "zookeeper")
-
+    def _launch_zetcd(self):
         self._zookeeper_port = self._get_free_port(self._hosts.split(",")[0])
 
-        # create zookeeper config file
-        with open(zoo_cfg, "w") as f:
-            f.write("dataDir={0}\n".format(zoo_data_dir))
-            f.write("clientPort={0}\n".format(self._zookeeper_port))
-            f.write("admin.enableServer=false\n")
-
-        zk_sh = shutil.which("zkServer.sh")
-        if not zk_sh:
-            raise RuntimeError("zkServer.sh command not found.")
-        cmd = [zk_sh, "start-foreground", zoo_cfg]
+        zetcd_cmd = shutil.which("zetcd")
+        if not zetcd_cmd:
+            raise RuntimeError("zetcd command not found.")
+        cmd = [
+            zetcd_cmd,
+            "--zkaddr",
+            "0.0.0.0:{}".format(self._zookeeper_port),
+            "--endpoints",
+            "localhost:2379",  # FIXME: get etcd port from vineyard
+        ]
 
         process = subprocess.Popen(
             cmd,
@@ -221,8 +227,8 @@ class LocalLauncher(Launcher):
             bufsize=1,
         )
 
-        logger.info("Server is initializing zookeeper.")
-        self._zk_process = process
+        logger.info("Server is initializing zetcd.")
+        self._zetcd_process = process
 
         start_time = time.time()
         while not is_port_in_use(self._hosts.split(",")[0], self._zookeeper_port):
@@ -231,7 +237,7 @@ class LocalLauncher(Launcher):
                 self._timeout_seconds
                 and self._timeout_seconds + start_time < time.time()
             ):
-                raise RuntimeError("Launch zookeeper service failed.")
+                raise RuntimeError("Launch zetcd proxy service failed.")
 
     def _launch_graph_manager(self):
         port = self._get_free_port(self._hosts.split(",")[0])
@@ -275,7 +281,7 @@ class LocalLauncher(Launcher):
         self._graph_manager_endpoint = "{0}:{1}".format(self._hosts.split(",")[0], port)
 
     def _create_interactive_engine_service(self):
-        self._launch_zookeeper()
+        self._launch_zetcd()
         self._launch_graph_manager()
 
     def _find_vineyardd(self):
@@ -322,13 +328,13 @@ class LocalLauncher(Launcher):
             self._vineyardd_process = process
 
     def _create_services(self):
-        # create GIE graph manager
-        if self._graphscope_home is not None:
-            self._create_interactive_engine_service()
         # create vineyard
         self._create_vineyard()
         # create GAE rpc service
         self._start_analytical_engine()
+        # create GIE graph manager
+        if self._graphscope_home is not None:
+            self._create_interactive_engine_service()
 
     def _start_analytical_engine(self):
         rmcp = ResolveMPICmdPrefix()
@@ -421,7 +427,7 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._vineyardd_process)
 
     def _stop_interactive_engine_service(self):
-        self._stop_subprocess(self._zk_process)
+        self._stop_subprocess(self._zetcd_process)
         # stop shell process
         self._stop_subprocess(self._graph_manager_process)
         self._graph_manager_endpoint = None

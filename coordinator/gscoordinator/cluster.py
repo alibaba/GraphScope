@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import random
+import shutil
 import subprocess
 import sys
 import time
@@ -143,7 +144,6 @@ class KubernetesClusterLauncher(Launcher):
     _etcd_container_name = "etcd"
     _engine_container_name = "engine"  # fixed
     _gie_manager_container_name = "manager"
-    _gie_zookeeper_container_name = "zookeeper"
 
     _mars_scheduler_container_name = "marsscheduler"  # fixed
     _mars_worker_container_name = "marsworker"  # fixed
@@ -168,15 +168,12 @@ class KubernetesClusterLauncher(Launcher):
         service_type=None,
         gs_image=None,
         etcd_image=None,
-        zookeeper_image=None,
         gie_graph_manager_image=None,
         coordinator_name=None,
         coordinator_service_name=None,
         etcd_num_pods=None,
         etcd_cpu=None,
         etcd_mem=None,
-        zookeeper_cpu=None,
-        zookeeper_mem=None,
         gie_graph_manager_cpu=None,
         gie_graph_manager_mem=None,
         engine_cpu=None,
@@ -253,6 +250,7 @@ class KubernetesClusterLauncher(Launcher):
         self._glog_level = parse_as_glog_level(log_level)
 
         self._analytical_engine_process = None
+        self._zetcd_process = None
 
         # 8000 ~ 9000 is exposed
         self._learning_engine_ports_usage = 8000
@@ -306,9 +304,21 @@ class KubernetesClusterLauncher(Launcher):
     def get_manager_host(self):
         return "http://{0}".format(self._get_graph_manager_service_endpoint())
 
+    def get_vineyard_stream_info(self):
+        hosts = [
+            "%s:%s" % (self._saved_locals["namespace"], host)
+            for host in self._pod_name_list
+        ]
+        return "kubernetes", hosts
+
     @property
     def preemptive(self):
         return self._saved_locals["preemptive"]
+
+    @property
+    def hosts(self):
+        """String of a list of pod name, comma separated."""
+        return ",".join(self._pod_name_list)
 
     def distribute_file(self, path):
         dir = os.path.dirname(path)
@@ -680,6 +690,14 @@ class KubernetesClusterLauncher(Launcher):
             return endpoints
         raise RuntimeError("Get graphlearn service endpoint failed.")
 
+    def get_engine_config(self):
+        config = {
+            "vineyard_service_name": self.get_vineyard_service_name(),
+            "vineyard_rpc_endpoint": self.get_vineyard_rpc_endpoint(),
+            "mars_endpoint": self.get_mars_scheduler_endpoint(),
+        }
+        return config
+
     def _create_interactive_engine_service(self):
         logger.info("Launching GIE graph manager ...")
         labels = {"app": self._gie_graph_manager_name}
@@ -731,21 +749,38 @@ class KubernetesClusterLauncher(Launcher):
             ports=self._interactive_engine_manager_port,
         )
 
-        # add zookeeper container
-        graph_manager_builder.add_zookeeper_container(
-            name=self._gie_zookeeper_container_name,
-            image=self._saved_locals["zookeeper_image"],
-            cpu=self._saved_locals["zookeeper_cpu"],
-            mem=self._saved_locals["zookeeper_mem"],
-            preemptive=self._saved_locals["preemptive"],
-            ports=self._zookeeper_port,
-        )
-
         self._resource_object.append(
             self._app_api.create_namespaced_deployment(
                 self._saved_locals["namespace"], graph_manager_builder.build()
             )
         )
+
+        # launch zetcd proxy
+        logger.info("Launching zetcd proxy service ...")
+        zetcd_cmd = shutil.which("zetcd")
+        if not zetcd_cmd:
+            raise RuntimeError("zetcd command not found.")
+        port = self._random_etcd_listen_client_service_port
+        etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
+        for i in range(self._etcd_num_pods):
+            etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
+        cmd = [
+            zetcd_cmd,
+            "--zkaddr",
+            "0.0.0.0:{}".format(self._zookeeper_port),
+            "--endpoints",
+            "{}".format(",".join(etcd_endpoints)),
+        ]
+        logger.info("zetcd cmd {}".format(" ".join(cmd)))
+
+        self._zetcd_process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+        )
+        stdout_watcher = PipeWatcher(self._zetcd_process.stdout, sys.stdout, drop=True)
+        setattr(self._zetcd_process, "stdout_watcher", stdout_watcher)
 
     def _waiting_interactive_engine_service_ready(self):
         start_time = time.time()
@@ -801,14 +836,14 @@ class KubernetesClusterLauncher(Launcher):
         logger.info("GIE graph manager service is ready.")
 
     def _create_services(self):
-        # create interactive engine service
-        self._create_interactive_engine_service()
-        self._waiting_interactive_engine_service_ready()
-
-        # etcd used by vineyard
+        # etcd used by vineyard and gie
         self._create_etcd()
         self._etcd_endpoint = self._get_etcd_service_endpoint()
         logger.info("Etcd is ready, endpoint is {}".format(self._etcd_endpoint))
+
+        # create interactive engine service
+        self._create_interactive_engine_service()
+        self._waiting_interactive_engine_service_ready()
 
         if self._saved_locals["with_mars"]:
             # scheduler used by mars

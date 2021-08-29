@@ -1,6 +1,6 @@
-package com.alibaba.graphscope.gaia;
+package com.alibaba.graphscope.gaia.broadcast;
 
-import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
+import com.alibaba.graphscope.gaia.broadcast.channel.AsyncRpcChannelFetcher;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.CloseableIterator;
 import com.alibaba.pegasus.intf.ResultProcessor;

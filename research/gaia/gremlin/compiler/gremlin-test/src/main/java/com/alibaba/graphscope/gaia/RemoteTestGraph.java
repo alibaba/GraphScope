@@ -633,6 +633,9 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
         method = "g_V_asXaX_both_asXbX_dedupXa_bX_byXlabelX_selectXa_bX",
         reason = "unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_both_group_by_byXout_dedup_foldX_unfold_selectXvaluesX_unfold_out_order_byXnameX_limitX1X_valuesXnameX",
+        reason = "unsupported")
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.FilterTest",
         method = "g_V_filterXfalseX",
         reason = "unsupported")

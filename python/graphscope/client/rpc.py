@@ -82,7 +82,7 @@ def suppress_grpc_error(fn):
 
 
 class GRPCClient(object):
-    def __init__(self, endpoint):
+    def __init__(self, endpoint, reconnect=False):
         """Connect to GRAPE engine at the given :code:`endpoint`."""
         # create the gRPC stub
         options = [
@@ -93,6 +93,7 @@ class GRPCClient(object):
         self._stub = coordinator_service_pb2_grpc.CoordinatorServiceStub(self._channel)
         self._session_id = None
         self._logs_fetching_thread = None
+        self._reconnect = reconnect
 
     def waiting_service_ready(self, timeout_seconds=60):
         begin_time = time.time()
@@ -145,6 +146,13 @@ class GRPCClient(object):
             self._logs_fetching_thread.daemon = True
             self._logs_fetching_thread.start()
 
+    def close(self):
+        if self._session_id:
+            self._close_session_impl()
+            self._session_id = None
+        if self._logs_fetching_thread:
+            self._logs_fetching_thread.join(timeout=5)
+
     @catch_grpc_error
     def send_heartbeat(self):
         request = message_pb2.HeartBeatRequest()
@@ -165,6 +173,7 @@ class GRPCClient(object):
             cleanup_instance=cleanup_instance,
             dangling_timeout_seconds=dangling_timeout_seconds,
             version=__version__,
+            reconnect=self._reconnect,
         )
 
         response = self._stub.ConnectSession(request)

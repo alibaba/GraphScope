@@ -36,6 +36,7 @@ def load_ogbn_mag(sess, prefix):
     Returns:
         :class:`graphscope.Graph`: A Graph object which graph type is ArrowProperty
     """
+    prefix = os.path.expandvars(prefix)
     graph = sess.g()
     graph = (
         graph.add_vertices(os.path.join(prefix, "paper.csv"), "paper")

@@ -100,9 +100,11 @@ public class SnapshotCache implements SchemaFetcher {
                     this.snapshotToListeners.headMap(snapshotId, true);
             for (Map.Entry<Long, List<SnapshotListener>> listenerEntry : listenersToTrigger.entrySet()) {
                 List<SnapshotListener> listeners = listenerEntry.getValue();
+                long listenSnapshotId = listenerEntry.getKey();
                 for (SnapshotListener listener : listeners) {
                     try {
                         listener.onSnapshotAvailable();
+                        logger.info("notify listener for snapshot id [" + listenSnapshotId + "]");
                     } catch (Exception e) {
                         logger.warn("trigger snapshotListener failed. snapshotId [" + snapshotId + "]");
                     }

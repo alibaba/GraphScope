@@ -55,6 +55,7 @@ import com.alibaba.maxgraph.compiler.tree.source.SourceTreeNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceVertexTreeNode;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
 import com.alibaba.maxgraph.compiler.utils.ReflectionUtils;
+import com.alibaba.maxgraph.tinkerpop.Filter;
 import com.alibaba.maxgraph.tinkerpop.steps.AllPathStep;
 import com.alibaba.maxgraph.tinkerpop.steps.ConnectedComponentsStep;
 import com.alibaba.maxgraph.tinkerpop.steps.CreateGraphStep;
@@ -95,15 +96,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.AbstractLambdaTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ConstantTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ElementValueTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.FunctionTraverser;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.LoopTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.TrueTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalOptionParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.BranchStep;
@@ -654,14 +647,12 @@ public class TreeBuilder {
     }
 
     private TreeNode visitChooseStep(ChooseStep step, TreeNode prev) {
-        Map<Object, List<Traversal.Admin<?, ?>>> traversalOptions = ReflectionUtils.getFieldValue(BranchStep.class, step, "traversalOptions");
-
-        if (traversalOptions.size() == 2 && traversalOptions.containsKey(true) && traversalOptions.containsKey(false)) {
-            List<Traversal.Admin<?, ?>> trueOptionList = traversalOptions.get(true);
-            List<Traversal.Admin<?, ?>> falseOptionList = traversalOptions.get(false);
-            if (trueOptionList.size() != 1 || falseOptionList.size() != 1) {
-                throw new IllegalArgumentException("Only support option list size is 1");
-            }
+        List<org.javatuples.Pair<Traversal.Admin, Traversal.Admin<?, ?>>> traversalOptions =
+                ReflectionUtils.getFieldValue(BranchStep.class, step, "traversalOptions");
+        Traversal.Admin<?, ?> trueOptionTraversal, falseOptionTraversal;
+        if (traversalOptions.size() == 2
+                && (trueOptionTraversal = getTraversalOption(true, traversalOptions)) != null
+                && (falseOptionTraversal = getTraversalOption(false, traversalOptions)) != null) {
 
             boolean saveFlag = this.rootPathFlag;
             this.rootPathFlag = false;
@@ -669,15 +660,29 @@ public class TreeBuilder {
             TreeNode branchNode = branchTraversal == null ? null : travelTraversalAdmin(branchTraversal, new SourceDelegateNode(prev, schema));
             this.rootPathFlag = saveFlag;
 
-            Traversal.Admin<?, ?> trueOptionTraversal = trueOptionList.get(0);
             TreeNode trueOptionNode = travelTraversalAdmin(trueOptionTraversal, new SourceDelegateNode(prev, schema));
-            Traversal.Admin<?, ?> falseOptionTraversal = falseOptionList.get(0);
             TreeNode falseOptionNode = travelTraversalAdmin(falseOptionTraversal, new SourceDelegateNode(prev, schema));
 
             return new OptionalTreeNode(prev, schema, branchNode, trueOptionNode, falseOptionNode);
         } else {
             throw new UnsupportedOperationException("Not support choose yet.");
         }
+    }
+
+    private Traversal.Admin<?, ?> getTraversalOption(boolean predicate, List<org.javatuples.Pair<Traversal.Admin, 
+            Traversal.Admin<?, ?>>> traversalOptions) {
+        for (int i = 0; i < 2; ++i) {
+            org.javatuples.Pair<Traversal.Admin, Traversal.Admin<?, ?>> pair = traversalOptions.get(i);
+            Traversal.Admin left = pair.getValue0();
+            if (left instanceof PredicateTraversal.Admin) {
+                PredicateTraversal predicateTraversal = (PredicateTraversal) left;
+                P p = ReflectionUtils.getFieldValue(PredicateTraversal.class, predicateTraversal, "predicate");
+                if (p.getValue().equals(predicate)) {
+                    return pair.getValue1();
+                }
+            }
+        }
+        return null;
     }
 
     private TreeNode visitOrStep(OrStep step, TreeNode prev) {

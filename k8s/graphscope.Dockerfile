@@ -78,6 +78,8 @@ RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
 
 ENV PATH=${PATH}:/usr/local/go/bin
 
+RUN go get github.com/etcd-io/zetcd/cmd/zetcd
+
 RUN source ~/.bashrc \
     && rustup component add rustfmt \
     && echo "build with profile: $profile" \
@@ -111,6 +113,7 @@ RUN mkdir -p /home/maxgraph/{bin,conf}
 ENV VINEYARD_IPC_SOCKET /home/maxgraph/data/vineyard/vineyard.sock
 COPY --from=builder /root/gs/interactive_engine/src/executor/target/$profile/executor /home/maxgraph/bin/executor
 COPY --from=builder /root/gs/interactive_engine/bin/giectl /home/maxgraph/bin/giectl
+COPY --from=builder /root/go/bin/zetcd /usr/local/bin/zetcd
 
 RUN mkdir -p /home/maxgraph/native
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/home/maxgraph/native

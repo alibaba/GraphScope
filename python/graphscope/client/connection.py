@@ -24,19 +24,68 @@ from gremlin_python.driver.driver_remote_connection import DriverRemoteConnectio
 from gremlin_python.process.anonymous_traversal import traversal
 
 from graphscope.framework.graph_schema import GraphSchema
+from graphscope.framework.record import EdgeRecordKey
+from graphscope.framework.record import VertexRecordKey
+from graphscope.framework.record import to_write_requests_pb
 from graphscope.proto import ddl_service_pb2
 from graphscope.proto import ddl_service_pb2_grpc
+from graphscope.proto import write_service_pb2
+from graphscope.proto import write_service_pb2_grpc
 
 
 class Graph:
     def __init__(self, graph_def, conn=None) -> None:
         self._schema = GraphSchema()
         self._schema.from_graph_def(graph_def)
-        self._conn = conn
+        self._conn: Connection = conn
         self._schema._conn = conn
 
     def schema(self):
         return self._schema
+
+    def insert_vertex(self, vertex: VertexRecordKey, properties: dict):
+        return self.insert_vertices([[vertex, properties]])
+
+    def insert_vertices(self, vertices: list):
+        request = to_write_requests_pb("VERTEX", vertices, write_service_pb2.INSERT)
+        return self._conn.batch_write(request)
+
+    def update_vertex_properties(self, vertex: VertexRecordKey, properties: dict):
+        request = to_write_requests_pb(
+            "VERTEX", [[vertex, properties]], write_service_pb2.UPDATE
+        )
+        return self._conn.batch_write(request)
+
+    def delete_vertex(self, vertex_pk: VertexRecordKey):
+        return self.delete_vertices([vertex_pk])
+
+    def delete_vertices(self, vertex_pks: list):
+        request = to_write_requests_pb(
+            "VERTEX", [[pk, {}] for pk in vertex_pks], write_service_pb2.DELETE
+        )
+        return self._conn.batch_write(request)
+
+    def insert_edge(self, edge: EdgeRecordKey, properties: dict):
+        return self.insert_edges([[edge, properties]])
+
+    def insert_edges(self, edges=list):
+        request = to_write_requests_pb("EDGE", edges, write_service_pb2.INSERT)
+        return self._conn.batch_write(request)
+
+    def update_edge_properties(self, edge: EdgeRecordKey, properties: dict):
+        request = to_write_requests_pb(
+            "EDGE", [[edge, properties]], write_service_pb2.UPDATE
+        )
+        return self._conn.batch_write(request)
+
+    def delete_edge(self, edge: EdgeRecordKey):
+        return self.delete_edges([edge])
+
+    def delete_edges(self, edge_pks: list):
+        request = to_write_requests_pb(
+            "EDGE", [[pk, {}] for pk in edge_pks], write_service_pb2.DELETE
+        )
+        return self._conn.batch_write(request)
 
 
 class Connection:
@@ -44,13 +93,15 @@ class Connection:
         self._addr = addr
         self._gremlin_endpoint = gremlin_endpoint
         channel = grpc.insecure_channel(addr)
-        self._stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
+        self._ddl_service_stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
+        self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel)
+        self._client_id = None
 
     def submit(self, requests):
-        return self._stub.batchSubmit(requests)
+        return self._ddl_service_stub.batchSubmit(requests)
 
     def get_graph_def(self, requests):
-        return self._stub.getGraphDef(requests)
+        return self._ddl_service_stub.getGraphDef(requests)
 
     def g(self):
         request = ddl_service_pb2.GetGraphDefRequest()
@@ -61,6 +112,25 @@ class Connection:
     def gremlin(self):
         graph_url = "ws://%s/gremlin" % self._gremlin_endpoint
         return traversal().withRemote(DriverRemoteConnection(graph_url, "g"))
+
+    def _get_client_id(self):
+        if self._client_id is None:
+            request = write_service_pb2.GetClientIdRequest()
+            response = self._write_service_stub.getClientId(request)
+            self._client_id = response.client_id
+        return self._client_id
+
+    def batch_write(self, request):
+        request.client_id = self._get_client_id()
+        response = self._write_service_stub.batchWrite(request)
+        return response.snapshot_id
+
+    def remote_flush(self, snapshot_id, timeout_ms=3000):
+        request = write_service_pb2.RemoteFlushRequest()
+        request.snapshot_id = snapshot_id
+        request.wait_time_ms = timeout_ms
+        response = self._write_service_stub.remoteFlush(request)
+        return response.success
 
 
 def conn(addr, gremlin_endpoint=None):

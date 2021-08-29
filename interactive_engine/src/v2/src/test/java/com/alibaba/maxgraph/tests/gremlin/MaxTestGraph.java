@@ -351,12 +351,31 @@ import java.util.Properties;
 @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesTest",
         method = "g_injectXg_VX1X_propertiesXnameX_nextX_value",
         reason = "Not support inject operator")
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest",
-        method = "g_V_hasLabelXpersonX_order_byXageX_skipX1X_valuesXnameX",
-        reason = "Memory allocation bug, see Issue: https://github.com/alibaba/GraphScope/issues/653")
-@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest",
-        method = "g_V_hasLabelXpersonX_order_byXageX_valuesXnameX_skipX1X",
-        reason = "Memory allocation bug, see Issue: https://github.com/alibaba/GraphScope/issues/653")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_hasXperson_name_markoX_elementMapXnameX_asXaX_unionXidentity_identityX_selectXaX_selectXnameX",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        method = "g_VX1X_elementMap_orderXlocalX_byXkeys_descXunfold",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+        method = "g_V_valueMapXname_ageX_withXtokens_idsX_byXunfoldX",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_V_bothE_properties_dedup_hasKeyXweightX_hasValueXltX0d3XX_value",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_V_bothE_properties_dedup_hasKeyXweightX_value",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        method = "g_V_both_hasLabelXpersonX_order_byXage_descX_name",
+        reason = "Not support inject operator")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_hasXperson_name_markoX_path_asXaX_unionXidentity_identityX_selectXaX_unfold",
+        reason = "Not support select traversal")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_hasXperson_name_markoX_count_asXaX_unionXidentity_identityX_selectXaX",
+        reason = "Not support select traversal")
 public class MaxTestGraph implements Graph {
     private static final Logger logger = LoggerFactory.getLogger(MaxTestGraph.class);
 

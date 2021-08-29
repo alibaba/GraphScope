@@ -221,12 +221,15 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
   BOOST_LEAF_AUTO(ctx_wrapper,
                   app->Query(worker.get(), query_args, context_key, wrapper));
   std::string context_type;
+  std::string context_schema;
   if (ctx_wrapper != nullptr) {
     context_type = ctx_wrapper->context_type();
+    context_schema = ctx_wrapper->schema();
     BOOST_LEAF_CHECK(object_manager_.PutObject(ctx_wrapper));
   }
-
-  return toJson({{"context_type", context_type}, {"context_key", context_key}});
+  return toJson({{"context_type", context_type},
+                 {"context_key", context_key},
+                 {"context_schema", context_schema}});
 }
 
 bl::result<std::string> GrapeInstance::reportGraph(

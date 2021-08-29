@@ -340,6 +340,8 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
     if op.op == types_pb2.REPORT_GRAPH:
         # do nothing for nx report graph
         return
+    if op.op == types_pb2.CREATE_GRAPH:
+        _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.ADD_LABELS:
         _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.RUN_APP:
@@ -387,13 +389,32 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         _pre_process_for_close_learning_instance_op(
             op, op_result_pool, key_to_op, **kwargs
         )
+    if op.op == types_pb2.OUTPUT:
+        _pre_process_for_output_op(op, op_result_pool, key_to_op, **kwargs)
+
+
+def _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) <= 1
+    if len(op.parents) == 1:
+        key_of_parent_op = op.parents[0]
+        parent_op = key_to_op[key_of_parent_op]
+        if parent_op.op == types_pb2.DATA_SOURCE:
+            for key, value in parent_op.attr.items():
+                op.attr[key].CopyFrom(value)
 
 
 def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs):
-    assert len(op.parents) == 1
-    key_of_parent_op = op.parents[0]
-    result = op_result_pool[key_of_parent_op]
-    op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
+    assert len(op.parents) == 2
+    for key_of_parent_op in op.parents:
+        parent_op = key_to_op[key_of_parent_op]
+        if parent_op.op == types_pb2.DATA_SOURCE:
+            for key, value in parent_op.attr.items():
+                op.attr[key].CopyFrom(value)
+        else:
+            result = op_result_pool[key_of_parent_op]
+            op.attr[types_pb2.GRAPH_NAME].CopyFrom(
+                utils.s_to_attr(result.graph_def.key)
+            )
 
 
 def _pre_process_for_close_interactive_query_op(
@@ -612,6 +633,20 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
         op.attr[types_pb2.SELECTOR].CopyFrom(
             attr_value_pb2.AttrValue(s=selector.encode("utf-8"))
         )
+
+
+def _pre_process_for_output_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    parent_op = key_to_op[key_of_parent_op]
+    result = op_result_pool[key_of_parent_op]
+    if parent_op.output_type in (
+        types_pb2.VINEYARD_TENSOR,
+        types_pb2.VINEYARD_DATAFRAME,
+    ):
+        # dependent to to_vineyard_dataframe
+        r = json.loads(result.result.decode("utf-8"))["object_id"]
+        op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.s_to_attr(r))
 
 
 def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):

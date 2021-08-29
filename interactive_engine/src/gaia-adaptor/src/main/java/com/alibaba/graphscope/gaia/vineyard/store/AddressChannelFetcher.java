@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.gaia.vineyard.store;
 
-import com.alibaba.graphscope.gaia.AsyncRpcChannelFetcher;
+import com.alibaba.graphscope.gaia.broadcast.channel.AsyncRpcChannelFetcher;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 import com.alibaba.pegasus.RpcChannel;

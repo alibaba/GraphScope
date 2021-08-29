@@ -100,6 +100,11 @@ public class InstanceManagerController {
         String stdoutMessage = "";
 
         try {
+            if (!isValidGraphName(graphName)) {
+                createInstanceEntity.setErrorCode(-1);
+                createInstanceEntity.setErrorMessage("Invalid graph name");
+                return createInstanceEntity;
+            }
             List<String> createCommandList = new ArrayList<>();
 
             createCommandList.add(instanceProperties.getCreateScript());
@@ -188,16 +193,17 @@ public class InstanceManagerController {
                                                @RequestParam("preemptive") String preemptive,
                                                @RequestParam("gremlinServerCpu") String gremlinServerCpu,
                                                @RequestParam("gremlinServerMem") String gremlinServerMem,
-                                               @RequestParam("engineParams") String engineParams) throws Exception {
+                                               @RequestParam("engineParams") String engineParams,
+                                               @RequestParam("zookeeperIp") String zookeeperIp) throws Exception {
         CreateInstanceEntity createInstanceEntity = new CreateInstanceEntity();
         int errorCode;
         String errorMessage;
         int frontendPort = 0;
 
         String schemaPath = "/tmp/" + graphName + ".json";
-        if (StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
+        if (!isValidGraphName(graphName) || StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
             createInstanceEntity.setErrorCode(-1);
-            createInstanceEntity.setErrorMessage("Invalid graph name=>" + graphName);
+            createInstanceEntity.setErrorMessage("Invalid graph name");
             return createInstanceEntity;
         }
         try {
@@ -224,6 +230,7 @@ public class InstanceManagerController {
             createCommandList.add(gremlinServerCpu);
             createCommandList.add(gremlinServerMem);
             createCommandList.add(engineParams);
+            createCommandList.add(zookeeperIp);
             String command = StringUtils.join(createCommandList, " ");
             logger.info("start to create instance with command " + command);
             Process process = Runtime.getRuntime().exec(command);
@@ -281,12 +288,13 @@ public class InstanceManagerController {
                 .port(port)
                 .serializer(serializer)
                 .create();
-        Client client = cluster.connect();
+	Client client = null;
         long start = System.currentTimeMillis();
         long end = start + LAUNCH_MAX_TIME_LILL;
         while (start < end) {
             try {
                 Thread.sleep(10000);
+                client = cluster.connect();
                 client.submit("g.V().limit(1)").all().get();
                 client.close();
                 cluster.close();
@@ -296,7 +304,9 @@ public class InstanceManagerController {
             }
             start = System.currentTimeMillis();
         }
-        client.close();
+        if (client != null) {
+            client.close();
+        }
         cluster.close();
         return false;
     }
@@ -312,9 +322,9 @@ public class InstanceManagerController {
         String errorMessage;
         int frontendPort = 0;
 
-        if (StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
+        if (!isValidGraphName(graphName) || StringUtils.isEmpty(SecurityUtil.pathFilter(schemaPath))) {
             createInstanceEntity.setErrorCode(-1);
-            createInstanceEntity.setErrorMessage("Invalid graph name=>" + graphName);
+            createInstanceEntity.setErrorMessage("Invalid graph name");
             return createInstanceEntity;
         }
         try {
@@ -377,6 +387,9 @@ public class InstanceManagerController {
         int errorCode;
         String errorMessage;
         try {
+            if (!isValidGraphName(graphName)) {
+                return new CloseInstanceEntity(-1, "Invalid graph name");
+            }
             List<String> closeCommandList = new ArrayList<>();
             closeCommandList.add(instanceProperties.getCloseScript());
             closeCommandList.add("close_gremlin_instance_on_k8s");
@@ -406,6 +419,9 @@ public class InstanceManagerController {
         String errorMessage;
 
         try{
+            if (!isValidGraphName(graphName)) {
+                return new CloseInstanceEntity(-1, "Invalid graph name");
+            }
             List<String> closeCommandList = new ArrayList<>();
             closeCommandList.add(instanceProperties.getCloseScript());
             closeCommandList.add("close_gremlin_instance_on_local");
@@ -430,5 +446,10 @@ public class InstanceManagerController {
     @RequestMapping("frontend")
     public String queryFrontendEndpoint(@RequestParam("graphName") String graphName) {
         return FrontendMemoryStorage.getFrontendStorage().getFrontendEndpoint(graphName).getFrontEndpoint();
+    }
+
+    public boolean isValidGraphName(String graphName) {
+        String validPattern = "^\\w{1,128}$";
+        return graphName.matches(validPattern);
     }
 }

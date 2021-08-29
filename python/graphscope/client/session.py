@@ -175,7 +175,7 @@ class _FetchHandler(object):
             # for nx
             return DynamicVertexDataContext(context_dag_node, ret["context_key"])
         else:
-            return Context(context_dag_node, ret["context_key"])
+            return Context(context_dag_node, ret["context_key"], ret["context_schema"])
 
     def _rebuild_gremlin_results(
         self, seq, op: Operation, op_result: op_def_pb2.OpResult
@@ -309,7 +309,6 @@ class Session(object):
         k8s_gs_image=gs_config.k8s_gs_image,
         k8s_etcd_image=gs_config.k8s_etcd_image,
         k8s_gie_graph_manager_image=gs_config.k8s_gie_graph_manager_image,
-        k8s_zookeeper_image=gs_config.k8s_zookeeper_image,
         k8s_image_pull_policy=gs_config.k8s_image_pull_policy,
         k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
         k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
@@ -317,8 +316,6 @@ class Session(object):
         k8s_etcd_num_pods=gs_config.k8s_etcd_num_pods,
         k8s_etcd_cpu=gs_config.k8s_etcd_cpu,
         k8s_etcd_mem=gs_config.k8s_etcd_mem,
-        k8s_zookeeper_cpu=gs_config.k8s_zookeeper_cpu,
-        k8s_zookeeper_mem=gs_config.k8s_zookeeper_mem,
         k8s_gie_graph_manager_cpu=gs_config.k8s_gie_graph_manager_cpu,
         k8s_gie_graph_manager_mem=gs_config.k8s_gie_graph_manager_mem,
         k8s_vineyard_daemonset=gs_config.k8s_vineyard_daemonset,
@@ -337,6 +334,7 @@ class Session(object):
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         with_mars=gs_config.with_mars,
         enable_gaia=gs_config.enable_gaia,
+        reconnect=False,
         **kw
     ):
         """Construct a new GraphScope session.
@@ -386,8 +384,6 @@ class Session(object):
 
             k8s_gie_graph_manager_image (str, optional): The GraphScope interactive engine's graph manager image.
 
-            k8s_zookeeper_image (str, optional): The image of zookeeper, which used by GIE graph manager.
-
             k8s_vineyard_daemonset (str, optional): The name of vineyard Helm deployment to use. GraphScope will try to
                 discovery the daemonset from kubernetes cluster, then use it if exists, and fallback to launching
                 a bundled vineyard container otherwise.
@@ -411,12 +407,6 @@ class Session(object):
             k8s_etcd_cpu (float, optional): Minimum number of CPU cores request for etcd pod. Defaults to 0.5.
 
             k8s_etcd_mem (str, optional): Minimum number of memory request for etcd pod. Defaults to '128Mi'.
-
-            k8s_zookeeper_cpu (float, optional):
-                Minimum number of CPU cores request for zookeeper container. Defaults to 0.5.
-
-            k8s_zookeeper_mem (str, optional):
-                Minimum number of memory request for zookeeper container. Defaults to '256Mi'.
 
             k8s_gie_graph_manager_cpu (float, optional):
                 Minimum number of CPU cores request for graphmanager container. Defaults to 1.0.
@@ -523,6 +513,17 @@ class Session(object):
                 - k8s_vineyard_shared_mem: Deprecated.
                     Please use vineyard_shared_mem instead.
 
+            reconnect (bool, optional): When connecting to a pre-launched GraphScope cluster with :code:`addr`,
+                the connect request would be rejected with there is still an existing session connected. There
+                are cases where the session still exists and user's client has lost connection with the backend,
+                e.g., in a jupyter notebook. We have a :code:`dangling_timeout_seconds` for it, but a more
+                deterministic behavior would be better.
+
+                If :code:`reconnect` is True, the existing session will be reused. It is the user's responsibility
+                to ensure there's no such an active client actually.
+
+                Defaults to :code:`False`.
+
         Raises:
             TypeError: If the given argument combination is invalid and cannot be used to create
                 a GraphScope session.
@@ -541,14 +542,11 @@ class Session(object):
             "k8s_image_pull_policy",
             "k8s_image_pull_secrets",
             "k8s_gie_graph_manager_image",
-            "k8s_zookeeper_image",
             "k8s_coordinator_cpu",
             "k8s_coordinator_mem",
             "k8s_etcd_num_pods",
             "k8s_etcd_cpu",
             "k8s_etcd_mem",
-            "k8s_zookeeper_cpu",
-            "k8s_zookeeper_mem",
             "k8s_gie_graph_manager_cpu",
             "k8s_gie_graph_manager_mem",
             "k8s_vineyard_daemonset",
@@ -563,6 +561,7 @@ class Session(object):
             "k8s_mars_scheduler_mem",
             "with_mars",
             "enable_gaia",
+            "reconnect",
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
@@ -969,7 +968,9 @@ class Session(object):
             self._coordinator_endpoint = self._launcher.coordinator_endpoint
 
         # waiting service ready
-        self._grpc_client = GRPCClient(self._coordinator_endpoint)
+        self._grpc_client = GRPCClient(
+            self._coordinator_endpoint, self._config_params["reconnect"]
+        )
         self._grpc_client.waiting_service_ready(
             timeout_seconds=self._config_params["timeout_seconds"],
         )
@@ -1177,6 +1178,8 @@ session = Session
 def set_option(**kwargs):
     """Set the value of specified options.
 
+    Find params detail in :class:`graphscope.Session`
+
     Available options:
         - num_workers
         - log_level
@@ -1187,7 +1190,6 @@ def set_option(**kwargs):
         - k8s_gs_image
         - k8s_etcd_image
         - k8s_gie_graph_manager_image
-        - k8s_zookeeper_image
         - k8s_image_pull_policy
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu
@@ -1201,8 +1203,15 @@ def set_option(**kwargs):
         - k8s_mars_worker_mem
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
+        - k8s_gie_graph_manager_cpu
+        - k8s_gie_graph_manager_mem
+        - k8s_gie_gremlin_server_cpu
+            Minimum number of CPU cores request for gremlin pod. Defaults to 0.5.
+        - k8s_gie_gremlin_server_mem
+            Minimum number of memory request for gremlin pod. Defaults to '512Mi'.
         - with_mars
         - enable_gaia
+        - k8s_volumes
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine
@@ -1231,6 +1240,8 @@ def set_option(**kwargs):
 def get_option(key):
     """Get the value of specified option.
 
+    Find params detail in :class:`graphscope.Session`
+
     Available options:
         - num_workers
         - log_level
@@ -1241,7 +1252,6 @@ def get_option(key):
         - k8s_gs_image
         - k8s_etcd_image
         - k8s_gie_graph_manager_image
-        - k8s_zookeeper_image
         - k8s_image_pull_policy
         - k8s_image_pull_secrets
         - k8s_coordinator_cpu
@@ -1255,8 +1265,15 @@ def get_option(key):
         - k8s_mars_worker_mem
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
+        - k8s_gie_graph_manager_cpu
+        - k8s_gie_graph_manager_mem
+        - k8s_gie_gremlin_server_cpu
+            Minimum number of CPU cores request for gremlin pod. Defaults to 0.5.
+        - k8s_gie_gremlin_server_mem
+            Minimum number of memory request for gremlin pod. Defaults to '512Mi'.
         - with_mars
         - enable_gaia
+        - k8s_volumes
         - k8s_waiting_for_delete
         - engine_params
         - initializing_interactive_engine

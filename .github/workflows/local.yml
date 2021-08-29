@@ -88,6 +88,15 @@ jobs:
       if: false
       uses: mxschmitt/action-tmate@v2
 
+    - name: Run Gaia on Vineyard Store Test
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        source ~/.graphscope_env
+        export GRAPHSCOPE_HOME=/usr/local
+        export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
+        # run test
+        cd interactive_engine/src/gaia-adaptor && ./gaia_on_vineyard_test.sh
+
     - name: Run Gaia on Maxgraph Store Test
       if: matrix.os == 'ubuntu-20.04'
       run: |
