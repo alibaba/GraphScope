@@ -136,7 +136,7 @@ jobs:
     - name: Install Dependencies
       run: |
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
-        tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
@@ -489,8 +489,10 @@ jobs:
     steps:
     - name: Install Dependencies
       run: |
+        pwd
+        ls -la
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
-        tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
