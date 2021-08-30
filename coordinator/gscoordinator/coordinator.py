@@ -721,11 +721,19 @@ class CoordinatorServiceServicer(
         object_id = op.attr[types_pb2.VINEYARD_ID].i
         enable_gaia = op.attr[types_pb2.GIE_ENABLE_GAIA].b
         # maxgraph endpoint pattern
-        MAXGRAPH_FRONTEND_PATTERN = re.compile("(?<=MAXGRAPH_FRONTEND_PORT:).*$")
+        MAXGRAPH_FRONTEND_PATTERN = re.compile("(?<=MAXGRAPH_FRONTEND_ENDPOINT:).*$")
+        MAXGRAPH_FRONTEND_EXTERNAL_PATTERN = re.compile(
+            "(?<=MAXGRAPH_FRONTEND_EXTERNAL_ENDPOINT:).*$"
+        )
         # gaia endpoint pattern
-        GAIA_FRONTEND_PATTERN = re.compile("(?<=GAIA_FRONTEND_PORT:).*$")
+        GAIA_FRONTEND_PATTERN = re.compile("(?<=GAIA_FRONTEND_ENDPOINT:).*$")
+        GAIA_FRONTEND_EXTERNAL_PATTERN = re.compile(
+            "(?<=GAIA_FRONTEND_EXTERNAL_ENDPOINT:).*$"
+        )
         # maxgraph endpoint and gaia endpoint
         endpoints = []
+        # maxgraph and gaia external endpoint, for client and gremlin function test
+        external_endpoints = []
         # create instance
         proc = self._launcher.create_interactive_instance(op.attr)
         try:
@@ -745,6 +753,11 @@ class CoordinatorServiceServicer(
                         maxgraph_endpoint,
                         object_id,
                     )
+                maxgraph_external_endpoint = _match_frontend_endpoint(
+                    MAXGRAPH_FRONTEND_EXTERNAL_PATTERN, outs
+                )
+                if maxgraph_external_endpoint:
+                    external_endpoints.append(maxgraph_external_endpoint)
                 # match gaia endpoint and check for ready
                 if enable_gaia:
                     gaia_endpoint = _match_frontend_endpoint(
@@ -757,13 +770,21 @@ class CoordinatorServiceServicer(
                             gaia_endpoint,
                             object_id,
                         )
+                    gaia_external_endpoint = _match_frontend_endpoint(
+                        GAIA_FRONTEND_EXTERNAL_PATTERN,
+                        outs,
+                    )
+                    if gaia_external_endpoint:
+                        external_endpoints.append(gaia_external_endpoint)
                 self._object_manager.put(
                     op.key, InteractiveQueryManager(op.key, endpoints, object_id)
                 )
                 return op_def_pb2.OpResult(
                     code=error_codes_pb2.OK,
                     key=op.key,
-                    result=",".join(endpoints).encode("utf-8"),
+                    result=",".join(external_endpoints).encode("utf-8")
+                    if external_endpoints
+                    else ",".join(endpoints).encode("utf-8"),
                     extra_info=str(object_id).encode("utf-8"),
                 )
             else:

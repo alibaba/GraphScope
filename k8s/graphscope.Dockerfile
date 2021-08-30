@@ -118,6 +118,7 @@ COPY --from=builder /home/graphscope/gs/k8s/precompile.py /tmp/precompile.py
 RUN python3 /tmp/precompile.py && rm /tmp/precompile.py
 
 COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/executor /usr/local/bin/executor
+COPY --from=builder /home/graphscope/gs/interactive_engine/src/executor/target/$profile/gaia_executor /usr/local/bin/gaia_executor
 COPY --from=builder /home/graphscope/gs/interactive_engine/bin/giectl /usr/local/bin/giectl
 COPY --from=builder /tmp/zetcd /usr/local/bin/zetcd
 

@@ -198,6 +198,7 @@ class KubernetesClusterLauncher(Launcher):
 
         self._saved_locals = locals()
         self._num_workers = self._saved_locals["num_workers"]
+        self._instance_id = self._saved_locals["instance_id"]
 
         # random for multiple k8s cluster in the same namespace
         self._engine_name = self._engine_name_prefix + self._saved_locals["instance_id"]
@@ -791,11 +792,13 @@ class KubernetesClusterLauncher(Launcher):
         setattr(self._zetcd_process, "stdout_watcher", stdout_watcher)
 
         start_time = time.time()
-        while not is_port_in_use(self._hosts.split(",")[0], self._zookeeper_port):
+        while not is_port_in_use(
+            socket.gethostbyname(socket.gethostname()), self._zookeeper_port
+        ):
             time.sleep(1)
             if (
-                self._timeout_seconds
-                and self._timeout_seconds + start_time < time.time()
+                self._saved_locals["timeout_seconds"]
+                and self._saved_locals["timeout_seconds"] + start_time < time.time()
             ):
                 raise RuntimeError("Launch zetcd service failed.")
         logger.info(
@@ -946,7 +949,7 @@ class KubernetesClusterLauncher(Launcher):
                     self._saved_locals["namespace"],
                     "cp",
                     "/tmp/kube_hosts",
-                    "{}:/etc/hosts_of_nodes".format(pod),
+                    "{}:/tmp/hosts_of_nodes".format(pod),
                     "-c",
                     self._engine_container_name,
                 ]

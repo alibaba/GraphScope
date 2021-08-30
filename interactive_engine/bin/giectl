@@ -269,13 +269,14 @@ start_executor() {
 
 
   # launch executor
-  declare -r flag="maxgraph${object_id}executor"
+  declare flag="maxgraph${object_id}executor"
   RUST_BACKTRACE=full ${GRAPHSCOPE_HOME}/bin/executor --config ${config_dir}/executor.vineyard.properties \
     ${flag} ${server_id} 1>> ${log_dir}/maxgraph-executor.out 2>> ${log_dir}/maxgraph-executor.err &
   echo $! >> ${pid_dir}/executor.pid
 
   # start gaia executor
   if [ "${enable_gaia}" = True ]; then
+    flag="gaia${object_id}executor"
     RUST_BACKTRACE=full ${GRAPHSCOPE_HOME}/bin/gaia_executor --config ${config_dir}/executor.vineyard.properties \
       ${flag} ${server_id} ${object_id}_gaia 1>> ${log_dir}/gaia-executor.out \
       2>> ${log_dir}/gaia-executor.err &
@@ -334,13 +335,13 @@ create_gremlin_instance_on_local() {
     gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $7}') || true
     gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $4}') || true
     if [ ! -z "${gremlin_server_port_in_log}" ]; then
-      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port_in_log}"
+      log "MAXGRAPH_FRONTEND_ENDPOINT:127.0.0.1:${gremlin_server_port_in_log}"
       gremlin_server_ready=True
     elif [ ! -z "${gremlin_server_port_in_out}" ]; then
-      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port_in_out}"
+      log "MAXGRAPH_FRONTEND_ENDPOINT:127.0.0.1:${gremlin_server_port_in_out}"
       gremlin_server_ready=True
     elif [ ! -z "${gremlin_server_port_in_err}" ]; then
-      log "MAXGRAPH_FRONTEND_PORT:127.0.0.1:${gremlin_server_port_in_err}"
+      log "MAXGRAPH_FRONTEND_ENDPOINT:127.0.0.1:${gremlin_server_port_in_err}"
       gremlin_server_ready=True
     fi
 
@@ -411,17 +412,17 @@ create_gremlin_instance_on_k8s() {
   declare -r engine_params=$6
   declare -r enable_gaia=$7
   declare -r coordinator_name=$8 # deployment name of coordinator
-  declare -r zookeeper_ip=$(hostname -i)
+  declare -r host_ip=$(hostname -i)
   declare -r zookeeper_port="2181"
 
   declare -r log_dir=${GRAPHSCOPE_RUNTIME}/logs/${object_id}
   declare -r cluster_type="k8s"
-  start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${zookeeper_ip} \
+  start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${host_ip} \
       ${zookeeper_port} ${engine_count} ${enable_gaia}
   sleep 1
 
   start_frontend ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${schema_path} \
-      ${zookeeper_ip} ${zookeeper_port} ${engine_count} ${enable_gaia}
+      ${host_ip} ${zookeeper_port} ${engine_count} ${enable_gaia}
   sleep 4
 
   # expose gremlin server (NB: must before start executor)
@@ -490,7 +491,7 @@ create_gremlin_instance_on_k8s() {
   _server_id=1
   for pod in $(echo ${pod_hosts})
   do
-    launch_executor_cmd="${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${_server_id} ${zookeeper_ip} ${zookeeper_port} ${engine_count} ${enable_gaia} ${engine_params}"
+    launch_executor_cmd="${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${_server_id} ${host_ip} ${zookeeper_port} ${engine_count} ${enable_gaia} ${engine_params}"
     kubectl --namespace=${KUBE_NAMESPACE} exec ${pod} -c ${engine_container} -- /bin/bash -c "${launch_executor_cmd}"
     let _server_id+=1
   done
@@ -546,8 +547,8 @@ create_gremlin_instance_on_k8s() {
     wait_period_seconds=0
     while true
     do
-      mg_node_port=$(kubectl describe services mg-gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]")
-      if [ -n "${mg_node_port}" ]; then
+      mg_external_port=$(kubectl describe services mg-gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]")
+      if [ -n "${mg_external_port}" ]; then
         break
       fi
       wait_period_seconds=$(($wait_period_seconds+5))
@@ -560,8 +561,8 @@ create_gremlin_instance_on_k8s() {
     wait_period_seconds=0
     while true
     do
-      mg_node_ip=$(kubectl describe pods ${coordinator_name} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
-      if [ -n "${mg_node_ip}" ]; then
+      mg_external_ip=$(kubectl describe pods ${coordinator_name} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
+      if [ -n "${mg_external_ip}" ]; then
         break
       fi
       wait_period_seconds=$(($wait_period_seconds+5))
@@ -579,8 +580,8 @@ create_gremlin_instance_on_k8s() {
       wait_period_seconds=0
       while true
       do
-        gaia_node_port=$(kubectl describe services gaia-gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]")
-        if [ -n "${gaia_node_port}" ]; then
+        gaia_external_port=$(kubectl describe services gaia-gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "[0-9]")
+        if [ -n "${gaia_external_port}" ]; then
           break
         fi
         wait_period_seconds=$(($wait_period_seconds+5))
@@ -593,8 +594,8 @@ create_gremlin_instance_on_k8s() {
       wait_period_seconds=0
       while true
       do
-        gaia_node_ip=$(kubectl describe pods ${coordinator_name} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
-        if [ -n "${gaia_node_ip}" ]; then
+        gaia_external_ip=$(kubectl describe pods ${coordinator_name} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
+        if [ -n "${gaia_external_ip}" ]; then
           break
         fi
         wait_period_seconds=$(($wait_period_seconds+5))
@@ -607,9 +608,11 @@ create_gremlin_instance_on_k8s() {
     fi
   fi
 
-  log "MAXGRAPH_FRONTEND_PORT:${mg_node_ip}:${mg_node_port}"
+  log "MAXGRAPH_FRONTEND_ENDPOINT:${host_ip}:${maxgraph_frontend_port}"
+  log "MAXGRAPH_FRONTEND_EXTERNAL_ENDPOINT:${mg_external_ip}:${mg_external_port}"
   if [ "${enable_gaia}" = True ]; then
-    log "GAIA_FRONTEND_PORT:${gaia_node_ip}:${gaia_node_port}"
+    log "GAIA_FRONTEND_ENDPOINT:${host_ip}:${gaia_frontend_port}"
+    log "GAIA_FRONTEND_EXTERNAL_ENDPOINT:${gaia_external_ip}:${gaia_external_port}"
   fi
 }
 
