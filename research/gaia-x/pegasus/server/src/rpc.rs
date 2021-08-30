@@ -96,6 +96,12 @@ pub struct RpcService<I: Data, O, P> {
     report: bool,
 }
 
+impl<I: Data, O, P> RpcService<I, O, P> {
+    pub fn new(service: Service<I, O, P>, report: bool) -> RpcService<I, O, P> {
+        RpcService { inner: service, report }
+    }
+}
+
 #[tonic::async_trait]
 impl<I, O, P> pb::job_service_server::JobService for RpcService<I, O, P>
 where
