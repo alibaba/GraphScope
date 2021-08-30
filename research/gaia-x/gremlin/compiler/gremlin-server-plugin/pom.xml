@@ -59,7 +59,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.alibaba.graphscope</groupId>
+            <groupId>com.alibaba.pegasus</groupId>
             <artifactId>pegasus-client</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
