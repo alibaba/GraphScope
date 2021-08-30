@@ -22,7 +22,7 @@ use std::sync::Arc;
 use pegasus::api::function::FnResult;
 use pegasus::api::FromStream;
 use pegasus::result::{FromStreamExt, ResultSink};
-use pegasus::{Data, JobConf};
+use pegasus::{Data, JobConf, ServerConf};
 use prost::Message;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_stream::wrappers::UnboundedReceiverStream;
@@ -168,6 +168,23 @@ impl<S: pb::job_service_server::JobService> RpcServer<S> {
     }
 }
 
-fn parse_conf_req(_req: pb::JobConfig) -> JobConf {
-    todo!()
+fn parse_conf_req(conf: pb::JobConfig) -> JobConf {
+    let mut job_conf = JobConf::with_id(conf.job_id, conf.job_name, conf.workers);
+    if conf.time_limit != 0 {
+        job_conf.time_limit = conf.time_limit;
+    }
+    if conf.batch_size != 0 {
+        job_conf.batch_size = conf.batch_size;
+    }
+    if conf.output_capacity != 0 {
+        job_conf.batch_capacity = conf.output_capacity;
+    }
+    if conf.memory_limit != 0 {
+        job_conf.memory_limit = conf.memory_limit;
+    }
+    job_conf.plan_print = conf.plan_print;
+    if !conf.servers.is_empty() {
+        job_conf.reset_servers(ServerConf::Partial(conf.servers.clone()));
+    }
+    job_conf
 }
