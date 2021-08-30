@@ -427,6 +427,7 @@ public class Plan {
         GroupBy groupBy = GroupBy
                 .newBuilder()
                 .setAccum(accumKind)
+                .setResource(keySelector)
                 .build();
         OperatorDef operatorDef = OperatorDef
                 .newBuilder()
