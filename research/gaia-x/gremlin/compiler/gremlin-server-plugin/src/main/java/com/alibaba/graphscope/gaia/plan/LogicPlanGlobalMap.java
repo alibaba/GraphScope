@@ -38,7 +38,6 @@ import com.alibaba.graphscope.gaia.plan.translator.TraversalTranslator;
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalBuilder;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Option;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
@@ -52,12 +51,15 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // todo: avoid import *
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class LogicPlanGlobalMap {
+    private static final Logger logger = LoggerFactory.getLogger(LogicPlanGlobalMap.class);
     public enum STEP {
         GraphStep,
         GaiaGraphStep,
@@ -277,14 +279,14 @@ public class LogicPlanGlobalMap {
             public void buildJob(StepBuilder stepBuilder) {
                 JobBuilder target = (JobBuilder) stepBuilder.getJobBuilder();
                 Step step = stepBuilder.getStep();
-                target.limit(true, (int) ((RangeGlobalStep) step).getHighRange());
+                target.limit((int) ((RangeGlobalStep) step).getHighRange());
             }
         });
         stepPlanMap.put(STEP.HasAnyStep, new JobBuilderResource() {
             @Override
             protected void buildJob(StepBuilder stepBuilder) {
                 JobBuilder target = (JobBuilder) stepBuilder.getJobBuilder();
-                target.limit(true, 1);
+                target.limit(1);
             }
         });
         stepPlanMap.put(STEP.SelectOneStep, new GremlinStepResource() {
@@ -338,7 +340,7 @@ public class LogicPlanGlobalMap {
                 JobBuilder target = (JobBuilder) stepBuilder.getJobBuilder();
                 Configuration conf = stepBuilder.getConf();
                 Step step = stepBuilder.getStep();
-                target.sortBy(true, Gremlin.GremlinStep.newBuilder()
+                target.sortBy(Gremlin.GremlinStep.newBuilder()
                         .setOrderByStep(PlanUtils.constructFrom((ComparatorHolder) step, conf))
                         .build().toByteString());
             }
@@ -349,7 +351,7 @@ public class LogicPlanGlobalMap {
                 JobBuilder target = (JobBuilder) stepBuilder.getJobBuilder();
                 Step step = stepBuilder.getStep();
                 Configuration conf = stepBuilder.getConf();
-                target.topBy(true, ((OrderGlobalLimitStep) step).getLimit(), Gremlin.GremlinStep.newBuilder()
+                target.topBy(((OrderGlobalLimitStep) step).getLimit(), Gremlin.GremlinStep.newBuilder()
                         .setOrderByStep(PlanUtils.constructFrom((ComparatorHolder) step, conf))
                         .build().toByteString());
             }
@@ -361,7 +363,7 @@ public class LogicPlanGlobalMap {
                 Step step = stepBuilder.getStep();
                 Configuration conf = stepBuilder.getConf();
                 Gremlin.GremlinStep.Builder builder = Gremlin.GremlinStep.newBuilder().setGroupByStep(PlanUtils.constructFrom(step, conf));
-                stepBuilder.setJobBuilder(target.groupBy(true, builder.build().toByteString()));
+                stepBuilder.setJobBuilder(target.groupBy(PlanUtils.getAccumKind(step), builder.build().toByteString()));
             }
         });
         stepPlanMap.put(STEP.GroupStep, new JobBuilderResource() {
@@ -371,14 +373,15 @@ public class LogicPlanGlobalMap {
                 Step step = stepBuilder.getStep();
                 Configuration conf = stepBuilder.getConf();
                 Gremlin.GremlinStep.Builder builder = Gremlin.GremlinStep.newBuilder().setGroupByStep(PlanUtils.constructFrom(step, conf));
-                stepBuilder.setJobBuilder(target.groupBy(true, builder.build().toByteString()));
+                logger.info("before set pb {}", PlanUtils.printGremlinStep(builder.build().toByteString()));
+                stepBuilder.setJobBuilder(target.groupBy(PlanUtils.getAccumKind(step), builder.build().toByteString()));
             }
         });
         stepPlanMap.put(STEP.CountGlobalStep, new JobBuilderResource() {
             @Override
             public void buildJob(StepBuilder stepBuilder) {
                 JobBuilder target = (JobBuilder) stepBuilder.getJobBuilder();
-                stepBuilder.setJobBuilder(target.count(true));
+                stepBuilder.setJobBuilder(target.count());
             }
         });
         stepPlanMap.put(STEP.BySubTaskStep, new JobBuilderResource() {
@@ -484,9 +487,7 @@ public class LogicPlanGlobalMap {
             @Override
             protected void buildJob(StepBuilder stepBuilder) {
                 JobBuilder target = (JobBuilder) stepBuilder.getJobBuilder();
-                target.dedup(true, Gremlin.GremlinStep.newBuilder()
-                        .setDedupStep(Gremlin.DedupStep.newBuilder()
-                                .setDedupType(Gremlin.DedupStep.DedupSetType.HashSet)).build().toByteString());
+                target.dedup();
             }
         });
         stepPlanMap.put(STEP.UnfoldStep, new GremlinStepResource() {
