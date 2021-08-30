@@ -146,9 +146,36 @@ extern "C" void master_signal_handler(int sig, siginfo_t* info, void* context) {
   }
 }
 
+// A custom sinker to redirect glog messages to stdout/stderr.
+class RedirectLogSink : public google::LogSink {
+  virtual void send(google::LogSeverity severity, const char* full_filename,
+                    const char* base_filename, int line,
+                    const struct ::tm* tm_time,
+                    const char* message, size_t message_len) {
+    // we redirect GLOG_ERROR message to stderr, others to stdout
+    if (severity != google::GLOG_ERROR) {
+      std::cerr << google::LogSink::ToString(
+              severity,
+              full_filename,
+              line,
+              tm_time,
+              message,
+              message_len) << std::endl;;
+    } else {
+      std::cout << google::LogSink::ToString(
+              severity,
+              full_filename,
+              line,
+              tm_time,
+              message,
+              message_len) << std::endl;;
+    }
+  }
+};
+
 int main(int argc, char* argv[]) {
   int exit_code = 0;
-  FLAGS_stderrthreshold = 0;
+  FLAGS_logtostderr = false;
 
   grape::gflags::SetUsageMessage(
       "Usage: mpiexec [mpi_opts] ./grape_engine [grape_opts]");
@@ -161,6 +188,8 @@ int main(int argc, char* argv[]) {
 
   google::InitGoogleLogging(argv[0]);
   google::InstallFailureSignalHandler();
+  RedirectLogSink redirect_log_sink;
+  google::AddLogSink(&redirect_log_sink);
 
   // InitMPI
   grape::InitMPIComm();
