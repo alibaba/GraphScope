@@ -14,6 +14,103 @@
 //! limitations under the License.
 
 pub(crate) use rob::*;
+use crate::tag::tools::map::TidyTagMap;
+use crate::api::scope::MergedScopeDelta;
+use crate::Tag;
+use ahash::{AHashMap, AHashSet};
+use std::cell::RefCell;
+use std::rc::Rc;
+use crate::communication::cancel::{CancelHandle, CancelListener};
+
+struct ChannelCancel {
+    scope_level: u32,
+    inner: CancelHandle,
+    delta: MergedScopeDelta,
+    current: TidyTagMap<()>,
+    parent: AHashSet<Tag>,
+}
+
+impl CancelListener for ChannelCancel {
+    fn cancel(&mut self, tag: &Tag, to: u32) -> Option<Tag> {
+        if let Some(tag) = self.inner.cancel(tag, to) {
+            let level = tag.len() as u32;
+            return if level == self.scope_level {
+                let tag_in = self.delta.evolve_back(&tag);
+                self.current.insert(tag_in.clone(), ());
+                Some(tag_in)
+            } else {
+                assert!(level < self.scope_level);
+                self.parent.insert(tag.clone());
+                Some(tag)
+            }
+        }
+        None
+    }
+}
+
+impl ChannelCancel {
+    fn is_canceled(&self, tag: &Tag) -> bool {
+        let level = tag.len() as u32;
+        if level == self.scope_level && !self.current.is_empty() {
+            if self.current.contains_key(tag) {
+                return true;
+            }
+
+            if *crate::config::ENABLE_CANCEL_CHILD && !self.parent.is_empty() {
+                let p = tag.to_parent_uncheck();
+                self.check_parent(p)
+            } else {
+                false
+            }
+        } else if level < self.scope_level {
+            self.check_parent(tag.clone())
+        } else {
+            false
+        }
+    }
+
+    fn check_parent(&self, mut p: Tag) -> bool {
+        loop {
+            if self.parent.contains(&p) {
+                return true;
+            }
+            if p.is_root() {
+                break;
+            } else {
+                p = p.to_parent_uncheck();
+            }
+        }
+
+        false
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct ChannelCancelPtr {
+    inner: Rc<RefCell<ChannelCancel>>
+}
+
+impl CancelListener for ChannelCancelPtr {
+    fn cancel(&mut self, tag: &Tag, to: u32) -> Option<Tag> {
+        self.inner.borrow_mut().cancel(tag, to)
+    }
+}
+
+impl ChannelCancelPtr {
+
+    fn new(scope_level: u32, delta: MergedScopeDelta, ch: CancelHandle) -> Self {
+        let inner = ChannelCancel { scope_level, inner: ch, delta, current: TidyTagMap::new(scope_level), parent: AHashSet::new() };
+        ChannelCancelPtr {
+            inner: Rc::new(RefCell::new(inner))
+        }
+    }
+
+    fn is_cancel(&self, tag: &Tag) -> bool {
+        self.inner.borrow().is_canceled(tag)
+    }
+}
+
+unsafe impl Send for ChannelCancelPtr { }
 
 #[cfg(not(feature = "rob"))]
 mod rob {
@@ -29,6 +126,8 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
+    use crate::communication::cancel::CancelHandle;
+    use super::*;
 
     struct Buffer<D> {
         pin: Tag,
@@ -56,11 +155,17 @@ mod rob {
         /// describe the scope change through this push;
         /// buffer for small push;
         buffer: Option<Buffer<D>>,
+        cancel_handle: ChannelCancelPtr,
     }
 
     impl<D: Data> ChannelPush<D> {
-        pub(crate) fn new(ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>) -> Self {
-            ChannelPush { ch_info, push, delta, buffer: None }
+        pub(crate) fn new(ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, cancel: CancelHandle) -> Self {
+            let cancel_handle = ChannelCancelPtr::new(ch_info.scope_level, delta.clone(), cancel);
+            ChannelPush { ch_info, push, delta, buffer: None, cancel_handle }
+        }
+
+        pub(crate) fn get_cancel_handle(&self) -> ChannelCancelPtr {
+            self.cancel_handle.clone()
         }
 
         fn push_without_evolve(&mut self, tag: Tag, msg: D) -> IOResult<()> {

@@ -20,7 +20,16 @@ use std::collections::VecDeque;
 use pegasus_common::downcast::AsAny;
 
 use crate::errors::IOResult;
+use crate::schedule::state::outbound::{OutputCancelState};
 use crate::{Data, Tag};
+pub(crate) use builder::OutputBuilderImpl;
+pub use output::OutputSession;
+pub(crate) use tee::ChannelPush;
+
+use crate::communication::decorator::ScopeStreamPush;
+use crate::communication::output::output::OutputHandle;
+use crate::data::MicroBatch;
+use crate::progress::EndSignal;
 
 pub trait OutputProxy: AsAny + Send {
     fn flush(&self) -> IOResult<()>;
@@ -44,20 +53,15 @@ pub trait OutputProxy: AsAny + Send {
 }
 
 pub trait OutputBuilder: AsAny {
+
+    fn build_cancel_handle(&self) -> Option<OutputCancelState>;
+
     fn build(self: Box<Self>) -> Option<Box<dyn OutputProxy>>;
 }
 
 mod builder;
 mod output;
 mod tee;
-pub(crate) use builder::OutputBuilderImpl;
-pub use output::OutputSession;
-pub(crate) use tee::ChannelPush;
-
-use crate::communication::decorator::ScopeStreamPush;
-use crate::communication::output::output::OutputHandle;
-use crate::data::MicroBatch;
-use crate::progress::EndSignal;
 
 pub struct RefWrapOutput<D: Data> {
     pub(crate) output: RefCell<OutputHandle<D>>,

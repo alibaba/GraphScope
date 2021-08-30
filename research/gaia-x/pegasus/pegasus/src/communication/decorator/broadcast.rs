@@ -10,16 +10,23 @@ mod rob {
     use crate::graph::Port;
     use crate::progress::{EndSignal, Weight};
     use crate::{Data, Tag};
+    use crate::communication::cancel::{MultiConsCancelPtr, CancelHandle};
 
     pub struct BroadcastBatchPush<D: Data> {
         pub ch_info: ChannelInfo,
         //pool: MemBatchPool<D>,
         pushes: Vec<EventEmitPush<D>>,
+        cancel_handle: MultiConsCancelPtr,
     }
 
     impl<D: Data> BroadcastBatchPush<D> {
         pub fn new(ch_info: ChannelInfo, pushes: Vec<EventEmitPush<D>>) -> Self {
-            BroadcastBatchPush { ch_info, pushes }
+            let cancel_handle = MultiConsCancelPtr::new(ch_info.scope_level, pushes.len());
+            BroadcastBatchPush { ch_info, pushes, cancel_handle }
+        }
+
+        pub(crate) fn get_cancel_handle(&self) -> CancelHandle {
+            CancelHandle::MC(self.cancel_handle.clone())
         }
     }
 
@@ -31,9 +38,15 @@ mod rob {
         fn push(&mut self, tag: &Tag, msg: MicroBatch<T>) -> IOResult<()> {
             for i in 1..self.pushes.len() {
                 // TODO: avoid clone msg;
-                self.pushes[i].push(tag, msg.clone())?;
+                if !self.cancel_handle.is_canceled(&msg.tag, i) {
+                    self.pushes[i].push(tag, msg.clone())?;
+                }
             }
-            self.pushes[0].push(tag, msg)
+            if !self.cancel_handle.is_canceled(&msg.tag, 0) {
+                self.pushes[0].push(tag, msg)
+            } else {
+                Ok(())
+            }
         }
 
         fn push_last(&mut self, msg: MicroBatch<T>, mut end: EndSignal) -> IOResult<()> {

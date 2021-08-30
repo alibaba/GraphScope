@@ -33,6 +33,7 @@ use crate::progress::EndSignal;
 use crate::schedule::state::inbound::InputEndNotify;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
+use crate::schedule::state::outbound::OutputCancelState;
 
 pub trait Notifiable: Send + 'static {
     fn on_notify(&mut self, n: Notification, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError>;
@@ -167,7 +168,6 @@ impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
         if outputs.len() == 1 {
             for input in inputs.iter() {
                 input.cancel_scope(&tag);
-                input.propagate_cancel(&tag)?;
             }
             outputs[0].skip(&tag)?;
             Ok(true)
@@ -182,7 +182,6 @@ impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
                     // received from all the ports, propagate cancel signal and clear data
                     for input in inputs.iter() {
                         input.cancel_scope(&tag);
-                        input.propagate_cancel(&tag)?;
                     }
                     if !*BRANCH_OPT {
                         for output in outputs.iter() {
@@ -433,10 +432,10 @@ impl OperatorBuilder {
 
     pub(crate) fn add_input<T: Data>(
         &mut self, ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<T>>,
-        notify: Option<GeneralPush<MicroBatch<T>>>, event_emitter: &EventEmitter, delta: MergedScopeDelta,
-    ) {
+        notify: Option<GeneralPush<MicroBatch<T>>>, event_emitter: &EventEmitter)
+    {
         assert_eq!(ch_info.target_port.port, self.inputs.len());
-        let input = new_input(ch_info, pull, event_emitter, delta);
+        let input = new_input(ch_info, pull, event_emitter);
         self.inputs.push(input);
         let n = notify.map(|p| Box::new(p) as Box<dyn InputEndNotify>);
         self.inputs_notify.push(n);
@@ -458,6 +457,15 @@ impl OperatorBuilder {
 
     pub(crate) fn take_inputs_notify(&mut self) -> Vec<Option<Box<dyn InputEndNotify>>> {
         std::mem::replace(&mut self.inputs_notify, vec![])
+    }
+
+    pub(crate) fn build_outputs_cancel(&self) -> Vec<Option<OutputCancelState>> {
+        let mut vec = Vec::with_capacity(self.outputs.len());
+        for o in self.outputs.iter() {
+            let handle = o.build_cancel_handle();
+            vec.push(handle);
+        }
+        vec
     }
 
     pub(crate) fn build(self) -> Operator {

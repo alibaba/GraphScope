@@ -77,6 +77,7 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::Tag;
+    use crate::communication::cancel::CancelListener;
 
     pub struct LocalMiniBatchPush<T: Data> {
         pub ch_info: ChannelInfo,
@@ -311,6 +312,14 @@ mod rob {
                 MicroBatchPush::Broadcast(p) => p.close(),
                 MicroBatchPush::ScopeShuffle(p) => p.close(),
             }
+        }
+    }
+
+    pub(crate) struct DefaultCancelListener;
+
+    impl CancelListener for DefaultCancelListener {
+        fn cancel(&mut self, tag: &Tag, _to: u32) -> Option<Tag> {
+            Some(tag.clone())
         }
     }
 }

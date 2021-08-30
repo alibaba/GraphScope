@@ -69,7 +69,7 @@ mod rob {
         pub fn push_batch_mut(&mut self, batch: &mut MicroBatch<D>) -> IOResult<()> {
             if self.skips.is_empty() || !self.skips.contains(&batch.tag) {
                 let seq = batch.seq;
-                let data = MicroBatch::new(batch.tag.clone(), self.src, seq, batch.take_batch());
+                let data = MicroBatch::new(batch.tag.clone(), self.src, seq, batch.take_data());
                 self.push_batch(data)
             } else {
                 Ok(())
@@ -585,11 +585,7 @@ mod rob {
                 warn_worker!("output[{:?}] the end signal of scope {:?} lost;", self.port, tag);
                 let batch = MicroBatch::new(tag, self.src, buf.into_read_only());
                 if let Err(err) = self.flush_batch(batch) {
-                    return if err.is_would_block() {
-                        Err(IOError::cannot_block())
-                    } else {
-                        Err(err)
-                    };
+                    return if err.is_would_block() { Err(IOError::cannot_block()) } else { Err(err) };
                 }
             }
             Ok(())
@@ -774,6 +770,4 @@ mod rob {
             self.tee.close()
         }
     }
-
 }
-

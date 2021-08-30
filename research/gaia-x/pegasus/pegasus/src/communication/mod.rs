@@ -26,6 +26,7 @@ pub(crate) mod channel;
 pub(crate) mod decorator;
 pub(crate) mod input;
 pub(crate) mod output;
+pub(crate) mod cancel;
 pub use channel::Channel;
 
 use crate::channel_id::ChannelId;
@@ -37,6 +38,30 @@ pub type Output<'a, D> = output::RefWrapOutput<D>;
 thread_local! {
     static CHANNEL_RESOURCES : RefCell<HashMap<ChannelId, LinkedList<Box<dyn Any>>>> = RefCell::new(Default::default());
 }
+
+
+
+#[derive(Copy, Clone)]
+enum Magic {
+    Modulo(u64),
+    And(u64),
+}
+
+impl Magic {
+
+    pub fn new(len: usize) -> Self {
+        if len & (len - 1) == 0 { Magic::And(len as u64 - 1) } else { Magic::Modulo(len as u64) }
+    }
+
+    #[inline(always)]
+    pub fn exec(&self, id: u64) -> u64 {
+        match self {
+            Magic::Modulo(x) => id % *x,
+            Magic::And(x) => id & *x,
+        }
+    }
+}
+
 
 pub(crate) fn build_channel<T: Data>(
     ch_id: ChannelId, conf: &JobConf,

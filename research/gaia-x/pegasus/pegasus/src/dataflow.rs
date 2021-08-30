@@ -31,6 +31,7 @@ use crate::graph::{Dependency, DotGraph, Edge, Port};
 use crate::operator::{GeneralOperator, NotifiableOperator, Operator, OperatorBuilder, OperatorCore};
 use crate::schedule::Schedule;
 use crate::{Data, JobConf, Tag, WorkerId};
+use std::collections::VecDeque;
 
 pub struct DataflowBuilder {
     pub worker_id: WorkerId,
@@ -126,7 +127,7 @@ impl DataflowBuilder {
         let mut op_names = vec![];
         op_names.push("root".to_owned());
         let mut depends = Dependency::default();
-        sch.add_schedule_op(0, 0, vec![], None);
+        sch.add_schedule_op(0, 0, vec![], vec![]);
         let sinks = self.sinks.replace(vec![]);
         depends.set_sinks(sinks);
         for e in self.edges.borrow().iter() {
@@ -136,8 +137,9 @@ impl DataflowBuilder {
         for (i, mut op_b) in builds.drain(..).enumerate() {
             let op_index = op_b.index();
             assert_eq!(i + 1, op_index, "{:?}", op_b.info);
-            let output_ports = depends.get_children_of(op_index);
-            sch.add_schedule_op(op_index, op_b.info.scope_level, op_b.take_inputs_notify(), output_ports);
+            let inputs_notify = op_b.take_inputs_notify();
+            let outputs_cancel = op_b.build_outputs_cancel();
+            sch.add_schedule_op(op_index, op_b.info.scope_level, inputs_notify, outputs_cancel);
             let op = op_b.build();
             op_names.push(op.info.name.clone());
             if report {
@@ -211,10 +213,10 @@ impl OperatorRef {
 
     pub fn add_input<T: Data>(
         &self, ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<T>>,
-        notify: Option<GeneralPush<MicroBatch<T>>>, event_emitter: &EventEmitter, delta: MergedScopeDelta,
+        notify: Option<GeneralPush<MicroBatch<T>>>, event_emitter: &EventEmitter
     ) {
         let mut b = self.borrow.borrow_mut();
-        b[self.index - 1].add_input(ch_info, pull, notify, event_emitter, delta)
+        b[self.index - 1].add_input(ch_info, pull, notify, event_emitter)
     }
 
     pub fn new_output<D: Data>(&self) -> OutputBuilderImpl<D> {
@@ -295,13 +297,15 @@ impl Dataflow {
         true
     }
 
-    pub fn try_cancel(&self, index: usize, discards: &mut Vec<(Port, Tag)>) -> Result<(), JobExecError> {
+    pub fn try_cancel(&self, index: usize, discards: &mut VecDeque<(Port, Tag)>) -> Result<(), JobExecError> {
         let mut operators = self.operators.borrow_mut();
         if let Some(op_opt) = operators.get_mut(index) {
             if let Some(op) = op_opt {
-                for (port, tag) in discards.drain(..) {
+                while let Some((port, tag)) = discards.pop_front() {
                     op.cancel(port, tag)?;
                 }
+            } else {
+                discards.clear();
             }
         }
         Ok(())

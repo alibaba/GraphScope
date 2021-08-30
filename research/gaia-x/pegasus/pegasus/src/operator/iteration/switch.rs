@@ -209,7 +209,6 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
             assert!(tag.len() < self.scope_level as usize);
             for input in inputs.iter() {
                 input.cancel_scope(&tag);
-                input.propagate_cancel(&tag)?;
             }
             for output in outputs.iter() {
                 output.skip(&tag)?;
@@ -221,14 +220,13 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
                     // in the middle iteration, should propagated into previous iteration
                     if nth != 0 {
                         inputs[1].cancel_scope(&tag);
-                        inputs[1].propagate_cancel(&tag)?;
                         outputs[1].skip(&tag)?;
                     } else {
                         inputs[0].cancel_scope(&tag);
-                        if *LOOP_OPT {
-                            // enable propagation to parent scope optimization
-                            inputs[0].propagate_cancel_uncheck(&tag)?;
-                        }
+                        // if *LOOP_OPT {
+                        //     // enable propagation to parent scope optimization
+                        //     inputs[0].propagate_cancel_uncheck(&tag)?;
+                        // }
                         outputs[1].skip(&tag)?;
                     }
                 } else {

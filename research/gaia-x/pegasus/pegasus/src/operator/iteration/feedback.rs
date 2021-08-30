@@ -89,7 +89,6 @@ impl<D: Data> Notifiable for IterSyncOperator<D> {
     ) -> Result<bool, JobExecError> {
         assert_eq!(port.port, 0);
         inputs[0].cancel_scope(&tag);
-        inputs[0].propagate_cancel(&tag)?;
         outputs[0].skip(&tag)?;
         Ok(true)
     }
@@ -186,7 +185,6 @@ impl<D: Data> Notifiable for FeedbackOperator<D> {
     ) -> Result<bool, JobExecError> {
         assert_eq!(port.port, 0);
         inputs[0].cancel_scope(&tag);
-        inputs[0].propagate_cancel(&tag)?;
         outputs[0].skip(&tag)?;
         Ok(true)
     }

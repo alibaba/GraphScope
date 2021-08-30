@@ -13,21 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-#[derive(Copy, Clone)]
-enum Magic {
-    Modulo(u64),
-    And(u64),
-}
-
-impl Magic {
-    #[inline(always)]
-    pub fn exec(&self, id: u64) -> u64 {
-        match self {
-            Magic::Modulo(x) => id % *x,
-            Magic::And(x) => id & *x,
-        }
-    }
-}
+use ahash::{AHashMap};
+use crate::Tag;
+use crate::tag::tools::map::TidyTagMap;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 pub use rob::*;
 
@@ -47,23 +37,33 @@ mod rob {
     use crate::graph::Port;
     use crate::progress::{EndSignal, Weight};
     use crate::{Data, Tag};
+    use crate::tag::tools::map::TidyTagMap;
+    use crate::communication::Magic;
+    use crate::communication::cancel::{MultiConsCancelPtr, CancelHandle, DynSingleConsCancelPtr};
+
 
     pub struct ExchangeMicroBatchPush<D: Data> {
         pub ch_info: ChannelInfo,
         pushes: Vec<BufferedPush<D, EventEmitPush<D>>>,
         routing: Box<dyn RouteFunction<D>>,
         magic: Magic,
+        cancel_handle: MultiConsCancelPtr,
     }
 
     impl<D: Data> ExchangeMicroBatchPush<D> {
-        pub fn new(
+        pub(crate) fn new(
             ch_info: ChannelInfo, pushes: Vec<BufferedPush<D, EventEmitPush<D>>>,
             routing: Box<dyn RouteFunction<D>>,
         ) -> Self {
             let len = pushes.len();
             let magic =
                 if len & (len - 1) == 0 { Magic::And(len as u64 - 1) } else { Magic::Modulo(len as u64) };
-            ExchangeMicroBatchPush { ch_info, pushes, routing, magic }
+            let cancel_table = MultiConsCancelPtr::new(ch_info.scope_level, len);
+            ExchangeMicroBatchPush { ch_info, pushes, routing, magic, cancel_handle: cancel_table }
+        }
+
+        pub(crate) fn get_cancel_handle(&self) -> CancelHandle {
+            CancelHandle::MC(self.cancel_handle.clone())
         }
 
         pub(crate) fn push_batch(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
@@ -184,7 +184,12 @@ mod rob {
             }
 
             let target = self.magic.exec(self.routing.route(&msg)?) as usize;
-            self.pushes[target].push(tag, msg)
+
+            if !self.cancel_handle.is_canceled(tag, target) {
+                self.pushes[target].push(tag, msg)
+            } else {
+                Ok(())
+            }
         }
 
         fn push_last(&mut self, msg: D, mut end: EndSignal) -> IOResult<()> {
@@ -207,19 +212,27 @@ mod rob {
 
         fn try_push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
             if self.pushes.len() == 1 {
-                self.pushes[0].try_push_iter(tag, iter)
+                if !self.cancel_handle.is_canceled(tag, 0) {
+                    self.pushes[0].try_push_iter(tag, iter)
+                } else {
+                    Ok(())
+                }
             } else {
                 match self.magic {
                     Magic::Modulo(x) => {
                         for next in iter {
-                            let idx = self.routing.route(&next)? % x;
-                            self.pushes[idx as usize].push(tag, next)?;
+                            let idx = (self.routing.route(&next)? % x) as usize;
+                            if !self.cancel_handle.is_canceled(tag, idx ) {
+                                self.pushes[idx].push(tag, next)?;
+                            }
                         }
                     }
                     Magic::And(x) => {
                         for next in iter {
-                            let idx = self.routing.route(&next)? & x;
-                            self.pushes[idx as usize].push(tag, next)?;
+                            let idx = (self.routing.route(&next)? & x) as usize;
+                            if !self.cancel_handle.is_canceled(tag, idx) {
+                                self.pushes[idx as usize].push(tag, next)?;
+                            }
                         }
                     }
                 }
@@ -256,15 +269,20 @@ mod rob {
         pushes: Vec<EventEmitPush<D>>,
         magic: Magic,
         has_cycles: Arc<AtomicBool>,
+        cancel_handle: DynSingleConsCancelPtr,
     }
 
     impl<D: Data> ExchangeByScopePush<D> {
         pub fn new(ch_info: ChannelInfo, cyclic: &Arc<AtomicBool>, pushes: Vec<EventEmitPush<D>>) -> Self {
             assert!(ch_info.scope_level > 0);
             let len = pushes.len();
-            let magic =
-                if len & (len - 1) == 0 { Magic::And(len as u64 - 1) } else { Magic::Modulo(len as u64) };
-            ExchangeByScopePush { ch_info, pushes, magic, has_cycles: cyclic.clone() }
+            let magic = Magic::new(len);
+            let cancel_handle = DynSingleConsCancelPtr::new(ch_info.scope_level, len);
+            ExchangeByScopePush { ch_info, pushes, magic, has_cycles: cyclic.clone(), cancel_handle }
+        }
+
+        pub(crate) fn get_cancel_handle(&self) -> CancelHandle {
+            CancelHandle::DSC(self.cancel_handle.clone())
         }
     }
 

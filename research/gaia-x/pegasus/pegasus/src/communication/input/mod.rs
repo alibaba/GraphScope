@@ -31,10 +31,6 @@ pub trait InputProxy: AsAny + Send {
 
     fn is_exhaust(&self) -> bool;
 
-    fn propagate_cancel(&self, tag: &Tag) -> IOResult<bool>;
-
-    fn propagate_cancel_uncheck(&self, tag: &Tag) -> IOResult<()>;
-
     fn cancel_scope(&self, tag: &Tag);
 }
 
@@ -51,10 +47,8 @@ use crate::event::emitter::EventEmitter;
 
 #[inline]
 pub(crate) fn new_input<D: Data>(
-    ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<D>>, event_emitter: &EventEmitter,
-    delta: MergedScopeDelta,
-) -> Box<dyn InputProxy> {
-    let input = InputHandle::new(ch_info, pull, event_emitter.clone(), delta);
+    ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<D>>, event_emitter: &EventEmitter) -> Box<dyn InputProxy> {
+    let input = InputHandle::new(ch_info, pull, event_emitter.clone());
     Box::new(RefWrapInput::wrap(input)) as Box<dyn InputProxy>
 }
 

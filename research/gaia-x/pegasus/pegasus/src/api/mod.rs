@@ -34,6 +34,17 @@ pub enum BranchEnum {
     Right,
 }
 
+
+pub struct EndScope {
+    pub port: usize,
+    end: EndSignal
+}
+
+pub struct CancelScope {
+    pub port: usize,
+    tag: Tag,
+}
+
 /// Represents a notification which always indicates that data of a scope in the input stream
 /// has exhaust;
 #[derive(Clone)]
