@@ -320,7 +320,7 @@ ENV PATH=${PATH}:/usr/local/go/bin
 ENV RUST_BACKTRACE=1
 
 # change user: graphscope
-RUN useradd -m graphscope \
+RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 USER graphscope
 WORKDIR /home/graphscope
