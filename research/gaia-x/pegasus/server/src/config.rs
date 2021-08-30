@@ -65,40 +65,39 @@ impl CommonConfig {
 pub fn combine_config(
     server_id: u64, host_config: Option<HostsConfig>, common_config: Option<CommonConfig>,
 ) -> Option<Configuration> {
-    // if let Some(host_config) = host_config {
-    //     let local_host = &host_config.peers[server_id as usize];
-    //     let ip = local_host.ip.to_owned();
-    //     let port = local_host.port;
-    //     let config = if let Some(common_config) = common_config {
-    //         let network_config = NetworkConfig {
-    //             server_id,
-    //             ip,
-    //             port,
-    //             nonblocking: common_config.nonblocking,
-    //             read_timeout_ms: common_config.read_timeout_ms,
-    //             write_timeout_ms: common_config.write_timeout_ms,
-    //             read_slab_size: common_config.read_slab_size,
-    //             no_delay: common_config.no_delay,
-    //             send_buffer: common_config.send_buffer,
-    //             heartbeat_sec: common_config.heartbeat_sec,
-    //             peers: Some(host_config.peers),
-    //         };
-    //         Configuration {
-    //             network: Some(network_config),
-    //             max_pool_size: common_config.max_pool_size,
-    //         }
-    //     } else {
-    //         let network_config =
-    //             NetworkConfig::with_default_config(server_id, ip, port, host_config.peers);
-    //         Configuration { network: Some(network_config), max_pool_size: None }
-    //     };
-    //     Some(config)
-    // } else {
-    //     if let Some(common_config) = common_config {
-    //         Some(Configuration { network: None, max_pool_size: common_config.max_pool_size })
-    //     } else {
-    //         None
-    //     }
-    // }
-    unimplemented!()
+    if let Some(host_config) = host_config {
+        let local_host = &host_config.peers[server_id as usize];
+        let ip = local_host.ip.to_owned();
+        let port = local_host.port;
+        let config = if let Some(common_config) = common_config {
+            let network_config = NetworkConfig {
+                server_id,
+                ip,
+                port,
+                nonblocking: common_config.nonblocking,
+                read_timeout_ms: common_config.read_timeout_ms,
+                write_timeout_ms: common_config.write_timeout_ms,
+                read_slab_size: common_config.read_slab_size,
+                no_delay: common_config.no_delay,
+                send_buffer: common_config.send_buffer,
+                heartbeat_sec: common_config.heartbeat_sec,
+                peers: Some(host_config.peers),
+            };
+            Configuration {
+                network: Some(network_config),
+                max_pool_size: common_config.max_pool_size,
+            }
+        } else {
+            let network_config =
+                NetworkConfig::with_default_config(server_id, ip, port, host_config.peers);
+            Configuration { network: Some(network_config), max_pool_size: None }
+        };
+        Some(config)
+    } else {
+        if let Some(common_config) = common_config {
+            Some(Configuration { network: None, max_pool_size: common_config.max_pool_size })
+        } else {
+            None
+        }
+    }
 }
