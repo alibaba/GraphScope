@@ -30,7 +30,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6-dongze
       options:
         --shm-size 4096m
     strategy:
@@ -43,8 +43,8 @@ jobs:
     - name: Cpp Format And Lint Check
       run: |
         # install clang-format
-        curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
-        chmod +x /usr/bin/clang-format
+        sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
+        sudo chmod +x /usr/bin/clang-format
 
         # run clang-format
         cd analytical_engine/
@@ -130,7 +130,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6-dongze
     steps:
     - name: Install Dependencies
       run: |
@@ -174,7 +174,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6-dongze
     steps:
     - uses: actions/checkout@v2.3.2
       with:
@@ -197,7 +197,7 @@ jobs:
 
     - name: build wheel
       run: |
-        sed -i 's/p.error/logger.warning/g' /usr/local/lib/python3.6/site-packages/auditwheel/main_repair.py
+        sudo sed -i 's/p.error/logger.warning/g' /usr/local/lib/python3.6/site-packages/auditwheel/main_repair.py
 
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64
         export WITH_LEARNING_ENGINE=ON
@@ -231,20 +231,17 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:dongze
 
     steps:
     - uses: actions/checkout@v2.3.2
 
     - name: Build
       run: |
-        mkdir /root/.m2
-        mv interactive_engine/deploy/docker/dockerfile/maven.settings.xml /root/.m2/settings.xml
         cd interactive_engine
         mvn clean package -DskipTests -Pjava-release --quiet
         cd ${GITHUB_WORKSPACE}
-        tar -cf manager.tar interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz \
-                            interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz
+        tar -cf manager.tar interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz
 
     - uses: actions/upload-artifact@v2
       with:
@@ -259,7 +256,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:dongze
       options:
         --shm-size 4096m
     strategy:
@@ -272,7 +269,7 @@ jobs:
 
     - name: Prepare environment for dataset
       run: |
-        export GS_TEST_DIR='/root/gstest'
+        export GS_TEST_DIR='/home/graphscope/gstest'
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
     - name: Prepare environment for deps
@@ -280,7 +277,7 @@ jobs:
         python3 -m pip install pytest-cov
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
-        cp -R -n opt/graphscope/* /usr/local/
+        sudo cp -R -n opt/graphscope/* /usr/local/
         ls -la /usr/local/bin/
         pushd /usr/local/dist/ && pip3 install ./*.whl && popd
         python3 -m pip install -r python/requirements.txt
@@ -298,7 +295,7 @@ jobs:
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
-        export GS_TEST_DIR='/root/gstest'
+        export GS_TEST_DIR='/home/graphscope/gstest'
         cd python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc \
                           --cov-report=xml --cov-report=term --exitfirst -s -v tests/unittest/
@@ -318,7 +315,7 @@ jobs:
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
-        export GS_TEST_DIR='/root/gstest'
+        export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests \
                           --ignore=python/graphscope/nx/tests/algorithms/forward
 
@@ -345,7 +342,7 @@ jobs:
       with:
         path: |
           ~/.cache/pip
-          /root/.cache/pip
+          /home/graphscope/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
@@ -362,13 +359,10 @@ jobs:
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:dongze
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                          --network=host \
-                          -f ./manager.Dockerfile .
         popd
         python3 -m pip install -r python/requirements.txt --user
         python3 -m pip install -r python/requirements-dev.txt --user
@@ -381,7 +375,6 @@ jobs:
       env:
         CHANGE_MINIKUBE_NONE_USER: true
         GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
-        GIE_MANAGER_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
       run: |
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
@@ -396,8 +389,7 @@ jobs:
         curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
         cd charts
         helm install graphscope --set coordinator.image.tag=${{ github.sha }} \
-                                --set engines.gae.image.tag=${{ github.sha }} \
-                                --set engines.gie.graph_manager.image.tag=${{ github.sha }} \
+                                --set engines.image.tag=${{ github.sha }} \
                                 --set vineyard.image.tag=${{ github.sha }} \
                                 --set imagePullPolicy=IfNotPresent \
                                 ./graphscope
@@ -439,7 +431,7 @@ jobs:
       with:
         path: |
           ~/.cache/pip
-          /root/.cache/pip
+          /home/graphscope/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
@@ -461,13 +453,10 @@ jobs:
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:dongze
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                          --network=host \
-                          -f ./manager.Dockerfile .
         popd
         python3 -m pip install -r python/requirements.txt
         python3 -m pip install -r python/requirements-dev.txt
@@ -478,15 +467,12 @@ jobs:
       run: |
         export PYTHONPATH=${GITHUB_WORKSPACE}/python
         cd interactive_engine/tests
-        ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                           registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
-        ./function_test.sh 8112 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-                           registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
+        ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
+        ./function_test.sh 8112 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
     - name: Clean
       if: always()
       run: |
-        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
 
   build-gss:
     # Note that this step is running in a container, and github will start the container by `docker run balabala`,
@@ -496,7 +482,7 @@ jobs:
     defaults:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
-    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
+    container: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6-dongze
     steps:
 
     - name: Install Dependencies
@@ -576,7 +562,7 @@ jobs:
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
         tar -zxf ./gss-${{ github.sha }}/giectl.tar.gz
 
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:dongze
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope-store.Dockerfile .
@@ -662,9 +648,6 @@ jobs:
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                          --network=host \
-                          -f ./manager.Dockerfile .
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope-store.Dockerfile .
@@ -677,11 +660,6 @@ jobs:
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest
 
-        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
-                        registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }}
-        sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest
-
         sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                         registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest
         sudo docker push registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }}
@@ -691,8 +669,6 @@ jobs:
       if: always()
       run: |
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest \
-            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:latest \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:latest \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} \
             registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha}} || true

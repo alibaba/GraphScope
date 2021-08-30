@@ -46,18 +46,6 @@ ENV PATH=${PATH}:/usr/local/bin
 ENV CC=/opt/rh/devtoolset-7/root/usr/bin/gcc
 ENV CXX=/opt/rh/devtoolset-7/root/usr/bin/g++
 
-# rust & cargo registry
-RUN wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
-    curl -sf -L https://static.rust-lang.org/rustup.sh | \
-        sh -s -- -y --profile minimal --default-toolchain 1.54.0 && \
-    echo "source ~/.cargo/env" >> ~/.bashrc
-
-# zetcd
-RUN export PATH=/usr/local/go/bin:${PATH} && \
-  go get github.com/etcd-io/zetcd/cmd/zetcd && \
-  cp /root/go/bin/zetcd /usr/local/bin/zetcd
-
 # apache arrow v1.0.1
 RUN cd /tmp && \
     wget https://github.com/apache/arrow/archive/apache-arrow-1.0.1.tar.gz && \
@@ -330,3 +318,9 @@ ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 ENV PATH=${PATH}:/usr/local/go/bin
 ENV RUST_BACKTRACE=1
+
+# change user: graphscope
+RUN useradd -m graphscope \
+    && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+USER graphscope
+WORKDIR /home/graphscope

@@ -56,33 +56,17 @@ engines:
   num_workers: 2
   # Available options of log_level: INFO, DEBUG
   log_level: INFO
-  gae:
-    image:
-      name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
-      # Overrides the image tag whose default is the chart appVersion.
-      tag: ""
-      resources:
-    resources:
-      requests:
-        cpu: 0.5
-        memory: 4Gi
-      limits:
-        cpu: 0.5
-        memory: 4Gi
-  gie:
-    graph_manager:
-      image:
-        name: registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager
-        # Overrides the image tag whose default is the chart appVersion.
-        tag: ""
-      resources:
-        requests:
-          cpu: 1.0
-          memory: 4Gi
-        limits:
-          cpu: 1.0
-          memory: 4Gi
-
+  image:
+    name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+  resources:
+    requests:
+      cpu: 0.5
+      memory: 4Gi
+    limits:
+      cpu: 0.5
+      memory: 4Gi
 
 vineyard:
   # When `vineyard.daemonset` is set to the Helm release name, the coordinator will

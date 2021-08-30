@@ -66,22 +66,16 @@ spec:
         - "--preemptive"
         - {{ .Values.preemptive | quote }}
         - "--k8s_gs_image"
-        {{- if .Values.engines.gae.image.tag }}
-        - "{{ .Values.engines.gae.image.name }}:{{ .Values.engines.gae.image.tag }}"
+        {{- if .Values.engines.image.tag }}
+        - "{{ .Values.engines.image.name }}:{{ .Values.engines.image.tag }}"
         {{- else }}
-        - "{{ .Values.engines.gae.image.name }}:{{ .Chart.AppVersion }}"
+        - "{{ .Values.engines.image.name }}:{{ .Chart.AppVersion }}"
         {{- end }}
         - "--k8s_etcd_image"
         {{- if .Values.etcd.image.tag }}
         - "{{ .Values.etcd.image.name }}:{{ .Values.etcd.image.tag }}"
         {{- else }}
         - "{{ .Values.etcd.image.name }}:{{ .Chart.AppVersion }}"
-        {{- end }}
-        - "--k8s_gie_graph_manager_image"
-        {{- if .Values.engines.gie.graph_manager.image.tag }}
-        - "{{ .Values.engines.gie.graph_manager.image.name}}:{{ .Values.engines.gie.graph_manager.image.tag }}"
-        {{- else }}
-        - "{{ .Values.engines.gie.graph_manager.image.name}}:{{ .Chart.AppVersion }}"
         {{- end }}
         - "--k8s_image_pull_policy"
         - {{ .Values.imagePullPolicy | quote }}
@@ -96,10 +90,6 @@ spec:
         - {{ .Values.etcd.resources.requests.cpu | quote }}
         - "--k8s_etcd_mem"
         - {{ .Values.etcd.resources.requests.memory }}
-        - "--k8s_gie_graph_manager_cpu"
-        - {{ .Values.engines.gie.graph_manager.resources.requests.cpu | quote }}
-        - "--k8s_gie_graph_manager_mem"
-        - {{ .Values.engines.gie.graph_manager.resources.requests.memory }}
         - "--k8s_vineyard_daemonset"
         {{- if .Values.vineyard.daemonset }}
         - {{ .Values.vineyard.daemonset }}
@@ -113,9 +103,9 @@ spec:
         - "--vineyard_shared_mem"
         - {{ .Values.vineyard.shared_mem }}
         - "--k8s_engine_cpu"
-        - {{ .Values.engines.gae.resources.requests.cpu | quote }}
+        - {{ .Values.engines.resources.requests.cpu | quote }}
         - "--k8s_engine_mem"
-        - {{ .Values.engines.gae.resources.requests.memory }}
+        - {{ .Values.engines.resources.requests.memory }}
         - '--k8s_volumes'
         {{- if .Values.volumes.enabled }}
         - {{ mustToJson .Values.volumes.items | quote}}
