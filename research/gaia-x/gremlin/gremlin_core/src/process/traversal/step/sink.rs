@@ -18,6 +18,7 @@ use crate::process::traversal::traverser::Traverser;
 use crate::result_process::result_to_pb;
 use pegasus::api::function::FnResult;
 use prost::Message;
+use std::collections::HashMap;
 
 pub struct TraverserSinkEncoder;
 
@@ -27,5 +28,17 @@ impl EncodeFunction<Traverser> for TraverserSinkEncoder {
         let mut bytes = vec![];
         result_pb.encode_raw(&mut bytes);
         Ok(bytes)
+    }
+}
+
+impl EncodeFunction<HashMap<Traverser, Vec<Traverser>>> for TraverserSinkEncoder {
+    fn encode(&self, _data: HashMap<Traverser, Vec<Traverser>>) -> FnResult<Vec<u8>> {
+        unimplemented!()
+    }
+}
+
+impl EncodeFunction<HashMap<Traverser, i32>> for TraverserSinkEncoder {
+    fn encode(&self, _data: HashMap<Traverser, i32>) -> FnResult<Vec<u8>> {
+        unimplemented!()
     }
 }

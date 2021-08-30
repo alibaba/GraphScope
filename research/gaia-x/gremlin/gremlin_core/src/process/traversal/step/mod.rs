@@ -75,7 +75,7 @@ use bit_set::BitSet;
 pub use filter::FilterFuncGen;
 pub use flat_map::FlatMapFuncGen;
 // pub use fold::FoldFunctionGen;
-// pub use group_by::GroupFunctionGen;
+pub use group_by::KeyFunctionGen;
 pub use map::MapFuncGen;
 pub use map::ResultProperty;
 pub use order_by::CompareFunctionGen;
