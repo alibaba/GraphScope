@@ -35,7 +35,7 @@ RUN cd /tmp && \
     pip3 install dist/* && \
     cd /tmp && \
     rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
-    useradd -m graphscope && \
+    useradd -m graphscope -u 1001 && \
     echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
     cp -r ~/.cargo /home/graphscope/.cargo && \
     chown -R graphscope:graphscope /home/graphscope/.cargo

@@ -160,6 +160,7 @@ jobs:
         ./exec.sh cargo build --all --release
         cd ${GITHUB_WORKSPACE}
         tar -cf gie.tar interactive_engine/src/executor/target/release/executor \
+                        interactive_engine/src/executor/target/release/gaia_executor \
                         interactive_engine/src/executor/store/log4rs.yml \
                         interactive_engine/bin \
                         interactive_engine/conf \
