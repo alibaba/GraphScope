@@ -16,6 +16,8 @@
 package com.alibaba.maxgraph.v2.frontend;
 
 import com.alibaba.maxgraph.proto.v2.*;
+import com.alibaba.maxgraph.proto.v2.CommitDataLoadRequest;
+import com.alibaba.maxgraph.proto.v2.PrepareDataLoadRequest;
 import com.alibaba.maxgraph.v2.common.BatchId;
 import com.alibaba.maxgraph.v2.common.CompletionCallback;
 import com.alibaba.maxgraph.v2.common.MetaService;
@@ -31,18 +33,19 @@ import com.alibaba.maxgraph.v2.common.operation.dml.OverwriteEdgeOperation;
 import com.alibaba.maxgraph.v2.common.operation.dml.OverwriteVertexOperation;
 import com.alibaba.maxgraph.v2.common.rpc.RoleClients;
 import com.alibaba.maxgraph.v2.common.schema.*;
+import com.alibaba.maxgraph.v2.common.schema.ddl.DdlExecutors;
+import com.alibaba.maxgraph.v2.common.schema.request.*;
 import com.alibaba.maxgraph.v2.common.util.PkHashUtils;
 import com.alibaba.maxgraph.v2.common.util.UuidUtils;
 import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
 import com.alibaba.maxgraph.v2.sdk.DataLoadTarget;
+import com.google.protobuf.InvalidProtocolBufferException;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -52,24 +55,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ClientService extends ClientGrpc.ClientImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientService.class);
 
-    private static final long COMMIT_TIMEOUT_SEC = 30;
-
-    private RealtimeWriter realtimeWriter;
     private SnapshotCache snapshotCache;
     private MetricsAggregator metricsAggregator;
     private StoreIngestor storeIngestor;
     private MetaService metaService;
-    private MaxGraphWriter writer;
+    private BatchDdlClient batchDdlClient;
 
-    public ClientService(RealtimeWriter realtimeWriter, SnapshotCache snapshotCache,
-                         MetricsAggregator metricsAggregator, StoreIngestor storeIngestor, MetaService metaService,
-                         RoleClients<QueryStoreRpcClient> queryStoreClients, MaxGraphWriter writer) {
-        this.realtimeWriter = realtimeWriter;
+    public ClientService(SnapshotCache snapshotCache, MetricsAggregator metricsAggregator, StoreIngestor storeIngestor,
+                         MetaService metaService, BatchDdlClient batchDdlClient) {
         this.snapshotCache = snapshotCache;
         this.metricsAggregator = metricsAggregator;
         this.storeIngestor = storeIngestor;
         this.metaService = metaService;
-        this.writer = writer;
+        this.batchDdlClient = batchDdlClient;
     }
 
     @Override
@@ -81,81 +79,158 @@ public class ClientService extends ClientGrpc.ClientImplBase {
 
     @Override
     public void prepareDataLoad(PrepareDataLoadRequest request, StreamObserver<PrepareDataLoadResponse> responseObserver) {
+        DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
         for (DataLoadTargetPb dataLoadTargetPb : request.getDataLoadTargetsList()) {
             DataLoadTarget dataLoadTarget = DataLoadTarget.parseProto(dataLoadTargetPb);
-            ((MaxGraphWriterImpl)this.writer).prepareDataLoad(dataLoadTarget);
+            builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.PrepareDataLoadRequest(dataLoadTarget));
         }
+        DdlRequestBatch batch = builder.build();
         try {
-            this.writer.commit().get(COMMIT_TIMEOUT_SEC, TimeUnit.SECONDS);
+            long snapshotId = this.batchDdlClient.batchDdl(batch);
+            this.snapshotCache.addListener(snapshotId, () -> {
+                responseObserver.onNext(PrepareDataLoadResponse.newBuilder().setGraphDef(
+                        this.snapshotCache.getSnapshotWithSchema().getGraphDef().toProto()).build());
+                responseObserver.onCompleted();
+            });
         } catch (Exception e) {
-            logger.error("commit prepare data load failed", e);
-            throw new RuntimeException(e);
+            logger.error("prepare data load failed", e);
+            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
-        GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
-        responseObserver.onNext(PrepareDataLoadResponse.newBuilder().setGraphDef(graphDef.toProto()).build());
-        responseObserver.onCompleted();
     }
 
     @Override
     public void commitDataLoad(CommitDataLoadRequest request, StreamObserver<CommitDataLoadResponse> responseObserver) {
+        DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
         Map<Long, DataLoadTargetPb> tableToTarget = request.getTableToTargetMap();
         tableToTarget.forEach((tableId, targetPb) -> {
             DataLoadTarget dataLoadTarget = DataLoadTarget.parseProto(targetPb);
-            ((MaxGraphWriterImpl)this.writer).commitDataLoad(dataLoadTarget, tableId);
+            builder.addDdlRequest(new com.alibaba.maxgraph.v2.common.schema.request.CommitDataLoadRequest(dataLoadTarget, tableId));
         });
+        DdlRequestBatch batch = builder.build();
         try {
-            this.writer.commit().get(COMMIT_TIMEOUT_SEC, TimeUnit.SECONDS);
+            long snapshotId = this.batchDdlClient.batchDdl(batch);
+            this.snapshotCache.addListener(snapshotId, () -> {
+                responseObserver.onNext(CommitDataLoadResponse.newBuilder().build());
+                responseObserver.onCompleted();
+            });
         } catch (Exception e) {
-            logger.error("commit prepare data load failed", e);
-            throw new RuntimeException(e);
+            logger.error("commit data load failed", e);
+            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
-        responseObserver.onNext(CommitDataLoadResponse.newBuilder().build());
-        responseObserver.onCompleted();
     }
 
     @Override
     public void loadJsonSchema(LoadJsonSchemaRequest request, StreamObserver<LoadJsonSchemaResponse> responseObserver) {
-        String schemaJson = request.getSchemaJson();
-        GraphSchema graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
-        this.writer.setAutoCommit(false);
-        for (VertexType vertexType : graphSchema.getVertexTypes()) {
-            this.writer.createVertexType(vertexType.getLabel(), vertexType.getPropertyList(), vertexType.getPrimaryKeyConstraint().getPrimaryKeyList());
-        }
-        for (EdgeType edgeType : graphSchema.getEdgeTypes()) {
-            this.writer.createEdgeType(edgeType.getLabel(), edgeType.getPropertyList(), edgeType.getRelationList());
-        }
         try {
-            this.writer.commit().get(COMMIT_TIMEOUT_SEC, TimeUnit.SECONDS);
+            String schemaJson = request.getSchemaJson();
+            GraphSchema graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
+            DdlRequestBatch.Builder ddlBatchBuilder = DdlRequestBatch.newBuilder();
+            for (VertexType vertexType : graphSchema.getVertexTypes()) {
+                String label = vertexType.getLabel();
+                List<String> primaryKeyList = vertexType.getPrimaryKeyConstraint().getPrimaryKeyList();
+                List<GraphProperty> propertyList = vertexType.getPropertyList();
+                TypeDef.Builder typeDefBuilder = TypeDef.newBuilder();
+                typeDefBuilder.setLabel(label);
+                typeDefBuilder.setTypeEnum(TypeEnum.VERTEX);
+                Set<String> primaryKeys = new HashSet<>(primaryKeyList);
+                for (GraphProperty graphProperty : propertyList) {
+                    PropertyDef.Builder propertyBuilder = PropertyDef.newBuilder();
+                    String propertyName = graphProperty.getName();
+                    DataType dataType = graphProperty.getDataType();
+                    propertyBuilder.setName(propertyName)
+                            .setDataType(dataType)
+                            .setComment(graphProperty.getComment());
+                    if (primaryKeys.contains(propertyName)) {
+                        propertyBuilder.setPk(true);
+                    }
+                    if (graphProperty.hasDefaultValue()) {
+                        Object defaultValue = graphProperty.getDefaultValue();
+                        propertyBuilder.setDefaultValue(new PropertyValue(dataType, defaultValue));
+                    }
+                    typeDefBuilder.addPropertyDef(propertyBuilder.build());
+                }
+                CreateVertexTypeRequest ddlRequest = new CreateVertexTypeRequest(typeDefBuilder.build());
+                ddlBatchBuilder.addDdlRequest(ddlRequest);
+            }
+            for (EdgeType edgeType : graphSchema.getEdgeTypes()) {
+                String label = edgeType.getLabel();
+                List<GraphProperty> propertyList = edgeType.getPropertyList();
+                List<EdgeRelation> relationList = edgeType.getRelationList();
+
+                TypeDef.Builder typeDefBuilder = TypeDef.newBuilder();
+                typeDefBuilder.setLabel(label);
+                typeDefBuilder.setTypeEnum(TypeEnum.EDGE);
+                for (GraphProperty graphProperty : propertyList) {
+                    PropertyDef.Builder propertyBuilder = PropertyDef.newBuilder();
+                    String propertyName = graphProperty.getName();
+                    DataType dataType = graphProperty.getDataType();
+                    propertyBuilder.setName(propertyName)
+                            .setDataType(dataType)
+                            .setComment(graphProperty.getComment());
+
+                    if (graphProperty.hasDefaultValue()) {
+                        Object defaultValue = graphProperty.getDefaultValue();
+                        propertyBuilder.setDefaultValue(new PropertyValue(dataType, defaultValue));
+                    }
+                    typeDefBuilder.addPropertyDef(propertyBuilder.build());
+                }
+                CreateEdgeTypeRequest createEdgeTypeRequest = new CreateEdgeTypeRequest(typeDefBuilder.build());
+                ddlBatchBuilder.addDdlRequest(createEdgeTypeRequest);
+                for (EdgeRelation edgeRelation : relationList) {
+                    AddEdgeKindRequest addEdgeKindRequest = new AddEdgeKindRequest(EdgeKind.newBuilder()
+                            .setEdgeLabel(label)
+                            .setSrcVertexLabel(edgeRelation.getSource().getLabel())
+                            .setDstVertexLabel(edgeRelation.getTarget().getLabel())
+                            .build());
+                    ddlBatchBuilder.addDdlRequest(addEdgeKindRequest);
+                }
+            }
+            long snapshotId = this.batchDdlClient.batchDdl(ddlBatchBuilder.build());
+            this.snapshotCache.addListener(snapshotId, () -> {
+                responseObserver.onNext(LoadJsonSchemaResponse.newBuilder().setGraphDef(
+                        this.snapshotCache.getSnapshotWithSchema().getGraphDef().toProto()).build());
+                responseObserver.onCompleted();
+            });
         } catch (Exception e) {
             logger.error("commit failed", e);
-            throw new RuntimeException(e);
+            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
-        GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
-        responseObserver.onNext(LoadJsonSchemaResponse.newBuilder().setGraphDef(graphDef.toProto()).build());
-        responseObserver.onCompleted();
     }
 
     @Override
     public void dropSchema(DropSchemaRequest request, StreamObserver<DropSchemaResponse> responseObserver) {
-        GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
-        for (EdgeType edgeType : graphDef.getEdgeTypes()) {
-            String label = edgeType.getLabel();
-            for (EdgeRelation relation : edgeType.getRelationList()) {
-                this.writer.dropEdgeRelation(label, relation.getSource().getLabel(), relation.getTarget().getLabel());
-            }
-            this.writer.dropEdgeType(label);
-        }
-        for (VertexType vertexType : graphDef.getVertexTypes()) {
-            this.writer.dropVertexType(vertexType.getLabel());
-        }
         try {
-            this.writer.commit().get(COMMIT_TIMEOUT_SEC, TimeUnit.SECONDS);
+            DdlRequestBatch.Builder ddlBatchBuilder = DdlRequestBatch.newBuilder();
+            GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
+            for (EdgeType edgeType : graphDef.getEdgeTypes()) {
+                String label = edgeType.getLabel();
+                for (EdgeRelation relation : edgeType.getRelationList()) {
+                    String sourceLabel = relation.getSource().getLabel();
+                    String destLabel = relation.getTarget().getLabel();
+                    EdgeKind edgeKind = EdgeKind.newBuilder().setEdgeLabel(label)
+                            .setSrcVertexLabel(sourceLabel)
+                            .setDstVertexLabel(destLabel)
+                            .build();
+                    RemoveEdgeKindRequest removeEdgeKindRequest = new RemoveEdgeKindRequest(edgeKind);
+                    ddlBatchBuilder.addDdlRequest(removeEdgeKindRequest);
+                }
+                DropEdgeTypeRequest dropEdgeTypeRequest = new DropEdgeTypeRequest(label);
+                ddlBatchBuilder.addDdlRequest(dropEdgeTypeRequest);
+            }
+            for (VertexType vertexType : graphDef.getVertexTypes()) {
+                DropVertexTypeRequest dropVertexTypeRequest = new DropVertexTypeRequest(vertexType.getLabel());
+                ddlBatchBuilder.addDdlRequest(dropVertexTypeRequest);
+            }
+            long snapshotId = this.batchDdlClient.batchDdl(ddlBatchBuilder.build());
+            this.snapshotCache.addListener(snapshotId, () -> {
+                responseObserver.onNext(DropSchemaResponse.newBuilder().setGraphDef(
+                        this.snapshotCache.getSnapshotWithSchema().getGraphDef().toProto()).build());
+                responseObserver.onCompleted();
+            });
         } catch (Exception e) {
             logger.error("drop schema commit failed", e);
-            throw new RuntimeException(e);
+            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
-        responseObserver.onNext(DropSchemaResponse.newBuilder().build());
-        responseObserver.onCompleted();
     }
 
     @Override
@@ -174,105 +249,6 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                 responseObserver.onError(t);
             }
         });
-
-    }
-
-    @Override
-    public void addVertices(AddVerticesRequest request, StreamObserver<AddVerticesResponse> responseObserver) {
-        GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
-        String session = request.getSession();
-        OperationBatch.Builder batchBuilder = OperationBatch.newBuilder();
-        for (VertexDataPb vertexDataPb : request.getDataListList()) {
-            String label = vertexDataPb.getLabel();
-            Map<String, String> properties = vertexDataPb.getPropertiesMap();
-            TypeDef typeDef = graphDef.getTypeDef(label);
-            LabelId labelId = typeDef.getTypeLabelId();
-            Map<Integer, PropertyValue> operationProperties = buildPropertiesMap(typeDef, properties);
-            List<Integer> pkIdxs = typeDef.getPkIdxs();
-            List<PropertyDef> propertyDefs = typeDef.getProperties();
-            long hashId = getHashId(labelId.getId(), operationProperties, pkIdxs, propertyDefs);
-            batchBuilder.addOperation(new OverwriteVertexOperation(new VertexId(hashId), labelId, operationProperties));
-        }
-        BatchId batchId = this.realtimeWriter.writeOperations(UuidUtils.getBase64UUIDString(), session,
-                batchBuilder.build());
-        responseObserver.onNext(AddVerticesResponse.newBuilder().setSnapshotId(batchId.getSnapshotId()).build());
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void addEdges(AddEdgesRequest request, StreamObserver<AddEdgesResponse> responseObserver) {
-        GraphDef graphDef = this.snapshotCache.getSnapshotWithSchema().getGraphDef();
-        String session = request.getSession();
-        long innerId = System.nanoTime();
-        OperationBatch.Builder batchBuilder = OperationBatch.newBuilder();
-        for (EdgeDataPb edgeDataPb : request.getDataListList()) {
-            String label = edgeDataPb.getLabel();
-            String srcLabel = edgeDataPb.getSrcLabel();
-            String dstLabel = edgeDataPb.getDstLabel();
-            Map<String, String> srcPkMap = edgeDataPb.getSrcPkMap();
-            Map<String, String> dstPkMap = edgeDataPb.getDstPkMap();
-            Map<String, String> properties = edgeDataPb.getPropertiesMap();
-
-            TypeDef typeDef = graphDef.getTypeDef(label);
-            LabelId labelId = typeDef.getTypeLabelId();
-            TypeDef srcTypeDef = graphDef.getTypeDef(srcLabel);
-            LabelId srcLabelId = srcTypeDef.getTypeLabelId();
-            TypeDef dstTypeDef = graphDef.getTypeDef(dstLabel);
-            LabelId dstLabelId = dstTypeDef.getTypeLabelId();
-            long srcHashId = getHashId(srcLabelId.getId(), buildPropertiesMap(srcTypeDef, srcPkMap),
-                    srcTypeDef.getPkIdxs(), srcTypeDef.getProperties());
-            long dstHashId = getHashId(dstLabelId.getId(), buildPropertiesMap(dstTypeDef, dstPkMap),
-                    dstTypeDef.getPkIdxs(), dstTypeDef.getProperties());
-            EdgeId edgeId = new EdgeId(new VertexId(srcHashId), new VertexId(dstHashId), innerId);
-            innerId++;
-            EdgeKind edgeKind = EdgeKind.newBuilder()
-                    .setEdgeLabelId(labelId)
-                    .setSrcVertexLabelId(srcLabelId)
-                    .setDstVertexLabelId(dstLabelId)
-                    .build();
-            Map<Integer, PropertyValue> operationProperties = buildPropertiesMap(typeDef, properties);
-            batchBuilder.addOperation(new OverwriteEdgeOperation(edgeId, edgeKind, operationProperties, true));
-            batchBuilder.addOperation(new OverwriteEdgeOperation(edgeId, edgeKind, operationProperties, false));
-        }
-        BatchId batchId = this.realtimeWriter.writeOperations(UuidUtils.getBase64UUIDString(), session,
-                batchBuilder.build());
-        responseObserver.onNext(AddEdgesResponse.newBuilder().setSnapshotId(batchId.getSnapshotId()).build());
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void remoteFlush(RemoteFlushRequest request, StreamObserver<RemoteFlushResponse> responseObserver) {
-        long snapshotId = request.getSnapshotId();
-        this.realtimeWriter.waitForSnapshotCompletion(snapshotId);
-        responseObserver.onNext(RemoteFlushResponse.newBuilder().build());
-        responseObserver.onCompleted();
-    }
-
-    private long getHashId(int labelId, Map<Integer, PropertyValue> operationProperties, List<Integer> pkIdxs,
-                           List<PropertyDef> propertyDefs) {
-        List<byte[]> pks = new ArrayList<>(pkIdxs.size());
-        for (int pkIdx : pkIdxs) {
-            int propertyId = propertyDefs.get(pkIdx).getId();
-            byte[] valBytes = operationProperties.get(propertyId).getValBytes();
-            pks.add(valBytes);
-        }
-        return PkHashUtils.hash(labelId, pks);
-    }
-
-    private Map<Integer, PropertyValue> buildPropertiesMap(TypeDef typeDef, Map<String, String> properties) {
-        Map<Integer, PropertyValue> operationProperties = new HashMap<>(properties.size());
-        properties.forEach((propertyName, valString) -> {
-            GraphProperty propertyDef = typeDef.getProperty(propertyName);
-            if (propertyDef == null) {
-                throw new PropertyDefNotFoundException("property [" + propertyName + "] not found in [" +
-                        typeDef.getLabel() + "]");
-            }
-            int id = propertyDef.getId();
-            DataType dataType = propertyDef.getDataType();
-            PropertyValue propertyValue = new PropertyValue(dataType, valString);
-            operationProperties.put(id, propertyValue);
-        });
-        return operationProperties;
     }
 
     @Override

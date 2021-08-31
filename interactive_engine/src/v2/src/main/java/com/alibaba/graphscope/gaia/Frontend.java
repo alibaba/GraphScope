@@ -27,7 +27,6 @@ import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.discovery.*;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
-import com.alibaba.maxgraph.v2.common.frontend.api.graph.MaxGraphWriter;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsAggregator;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectClient;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectService;
@@ -53,7 +52,6 @@ public class Frontend extends NodeBase {
     private NodeDiscovery discovery;
     private ChannelManager channelManager;
     private MetaService metaService;
-    private RealtimeWriter realtimeWriter;
     private RpcServer rpcServer;
     private MaxGraphServer maxGraphServer;
 
@@ -74,8 +72,6 @@ public class Frontend extends NodeBase {
         MetricsCollector metricsCollector = new MetricsCollector(configs);
         RoleClients<IngestorWriteClient> ingestorWriteClients = new RoleClients<>(this.channelManager,
                 RoleType.INGESTOR, IngestorWriteClient::new);
-        this.realtimeWriter = new RealtimeWriter(this.metaService, snapshotCache, ingestorWriteClients,
-                metricsCollector);
         FrontendSnapshotService frontendSnapshotService = new FrontendSnapshotService(snapshotCache);
         RoleClients<MetricsCollectClient> frontendMetricsCollectClients = new RoleClients<>(this.channelManager,
                 RoleType.FRONTEND, MetricsCollectClient::new);
@@ -90,11 +86,10 @@ public class Frontend extends NodeBase {
         SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
                 RoleType.COORDINATOR, SchemaClient::new));
         DdlExecutors ddlExecutors = new DdlExecutors();
-        MaxGraphWriter writer = new MaxGraphWriterImpl(this.realtimeWriter, schemaWriter, ddlExecutors,
-                snapshotCache, "schema", false, null);
-        ClientService clientService = new ClientService(this.realtimeWriter, snapshotCache, metricsAggregator,
-                storeIngestClients, this.metaService, queryStoreClients, writer);
-        ClientDdlService clientDdlService = new ClientDdlService(schemaWriter, snapshotCache, ddlExecutors);
+        BatchDdlClient batchDdlClient = new BatchDdlClient(ddlExecutors, snapshotCache, schemaWriter);
+        ClientService clientService = new ClientService(snapshotCache, metricsAggregator,
+                storeIngestClients, this.metaService, batchDdlClient);
+        ClientDdlService clientDdlService = new ClientDdlService(snapshotCache, batchDdlClient);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
 
         this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
