@@ -27,8 +27,8 @@ import os
 import pickle
 import queue
 import random
+import re
 import signal
-import socket
 import string
 import sys
 import threading
@@ -70,6 +70,10 @@ from gscoordinator.object_manager import InteractiveQueryManager
 from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import LibMeta
 from gscoordinator.object_manager import ObjectManager
+from gscoordinator.utils import COORDINATOR_HOME
+from gscoordinator.utils import GRAPHSCOPE_HOME
+from gscoordinator.utils import WORKSPACE
+from gscoordinator.utils import check_gremlin_server_ready
 from gscoordinator.utils import compile_app
 from gscoordinator.utils import compile_graph_frame
 from gscoordinator.utils import create_single_op_dag
@@ -82,21 +86,8 @@ from gscoordinator.utils import str2bool
 from gscoordinator.utils import to_maxgraph_schema
 from gscoordinator.version import __version__
 
-COORDINATOR_HOME = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
-
-WORKSPACE = "/tmp/gs"
-DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
-ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
-ANALYTICAL_ENGINE_PATH = os.path.join(ANALYTICAL_ENGINE_HOME, "build", "grape_engine")
-TEMPLATE_DIR = os.path.join(COORDINATOR_HOME, "gscoordinator", "template")
-BUILTIN_APP_RESOURCE_PATH = os.path.join(
-    COORDINATOR_HOME, "gscoordinator", "builtin/app/builtin_app.gar"
-)
+# endpoint of prelaunch analytical engine
 GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
-
-ENGINE_CONTAINER = "engine"
-VINEYARD_CONTAINER = "vineyard"
 
 # 2 GB
 GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
@@ -141,6 +132,7 @@ class CoordinatorServiceServicer(
                 raise RuntimeError("Coordinator Launching failed.")
 
         self._launcher_type = self._launcher.type()
+        self._instance_id = self._launcher.instance_id
         # string of a list of hosts, comma separated
         self._engine_hosts = self._launcher.hosts
         self._k8s_namespace = ""
@@ -232,7 +224,11 @@ class CoordinatorServiceServicer(
         self._key_to_op = dict()
         # dict of op_def_pb2.OpResult
         self._op_result_pool = dict()
-        self._udf_app_workspace = os.path.join(WORKSPACE, self._session_id)
+
+        self._udf_app_workspace = os.path.join(
+            WORKSPACE, self._instance_id, self._session_id
+        )
+        self._launcher.set_session_workspace(self._session_id)
 
         # Session connected, fetch logs via gRPC.
         self._streaming_logs = True
@@ -714,92 +710,94 @@ class CoordinatorServiceServicer(
         return self._make_response(message_pb2.CloseSessionResponse, error_codes_pb2.OK)
 
     def _create_interactive_instance(self, op: op_def_pb2.OpDef):
+        def _match_frontend_endpoint(pattern, lines):
+            for line in lines.split("\n"):
+                rlt = re.findall(pattern, line)
+                if rlt:
+                    return rlt[0]
+            return ""
+
+        # vineyard object id of graph
         object_id = op.attr[types_pb2.VINEYARD_ID].i
-        schema_path = op.attr[types_pb2.SCHEMA_PATH].s.decode()
-        gremlin_server_cpu = op.attr[types_pb2.GIE_GREMLIN_SERVER_CPU].f
-        gremlin_server_mem = op.attr[types_pb2.GIE_GREMLIN_SERVER_MEM].s.decode()
-        if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in op.attr:
-            engine_params = json.loads(
-                op.attr[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
-            )
-        else:
-            engine_params = {}
         enable_gaia = op.attr[types_pb2.GIE_ENABLE_GAIA].b
-        with open(schema_path) as file:
-            schema_json = file.read()
-
-        params = {
-            "graphName": "%s" % object_id,
-            "zookeeperIp": socket.gethostbyname(socket.gethostname()),
-        }
-
-        if self._launcher_type == types_pb2.K8S:
-            post_url = "{0}/instance/create".format(self._launcher.get_manager_host())
-            params.update(
-                {
-                    "schemaJson": schema_json,
-                    "podNameList": self._engine_hosts,
-                    "containerName": ENGINE_CONTAINER,
-                    "preemptive": str(self._launcher.preemptive),
-                    "gremlinServerCpu": str(gremlin_server_cpu),
-                    "gremlinServerMem": gremlin_server_mem,
-                    "enableGaia": str(enable_gaia),
-                }
-            )
-            engine_params = [
-                "{}:{}".format(key, value) for key, value in engine_params.items()
-            ]
-            params["engineParams"] = "'{}'".format(";".join(engine_params))
-        else:
-            manager_host = self._launcher.graph_manager_endpoint
-            params.update(
-                {
-                    "vineyardIpcSocket": self._launcher.vineyard_socket,
-                    "schemaPath": schema_path,
-                    "zookeeperPort": str(self._launcher.zookeeper_port),
-                    "enableGaia": str(enable_gaia),
-                }
-            )
-            post_url = "http://%s/instance/create_local" % manager_host
-
-        post_data = urllib.parse.urlencode(params).encode("utf-8")
-        create_res = urllib.request.urlopen(url=post_url, data=post_data)
-        res_json = json.load(create_res)
-        error_code = res_json["errorCode"]
-        if error_code == 0:
-            maxgraph_endpoint = f"{res_json['frontHost']}:{res_json['frontPort']}"
-            logger.info(
-                "build maxgraph frontend %s for graph %ld", maxgraph_endpoint, object_id
-            )
-            endpoints = [maxgraph_endpoint]
-            if enable_gaia:
-                gaia_endpoint = (
-                    f"{res_json['gaiaFrontHost']}:{res_json['gaiaFrontPort']}"
+        # maxgraph endpoint pattern
+        MAXGRAPH_FRONTEND_PATTERN = re.compile("(?<=MAXGRAPH_FRONTEND_ENDPOINT:).*$")
+        MAXGRAPH_FRONTEND_EXTERNAL_PATTERN = re.compile(
+            "(?<=MAXGRAPH_FRONTEND_EXTERNAL_ENDPOINT:).*$"
+        )
+        # gaia endpoint pattern
+        GAIA_FRONTEND_PATTERN = re.compile("(?<=GAIA_FRONTEND_ENDPOINT:).*$")
+        GAIA_FRONTEND_EXTERNAL_PATTERN = re.compile(
+            "(?<=GAIA_FRONTEND_EXTERNAL_ENDPOINT:).*$"
+        )
+        # maxgraph endpoint and gaia endpoint
+        endpoints = []
+        # maxgraph and gaia external endpoint, for client and gremlin function test
+        external_endpoints = []
+        # create instance
+        proc = self._launcher.create_interactive_instance(op.attr)
+        try:
+            # 60 seconds is enough
+            # already add errs to outs
+            outs, errs = proc.communicate(timeout=60)
+            return_code = proc.poll()
+            if return_code == 0:
+                # match maxgraph endpoint and check for ready
+                maxgraph_endpoint = _match_frontend_endpoint(
+                    MAXGRAPH_FRONTEND_PATTERN, outs
                 )
-                endpoints.append(gaia_endpoint)
-                logger.info(
-                    "build gaia frontend %s for graph %ld", gaia_endpoint, object_id
+                if check_gremlin_server_ready(maxgraph_endpoint):
+                    endpoints.append(maxgraph_endpoint)
+                    logger.info(
+                        "build maxgraph frontend %s for graph %ld",
+                        maxgraph_endpoint,
+                        object_id,
+                    )
+                maxgraph_external_endpoint = _match_frontend_endpoint(
+                    MAXGRAPH_FRONTEND_EXTERNAL_PATTERN, outs
                 )
-            self._object_manager.put(
-                op.key,
-                InteractiveQueryManager(op.key, endpoints, object_id),
-            )
-            return op_def_pb2.OpResult(
-                code=error_codes_pb2.OK,
-                key=op.key,
-                result=",".join(endpoints).encode("utf-8"),
-                extra_info=str(object_id).encode("utf-8"),
-            )
-        else:
-            error_message = (
-                "create interactive instance for object id %ld failed with error code %d message %s"
-                % (object_id, error_code, res_json["errorMessage"])
-            )
-            logger.error(error_message)
+                if maxgraph_external_endpoint:
+                    external_endpoints.append(maxgraph_external_endpoint)
+                # match gaia endpoint and check for ready
+                if enable_gaia:
+                    gaia_endpoint = _match_frontend_endpoint(
+                        GAIA_FRONTEND_PATTERN, outs
+                    )
+                    if check_gremlin_server_ready(gaia_endpoint):
+                        endpoints.append(gaia_endpoint)
+                        logger.info(
+                            "build gaia frontend %s for graph %ld",
+                            gaia_endpoint,
+                            object_id,
+                        )
+                    gaia_external_endpoint = _match_frontend_endpoint(
+                        GAIA_FRONTEND_EXTERNAL_PATTERN,
+                        outs,
+                    )
+                    if gaia_external_endpoint:
+                        external_endpoints.append(gaia_external_endpoint)
+                self._object_manager.put(
+                    op.key, InteractiveQueryManager(op.key, endpoints, object_id)
+                )
+                return op_def_pb2.OpResult(
+                    code=error_codes_pb2.OK,
+                    key=op.key,
+                    result=",".join(external_endpoints).encode("utf-8")
+                    if external_endpoints
+                    else ",".join(endpoints).encode("utf-8"),
+                    extra_info=str(object_id).encode("utf-8"),
+                )
+            else:
+                raise RuntimeError(
+                    "error code: {0}, message {1}".format(return_code, outs)
+                )
+        except Exception as e:
+            proc.kill()
+            self._launcher.close_interactive_instance(object_id)
             return op_def_pb2.OpResult(
                 code=error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR,
                 key=op.key,
-                error_msg=error_message,
+                error_msg="Create interactive instance failed: {0}".format(str(e)),
             )
 
     def _execute_gremlin_query(self, op: op_def_pb2.OpDef):
@@ -946,37 +944,14 @@ class CoordinatorServiceServicer(
             key_of_parent_op = op.parents[0]
             gremlin_client = self._object_manager.get(key_of_parent_op)
             object_id = gremlin_client.object_id
-            if self._launcher_type == types_pb2.K8S:
-                manager_host = self._launcher.get_manager_host()
-                close_url = "%s/instance/close?graphName=%ld&podNameList=%s&containerName=%s&waitingForDelete=%s" % (
-                    manager_host,
-                    object_id,
-                    self._engine_hosts,
-                    ENGINE_CONTAINER,
-                    str(self._launcher.waiting_for_delete()),
-                )
-            else:
-                manager_host = self._launcher.graph_manager_endpoint
-                close_url = "http://%s/instance/close_local?graphName=%ld" % (
-                    manager_host,
-                    object_id,
-                )
-            logger.info(
-                "Coordinator close interactive instance with url[%s]" % close_url
-            )
-            close_res = urllib.request.urlopen(close_url).read()
+            proc = self._launcher.close_interactive_instance(object_id)
+            # 60s is enough
+            proc.wait(timeout=60)
             gremlin_client.closed = True
         except Exception as e:
-            logger.error("Failed to close interactive instance: %s", str(e))
-        else:
-            res_json = json.loads(close_res.decode("utf-8", errors="ignore"))
-            error_code = res_json["errorCode"]
-            if error_code != 0:
-                error_message = (
-                    "Failed to close interactive instance for object id %ld with error code %d message %s"
-                    % (object_id, error_code, res_json["errorMessage"])
-                )
-                logger.error("Failed to close interactive instance: %s", error_message)
+            logger.error(
+                "Failed to close interactive instance with %ld: %s", object_id, str(e)
+            )
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
@@ -1316,14 +1291,6 @@ def parse_sys_args():
         help="Docker image of etcd, used by vineyard.",
     )
     parser.add_argument(
-        "--k8s_gie_graph_manager_image",
-        type=str,
-        default="registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:{}".format(
-            __version__
-        ),
-        help="Graph Manager image of graph interactive engine.",
-    )
-    parser.add_argument(
         "--k8s_image_pull_policy",
         type=str,
         default="IfNotPresent",
@@ -1388,18 +1355,6 @@ def parse_sys_args():
         type=str,
         default="256Mi",
         help="Memory of etcd pod, suffix with ['Mi', 'Gi', 'Ti'].",
-    )
-    parser.add_argument(
-        "--k8s_gie_graph_manager_cpu",
-        type=float,
-        default=1.0,
-        help="Cpu cores of graph manager container, default: 1.0",
-    )
-    parser.add_argument(
-        "--k8s_gie_graph_manager_mem",
-        type=str,
-        default="256Mi",
-        help="Memory of graph manager container, suffix with ['Mi', 'Gi', 'Ti'].",
     )
     parser.add_argument(
         "--k8s_with_mars",
@@ -1480,14 +1435,11 @@ def launch_graphscope():
             service_type=args.k8s_service_type,
             gs_image=args.k8s_gs_image,
             etcd_image=args.k8s_etcd_image,
-            gie_graph_manager_image=args.k8s_gie_graph_manager_image,
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,
             etcd_num_pods=args.k8s_etcd_num_pods,
             etcd_cpu=args.k8s_etcd_cpu,
             etcd_mem=args.k8s_etcd_mem,
-            gie_graph_manager_cpu=args.k8s_gie_graph_manager_cpu,
-            gie_graph_manager_mem=args.k8s_gie_graph_manager_mem,
             engine_cpu=args.k8s_engine_cpu,
             engine_mem=args.k8s_engine_mem,
             vineyard_daemonset=args.k8s_vineyard_daemonset,

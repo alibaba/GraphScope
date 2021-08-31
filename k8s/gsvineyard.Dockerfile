@@ -5,7 +5,9 @@
 ARG BASE_VERSION=latest
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:$BASE_VERSION
 
-RUN cd /tmp && \
+RUN sudo mkdir -p /opt/graphscope && \
+    sudo chown -R graphscope:graphscope /opt/graphscope && \
+    cd /tmp && \
     git clone https://github.com/alibaba/libgrape-lite.git --depth=1 && \
     cd libgrape-lite && \
     mkdir build && \

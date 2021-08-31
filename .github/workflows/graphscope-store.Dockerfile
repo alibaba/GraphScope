@@ -1,4 +1,4 @@
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest-root-user
 
 RUN mkdir -p /home/maxgraph/{bin,conf}
 COPY ./opt/graphscope/ /usr/local/
