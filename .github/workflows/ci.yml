@@ -543,6 +543,11 @@ jobs:
           giectl.tar.gz
         retention-days: 5
 
+    - name: Clean
+      if: always()
+      run: |
+        rm -rf ${GITHUB_WORKSPACE}
+
   gss-test:
     runs-on: self-hosted
     needs: [build-gss]
