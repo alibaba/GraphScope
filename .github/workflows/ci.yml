@@ -276,6 +276,12 @@ jobs:
 
     - name: Prepare environment for deps
       run: |
+        # install zetcd
+        wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+        go get github.com/etcd-io/zetcd/cmd/zetcd
+        sudo cp $(go env GOPATH)/bin/zetcd /usr/local/bin/
+
         python3 -m pip install pytest-cov
         tar -xf ./gae-${{ github.sha }}/gae.tar
         tar -xf ./gle-${{ github.sha }}/gle.tar
@@ -489,8 +495,6 @@ jobs:
     steps:
     - name: Install Dependencies
       run: |
-        pwd
-        ls -la
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
         sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
