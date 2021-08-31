@@ -108,9 +108,8 @@ message ExprUnit {
   }
 }
 
-// A Node defines each node in an expression tree,
-message ExprNode {
-  ExprUnit operator = 1;
-  repeated ExprNode children = 2;
+// A suffix tree to represent an expression
+message ExprSuffixTree {
+  repeated ExprUnit operators = 1;
 }
 
