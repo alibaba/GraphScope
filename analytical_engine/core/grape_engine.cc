@@ -153,8 +153,8 @@ class RedirectLogSink : public google::LogSink {
                     const char* base_filename, int line,
                     const struct ::tm* tm_time, const char* message,
                     size_t message_len) {
-    // we redirect GLOG_ERROR message to stderr, others to stdout
-    if (severity != google::GLOG_ERROR) {
+    // we redirect GLOG_ERROR/GLOG_WARNING message to stderr, others to stdout
+    if (severity == google::GLOG_ERROR || severity == google::GLOG_WARNING) {
       std::cerr << google::LogSink::ToString(severity, full_filename, line,
                                              tm_time, message, message_len)
                 << std::endl;
