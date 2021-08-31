@@ -509,6 +509,7 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo chown -R $(id -u):$(id -g) ${HOME}
+        sudo chmod -R a+wrx ${HOME} ${GITHUB_WORKSPACE}
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
         sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
         curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
