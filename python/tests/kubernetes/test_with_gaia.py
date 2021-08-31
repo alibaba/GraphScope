@@ -53,7 +53,7 @@ def get_gs_image_on_ci_env():
 def gs_session():
     gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
-        num_workers=2,
+        num_workers=1,
         enable_gaia=True,
         k8s_gs_image=gs_image,
         k8s_coordinator_cpu=2,
@@ -81,7 +81,7 @@ def test_query_modern_graph(gs_session, modern_graph_data_dir, modern_scripts):
     graph = load_modern_graph(gs_session, modern_graph_data_dir)
     interactive = gs_session.gremlin(graph)
     for q in modern_scripts:
-        result = interactive.gaia().execute(q).all().result()[0]
+        result = interactive.gaia().execute(q).all()[0]
         assert result == 1
 
 
