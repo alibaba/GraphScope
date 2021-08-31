@@ -494,26 +494,27 @@ jobs:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6-dongze
     steps:
 
-    - name: "Debug: Package dependancies for tmate"
-      run: |
-        sudo yum update -y
-        sudo yum install -y xz
-        sudo ln -s /bin/true /bin/apt-get
+    #- name: "Debug: Package dependancies for tmate"
+      #run: |
+        #sudo yum update -y
+        #sudo yum install -y xz
+        #sudo ln -s /bin/true /bin/apt-get
 
-    - name: Setup tmate session debug
-      if: true
-      uses: mxschmitt/action-tmate@v3
+    #- name: Setup tmate session debug
+      #if: true
+      #uses: mxschmitt/action-tmate@v3
 
     - name: Install Dependencies
       run: |
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
         sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
-        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
+        curl -sf -L https://static.rust-lang.org/rustup.sh | sudo sh -s -- -y --profile minimal --default-toolchain 1.54.0
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
         rustup component add rustfmt
-        yum install -y xz
-        ln -s /bin/true /bin/apt-get
+        sudo yum update -y
+        sudo yum install -y xz
+        sudo ln -s /bin/true /bin/apt-get
 
     - uses: actions/checkout@v2.3.2
 
