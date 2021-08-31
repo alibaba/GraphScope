@@ -14,6 +14,7 @@
  */
 
 #include <csignal>
+#include <limits>
 #include <thread>
 #include <utility>
 
@@ -154,28 +155,21 @@ class RedirectLogSink : public google::LogSink {
                     const char* message, size_t message_len) {
     // we redirect GLOG_ERROR message to stderr, others to stdout
     if (severity != google::GLOG_ERROR) {
-      std::cerr << google::LogSink::ToString(
-              severity,
-              full_filename,
-              line,
-              tm_time,
-              message,
-              message_len) << std::endl;;
+      std::cerr << google::LogSink::ToString(severity, full_filename, line,
+                                              tm_time, message, message_len)
+                << std::endl;;
     } else {
-      std::cout << google::LogSink::ToString(
-              severity,
-              full_filename,
-              line,
-              tm_time,
-              message,
-              message_len) << std::endl;;
+      std::cout << google::LogSink::ToString(severity, full_filename, line,
+                                             tm_time, message, message_len)
+                << std::endl;;
     }
   }
 };
 
 int main(int argc, char* argv[]) {
   int exit_code = 0;
-  FLAGS_logtostderr = false;
+  // not output any log to stderr by glog.
+  FLAGS_stderrthreshold = std::numeric_limits<int>::max();
 
   grape::gflags::SetUsageMessage(
       "Usage: mpiexec [mpi_opts] ./grape_engine [grape_opts]");
