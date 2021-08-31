@@ -303,6 +303,7 @@ jobs:
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
+        export GRAPHSCOPE_HOME='/usr/local'
         export GS_TEST_DIR='/home/graphscope/gstest'
         cd python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc \
@@ -323,6 +324,7 @@ jobs:
         # prelaunch the etcd
         /usr/local/bin/etcd --data-dir=/tmp/default.etcd &
 
+        export GRAPHSCOPE_HOME='/usr/local'
         export GS_TEST_DIR='/home/graphscope/gstest'
         python3 -m pytest --exitfirst -s -v python/graphscope/nx/tests \
                           --ignore=python/graphscope/nx/tests/algorithms/forward
@@ -549,11 +551,6 @@ jobs:
           lib.tar.gz
           giectl.tar.gz
         retention-days: 5
-
-    - name: Clean
-      if: always()
-      run: |
-        rm -fr ${GITHUB_WORKSPACE}
 
   gss-test:
     runs-on: self-hosted
