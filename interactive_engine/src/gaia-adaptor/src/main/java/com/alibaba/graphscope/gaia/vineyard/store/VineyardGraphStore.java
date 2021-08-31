@@ -15,12 +15,15 @@
  */
 package com.alibaba.graphscope.gaia.vineyard.store;
 
+import com.alibaba.graphscope.common.proto.GremlinResult;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.math.BigInteger;
 
 public class VineyardGraphStore extends GraphStoreService {
     private static final Logger logger = LoggerFactory.getLogger(VineyardGraphStore.class);
@@ -77,5 +80,16 @@ public class VineyardGraphStore extends GraphStoreService {
     }
 
     @Override
-    public synchronized void updateSnapShotId() { }
+    public synchronized void updateSnapShotId() {
+    }
+
+    @Override
+    public Object fromBytes(byte[] edgeId) {
+        return new BigInteger(edgeId);
+    }
+
+    @Override
+    public Object getCompositeId(GremlinResult.Edge edge) {
+        return String.format("%d_%d", edge.getSrcId(), edge.getDstId());
+    }
 }

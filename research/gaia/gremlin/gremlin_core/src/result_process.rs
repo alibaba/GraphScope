@@ -43,7 +43,7 @@ fn vertex_to_pb(v: &Vertex) -> result_pb::Vertex {
 
 fn edge_to_pb(e: &Edge) -> result_pb::Edge {
     result_pb::Edge {
-        id: e.id.to_string(),
+        id: e.id.to_be_bytes().to_vec(),
         label: label_to_pb(e.label.as_ref()),
         src_id: e.src_id as i64,
         src_label: label_to_pb(e.get_src_label()),
