@@ -493,9 +493,15 @@ jobs:
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6-dongze
     steps:
+
+    - name: "Debug: Package dependancies for tmate"
+      run: |
+        yum install -y xz
+        sudo ln -s /bin/true /bin/apt-get
+
     - name: Setup tmate session debug
       if: true
-      uses: mxschmitt/action-tmate@v2
+      uses: mxschmitt/action-tmate@v3
 
     - name: Install Dependencies
       run: |
