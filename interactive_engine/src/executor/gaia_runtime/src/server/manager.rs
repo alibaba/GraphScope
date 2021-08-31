@@ -27,7 +27,7 @@ use maxgraph_runtime::server::RuntimeAddress;
 use maxgraph_runtime::server::RuntimeInfo;
 use maxgraph_runtime::store::task_partition_manager::TaskPartitionManager;
 use maxgraph_store::config::StoreConfig;
-use pegasus::network_connection;
+use pegasus::{network_connection, ConfigArgs};
 use pegasus::Pegasus;
 use pegasus_network::config::{NetworkConfig, PeerConfig};
 use std::collections::HashMap;
@@ -40,7 +40,8 @@ use std::vec::Vec;
 
 pub struct GaiaServerManager {
     server_manager_common: ServerManagerCommon,
-    gaia_pegasus_runtime: Arc<Option<Pegasus>>,
+    // we preserve pegasus_runtime for heartbeat
+    pegasus_runtime: Arc<Option<Pegasus>>,
     // mapping of partition id -> worker id
     partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
     // mapping of worker id -> partition list
@@ -56,7 +57,7 @@ impl GaiaServerManager {
     ) -> GaiaServerManager {
         GaiaServerManager {
             server_manager_common: ServerManagerCommon::new(receiver, runtime_info),
-            gaia_pegasus_runtime: Arc::new(None),
+            pegasus_runtime: Arc::new(None),
             partition_worker_mapping: Arc::new(RwLock::new(None)),
             worker_partition_list_mapping: Arc::new(RwLock::new(None)),
             signal,
@@ -65,7 +66,7 @@ impl GaiaServerManager {
 
     #[inline]
     pub fn get_server(&self) -> Arc<Option<Pegasus>> {
-        self.gaia_pegasus_runtime.clone()
+        self.pegasus_runtime.clone()
     }
 
     #[inline]
@@ -86,6 +87,19 @@ impl GaiaServerManager {
     fn initial_worker_partition_list_mapping(&self, task_partition_lists: HashMap<u32, Vec<u32>>) {
         let mut worker_partition_list_mapping = self.worker_partition_list_mapping.write().unwrap();
         worker_partition_list_mapping.replace(task_partition_lists);
+    }
+
+    /// Initialize pegasus runtime
+    ///
+    /// Pegasus runtime is shared by query rpc thread and server manager thread, but it will only be initialized once by
+    /// server manager thread and query rpc thread only read the value.
+    /// Consequently here use `unsafe` but not `Mutex` or `RwLock` to initialize pegasus runtime.
+    fn initial_pegasus_runtime(&self, process_id: usize, store_config: Arc<StoreConfig>) {
+        let pegasus_runtime = ConfigArgs::distribute(process_id, store_config.pegasus_thread_pool_size as usize, store_config.worker_num as usize, "".to_string()).build();
+        unsafe {
+            let pegasus_pointer = Arc::into_raw(self.pegasus_runtime.clone()) as *mut Option<Pegasus>;
+            (*pegasus_pointer).replace(pegasus_runtime);
+        }
     }
 }
 
@@ -118,10 +132,15 @@ impl ServerManager for GaiaServerManager {
                 let address_list = timely_server_resp.get_addresses();
                 let task_partition_list = timely_server_resp.get_task_partition_list();
 
+                if self.pegasus_runtime.is_none() {
+                    info!("Begin start pegasus with process id {} in group {}.", worker_id, group_id);
+                    self.initial_pegasus_runtime(worker_id as usize, store_config.clone());
+                }
                 if !address_list.is_empty() && !task_partition_list.is_empty() {
                     // start gaia_pegasus
                     let configuration = build_gaia_config(worker_id as usize, address_list);
-                    if let Err(err) = gaia_pegasus::startup(configuration) {
+                    info!("gaia configuration {:?}", configuration);
+		    if let Err(err) = gaia_pegasus::startup(configuration) {
                         info!("start pegasus failed {:?}", err);
                     } else {
                         info!("start pegasus successfully");
@@ -152,7 +171,7 @@ impl ServerManager for GaiaServerManager {
                                          self.server_manager_common.version, format!("worker {} in group {} connect to {:?} success.", worker_id, group_id, result).as_str());
                         for (index, address, tcp_stream) in result.into_iter() {
                             let connection = network_connection::Connection::new(index, address, tcp_stream);
-                            self.gaia_pegasus_runtime.as_ref().as_ref().unwrap().reset_single_network(connection.clone());
+                            self.pegasus_runtime.as_ref().as_ref().unwrap().reset_single_network(connection.clone());
                             network_manager.reset_network(connection);
                         }
                     }

@@ -34,4 +34,16 @@ RUN cd /tmp && \
     cp -f dist/* /opt/graphscope/dist && \
     pip3 install dist/* && \
     cd /tmp && \
-    rm -fr /tmp/libvineyard /tmp/libgrape-lite
+    rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
+    useradd -m graphscope -u 1001 && \
+    echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    cp -r ~/.cargo /home/graphscope/.cargo && \
+    chown -R graphscope:graphscope /home/graphscope/.cargo
+
+USER graphscope
+
+SHELL ["/bin/bash", "-c"]
+
+RUN source /home/graphscope/.cargo/env && \
+    rustup install stable && rustup default stable && rustup component add rustfmt && \
+    echo "source ~/.cargo/env" >> ~/.bashrc

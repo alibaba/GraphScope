@@ -9,7 +9,7 @@ INSTALL_PREFIX              ?= /usr/local
 NETWORKX                    ?= OFF
 
 # client build options
-WITH_LEARNING_ENGINE        ?= OFF
+WITH_LEARNING_ENGINE        ?= ON
 
 # testing build option
 BUILD_TEST                  ?= OFF
@@ -77,7 +77,6 @@ gie:
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
 	mkdir -p $(WORKING_DIR)/.install_prefix/bin && \
 	mkdir -p $(WORKING_DIR)/.install_prefix/conf && \
-	tar -xf $(WORKING_DIR)/interactive_engine/src/instance-manager/target/0.0.1-SNAPSHOT.tar.gz -C $(WORKING_DIR)/.install_prefix && \
 	tar -xf $(WORKING_DIR)/interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz -C $(WORKING_DIR)/.install_prefix && \
 	cp $(WORKING_DIR)/interactive_engine/src/executor/target/debug/executor $(WORKING_DIR)/.install_prefix/bin/executor && \
 	cp $(WORKING_DIR)/interactive_engine/src/executor/target/debug/gaia_executor $(WORKING_DIR)/.install_prefix/bin/gaia_executor && \

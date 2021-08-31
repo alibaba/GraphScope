@@ -49,19 +49,18 @@ def get_k8s_volumes():
 
 
 def get_gs_image_on_ci_env():
-    if "GS_IMAGE" in os.environ and "GIE_MANAGER_IMAGE" in os.environ:
-        return os.environ["GS_IMAGE"], os.environ["GIE_MANAGER_IMAGE"]
+    if "GS_IMAGE" in os.environ:
+        return os.environ["GS_IMAGE"]
     else:
-        return gs_config.k8s_gs_image, gs_config.k8s_gie_graph_manager_image
+        return gs_config.k8s_gs_image
 
 
 @pytest.fixture
 def gs_session():
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+    gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
         k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=2,
         k8s_coordinator_mem="4Gi",
         k8s_vineyard_cpu=2,
@@ -71,8 +70,6 @@ def gs_session():
         k8s_etcd_cpu=2,
         k8s_etcd_mem="256Mi",
         k8s_etcd_num_pods=3,
-        k8s_gie_graph_manager_cpu=1,
-        k8s_gie_graph_manager_mem="4Gi",
         vineyard_shared_mem="4Gi",
         k8s_volumes=get_k8s_volumes(),
     )
@@ -82,11 +79,10 @@ def gs_session():
 
 @pytest.fixture
 def gs_session_distributed():
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+    gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=2,
         k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_coordinator_cpu=2,
         k8s_coordinator_mem="4Gi",
         k8s_vineyard_cpu=2,
@@ -96,8 +92,6 @@ def gs_session_distributed():
         k8s_etcd_cpu=4,
         k8s_etcd_mem="256Mi",
         k8s_etcd_num_pods=3,
-        k8s_gie_graph_manager_cpu=1,
-        k8s_gie_graph_manager_mem="4Gi",
         vineyard_shared_mem="4Gi",
         k8s_volumes=get_k8s_volumes(),
     )
@@ -199,11 +193,10 @@ def test_multiple_session():
         [random.choice(string.ascii_lowercase) for _ in range(6)]
     )
 
-    gs_image, gie_manager_image = get_gs_image_on_ci_env()
+    gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
         k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_volumes=get_k8s_volumes(),
     )
     info = sess.info
@@ -214,7 +207,6 @@ def test_multiple_session():
         k8s_namespace=namespace,
         num_workers=2,
         k8s_gs_image=gs_image,
-        k8s_gie_graph_manager_image=gie_manager_image,
         k8s_volumes=get_k8s_volumes(),
     )
 
