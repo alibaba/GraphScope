@@ -21,51 +21,42 @@ pub use primitive::sink::{FromStream, Sink};
 pub use primitive::source::{IntoDataflow, Source};
 pub use primitive::unary::Unary;
 
-use crate::progress::EndSignal;
-use crate::Tag;
+pub mod notification {
 
-pub enum Res<D> {
-    Data(D),
-    Halt,
-}
+    use crate::progress::Weight;
+    use crate::Tag;
 
-pub enum BranchEnum {
-    Left,
-    Right,
-}
-
-
-pub struct EndScope {
-    pub port: usize,
-    end: EndSignal
-}
-
-pub struct CancelScope {
-    pub port: usize,
-    tag: Tag,
-}
-
-/// Represents a notification which always indicates that data of a scope in the input stream
-/// has exhaust;
-#[derive(Clone)]
-pub struct Notification {
-    /// The port of operator's input this notification belongs to;
-    pub port: usize,
-    /// The end signal of the scope this notification belongs to;
-    end: EndSignal,
-}
-
-impl Notification {
-    pub fn new(port: usize, end: EndSignal) -> Self {
-        Notification { port, end }
+    #[derive(Debug, Clone)]
+    pub struct EndScope {
+        pub(crate) port: usize,
+        pub(crate) tag: Tag,
+        pub(crate) weight: Weight,
     }
 
-    pub fn tag(&self) -> &Tag {
-        &self.end.tag
+    #[derive(Debug, Clone)]
+    pub struct CancelScope {
+        pub(crate) port: usize,
+        pub(crate) tag: Tag,
     }
 
-    pub fn take_end(self) -> EndSignal {
-        self.end
+    impl EndScope {
+        pub fn tag(&self) -> &Tag {
+            &self.tag
+        }
+
+        pub fn port(&self) -> usize {
+            self.port
+        }
+    }
+
+    impl CancelScope {
+        pub fn tag(&self) -> &Tag {
+            &self.tag
+        }
+
+        pub fn port(&self) -> usize {
+            self.port
+        }
     }
 }
 

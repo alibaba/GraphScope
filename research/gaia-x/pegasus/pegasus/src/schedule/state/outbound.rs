@@ -1,13 +1,9 @@
-use std::collections::VecDeque;
-
-use ahash::AHashMap;
 use nohash_hasher::{IntMap, IntSet};
 
+use crate::communication::cancel::CancelListener;
 use crate::graph::Port;
 use crate::tag::tools::map::TidyTagMap;
 use crate::Tag;
-use crate::communication::cancel::CancelListener;
-
 
 struct CancelSingle {
     ch: u32,
@@ -66,13 +62,13 @@ impl HandleKind {
     }
 }
 
+#[allow(dead_code)]
 pub struct OutputCancelState {
     port: Port,
     handle: HandleKind,
 }
 
 impl OutputCancelState {
-
     pub fn single(port: Port, ch: u32, listener: Box<dyn CancelListener>) -> Self {
         OutputCancelState { port, handle: HandleKind::Single(CancelSingle { ch, listener }) }
     }
@@ -87,11 +83,8 @@ impl OutputCancelState {
         for i in 0..scope_level {
             cancel_trace.push(TidyTagMap::new(i));
         }
-        let handle = CancelTee { channels, scope_level, tee: map,  cancel_trace };
-        OutputCancelState {
-            port,
-            handle: HandleKind::Tee(handle)
-        }
+        let handle = CancelTee { channels, scope_level, tee: map, cancel_trace };
+        OutputCancelState { port, handle: HandleKind::Tee(handle) }
     }
 
     pub fn on_cancel(&mut self, ch: u32, to: u32, tag: &Tag) -> Option<Tag> {

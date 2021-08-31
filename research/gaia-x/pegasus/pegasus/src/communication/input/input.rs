@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use std::cell::RefCell;
-use std::collections::{HashSet, VecDeque};
+use std::collections::VecDeque;
 use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -22,7 +22,6 @@ use std::sync::Arc;
 use ahash::AHashSet;
 use pegasus_common::downcast::*;
 
-use crate::api::scope::MergedScopeDelta;
 use crate::channel_id::ChannelInfo;
 use crate::communication::input::{InputProxy, InputSession};
 use crate::data::MicroBatch;
@@ -311,7 +310,7 @@ impl<D: Data> InputHandle<D> {
         if level == self.ch_info.scope_level {
             // cancel scopes in current scope level;
             self.cancel.insert(tag.clone(), ());
-            if let Some(mut stash) = self.stash_index.get_mut(tag) {
+            if let Some(stash) = self.stash_index.get_mut(tag) {
                 stash.skip();
             }
         } else if *crate::config::ENABLE_CANCEL_CHILD {
@@ -364,7 +363,7 @@ impl<D: Data> InputHandle<D> {
         };
 
         if let Err(e) = result {
-            error_worker!("propagate cancel of {:?} failure;", tag);
+            error_worker!("propagate cancel of {:?} failure, error: {}", tag, e);
         }
     }
 }

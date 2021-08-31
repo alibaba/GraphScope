@@ -1,9 +1,11 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use ahash::AHashMap;
+
+use crate::communication::Magic;
 use crate::tag::tools::map::TidyTagMap;
 use crate::Tag;
-use ahash::AHashMap;
-use std::rc::Rc;
-use std::cell::RefCell;
-use crate::communication::Magic;
 
 pub trait CancelListener: Send + 'static {
     fn cancel(&mut self, tag: &Tag, to: u32) -> Option<Tag>;
@@ -37,27 +39,25 @@ pub(crate) struct MultiConsCancel {
     scope_level: u32,
     targets: usize,
     current_level: TidyTagMap<Vec<bool>>,
-    parent: AHashMap<Tag, Vec<bool>>
+    parent: AHashMap<Tag, Vec<bool>>,
 }
 
 impl MultiConsCancel {
-
     fn new(scope_level: u32, targets: usize) -> Self {
         MultiConsCancel {
             scope_level,
             targets,
             current_level: TidyTagMap::new(scope_level),
-            parent: AHashMap::new()
+            parent: AHashMap::new(),
         }
     }
 
     fn is_canceled(&self, target: usize, tag: &Tag) -> bool {
-
         if target >= self.targets {
             return false;
         }
 
-        let mut level = tag.len() as u32;
+        let level = tag.len() as u32;
         if level == self.scope_level {
             if !self.current_level.is_empty() {
                 if let Some(ce) = self.current_level.get(tag) {
@@ -69,7 +69,7 @@ impl MultiConsCancel {
 
             // no cancel checked in current level;
             if *crate::config::ENABLE_CANCEL_CHILD && !self.parent.is_empty() {
-                let mut p = tag.to_parent_uncheck();
+                let p = tag.to_parent_uncheck();
                 self.check_parent(target, p)
             } else {
                 false
@@ -77,7 +77,7 @@ impl MultiConsCancel {
         } else if level < self.scope_level {
             self.check_parent(target, tag.clone())
         } else {
-           false
+            false
         }
     }
 
@@ -106,7 +106,9 @@ impl CancelListener for MultiConsCancel {
         let to = to as usize;
         if to < targets {
             if level == self.scope_level {
-                let x = self.current_level.get_mut_or_else(tag, || vec![false; targets]);
+                let x = self
+                    .current_level
+                    .get_mut_or_else(tag, || vec![false; targets]);
                 x[to] = true;
                 if x.iter().all(|f| *f) {
                     Some(tag.clone())
@@ -114,7 +116,10 @@ impl CancelListener for MultiConsCancel {
                     None
                 }
             } else if level < self.scope_level {
-                let x = self.parent.entry(tag.clone()).or_insert_with(|| vec![false; targets]);
+                let x = self
+                    .parent
+                    .entry(tag.clone())
+                    .or_insert_with(|| vec![false; targets]);
                 x[to] = true;
                 if x.iter().all(|f| *f) {
                     Some(tag.clone())
@@ -133,16 +138,13 @@ impl CancelListener for MultiConsCancel {
 
 #[derive(Clone)]
 pub(crate) struct MultiConsCancelPtr {
-    inner: Rc<RefCell<MultiConsCancel>>
+    inner: Rc<RefCell<MultiConsCancel>>,
 }
 
 impl MultiConsCancelPtr {
-
     pub(crate) fn new(scope_level: u32, targets: usize) -> Self {
         let inner = MultiConsCancel::new(scope_level, targets);
-        MultiConsCancelPtr {
-            inner: Rc::new(RefCell::new(inner))
-        }
+        MultiConsCancelPtr { inner: Rc::new(RefCell::new(inner)) }
     }
 
     pub fn cancel(&self, tag: &Tag, to: u32) -> Option<Tag> {
@@ -155,14 +157,14 @@ impl MultiConsCancelPtr {
 }
 
 // won't be shared between threads;
-unsafe impl Send for MultiConsCancelPtr { }
+unsafe impl Send for MultiConsCancelPtr {}
 
 pub(crate) struct DynSingleConsCancel {
     scope_level: u32,
     targets: usize,
     route: Magic,
     current_level: TidyTagMap<()>,
-    parent: AHashMap<Tag, Vec<bool>>
+    parent: AHashMap<Tag, Vec<bool>>,
 }
 
 impl CancelListener for DynSingleConsCancel {
@@ -180,7 +182,10 @@ impl CancelListener for DynSingleConsCancel {
             }
         } else if level < self.scope_level {
             let targets = self.targets;
-            let x = self.parent.entry(tag.clone()).or_insert_with(|| vec![false; targets]);
+            let x = self
+                .parent
+                .entry(tag.clone())
+                .or_insert_with(|| vec![false; targets]);
             x[to as usize] = true;
             if x.iter().all(|f| *f) {
                 Some(tag.clone())
@@ -203,7 +208,7 @@ impl DynSingleConsCancel {
             }
 
             if *crate::config::ENABLE_CANCEL_CHILD && !self.parent.is_empty() {
-                let mut p =  tag.to_parent_uncheck();
+                let p = tag.to_parent_uncheck();
                 self.check_parent(p)
             } else {
                 false
@@ -221,7 +226,7 @@ impl DynSingleConsCancel {
                 return true;
             }
             if p.is_root() {
-                break
+                break;
             } else {
                 p = p.to_parent_uncheck();
             }
@@ -232,7 +237,7 @@ impl DynSingleConsCancel {
 
 #[derive(Clone)]
 pub(crate) struct DynSingleConsCancelPtr {
-    inner: Rc<RefCell<DynSingleConsCancel>>
+    inner: Rc<RefCell<DynSingleConsCancel>>,
 }
 
 impl CancelListener for DynSingleConsCancelPtr {
@@ -248,12 +253,10 @@ impl DynSingleConsCancelPtr {
             targets,
             route: Magic::new(targets),
             current_level: TidyTagMap::new(scope_level),
-            parent: AHashMap::new()
+            parent: AHashMap::new(),
         };
 
-        DynSingleConsCancelPtr {
-            inner: Rc::new(RefCell::new(inner))
-        }
+        DynSingleConsCancelPtr { inner: Rc::new(RefCell::new(inner)) }
     }
 
     pub(crate) fn is_canceled(&self, tag: &Tag) -> bool {
@@ -261,27 +264,20 @@ impl DynSingleConsCancelPtr {
     }
 }
 
-unsafe impl Send for DynSingleConsCancelPtr { }
-
+unsafe impl Send for DynSingleConsCancelPtr {}
 
 pub(crate) enum CancelHandle {
     SC(SingleConsCancel),
     MC(MultiConsCancelPtr),
-    DSC(DynSingleConsCancelPtr)
+    DSC(DynSingleConsCancelPtr),
 }
 
 impl CancelListener for CancelHandle {
     fn cancel(&mut self, tag: &Tag, to: u32) -> Option<Tag> {
         match self {
-            CancelHandle::SC(x) => {
-                x.cancel(tag, to)
-            }
-            CancelHandle::MC(x) => {
-                x.cancel(tag, to)
-            }
-            CancelHandle::DSC(x) => {
-                x.cancel(tag, to)
-            }
+            CancelHandle::SC(x) => x.cancel(tag, to),
+            CancelHandle::MC(x) => x.cancel(tag, to),
+            CancelHandle::DSC(x) => x.cancel(tag, to),
         }
     }
 }

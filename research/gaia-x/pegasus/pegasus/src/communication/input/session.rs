@@ -18,7 +18,7 @@ use std::cell::RefMut;
 use crate::communication::input::input::InputBlockGuard;
 use crate::communication::input::InputHandle;
 use crate::data::MicroBatch;
-use crate::errors::{ErrorKind, IOResult, JobExecError};
+use crate::errors::{ErrorKind, JobExecError};
 use crate::{Data, Tag};
 
 pub struct InputSession<'a, D: Data> {
@@ -124,7 +124,7 @@ impl<'a, D: Data> InputSession<'a, D> {
                         return Ok(());
                     }
                 }
-                Err(mut err) => match &err.kind {
+                Err(err) => match &err.kind {
                     ErrorKind::WouldBlock(_) => {
                         if batch.tag.is_root() {
                             self.on_interrupt(batch);

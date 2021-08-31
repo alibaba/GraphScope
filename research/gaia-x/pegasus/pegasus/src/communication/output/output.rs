@@ -18,11 +18,14 @@ pub use rob::{OutputHandle, OutputSession};
 #[cfg(not(feature = "rob"))]
 mod rob {
     use std::cell::RefMut;
-    use std::collections::{HashSet, VecDeque};
+    use std::collections::VecDeque;
+
+    use ahash::AHashSet;
 
     use crate::communication::decorator::ScopeStreamPush;
     use crate::communication::output::builder::OutputMeta;
     use crate::communication::output::tee::Tee;
+    use crate::communication::output::BlockScope;
     use crate::data::MicroBatch;
     use crate::errors::IOResult;
     use crate::graph::Port;
@@ -36,9 +39,9 @@ mod rob {
         pub src: u32,
         tee: Tee<D>,
         in_block: TidyTagMap<Box<dyn Iterator<Item = D> + Send + 'static>>,
-        blocks: VecDeque<Tag>,
+        blocks: VecDeque<BlockScope>,
         is_closed: bool,
-        skips: HashSet<Tag>,
+        canceled: AHashSet<Tag>,
     }
 
     impl<D: Data> OutputHandle<D> {
@@ -54,12 +57,12 @@ mod rob {
                 in_block: TidyTagMap::new(scope_level),
                 blocks: VecDeque::new(),
                 is_closed: false,
-                skips: HashSet::new(),
+                canceled: AHashSet::new(),
             }
         }
 
         pub fn push_batch(&mut self, dataset: MicroBatch<D>) -> IOResult<()> {
-            if self.skips.is_empty() || !self.skips.contains(&dataset.tag) {
+            if self.canceled.is_empty() || !self.canceled.contains(&dataset.tag) {
                 self.tee.forward(dataset)
             } else {
                 Ok(())
@@ -67,7 +70,7 @@ mod rob {
         }
 
         pub fn push_batch_mut(&mut self, batch: &mut MicroBatch<D>) -> IOResult<()> {
-            if self.skips.is_empty() || !self.skips.contains(&batch.tag) {
+            if self.canceled.is_empty() || !self.canceled.contains(&batch.tag) {
                 let seq = batch.seq;
                 let data = MicroBatch::new(batch.tag.clone(), self.src, seq, batch.take_data());
                 self.push_batch(data)
@@ -84,7 +87,8 @@ mod rob {
                     let iter = Box::new(iter);
                     if e.is_would_block() || e.is_interrupted() {
                         self.in_block.insert(tag.clone(), iter);
-                        self.blocks.push_back(tag.clone());
+                        self.blocks
+                            .push_back(BlockScope::new(tag.clone()));
                     }
                     Err(e)
                 }
@@ -92,28 +96,25 @@ mod rob {
             }
         }
 
-        pub(crate) fn try_unblock(&mut self, unblocked: &mut Vec<Tag>) -> IOResult<()> {
+        pub(crate) fn try_unblock(&mut self) -> IOResult<()> {
             let len = self.blocks.len();
             if len > 0 {
                 for _ in 0..len {
-                    if let Some(tag) = self.blocks.pop_front() {
-                        if let Some(mut iter) = self.in_block.remove(&tag) {
-                            match self.try_push_iter(&tag, &mut iter) {
+                    if let Some(bk) = self.blocks.pop_front() {
+                        if let Some(mut iter) = self.in_block.remove(bk.tag()) {
+                            match self.try_push_iter(bk.tag(), &mut iter) {
                                 Err(e) => {
                                     if e.is_would_block() || e.is_interrupted() {
-                                        self.in_block.insert(tag.clone(), iter);
-                                        self.blocks.push_back(tag);
+                                        self.in_block.insert(bk.tag().clone(), iter);
+                                        self.blocks.push_back(bk);
                                     } else {
                                         return Err(e);
                                     }
                                 }
                                 _ => {
-                                    trace_worker!("data in scope {:?} unblocked", tag);
-                                    unblocked.push(tag);
+                                    trace_worker!("data in scope {:?} unblocked", bk.tag());
                                 }
                             }
-                        } else {
-                            unblocked.push(tag);
                         }
                     }
                 }
@@ -121,23 +122,23 @@ mod rob {
             Ok(())
         }
 
-        pub fn get_blocks(&self) -> &VecDeque<Tag> {
+        pub fn get_blocks(&self) -> &VecDeque<BlockScope> {
             &self.blocks
         }
 
         #[inline]
-        pub fn skip(&mut self, tag: &Tag) -> IOResult<()> {
-            self.skips.insert(tag.clone());
+        pub fn cancel(&mut self, tag: &Tag) -> IOResult<()> {
+            self.canceled.insert(tag.clone());
             let len = self.blocks.len();
             for _ in 0..len {
-                if let Some(t) = self.blocks.pop_front() {
+                if let Some(bk) = self.blocks.pop_front() {
                     if *crate::config::ENABLE_CANCEL_CHILD {
-                        if !t.eq(tag) && !tag.is_parent_of(&t) {
-                            self.blocks.push_back(t);
+                        if !bk.tag().eq(tag) && !tag.is_parent_of(bk.tag()) {
+                            self.blocks.push_back(bk);
                         }
                     } else {
-                        if !t.eq(tag) {
-                            self.blocks.push_back(t);
+                        if !bk.tag().eq(tag) {
+                            self.blocks.push_back(bk);
                         }
                     }
                 }
@@ -152,16 +153,16 @@ mod rob {
         }
 
         #[inline]
-        fn is_skipped(&self, tag: &Tag) -> bool {
+        fn is_canceled(&self, tag: &Tag) -> bool {
             if *crate::config::ENABLE_CANCEL_CHILD && self.scope_level as usize > tag.len() {
-                for skip_tag in self.skips.iter() {
+                for skip_tag in self.canceled.iter() {
                     if skip_tag.is_parent_of(tag) {
                         return true;
                     }
                 }
                 false
             } else {
-                self.skips.contains(tag)
+                self.canceled.contains(tag)
             }
         }
 
@@ -179,7 +180,7 @@ mod rob {
 
         #[inline]
         fn push(&mut self, tag: &Tag, msg: D) -> IOResult<()> {
-            if !self.is_skipped(tag) {
+            if !self.is_canceled(tag) {
                 self.tee.push(tag, msg)?;
             }
             Ok(())
@@ -192,7 +193,7 @@ mod rob {
 
         #[inline]
         fn try_push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
-            if !self.is_skipped(tag) {
+            if !self.is_canceled(tag) {
                 self.tee.try_push_iter(tag, iter)?;
             }
             Ok(())

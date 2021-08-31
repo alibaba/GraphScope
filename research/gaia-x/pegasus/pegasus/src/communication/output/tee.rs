@@ -13,14 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub(crate) use rob::*;
-use crate::tag::tools::map::TidyTagMap;
-use crate::api::scope::MergedScopeDelta;
-use crate::Tag;
-use ahash::{AHashMap, AHashSet};
 use std::cell::RefCell;
 use std::rc::Rc;
+
+use ahash::AHashSet;
+pub(crate) use rob::*;
+
+use crate::api::scope::MergedScopeDelta;
 use crate::communication::cancel::{CancelHandle, CancelListener};
+use crate::tag::tools::map::TidyTagMap;
+use crate::Tag;
 
 struct ChannelCancel {
     scope_level: u32,
@@ -42,7 +44,7 @@ impl CancelListener for ChannelCancel {
                 assert!(level < self.scope_level);
                 self.parent.insert(tag.clone());
                 Some(tag)
-            }
+            };
         }
         None
     }
@@ -87,7 +89,7 @@ impl ChannelCancel {
 
 #[derive(Clone)]
 pub(crate) struct ChannelCancelPtr {
-    inner: Rc<RefCell<ChannelCancel>>
+    inner: Rc<RefCell<ChannelCancel>>,
 }
 
 impl CancelListener for ChannelCancelPtr {
@@ -97,28 +99,33 @@ impl CancelListener for ChannelCancelPtr {
 }
 
 impl ChannelCancelPtr {
-
     fn new(scope_level: u32, delta: MergedScopeDelta, ch: CancelHandle) -> Self {
-        let inner = ChannelCancel { scope_level, inner: ch, delta, current: TidyTagMap::new(scope_level), parent: AHashSet::new() };
-        ChannelCancelPtr {
-            inner: Rc::new(RefCell::new(inner))
-        }
+        let inner = ChannelCancel {
+            scope_level,
+            inner: ch,
+            delta,
+            current: TidyTagMap::new(scope_level),
+            parent: AHashSet::new(),
+        };
+        ChannelCancelPtr { inner: Rc::new(RefCell::new(inner)) }
     }
 
-    fn is_cancel(&self, tag: &Tag) -> bool {
+    fn is_canceled(&self, tag: &Tag) -> bool {
         self.inner.borrow().is_canceled(tag)
     }
 }
 
-unsafe impl Send for ChannelCancelPtr { }
+unsafe impl Send for ChannelCancelPtr {}
 
 #[cfg(not(feature = "rob"))]
 mod rob {
     use pegasus_common::buffer::{Batch, BatchPool, MemBatchPool, MemBufAlloc};
     use smallvec::SmallVec;
 
+    use super::*;
     use crate::api::scope::MergedScopeDelta;
     use crate::channel_id::ChannelInfo;
+    use crate::communication::cancel::CancelHandle;
     use crate::communication::decorator::{MicroBatchPush, ScopeStreamBuffer, ScopeStreamPush};
     use crate::data::MicroBatch;
     use crate::errors::{IOError, IOResult};
@@ -126,8 +133,6 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
-    use crate::communication::cancel::CancelHandle;
-    use super::*;
 
     struct Buffer<D> {
         pin: Tag,
@@ -159,7 +164,9 @@ mod rob {
     }
 
     impl<D: Data> ChannelPush<D> {
-        pub(crate) fn new(ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, cancel: CancelHandle) -> Self {
+        pub(crate) fn new(
+            ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, cancel: CancelHandle,
+        ) -> Self {
             let cancel_handle = ChannelCancelPtr::new(ch_info.scope_level, delta.clone(), cancel);
             ChannelPush { ch_info, push, delta, buffer: None, cancel_handle }
         }
@@ -244,6 +251,9 @@ mod rob {
 
         fn push(&mut self, tag: &Tag, msg: D) -> IOResult<()> {
             assert_eq!(tag.len(), self.delta.origin_scope_level);
+            if self.cancel_handle.is_canceled(&tag) {
+                return Ok(());
+            }
             let tag = self.delta.evolve(tag);
             self.push_without_evolve(tag, msg)
         }
@@ -279,6 +289,9 @@ mod rob {
 
         fn try_push_iter<I: Iterator<Item = D>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
             assert_eq!(tag.len(), self.delta.origin_scope_level);
+            if self.cancel_handle.is_canceled(tag) {
+                return Ok(());
+            }
             let tag = self.delta.evolve(tag);
             if let Some(b) = self.buffer.as_mut() {
                 if b.pin == tag {

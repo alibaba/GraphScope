@@ -22,11 +22,11 @@ use crate::errors::{BuildJobError, IOError};
 use crate::{Data, JobConf};
 
 mod buffer;
+pub(crate) mod cancel;
 pub(crate) mod channel;
 pub(crate) mod decorator;
 pub(crate) mod input;
 pub(crate) mod output;
-pub(crate) mod cancel;
 pub use channel::Channel;
 
 use crate::channel_id::ChannelId;
@@ -39,8 +39,6 @@ thread_local! {
     static CHANNEL_RESOURCES : RefCell<HashMap<ChannelId, LinkedList<Box<dyn Any>>>> = RefCell::new(Default::default());
 }
 
-
-
 #[derive(Copy, Clone)]
 enum Magic {
     Modulo(u64),
@@ -48,9 +46,12 @@ enum Magic {
 }
 
 impl Magic {
-
     pub fn new(len: usize) -> Self {
-        if len & (len - 1) == 0 { Magic::And(len as u64 - 1) } else { Magic::Modulo(len as u64) }
+        if len & (len - 1) == 0 {
+            Magic::And(len as u64 - 1)
+        } else {
+            Magic::Modulo(len as u64)
+        }
     }
 
     #[inline(always)]
@@ -61,7 +62,6 @@ impl Magic {
         }
     }
 }
-
 
 pub(crate) fn build_channel<T: Data>(
     ch_id: ChannelId, conf: &JobConf,

@@ -108,8 +108,7 @@ mod rob {
                     self.target_worker,
                     self.ch_info.target_port
                 );
-                let event =
-                    Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
+                let event = Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
                 self.event_emitter
                     .send(self.target_worker, event)?;
             }
@@ -167,8 +166,7 @@ mod rob {
                     self.target_worker,
                     self.ch_info.target_port
                 );
-                let event =
-                    Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
+                let event = Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
                 self.event_emitter
                     .send(self.target_worker, event)?;
             }

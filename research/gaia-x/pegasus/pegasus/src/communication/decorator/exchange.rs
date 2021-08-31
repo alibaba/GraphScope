@@ -13,12 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use ahash::{AHashMap};
-use crate::Tag;
-use crate::tag::tools::map::TidyTagMap;
-use std::rc::Rc;
-use std::cell::RefCell;
-
 pub use rob::*;
 
 #[cfg(not(feature = "rob"))]
@@ -26,21 +20,18 @@ mod rob {
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::Arc;
 
-    use super::*;
     use crate::api::function::RouteFunction;
     use crate::channel_id::ChannelInfo;
     use crate::communication::buffer::BufferedPush;
+    use crate::communication::cancel::{CancelHandle, DynSingleConsCancelPtr, MultiConsCancelPtr};
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::communication::decorator::{ScopeStreamBuffer, ScopeStreamPush};
+    use crate::communication::Magic;
     use crate::data::MicroBatch;
     use crate::errors::{IOError, IOResult};
     use crate::graph::Port;
     use crate::progress::{EndSignal, Weight};
     use crate::{Data, Tag};
-    use crate::tag::tools::map::TidyTagMap;
-    use crate::communication::Magic;
-    use crate::communication::cancel::{MultiConsCancelPtr, CancelHandle, DynSingleConsCancelPtr};
-
 
     pub struct ExchangeMicroBatchPush<D: Data> {
         pub ch_info: ChannelInfo,
@@ -222,7 +213,7 @@ mod rob {
                     Magic::Modulo(x) => {
                         for next in iter {
                             let idx = (self.routing.route(&next)? % x) as usize;
-                            if !self.cancel_handle.is_canceled(tag, idx ) {
+                            if !self.cancel_handle.is_canceled(tag, idx) {
                                 self.pushes[idx].push(tag, next)?;
                             }
                         }
@@ -292,12 +283,18 @@ mod rob {
         }
 
         fn push(&mut self, tag: &Tag, msg: MicroBatch<D>) -> IOResult<()> {
+            if self.cancel_handle.is_canceled(tag) {
+                return Ok(());
+            }
             let idx = tag.current_uncheck() as u64;
             let offset = self.magic.exec(idx) as usize;
             self.pushes[offset].push(tag, msg)
         }
 
         fn push_last(&mut self, msg: MicroBatch<D>, mut end: EndSignal) -> IOResult<()> {
+            if self.cancel_handle.is_canceled(&msg.tag) {
+                return self.notify_end(end);
+            }
             let idx = end.tag.current_uncheck() as u64;
             let offset = self.magic.exec(idx) as usize;
             if self.has_cycles.load(Ordering::SeqCst) {

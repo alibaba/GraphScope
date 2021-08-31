@@ -3,6 +3,7 @@ pub(crate) use rob::*;
 #[cfg(not(feature = "rob"))]
 mod rob {
     use crate::channel_id::ChannelInfo;
+    use crate::communication::cancel::{CancelHandle, MultiConsCancelPtr};
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::communication::decorator::ScopeStreamPush;
     use crate::communication::IOResult;
@@ -10,7 +11,6 @@ mod rob {
     use crate::graph::Port;
     use crate::progress::{EndSignal, Weight};
     use crate::{Data, Tag};
-    use crate::communication::cancel::{MultiConsCancelPtr, CancelHandle};
 
     pub struct BroadcastBatchPush<D: Data> {
         pub ch_info: ChannelInfo,

@@ -1,17 +1,16 @@
 use std::rc::Rc;
 
-use crate::api::{IterCondition, Notification};
+use crate::api::notification::{CancelScope, EndScope};
+use crate::api::IterCondition;
 use crate::communication::input::{new_input_session, InputProxy};
 use crate::communication::output::{new_output, OutputProxy};
 use crate::communication::Output;
-use crate::config::LOOP_OPT;
 use crate::data::{MarkedData, MicroBatch};
 use crate::errors::JobExecError;
-use crate::graph::Port;
 use crate::operator::{Notifiable, OperatorCore};
 use crate::progress::EndSignal;
 use crate::tag::tools::map::TidyTagMap;
-use crate::{Data, Tag};
+use crate::Data;
 
 pub(crate) struct SwitchOperator<D> {
     scope_level: u32,
@@ -176,21 +175,21 @@ fn switch<D: Data>(
 
 impl<D: Data> Notifiable for SwitchOperator<D> {
     // handle end signal of parent scope;
-    fn on_notify(&mut self, n: Notification, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
+    fn on_notify(&mut self, n: EndScope, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
         debug_worker!("on notify of {:?} on in port {}", n.tag(), n.port);
-        let n_len = n.tag().len();
-        assert!(n_len < self.scope_level as usize);
+        let level = n.tag().len();
+        assert!(level < self.scope_level as usize);
 
         if n.port == 0 {
             if self.iter_scope.is_empty() {
-                let end = n.take_end();
-                if end.tag.is_root() {
+                if n.tag().is_root() {
                     debug_worker!("all scopes out of iteration at scope level {};", self.scope_level);
+                    let end: EndSignal = n.into();
                     outputs[0].notify_end(end.clone())?;
                     outputs[1].notify_end(end)?;
                 }
             } else {
-                let end = EndGuard::new(n.take_end());
+                let end = EndGuard::new(n.into());
                 for (t, v) in self.iter_scope.iter_mut() {
                     if &end.end.tag == &*t || end.end.tag.is_parent_of(&t) {
                         v.push(end.clone());
@@ -201,41 +200,26 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
         Ok(())
     }
 
-    fn on_cancel(
-        &mut self, port: Port, tag: Tag, inputs: &[Box<dyn InputProxy>], outputs: &[Box<dyn OutputProxy>],
-    ) -> Result<bool, JobExecError> {
-        if port.port == 0 {
+    fn on_cancel(&mut self, n: CancelScope, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
+        if n.port == 0 {
             // received from outer loop
-            assert!(tag.len() < self.scope_level as usize);
+            assert!(n.tag().len() < self.scope_level as usize);
             for input in inputs.iter() {
-                input.cancel_scope(&tag);
-            }
-            for output in outputs.iter() {
-                output.skip(&tag)?;
+                input.cancel_scope(n.tag());
             }
         } else {
-            assert_eq!(port.port, 1);
-            if tag.len() == self.scope_level as usize {
-                if let Some(nth) = tag.current() {
-                    // in the middle iteration, should propagated into previous iteration
-                    if nth != 0 {
-                        inputs[1].cancel_scope(&tag);
-                        outputs[1].skip(&tag)?;
-                    } else {
-                        inputs[0].cancel_scope(&tag);
-                        // if *LOOP_OPT {
-                        //     // enable propagation to parent scope optimization
-                        //     inputs[0].propagate_cancel_uncheck(&tag)?;
-                        // }
-                        outputs[1].skip(&tag)?;
-                    }
+            assert_eq!(n.port, 1);
+            if n.tag().len() == self.scope_level as usize {
+                let nth = n.tag().current_uncheck();
+                // in the middle iteration, should propagated into previous iteration
+                if nth != 0 {
+                    inputs[1].cancel_scope(n.tag());
                 } else {
-                    // tag is ROOT, impossible!
-                    unreachable!()
+                    inputs[0].cancel_scope(n.tag());
                 }
             }
         }
-        Ok(true)
+        Ok(())
     }
 }
 

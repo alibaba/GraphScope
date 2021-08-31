@@ -19,7 +19,7 @@ use crate::communication::output::{ChannelPush, OutputBuilderImpl};
 use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPull, GeneralPush};
 use crate::graph::Port;
-use crate::{Data, Tag};
+use crate::Data;
 
 pub enum ChannelKind<T: Data> {
     Pipeline,
@@ -147,7 +147,6 @@ impl<T: Data> Channel<T> {
     }
 }
 
-
 #[cfg(not(feature = "rob"))]
 mod rob {
     use std::sync::atomic::AtomicBool;
@@ -158,6 +157,7 @@ mod rob {
     use super::*;
     use crate::channel_id::{ChannelId, ChannelInfo};
     use crate::communication::buffer::BufferedPush;
+    use crate::communication::cancel::{CancelHandle, SingleConsCancel};
     use crate::communication::decorator::aggregate::AggregateBatchPush;
     use crate::communication::decorator::broadcast::BroadcastBatchPush;
     use crate::communication::decorator::exchange::ExchangeByScopePush;
@@ -170,7 +170,6 @@ mod rob {
     use crate::dataflow::DataflowBuilder;
     use crate::errors::BuildJobError;
     use crate::graph::Port;
-    use crate::communication::cancel::{CancelHandle, SingleConsCancel};
 
     impl<T: Data> Channel<T> {
         fn build_pipeline(self, target: Port, id: ChannelId) -> MaterializedChannel<T> {
@@ -263,7 +262,8 @@ mod rob {
                     }
                     let push = ExchangeMicroBatchPush::new(ch_info, buffered, r);
                     let cancel = push.get_cancel_handle();
-                    let push = ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Shuffle(push), cancel);
+                    let push =
+                        ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Shuffle(push), cancel);
                     Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
                 }
                 ChannelKind::Broadcast => {
@@ -273,7 +273,12 @@ mod rob {
                     let cancel = push.get_cancel_handle();
                     let push =
                         BufferedPush::new(scope_level, batch_size, scope_capacity, batch_capacity, push);
-                    let push = ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Broadcast(push), cancel);
+                    let push = ChannelPush::new(
+                        ch_info,
+                        self.scope_delta,
+                        MicroBatchPush::Broadcast(push),
+                        cancel,
+                    );
 
                     Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
                 }
@@ -285,7 +290,12 @@ mod rob {
                     let push =
                         BufferedPush::new(scope_level, batch_size, scope_capacity, batch_capacity, push);
                     let cancel = CancelHandle::SC(SingleConsCancel::new(worker));
-                    let push = ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Aggregate(push), cancel);
+                    let push = ChannelPush::new(
+                        ch_info,
+                        self.scope_delta,
+                        MicroBatchPush::Aggregate(push),
+                        cancel,
+                    );
                     Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
                 }
                 ChannelKind::ShuffleScope => {
@@ -296,8 +306,12 @@ mod rob {
                     let cancel = push.get_cancel_handle();
                     let push =
                         BufferedPush::new(scope_level, batch_size, scope_capacity, batch_capacity, push);
-                    let push =
-                        ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::ScopeShuffle(push), cancel);
+                    let push = ChannelPush::new(
+                        ch_info,
+                        self.scope_delta,
+                        MicroBatchPush::ScopeShuffle(push),
+                        cancel,
+                    );
                     Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
                 }
             }

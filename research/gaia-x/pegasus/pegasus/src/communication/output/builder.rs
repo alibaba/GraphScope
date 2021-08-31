@@ -19,14 +19,13 @@ use std::rc::Rc;
 use pegasus_common::downcast::*;
 
 use crate::api::scope::ScopeDelta;
+use crate::communication::cancel::CancelListener;
 use crate::communication::output::output::OutputHandle;
 use crate::communication::output::tee::{ChannelPush, Tee};
 use crate::communication::output::{OutputBuilder, OutputProxy, RefWrapOutput};
 use crate::graph::Port;
+use crate::schedule::state::outbound::OutputCancelState;
 use crate::Data;
-use crate::schedule::state::outbound::{OutputCancelState};
-use crate::communication::decorator::ScopeStreamPush;
-use crate::communication::cancel::CancelListener;
 
 #[derive(Copy, Clone, Debug)]
 pub struct OutputMeta {
@@ -116,7 +115,6 @@ impl<D: Data> Clone for OutputBuilderImpl<D> {
 impl_as_any!(OutputBuilderImpl<D: Data>);
 
 impl<D: Data> OutputBuilder for OutputBuilderImpl<D> {
-
     fn build_cancel_handle(&self) -> Option<OutputCancelState> {
         let port = self.meta.borrow().port;
         let scope_level = self.meta.borrow().scope_level;
@@ -141,7 +139,6 @@ impl<D: Data> OutputBuilder for OutputBuilderImpl<D> {
                     let listener = ch.get_cancel_handle();
                     let index = ch.ch_info.id.index;
                     vec.push((index, Box::new(listener) as Box<dyn CancelListener>));
-
                 }
             }
             Some(OutputCancelState::tee(port, scope_level, vec))

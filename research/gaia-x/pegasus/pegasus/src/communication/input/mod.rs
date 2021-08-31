@@ -18,6 +18,8 @@ use pegasus_common::downcast::*;
 use crate::channel_id::ChannelInfo;
 use crate::data::MicroBatch;
 use crate::data_plane::GeneralPull;
+use crate::errors::IOResult;
+use crate::event::emitter::EventEmitter;
 use crate::progress::EndSignal;
 use crate::{Data, Tag};
 
@@ -41,13 +43,10 @@ pub use input::InputBlockGuard;
 use input::{InputHandle, RefWrapInput};
 pub use session::InputSession;
 
-use crate::api::scope::MergedScopeDelta;
-use crate::errors::IOResult;
-use crate::event::emitter::EventEmitter;
-
 #[inline]
 pub(crate) fn new_input<D: Data>(
-    ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<D>>, event_emitter: &EventEmitter) -> Box<dyn InputProxy> {
+    ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<D>>, event_emitter: &EventEmitter,
+) -> Box<dyn InputProxy> {
     let input = InputHandle::new(ch_info, pull, event_emitter.clone());
     Box::new(RefWrapInput::wrap(input)) as Box<dyn InputProxy>
 }

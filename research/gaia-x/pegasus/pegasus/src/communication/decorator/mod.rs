@@ -66,6 +66,7 @@ mod rob {
     use super::*;
     use crate::channel_id::ChannelInfo;
     use crate::communication::buffer::BufferedPush;
+    use crate::communication::cancel::CancelListener;
     use crate::communication::decorator::aggregate::AggregateBatchPush;
     use crate::communication::decorator::broadcast::BroadcastBatchPush;
     use crate::communication::decorator::exchange::{ExchangeByScopePush, ExchangeMicroBatchPush};
@@ -77,7 +78,6 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::Tag;
-    use crate::communication::cancel::CancelListener;
 
     pub struct LocalMiniBatchPush<T: Data> {
         pub ch_info: ChannelInfo,

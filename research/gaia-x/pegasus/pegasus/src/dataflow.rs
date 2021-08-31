@@ -14,13 +14,13 @@
 //! limitations under the License.
 
 use std::cell::RefCell;
+use std::collections::VecDeque;
 use std::fmt::Write;
 use std::fs::File;
 use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::api::meta::OperatorInfo;
-use crate::api::scope::MergedScopeDelta;
 use crate::channel_id::ChannelInfo;
 use crate::communication::output::OutputBuilderImpl;
 use crate::data::MicroBatch;
@@ -31,7 +31,6 @@ use crate::graph::{Dependency, DotGraph, Edge, Port};
 use crate::operator::{GeneralOperator, NotifiableOperator, Operator, OperatorBuilder, OperatorCore};
 use crate::schedule::Schedule;
 use crate::{Data, JobConf, Tag, WorkerId};
-use std::collections::VecDeque;
 
 pub struct DataflowBuilder {
     pub worker_id: WorkerId,
@@ -213,7 +212,7 @@ impl OperatorRef {
 
     pub fn add_input<T: Data>(
         &self, ch_info: ChannelInfo, pull: GeneralPull<MicroBatch<T>>,
-        notify: Option<GeneralPush<MicroBatch<T>>>, event_emitter: &EventEmitter
+        notify: Option<GeneralPush<MicroBatch<T>>>, event_emitter: &EventEmitter,
     ) {
         let mut b = self.borrow.borrow_mut();
         b[self.index - 1].add_input(ch_info, pull, notify, event_emitter)
@@ -297,12 +296,14 @@ impl Dataflow {
         true
     }
 
-    pub fn try_cancel(&self, index: usize, discards: &mut VecDeque<(Port, Tag)>) -> Result<(), JobExecError> {
+    pub fn try_cancel(
+        &self, index: usize, discards: &mut VecDeque<(Port, Tag)>,
+    ) -> Result<(), JobExecError> {
         let mut operators = self.operators.borrow_mut();
         if let Some(op_opt) = operators.get_mut(index) {
             if let Some(op) = op_opt {
                 while let Some((port, tag)) = discards.pop_front() {
-                    op.cancel(port, tag)?;
+                    op.cancel(port.port, tag)?;
                 }
             } else {
                 discards.clear();
