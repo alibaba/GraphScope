@@ -30,7 +30,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6-dongze
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
       options:
         --shm-size 4096m
     strategy:
@@ -131,7 +131,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6-dongze
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
     - name: Install Dependencies
       run: |
@@ -177,7 +177,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6-dongze
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
     - uses: actions/checkout@v2.3.2
       with:
@@ -235,7 +235,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:dongze
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
     steps:
     - uses: actions/checkout@v2.3.2
 
@@ -259,7 +259,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:dongze
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
       options:
         --shm-size 4096m
     strategy:
@@ -370,7 +370,7 @@ jobs:
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:dongze
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
@@ -464,7 +464,7 @@ jobs:
         tar -xf ./gle-${{ github.sha }}/gle.tar
         tar -xf ./gie-${{ github.sha }}/gie.tar
         tar -xf ./manager-${{ github.sha }}/manager.tar
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:dongze
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope.Dockerfile .
@@ -494,7 +494,7 @@ jobs:
       run:
         shell: scl enable devtoolset-7 -- bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6-dongze
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6
     steps:
 
     #- name: "Debug: Package dependancies for tmate"
@@ -587,7 +587,7 @@ jobs:
         tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
         tar -zxf ./gss-${{ github.sha }}/giectl.tar.gz
 
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:dongze
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${{ github.sha }} \
                           --network=host \
                           -f ./graphscope-store.Dockerfile .

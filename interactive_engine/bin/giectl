@@ -351,13 +351,13 @@ create_gremlin_instance_on_local() {
       gaia_gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.out | awk -F: '{print $7}') || true
       gaia_gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/gaia-frontend.err | awk -F: '{print $4}') || true
       if [ ! -z "${gaia_gremlin_server_port_in_log}" ]; then
-        log "GAIA_FRONTEND_PORT:127.0.0.1:${gaia_gremlin_server_port_in_log}"
+        log "GAIA_FRONTEND_ENDPOINT:127.0.0.1:${gaia_gremlin_server_port_in_log}"
         gaia_gremlin_server_ready=True
       elif [ ! -z "${gaia_gremlin_server_port_in_out}" ]; then
-        log "GAIA_FRONTEND_PORT:127.0.0.1:${gaia_gremlin_server_port_in_out}"
+        log "GAIA_FRONTEND_ENDPOINT:127.0.0.1:${gaia_gremlin_server_port_in_out}"
         gaia_gremlin_server_ready=True
       elif [ ! -z "${gaia_gremlin_server_port_in_err}" ]; then
-        log "GAIA_FRONTEND_PORT:127.0.0.1:${gaia_gremlin_server_port_in_err}"
+        log "GAIA_FRONTEND_ENDPOINT:127.0.0.1:${gaia_gremlin_server_port_in_err}"
         gaia_gremlin_server_ready=True
       fi
     fi
