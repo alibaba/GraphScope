@@ -49,8 +49,6 @@ limitations under the License.
 #include "wcc/wcc.h"
 #include "wcc/wcc_auto.h"
 
-#include "apps/assortativity/attribute/attribute_assortativity.h"
-#include "apps/assortativity/attribute/numeric_assortativity.h"
 #include "apps/bfs/bfs_generic.h"
 #include "apps/centrality/degree/degree_centrality.h"
 #include "apps/centrality/eigenvector/eigenvector_centrality.h"
@@ -117,9 +115,6 @@ DECLARE_int32(app_concurrency);
 
 DECLARE_int64(dfs_source);
 DECLARE_string(dfs_format);
-
-DECLARE_string(source_degree_type);
-DECLARE_string(target_degree_type);
 
 namespace gs {
 
@@ -426,20 +421,6 @@ void Run() {
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
                                        FLAGS_bfs_source);
-  } else if (name == "attribute_assortativity") {
-    using GraphType =
-        grape::ImmutableEdgecutFragment<OID_T, VID_T, std::string, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
-    using AppType = AttributeAssortativity<GraphType>;
-    CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
-                                       FLAGS_datasource, fnum, spec);
-  } else if (name == "numeric_assortativity") {
-    using GraphType =
-        grape::ImmutableEdgecutFragment<OID_T, VID_T, int, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
-    using AppType = NumericAssortativity<GraphType>;
-    CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
-                                       FLAGS_datasource, fnum, spec);
   } else {
     LOG(FATAL) << "No available application named [" << name << "].";
   }
