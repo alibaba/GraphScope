@@ -334,6 +334,7 @@ jobs:
         sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm || true
         sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
         sudo rm -rf ./* || true
+        sudo rm -rf "/home/gsuser/actions-runner/_work/GraphScope/GraphScope/.git" || true
         find ./ -name "*.egg-info" | xargs sudo rm -rf || true
         find ./ -name "*.whl" | xargs sudo rm -rf || true
         find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
@@ -428,6 +429,7 @@ jobs:
         sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
         sudo rm -rf ./* || true
         sudo rm -rf /tmp/graphscope/app_* || true
+        sudo rm -rf "/home/gsuser/actions-runner/_work/GraphScope/GraphScope/.git" || true
         find ./ -name "*.egg-info" | xargs sudo rm -rf || true
         find ./ -name "*.whl" | xargs sudo rm -rf || true
         find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
@@ -543,11 +545,6 @@ jobs:
           giectl.tar.gz
         retention-days: 5
 
-    - name: Clean
-      if: always()
-      run: |
-        rm -rf ${GITHUB_WORKSPACE}
-
   gss-test:
     runs-on: self-hosted
     needs: [build-gss]
@@ -561,6 +558,7 @@ jobs:
         sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm || true
         sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
         sudo rm -rf ./* || true
+        sudo rm -rf "/home/gsuser/actions-runner/_work/GraphScope/GraphScope/.git" || true
         find ./ -name "*.egg-info" | xargs sudo rm -rf || true
         find ./ -name "*.whl" | xargs sudo rm -rf || true
         find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
