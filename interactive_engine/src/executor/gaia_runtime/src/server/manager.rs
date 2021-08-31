@@ -139,7 +139,8 @@ impl ServerManager for GaiaServerManager {
                 if !address_list.is_empty() && !task_partition_list.is_empty() {
                     // start gaia_pegasus
                     let configuration = build_gaia_config(worker_id as usize, address_list);
-                    if let Err(err) = gaia_pegasus::startup(configuration) {
+                    info!("gaia configuration {:?}", configuration);
+		    if let Err(err) = gaia_pegasus::startup(configuration) {
                         info!("start pegasus failed {:?}", err);
                     } else {
                         info!("start pegasus successfully");
