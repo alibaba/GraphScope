@@ -120,7 +120,7 @@ class HostsClusterLauncher(Launcher):
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=sys.stdout if gs_config.show_log else subprocess.DEVNULL,
-            stderr=sys.stderr if gs_config.show_log else subprocess.DEVNULL,
+            stderr=sys.stderr,
             bufsize=1,
             env=env,
         )
