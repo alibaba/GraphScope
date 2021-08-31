@@ -355,9 +355,10 @@ impl GremlinJobCompiler {
     }
 }
 
-impl JobParser<Traverser, Vec<u8>> for GremlinJobCompiler {
+impl JobParser<Traverser, pb::protobuf::Result> for GremlinJobCompiler {
     fn parse(
-        &self, plan: &JobRequest, input: &mut Source<Traverser>, output: ResultSink<Vec<u8>>,
+        &self, plan: &JobRequest, input: &mut Source<Traverser>,
+        output: ResultSink<pb::protobuf::Result>,
     ) -> Result<(), BuildJobError> {
         if let Some(source) = plan.source.as_ref() {
             let source = input.input_from(self.udf_gen.gen_source(source.resource.as_ref())?)?;

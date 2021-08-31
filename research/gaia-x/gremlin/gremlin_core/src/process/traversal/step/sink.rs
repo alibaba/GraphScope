@@ -14,31 +14,53 @@
 //! limitations under the License.
 
 use crate::functions::EncodeFunction;
+use crate::generated::protobuf as result_pb;
 use crate::process::traversal::traverser::Traverser;
 use crate::result_process::result_to_pb;
 use pegasus::api::function::FnResult;
+use pegasus::codec::{ReadExt, WriteExt};
+use pegasus_common::codec::{Decode, Encode};
 use prost::Message;
 use std::collections::HashMap;
 
 pub struct TraverserSinkEncoder;
 
-impl EncodeFunction<Traverser> for TraverserSinkEncoder {
-    fn encode(&self, data: Traverser) -> FnResult<Vec<u8>> {
-        let result_pb = result_to_pb(data);
+impl Encode for result_pb::Result {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         let mut bytes = vec![];
-        result_pb.encode_raw(&mut bytes);
-        Ok(bytes)
+        self.encode_raw(&mut bytes);
+        writer.write_u32(bytes.len() as u32)?;
+        writer.write_all(bytes.as_slice())?;
+        Ok(())
+    }
+}
+
+impl Decode for result_pb::Result {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let len = reader.read_u32()? as usize;
+        let mut buffer = Vec::with_capacity(len);
+        reader.read_exact(&mut buffer)?;
+        result_pb::Result::decode(buffer.as_slice()).map_err(|_e| {
+            std::io::Error::new(std::io::ErrorKind::Other, "decoding result_pb failed!")
+        })
+    }
+}
+
+impl EncodeFunction<Traverser> for TraverserSinkEncoder {
+    fn encode(&self, data: Traverser) -> FnResult<result_pb::Result> {
+        let result_pb = result_to_pb(data);
+        Ok(result_pb)
     }
 }
 
 impl EncodeFunction<HashMap<Traverser, Vec<Traverser>>> for TraverserSinkEncoder {
-    fn encode(&self, _data: HashMap<Traverser, Vec<Traverser>>) -> FnResult<Vec<u8>> {
+    fn encode(&self, _data: HashMap<Traverser, Vec<Traverser>>) -> FnResult<result_pb::Result> {
         unimplemented!()
     }
 }
 
 impl EncodeFunction<HashMap<Traverser, i32>> for TraverserSinkEncoder {
-    fn encode(&self, _data: HashMap<Traverser, i32>) -> FnResult<Vec<u8>> {
+    fn encode(&self, _data: HashMap<Traverser, i32>) -> FnResult<result_pb::Result> {
         unimplemented!()
     }
 }
