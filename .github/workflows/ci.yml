@@ -493,6 +493,10 @@ jobs:
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.2.6-dongze
     steps:
+    - name: Setup tmate session debug
+      if: true
+      uses: mxschmitt/action-tmate@v2
+
     - name: Install Dependencies
       run: |
         wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
@@ -536,6 +540,11 @@ jobs:
           lib.tar.gz
           giectl.tar.gz
         retention-days: 5
+
+    - name: Clean
+      if: always()
+      run: |
+        rm -fr ${GITHUB_WORKSPACE}
 
   gss-test:
     runs-on: self-hosted
