@@ -120,8 +120,8 @@ public class DefaultResultParser implements ResultParser {
         }
     }
 
-    protected BigInteger extractEdgeId(GremlinResult.Edge edge) {
-        return new BigInteger(edge.getId());
+    protected Object extractEdgeId(GremlinResult.Edge edge) {
+        return graphStore.fromBytes(edge.getId().toByteArray());
     }
 
     protected BigInteger extractVertexId(GremlinResult.Vertex vertex) {

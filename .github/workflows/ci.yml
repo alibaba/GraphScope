@@ -334,6 +334,7 @@ jobs:
         echo "CI is running on host $(curl -s 'https://api.ipify.org')"
         sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm || true
         sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
+        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
         sudo rm -rf ./* || true
         find ./ -name "*.egg-info" | xargs sudo rm -rf || true
         find ./ -name "*.whl" | xargs sudo rm -rf || true
@@ -427,6 +428,7 @@ jobs:
         echo "CI is running on host $(curl -s 'https://api.ipify.org')"
         sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm || true
         sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
+        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
         sudo rm -rf ./* || true
         sudo rm -rf /tmp/graphscope/app_* || true
         find ./ -name "*.egg-info" | xargs sudo rm -rf || true
@@ -554,6 +556,7 @@ jobs:
     - name: Clean up
       run: |
         echo "CI is running on host $(curl -s 'https://api.ipify.org')"
+        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
         sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm || true
         sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
         sudo rm -rf ./* || true

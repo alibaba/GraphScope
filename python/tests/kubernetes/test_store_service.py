@@ -126,14 +126,7 @@ def test_demo(gs_conn):
             .toList()[0]
             .id
         )
-    # FIXME: In GAIA the eid is 128 bit, which cannot fit in the proto.
-    # Fix the bug and remove the try block.
-    # And we will allow the maxgraph executor to run the remaining tests.
-    try:
-        snapshot_id = graph.update_edge_properties(*edge_update)
-    except ValueError:
-        print("Knows bugs in GAIA, will be fixed later.")
-        return
+    snapshot_id = graph.update_edge_properties(*edge_update)
 
     assert gs_conn.remote_flush(snapshot_id)
 
