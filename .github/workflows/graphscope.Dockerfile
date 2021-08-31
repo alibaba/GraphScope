@@ -6,6 +6,7 @@ COPY ./opt/graphscope/ /usr/local/
 RUN cd /usr/local/dist/ && pip3 install ./*.whl
 
 COPY ./interactive_engine/src/executor/target/release/executor /usr/local/bin/executor
+COPY ./interactive_engine/src/executor/target/release/gaia_executor /usr/local/bin/gaia_executor
 COPY ./interactive_engine/bin/giectl /usr/local/bin/giectl
 COPY ./interactive_engine/bin/zetcd /usr/local/bin/zetcd
 COPY ./interactive_engine/src/assembly/target/0.0.1-SNAPSHOT.tar.gz /tmp/0.0.1-SNAPSHOT.tar.gz
