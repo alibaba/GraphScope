@@ -496,7 +496,8 @@ jobs:
 
     - name: "Debug: Package dependancies for tmate"
       run: |
-        yum install -y xz
+        sudo yum update -y
+        sudo yum install -y xz
         sudo ln -s /bin/true /bin/apt-get
 
     - name: Setup tmate session debug
