@@ -518,9 +518,6 @@ jobs:
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
         rustup component add rustfmt
-        sudo yum update -y
-        sudo yum install -y xz
-        sudo ln -s /bin/true /bin/apt-get
 
     - uses: actions/checkout@v2.3.2
 
