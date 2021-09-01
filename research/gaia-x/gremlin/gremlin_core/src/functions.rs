@@ -13,8 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::generated::protobuf as result_pb;
 use pegasus::api::function::FnResult;
-
 
 use std::cmp::Ordering;
 
@@ -27,7 +27,7 @@ pub trait KeyFunction<D, K, V>: Send + 'static {
 }
 
 pub trait EncodeFunction<D>: Send + 'static {
-    fn encode(&self, data: D) -> FnResult<Vec<u8>>;
+    fn encode(&self, data: D) -> FnResult<result_pb::Result>;
 }
 
 ///
