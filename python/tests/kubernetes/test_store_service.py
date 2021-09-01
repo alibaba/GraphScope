@@ -40,20 +40,21 @@ def gs_conn():
     yield graphscope.conn(grpc_endpoint, gremlin_endpoint)
 
 
-def test_demo(gs_conn):
-    graph = gs_conn.g()
-    # Create schema
-    schema = graph.schema()
-    schema.add_vertex_label("person").add_primary_key("id", "long").add_property(
-        "name", "str"
-    )
-    schema.add_edge_label("knows").source("person").destination("person").add_property(
-        "date", "str"
-    )
-    schema.update()
-    # Bulk load data
-    load_script = os.environ["LOAD_DATA_SCRIPT"]
-    os.system(load_script)
+def demo(gs_conn, loaded):
+    if not loaded:
+        graph = gs_conn.g()
+        # Create schema
+        schema = graph.schema()
+        schema.add_vertex_label("person").add_primary_key("id", "long").add_property(
+            "name", "str"
+        )
+        schema.add_edge_label("knows").source("person").destination(
+            "person"
+        ).add_property("date", "str")
+        schema.update()
+        # Bulk load data
+        load_script = os.environ["LOAD_DATA_SCRIPT"]
+        os.system(load_script)
 
     interactive = gs_conn.gremlin()
     assert interactive.V().count().toList()[0] == 903
@@ -151,3 +152,11 @@ def test_demo(gs_conn):
 
     assert interactive.V().count().toList()[0] == 903
     assert interactive.E().count().toList()[0] == 6626
+
+
+def test_demo_unloaded(gs_conn):
+    demo(gs_conn, False)
+
+
+def test_demo_loaded(gs_conn):
+    demo(gs_conn, True)

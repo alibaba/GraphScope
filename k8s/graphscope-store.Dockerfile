@@ -38,7 +38,3 @@ COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
 COPY --from=builder /opt/graphscope /usr/local/
 COPY --from=builder /home/graphscope/gs/interactive_engine/distribution/target/maxgraph.tar.gz /tmp/maxgraph.tar.gz
 RUN sudo tar -zxf /tmp/maxgraph.tar.gz -C /usr/local
-COPY --from=builder /home/graphscope/gs/interactive_engine/bin/giectl /usr/local/bin/giectl
-COPY --from=builder /home/graphscope/gs/interactive_engine/conf/* /usr/local/conf/
-
-ENV GRAPHSCOPE_HOME=/usr/local
