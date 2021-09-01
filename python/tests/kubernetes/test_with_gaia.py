@@ -25,9 +25,7 @@ import graphscope
 from graphscope.config import GSConfig as gs_config
 from graphscope.dataset.modern_graph import load_modern_graph
 
-graphscope.set_option(
-    show_log=True, k8s_gie_gremlin_server_cpu=1.0, k8s_gie_gremlin_server_mem="4Gi"
-)
+graphscope.set_option(show_log=True)
 logger = logging.getLogger("graphscope")
 
 

@@ -79,7 +79,7 @@ spec:
                      -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/conf/log4rs.yml@g" \
             /etc/graphscope-store/my.cnf.tpl | sudo tee /etc/graphscope-store/my.cnf
 
-            LOG_NAME=graphscope-store.log ${GRAPHSCOPE_HOME}/bin/giectl maxgraph /etc/graphscope-store/my.cnf ingestor
+            LOG_NAME=graphscope-store.log /usr/local/bin/giectl maxgraph /etc/graphscope-store/my.cnf ingestor
             tail -f /dev/null
           env:
             - name: DEBUG
