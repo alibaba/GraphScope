@@ -385,13 +385,15 @@ class LocalLauncher(Launcher):
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stderr=subprocess.PIPE,
             bufsize=1,
         )
 
         logger.info("Server is initializing analytical engine.")
         stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
+        stderr_watcher = PipeWatcher(process.stderr, sys.stderr)
         setattr(process, "stdout_watcher", stdout_watcher)
+        setattr(process, "stderr_watcher", stderr_watcher)
 
         self._analytical_engine_process = process
 

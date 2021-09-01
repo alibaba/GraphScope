@@ -978,14 +978,18 @@ class KubernetesClusterLauncher(Launcher):
             cmd,
             env=env,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stderr=subprocess.PIPE,
             encoding="utf-8",
         )
 
         stdout_watcher = PipeWatcher(
             self._analytical_engine_process.stdout, sys.stdout, drop=True
         )
+        stderr_watcher = PipeWatcher(
+            self._analytical_engine_process.stderr, sys.stderr, drop=True
+        )
         setattr(self._analytical_engine_process, "stdout_watcher", stdout_watcher)
+        setattr(self._analytical_engine_process, "stderr_watcher", stderr_watcher)
 
     def _delete_dangling_coordinator(self):
         # delete service

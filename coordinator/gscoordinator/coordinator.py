@@ -676,15 +676,21 @@ class CoordinatorServiceServicer(
     def FetchLogs(self, request, context):
         while self._streaming_logs:
             try:
-                message = sys.stdout.poll(timeout=3)
+                info_message = sys.stdout.poll(timeout=2)
             except queue.Empty:
-                pass
-            else:
+                info_message = ""
+            try:
+                error_message = sys.stderr.poll(timeout=2)
+            except queue.Empty:
+                error_message = ""
+
+            if info_message or error_message:
                 if self._streaming_logs:
                     yield self._make_response(
                         message_pb2.FetchLogsResponse,
                         error_codes_pb2.OK,
-                        message=message,
+                        info_message=info_message,
+                        error_message=error_message,
                     )
 
     def CloseSession(self, request, context):
