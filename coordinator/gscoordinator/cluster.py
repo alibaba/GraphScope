@@ -313,6 +313,7 @@ class KubernetesClusterLauncher(Launcher):
 
     def distribute_file(self, path):
         dir = os.path.dirname(path)
+        # TODO(dongze): This command may fail, and it will cause the cluster to stuck.
         for pod in self._pod_name_list:
             subprocess.check_call(
                 [
@@ -813,6 +814,7 @@ class KubernetesClusterLauncher(Launcher):
         logger.info("Etcd is ready, endpoint is {}".format(self._etcd_endpoint))
 
         # create interactive engine service
+        logger.info("Creating interactive engine service...")
         self._create_interactive_engine_service()
 
         if self._saved_locals["with_mars"]:
@@ -820,6 +822,7 @@ class KubernetesClusterLauncher(Launcher):
             self._create_mars_scheduler()
             self._create_mars_service()
 
+        logger.info("Creating engine replicaset...")
         self._create_engine_replicaset()
         if not self._exists_vineyard_daemonset(
             self._saved_locals["vineyard_daemonset"]
@@ -1076,7 +1079,7 @@ class KubernetesClusterLauncher(Launcher):
             self._resource_object = []
 
             if is_dangling:
-                logger.info("Dangling coordinator detected, clean up soon.")
+                logger.info("Dangling coordinator detected, cleaning up...")
                 # delete everything inside namespace of graphscope instance
                 if self._saved_locals["delete_namespace"]:
                     # delete namespace created by graphscope

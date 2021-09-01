@@ -134,12 +134,12 @@ class Selector {
       std::string prop_name = sm[1];
       if (prop_name.empty()) {
         RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                        "Empty property name: " + prop_name);
+                        "Property name not found, the selector is: " + selector);
       }
       return Selector(prop_name);
     }
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                    "Unmatched selector: " + selector);
+                    "Invalid syntax, the selector is: " + selector);
   }
 
   /**
@@ -282,12 +282,12 @@ class LabeledSelector : public Selector {
 
       if (prop_name.empty()) {
         RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                        "Empty property name: " + prop_name);
+                        "Property name not found, the selector is: " + selector);
       }
       return LabeledSelector(label_id, prop_name);
     }
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                    "Unmatched selector: " + selector);
+                    "Invalid syntax, the selector is: " + selector);
   }
 
   /**
