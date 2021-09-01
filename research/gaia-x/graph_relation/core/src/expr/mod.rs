@@ -238,7 +238,7 @@ fn to_suffix_tokens(tokens: Vec<Token>) -> ExprResult<Vec<Token>> {
     Ok(results)
 }
 
-pub fn to_suffix_expr(tokens: Vec<Token>) -> ExprResult<Vec<pb::ExprUnit>> {
+pub fn to_suffix_expr_pb(tokens: Vec<Token>) -> ExprResult<Vec<pb::ExprUnit>> {
     let tokens = to_suffix_tokens(tokens)?;
     let mut suffix_expr = Vec::<pb::ExprUnit>::with_capacity(tokens.len());
 

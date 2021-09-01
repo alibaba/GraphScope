@@ -19,11 +19,14 @@ use crate::generated::common as pb;
 use crate::generated::common::expr_unit::Item;
 use crate::generated::common::{Arithmetic, ExprUnit, Logical};
 use dyn_type::arith::Exp;
-use dyn_type::{BorrowObject, Object, Primitives};
+use dyn_type::{BorrowObject, Object};
 use std::cell::RefCell;
 
 pub struct Evaluator<'a> {
+    /// A suffix-tree-based expression for evaluating
     suffix_tree: Vec<pb::ExprUnit>,
+    /// A stack for evaluating the suffix-tree-based expression
+    /// Wrap it in a `RefCell` to avoid conflict mutable reference
     stack: RefCell<Vec<BorrowObject<'a>>>,
     // todo shall take a concept to accept values for variable
 }
@@ -45,15 +48,14 @@ fn apply_arith<'a>(
     if first.is_some() && second.is_some() {
         let a = first.unwrap();
         let b = second.unwrap();
-        let rst = match arith {
+        Ok(match arith {
             Arithmetic::Add => BorrowObject::Primitive(a.as_primitive()? + b.as_primitive()?),
             Arithmetic::Sub => BorrowObject::Primitive(a.as_primitive()? - b.as_primitive()?),
             Arithmetic::Mul => BorrowObject::Primitive(a.as_primitive()? * b.as_primitive()?),
             Arithmetic::Div => BorrowObject::Primitive(a.as_primitive()? / b.as_primitive()?),
             Arithmetic::Mod => BorrowObject::Primitive(a.as_primitive()? % b.as_primitive()?),
             Arithmetic::Exp => BorrowObject::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
-        };
-        Ok(rst)
+        })
     } else {
         Err(ExprError::OtherErr(
             "invalid expression, the arithmetic operator misses operand".into(),
@@ -98,8 +100,9 @@ fn apply_logical<'a>(
 
 // Private api
 impl<'a> Evaluator<'a> {
-    // Evaluate simple expression
-    fn eval_without_stack(&'a self) -> ExprResult<Primitives> {
+    /// Evaluate simple expression that contains less than three operators
+    /// without using the stack.
+    fn eval_without_stack(&'a self) -> ExprResult<Object> {
         assert!(self.suffix_tree.len() <= 3);
         if self.suffix_tree.is_empty() {
             return Err("empty expression".into());
@@ -107,13 +110,12 @@ impl<'a> Evaluator<'a> {
             return Ok(self.suffix_tree[0]
                 .as_borrow_object()
                 .ok_or(ExprError::from("invalid expression"))?
-                .as_primitive()?);
+                .into());
         } else if self.suffix_tree.len() == 2 {
             // must be not
             if let Some(logical) = self.suffix_tree[1].as_logical() {
                 return Ok(
-                    apply_logical(logical, self.suffix_tree[0].as_borrow_object(), None)?
-                        .as_primitive()?,
+                    apply_logical(logical, self.suffix_tree[0].as_borrow_object(), None)?.into(),
                 );
             }
         } else {
@@ -123,14 +125,14 @@ impl<'a> Evaluator<'a> {
                     self.suffix_tree[0].as_borrow_object(),
                     self.suffix_tree[1].as_borrow_object(),
                 )?
-                .as_primitive()?);
+                .into());
             } else if let Some(arith) = self.suffix_tree[2].as_arith() {
                 return Ok(apply_arith(
                     arith,
                     self.suffix_tree[0].as_borrow_object(),
                     self.suffix_tree[1].as_borrow_object(),
                 )?
-                .as_primitive()?);
+                .into());
             }
         }
 
@@ -145,11 +147,12 @@ impl<'a> Evaluator<'a> {
     }
 
     /// Evaluate an expression without a context
-    pub fn eval(&'a self) -> ExprResult<Primitives> {
+    pub fn eval(&'a self) -> ExprResult<Object> {
         let mut stack = self.stack.borrow_mut();
         if self.suffix_tree.len() <= 3 {
             return self.eval_without_stack();
         }
+        stack.clear();
         for opr in &self.suffix_tree {
             if opr.is_operand() {
                 if let Some(obj) = opr.as_borrow_object() {
@@ -176,7 +179,7 @@ impl<'a> Evaluator<'a> {
         }
 
         if stack.len() == 1 {
-            Ok(stack.pop().unwrap().as_primitive()?)
+            Ok(stack.pop().unwrap().into())
         } else {
             Err("invalid expression".into())
         }
@@ -288,5 +291,121 @@ impl pb::ExprUnit {
             Item::Logical(logi) => Some(unsafe { std::mem::transmute::<_, pb::Logical>(*logi) }),
             _ => None,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::expr::to_suffix_expr_pb;
+    use crate::expr::token::tokenize;
+
+    #[test]
+    fn test_eval_simple() {
+        let cases: Vec<&str> = vec![
+            "7 + 3",          // 10
+            "7.0 + 3",        // 10.0
+            "7 * 3",          // 21
+            "7 / 3",          // 2
+            "7 ^ 3",          // 343
+            "7 ^ -3",         // 1 / 343
+            "7 % 3",          // 1
+            "7 -3",           // 4
+            "-3 + 7",         // 4
+            "-3",             // -3
+            "-3.0",           // -3.0
+            "false",          // false
+            "!true",          // false
+            "!10",            // false
+            "!0",             // true
+            "true || true",   // true
+            "true || false",  // true
+            "false || false", // false
+            "true && true",   // true
+            "true && false",  // false
+            "1 > 2",          // false
+            "1 < 2",          // true
+            "1 >= 2",         // false
+            "2 <= 2",         // true,
+            "2 == 2",         // true
+            "1.0 > 2.0",      // false
+        ];
+
+        let expected: Vec<Object> = vec![
+            Object::from(10),
+            Object::from(10.0),
+            Object::from(21),
+            Object::from(2),
+            Object::from(343),
+            Object::from(1.0 / 343.0),
+            Object::from(1),
+            Object::from(4),
+            Object::from(4),
+            Object::from(-3),
+            Object::from(-3.0),
+            Object::from(false),
+            Object::from(false),
+            Object::from(false),
+            Object::from(true),
+            Object::from(true),
+            Object::from(true),
+            Object::from(false),
+            Object::from(true),
+            Object::from(false),
+            Object::from(false),
+            Object::from(true),
+            Object::from(false),
+            Object::from(true),
+            Object::from(true),
+            Object::from(false),
+        ];
+
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap());
+            assert_eq!(eval.eval().unwrap(), expected);
+        }
+    }
+
+    #[test]
+    fn test_eval_complex() {
+        let cases: Vec<&str> = vec![
+            "(-10)",                                 // -10
+            "2 * 2 - 3",                             // 1
+            "2 * (2 - 3)",                           // -2
+            "6 / 2 - 3",                             // 0
+            "6 / (2 - 3)",                           // -6
+            "2 * 1e-3",                              // 0.002
+            "1 > 2 && 1 < 3",                        // false
+            "1 > 2 || 1 < 3",                        // true
+            "2 ^ 10 > 10",                           // true
+            "2 / 5 ^ 2",                             // 0
+            "2.0 / 5 ^ 2",                           // 2.0 / 25
+            "((1 + 2) * 3) / (7 * 8) + 12.5 / 10.1", // 1.2376237623762376
+            "((1 + 2) * 3) / 7 * 8 + 12.5 / 10.1",   // 9.237623762376238
+            "((1 + 2) * 3) / 7 * 8 + 12.5 / 10.1 \
+                == ((1 + 2) * 3) / (7 * 8) + 12.5 / 10.1", // false
+        ];
+
+        let expected: Vec<Object> = vec![
+            Object::from(-10),
+            Object::from(1),
+            Object::from(-2),
+            Object::from(0),
+            Object::from(-6),
+            Object::from(0.002),
+            Object::from(false),
+            Object::from(true),
+            Object::from(true),
+            Object::from(0),
+            Object::from(2.0 / 25.0),
+            Object::from(1.2376237623762376),
+            Object::from(9.237623762376238),
+            Object::from(false),
+        ];
+
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::from(to_suffix_expr_pb(tokenize(case).unwrap()).unwrap());
+            assert_eq!(eval.eval().unwrap(), expected);
+        }
     }
 }

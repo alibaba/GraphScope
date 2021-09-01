@@ -13,13 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-
 #[cfg(feature = "proto_inplace")]
 mod generated {
-    #[path = "common.rs"]
-    pub mod common;
     #[path = "algebra.rs"]
     pub mod algebra;
+    #[path = "common.rs"]
+    pub mod common;
 }
 
 #[cfg(not(feature = "proto_inplace"))]

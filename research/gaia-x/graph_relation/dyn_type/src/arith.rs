@@ -222,29 +222,48 @@ pub trait Exp {
     fn exp(self, other: Self) -> Self::Output;
 }
 
+fn exp_positive(this: Primitives, other: Primitives) -> Primitives {
+    use super::Primitives::*;
+    match (this, other) {
+        (Byte(a), Byte(b)) => Byte(a.pow(b as u32)),
+        (Byte(a), Integer(b)) => Integer((a as i32).pow(b as u32)),
+        (Byte(a), Long(b)) => Long((a as i64).pow(b as u32)),
+        (Byte(a), ULLong(b)) => ULLong((a as u128).pow(b as u32)),
+        (Integer(a), Byte(b)) => Integer(a.pow(b as u32)),
+        (Integer(a), Integer(b)) => Integer(a.pow(b as u32)),
+        (Integer(a), Long(b)) => Long((a as i64).pow(b as u32)),
+        (Integer(a), ULLong(b)) => ULLong((a as u128).pow(b as u32)),
+        (Long(a), Byte(b)) => Long(a.pow(b as u32)),
+        (Long(a), Integer(b)) => Long(a.pow(b as u32)),
+        (Long(a), Long(b)) => Long(a.pow(b as u32)),
+        (Long(a), ULLong(b)) => ULLong((a as u128).pow(b as u32)),
+        (ULLong(a), Byte(b)) => ULLong(a.pow(b as u32)),
+        (ULLong(a), Integer(b)) => ULLong(a.pow(b as u32)),
+        (ULLong(a), Long(b)) => ULLong(a.pow(b as u32)),
+        (ULLong(a), ULLong(b)) => ULLong(a.pow(b as u32)),
+        (Float(a), Byte(b)) => Float(a.powi(b as i32)),
+        (Float(a), Integer(b)) => Float(a.powi(b as i32)),
+        (Float(a), Long(b)) => Float(a.powi(b as i32)),
+        (Float(a), ULLong(b)) => Float(a.powi(b as i32)),
+        (Byte(a), Float(b)) => Float((a as f64).powf(b)),
+        (Integer(a), Float(b)) => Float((a as f64).powf(b)),
+        (Long(a), Float(b)) => Float((a as f64).powf(b)),
+        (ULLong(a), Float(b)) => Float((a as f64).powf(b)),
+        (Float(a), Float(b)) => Float((a as f64).powf(b)),
+    }
+}
+
 impl Exp for Primitives {
     type Output = Primitives;
 
     fn exp(self, other: Primitives) -> Self::Output {
         use super::Primitives::*;
-        match (self, other) {
-            (Byte(a), Byte(b)) => Byte(a ^ b),
-            (Byte(a), Integer(b)) => Integer(a as i32 ^ b),
-            (Byte(a), Long(b)) => Long(a as i64 ^ b),
-            (Byte(a), ULLong(b)) => ULLong(a as u128 ^ b),
-            (Integer(a), Byte(b)) => Integer(a ^ (b as i32)),
-            (Integer(a), Integer(b)) => Integer(a ^ b),
-            (Integer(a), Long(b)) => Long(a as i64 ^ b),
-            (Integer(a), ULLong(b)) => ULLong(a as u128 ^ b),
-            (Long(a), Byte(b)) => Long(a ^ (b as i64)),
-            (Long(a), Integer(b)) => Long(a ^ (b as i64)),
-            (Long(a), Long(b)) => Long(a ^ b),
-            (Long(a), ULLong(b)) => ULLong(a as u128 ^ b),
-            (ULLong(a), Byte(b)) => ULLong(a ^ (b as u128)),
-            (ULLong(a), Integer(b)) => ULLong(a ^ (b as u128)),
-            (ULLong(a), Long(b)) => ULLong(a ^ (b as u128)),
-            (ULLong(a), ULLong(b)) => ULLong(a ^ b),
-            (Float(_), _) | (_, Float(_)) => unimplemented!("no implementation for `f64 ^ f64`"),
+        if other >= Integer(0) {
+            exp_positive(self, other)
+        } else {
+            // -minus has no problem on UULong in this case
+            let pos = exp_positive(self, -other);
+            Float(1.0) / pos
         }
     }
 }

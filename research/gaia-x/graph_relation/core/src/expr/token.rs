@@ -17,6 +17,7 @@
 use crate::expr::error::{ExprError, ExprResult};
 
 #[derive(Debug, PartialEq, Clone)]
+#[repr(C)]
 pub enum Token {
     // Arithmetic
     Plus,    // +
@@ -91,6 +92,8 @@ impl Token {
 pub enum PartialToken {
     /// A partial token that unambiguously maps to a single token.
     Token(Token),
+    /// A partial token that is a minus, which may be a Sub, or a Negative sign.
+    Minus,
     /// A partial token that is a literal.
     Literal(String),
     /// A whitespace character, e.g. ' '.
@@ -118,9 +121,9 @@ fn char_to_partial_token(c: char) -> PartialToken {
         '<' => PartialToken::Lt,
         '&' => PartialToken::Ampersand,
         '|' => PartialToken::VerticalBar,
-
+        '-' => PartialToken::Minus,
+        // '-' => PartialToken::Token(Token::Minus),
         '+' => PartialToken::Token(Token::Plus),
-        '-' => PartialToken::Token(Token::Minus),
         '*' => PartialToken::Token(Token::Star),
         '/' => PartialToken::Token(Token::Slash),
         '%' => PartialToken::Token(Token::Percent),
@@ -201,98 +204,130 @@ fn str_to_partial_tokens(string: &str) -> ExprResult<Vec<PartialToken>> {
 /// Resolves all partial tokens by converting them to complex tokens.
 fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token>> {
     let mut result = Vec::new();
+    let mut recent_token: Option<Token> = None;
     while !tokens.is_empty() {
         let first = tokens[0].clone();
         let second = tokens.get(1).cloned();
         let third = tokens.get(2).cloned();
         let mut cutoff = 2;
 
-        result.extend(
-            match first {
-                PartialToken::Token(token) => {
-                    cutoff = 1;
-                    Some(token)
-                }
-                PartialToken::Literal(literal) => {
-                    cutoff = 1;
-                    if let Ok(number) = literal.parse::<i64>() {
-                        Some(Token::Int(number))
-                    } else if let Ok(number) = literal.parse::<f64>() {
-                        Some(Token::Float(number))
-                    } else if let Ok(boolean) = literal.parse::<bool>() {
-                        Some(Token::Boolean(boolean))
-                    } else {
-                        // To parse the float of the form `<coefficient>e{+,-}<exponent>`,
-                        // for example [Literal("10e"), Minus, Literal("3")] => "1e-3".parse().
-                        match (second, third) {
-                            (Some(second), Some(third))
-                                if second == PartialToken::Token(Token::Minus)
-                                    || second == PartialToken::Token(Token::Plus) =>
+        let curr_token = match first {
+            PartialToken::Token(token) => {
+                cutoff = 1;
+                Some(token)
+            }
+            PartialToken::Literal(literal) => {
+                cutoff = 1;
+                if let Ok(number) = literal.parse::<i64>() {
+                    Some(Token::Int(number))
+                } else if let Ok(number) = literal.parse::<f64>() {
+                    Some(Token::Float(number))
+                } else if let Ok(boolean) = literal.parse::<bool>() {
+                    Some(Token::Boolean(boolean))
+                } else {
+                    // To parse the float of the form `<coefficient>e{+,-}<exponent>`,
+                    // for example [Literal("10e"), Minus, Literal("3")] => "1e-3".parse().
+                    match (second, third) {
+                        (Some(second), Some(third))
+                            if second == PartialToken::Minus
+                                || second == PartialToken::Token(Token::Plus) =>
+                        {
+                            let second_sign = match second {
+                                PartialToken::Minus => "-",
+                                _ => "+",
+                            };
+                            let third_num = match third {
+                                PartialToken::Literal(s) => s,
+                                _ => "".to_string(),
+                            };
+                            if let Ok(number) =
+                                format!("{}{}{}", literal, second_sign, third_num).parse::<f64>()
                             {
-                                let second_sign = match second {
-                                    PartialToken::Token(Token::Minus) => "-",
-                                    _ => "+",
-                                };
-                                let third_num = match third {
-                                    PartialToken::Literal(s) => s,
-                                    _ => "".to_string(),
-                                };
-                                if let Ok(number) =
-                                    format!("{}{}{}", literal, second_sign, third_num)
-                                        .parse::<f64>()
-                                {
-                                    cutoff = 3;
-                                    Some(Token::Float(number))
-                                } else {
-                                    Some(Token::Identifier(literal.to_string()))
-                                }
+                                cutoff = 3;
+                                Some(Token::Float(number))
+                            } else {
+                                Some(Token::Identifier(literal.to_string()))
                             }
-                            _ => Some(Token::Identifier(literal.to_string())),
+                        }
+                        _ => Some(Token::Identifier(literal.to_string())),
+                    }
+                }
+            }
+            PartialToken::Whitespace => {
+                cutoff = 1;
+                None
+            }
+            PartialToken::Minus => {
+                // Should we consider minus as a negative sign
+                let is_negative_sign =
+                    { recent_token.is_none() || !recent_token.as_ref().unwrap().is_operand() };
+                if is_negative_sign {
+                    match &second {
+                        // Be aware that minus can represent both subtraction or negative sign
+                        // if it is a negative sign, it must be directly trailed by a number.
+                        // However, we can not actually tell whether the case "x -y", is actually
+                        // subtracting x by y, or -y must be treated as a number.
+                        Some(PartialToken::Literal(literal)) => {
+                            // Must check whether previous is what
+                            if let Ok(number) = literal.parse::<i64>() {
+                                Some(Token::Int(-number))
+                            } else if let Ok(number) = literal.parse::<f64>() {
+                                Some(Token::Float(-number))
+                            } else {
+                                return Err(ExprError::unmatched_partial_token(first, second));
+                            }
+                        }
+                        _ => {
+                            cutoff = 1;
+                            Some(Token::Minus)
                         }
                     }
-                }
-                PartialToken::Whitespace => {
+                } else {
                     cutoff = 1;
-                    None
+                    Some(Token::Minus)
                 }
-                PartialToken::Eq => match second {
-                    Some(PartialToken::Eq) => Some(Token::Eq),
-                    _ => {
-                        return Err(ExprError::unmatched_partial_token(first, second));
-                    }
-                },
-                PartialToken::ExclamationMark => match second {
-                    Some(PartialToken::Eq) => Some(Token::Ne),
-                    _ => {
-                        cutoff = 1;
-                        Some(Token::Not)
-                    }
-                },
-                PartialToken::Gt => match second {
-                    Some(PartialToken::Eq) => Some(Token::Ge),
-                    _ => {
-                        cutoff = 1;
-                        Some(Token::Gt)
-                    }
-                },
-                PartialToken::Lt => match second {
-                    Some(PartialToken::Eq) => Some(Token::Le),
-                    _ => {
-                        cutoff = 1;
-                        Some(Token::Lt)
-                    }
-                },
-                PartialToken::Ampersand => match second {
-                    Some(PartialToken::Ampersand) => Some(Token::And),
-                    _ => return Err(ExprError::unmatched_partial_token(first, second)),
-                },
-                PartialToken::VerticalBar => match second {
-                    Some(PartialToken::VerticalBar) => Some(Token::Or),
-                    _ => return Err(ExprError::unmatched_partial_token(first, second)),
-                },
             }
-            .into_iter(),
-        );
+            PartialToken::Eq => match second {
+                Some(PartialToken::Eq) => Some(Token::Eq),
+                _ => {
+                    return Err(ExprError::unmatched_partial_token(first, second));
+                }
+            },
+            PartialToken::ExclamationMark => match second {
+                Some(PartialToken::Eq) => Some(Token::Ne),
+                _ => {
+                    cutoff = 1;
+                    Some(Token::Not)
+                }
+            },
+            PartialToken::Gt => match second {
+                Some(PartialToken::Eq) => Some(Token::Ge),
+                _ => {
+                    cutoff = 1;
+                    Some(Token::Gt)
+                }
+            },
+            PartialToken::Lt => match second {
+                Some(PartialToken::Eq) => Some(Token::Le),
+                _ => {
+                    cutoff = 1;
+                    Some(Token::Lt)
+                }
+            },
+            PartialToken::Ampersand => match second {
+                Some(PartialToken::Ampersand) => Some(Token::And),
+                _ => return Err(ExprError::unmatched_partial_token(first, second)),
+            },
+            PartialToken::VerticalBar => match second {
+                Some(PartialToken::VerticalBar) => Some(Token::Or),
+                _ => return Err(ExprError::unmatched_partial_token(first, second)),
+            },
+        };
+
+        if let Some(token) = curr_token.clone() {
+            result.push(token);
+            recent_token = curr_token.clone();
+        }
 
         tokens = &tokens[cutoff..];
     }
@@ -330,6 +365,30 @@ mod tests {
         ];
 
         assert_eq!(case1, expected_case1);
+
+        let case2 = tokenize("1 - 2").unwrap();
+        let expected_case2 = vec![Token::Int(1), Token::Minus, Token::Int(2)];
+        assert_eq!(case2, expected_case2);
+
+        let case3 = tokenize("1 + (-2)").unwrap();
+        let expected_case3 = vec![
+            Token::Int(1),
+            Token::Plus,
+            Token::LBrace,
+            Token::Int(-2),
+            Token::RBrace,
+        ];
+        assert_eq!(case3, expected_case3);
+
+        let case4 = tokenize("1 + -2 + 2").unwrap();
+        let expected_case4 = vec![
+            Token::Int(1),
+            Token::Plus,
+            Token::Int(-2),
+            Token::Plus,
+            Token::Int(2),
+        ];
+        assert_eq!(case4, expected_case4);
     }
 
     #[test]
@@ -356,6 +415,15 @@ mod tests {
             ExprError::unmatched_partial_token(
                 PartialToken::VerticalBar,
                 Some(PartialToken::Whitespace)
+            )
+        );
+
+        let case4 = tokenize("-a");
+        assert_eq!(
+            case4.err().unwrap(),
+            ExprError::unmatched_partial_token(
+                PartialToken::Minus,
+                Some(PartialToken::Literal("a".to_string()))
             )
         );
     }

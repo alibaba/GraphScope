@@ -1091,6 +1091,17 @@ impl From<String> for Object {
     }
 }
 
+impl<'a> From<BorrowObject<'a>> for Object {
+    fn from(s: BorrowObject<'a>) -> Self {
+        match s {
+            BorrowObject::Primitive(p) => Object::Primitive(p),
+            BorrowObject::Blob(blob) => Object::Blob(blob.to_vec().into_boxed_slice()),
+            BorrowObject::String(s) => Object::String(s.to_string()),
+            _ => unimplemented!(),
+        }
+    }
+}
+
 pub enum OwnedOrRef<'a, T> {
     Owned(T),
     Ref(&'a T),

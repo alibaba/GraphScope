@@ -31,17 +31,28 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
         std::fs::remove_dir_all(GEN_DIR).unwrap();
     }
     std::fs::create_dir(GEN_DIR).unwrap();
-    tonic_build::configure().build_server(false).out_dir(GEN_DIR).compile(
-        &["../proto/common.proto", "../proto/expr.proto", "../proto/algebra.proto"],
-        &["../proto"],
-    )?;
+    tonic_build::configure()
+        .build_server(false)
+        .out_dir(GEN_DIR)
+        .compile(
+            &[
+                "../proto/common.proto",
+                "../proto/expr.proto",
+                "../proto/algebra.proto",
+            ],
+            &["../proto"],
+        )?;
     Ok(())
 }
 
 #[cfg(not(feature = "proto_inplace"))]
 fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     tonic_build::configure().build_server(false).compile(
-        &["../proto/common.proto", "../proto/expr.proto", "../proto/algebra.proto"],
+        &[
+            "../proto/common.proto",
+            "../proto/expr.proto",
+            "../proto/algebra.proto",
+        ],
         &["../proto"],
     )?;
     Ok(())
