@@ -28,7 +28,6 @@ import com.alibaba.maxgraph.v2.common.discovery.*;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
 import com.alibaba.maxgraph.v2.common.frontend.api.graph.GraphPartitionManager;
-import com.alibaba.maxgraph.v2.common.frontend.api.graph.MaxGraphWriter;
 import com.alibaba.maxgraph.v2.common.frontend.remote.RemoteGraphPartitionManager;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsAggregator;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectClient;
@@ -41,7 +40,6 @@ import com.alibaba.maxgraph.v2.common.rpc.RpcServer;
 import com.alibaba.maxgraph.v2.common.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.v2.common.util.CuratorUtils;
 import com.alibaba.maxgraph.v2.frontend.*;
-import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
 import com.alibaba.maxgraph.v2.frontend.write.DefaultEdgeIdGenerator;
 import com.alibaba.maxgraph.v2.frontend.write.EdgeIdGenerator;
 import com.alibaba.maxgraph.v2.frontend.write.GraphWriter;
@@ -85,8 +83,6 @@ public class Frontend extends NodeBase {
                 ingestorMetricsCollectClients);
         StoreIngestor storeIngestClients = new StoreIngestClients(this.channelManager, RoleType.STORE,
                 StoreIngestClient::new);
-        RoleClients<QueryStoreRpcClient> queryStoreClients = new RoleClients<>(this.channelManager,
-                RoleType.EXECUTOR_GRAPH, QueryStoreRpcClient::new);
         SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
                 RoleType.COORDINATOR, SchemaClient::new));
         DdlExecutors ddlExecutors = new DdlExecutors();

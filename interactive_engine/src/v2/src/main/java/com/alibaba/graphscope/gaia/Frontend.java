@@ -38,7 +38,6 @@ import com.alibaba.maxgraph.v2.common.rpc.RpcServer;
 import com.alibaba.maxgraph.v2.common.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.v2.common.util.CuratorUtils;
 import com.alibaba.maxgraph.v2.frontend.*;
-import com.alibaba.maxgraph.v2.frontend.compiler.client.QueryStoreRpcClient;
 
 import com.alibaba.maxgraph.v2.frontend.write.DefaultEdgeIdGenerator;
 import com.alibaba.maxgraph.v2.frontend.write.EdgeIdGenerator;
@@ -84,8 +83,6 @@ public class Frontend extends NodeBase {
                 ingestorMetricsCollectClients);
         StoreIngestor storeIngestClients = new StoreIngestClients(this.channelManager, RoleType.STORE,
                 StoreIngestClient::new);
-        RoleClients<QueryStoreRpcClient> queryStoreClients = new RoleClients<>(this.channelManager,
-                RoleType.EXECUTOR_GRAPH, QueryStoreRpcClient::new);
         SchemaWriter schemaWriter = new SchemaWriter(new RoleClients<>(this.channelManager,
                 RoleType.COORDINATOR, SchemaClient::new));
         DdlExecutors ddlExecutors = new DdlExecutors();
