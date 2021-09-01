@@ -416,8 +416,7 @@ jobs:
     - name: Clean
       if: always()
       run: |
-        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
-            registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
+        sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} || true
         helm uninstall graphscope || true
         kubectl delete pod graphscope-test-rpc-service --wait=false || true
 
@@ -519,9 +518,6 @@ jobs:
         echo "source ~/.cargo/env" >> ~/.bashrc
         source ~/.bashrc
         rustup component add rustfmt
-        sudo yum update -y
-        sudo yum install -y xz
-        sudo ln -s /bin/true /bin/apt-get
 
     - uses: actions/checkout@v2.3.2
 
