@@ -415,7 +415,7 @@ jobs:
         fail_ci_if_error: true
 
     - name: Clean
-      if: always()
+      if: true
       run: |
         sudo docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }} \
             registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${{ github.sha }} || true
