@@ -195,9 +195,12 @@ class GRPCClient(object):
         responses = self._stub.FetchLogs(request)
         for resp in responses:
             resp = check_grpc_response(resp)
-            message = resp.message.rstrip()
-            if message:
-                logger.info(message, extra={"simple": True})
+            info = resp.info_message.rstrip()
+            if info:
+                logger.info(info, extra={"simple": True})
+            error = resp.error_message.rstrip()
+            if error:
+                logger.error(error, extra={"simple": True})
 
     @catch_grpc_error
     def _close_session_impl(self):
