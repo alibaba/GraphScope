@@ -82,6 +82,6 @@ pub use order_by::CompareFunctionGen;
 pub use sink::TraverserSinkEncoder;
 pub use source::graph_step_from;
 pub use source::GraphVertexStep;
-// pub use sub_traversal::{BySubJoin, GroupBySubJoin, HasAnyJoin, JoinFuncGen, SelectBySubJoin};
+pub use sub_traversal::TraverserLeftJoinGen;
 pub use traverser_router::Router;
 pub use util::result_downcast;

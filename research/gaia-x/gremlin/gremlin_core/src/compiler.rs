@@ -46,7 +46,7 @@ type TraverserMap = Box<dyn MapFunction<Traverser, Traverser>>;
 type TraverserFlatMap = Box<dyn FlatMapFunction<Traverser, Traverser, Target = DynIter<Traverser>>>;
 type TraverserFilter = Box<dyn FilterFunction<Traverser>>;
 type TraverserCompare = Box<dyn CompareFunction<Traverser>>;
-type TraverserLeftJoin = Box<dyn BinaryFunction<Traverser, Vec<Traverser>, Traverser>>;
+type TraverserLeftJoin = Box<dyn BinaryFunction<Traverser, Vec<Traverser>, Option<Traverser>>>;
 type TraverserKey = Box<dyn KeyFunction<Traverser, Traverser, Traverser>>;
 // type TraverserGroup = Box<dyn GroupFunction<Traverser, Traverser, Traverser>>;
 type TraverserEncode = Box<dyn EncodeFunction<Traverser>>;
@@ -103,8 +103,9 @@ impl FnGenerator {
         Ok(step.gen_filter()?)
     }
 
-    fn gen_subtask(&self, _res: &BinaryResource) -> Result<TraverserLeftJoin, BuildJobError> {
-        todo!()
+    fn gen_subtask(&self, res: &BinaryResource) -> Result<TraverserLeftJoin, BuildJobError> {
+        let joiner = decode::<pb::gremlin::SubTaskJoiner>(res)?;
+        Ok(joiner.gen_subtask()?)
     }
 
     fn gen_cmp(&self, res: &BinaryResource) -> Result<TraverserCompare, BuildJobError> {
@@ -343,7 +344,7 @@ impl GremlinJobCompiler {
                                         .collect::<Vec<Traverser>>()?;
                                     Ok(sub_end)
                                 })?
-                                .map(move |(parent, sub)| join_func.exec(parent, sub))?;
+                                .filter_map(move |(parent, sub)| join_func.exec(parent, sub))?;
                         }
                     }
                 }
