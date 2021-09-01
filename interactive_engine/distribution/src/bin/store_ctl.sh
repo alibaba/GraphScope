@@ -75,7 +75,7 @@ _setup_maxgraph_env() {
 
 # start max_node of {gaia, v2}
 max_node() {
-  declare -r type=$1; shift
+  type=$1; shift
   _setup_maxgraph_env
 
   if [[ "${type}" == "gaia" ]]; then
