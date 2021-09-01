@@ -925,7 +925,7 @@ def graph_to_dataframe(graph, selector=None, vertex_range=None):
     return op
 
 
-def create_interactive_query(graph, engine_params, cpu, mem, enable_gaia):
+def create_interactive_query(graph, engine_params, enable_gaia):
     """Create a interactive engine that query on the :code:`graph`
 
     Args:
@@ -934,15 +934,11 @@ def create_interactive_query(graph, engine_params, cpu, mem, enable_gaia):
         engine_params (dict, optional):
             Configuration to startup the interactive engine. See detail in:
             `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`
-        cpu (float): The number of CPU cores for gremlin server.
-        mem (str): The number of mem  for gremlin server.
 
     Returns:
         An op to create a interactive engine based on a graph.
     """
     config = {}
-    config[types_pb2.GIE_GREMLIN_SERVER_CPU] = utils.f_to_attr(cpu)
-    config[types_pb2.GIE_GREMLIN_SERVER_MEM] = utils.s_to_attr(mem)
     if engine_params is not None:
         config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS] = utils.s_to_attr(
             json.dumps(engine_params)

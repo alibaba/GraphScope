@@ -252,15 +252,11 @@ launch_k8s_cluster() {
 pull_images() {
   log "Pulling GraphScope images."
   sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${image_tag} || true
-  sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${image_tag} || true
-  sudo docker pull zookeeper:3.4.14 || true
   sudo docker pull quay.io/coreos/etcd:v3.4.13 || true
   log "GraphScope images pulled successfully."
 
   log "Loading images into kind cluster."
   sudo kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${image_tag} || true
-  sudo kind load docker-image registry.cn-hongkong.aliyuncs.com/graphscope/maxgraph_standalone_manager:${image_tag} || true
-  sudo kind load docker-image zookeeper:3.4.14 || true
   sudo kind load docker-image quay.io/coreos/etcd:v3.4.13 || true
   log "GraphScope images loaded into kind cluster successfully."
 }
