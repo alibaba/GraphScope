@@ -163,7 +163,6 @@ impl<'a, D: Data> InputSession<'a, D> {
                     self.input.end_on(end);
                 }
             } else {
-                trace_worker!("trigger cancel scope {:?};", &batch.tag);
                 self.input.cancel_scope(&batch.tag);
             }
             false

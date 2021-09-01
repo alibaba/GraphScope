@@ -8,6 +8,10 @@ use crate::tag::tools::map::TidyTagMap;
 use crate::Tag;
 
 pub trait CancelListener: Send + 'static {
+    /// invoked by the consumer who won't consume any data of the scope=[`Tag`], and notify the
+    /// producer don't produce data of the scope to it;
+    ///
+    /// this listener is owned by the producer to listen notification from it's consumers;
     fn cancel(&mut self, tag: &Tag, to: u32) -> Option<Tag>;
 }
 

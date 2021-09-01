@@ -309,6 +309,7 @@ impl<D: Data> InputHandle<D> {
         let level = tag.len() as u32;
         if level == self.ch_info.scope_level {
             // cancel scopes in current scope level;
+            trace_worker!("EARLY_STOP: ch {} cancel consume data scope {:?};", self.ch_info.index(), tag);
             self.cancel.insert(tag.clone(), ());
             if let Some(stash) = self.stash_index.get_mut(tag) {
                 stash.skip();
@@ -320,8 +321,10 @@ impl<D: Data> InputHandle<D> {
             let mut stash_index = std::mem::replace(&mut self.stash_index, Default::default());
             for (child, stash) in stash_index.iter_mut() {
                 if tag.is_parent_of(&*child) {
+                    trace_worker!("EARLY_STOP: ch {} cancel consume data of {:?} as it's parent scope {:?} been canceled;", self.ch_info.index(), child, tag);
                     self.cancel.insert((&*child).clone(), ());
                     stash.skip();
+                    // todo: if need to propagate event of this child scope;
                 }
             }
             self.stash_index = stash_index;
@@ -355,10 +358,10 @@ impl<D: Data> InputHandle<D> {
         let ch = self.ch_info.id.index;
         let event = Event::new(source, self.ch_info.source_port, EventKind::Cancel((ch, tag.clone())));
         let result = if self.ch_info.source_peers > 1 {
-            trace_worker!("EARLY-STOP: broadcast backward cancel signal {:?}", event);
+            trace_worker!("EARLY-STOP: ch: {} broadcast backward cancel signal of {:?} to {:?}", self.ch_info.index(), tag, self.ch_info.source_port);
             self.event_emitter.broadcast(event)
         } else {
-            trace_worker!("EARLY-STOP: send self backward cancel signal {:?}", event);
+            trace_worker!("EARLY-STOP: ch: {} send self backward cancel signal {:?} to {:?}", self.ch_info.index(), tag, self.ch_info.source_port);
             self.event_emitter.send(source, event)
         };
 

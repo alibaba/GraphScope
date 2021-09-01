@@ -113,9 +113,11 @@ impl MultiOutputsMerge {
         assert!(level < self.cancel_merge.len());
         if let Some(mut in_merge) = self.cancel_merge[level].remove(n.tag()) {
             in_merge.insert(n.port as u64);
-            if in_merge.len() == self.output_size {
+            let left = self.output_size - in_merge.len();
+            if left == 0 {
                 Some(n.tag)
             } else {
+                trace_worker!("EARLY_STOP: other {} output still send data of {:?};", left, n.tag);
                 self.cancel_merge[level].insert(n.tag().clone(), in_merge);
                 None
             }
@@ -350,12 +352,11 @@ impl Operator {
 
     pub fn cancel(&mut self, port: usize, tag: Tag) -> Result<(), JobExecError> {
         trace_worker!(
-            "[EARLY-STOP] operator{:?} try to cancel output data of scope {:?} on port {};",
-            self.info,
+            "EARLY-STOP output[{:?}] stop sending data of scope {:?};",
+            Port::new(self.info.index, port),
             tag,
-            port,
         );
-
+        self.outputs[port].cancel(&tag)?;
         let cancel = CancelScope { port, tag };
         self.core.on_cancel(cancel, &self.inputs)?;
         Ok(())

@@ -28,33 +28,55 @@ struct ChannelCancel {
     scope_level: u32,
     inner: CancelHandle,
     delta: MergedScopeDelta,
-    current: TidyTagMap<()>,
+    /// used to check cancel before evolve and push;
+    before_enter: TidyTagMap<()>,
     parent: AHashSet<Tag>,
 }
 
 impl CancelListener for ChannelCancel {
     fn cancel(&mut self, tag: &Tag, to: u32) -> Option<Tag> {
-        if let Some(tag) = self.inner.cancel(tag, to) {
-            let level = tag.len() as u32;
-            return if level == self.scope_level {
-                let tag_in = self.delta.evolve_back(&tag);
-                self.current.insert(tag_in.clone(), ());
-                Some(tag_in)
-            } else {
-                assert!(level < self.scope_level);
+        let tag = self.inner.cancel(tag, to)?;
+        let level = tag.len() as u32;
+
+
+        if self.delta.scope_level_delta < 0 {
+            // channel send data to parent scope;
+            // cancel from parent scope;
+            assert!(level < self.before_enter.scope_level);
+            if *crate::config::ENABLE_CANCEL_CHILD {
                 self.parent.insert(tag.clone());
-                Some(tag)
-            };
+                return Some(tag.clone());
+            } else {
+                None
+            }
+        } else {
+            // scope_level delta > 0;
+            if level == self.scope_level {
+                let before_enter = self.delta.evolve_back(&tag);
+                self.before_enter.insert(before_enter.clone(), ());
+                Some(before_enter)
+            } else if level < self.scope_level {
+                // cancel from parent scope;
+                if *crate::config::ENABLE_CANCEL_CHILD {
+                    self.parent.insert(tag.clone());
+                    Some(tag.clone())
+                } else {
+                    None
+                }
+            } else {
+                warn_worker!("unexpected cancel of scope {:?} expect scope level {};", tag, self.scope_level);
+                // ignore:
+                None
+            }
         }
-        None
     }
 }
 
 impl ChannelCancel {
     fn is_canceled(&self, tag: &Tag) -> bool {
         let level = tag.len() as u32;
-        if level == self.scope_level && !self.current.is_empty() {
-            if self.current.contains_key(tag) {
+        if level == self.before_enter.scope_level {
+            if !self.before_enter.is_empty() && self.before_enter.contains_key(tag) {
                 return true;
             }
 
@@ -64,7 +86,7 @@ impl ChannelCancel {
             } else {
                 false
             }
-        } else if level < self.scope_level {
+        } else if level < self.before_enter.scope_level {
             self.check_parent(tag.clone())
         } else {
             false
@@ -100,11 +122,12 @@ impl CancelListener for ChannelCancelPtr {
 
 impl ChannelCancelPtr {
     fn new(scope_level: u32, delta: MergedScopeDelta, ch: CancelHandle) -> Self {
+        let level_before = delta.origin_scope_level as u32;
         let inner = ChannelCancel {
             scope_level,
             inner: ch,
             delta,
-            current: TidyTagMap::new(scope_level),
+            before_enter: TidyTagMap::new(level_before),
             parent: AHashSet::new(),
         };
         ChannelCancelPtr { inner: Rc::new(RefCell::new(inner)) }
@@ -131,8 +154,8 @@ mod rob {
     use crate::errors::{IOError, IOResult};
     use crate::graph::Port;
     use crate::progress::EndSignal;
-    use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
+    use nohash_hasher::IntSet;
 
     struct Buffer<D> {
         pin: Tag,
@@ -173,6 +196,11 @@ mod rob {
 
         pub(crate) fn get_cancel_handle(&self) -> ChannelCancelPtr {
             self.cancel_handle.clone()
+        }
+
+        #[inline]
+        fn is_canceled(&self, tag: &Tag) -> bool {
+            self.cancel_handle.is_canceled(tag)
         }
 
         fn push_without_evolve(&mut self, tag: Tag, msg: D) -> IOResult<()> {
@@ -388,17 +416,15 @@ mod rob {
         pub port: Port,
         main_push: ChannelPush<D>,
         pushes: SmallVec<[ChannelPush<D>; 2]>,
-        buffers: TidyTagMap<SmallVec<[Batch<D>; 2]>>,
         buffer_pool: MemBatchPool<D>,
     }
 
     impl<D: Data> Tee<D> {
-        pub fn new(port: Port, scope_level: u32, push: ChannelPush<D>) -> Self {
+        pub fn new(port: Port, _scope_level: u32, push: ChannelPush<D>) -> Self {
             Tee {
                 port,
                 main_push: push,
                 pushes: SmallVec::new(),
-                buffers: TidyTagMap::new(scope_level),
                 buffer_pool: BatchPool::new(1023, 128, MemBufAlloc::new()),
             }
         }
@@ -517,67 +543,104 @@ mod rob {
             if len == 0 {
                 self.main_push.try_push_iter(tag, iter)
             } else {
-                let mut buffer_map = std::mem::replace(&mut self.buffers, Default::default());
-                let buffers = buffer_map.get_mut_or_insert(tag);
-                if buffers.is_empty() {
-                    let b = self
-                        .buffer_pool
-                        .fetch()
-                        .unwrap_or(Batch::with_capacity(1023));
-                    buffers.push(b);
-                }
-                let mut cor = Iter::new(iter, buffers);
-                let mut error = None;
-                if let Err(e) = self.main_push.try_push_iter(tag, &mut cor) {
-                    if !e.is_interrupted() && !e.is_would_block() {
-                        return Err(e);
-                    } else {
-                        error = Some(e);
+                // if no cancel has been triggered, the 'stat' won't be allocated;
+                let mut stat = IntSet::default();
+                for (i, p) in self.pushes.iter().enumerate() {
+                    if p.is_canceled(tag) {
+                        stat.insert(i);
                     }
                 }
 
-                let mut errors = Vec::new();
-                for (i, buf) in buffers.iter_mut().enumerate() {
-                    if !buf.is_empty() {
-                        if let Err(e) = self.pushes[i].try_push_iter(tag, buf) {
-                            if e.is_interrupted() {
-                                errors.push(0);
-                            } else if e.is_would_block() {
-                                errors.push(1);
+                if self.main_push.is_canceled(tag) {
+                    if stat.len() == self.pushes.len() {
+                        // all canceled;
+                        Ok(())
+                    } else if self.pushes.len() == 1 {
+                        self.pushes[0].try_push_iter(tag, iter)
+                    } else {
+                        // corner case;
+                        if self.pushes.len() - stat.len() == 1 {
+                            for (i, p) in self.pushes.iter_mut().enumerate() {
+                                if !stat.contains(&i) {
+                                    return p.try_push_iter(tag, iter);
+                                }
+                            }
+                            Ok(())
+                        } else {
+                            let mut queue = vec![];
+                            for i in 0..self.pushes.len() {
+                                if !stat.contains(&i) {
+                                   let b = self.buffer_pool.fetch().unwrap_or(Batch::with_capacity(1024));
+                                    queue.push((i, b));
+                                }
+                            }
+                            assert!(queue.len() > 1);
+                            let first = queue.swap_remove(queue.len() - 1);
+                            let mut cor = Iter::new(iter, queue.as_mut_slice());
+                            let mut has_block = false;
+                            if let Err(err) = self.pushes[first.0].try_push_iter(tag, &mut cor) {
+                                if err.is_would_block() || err.is_interrupted() {
+                                    has_block = true;
+                                } else {
+                                    return Err(err);
+                                }
+                            }
+
+                            for (i, mut b) in queue.drain(..) {
+                                if let Err(err) = self.pushes[i].try_push_iter(tag, &mut b) {
+                                    return if err.is_would_block() || err.is_interrupted() {
+                                        error_worker!("can't handle block of tee push;");
+                                        Err(IOError::cannot_block())
+                                    } else {
+                                        Err(err)
+                                    }
+                                }
+                            }
+                            if has_block {
+                                would_block!("main push block in tee;")
                             } else {
-                                return Err(e);
+                                Ok(())
                             }
                         }
                     }
-                }
-
-                if errors.is_empty() {
-                    assert!(buffers.iter().all(|b| b.is_empty()));
-                    buffers.clear();
                 } else {
-                    if buffers.iter().all(|b| b.is_empty()) {
-                        buffers.clear();
-                    }
-                }
-                self.buffers = buffer_map;
-                if let Some(err) = error {
-                    if err.is_interrupted() {
-                        return Err(err);
+                    if stat.len() == self.pushes.len() {
+                        self.main_push.try_push_iter(tag, iter)
                     } else {
-                        if errors.iter().any(|x| *x == 0) {
-                            return interrupt!("tee");
-                        } else {
-                            return Err(err);
+                        let mut queue = vec![];
+                        for i in 0..self.pushes.len() {
+                            if !stat.contains(&i) {
+                                let b = self.buffer_pool.fetch().unwrap_or(Batch::with_capacity(1024));
+                                queue.push((i, b));
+                            }
                         }
+                        let mut cor = Iter::new(iter, queue.as_mut_slice());
+                        let mut has_block = false;
+                        if let Err(err) = self.main_push.try_push_iter(tag, &mut cor) {
+                            if err.is_would_block() || err.is_interrupted() {
+                                has_block = true;
+                            } else {
+                                return Err(err);
+                            }
+                        }
+
+                        for (i, mut b) in queue.drain(..) {
+                            if let Err(err) = self.pushes[i].try_push_iter(tag, &mut b) {
+                                return if err.is_would_block() || err.is_interrupted() {
+                                    error_worker!("can't handle block of tee push;");
+                                    Err(IOError::cannot_block())
+                                } else {
+                                    Err(err)
+                                }
+                            }
+                        }
+                        if has_block {
+                            would_block!("main push block in tee;")
+                        } else {
+                            Ok(())
+                        }
+
                     }
-                } else if !errors.is_empty() {
-                    if errors.iter().any(|x| *x == 0) {
-                        return interrupt!("tee");
-                    } else {
-                        return would_block!("tee");
-                    }
-                } else {
-                    Ok(())
                 }
             }
         }
@@ -645,11 +708,11 @@ mod rob {
 
     struct Iter<'a, D, I> {
         iter: &'a mut I,
-        buf: &'a mut [Batch<D>],
+        buf: &'a mut [(usize, Batch<D>)],
     }
 
     impl<'a, D, I> Iter<'a, D, I> {
-        pub fn new(iter: &'a mut I, buf: &'a mut [Batch<D>]) -> Self {
+        pub fn new(iter: &'a mut I, buf: &'a mut [(usize, Batch<D>)]) -> Self {
             Iter { iter, buf }
         }
     }
@@ -664,7 +727,7 @@ mod rob {
         fn next(&mut self) -> Option<Self::Item> {
             if let Some(next) = self.iter.next() {
                 for b in self.buf.iter_mut() {
-                    b.push(next.clone());
+                    b.1.push(next.clone());
                 }
                 Some(next)
             } else {

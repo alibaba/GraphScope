@@ -80,7 +80,7 @@ impl OutputCancelState {
             map.insert(ch, lis);
         }
         let mut cancel_trace = Vec::with_capacity(scope_level as usize);
-        for i in 0..scope_level {
+        for i in 0..scope_level + 1 {
             cancel_trace.push(TidyTagMap::new(i));
         }
         let handle = CancelTee { channels, scope_level, tee: map, cancel_trace };

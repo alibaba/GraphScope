@@ -86,7 +86,9 @@ impl Schedule {
 
         for i in (0..task.operator_length()).rev() {
             let discards = self.sch_ops[i].get_discards();
-            task.try_cancel(i, discards)?;
+            if !discards.is_empty() {
+                task.try_cancel(i, discards)?;
+            }
         }
 
         // fire;

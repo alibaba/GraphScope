@@ -49,17 +49,18 @@ impl OperatorScheduler {
             EventKind::Cancel((ch, tag)) => {
                 if let Some(Some(handle)) = self.outputs_cancel.get_mut(port.port) {
                     trace_worker!(
-                        "output[{:?}] EARLY-STOP: accept cancel of {:?} to ch {} to worker {}",
+                        "EARLY-STOP: output[{:?}] accept cancel of {:?} to ch {} to worker {}",
                         port,
                         tag,
                         ch,
                         src
                     );
                     if let Some(t) = handle.on_cancel(ch, src, &tag) {
+                        trace_worker!("EARLY-STOP: output[{:?}] should stop sending data of {:?} ;", port, t);
                         self.discards.push_back((port, t));
                     }
                 } else {
-                    warn_worker!("unrecognized event of port {:?}; form worker {}", port, src)
+                    warn_worker!("unrecognized cancel event of port {:?}; form worker {}", port, src)
                 }
             }
         }
