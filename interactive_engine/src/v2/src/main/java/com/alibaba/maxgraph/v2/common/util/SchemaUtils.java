@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.maxgraph.v2.frontend.compiler.utils;
+package com.alibaba.maxgraph.v2.common.util;
 
 import com.alibaba.maxgraph.proto.v2.RuntimeLabelIdNameProto;
 import com.alibaba.maxgraph.proto.v2.RuntimePropertyIdNameProto;
 import com.alibaba.maxgraph.proto.v2.RuntimeSchemaProto;
 import com.alibaba.maxgraph.v2.common.frontend.api.schema.*;
 import com.alibaba.maxgraph.v2.common.schema.DataType;
-import com.alibaba.maxgraph.v2.frontend.compiler.tree.TreeConstants;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.tinkerpop.gremlin.structure.T;
@@ -98,22 +97,6 @@ public class SchemaUtils {
             throw new UnsupportedOperationException("there're multiple property name for property id " + propId + " in " + labelPropertyNames);
         }
         return propertyNames.iterator().next();
-    }
-
-    /**
-     * Get property id with the given property name and schema
-     *
-     * @param name   The given property name
-     * @param schema The given schema
-     * @return The property name
-     */
-    public static int getPropId(String name, GraphSchema schema) {
-        Map<Integer, Integer> labelPropertyIds = schema.getPropertyId(name);
-        Set<Integer> propertyIds = Sets.newHashSet(labelPropertyIds.values());
-        if (propertyIds.size() > 1) {
-            throw new UnsupportedOperationException("there're multiple property id for property name " + name + " in " + labelPropertyIds);
-        }
-        return propertyIds.isEmpty() ? TreeConstants.MAGIC_PROP_ID : propertyIds.iterator().next();
     }
 
     /**

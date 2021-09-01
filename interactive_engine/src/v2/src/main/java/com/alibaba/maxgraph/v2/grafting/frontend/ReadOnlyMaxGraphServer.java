@@ -24,7 +24,7 @@ import com.alibaba.maxgraph.tinkerpop.Utils;
 import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
-import com.alibaba.maxgraph.v2.frontend.config.FrontendConfig;
+import com.alibaba.maxgraph.v2.common.config.GremlinConfig;
 import io.netty.channel.Channel;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -72,7 +72,7 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
         this.loadSettings();
 
         logger.info(GremlinServer.getHeader());
-        this.settings.port = FrontendConfig.GREMLIN_PORT.get(this.configs);
+        this.settings.port = GremlinConfig.GREMLIN_PORT.get(this.configs);
         this.settings.host = "0.0.0.0";
         if (settings.gremlinPool == 0) {
             settings.gremlinPool = Runtime.getRuntime().availableProcessors();
@@ -82,8 +82,8 @@ public class ReadOnlyMaxGraphServer implements MaxGraphServer {
         } else {
             throw new IllegalArgumentException("Not support for channelizer=>" + settings.channelizer);
         }
-        settings.writeBufferHighWaterMark = FrontendConfig.SERVER_WRITE_BUFFER_HIGH_WATER.get(this.configs);
-        settings.writeBufferLowWaterMark = FrontendConfig.SERVER_WRITE_BUFFER_LOW_WATER.get(this.configs);
+        settings.writeBufferHighWaterMark = GremlinConfig.SERVER_WRITE_BUFFER_HIGH_WATER.get(this.configs);
+        settings.writeBufferLowWaterMark = GremlinConfig.SERVER_WRITE_BUFFER_LOW_WATER.get(this.configs);
         this.server = new GremlinServer(settings);
 
         ServerGremlinExecutor serverGremlinExecutor = Utils.getFieldValue(GremlinServer.class, this.server, "serverGremlinExecutor");

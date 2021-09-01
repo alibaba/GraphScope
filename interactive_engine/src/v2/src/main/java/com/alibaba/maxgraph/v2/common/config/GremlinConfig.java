@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.maxgraph.v2.frontend.config;
+package com.alibaba.maxgraph.v2.common.config;
 
 import com.alibaba.maxgraph.v2.common.config.Config;
 
 /**
- * Frontend related config
+ * Gremlin related config
  */
-public class FrontendConfig {
+public class GremlinConfig {
     /**
      * Get gremlin server port
      *
@@ -45,35 +45,4 @@ public class FrontendConfig {
     public static final Config<Integer> SERVER_WRITE_BUFFER_LOW_WATER =
             Config.intConfig("gremlin.server.buffer.low.water", 8 * 1024 * 1024);
 
-    /**
-     * Get the graph store type for current system
-     *
-     * @return The store type, memory for default
-     */
-    public static final Config<String> GRAPH_STORE_TYPE =
-            Config.stringConfig("graph.store.type", "memory");
-
-    /**
-     * The batch size of result written from server to client
-     */
-    public static final Config<Integer> RESULT_ITERATION_BATCH_SIZE =
-            Config.intConfig("gremlin.result.iteration.batch.size", 64);
-
-    public static final Config<Integer> QUERY_RESPONSE_BUFFER_QUEUE_SIZE =
-            Config.intConfig("query.response.buffer.queue.size", 64);
-
-    public static final Config<String> QUERY_VINEYARD_SCHEMA_PATH =
-            Config.stringConfig("query.vineyard.schema.path", "");
-
-    public static final Config<Boolean> GREMLIN_SERVER_VERTEX_CACHE_ENABLE =
-            Config.boolConfig("gremlin.server.vertex.cache.enable", true);
-
-    public static final Config<Boolean> TIMELY_FETCH_PROP_FLAG =
-            Config.boolConfig("timely.fetch.prop.flag", true);
-
-    public static final Config<Integer> TIMELY_RESULT_ITERATION_BATCH_SIZE =
-            Config.intConfig("timely.result.iteration.batch.size", 64);
-
-    public static final Config<Boolean> TIMELY_GLOBAL_PULL_GRAPH_FLAG =
-            Config.boolConfig("timely.global.pull.graph.flag", false);
 }

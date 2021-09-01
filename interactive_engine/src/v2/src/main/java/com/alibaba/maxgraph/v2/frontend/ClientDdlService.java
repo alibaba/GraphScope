@@ -16,12 +16,9 @@
 package com.alibaba.maxgraph.v2.frontend;
 
 import com.alibaba.graphscope.proto.ddl.*;
-import com.alibaba.maxgraph.v2.common.frontend.api.exception.GraphCreateSchemaException;
 import com.alibaba.maxgraph.v2.common.schema.*;
 import com.alibaba.maxgraph.v2.common.schema.GraphDef;
-import com.alibaba.maxgraph.v2.common.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.v2.common.schema.request.DdlRequestBatch;
-import com.alibaba.maxgraph.v2.common.util.UuidUtils;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import io.grpc.Status;

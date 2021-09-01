@@ -27,8 +27,6 @@ import com.alibaba.maxgraph.v2.common.config.Configs;
 import com.alibaba.maxgraph.v2.common.discovery.*;
 import com.alibaba.maxgraph.v2.common.exception.MaxGraphException;
 import com.alibaba.maxgraph.v2.common.frontend.api.MaxGraphServer;
-import com.alibaba.maxgraph.v2.common.frontend.api.graph.GraphPartitionManager;
-import com.alibaba.maxgraph.v2.common.frontend.remote.RemoteGraphPartitionManager;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsAggregator;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectClient;
 import com.alibaba.maxgraph.v2.common.metrics.MetricsCollectService;
@@ -98,10 +96,9 @@ public class Frontend extends NodeBase {
         ClientWriteService clientWriteService = new ClientWriteService(writeSessionGenerator, graphWriter);
         this.rpcServer = new RpcServer(configs, localNodeProvider, frontendSnapshotService, clientService,
                 metricsCollectService, clientDdlService, clientWriteService);
-        GraphPartitionManager partitionManager = new RemoteGraphPartitionManager(this.metaService);
         WrappedSchemaFetcher wrappedSchemaFetcher = new WrappedSchemaFetcher(snapshotCache, metaService);
-        MaxGraphImpl maxGraphImpl = new MaxGraphImpl(this.discovery, wrappedSchemaFetcher, partitionManager,
-                graphWriter, writeSessionGenerator);
+        MaxGraphImpl maxGraphImpl = new MaxGraphImpl(this.discovery, wrappedSchemaFetcher, graphWriter,
+                writeSessionGenerator, metaService);
         TinkerMaxGraph graph = new TinkerMaxGraph(new InstanceConfig(configs.getInnerProperties()), maxGraphImpl,
                 new DefaultGraphDfs());
         this.maxGraphServer = new ReadOnlyMaxGraphServer(configs, graph, wrappedSchemaFetcher,
