@@ -8,7 +8,7 @@ set -o pipefail
 
 usage() {
 cat <<END
-  A script to launch interactive engine.
+  A script to launch graphscope-store service.
 
   Usage: store_ctl.sh [options] [command] [parameters]
 
