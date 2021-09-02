@@ -218,7 +218,7 @@ fn parse_store_ip_list_for_gaia(address_list: &[RuntimeAddressProto]) -> Vec<Pee
             server_id: server_idx,
             ip: address.get_ip().to_string(),
             // assign a random port for pegasus
-            port: 0,
+            port: 8198,
         };
         peers_list.push(peer_config);
         server_idx += 1;
