@@ -85,7 +85,7 @@ max_node() {
          -Dlog.dir="${LOG_DIR}" \
          -Dlog.name="${LOG_NAME}" \
          -cp "${libpath}" com.alibaba.graphscope.gaia.MaxNode \
-         "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.out" >&2)
+         "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
   else
     java -server \
          -Dlogback.configurationFile="${MAXGRAPH_LOGBACK_FILE}" \
@@ -93,7 +93,7 @@ max_node() {
          -Dlog.dir="${LOG_DIR}" \
          -Dlog.name="${LOG_NAME}" \
          -cp "${libpath}" com.alibaba.maxgraph.v2.MaxNode \
-         "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.out" >&2)
+         "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
   fi
 }
 
@@ -108,7 +108,7 @@ admin_tools() {
       -Dlog.dir="${LOG_DIR}" \
       -Dlog.name="${LOG_NAME}" \
       -cp "${libpath}" com.alibaba.maxgraph.v2.AdminTools \
-      "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.out" >&2)
+      "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
 load_tools() {
@@ -148,7 +148,7 @@ maxgraph() {
       -Dlog.dir="${LOG_DIR}" \
       -Dlog.name="${LOG_NAME}" \
       -cp "${libpath}" com.alibaba.maxgraph.v2.MaxGraph \
-      "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.out" >&2)
+      "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
 # parse argv
