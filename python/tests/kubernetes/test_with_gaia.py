@@ -51,7 +51,7 @@ def get_gs_image_on_ci_env():
 def gs_session():
     gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
-        num_workers=1,
+        num_workers=2,
         enable_gaia=True,
         k8s_gs_image=gs_image,
         k8s_coordinator_cpu=2,
