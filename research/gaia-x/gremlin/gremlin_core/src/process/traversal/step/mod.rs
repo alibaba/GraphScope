@@ -55,7 +55,6 @@ impl Step for pb::GremlinStep {
 }
 
 mod by_key;
-mod dedup;
 mod filter;
 mod flat_map;
 mod fold;
