@@ -397,6 +397,7 @@ jobs:
                           ./tests/kubernetes
 
     - name: HDFS test
+      env:
         CHANGE_MINIKUBE_NONE_USER: true
         GS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${{ github.sha }}
       run: |
