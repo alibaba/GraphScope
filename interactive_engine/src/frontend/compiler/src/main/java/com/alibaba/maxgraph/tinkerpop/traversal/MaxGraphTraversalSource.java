@@ -25,6 +25,8 @@ import com.alibaba.maxgraph.tinkerpop.steps.GraphSourceStep;
 import com.alibaba.maxgraph.tinkerpop.steps.MaxGraphStep;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.tinkerpop.gremlin.process.remote.RemoteConnection;
+import org.apache.tinkerpop.gremlin.process.remote.traversal.strategy.decoration.RemoteStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -33,6 +35,7 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.util.empty.EmptyGraph;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,6 +50,12 @@ public class MaxGraphTraversalSource extends GraphTraversalSource {
 
     public MaxGraphTraversalSource(final Graph graph) {
         this(graph, TraversalStrategies.GlobalCache.getStrategies(graph.getClass()));
+    }
+
+    public MaxGraphTraversalSource(final RemoteConnection remoteConnection) {
+        this(EmptyGraph.instance(), TraversalStrategies.GlobalCache.getStrategies(EmptyGraph.class).clone());
+        this.connection = connection;
+        this.strategies.addStrategies(new RemoteStrategy(connection));
     }
 
     public GraphTraversal<Vertex, Vertex> V(final Object... vertexIds) {
