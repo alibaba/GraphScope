@@ -21,7 +21,7 @@ use crate::Partitioner;
 use pegasus::api::function::*;
 use pegasus::api::{
     Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration,
-    KeyBy, Limit, Map, Reduce, Sink, SortBy, Source,
+    KeyBy, Limit, Map, Merge, Reduce, Sink, SortBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::BuildJobError;
@@ -308,8 +308,23 @@ impl GremlinJobCompiler {
                             .dedup()?
                             .map(|pair| Ok(pair.value))?;
                     }
-                    server_pb::operator_def::OpKind::Union(_) => {
-                        todo!()
+                    server_pb::operator_def::OpKind::Union(union) => {
+                        if union.branches.len() < 2 {
+                            Err("invalid branch sizes in union")?;
+                        }
+                        // // TODO: engine bug here
+                        // let (mut ori_stream, sub_stream) = stream.copied()?;
+                        // stream = self.install(sub_stream, &union.branches[0].plan[..])?;
+                        // for subtask in &union.branches[1..] {
+                        //     let copied = ori_stream.copied()?;
+                        //     ori_stream = copied.0;
+                        //     stream = self.install(copied.1, &subtask.plan[..])?.merge(stream)?;
+                        // }
+                        // TODO(bingqing): This is just for test, remove it when merge is ready
+                        let (ori_stream, sub_stream) = stream.copied()?;
+                        stream = self.install(ori_stream, &union.branches[0].plan[..])?;
+                        stream =
+                            self.install(sub_stream, &union.branches[1].plan[..])?.merge(stream)?;
                     }
                     server_pb::operator_def::OpKind::Iterate(iter) => {
                         let until = if let Some(condition) =
