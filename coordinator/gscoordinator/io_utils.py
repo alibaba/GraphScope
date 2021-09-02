@@ -29,6 +29,14 @@ class StdStreamWrapper(object):
             self._lines = queue
         self._drop = drop
 
+    @property
+    def stdout(self):
+        return self._stream_backup
+
+    @property
+    def stderr(self):
+        return self._stream_backup
+
     def drop(self, drop=True):
         self._drop = drop
 
