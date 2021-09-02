@@ -281,7 +281,7 @@ class LocalLauncher(Launcher):
             encoding="utf-8",
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
-            stderr=sys.stderr,
+            stderr=subprocess.STDOUT,
             bufsize=1,
         )
 
