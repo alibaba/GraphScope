@@ -172,7 +172,7 @@ def test_demo_on_hdfs(gs_session_distributed):
     )
 
     # Interactive engine
-    interactive = gs_session.gremlin(graph)
+    interactive = gs_session_distributed.gremlin(graph)
     sub_graph = interactive.subgraph(  # noqa: F841
         'g.V().hasLabel("person").outE("knows")'
     )
