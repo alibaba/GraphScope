@@ -38,7 +38,6 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
                                           RunStepResponse* response) {
   CHECK(request->has_dag_def());
   const DagDef& dag_def = request->dag_def();
-  auto* res_status = response->mutable_status();
   std::unordered_map<std::string, OpResult*> op_key_to_result;
 
   for (const auto& op : dag_def.op()) {
@@ -67,7 +66,7 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
             std::string error_msg =
                 "BUG: Multiple workers return different graph def.";
             LOG(ERROR) << error_msg;
-            return Status::(StatusCode::INTERNAL, error_msg);
+            return Status(StatusCode::INTERNAL, error_msg);
           }
         }
       } else {
@@ -116,7 +115,7 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
           op_result->set_code(rpc::Code::WORKER_RESULTS_INCONSISTENT_ERROR);
           op_result->set_error_msg(ss.str());
           LOG(ERROR) << ss.str();
-          return Status::(StatusCode::INTERNAL, ss.str());
+          return Status(StatusCode::INTERNAL, ss.str());
         }
       }
       break;

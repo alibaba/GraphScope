@@ -605,8 +605,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::convertGraph(
 
   VLOG(1) << "Converting graph, src graph name: " << src_graph_name
           << ", dst graph name: " << dst_graph_name << ", dst graph type: "
-          << rpc::graph::GraphTypePb_Name(dst_graph_type);
-  << ", type_sig: " << type_sig;
+          << rpc::graph::GraphTypePb_Name(dst_graph_type)
+          << ", type_sig: " << type_sig;
 
   BOOST_LEAF_AUTO(g_utils,
                   object_manager_.GetObject<PropertyGraphUtils>(type_sig));
@@ -907,7 +907,7 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
   } else {
     RETURN_GS_ERROR(
         vineyard::ErrorCode::kInvalidValueError,
-        "Unsupported graph type: " << rpc::graph::GraphTypePb_Name(graph_type));
+        "Unsupported graph type: " + rpc::graph::GraphTypePb_Name(graph_type));
   }
 }
 
