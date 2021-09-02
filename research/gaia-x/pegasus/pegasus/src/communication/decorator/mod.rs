@@ -117,10 +117,11 @@ mod rob {
                 let size = c.0 + c.1 + msg.len();
                 if size > 0 {
                     trace_worker!(
-                        "output[{:?}]: push last data of {:?}, total pushed {} to self;",
+                        "output[{:?}]: push last data of {:?}, total pushed {} into channel[{}] to self;",
                         self.port(),
                         msg.tag,
-                        size
+                        size,
+                        self.ch_info.index()
                     );
                 }
             }
@@ -140,13 +141,14 @@ mod rob {
                         .unwrap_or((0, 0));
                     let size = c.0 + c.1;
                     trace_worker!(
-                        "output[{:?}]: notify end of {:?}, total pushed {} to self;",
+                        "output[{:?}]: notify end of {:?}, total pushed {} into channel[{}] to self;",
                         self.port(),
                         end.tag,
-                        size
+                        size,
+                        self.ch_info.index()
                     );
                 } else {
-                    trace_worker!("output[{:?}] notify end of {:?}", self.port(), end.tag);
+                    trace_worker!("output[{:?}] notify end of {:?} into channel[{}];", self.port(), end.tag, self.ch_info.index());
                 }
             }
             let seq = end.seq;
@@ -163,13 +165,13 @@ mod rob {
         fn flush(&mut self) -> IOResult<()> {
             if log_enabled!(log::Level::Trace) {
                 let port = self.port();
-                trace_worker!("output[{:?}] flush;", port);
+                trace_worker!("output[{:?}] flush channel[{}];", port, self.ch_info.index());
                 for (a, b) in self.push_counts.iter_mut() {
                     let cnt = b.0;
                     if cnt > 0 {
                         b.1 += cnt;
                         b.0 = 0;
-                        trace_worker!("output[{:?}] flush {} data of {:?} to self;", port, cnt, a);
+                        trace_worker!("output[{:?}] flush {} data of {:?} into channel[{}] to self;", port, cnt, a, self.ch_info.index());
                     }
                 }
             }
@@ -260,7 +262,7 @@ mod rob {
 
         #[inline]
         fn push_last(&mut self, msg: T, end: EndSignal) -> IOResult<()> {
-            trace_worker!("out port {:?} push end of {:?}", self.port(), end.tag);
+            trace_worker!("output[{:?}] push last of {:?}", self.port(), end.tag);
             match self {
                 MicroBatchPush::Pipeline(p) => p.push_last(msg, end),
                 MicroBatchPush::Shuffle(p) => p.push_last(msg, end),
@@ -282,7 +284,7 @@ mod rob {
 
         #[inline]
         fn notify_end(&mut self, end: EndSignal) -> IOResult<()> {
-            trace_worker!("out port {:?} notify end of {:?}", self.port(), end.tag);
+            trace_worker!("output[{:?}]: notify end of {:?}", self.port(), end.tag);
             match self {
                 MicroBatchPush::Pipeline(p) => p.notify_end(end),
                 MicroBatchPush::Shuffle(p) => p.notify_end(end),

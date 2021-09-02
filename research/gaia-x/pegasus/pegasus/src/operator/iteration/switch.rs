@@ -204,6 +204,7 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
         if n.port == 0 {
             // received from outer loop
             assert!(n.tag().len() < self.scope_level as usize);
+            trace_worker!("EARLY_STOP: cancel all iterations of scope {:?};", n.tag());
             for input in inputs.iter() {
                 input.cancel_scope(n.tag());
             }
@@ -213,9 +214,12 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
                 let nth = n.tag().current_uncheck();
                 // in the middle iteration, should propagated into previous iteration
                 if nth != 0 {
+                    trace_worker!("EARLY_STOP: cancel the {}th iteration of {:?};", nth, n.tag());
                     inputs[1].cancel_scope(n.tag());
                 } else {
-                    inputs[0].cancel_scope(n.tag());
+                    let p = n.tag().to_parent_uncheck();
+                    trace_worker!("EARLY_STOP: cancel new iteration of {:?};", p);
+                    inputs[0].cancel_scope(&p);
                 }
             }
         }

@@ -120,7 +120,7 @@ impl<'a, D: Data> InputSession<'a, D> {
             }
             match (*func)(&mut batch) {
                 Ok(_) => {
-                    if self.on_consumed(is_last, &mut batch) {
+                    if !self.on_consumed(is_last, &mut batch) {
                         return Ok(());
                     }
                 }

@@ -241,7 +241,7 @@ impl<D: Data> InputHandle<D> {
                         assert!(batch.is_empty());
                         assert!(batch.is_last());
                         if batch.tag.is_root() {
-                            debug_worker!("channel {:?} exhaust;", self.ch_info.id);
+                            debug_worker!("channel[{}] exhaust;", self.ch_info.index());
                             self.data_exhaust = true;
                         }
                         let end = batch.take_end().expect("unreachable");
@@ -251,16 +251,16 @@ impl<D: Data> InputHandle<D> {
                             end.update();
                             batch.set_end(end);
                             if batch.tag.is_root() {
-                                debug_worker!("channel {:?} exhaust;", self.ch_info.id);
+                                debug_worker!("channel[{}] exhaust;", self.ch_info.index());
                                 self.data_exhaust = true;
                             }
                         }
 
-                        if self.is_skipped(&batch.tag) {
+                        if self.is_discard(&batch.tag) {
                             batch.take_data();
                             if batch.is_last() {
                                 trace_worker!(
-                                    "ch[{}] pull last batch of {:?} from {};",
+                                    "channel[{}] pull last batch of {:?} from {};",
                                     self.ch_info.id.index,
                                     batch.tag,
                                     batch.src
@@ -271,7 +271,7 @@ impl<D: Data> InputHandle<D> {
                             if log_enabled!(log::Level::Trace) {
                                 if batch.is_last() {
                                     trace_worker!(
-                                        "ch[{}] pulled last batch(len={}) of {:?} from {}",
+                                        "channel[{}] pulled last batch(len={}) of {:?} from {}",
                                         self.ch_info.id.index,
                                         batch.len(),
                                         batch.tag,
@@ -279,7 +279,7 @@ impl<D: Data> InputHandle<D> {
                                     );
                                 } else {
                                     trace_worker!(
-                                        "ch[{}] pulled batch(len={}) of {:?} from {}",
+                                        "channel[{}] pulled batch(len={}) of {:?} from {}",
                                         self.ch_info.id.index,
                                         batch.len(),
                                         batch.tag,
@@ -294,7 +294,7 @@ impl<D: Data> InputHandle<D> {
                 Ok(None) => return Ok(None),
                 Err(err) => {
                     return if err.is_source_exhaust() {
-                        debug_worker!("channel {:?} closed;", self.ch_info.id);
+                        debug_worker!("channel[{}] closed;", self.ch_info.index());
                         assert!(self.data_exhaust);
                         Ok(None)
                     } else {
@@ -309,32 +309,40 @@ impl<D: Data> InputHandle<D> {
         let level = tag.len() as u32;
         if level == self.ch_info.scope_level {
             // cancel scopes in current scope level;
-            trace_worker!("EARLY_STOP: ch {} cancel consume data scope {:?};", self.ch_info.index(), tag);
-            self.cancel.insert(tag.clone(), ());
-            if let Some(stash) = self.stash_index.get_mut(tag) {
-                stash.skip();
-            }
+            if self.cancel.insert(tag.clone(), ()).is_none() {
+                trace_worker!("EARLY_STOP: channel[{}] cancel consume data scope {:?};", self.ch_info.index(), tag);
+                if let Some(stash) = self.stash_index.get_mut(tag) {
+                    stash.discard();
+                    if !stash.is_exhaust() {
+                       self.propagate_cancel(tag);
+                    } else {
+                        // upstream had finished producing data of the tag;
+                    }
+                } else {
+                    self.propagate_cancel(tag);
+                }
+            };
         } else if *crate::config::ENABLE_CANCEL_CHILD {
             // if it's a cancel signal from parent scope;
             assert!(level < self.ch_info.scope_level);
-            self.parent_cancel.insert(tag.clone());
-            let mut stash_index = std::mem::replace(&mut self.stash_index, Default::default());
-            for (child, stash) in stash_index.iter_mut() {
-                if tag.is_parent_of(&*child) {
-                    trace_worker!("EARLY_STOP: ch {} cancel consume data of {:?} as it's parent scope {:?} been canceled;", self.ch_info.index(), child, tag);
-                    self.cancel.insert((&*child).clone(), ());
-                    stash.skip();
-                    // todo: if need to propagate event of this child scope;
+            if self.parent_cancel.insert(tag.clone()) {
+                let mut stash_index = std::mem::replace(&mut self.stash_index, Default::default());
+                for (child, stash) in stash_index.iter_mut() {
+                    if tag.is_parent_of(&*child) {
+                        trace_worker!("EARLY_STOP: channel[{}] cancel consume data of {:?} as it's parent scope {:?} been canceled;", self.ch_info.index(), child, tag);
+                        self.cancel.insert((&*child).clone(), ());
+                        stash.discard();
+                        // todo: if need to propagate event of this child scope;
+                    }
                 }
+                self.stash_index = stash_index;
+                self.propagate_cancel(tag);
             }
-            self.stash_index = stash_index;
         }
-
-        self.propagate_cancel(tag);
     }
 
     #[inline]
-    fn is_skipped(&self, tag: &Tag) -> bool {
+    fn is_discard(&self, tag: &Tag) -> bool {
         let level = tag.len() as u32;
         assert_eq!(level, self.ch_info.scope_level);
         if !self.cancel.is_empty() {
@@ -358,10 +366,10 @@ impl<D: Data> InputHandle<D> {
         let ch = self.ch_info.id.index;
         let event = Event::new(source, self.ch_info.source_port, EventKind::Cancel((ch, tag.clone())));
         let result = if self.ch_info.source_peers > 1 {
-            trace_worker!("EARLY-STOP: ch: {} broadcast backward cancel signal of {:?} to {:?}", self.ch_info.index(), tag, self.ch_info.source_port);
+            trace_worker!("EARLY_STOP: channel[{}] broadcast backward cancel signal of {:?} to {:?}", self.ch_info.index(), tag, self.ch_info.source_port);
             self.event_emitter.broadcast(event)
         } else {
-            trace_worker!("EARLY-STOP: ch: {} send self backward cancel signal {:?} to {:?}", self.ch_info.index(), tag, self.ch_info.source_port);
+            trace_worker!("EARLY_STOP: channel[{}] send self backward cancel signal {:?} to {:?}", self.ch_info.index(), tag, self.ch_info.source_port);
             self.event_emitter.send(source, event)
         };
 
@@ -450,6 +458,10 @@ impl<D> StashedQueue<D> {
         }
     }
 
+    fn is_exhaust(&self) -> bool {
+        self.queue.back().map(|b| b.is_last()).unwrap_or(false)
+    }
+
     fn stash(&mut self, batch: MicroBatch<D>) {
         if batch.is_empty() {
             if batch.is_last() {
@@ -466,7 +478,7 @@ impl<D> StashedQueue<D> {
         }
     }
 
-    fn skip(&mut self) {
+    fn discard(&mut self) {
         self.skip = true;
         let last = self.queue.pop_back();
         self.queue.clear();

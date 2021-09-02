@@ -352,7 +352,7 @@ impl Operator {
 
     pub fn cancel(&mut self, port: usize, tag: Tag) -> Result<(), JobExecError> {
         trace_worker!(
-            "EARLY-STOP output[{:?}] stop sending data of scope {:?};",
+            "EARLY_STOP output[{:?}] stop sending data of scope {:?};",
             Port::new(self.info.index, port),
             tag,
         );

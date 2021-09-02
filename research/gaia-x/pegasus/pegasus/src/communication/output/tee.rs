@@ -626,11 +626,13 @@ mod rob {
 
                         for (i, mut b) in queue.drain(..) {
                             if let Err(err) = self.pushes[i].try_push_iter(tag, &mut b) {
-                                return if err.is_would_block() || err.is_interrupted() {
-                                    error_worker!("can't handle block of tee push;");
-                                    Err(IOError::cannot_block())
+                                if err.is_would_block() || err.is_interrupted() {
+                                    if !b.is_empty() {
+                                        error_worker!("can't handle block of tee push {} on port {:?};", i, self.port);
+                                        return Err(IOError::cannot_block());
+                                    }
                                 } else {
-                                    Err(err)
+                                    return Err(err);
                                 }
                             }
                         }

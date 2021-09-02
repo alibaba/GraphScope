@@ -83,10 +83,11 @@ mod rob {
                 let size = c.0 + c.1 + msg.len();
                 if size > 0 {
                     trace_worker!(
-                        "output[{:?}]: push last data of {:?}, total pushed {} to {};",
+                        "output[{:?}]: push last data of {:?}, total pushed {} into channel[{}] to {};",
                         self.port(),
                         msg.tag,
                         size,
+                        self.ch_info.index(),
                         self.target_worker
                     );
                 }
@@ -103,7 +104,7 @@ mod rob {
                 // of the data; It must guarantee that if the event reached, then all data were also reached;
                 self.flush()?;
                 trace_worker!(
-                    "send end event of {:?} on to [worker {}: port: {:?} ;",
+                    "send end event of {:?} on to [worker_{}]: port: {:?} ;",
                     end.tag,
                     self.target_worker,
                     self.ch_info.target_port
@@ -125,10 +126,11 @@ mod rob {
                             .unwrap_or((0, 0));
                         let size = c.0 + c.1;
                         trace_worker!(
-                            "output[{:?}]: notify end of {:?}, total pushed {} to {};",
+                            "output[{:?}]: notify end of {:?}, total pushed {} into channel[{}] to {};",
                             self.port(),
                             end.tag,
                             size,
+                            self.ch_info.index(),
                             self.target_worker
                         );
                     }
@@ -148,20 +150,21 @@ mod rob {
                             .unwrap_or((0, 0));
                         let size = c.0 + c.1;
                         trace_worker!(
-                            "output[{:?}]: notify end of {:?}, total pushed {} to {};",
+                            "output[{:?}]: notify end of {:?}, total pushed {} into channel[{}] to {};",
                             self.port(),
                             end.tag,
                             size,
+                            self.ch_info.index(),
                             self.target_worker
                         );
                     } else {
-                        trace_worker!("output[{:?}] notify end of {:?}", self.port(), end.tag);
+                        trace_worker!("output[{:?}] notify end of {:?} of channel[{}]", self.port(), end.tag, self.ch_info.index());
                     }
                 }
 
                 self.flush()?;
                 trace_worker!(
-                    "send end event of {:?} on to [worker {}]: port: {:?} ;",
+                    "send end event of {:?} on to {}: port: {:?} ;",
                     end.tag,
                     self.target_worker,
                     self.ch_info.target_port
@@ -176,17 +179,18 @@ mod rob {
         fn flush(&mut self) -> IOResult<()> {
             if log_enabled!(log::Level::Trace) {
                 let port = self.port();
-                trace_worker!("output[{:?}] flush;", port);
+                trace_worker!("output[{:?}] flush channel[{}] to {};", port, self.ch_info.index(), self.target_worker);
                 for (a, b) in self.push_counts.iter_mut() {
                     let cnt = b.0;
                     if cnt > 0 {
                         b.1 += cnt;
                         b.0 = 0;
                         trace_worker!(
-                            "output[{:?}] flush {} data of {:?} to {};",
+                            "output[{:?}] flush {} data of {:?} into channel[{}] to {};",
                             port,
                             cnt,
                             a,
+                            self.ch_info.index(),
                             self.target_worker
                         );
                     }

@@ -22,6 +22,7 @@ mod rob {
     struct ScopeBatchPool<D: Data> {
         src: u32,
         scope_capacity: usize,
+        batch_capacity: usize,
         top_pool: MemBatchPoolRef<D>,
         sec_pool: TidyTagMap<DataSetPool<D, MemBatchPoolRef<D>>>,
         exe_metric: Option<ExecuteTimeMetric>,
@@ -42,6 +43,7 @@ mod rob {
             ScopeBatchPool {
                 src,
                 scope_capacity,
+                batch_capacity,
                 top_pool,
                 sec_pool: TidyTagMap::new(scope_level),
                 exe_metric,
@@ -65,7 +67,7 @@ mod rob {
             let p = self.top_pool.clone();
             let br = p.borrow();
             let batch_size = br.batch_size;
-            let capacity = self.scope_capacity;
+            let capacity = self.batch_capacity;
             std::mem::drop(br);
             let src = self.src;
 

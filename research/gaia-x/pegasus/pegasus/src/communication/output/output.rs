@@ -41,7 +41,8 @@ mod rob {
         in_block: TidyTagMap<Box<dyn Iterator<Item = D> + Send + 'static>>,
         blocks: VecDeque<BlockScope>,
         is_closed: bool,
-        canceled: AHashSet<Tag>,
+        current_canceled: TidyTagMap<()>,
+        parent_canceled: AHashSet<Tag>,
     }
 
     impl<D: Data> OutputHandle<D> {
@@ -57,12 +58,13 @@ mod rob {
                 in_block: TidyTagMap::new(scope_level),
                 blocks: VecDeque::new(),
                 is_closed: false,
-                canceled: AHashSet::new(),
+                current_canceled: TidyTagMap::new(scope_level),
+                parent_canceled: AHashSet::new(),
             }
         }
 
         pub fn push_batch(&mut self, dataset: MicroBatch<D>) -> IOResult<()> {
-            if self.canceled.is_empty() || !self.canceled.contains(&dataset.tag) {
+            if !self.is_canceled(&dataset.tag) {
                 self.tee.forward(dataset)
             } else {
                 Ok(())
@@ -70,7 +72,7 @@ mod rob {
         }
 
         pub fn push_batch_mut(&mut self, batch: &mut MicroBatch<D>) -> IOResult<()> {
-            if self.canceled.is_empty() || !self.canceled.contains(&batch.tag) {
+            if !self.is_canceled(&batch.tag) {
                 let seq = batch.seq;
                 let data = MicroBatch::new(batch.tag.clone(), self.src, seq, batch.take_data());
                 self.push_batch(data)
@@ -128,42 +130,77 @@ mod rob {
 
         #[inline]
         pub fn cancel(&mut self, tag: &Tag) -> IOResult<()> {
-            self.canceled.insert(tag.clone());
-            let len = self.blocks.len();
-            for _ in 0..len {
-                if let Some(bk) = self.blocks.pop_front() {
-                    if *crate::config::ENABLE_CANCEL_CHILD {
-                        if !bk.tag().eq(tag) && !tag.is_parent_of(bk.tag()) {
-                            self.blocks.push_back(bk);
-                        }
-                    } else {
-                        if !bk.tag().eq(tag) {
-                            self.blocks.push_back(bk);
+            let level = tag.len() as u32;
+            if level == self.scope_level {
+                if self.current_canceled.insert(tag.clone(), ()).is_none() {
+                    let len = self.blocks.len();
+                    for _ in 0..len {
+                        if let Some(bk) = self.blocks.pop_front() {
+                            if bk.tag() == tag {
+                                self.in_block.remove(tag);
+                                trace_worker!("EARLY_STOP: output[{:?}] cancel block of {:?};", self.port, tag);
+                            } else {
+                                self.blocks.push_back(bk);
+                            }
+                        } else {
+                            unreachable!("pop front none");
                         }
                     }
                 }
-            }
-            if *crate::config::ENABLE_CANCEL_CHILD && self.scope_level as usize > tag.len() {
-                self.in_block
-                    .retain(|t, _| !tag.is_parent_of(t));
+            } else if level < self.scope_level {
+                if *crate::config::ENABLE_CANCEL_CHILD && self.parent_canceled.insert(tag.clone()) {
+                    let len = self.blocks.len();
+                    for _ in 0..len {
+                        if let Some(bk) = self.blocks.pop_front() {
+                            if tag.is_parent_of(bk.tag()) {
+                                self.in_block.remove(bk.tag());
+                                trace_worker!("EARLY_STOP: output[{:?}] cancel block of {:?};", self.port, tag);
+                            } else {
+                                self.blocks.push_back(bk);
+                            }
+                        } else {
+                            unreachable!("pop front none");
+                        }
+                    }
+                }
             } else {
-                self.in_block.remove(tag);
+                warn_worker!("unrecognized cancel {:?} ;", tag)
             }
             Ok(())
         }
 
-        #[inline]
         fn is_canceled(&self, tag: &Tag) -> bool {
-            if *crate::config::ENABLE_CANCEL_CHILD && self.scope_level as usize > tag.len() {
-                for skip_tag in self.canceled.iter() {
-                    if skip_tag.is_parent_of(tag) {
-                        return true;
-                    }
+            let level = tag.len() as u32;
+            if level == self.scope_level {
+                if !self.current_canceled.is_empty() && self.current_canceled.contains_key(tag) {
+                   return true;
                 }
-                false
+                if *crate::config::ENABLE_CANCEL_CHILD && !self.parent_canceled.is_empty() {
+                    let p = tag.to_parent_uncheck();
+                    self.check_parent_cancel(p)
+                } else {
+                    false
+                }
+            } else if level < self.scope_level {
+                self.check_parent_cancel(tag.clone())
             } else {
-                self.canceled.contains(tag)
+                false
             }
+        }
+
+        fn check_parent_cancel(&self, mut p: Tag) -> bool {
+            loop {
+                if self.parent_canceled.contains(&p) {
+                    return true;
+                }
+                if p.is_root() {
+                    break;
+                } else {
+                    p = p.to_parent_uncheck();
+                }
+            }
+
+            false
         }
 
         #[inline]

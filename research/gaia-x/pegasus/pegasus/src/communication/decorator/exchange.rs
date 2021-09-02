@@ -206,6 +206,7 @@ mod rob {
                 if !self.cancel_handle.is_canceled(tag, 0) {
                     self.pushes[0].try_push_iter(tag, iter)
                 } else {
+                    trace_worker!("EARLY_START: output[{:?}] ch: {} cancel push data of {:?} to worker 0;", self.ch_info.scope_level, self.ch_info.index(), tag);
                     Ok(())
                 }
             } else {
