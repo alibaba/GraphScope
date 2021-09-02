@@ -101,7 +101,6 @@ jobs:
       if: matrix.os == 'ubuntu-20.04'
       run: |
         source ~/.graphscope_env
-        export GRAPHSCOPE_HOME=/usr/local
         # run test
         cd interactive_engine/src/gaia-adaptor && ./gremlin_test.sh
 

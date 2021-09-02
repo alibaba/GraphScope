@@ -639,7 +639,7 @@ jobs:
                                       ./graphscope-store
         helm test ci --timeout 5m0s
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest -s vvv tests/kubernetes/test_store_service.py -k test_loaded_demo
+        python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_loaded_demo
 
     - name: Clean
       if: always()
