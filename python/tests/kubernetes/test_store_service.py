@@ -40,7 +40,7 @@ def gs_conn():
     yield graphscope.conn(grpc_endpoint, gremlin_endpoint)
 
 
-def demo(gs_conn):
+def test_demo(gs_conn):
     graph = gs_conn.g()
     # Create schema
     schema = graph.schema()
