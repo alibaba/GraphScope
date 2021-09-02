@@ -28,8 +28,8 @@ using ::grpc::Status;
 using ::grpc::StatusCode;
 
 Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
-                                            const HeartBeatRequest* request,
-                                            HeartBeatResponse* response) {
+                                    const HeartBeatRequest* request,
+                                    HeartBeatResponse* response) {
   return Status::OK;
 }
 
@@ -62,8 +62,10 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
         if (!graph_def.key().empty()) {
           if (op_result->graph_def().key().empty()) {
             op_result->mutable_graph_def()->CopyFrom(graph_def);
-          } else if (!::google::protobuf::util::MessageDifferencer::Equals(graph_def, op_result->graph_def())) {
-            std::string error_msg = "BUG: Multiple workers return different graph def.";
+          } else if (!::google::protobuf::util::MessageDifferencer::Equals(
+                         graph_def, op_result->graph_def())) {
+            std::string error_msg =
+                "BUG: Multiple workers return different graph def.";
             LOG(ERROR) << error_msg;
             return Status::(StatusCode::INTERNAL, error_msg);
           }

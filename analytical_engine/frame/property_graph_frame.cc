@@ -213,7 +213,8 @@ void ToArrowFragment(
         return std::dynamic_pointer_cast<gs::IFragmentWrapper>(wrapper);
 #else
         RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                        "GraphScope is built with NETWORKX=OFF, please recompile it with NETWORKX=ON");
+                        "GraphScope is built with NETWORKX=OFF, please "
+                        "recompile it with NETWORKX=ON");
 #endif
       });
 }
@@ -262,7 +263,8 @@ void ToDynamicFragment(
     return std::dynamic_pointer_cast<gs::IFragmentWrapper>(wrapper);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                    "GraphScope is built with NETWORKX=OFF, please recompile it with NETWORKX=ON");
+                    "GraphScope is built with NETWORKX=OFF, please recompile "
+                    "it with NETWORKX=ON");
 #endif
   });
 }

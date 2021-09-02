@@ -126,7 +126,8 @@ class PropertyGraphUtils : public GSObject {
     return wrapper;
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
-                    "GraphScope is compiled with NETWORKX=OFF, please recompile with NETWORKX=ON");
+                    "GraphScope is compiled with NETWORKX=OFF, please "
+                    "recompile with NETWORKX=ON");
 #endif
   }
 
@@ -141,7 +142,8 @@ class PropertyGraphUtils : public GSObject {
     return wrapper;
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
-                    "GraphScope is compiled with NETWORKX=OFF, please recompile with NETWORKX=ON");
+                    "GraphScope is compiled with NETWORKX=OFF, please "
+                    "recompile with NETWORKX=ON");
 #endif
   }
 

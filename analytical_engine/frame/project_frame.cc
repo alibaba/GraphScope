@@ -55,10 +55,11 @@ class ProjectSimpleFrame<
   static bl::result<std::shared_ptr<IFragmentWrapper>> Project(
       std::shared_ptr<IFragmentWrapper>& input_wrapper,
       const std::string& projected_graph_name, const rpc::GSParams& params) {
-        auto graph_type = input_wrapper->graph_def().graph_type();
+    auto graph_type = input_wrapper->graph_def().graph_type();
     if (graph_type != rpc::graph::ARROW_PROPERTY) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                      "graph_type should be ARROW_PROPERTY, got " + rpc::graph::GraphTypePb_Name(graph_type));
+                      "graph_type should be ARROW_PROPERTY, got " +
+                          rpc::graph::GraphTypePb_Name(graph_type));
     }
 
     BOOST_LEAF_AUTO(v_label_id, params.Get<int64_t>(rpc::V_LABEL_ID));
@@ -138,11 +139,11 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
   static bl::result<std::shared_ptr<IFragmentWrapper>> Project(
       std::shared_ptr<IFragmentWrapper>& input_wrapper,
       const std::string& projected_graph_name, const rpc::GSParams& params) {
-                auto graph_type = input_wrapper->graph_def().graph_type();
-    if (graph_type !=
-        rpc::graph::DYNAMIC_PROPERTY) {
+    auto graph_type = input_wrapper->graph_def().graph_type();
+    if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                      "graph_type should be DYNAMIC_PROPERTY, got " + rpc::graph::GraphTypePb_Name(graph_type));
+                      "graph_type should be DYNAMIC_PROPERTY, got " +
+                          rpc::graph::GraphTypePb_Name(graph_type));
     }
     BOOST_LEAF_AUTO(v_prop_key, params.Get<std::string>(rpc::V_PROP_KEY));
     BOOST_LEAF_AUTO(e_prop_key, params.Get<std::string>(rpc::E_PROP_KEY));

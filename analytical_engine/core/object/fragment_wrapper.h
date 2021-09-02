@@ -630,8 +630,9 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
   bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Cannot convert to the undirected DynamicProjectedFragment");
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidOperationError,
+        "Cannot convert to the undirected DynamicProjectedFragment");
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
@@ -850,8 +851,9 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
   bl::result<std::shared_ptr<IFragmentWrapper>> ToUnDirected(
       const grape::CommSpec& comm_spec,
       const std::string& dst_graph_name) override {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Cannot convert to the undirected DynamicProjectedFragment");
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidOperationError,
+        "Cannot convert to the undirected DynamicProjectedFragment");
   }
 
   bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
