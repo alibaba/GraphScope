@@ -95,7 +95,6 @@ GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
 logger = logging.getLogger("graphscope")
 
 
-
 class CoordinatorServiceServicer(
     coordinator_service_pb2_grpc.CoordinatorServiceServicer
 ):
@@ -209,13 +208,24 @@ class CoordinatorServiceServicer(
                 )
             else:
                 context.set_code(grpc.StatusCode.ALREADY_EXISTS)
-                context.set_details("Cannot setup more than one connection at the same time.")
+                context.set_details(
+                    "Cannot setup more than one connection at the same time."
+                )
                 return message_pb2.ConnectSessionResponse()
 
         # Connect to serving coordinator.
         self._request = request
-        self._analytical_engine_config = self._get_engine_config()
-
+        try:
+            self._analytical_engine_config = self._get_engine_config()
+        except grpc.RpcError as e:
+            logger.error(
+                "Get engine config failed, code: %s, details: %s",
+                e.code().name,
+                e.details(),
+            )
+            context.set_code(e.code())
+            context.set_details(e.details())
+            return message_pb2.ConnectSessionResponse()
         # Generate session id
         self._session_id = self._generate_session_id()
         self._key_to_op = dict()
@@ -270,9 +280,16 @@ class CoordinatorServiceServicer(
         request = message_pb2.HeartBeatRequest()
         try:
             self._analytical_engine_stub.HeartBeat(request)
-        except Exception as e:
+        except grpc.RpcError as e:
+            logger.error(
+                "Heartbeat engine failed, code: %s, details: %s",
+                e.code().name,
+                e.details(),
+            )
             context.set_code(grpc.StatusCode.DEADLINE_EXCEEDED)
-            context.set_code("Heart beat analytical engine failed")
+            context.set_details(
+                "Heart beat analytical engine failed, The engine may crashed."
+            )
             return message_pb2.HeartBeatResponse()
         return message_pb2.HeartBeatResponse()
 
@@ -286,7 +303,7 @@ class CoordinatorServiceServicer(
                 self._op_result_pool,
                 self._key_to_op,
                 engine_hosts=self._engine_hosts,
-                engine_config=self._get_engine_config(),
+                engine_config=self._analytical_engine_config,
             )
 
             # Compile app or not.
@@ -312,8 +329,15 @@ class CoordinatorServiceServicer(
         request = message_pb2.RunStepRequest(
             session_id=self._session_id, dag_def=dag_def
         )
-        response = self._analytical_engine_stub.RunStep(request)
-
+        try:
+            response = self._analytical_engine_stub.RunStep(request)
+        except grpc.RpcError as e:
+            logger.error(
+                "Engine RunStep failed, code: %s, details: %s",
+                e.code().name,
+                e.details(),
+            )
+            raise
         op_results.extend(response.results)
         for r in response.results:
             op = self._key_to_op[r.key]
@@ -333,9 +357,7 @@ class CoordinatorServiceServicer(
                 types_pb2.ADD_LABELS,
                 types_pb2.ADD_COLUMN,
             ):
-                schema_path = os.path.join(
-                    "/tmp", op_result.graph_def.key + ".json"
-                )
+                schema_path = os.path.join("/tmp", op_result.graph_def.key + ".json")
                 vy_info = graph_def_pb2.VineyardInfoPb()
                 op_result.graph_def.extension.Unpack(vy_info)
                 self._object_manager.put(
@@ -371,11 +393,11 @@ class CoordinatorServiceServicer(
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             op_pre_process(
-                    op,
-                    self._op_result_pool,
-                    self._key_to_op,
-                    engine_hosts=self._engine_hosts,
-                    engine_config=self._get_engine_config(),
+                op,
+                self._op_result_pool,
+                self._key_to_op,
+                engine_hosts=self._engine_hosts,
+                engine_config=self._analytical_engine_config,
             )
             if op.op == types_pb2.CREATE_INTERACTIVE_QUERY:
                 op_result = self._create_interactive_instance(op)
@@ -406,7 +428,7 @@ class CoordinatorServiceServicer(
                 self._op_result_pool,
                 self._key_to_op,
                 engine_hosts=self._engine_hosts,
-                engine_config=self._get_engine_config(),
+                engine_config=self._analytical_engine_config,
             )
             if op.op == types_pb2.CREATE_LEARNING_INSTANCE:
                 op_result = self._create_learning_instance(op)
@@ -428,7 +450,7 @@ class CoordinatorServiceServicer(
                 self._op_result_pool,
                 self._key_to_op,
                 engine_hosts=self._engine_hosts,
-                engine_config=self._get_engine_config(),
+                engine_config=self._analytical_engine_config,
             )
             if op.op == types_pb2.DATA_SOURCE:
                 op_result = self._process_data_source(op)
@@ -449,19 +471,21 @@ class CoordinatorServiceServicer(
             run_dag_on, dag_def = next_dag
             try:
                 if run_dag_on == GSEngine.analytical_engine:
-                    ret = self.run_on_analytical_engine(
-                            request.session_id, dag_def, op_results
-                        )
+                    self.run_on_analytical_engine(
+                        request.session_id, dag_def, op_results
+                    )
                 elif run_dag_on == GSEngine.interactive_engine:
-                    ret = self.run_on_interactive_engine(
+                    self.run_on_interactive_engine(
                         request.session_id, dag_def, op_results
                     )
                 elif run_dag_on == GSEngine.learning_engine:
-                    ret = self.run_on_learning_engine(
-                        request.session_id, dag_def, op_results
-                    )
+                    self.run_on_learning_engine(request.session_id, dag_def, op_results)
                 elif run_dag_on == GSEngine.coordinator:
-                    ret = self.run_on_coordinator(request.session_id, dag_def, op_results)
+                    self.run_on_coordinator(request.session_id, dag_def, op_results)
+            except grpc.RpcError as exc:
+                context.set_code(exc.code())
+                context.set_details(exc.details())
+                return message_pb2.RunStepResponse()
             except Exception as exc:
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(pickle.dumps(exc))
@@ -477,7 +501,9 @@ class CoordinatorServiceServicer(
         if not os.path.isfile(app_lib_path):
             compiled_path = self._compile_lib_and_distribute(compile_app, app_sig, op)
             if app_lib_path != compiled_path:
-                raise RuntimeError(f"Computed application library path not equal to compiled path, {app_lib_path} versus {compiled_path}")
+                raise RuntimeError(
+                    f"Computed application library path not equal to compiled path, {app_lib_path} versus {compiled_path}"
+                )
 
         op.attr[types_pb2.APP_LIBRARY_PATH].CopyFrom(
             attr_value_pb2.AttrValue(s=app_lib_path.encode("utf-8"))
@@ -493,7 +519,9 @@ class CoordinatorServiceServicer(
                 compile_graph_frame, graph_sig, op
             )
             if graph_lib_path != compiled_path:
-                raise RuntimeError(f"Computed graph library path not equal to compiled path, {graph_lib_path} versus {compiled_path}")
+                raise RuntimeError(
+                    f"Computed graph library path not equal to compiled path, {graph_lib_path} versus {compiled_path}"
+                )
         if graph_sig not in self._object_manager:
             # register graph
             op_def = op_def_pb2.OpDef(op=types_pb2.REGISTER_GRAPH_TYPE)
@@ -513,8 +541,17 @@ class CoordinatorServiceServicer(
             register_request = message_pb2.RunStepRequest(
                 session_id=session_id, dag_def=dag_def
             )
-            register_response = self._analytical_engine_stub.RunStep(register_request)
-
+            try:
+                register_response = self._analytical_engine_stub.RunStep(
+                    register_request
+                )
+            except grpc.RpcError as e:
+                logger.error(
+                    "Register graph failed, code: %s, details: %s",
+                    e.code().name,
+                    e.details(),
+                )
+                raise
             self._object_manager.put(
                 graph_sig,
                 LibMeta(
@@ -541,7 +578,9 @@ class CoordinatorServiceServicer(
 
             if info_message or error_message:
                 if self._streaming_logs:
-                    yield message_pb2.FetchLogsResponse(info_message=info_message, error_message=error_message)
+                    yield message_pb2.FetchLogsResponse(
+                        info_message=info_message, error_message=error_message
+                    )
 
     def CloseSession(self, request, context):
         """
@@ -549,7 +588,9 @@ class CoordinatorServiceServicer(
         """
         if request.session_id != self._session_id:
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
-            context.set_details(f"Session handle not matched, {request.session_id} versus {self._session_id}")
+            context.set_details(
+                f"Session handle not matched, {request.session_id} versus {self._session_id}"
+            )
 
         self._cleanup(
             cleanup_instance=self._request.cleanup_instance, is_dangling=False
@@ -664,12 +705,9 @@ class CoordinatorServiceServicer(
                 message, request_options=request_options, query_gaia=query_gaia
             )
         except Exception as e:
-            raise RuntimeError("Gremlin query failed with error message {0}") from e
+            raise RuntimeError("Gremlin query failed.") from e
         self._object_manager.put(op.key, GremlinResultSet(op.key, rlt))
-        return op_def_pb2.OpResult(
-                code=error_codes_pb2.OK,
-                key=op.key,
-                )
+        return op_def_pb2.OpResult(code=error_codes_pb2.OK, key=op.key)
 
     def _fetch_gremlin_result(self, op: op_def_pb2.OpDef):
         fetch_result_type = op.attr[types_pb2.GIE_GREMLIN_FETCH_RESULT_TYPE].s.decode()
@@ -682,10 +720,10 @@ class CoordinatorServiceServicer(
                 rlt = result_set.all().result()
         except Exception as e:
             raise RuntimeError("Fetch gremlin result failed") from e
-        
+
         return op_def_pb2.OpResult(
-                code=error_codes_pb2.OK, key=op.key, result=pickle.dumps(rlt)
-            )
+            code=error_codes_pb2.OK, key=op.key, result=pickle.dumps(rlt)
+        )
 
     def _output(self, op: op_def_pb2.OpDef):
         import vineyard
@@ -694,7 +732,7 @@ class CoordinatorServiceServicer(
         storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
         fd = op.attr[types_pb2.FD].s.decode()
         df = op.attr[types_pb2.VINEYARD_ID].s.decode()
-        engine_config = self._get_engine_config()
+        engine_config = self._analytical_engine_config
         vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
         vineyard_ipc_socket = engine_config["vineyard_socket"]
         deployment, hosts = self._launcher.get_vineyard_stream_info()
@@ -723,7 +761,7 @@ class CoordinatorServiceServicer(
             import vineyard
             import vineyard.io
 
-            engine_config = self._get_engine_config()
+            engine_config = self._analytical_engine_config
             vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
             vineyard_ipc_socket = engine_config["vineyard_socket"]
             deployment, hosts = self._launcher.get_vineyard_stream_info()
@@ -867,15 +905,7 @@ class CoordinatorServiceServicer(
 
             return subgraph_task.result()
         except Exception as e:
-            error_message = "Failed to create subgraph from gremlin query with error message: {0}".format(
-                str(e)
-            )
-            logger.error(error_message)
-            return op_def_pb2.OpResult(
-                code=error_codes_pb2.GREMLIN_QUERY_ERROR,
-                key=op.key,
-                error_msg=error_message,
-            )
+            raise RuntimeError("Failed to create subgraph from gremlin query") from e
 
     def _create_learning_instance(self, op: op_def_pb2.OpDef):
         object_id = op.attr[types_pb2.VINEYARD_ID].i
@@ -913,14 +943,12 @@ class CoordinatorServiceServicer(
             key=op.key,
         )
 
-
-
     def _cleanup(self, cleanup_instance=True, is_dangling=False):
         # clean up session resources.
         for key in self._object_manager.keys():
             obj = self._object_manager.get(key)
             obj_type = obj.type
-            unload_type = None
+            unload_type, config = None, None
 
             if obj_type == "app":
                 unload_type = types_pb2.UNLOAD_APP
@@ -963,7 +991,14 @@ class CoordinatorServiceServicer(
                 request = message_pb2.RunStepRequest(
                     session_id=self._session_id, dag_def=dag_def
                 )
-                self._analytical_engine_stub.RunStep(request)
+                try:
+                    self._analytical_engine_stub.RunStep(request)
+                except grpc.RpcError as e:
+                    logger.error(
+                        "Cleanup failed, code: %s, details: %s",
+                        e.code().name,
+                        e.details(),
+                    )
 
         self._object_manager.clear()
 
@@ -993,22 +1028,24 @@ class CoordinatorServiceServicer(
         return engine_service_pb2_grpc.EngineServiceStub(channel)
 
     def _get_engine_config(self):
-        op_def = op_def_pb2.OpDef(op=types_pb2.GET_ENGINE_CONFIG)
-        dag_def = op_def_pb2.DagDef()
-        dag_def.op.extend([op_def])
-        fetch_request = message_pb2.RunStepRequest(
+        dag_def = create_single_op_dag(types_pb2.GET_ENGINE_CONFIG)
+        request = message_pb2.RunStepRequest(
             session_id=self._session_id, dag_def=dag_def
         )
-        fetch_response = self._analytical_engine_stub.RunStep(fetch_request)
-
-        config = json.loads(fetch_response.results[0].result.decode("utf-8"))
+        try:
+            response = self._analytical_engine_stub.RunStep(request)
+        except grpc.RpcError as e:
+            logger.error(
+                "Get engine config failed, code: %s, details: %s",
+                e.code().name,
+                e.details(),
+            )
+            raise
+        config = json.loads(response.results[0].result.decode("utf-8"))
         config.update(self._launcher.get_engine_config())
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
-        if self._analytical_engine_config is None:
-            # fetch NETWORKX compile option from engine
-            self._analytical_engine_config = self._get_engine_config()
         space = self._builtin_workspace
         if types_pb2.GAR in op.attr:
             space = self._udf_app_workspace
@@ -1028,7 +1065,7 @@ def parse_sys_args():
         "--num_workers",
         type=int,
         default=4,
-        help="The number of engine workers.",
+        help="The number of graphscope engine workers.",
     )
     parser.add_argument(
         "--preemptive",
@@ -1053,63 +1090,61 @@ def parse_sys_args():
         "--log_level",
         type=str,
         default="info",
-        help="Log level, info or debug.",
+        help="Log level, choose from 'info' or 'debug'.",
     )
     parser.add_argument(
         "--hosts",
         type=str,
         default="localhost",
-        help="A list of hostname, comma separated.",
+        help="list of comma seperated hostnames of graphscope engine workers.",
     )
     parser.add_argument(
         "--vineyard_socket",
         type=str,
         default=None,
-        help="Socket path to connect to vineyard, random socket will be created if param missing.",
+        help="Vineyard IPC socket path, a socket suffixed by timestamp will be created in '/tmp' if not given.",
     )
     parser.add_argument(
         "--cluster_type",
         type=str,
         default="k8s",
-        help="Deploy graphscope components on local or kubernetes cluster.",
+        help="Cluster type of deploying, choose from 'k8s' or 'local'.",
     )
     parser.add_argument(
         "--k8s_namespace",
         type=str,
         default="graphscope",
-        help="Contains the namespace to create all resource inside, namespace must be exist.",
+        help="The namespace to create all resource, which must exist in advance.",
     )
     parser.add_argument(
         "--k8s_service_type",
         type=str,
         default="NodePort",
-        help="Valid options are NodePort, and LoadBalancer.",
+        help="Service type, choose from 'NodePort' or 'LoadBalancer'.",
     )
     parser.add_argument(
         "--k8s_gs_image",
         type=str,
-        default="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{}".format(
-            __version__
-        ),
+        default=f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}",
         help="Docker image of graphscope engines.",
     )
     parser.add_argument(
         "--k8s_coordinator_name",
         type=str,
         default="",
-        help="Coordinator name in graphscope instance.",
+        help="Coordinator name of graphscope instance.",
     )
     parser.add_argument(
         "--k8s_coordinator_service_name",
         type=str,
         default="",
-        help="Coordinator service name in graphscope instance.",
+        help="Coordinator service name of graphscope instance.",
     )
     parser.add_argument(
         "--k8s_etcd_image",
         type=str,
         default="registry.cn-hongkong.aliyuncs.com/graphscope/etcd:v3.4.13",
-        help="Docker image of etcd, used by vineyard.",
+        help="Docker image of etcd, needed by vineyard.",
     )
     parser.add_argument(
         "--k8s_image_pull_policy",
@@ -1121,19 +1156,19 @@ def parse_sys_args():
         "--k8s_image_pull_secrets",
         type=str,
         default="graphscope",
-        help="A list of secret name, comma separated.",
+        help="A list of comma sparated secrets to pull image.",
     )
     parser.add_argument(
         "--k8s_vineyard_daemonset",
         type=str,
         default="",
-        help="Try to use the existing vineyard DaemonSet with name 'k8s_vineyard_daemonset'.",
+        help="Use the existing vineyard DaemonSet with name 'k8s_vineyard_daemonset'.",
     )
     parser.add_argument(
         "--k8s_vineyard_cpu",
         type=float,
         default=1.0,
-        help="Cpu cores of vinayard container.",
+        help="CPU cores of vinayard container.",
     )
     parser.add_argument(
         "--k8s_vineyard_mem",
@@ -1151,7 +1186,7 @@ def parse_sys_args():
         "--k8s_engine_cpu",
         type=float,
         default=1.0,
-        help="Cpu cores of engine container, default: 1.0",
+        help="CPU cores of engine container, default: 1.0",
     )
     parser.add_argument(
         "--k8s_engine_mem",
@@ -1169,7 +1204,7 @@ def parse_sys_args():
         "--k8s_etcd_cpu",
         type=float,
         default=1.0,
-        help="Cpu cores of etcd pod, default: 1.0",
+        help="CPU cores of etcd pod, default: 1.0",
     )
     parser.add_argument(
         "--k8s_etcd_mem",
@@ -1189,43 +1224,43 @@ def parse_sys_args():
         "--k8s_mars_worker_cpu",
         type=float,
         default=0.5,
-        help="Cpu cores of mars worker container, default: 0.5",
+        help="CPU cores of mars worker container, default: 0.5",
     )
     parser.add_argument(
         "--k8s_mars_worker_mem",
         type=str,
         default="4Gi",
-        help="Memory of mars worker container, default: 4Gi",
+        help="Memory of Mars worker container, default: 4Gi",
     )
     parser.add_argument(
         "--k8s_mars_scheduler_cpu",
         type=float,
         default=0.5,
-        help="Cpu cores of mars scheduler container, default: 0.5",
+        help="CPU cores of Mars scheduler container, default: 0.5",
     )
     parser.add_argument(
         "--k8s_mars_scheduler_mem",
         type=str,
         default="2Gi",
-        help="Memory of mars scheduler container, default: 2Gi",
+        help="Memory of Mars scheduler container, default: 2Gi",
     )
     parser.add_argument(
         "--k8s_volumes",
         type=str,
         default="{}",
-        help="A json string for kubernetes volumes.",
+        help="A json string spcifies the kubernetes volumes to mount.",
     )
     parser.add_argument(
         "--timeout_seconds",
         type=int,
         default=600,
-        help="Launch failed after waiting timeout seconds.",
+        help="The length of time to wait before giving up launching graphscope.",
     )
     parser.add_argument(
         "--dangling_timeout_seconds",
         type=int,
         default=600,
-        help="Kill graphscope instance after seconds of client disconnect.",
+        help="The length of time to wait starting from client disconnected before killing the graphscope instance",
     )
     parser.add_argument(
         "--waiting_for_delete",
@@ -1233,7 +1268,7 @@ def parse_sys_args():
         nargs="?",
         const=True,
         default=False,
-        help="Waiting for delete graphscope instance.",
+        help="Wait until the graphscope instance has been deleted successfully",
     )
     parser.add_argument(
         "--k8s_delete_namespace",
@@ -1241,7 +1276,7 @@ def parse_sys_args():
         nargs="?",
         const=True,
         default=False,
-        help="Delete namespace or not.",
+        help="Delete the namespace that created by graphscope.",
     )
     return parser.parse_args()
 
@@ -1313,7 +1348,7 @@ def launch_graphscope():
     coordinator_service_pb2_grpc.add_CoordinatorServiceServicer_to_server(
         coordinator_service_servicer, server
     )
-    server.add_insecure_port("0.0.0.0:{}".format(args.port))
+    server.add_insecure_port(f"0.0.0.0:{args.port}")
     logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
 
     server.start()

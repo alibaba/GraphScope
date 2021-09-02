@@ -58,7 +58,7 @@ logger = logging.getLogger("graphscope")
 # runtime workspace
 try:
     WORKSPACE = os.environ["GRAPHSCOPE_RUNTIME"]
-except:  # noqa: E722
+except KeyError:
     WORKSPACE = "/tmp/gs"
 
 # COORDINATOR_HOME
@@ -86,7 +86,7 @@ DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 #   2) infer from COORDINATOR_HOME
 try:
     GRAPHSCOPE_HOME = os.environ["GRAPHSCOPE_HOME"]
-except:  # noqa: E722
+except KeyError:
     GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
 
 # ANALYTICAL_ENGINE_HOME
@@ -134,7 +134,7 @@ def get_lib_path(app_dir, app_name):
     elif sys.platform == "darwin":
         lib_path = os.path.join(app_dir, "lib%s.dylib" % app_name)
     else:
-        raise RuntimeError("Unsupported platform.")
+        raise RuntimeError(f"Unsupported platform {sys.platform}")
     return lib_path
 
 
@@ -211,8 +211,8 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     cmake_commands = [
         "cmake",
         ".",
-        "-DNETWORKX={0}".format(engine_config["networkx"]),
-        "-DCMAKE_PREFIX_PATH={0}".format(GRAPHSCOPE_HOME),
+        f"-DNETWORKX={engine_config['networkx']}",
+        "-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
     ]
     if app_type != "cpp_pie":
         if app_type == "cython_pregel":
@@ -226,15 +226,15 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
 
         # Copy pxd file and generate cc file from pyx
         shutil.copyfile(
-            os.path.join(TEMPLATE_DIR, "{}.pxd.template".format(pxd_name)),
-            os.path.join(app_dir, "{}.pxd".format(pxd_name)),
+            os.path.join(TEMPLATE_DIR, f"{pxd_name}.pxd.template"),
+            os.path.join(app_dir, f"{pxd_name}.pxd"),
         )
         # Assume the gar will have and only have one .pyx file
         for pyx_file in glob.glob(app_dir + "/*.pyx"):
             module_name = os.path.splitext(os.path.basename(pyx_file))[0]
             cc_file = os.path.join(app_dir, module_name + ".cc")
             subprocess.check_call(["cython", "-3", "--cplus", "-o", cc_file, pyx_file])
-        app_header = "{}.h".format(module_name)
+        app_header = f"{module_name}.h"
 
     # replace and generate cmakelist
     cmakelists_file_tmp = os.path.join(TEMPLATE_DIR, "CMakeLists.template")
@@ -315,8 +315,8 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     cmake_commands = [
         "cmake",
         ".",
-        "-DNETWORKX=" + engine_config["networkx"],
-        "-DCMAKE_PREFIX_PATH={0}".format(GRAPHSCOPE_HOME),
+        f"-DNETWORKX={engine_config['networkx']}",
+        f"-DCMAKE_PREFIX_PATH={GRAPHSCOPE_HOME}",
     ]
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]
@@ -326,7 +326,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     ):
         cmake_commands += ["-DPROJECT_FRAME=True"]
     else:
-        raise ValueError("Illegal graph type: {}".format(graph_type))
+        raise ValueError(f"Illegal graph type: {graph_type}")
     # replace and generate cmakelist
     cmakelists_file_tmp = os.path.join(TEMPLATE_DIR, "CMakeLists.template")
     cmakelists_file = os.path.join(library_dir, "CMakeLists.txt")
@@ -899,29 +899,29 @@ def _transform_vertex_property_data_r(selector):
 def _transform_labeled_vertex_data_v(schema, label, prop):
     label_id = schema.get_vertex_label_id(label)
     if prop == "id":
-        return "label{}.{}".format(label_id, prop)
+        return f"label{label_id}.{prop}"
     else:
         prop_id = schema.get_vertex_property_id(label, prop)
-        return "label{}.property{}".format(label_id, prop_id)
+        return f"label{label_id}.property{prop_id}"
 
 
 def _transform_labeled_vertex_data_e(schema, label, prop):
     label_id = schema.get_edge_label_id(label)
     if prop in ("src", "dst"):
-        return "label{}.{}".format(label_id, prop)
+        return f"label{label_id}.{prop}"
     else:
         prop_id = schema.get_vertex_property_id(label, prop)
-        return "label{}.property{}".format(label_id, prop_id)
+        return f"label{label_id}.property{prop_id}"
 
 
 def _transform_labeled_vertex_data_r(schema, label):
     label_id = schema.get_vertex_label_id(label)
-    return "label{}".format(label_id)
+    return f"label{label_id}"
 
 
 def _transform_labeled_vertex_property_data_r(schema, label, prop):
     label_id = schema.get_vertex_label_id(label)
-    return "label{}.{}".format(label_id, prop)
+    return f"label{label_id}.{prop}"
 
 
 def transform_vertex_data_selector(selector):
@@ -942,7 +942,7 @@ def transform_vertex_data_selector(selector):
     elif segments[0] == "r":
         selector = _transform_vertex_data_r(selector)
     else:
-        raise SyntaxError("Invalid selector: %s, choose from v / e / r." % selector)
+        raise SyntaxError(f"Invalid selector: {selector}, choose from v / e / r.")
     return selector
 
 
@@ -956,7 +956,7 @@ def transform_vertex_property_data_selector(selector):
         raise RuntimeError("selector cannot be None")
     segments = selector.split(".")
     if len(segments) != 2:
-        raise SyntaxError("Invalid selector: %s." % selector)
+        raise SyntaxError(f"Invalid selector: {selector}")
     if segments[0] == "v":
         selector = _transform_vertex_data_v(selector)
     elif segments[0] == "e":
@@ -964,7 +964,7 @@ def transform_vertex_property_data_selector(selector):
     elif segments[0] == "r":
         selector = _transform_vertex_property_data_r(selector)
     else:
-        raise SyntaxError("Invalid selector: %s, choose from v / e / r." % selector)
+        raise SyntaxError(f"Invalid selector: {selector}, choose from v / e / r.")
     return selector
 
 
@@ -979,7 +979,7 @@ def transform_labeled_vertex_data_selector(schema, selector):
 
     ret_type, segments = selector.split(":")
     if ret_type not in ("v", "e", "r"):
-        raise SyntaxError("Invalid selector: " + selector)
+        raise SyntaxError(f"Invalid selector: {selector}")
     segments = segments.split(".")
     ret = ""
     if ret_type == "v":
@@ -1001,7 +1001,7 @@ def transform_labeled_vertex_property_data_selector(schema, selector):
         raise RuntimeError("selector cannot be None")
     ret_type, segments = selector.split(":")
     if ret_type not in ("v", "e", "r"):
-        raise SyntaxError("Invalid selector: " + selector)
+        raise SyntaxError(f"Invalid selector: {selector}")
     segments = segments.split(".")
     ret = ""
     if ret_type == "v":
@@ -1010,7 +1010,7 @@ def transform_labeled_vertex_property_data_selector(schema, selector):
         ret = _transform_labeled_vertex_data_e(schema, *segments)
     elif ret_type == "r":
         ret = _transform_labeled_vertex_property_data_r(schema, *segments)
-    return "{}:{}".format(ret_type, ret)
+    return f"{ret_type}:{ret}"
 
 
 def _extract_gar(app_dir: str, attr):
@@ -1058,7 +1058,7 @@ def _codegen_app_info(attr, meta_file: str):
                 return (
                     app_type,
                     app["src"],
-                    "{}<_GRAPH_TYPE>".format(app["class_name"]),
+                    f"{app['class_name']}<_GRAPH_TYPE>",
                     None,
                     None,
                     None,
@@ -1198,11 +1198,9 @@ def parse_readable_memory(value):
     try:
         float(num)
     except ValueError as e:
-        raise ValueError(
-            "Argument cannot be interpreted as a number: %s" % value
-        ) from e
+        raise ValueError(f"Argument cannot be interpreted as a number: {value}") from e
     if suffix not in ["Ki", "Mi", "Gi"]:
-        raise ValueError("Memory suffix must be one of 'Ki', 'Mi' and 'Gi': %s" % value)
+        raise ValueError(f"Memory suffix must be one of 'Ki', 'Mi' and 'Gi': {value}")
     return value
 
 
@@ -1289,9 +1287,7 @@ class ResolveMPICmdPrefix(object):
             raise RuntimeError("The number of hosts less then num_workers")
 
         for i in range(host_list_len):
-            host_list[i] = "{}:{}".format(
-                host_list[i], int(host_to_proc_num[host_list[i]])
-            )
+            host_list[i] = f"{host_list[i]}:{host_to_proc_num[host_list[i]]}"
 
         return ",".join(host_list)
 
@@ -1323,9 +1319,9 @@ class ResolveMPICmdPrefix(object):
         cmd.extend(["-n", str(num_workers)])
         cmd.extend(["-host", self.alloc(num_workers, hosts)])
 
-        logger.debug("Resolve mpi cmd prefix: {}".format(cmd))
-        logger.debug("Resolve mpi env: {}".format(env))
-        return (cmd, env)
+        logger.debug("Resolve mpi cmd prefix: %s", " ".join(cmd))
+        logger.debug("Resolve mpi env: %s", json.dumps(env))
+        return cmd, env
 
 
 def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config):
@@ -1482,7 +1478,7 @@ def check_argument(condition, message=None):
     if not condition:
         if message is None:
             message = "in '%s'" % inspect.stack()[1].code_context[0]
-        raise ValueError("Check failed: %s" % message)
+        raise ValueError(f"Check failed: {message}")
 
 
 def check_gremlin_server_ready(endpoint):
@@ -1495,7 +1491,7 @@ def check_gremlin_server_ready(endpoint):
             # which external ip is 'localhost' when service type is 'LoadBalancer'
             return True
 
-    client = Client("ws://{0}/gremlin".format(endpoint), "g")
+    client = Client(f"ws://{endpoint}/gremlin", "g")
     error_message = ""
     begin_time = time.time()
     while True:
@@ -1507,4 +1503,4 @@ def check_gremlin_server_ready(endpoint):
             return True
         time.sleep(3)
         if time.time() - begin_time > INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS:
-            raise TimeoutError("Gremlin check query failed: {0}".format(error_message))
+            raise TimeoutError(f"Gremlin check query failed: {error_message}")

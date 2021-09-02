@@ -30,9 +30,6 @@ using ::grpc::StatusCode;
 Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
                                             const HeartBeatRequest* request,
                                             HeartBeatResponse* response) {
-  ResponseStatus* res_status = response->mutable_status();
-  res_status->set_code(rpc::Code::OK);
-
   return Status::OK;
 }
 

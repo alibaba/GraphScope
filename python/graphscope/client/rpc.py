@@ -20,6 +20,7 @@
 import functools
 import json
 import logging
+import pickle
 import sys
 import threading
 import time
@@ -28,8 +29,8 @@ import grpc
 
 from graphscope.config import GSConfig as gs_config
 from graphscope.framework.errors import ConnectionError
+from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import GRPCError
-from graphscope.framework.errors import check_grpc_response
 from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import error_codes_pb2
 from graphscope.proto import message_pb2
@@ -46,12 +47,15 @@ def catch_grpc_error(fn):
         try:
             return fn(*args, **kwargs)
         except grpc.RpcError as exc:
-            if isinstance(exc, grpc.Call):
-                # pylint: disable=no-member
-                raise GRPCError(
+            if grpc.StatusCode.INTERNAL == exc.code():
+                e = pickle.loads(exc.details())
+                raise e from exc
+            elif grpc.StatusCode.UNKNOWN == exc.code():
+                logger.error(
                     "rpc %s: failed with error code %s, details: %s"
                     % (fn.__name__, exc.code(), exc.details())
-                ) from exc
+                )
+                raise FatalError("The analytical engine may crashed.")
             else:
                 raise GRPCError(
                     "rpc %s failed: status %s" % (str(fn.__name__), exc)
@@ -98,26 +102,26 @@ class GRPCClient(object):
     def waiting_service_ready(self, timeout_seconds=60):
         begin_time = time.time()
         request = message_pb2.HeartBeatRequest()
-        # Do not drop this line, which is for handling KeyboardInterrupt.
-        response = None
         while True:
             try:
-                response = self._stub.HeartBeat(request)
-            except Exception:
-                # grpc disconnect is expect
-                response = None
-            finally:
-                if response is not None:
-                    if response.status.code == error_codes_pb2.OK:
-                        logger.info("GraphScope coordinator service connected.")
-                        break
+                self._stub.HeartBeat(request)
+                logger.info("GraphScope coordinator service connected.")
+                break
+            except grpc.RpcError as e:
+                # Cannot connect to coordinator for a short time is expected
+                # as the coordinator takes some time to launch
+                logger.warning(
+                    "Heart beat analytical engine failed, code: %s, details: %s",
+                    e.code().name,
+                    e.details(),
+                )
                 time.sleep(1)
                 if time.time() - begin_time >= timeout_seconds:
-                    if response is None:
-                        msg = "grpc connnect failed."
-                    else:
-                        msg = response.status.error_msg
-                    raise ConnectionError("Connect coordinator timeout, {}".format(msg))
+                    raise ConnectionError(
+                        "Connect coordinator timeout, code: %s, details: %s",
+                        e.code().name,
+                        e.details(),
+                    )
 
     def connect(self, cleanup_instance=True, dangling_timeout_seconds=60):
         return self._connect_session_impl(
@@ -177,7 +181,6 @@ class GRPCClient(object):
         )
 
         response = self._stub.ConnectSession(request)
-        response = check_grpc_response(response)
 
         self._session_id = response.session_id
         return (
@@ -194,7 +197,6 @@ class GRPCClient(object):
         request = message_pb2.FetchLogsRequest(session_id=self._session_id)
         responses = self._stub.FetchLogs(request)
         for resp in responses:
-            resp = check_grpc_response(resp)
             info = resp.info_message.rstrip()
             if info:
                 logger.info(info, extra={"simple": True})
@@ -206,12 +208,11 @@ class GRPCClient(object):
     def _close_session_impl(self):
         request = message_pb2.CloseSessionRequest(session_id=self._session_id)
         response = self._stub.CloseSession(request)
-        return check_grpc_response(response)
+        return response
 
-    @catch_grpc_error
     def _run_step_impl(self, dag_def):
         request = message_pb2.RunStepRequest(
             session_id=self._session_id, dag_def=dag_def
         )
         response = self._stub.RunStep(request)
-        return check_grpc_response(response)
+        return response
