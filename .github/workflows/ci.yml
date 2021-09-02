@@ -633,11 +633,12 @@ jobs:
         python3 -m pytest -s -vvv tests/kubernetes/test_store_service.py -k test_demo
 
         # helm restart ci release and run demo with the PersistentVolume
-        # FIXME(@haixia): PersisitentVolume not work
         helm uninstall ci
+        cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${{ github.sha }},executor=${{ matrix.executor }} \
                                       ./graphscope-store
         helm test ci --timeout 5m0s
+        cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest -s vvv tests/kubernetes/test_store_service.py -k test_loaded_demo
 
     - name: Clean
