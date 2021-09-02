@@ -55,6 +55,8 @@ pub trait ScopeStreamBuffer {
 pub trait BlockPush {
     // try to unblock data on scope, return true if the data is unblocked;
     fn try_unblock(&mut self, tag: &Tag) -> IOResult<bool>;
+
+    fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()>;
 }
 
 pub use rob::*;
@@ -407,15 +409,6 @@ mod rob {
         ScopeGlobal(ExchangeByScopePush<T>),
     }
 
-    impl<T: Data> MicroBatchPush<T> {
-        pub(crate) fn skip(&mut self, tag: &Tag) -> IOResult<()> {
-            match self {
-                MicroBatchPush::Exchange(p) => p.skip(tag),
-                _ => Ok(()),
-            }
-        }
-    }
-
     impl<T: Data> Push<MicroBatch<T>> for MicroBatchPush<T> {
         fn push(&mut self, batch: MicroBatch<T>) -> Result<(), IOError> {
             match self {
@@ -449,10 +442,18 @@ mod rob {
     }
 
     impl<T: Data> BlockPush for MicroBatchPush<T> {
+
         fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
             match self {
                 MicroBatchPush::Exchange(p) => p.try_unblock(tag),
                 _ => Ok(true),
+            }
+        }
+
+        fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()> {
+            match self {
+                MicroBatchPush::Exchange(p) => p.clean_block_of(tag),
+                _ => Ok(())
             }
         }
     }

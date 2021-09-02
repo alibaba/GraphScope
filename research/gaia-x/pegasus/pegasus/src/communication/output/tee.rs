@@ -753,6 +753,8 @@ mod rob {
     use crate::errors::IOError;
     use crate::graph::Port;
     use crate::{Data, Tag};
+    use crate::communication::output::tee::ChannelCancelPtr;
+    use crate::communication::cancel::CancelHandle;
 
     #[allow(dead_code)]
     pub(crate) struct ChannelPush<D: Data> {
@@ -760,21 +762,32 @@ mod rob {
         pub src: u32,
         pub(crate) delta: MergedScopeDelta,
         push: MicroBatchPush<D>,
+        cancel_handle: ChannelCancelPtr,
     }
 
     impl<D: Data> ChannelPush<D> {
-        pub(crate) fn new(ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>) -> Self {
+        pub(crate) fn new(ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, ch: CancelHandle) -> Self {
             let src = crate::worker_id::get_current_worker().index;
-            ChannelPush { ch_info, src, delta, push }
+            let cancel_handle = ChannelCancelPtr::new(ch_info.scope_level, delta.clone(), ch);
+            ChannelPush { ch_info, src, delta, push, cancel_handle }
         }
 
-        pub(crate) fn skip(&mut self, tag: &Tag) -> IOResult<()> {
-            self.push.skip(tag)
+        pub(crate) fn get_cancel_handle(&self) -> ChannelCancelPtr {
+            self.cancel_handle.clone()
+        }
+
+        #[inline]
+        fn is_canceled(&self, tag: &Tag) -> bool {
+            self.cancel_handle.is_canceled(tag)
         }
     }
 
     impl<D: Data> Push<MicroBatch<D>> for ChannelPush<D> {
         fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
+            if self.is_canceled(&batch.tag) {
+                return Ok(());
+            }
+
             if batch.tag.len() == self.delta.origin_scope_level {
                 let tag = self.delta.evolve(&batch.tag);
                 if let Some(end) = batch.take_end() {
@@ -825,6 +838,10 @@ mod rob {
         fn try_unblock(&mut self, tag: &Tag) -> Result<bool, IOError> {
             self.push.try_unblock(tag)
         }
+
+        fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()> {
+            self.push.clean_block_of(tag)
+        }
     }
 
     #[allow(dead_code)]
@@ -842,14 +859,6 @@ mod rob {
 
         pub fn add_push(&mut self, push: ChannelPush<D>) {
             self.other_pushes.push(push);
-        }
-
-        pub fn skip(&mut self, tag: &Tag) -> IOResult<()> {
-            self.main_push.skip(tag)?;
-            for p in self.other_pushes.iter_mut() {
-                p.skip(tag)?;
-            }
-            Ok(())
         }
     }
 
@@ -914,6 +923,14 @@ mod rob {
                 would_block |= o.try_unblock(tag)?;
             }
             Ok(would_block)
+        }
+
+        fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()> {
+           self.main_push.clean_block_of(tag)?;
+            for o in self.other_pushes.iter_mut() {
+                o.clean_block_of(tag)?;
+            }
+            Ok(())
         }
     }
 }

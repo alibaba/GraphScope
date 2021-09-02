@@ -315,6 +315,7 @@ mod rob {
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
+    use crate::communication::output::BlockScope;
 
     enum BlockEntry<D: Data> {
         Single(D),
@@ -329,7 +330,7 @@ mod rob {
         tee: Tee<D>,
         buf_pool: ScopeBufferPool<D>,
         in_block: TidyTagMap<BlockEntry<D>>,
-        blocks: VecDeque<Tag>,
+        blocks: VecDeque<BlockScope>,
         seq_emit: TidyTagMap<u64>,
         is_closed: bool,
         current_skips: TidyTagMap<()>,
@@ -384,7 +385,7 @@ mod rob {
                             }
                         }
                     } else {
-                        self.blocks.push_back(tag.clone());
+                        self.blocks.push_back(BlockScope::new(tag.clone()));
                         self.in_block
                             .insert(tag.clone(), BlockEntry::DynIter(None, Box::new(iter)));
                     }
@@ -421,30 +422,30 @@ mod rob {
             self.buf_pool.pin(tag)
         }
 
-        pub(crate) fn try_unblock(&mut self, unblocked: &mut Vec<Tag>) -> IOResult<()> {
+        pub(crate) fn try_unblock(&mut self) -> IOResult<()> {
             let len = self.blocks.len();
             if len > 0 {
                 for _ in 0..len {
-                    if let Some(tag) = self.blocks.pop_front() {
-                        trace_worker!("output[{:?}] try to unblock data of {:?};", self.port, tag);
-                        if self.tee.try_unblock(&tag)? {
-                            if let Some(iter) = self.in_block.remove(&tag) {
+                    if let Some(bk) = self.blocks.pop_front() {
+                        trace_worker!("output[{:?}] try to unblock data of {:?};", self.port, bk.tag());
+                        if self.tee.try_unblock(bk.tag())? {
+                            if let Some(iter) = self.in_block.remove(bk.tag()) {
                                 match iter {
                                     BlockEntry::Single(x) => {
-                                        self.push(&tag, x)?;
+                                        self.push(bk.tag(), x)?;
                                     }
                                     BlockEntry::LastSingle(x, e) => {
                                         self.push_last(x, e)?;
                                     }
                                     BlockEntry::DynIter(head, iter) => {
                                         if let Some(x) = head {
-                                            if let Err(e) = self.push(&tag, x) {
+                                            if let Err(e) = self.push(bk.tag(), x) {
                                                 if e.is_would_block() {
-                                                    if let Some(blocked) = self.in_block.remove(&tag) {
+                                                    if let Some(blocked) = self.in_block.remove(bk.tag()) {
                                                         match blocked {
                                                             BlockEntry::Single(x) => {
                                                                 self.in_block.insert(
-                                                                    tag.clone(),
+                                                                    bk.tag().clone(),
                                                                     BlockEntry::DynIter(Some(x), iter),
                                                                 );
                                                             }
@@ -452,27 +453,26 @@ mod rob {
                                                         }
                                                     } else {
                                                         self.in_block.insert(
-                                                            tag.clone(),
+                                                            bk.tag().clone(),
                                                             BlockEntry::DynIter(None, iter),
                                                         );
-                                                        self.blocks.push_back(tag.clone());
+                                                        self.blocks.push_back(bk);
                                                     }
                                                 }
                                                 return Err(e);
                                             }
                                         }
 
-                                        self.push_box_iter(&tag, iter)?;
+                                        self.push_box_iter(bk, iter)?;
                                     }
                                 }
-                                trace_worker!("output[{:?}]: data in scope {:?} unblocked", self.port, tag);
-                                unblocked.push(tag);
+                                // trace_worker!("output[{:?}]: data in scope {:?} unblocked", self.port, tag);
+
                             } else {
-                                trace_worker!("output[{:?}]: data in scope {:?} unblocked", self.port, tag);
-                                unblocked.push(tag);
+                                // trace_worker!("output[{:?}]: data in scope {:?} unblocked", self.port, tag);
                             }
                         } else {
-                            self.blocks.push_back(tag);
+                            self.blocks.push_back(bk);
                         }
                     }
                 }
@@ -480,11 +480,11 @@ mod rob {
             Ok(())
         }
 
-        pub(crate) fn get_blocks(&self) -> &VecDeque<Tag> {
+        pub(crate) fn get_blocks(&self) -> &VecDeque<BlockScope> {
             &self.blocks
         }
 
-        pub(crate) fn skip(&mut self, tag: &Tag) -> IOResult<()> {
+        pub(crate) fn cancel(&mut self, tag: &Tag) -> IOResult<()> {
             let level = tag.len() as u32;
             if level < self.scope_level {
                 assert_eq!(level + 1, self.scope_level);
@@ -494,9 +494,9 @@ mod rob {
                     self.buf_pool.skip_buf(tag);
                     let block_len = self.blocks.len();
                     for _ in 0..block_len {
-                        if let Some(t) = self.blocks.pop_front() {
-                            if tag.is_parent_of(&t) {
-                                if let Some(b) = self.in_block.remove(&t) {
+                        if let Some(b) = self.blocks.pop_front() {
+                            if tag.is_parent_of(b.tag()) {
+                                if let Some(b) = self.in_block.remove(b.tag()) {
                                     match b {
                                         BlockEntry::LastSingle(_, end) => {
                                             self.notify_end(end)?;
@@ -505,11 +505,11 @@ mod rob {
                                     }
                                 }
                             } else {
-                                self.blocks.push_back(t);
+                                self.blocks.push_back(b);
                             }
                         }
                     }
-                    self.tee.skip(tag)?;
+                    self.tee.clean_block_of(tag)?;
                 }
             } else if level == self.scope_level {
                 // skip current scope level;
@@ -517,9 +517,9 @@ mod rob {
                 self.buf_pool.skip_buf(tag);
                 let block_len = self.blocks.len();
                 for _ in 0..block_len {
-                    if let Some(t) = self.blocks.pop_front() {
-                        if tag == &t {
-                            if let Some(b) = self.in_block.remove(&t) {
+                    if let Some(b) = self.blocks.pop_front() {
+                        if tag == b.tag() {
+                            if let Some(b) = self.in_block.remove(b.tag()) {
                                 match b {
                                     BlockEntry::LastSingle(_, end) => {
                                         self.notify_end(end)?;
@@ -528,11 +528,11 @@ mod rob {
                                 }
                             }
                         } else {
-                            self.blocks.push_back(t);
+                            self.blocks.push_back(b);
                         }
                     }
                 }
-                self.tee.skip(tag)?;
+                self.tee.clean_block_of(tag)?;
             } else {
                 // skip from child scopes;
                 // ignore;
@@ -561,22 +561,25 @@ mod rob {
 
         #[inline]
         fn push_box_iter(
-            &mut self, tag: &Tag, mut iter: Box<dyn Iterator<Item = D> + Send + 'static>,
+            &mut self, bks: BlockScope, mut iter: Box<dyn Iterator<Item = D> + Send + 'static>,
         ) -> IOResult<()> {
-            if let Err(e) = self.try_push_iter(tag, &mut iter) {
+            if let Err(e) = self.try_push_iter(bks.tag(), &mut iter) {
                 if e.is_would_block() {
-                    if let Some(e) = self.in_block.remove(&tag) {
+                    if let Some(e) = self.in_block.remove(bks.tag()) {
                         match e {
                             BlockEntry::Single(x) => {
                                 self.in_block
-                                    .insert(tag.clone(), BlockEntry::DynIter(Some(x), iter));
+                                    .insert(bks.tag().clone(), BlockEntry::DynIter(Some(x), iter));
+                                if let Some(b) = self.blocks.back_mut() {
+                                    *b = bks;
+                                }
                             }
                             _ => unreachable!("unexpected blocking"),
                         }
                     } else {
-                        self.blocks.push_back(tag.clone());
                         self.in_block
-                            .insert(tag.clone(), BlockEntry::DynIter(None, iter));
+                            .insert(bks.tag().clone(), BlockEntry::DynIter(None, iter));
+                        self.blocks.push_back(bks);
                     }
                 }
                 Err(e)
@@ -601,7 +604,7 @@ mod rob {
             match self.tee.push(batch) {
                 Err(e) => {
                     if e.is_would_block() {
-                        self.blocks.push_back(tag);
+                        self.blocks.push_back(BlockScope::new(tag));
                     }
                     Err(e)
                 }
@@ -702,7 +705,7 @@ mod rob {
                         self.in_block
                             .insert(tag.clone(), BlockEntry::Single(item));
                     }
-                    self.blocks.push_back(tag.clone());
+                    self.blocks.push_back(BlockScope::new(tag.clone()));
                     would_block!("no buffer available")
                 }
                 Ok(_) => Ok(()),
@@ -727,7 +730,7 @@ mod rob {
                 }
                 Err(e) => {
                     if let Some(item) = e.0 {
-                        self.blocks.push_back(end.tag.clone());
+                        self.blocks.push_back(BlockScope::new(end.tag.clone()));
                         self.in_block
                             .insert(end.tag.clone(), BlockEntry::LastSingle(item, end));
                     } else {
@@ -753,7 +756,7 @@ mod rob {
                     }
                     Err(e) => {
                         if let Some(item) = e.0 {
-                            self.blocks.push_back(tag.clone());
+                            self.blocks.push_back(BlockScope::new(tag.clone()));
                             self.in_block
                                 .insert(tag.clone(), BlockEntry::Single(item));
                         }

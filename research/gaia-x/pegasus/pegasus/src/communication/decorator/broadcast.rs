@@ -90,30 +90,48 @@ mod rob {
     use crate::data_plane::Push;
     use crate::errors::IOError;
     use crate::Data;
+    use crate::communication::cancel::{MultiConsCancelPtr, CancelHandle};
 
     pub struct BroadcastBatchPush<D: Data> {
         pub ch_info: ChannelInfo,
         pushes: Vec<EventEmitPush<D>>,
+        cancel_handle: MultiConsCancelPtr,
     }
 
     impl<D: Data> BroadcastBatchPush<D> {
         pub fn new(ch_info: ChannelInfo, pushes: Vec<EventEmitPush<D>>) -> Self {
-            BroadcastBatchPush { ch_info, pushes }
+            let cancel_handle = MultiConsCancelPtr::new(ch_info.scope_level, pushes.len());
+            BroadcastBatchPush { ch_info, pushes, cancel_handle }
+        }
+
+        pub(crate) fn get_cancel_handle(&self) -> CancelHandle {
+            CancelHandle::MC(self.cancel_handle.clone())
         }
     }
 
     impl<D: Data> Push<MicroBatch<D>> for BroadcastBatchPush<D> {
         fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
             if self.pushes.len() == 1 {
-                self.pushes[0].push(batch)
+                if !self.cancel_handle.is_canceled(&batch.tag, 0) {
+                    self.pushes[0].push(batch)
+                } else {
+                    if let Some(end) = batch.take_end() {
+                        self.pushes[0].notify_end(end)?;
+                    }
+                    Ok(())
+                }
             } else {
                 let end = batch.take_end();
                 if !batch.is_empty() {
                     for i in 1..self.pushes.len() {
-                        let b = batch.share();
-                        self.pushes[i].push(b)?;
+                        if !self.cancel_handle.is_canceled(&batch.tag, i) {
+                            let b = batch.share();
+                            self.pushes[i].push(b)?;
+                        }
                     }
-                    self.pushes[0].push(batch)?;
+                    if !self.cancel_handle.is_canceled(&batch.tag, 0) {
+                        self.pushes[0].push(batch)?;
+                    }
                 }
 
                 if let Some(end) = end {

@@ -334,6 +334,7 @@ mod rob {
     use crate::communication::decorator::{LocalMicroBatchPush, MicroBatchPush};
     use crate::dataflow::DataflowBuilder;
     use crate::BuildJobError;
+    use crate::communication::cancel::{SingleConsCancel, CancelHandle};
 
     impl<T: Data> Channel<T> {
         fn build_pipeline(self, target: Port, id: ChannelId) -> MaterializedChannel<T> {
@@ -341,7 +342,9 @@ mod rob {
             let scope_level = self.get_scope_level();
             let ch_info = ChannelInfo::new(id, scope_level, 1, 1, self.source, target);
             let push = LocalMicroBatchPush::new(ch_info, tx);
-            let push = ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Local(push));
+            let worker = crate::worker_id::get_current_worker().index;
+            let ch = CancelHandle::SC(SingleConsCancel::new(worker));
+            let push = ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Local(push), ch);
             MaterializedChannel { push, pull: rx.into(), notify: None }
         }
 
@@ -402,13 +405,15 @@ mod rob {
                         buffers.push(b);
                     }
                     let push = ExchangeMicroBatchPush::new(info, cyclic, r, buffers, pushes);
-                    let push = ChannelPush::new(info, self.scope_delta, MicroBatchPush::Exchange(push));
+                    let ch = push.get_cancel_handle();
+                    let push = ChannelPush::new(info, self.scope_delta, MicroBatchPush::Exchange(push), ch);
                     Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
                 }
                 ChannelKind::Broadcast => {
                     let (info, pushes, pull, notify) = self.build_remote(scope_level, target, id, dfb)?;
                     let push = BroadcastBatchPush::new(info, pushes);
-                    let push = ChannelPush::new(info, self.scope_delta, MicroBatchPush::Broadcast(push));
+                    let ch = push.get_cancel_handle();
+                    let push = ChannelPush::new(info, self.scope_delta, MicroBatchPush::Broadcast(push), ch);
                     Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
                 }
                 ChannelKind::Aggregate(worker) => {
@@ -416,15 +421,17 @@ mod rob {
                         self.build_remote(scope_level, target, id, dfb)?;
                     ch_info.target_peers = 1;
                     let push = AggregateBatchPush::new(worker, ch_info, pushes, &cyclic);
-                    let push = ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Global(push));
+                    let cancel = CancelHandle::SC(SingleConsCancel::new(worker));
+                    let push = ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::Global(push), cancel);
                     Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
                 }
                 ChannelKind::ShuffleScope => {
                     let (ch_info, pushes, pull, notify) =
                         self.build_remote(scope_level, target, id, dfb)?;
                     let push = ExchangeByScopePush::new(ch_info, &cyclic, pushes);
+                    let ch = push.get_cancel_handle();
                     let push =
-                        ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::ScopeGlobal(push));
+                        ChannelPush::new(ch_info, self.scope_delta, MicroBatchPush::ScopeGlobal(push), ch);
                     Ok(MaterializedChannel { push, pull: pull.into(), notify: Some(notify) })
                 }
             }

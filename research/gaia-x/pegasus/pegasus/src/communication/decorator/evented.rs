@@ -217,7 +217,7 @@ mod rob {
     use crate::data::MicroBatch;
     use crate::data_plane::{GeneralPush, Push};
     use crate::event::emitter::EventEmitter;
-    use crate::event::{Event, Signal};
+    use crate::event::{Event, EventKind};
     use crate::progress::EndSignal;
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
@@ -287,7 +287,7 @@ mod rob {
                     self.ch_info.target_port
                 );
                 let event =
-                    Event::new(self.source_worker, self.ch_info.target_port, Signal::EndSignal(end));
+                    Event::new(self.source_worker, self.ch_info.target_port, EventKind::End(end));
                 self.event_emitter
                     .send(self.target_worker, event)
             }

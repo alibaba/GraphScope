@@ -348,13 +348,12 @@ mod rob {
 
     use pegasus_common::buffer::ReadBuffer;
 
-    use super::*;
     use crate::api::function::{FnResult, RouteFunction};
     use crate::channel_id::ChannelInfo;
     use crate::communication::buffer::ScopeBufferPool;
     use crate::communication::decorator::evented::EventEmitPush;
     use crate::communication::decorator::BlockPush;
-    use crate::communication::IOResult;
+    use crate::communication::{IOResult, Magic};
     use crate::data::MicroBatch;
     use crate::data_plane::Push;
     use crate::errors::IOError;
@@ -362,6 +361,7 @@ mod rob {
     use crate::progress::{EndSignal, Weight};
     use crate::tag::tools::map::TidyTagMap;
     use crate::{Data, Tag};
+    use crate::communication::cancel::{MultiConsCancelPtr, CancelHandle, DynSingleConsCancelPtr};
 
     #[allow(dead_code)]
     struct Exchange<D> {
@@ -398,6 +398,7 @@ mod rob {
         route: Exchange<D>,
         cyclic: Arc<AtomicBool>,
         blocks: TidyTagMap<VecDeque<BlockEntry<D>>>,
+        cancel_handle: MultiConsCancelPtr,
     }
 
     impl<D: Data> ExchangeMicroBatchPush<D> {
@@ -407,6 +408,7 @@ mod rob {
         ) -> Self {
             let src = crate::worker_id::get_current_worker().index;
             let len = pushes.len();
+            let cancel_handle = MultiConsCancelPtr::new(info.scope_level, len);
             ExchangeMicroBatchPush {
                 src,
                 port: info.source_port,
@@ -415,7 +417,12 @@ mod rob {
                 route: Exchange::new(len, router),
                 cyclic,
                 blocks: TidyTagMap::new(info.scope_level),
+                cancel_handle,
             }
+        }
+
+        pub(crate) fn get_cancel_handle(&self) -> CancelHandle {
+            CancelHandle::MC(self.cancel_handle.clone())
         }
 
         pub(crate) fn skip(&mut self, tag: &Tag) -> IOResult<()> {
@@ -525,8 +532,12 @@ mod rob {
             //     let count = self.push_counts[index].get_mut_or_insert(&batch.tag);
             //     *count = batch.len();
             // };
-            let batch = MicroBatch::new(tag, self.src, buf);
-            self.pushes[index].push(batch)
+            if !self.cancel_handle.is_canceled(&tag, index) {
+                let batch = MicroBatch::new(tag, self.src, buf);
+                self.pushes[index].push(batch)
+            } else {
+                Ok(())
+            }
         }
 
         fn push_inner(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
@@ -589,7 +600,9 @@ mod rob {
             }
 
             if self.pushes.len() == 1 {
-                return self.pushes[0].push(batch);
+                if !self.cancel_handle.is_canceled(&batch.tag, 0) {
+                    return self.pushes[0].push(batch);
+                }
             }
 
             let len = batch.len();
@@ -709,6 +722,10 @@ mod rob {
             }
             Ok(true)
         }
+
+        fn clean_block_of(&mut self, tag: &Tag) -> IOResult<()> {
+            self.skip(tag)
+        }
     }
 
     pub struct ExchangeByScopePush<D: Data> {
@@ -716,15 +733,20 @@ mod rob {
         pushes: Vec<EventEmitPush<D>>,
         magic: Magic,
         has_cycles: Arc<AtomicBool>,
+        cancel_handle: DynSingleConsCancelPtr,
     }
 
     impl<D: Data> ExchangeByScopePush<D> {
         pub fn new(ch_info: ChannelInfo, cyclic: &Arc<AtomicBool>, pushes: Vec<EventEmitPush<D>>) -> Self {
             assert!(ch_info.scope_level > 0);
             let len = pushes.len();
-            let magic =
-                if len & (len - 1) == 0 { Magic::And(len as u64 - 1) } else { Magic::Modulo(len as u64) };
-            ExchangeByScopePush { ch_info, pushes, magic, has_cycles: cyclic.clone() }
+            let magic = Magic::new(len);
+            let cancel_handle = DynSingleConsCancelPtr::new(ch_info.scope_level, len);
+            ExchangeByScopePush { ch_info, pushes, magic, has_cycles: cyclic.clone(), cancel_handle }
+        }
+
+        pub(crate) fn get_cancel_handle(&self) -> CancelHandle {
+            CancelHandle::DSC(self.cancel_handle.clone())
         }
     }
 
@@ -732,9 +754,11 @@ mod rob {
         fn push(&mut self, mut batch: MicroBatch<D>) -> Result<(), IOError> {
             let end = batch.take_end();
             if !batch.is_empty() {
-                let cur = batch.tag.current_uncheck() as u64;
-                let target = self.magic.exec(cur) as usize;
-                self.pushes[target].push(batch)?;
+                if !self.cancel_handle.is_canceled(&batch.tag) {
+                    let cur = batch.tag.current_uncheck() as u64;
+                    let target = self.magic.exec(cur) as usize;
+                    self.pushes[target].push(batch)?;
+                }
             }
 
             if let Some(mut end) = end {
