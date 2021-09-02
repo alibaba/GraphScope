@@ -142,8 +142,8 @@ def test_demo_on_hdfs(gs_session_distributed):
     graph.add_vertices(
         Loader(
             os.environ["HDFS_TEST_DIR"] + "/person_0_0.csv",
-            host="localhost",
-            port="9000",
+            host=os.environ["HDFS_HOST"],
+            port=9000,
             delimiter="|",
         ),
         "person",
@@ -161,8 +161,8 @@ def test_demo_on_hdfs(gs_session_distributed):
     graph = graph.add_edges(
         Loader(
             os.environ["HDFS_TEST_DIR"] + "/person_knows_person_0_0.csv",
-            host="localhost",
-            port="9000",
+            host=os.environ["HDFS_HOST"],
+            port=9000,
             delimiter="|",
         ),
         "knows",
@@ -182,12 +182,14 @@ def test_demo_on_hdfs(gs_session_distributed):
     simple_g = sub_graph.project(vertices={"person": []}, edges={"knows": []})
 
     pr_result = graphscope.pagerank(simple_g, delta=0.8)
-    tc_result = graphscope.triangles(simple_g)
 
-    # add the PageRank and triangle-counting results as new columns to the property graph
-    # FIXME: Add column to sub_graph
-    sub_graph.add_column(pr_result, {"Ranking": "r"})
-    sub_graph.add_column(tc_result, {"TC": "r"})
+    # output to hdfs
+    pr_result.output(
+        os.environ["HDFS_TEST_DIR"] + "/res.csv",
+        selector={"id": "v.id", "rank": "r"},
+        host=os.environ["HDFS_HOST"],
+        port=9000,
+    )
 
 
 def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir):

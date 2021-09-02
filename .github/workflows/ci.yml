@@ -410,13 +410,15 @@ jobs:
         ./prepare_hadoop.sh /tmp/hadoop-2.10.1
         export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
-        export HDFS_TEST_DIR=hdfs:///ldbc_sample
         hadoop fs -mkdir /ldbc_sample || true
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
+        export HDFS_TEST_DIR=hdfs:///ldbc_sample
+        export HDFS_HOST=$(hostname -I | awk '{print $1}')
 
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest ./tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
+        hdfs fs -test -e /ldbc_sample/res.csv
 
     - name: Helm test
       run: |
