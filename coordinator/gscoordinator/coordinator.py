@@ -20,7 +20,6 @@
 
 import argparse
 import atexit
-from coordinator.gscoordinator.io_utils import StdStreamWrapper
 import datetime
 import json
 import logging
