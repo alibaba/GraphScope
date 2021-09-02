@@ -139,7 +139,7 @@ def test_demo(gs_session, data_dir):
 @pytest.mark.skipif("HDFS_TEST_DIR" not in os.environ, reason="the test case need HDFS")
 def test_demo_on_hdfs(gs_session_distributed):
     graph = gs_session_distributed.g()
-    graph.add_vertices(
+    graph = graph.add_vertices(
         Loader(
             os.environ["HDFS_TEST_DIR"] + "/person_0_0.csv",
             host=os.environ["HDFS_HOST"],
