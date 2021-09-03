@@ -200,9 +200,7 @@ class LocalLauncher(Launcher):
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
         # engine params format:
         #   k1:v1;k2:v2;k3:v3
-        engine_params = {
-            "gaia.engine.port": self._get_free_port("localhost")
-        }
+        engine_params = {"gaia.engine.port": self._get_free_port("localhost")}
         if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
             engine_params = json.loads(
                 config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
