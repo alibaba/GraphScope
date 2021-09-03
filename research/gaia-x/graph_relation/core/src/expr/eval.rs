@@ -181,7 +181,63 @@ impl<'a> Evaluator<'a> {
         self.stack.borrow_mut().clear();
     }
 
-    /// Evaluate an expression with an optional context.
+    /// Evaluate an expression with an optional context. The context must implement the
+    /// provided trait `[Context]`, that can get an `[crate::graph::element::Element]`
+    /// using a given key.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use ir_core::graph::element::Vertex;
+    /// # use ir_core::expr::eval::{Context, Evaluator};
+    /// # use ir_core::{NameOrId, FromPb};
+    /// # use ir_core::graph::property::{DefaultDetails, DynDetails, Label};
+    /// # use std::collections::HashMap;
+    /// # use dyn_type::Object;
+    /// # use ir_core::expr::token::tokenize;
+    /// # use ir_core::expr::to_suffix_expr_pb;
+    ///
+    /// struct Vertices {
+    ///     vec: Vec<Vertex>,
+    /// }
+    ///
+    /// impl Context<Vertex> for Vertices {
+    ///     fn get(&self, key: &NameOrId) -> Option<&Vertex> {
+    ///        match key {
+    ///             NameOrId::Str(_) => None,
+    ///             NameOrId::Id(i) => self.vec.get(*i as usize),
+    ///         }
+    ///     }
+    /// }
+    ///
+    /// let map: HashMap<NameOrId, Object> = vec![
+    ///         (NameOrId::from("age".to_string()), 12.into()),
+    ///         (NameOrId::from("birthday".to_string()), 19900416.into()),
+    ///     ]
+    ///     .into_iter()
+    ///     .collect();
+    ///
+    ///     let ctxt = Vertices {
+    ///         vec: vec![
+    ///             Vertex::new(DynDetails::new(DefaultDetails::with_property(
+    ///                 1,
+    ///                 Label::from(1),
+    ///                 map.clone(),
+    ///             ))),
+    ///             Vertex::new(DynDetails::new(DefaultDetails::with_property(
+    ///                 2,
+    ///                 Label::from(2),
+    ///                 map.clone(),
+    ///             ))),
+    ///         ],
+    ///     };
+    ///
+    /// let tokens = tokenize("@0.age == @1.age").unwrap();    
+    /// let suffix_tree = to_suffix_expr_pb(tokens).unwrap();
+    /// let eval = Evaluator::from_pb(suffix_tree).unwrap();
+    ///
+    /// assert!(eval.eval::<_, _>(Some(&ctxt)).unwrap().as_bool().unwrap())
+    /// ```
     pub fn eval<E: Element + 'a, C: Context<E> + 'a>(
         &'a self,
         context: Option<&'a C>,
@@ -445,4 +501,6 @@ mod tests {
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
+
+    // todo!(add test cases for evaluating expression with variables and errors)
 }
