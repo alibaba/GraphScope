@@ -411,6 +411,7 @@ jobs:
         export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
         export GS_TEST_DIR=${GITHUB_WORKSPACE}/gstest
         hadoop fs -mkdir /ldbc_sample || true
+        hadoop fs -chmod 777 /ldbc_sample
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
         hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
         export HDFS_TEST_DIR=hdfs:///ldbc_sample
@@ -419,7 +420,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest ./tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
         # FIXME: context.output file not found
-        # hdfs dfs -test -e /ldbc_sample/res.csv
+        hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
 
     - name: Helm test
       run: |
