@@ -289,20 +289,20 @@ mod rob {
         }
 
         fn push(&mut self, tag: &Tag, msg: MicroBatch<D>) -> IOResult<()> {
-            if self.cancel_handle.is_canceled(tag) {
-                return Ok(());
-            }
             let idx = tag.current_uncheck() as u64;
             let offset = self.magic.exec(idx) as usize;
+            if self.cancel_handle.is_canceled(tag, offset) {
+                return Ok(());
+            }
             self.pushes[offset].push(tag, msg)
         }
 
         fn push_last(&mut self, msg: MicroBatch<D>, mut end: EndSignal) -> IOResult<()> {
-            if self.cancel_handle.is_canceled(&msg.tag) {
+            let idx = msg.tag.current_uncheck() as u64;
+            let offset = self.magic.exec(idx) as usize;
+            if self.cancel_handle.is_canceled(&msg.tag, offset) {
                 return self.notify_end(end);
             }
-            let idx = end.tag.current_uncheck() as u64;
-            let offset = self.magic.exec(idx) as usize;
             if self.has_cycles.load(Ordering::SeqCst) {
                 for (i, p) in self.pushes.iter_mut().enumerate() {
                     if i != offset {
